@@ -17,7 +17,7 @@
         {{ $categoryurl := .RelPermalink }}            
         {{ range .RegularPages.ByTitle }}
           {{ if eq $category ("Advertisments") }}
-            <div class="main-menu {{ $category }}">
+            <div class="main-menu {{ $category }} item">
               <div class="menu-header">
                 <a href="{{ .RelPermalink }}" class="listpageimages">
                   {{ range .Params.images }}

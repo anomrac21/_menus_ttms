@@ -48,7 +48,7 @@
       {{ else }}
         {{ if .RegularPages }}
           {{ if not (or (eq $title ("Categories")) (eq $title ("Tags"))) }} 
-              <div class="main-menu {{ .LinkTitle }}">
+              <div class="main-menu {{ .LinkTitle }} item">
                 <div class="menu-header">
                   <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                   {{ if .Params.image }}

@@ -11,7 +11,7 @@
 }
 
 #ad-slot-top,#ad-slot-footer {
-    background: #0ff5;
+    background: linear-gradient(transparent, #0ff5);
     min-height: 256px;
     text-align: center
 }
@@ -23,9 +23,11 @@
 .Advertisments img {
     min-width: 100%!important
 }
-.advertisments h1{
-    text-align: center;
+
+.advertisments h1 {
+    text-align: center
 }
+
 .advertisments .singlepageimages img {
     height: auto!important;
     max-width: 480px!important
@@ -337,7 +339,7 @@ h1,h3,h4,h5,h6 {
     margin-block:.4em .2em}
 
 h2 {
-    margin-block: .4em;padding-inline:.4em}
+    margin-block:.4em;padding-inline:.4em}
 
 #orderModal h2,#orderModal h3 {
     margin-block:.4em;padding-inline:.4em;color: var(--selected-text-color1)
@@ -459,8 +461,7 @@ footer {
         object-fit: cover;
         width: 100%;
         margin: 0;
-        margin-inline-end:.8em;
-        float: left
+        margin-inline-end:.8em;float: left
     }
 }
 
