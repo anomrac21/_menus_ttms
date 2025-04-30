@@ -1,0 +1,137 @@
+{{ define "main" }}
+  
+
+  <!--{{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
+  {{ $dateHuman := .Date | time.Format ":date_long" }}
+  <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time-->
+  {{if not (eq .Section ("advertisments")) }}
+    <table class="singlepagemenu {{ .Section }}">
+      <tbody>
+        {{ $category :=  .Section  }}
+        {{ $categoryurl := .Parent.Permalink }}            
+        {{$sizes := slice}}
+        {{range .Params.prices}}
+          {{if not (in $sizes .size)}}
+            {{$sizes = $sizes | append .size}}
+          {{end}}
+        {{end}}
+
+        {{$flavours := slice}}
+        {{range .Params.prices}}
+          {{if not (in $flavours .flavour)}}
+            {{$flavours = $flavours | append .flavour}}
+          {{end}}
+        {{end}}
+
+        {{$prices := slice}}
+        {{range .Params.prices}}
+          {{$price := slice}}
+          {{$price = $price | append .size}}
+          {{$price = $price | append .flavour}}
+          {{$price = $price | append .price}}
+          {{$prices = $prices | append $price}}
+        {{end}}
+
+        {{$sides := slice}}
+        {{range .Params.sides }}
+          {{$side := slice}}
+          {{$side = $side | append .name}}
+          {{$side = $side | append .type}}
+          {{$side = $side | append .price}}
+          {{$sides = $sides | append $side}}
+        {{end}}
+
+        {{$additions := slice}}
+        {{range .Params.additions }}
+          {{$addition := slice}}
+          {{$addition = $addition | append .name}}
+          {{$addition = $addition | append .price}}
+          {{$additions = $additions | append $addition}}
+        {{end}}
+        
+        {{$modifications := slice}}
+        {{range .Params.modifications }}
+          {{$modification := slice}}
+          {{$modification = $modification | append .name}}
+          {{$modification = $modification | append .price}}
+          {{$modifications = $modifications | append $modification}}
+        {{end}}
+        
+        {{$images := slice}}
+        {{range .Params.images }}
+          {{$images = $images | append .image}}
+        {{end}}
+        
+        <tr class="item" onclick="openItem(this,{
+                  'category': '{{ $category }}',
+                  'categoryurl': '{{ $categoryurl }}',
+                  'name': '{{ .LinkTitle }}',
+                  'url': '{{ .RelPermalink }}', 
+                  'images': {{ $images }}, 
+                  'desc': '{{ .Summary }}',  
+                  'sizes': {{ $sizes }},
+                  'flavours': {{ sort $flavours }},
+                  'items': {{ $prices }},
+                  'sides': {{ $sides }},
+                  'sideoptions':  { 'all':{'maxcount':1 ,'valuecount':1, 'value':0},
+                                    'regular':{'maxcount':1 ,'valuecount':1, 'value':0},
+                                    'premium':{'maxcount':1 ,'valuecount':1, 'value':0} },
+                  'additions': {{ $additions }},
+                  'modifications': {{ $modifications }}
+                  } );">
+            <td>
+              {{if .Params.images }}
+              <div class="singlepageimages">
+                {{range .Params.images }}
+                <img id="singlepageimage" src="/{{ .image }}">
+                {{ end }}
+              </div>
+              {{ else }}
+                <img id="singlepageimage" src="/branding/favicon-400x200.webp">  
+              {{ end }}  
+              <h1>{{ .Title }}</h1>
+              {{ .Content }}
+              {{$allprices := .Params.prices}}
+              {{ range $index, $currentItem := $sizes }}
+                <br>
+                {{ $currentItem }}
+                <ul class="prices">
+                  {{ range $allprices }}
+                    {{ if eq $currentItem .size }}
+                      <li>
+                        {{ .flavour }} <b>${{ .price }}</b>
+                      </li>
+                    {{ end }}
+                  {{ end }}
+                </ul>
+              {{ end }}                        
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  {{ else }}
+    <div class="singlepagemenu {{ .Section }}">
+      {{ if gt (len .Params.images) 0 }}
+        <div class="singlepageimages">
+          {{ range .Params.images }}
+            <img src="/{{ .image }}">
+          {{ end }}
+        </div>
+      {{ else }}
+        <img id="singlepageimage" src="/branding/favicon-400x200.webp">  
+      {{ end }}  
+      <h1>{{ .Title }}</h1>
+      {{ range .Params.youtube }}
+        <iframe style="margin-inline: auto;display: block;" width="315" height="560" 
+            src="{{ .url }}" 
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+        </iframe>
+      {{ end }}
+      {{ .Content }}
+    </div>
+  {{ end }}
+  {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+{{ end }}

@@ -1,0 +1,52 @@
+<!-- Table Number Modal-->
+<div id="tableNumberModal" class="hide">
+	<div class="container">
+		<div class="modal">
+			<div class="input">
+				<div class="header">
+					<img data-aos="zoom-out" src="/branding/favicon192.webp" class="aos-init aos-animate">
+					<h3 class="title">Select</h3>
+					<a id="itemClose" class="close" onclick="closeTableModal();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a>
+				</div>
+				<div class="container">
+					<div>
+						<div class="sepline tableBtn">Table Number</div>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">1</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">2</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">3</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">4</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">5</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">6</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">7</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">8</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">9</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">10</a>
+						<div class="sepline tableBtn"></div>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">P1</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">P2</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">P3</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">P4</a>
+						<a class="tableBtn" href="#here" onclick="selectTable(this);">P5</a>
+					</div>  
+				</div>
+			</div>
+			<div class="confirm hide" id="askforservermodal">
+				<h3 class="selectTableTitle">Ask for Server?</h3>
+				<h2 id="myTableNum"></h2>
+				<div class="options" id="here">
+					<a onclick="confirmTable('askforserver');" style="background: linear-gradient(#00ff00, #003506);"><i class="fa fa-whatsapp"></i> YES</a>
+					<a onclick="closeTableModal();" style="background: #f00;">CANCEL</a>
+				</div>
+			</div>
+			<div class="confirm" id="confirmmodal">
+				<h3 class="selectTableTitle">Are You Sure?</h3>
+				<h2 id="myTableNum"></h2>
+				<div class="options" id="here">
+					<a onclick="confirmTable('order');" style="background: linear-gradient(#00ff00, #003506);"><i class="fa fa-whatsapp"></i> YES</a
+					><a onclick="closeTableModal();" style="background: #f00;">CANCEL</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- End Table Number Modal-->

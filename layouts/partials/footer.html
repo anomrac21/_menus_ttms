@@ -1,0 +1,15 @@
+{{ partial "table_select_modal.html" . }}
+
+<div id="footer" >
+	{{ partial "ttmenus_modal.html" . }}
+	{{ partial "cart.html" . }}
+	<!--Cart Short COde-->
+
+	<!--accessibility Short COde-->
+	
+		<div id="footerBtns" class="grad2">
+			<div>
+				<a onclick="toggleTTMS();" target="_blank" ><b id="adcount" class="hide">0</b><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/home.svg"></a> | <a onclick="toggleCart();"><b id="cartcount" class="hide">0</b><img id="carticon" class="icon center" src="https://ct.ttmenus.com/icons/utilities/cart0.svg"></a> | <a onclick="toggleSearch();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/search.svg"></a> | <a onclick="toggleFooterAccessibility();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/settings.svg"></a>
+			</div>
+		</div>
+</div>

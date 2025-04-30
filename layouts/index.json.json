@@ -1,0 +1,48 @@
+{{ warnf "Generating JSON file for Home Page: %s" .Title }}
+{{- with .Site.Home }}
+
+  {{- $images := slice -}}
+  {{- range .Params.images }}
+    {{- $images = $images | append (dict "image" .image) -}}
+  {{- end }}
+
+  {{- $locations := slice -}}
+  {{- range $index, $loc := .Params.locations }}
+    {{- $locationData := dict
+        "location" $loc.location
+        "address"  $loc.address
+        "lat"      $loc.lat
+        "lon"      $loc.lon
+        "opening_hours" $loc.opening_hours
+      -}}
+    {{- $locations = $locations | append $locationData -}}
+  {{- end }}
+
+  {{- $social := dict -}}
+  {{- with .Params.facebook }}{{ $social = merge $social (dict "facebook" .) }}{{ end }}
+  {{- with .Params.instagram }}{{ $social = merge $social (dict "instagram" .) }}{{ end }}
+  {{- with .Params.youtube }}{{ $social = merge $social (dict "youtube" .) }}{{ end }}
+  {{- with .Params.tiktok }}{{ $social = merge $social (dict "tiktok" .) }}{{ end }}
+  {{- with .Params.phone }}{{ $social = merge $social (dict "phone" .) }}{{ end }}
+  {{- with .Params.whatsapp }}{{ $social = merge $social (dict "whatsapp" .) }}{{ end }}
+  {{- with .Params.whatsappordersystem }}{{ $social = merge $social (dict "whatsapp_ordersystem" .) }}{{ end }}
+
+  {{- $features := dict -}}
+  {{- with site.Data.menudata }}
+    {{- with .payments }}{{ $features = merge $features (dict "payments" .) }}{{ end }}
+    {{- with .delivery }}{{ $features = merge $features (dict "delivery" .) }}{{ end }}
+    {{- with .notifications }}{{ $features = merge $features (dict "notifications" .) }}{{ end }}
+  {{- end }}
+
+  {{- $json := dict
+      "title" .Title
+      "hero_background_image" (.Params.image | default "")
+      "featured_images" $images
+      "locations" $locations
+      "social_links" $social
+      "features" $features
+  -}}
+
+  {{ $json | jsonify }}
+
+{{- end }}

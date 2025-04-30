@@ -1,0 +1,36 @@
+<div id="cart" class="cart-hidden">
+	<div class="order">
+		<div class="waBtn">
+			<a id="titleRow" class="titleRow" onclick="toggleCart();"><i class="fa fa-arrow-right"></i> Order</a>
+			<div class="button hide" id="button-5">
+		      <input type="checkbox" class="checkbox" id="dining-mode-checkbox-2" onclick="toggleDiningMode(this);"/>
+		      <div class="knobs">
+		        <span></span>
+		      </div>
+		      <div class="layer"></div>
+		    </div><!--a class="close" onclick="toggleCart();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a-->
+		</div>
+		
+		<table id="whatsappOrder">
+			<tr><th>#</th><th>Desc</th><th>Item</th><th>Amt</th><th>Cost</th><th><i class="fa fa-trash-o"></i></th></tr>
+			<tr><td>-</td><td>-</td><th>-</th><th>-</th><td>-</td></tr>
+		</table>
+		
+	</div>
+	<div id="whatsappOrderBtn">
+		<div id="subTotalcontainer">
+			<div id="sub">Sub Total $</div>
+			<div id="subTotal">0</div>
+		</div>
+		<div id="vatCalccontainer">
+			<div id="vat"></div>
+			<div id="vatCalc"></div>
+		</div>
+		<div id="serviceCalccontainer">
+			<div id="service"></div>
+			<div id="serviceCalc"></div>
+		</div>
+		<div id="itemTotal">TOTAL $0</div>
+		<button class="placeOrder" onclick="openTableModal('order');"><i class="fa fa-whatsapp"></i> Order Now</button>
+	</div>
+</div>

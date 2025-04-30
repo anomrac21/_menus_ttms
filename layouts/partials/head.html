@@ -1,0 +1,117 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
+{{ partialCached "head/css.html" . }}
+{{ partialCached "head/js.html" . }}
+<meta property="og:title" content="{{ .Title }} | {{ site.Title }}"/>
+{{$images := slice}}
+{{range .Params.images }}
+  {{$images = $images | append .image}}
+{{end}}
+{{ if gt (len $images) 0 }}
+  {{$firstImage := index $images 0}}
+  <meta property="og:image" content="/{{ $firstImage }}"/>
+{{ else }} 
+   <meta property="og:image" content="/branding/favicon152.webp"/>
+{{ end }}
+
+<!--APPLE SUPPORT-->
+<meta name="apple-mobile-web-app-title" content="{{ site.Title }}">
+<meta name="description" content="{{ .Summary }} "/>
+<meta property="og:description" content="{{ .Summary }} Digital Menu"/>
+
+<!-- WEBSITE LINK AND IMAGE -->
+<meta property="og:url" content="{{ site.GetPage.Permalink }}" />
+
+<!-- APP THEME COLOR -->
+<meta name="theme-color" content="#000000"/>
+
+<!-- MAIN APP STYLE -->
+<link rel="stylesheet" href="{{ site.BaseURL}}css/colors.css"/> 
+<link rel="stylesheet" href="{{ site.BaseURL}}css/custom.css"/> 
+
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/basic.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/cart.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/menu.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/order_system.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/apple_instructions.css"/>
+
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/header.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/contactinfo.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/footer.css"/>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="/manifest.json" />
+
+<!--APPLE SUPPORT and ALL ICONS-->
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shortcut icon" sizes="16x16" href="/branding/favicon16.webp">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon.ico">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon196.webp">
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shorcut icon" href="/branding/favicon512.webp"/>
+<link rel="apple-touch-icon-precomposed" href="/branding/favicon152.webp">
+
+<!--ANIMATE ON SCROLL ANIMATIONS-->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- FONTS FOR THE MENU -->
+<!-- <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200anddisplay=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+Oneanddisplay=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700anddisplay=swap" rel="stylesheet"> -->
+
+<script>
+    if (typeof navigator.serviceWorker !== 'undefined') {
+        navigator.serviceWorker.register('{{ site.BaseURL}}OneSignalSDKWorker.js?v=2')
+        .then(function(registration) {
+        console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(function(error) {
+        console.error('Service Worker registration failed:', error);
+        });
+    }
+</script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.init({
+      appId: "{{ site.Data.menudata.onesignal }}",
+    });
+  });
+</script>
+
+<!-- Matomo Global and Client Tracking -->
+<script>
+  var _paq = window._paq = window._paq || [];
+
+  /* Default tracker: ttmenus.com (Site ID 1) */
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+  _paq.push(["setCookieDomain", "*.ttmenus.com"]);
+  _paq.push(["setDomains", ["*.ttmenus.com"]]);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+
+  /* Add second tracker: wingit.ttmenus.com (Site ID 6) */
+  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Data.menudata.analyticsid }}']);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+
+  (function() {
+    var u="//analytics.ttmenus.com/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
+<!-- End Matomo Code -->

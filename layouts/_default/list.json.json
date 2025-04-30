@@ -1,0 +1,67 @@
+{{ warnf "Generating JSON file for section: %s" .Section }}
+
+{{- $items := slice -}}
+
+{{- range $index, $page := .Pages }}
+  {{ warnf "- Processing item file in section: %s || %s" $.Section $page.Title }}
+
+  {{- $item := dict
+      "title"  $page.Title
+      "weight" ($page.Params.weight | default 0)
+      "date"   $page.Date
+      "images" ($page.Params.images | default slice)
+      "body"   ($page.Params.body | default "")
+  -}}
+
+  {{- if eq $.Section "advertisments" }}
+    {{- $item = merge $item (dict
+      "location" ($page.Params.location | default "")
+      "recuring" ($page.Params.recuring | default false)
+      "youtube"  ($page.Params.youtube | default slice)
+    ) }}
+
+    {{- $start := dict -}}
+    {{- $end := dict -}}
+
+    {{- range $i, $ev := $page.Params.eventdates }}
+      {{- if eq $ev.type "start" }}
+        {{- $start = dict
+            "year"   $ev.yy
+            "month"  $ev.mm
+            "day"    $ev.dd
+            "hour"   $ev.h
+            "minute" $ev.m
+        }}
+      {{- else if eq $ev.type "end" }}
+        {{- $end = dict
+            "year"   $ev.yy
+            "month"  $ev.mm
+            "day"    $ev.dd
+            "hour"   $ev.h
+            "minute" $ev.m
+        }}
+      {{- end }}
+    {{- end }}
+
+    {{- $eventdates := slice -}}
+    {{- if and (gt (len $start) 0) (gt (len $end) 0) }}
+      {{- $eventdates = $eventdates | append (dict "start" $start "end" $end) }}
+    {{- end }}
+
+    {{- $item = merge $item (dict "eventdates" $eventdates) }}
+
+  {{- else }}
+    {{- $item = merge $item (dict
+        "prices"        ($page.Params.prices | default slice)
+        "additions"     ($page.Params.additions | default slice)
+        "modifications" ($page.Params.modifications | default slice)
+        "sides"         ($page.Params.sides | default slice)
+        "side_config"   ($page.Params.side_config | default slice)
+    ) }}
+  {{- end }}
+
+  {{- $items = $items | append $item -}}
+{{- end }}
+
+{{- $json := dict "items" $items -}}
+{{- $json | jsonify -}}
