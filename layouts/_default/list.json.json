@@ -14,38 +14,22 @@
   -}}
 
   {{- if eq $.Section "advertisments" }}
+    {{ warnf "  ↪ Ad: %s | Location: %s | Recurring: %v" $page.Title ($page.Params.location | default "N/A") ($page.Params.recuring | default false) }}
+
     {{- $item = merge $item (dict
       "location" ($page.Params.location | default "")
       "recuring" ($page.Params.recuring | default false)
       "youtube"  ($page.Params.youtube | default slice)
     ) }}
 
-    {{- $start := dict -}}
-    {{- $end := dict -}}
-
-    {{- range $i, $ev := $page.Params.eventdates }}
-      {{- if eq $ev.type "start" }}
-        {{- $start = dict
-            "year"   $ev.yy
-            "month"  $ev.mm
-            "day"    $ev.dd
-            "hour"   $ev.h
-            "minute" $ev.m
-        }}
-      {{- else if eq $ev.type "end" }}
-        {{- $end = dict
-            "year"   $ev.yy
-            "month"  $ev.mm
-            "day"    $ev.dd
-            "hour"   $ev.h
-            "minute" $ev.m
-        }}
-      {{- end }}
-    {{- end }}
-
     {{- $eventdates := slice -}}
-    {{- if and (gt (len $start) 0) (gt (len $end) 0) }}
-      {{- $eventdates = $eventdates | append (dict "start" $start "end" $end) }}
+    {{- range $i, $ev := $page.Params.eventdates }}
+      {{- if and $ev.start $ev.end }}
+        {{ warnf "    • Event #%d: Start: %s | End: %s" (add $i 1) $ev.start $ev.end }}
+        {{- $eventdates = $eventdates | append (dict "start" $ev.start "end" $ev.end) }}
+      {{- else }}
+        {{ warnf "    ⚠️ Incomplete event date in ad: %s" $page.Title }}
+      {{- end }}
     {{- end }}
 
     {{- $item = merge $item (dict "eventdates" $eventdates) }}
