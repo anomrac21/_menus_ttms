@@ -25,7 +25,6 @@
     {{- $eventdates := slice -}}
     {{- range $i, $ev := $page.Params.eventdates }}
       {{- if and $ev.start $ev.end }}
-        {{ warnf "    • Event #%d: Start: %s | End: %s" (add $i 1) $ev.start $ev.end }}
         {{- $eventdates = $eventdates | append (dict "start" $ev.start "end" $ev.end) }}
       {{- else }}
         {{ warnf "    ⚠️ Incomplete event date in ad: %s" $page.Title }}
