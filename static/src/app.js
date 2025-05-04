@@ -91,3 +91,17 @@ function showAppleMsg(x) {
       
     }
   }
+
+  function toggleDashboard(){
+    var dashboard = document.getElementById("dashboard");
+    if(dashboard.classList.contains('loader-hide-left')){
+      dashboard.classList.remove('loader-hide-left');
+    }else{
+      dashboard.classList.add('loader-hide-left');
+    }
+  }
+  
+  function closeDashboard(){
+    var dashboard = document.getElementById("dashboard");
+    dashboard.classList.add('loader-hide-left');
+  }

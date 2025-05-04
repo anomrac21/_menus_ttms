@@ -8,16 +8,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 {{ $pagetitle:= .LinkTitle }}
 <div class="main-header">
 	<div class="container">
-		<!-- MENU LOGO -->
-		{{ if and (not .IsHome)}}
-			<a href="/" id="logo" onclick="closeCart();">
-				<img class="logo center" src="/branding/favicon192.webp"></a>
-			<!-- END MENU LOGO -->
-		{{ else }}
-			<a href="#" id="logo" onclick="closeCart();">
-				<img class="logo center" src="/branding/favicon192.webp"></a>
-			<!-- END MENU LOGO -->
-		{{ end }} 
+		<ul id="menublock">
+			<li>{{ partialCached ttms-dashboard/button.html" . }}</li>
+			<li>
+				<!-- MENU LOGO -->
+				{{ if and (not .IsHome)}}
+					<a href="/" id="logo" onclick="closeCart();">
+						<img class="logo center" src="/branding/favicon192.webp"></a>
+					<!-- END MENU LOGO -->
+				{{ else }}
+					<a href="#" id="logo" onclick="closeCart();">
+						<img class="logo center" src="/branding/favicon192.webp"></a>
+					<!-- END MENU LOGO -->
+				{{ end }}
+			</li>
+		</ul>
 		{{ if and (not .IsHome)}}
 			<ul id="menublock">
 				{{ range site.Pages.ByWeight }}
