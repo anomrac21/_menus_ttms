@@ -2,14 +2,15 @@
     box-shadow: 0px 2px 5px #111111;
 }
 #dashboard {
-    background: #fefefeef;
+    background: #fefefefb;
     height: 100vh;
-    width: -webkit-fill-available;
-    max-width: 75vw;
+    width: 75vw;
+    max-width: 500px;
     position: fixed;
     transition: .26s;
     z-index: 2;
     color: #000000;
+    box-shadow: 0px 2px 5px #111111;
 }
 #dashboard ul{
     display: flex;
