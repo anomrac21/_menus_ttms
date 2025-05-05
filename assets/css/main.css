@@ -3,18 +3,27 @@
 }
 #dashboard {
     background: #fefefeef;
-    height: calc(100vh - 4em);
+    height: 100vh;
     width: -webkit-fill-available;
     max-width: 75vw;
-    position: absolute;
+    position: fixed;
     transition: .26s;
+    z-index: 2;
+    color: #000000;
 }
 #dashboard ul{
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
-
+#dashboard .header{
+    height: 4em;
+    background: linear-gradient(#d73301ee, #800000ee);
+    display: flex;
+}
+#dashboard .header a{
+    display: flex;
+}
 #dashboard li {
     height: 2em;
     padding: .4em .8em;
@@ -414,7 +423,7 @@ main img {
 }
 
 .logo_container {
-    box-shadow: inset 0px 0px 0.4em 0.4em var(--hero-bg-color);
+    box-shadow: inset 0px -.4em 0.4em 0.4em var(--hero-bg-color);
     width: 110vw;
     left: -5vw;
     z-index: 1;
@@ -426,7 +435,6 @@ main img {
     margin: auto;
     z-index: 1;
     position: relative;
-    box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
 }
 
 #bg {
