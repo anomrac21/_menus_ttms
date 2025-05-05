@@ -2,20 +2,18 @@
 {{ $pagetitle:= .LinkTitle }}
 <div class="main-header">
 	<div class="container">
+		{{ partialCached "ttms-dashboard/button.html" . }}
 		<ul id="menublock">
-			<li>{{ partialCached "ttms-dashboard/button.html" . }}</li>
-			<li>
-				<!-- MENU LOGO -->
-				{{ if and (not .IsHome)}}
-					<a href="/" id="logo" onclick="closeCart();">
-						<img class="logo center" src="/branding/favicon192.webp"></a>
-					<!-- END MENU LOGO -->
-				{{ else }}
-					<a href="#" id="logo" onclick="closeCart();">
-						<img class="logo center" src="/branding/favicon192.webp"></a>
-					<!-- END MENU LOGO -->
-				{{ end }}
-			</li>
+		<!-- MENU LOGO -->
+		{{ if and (not .IsHome)}}
+			<a href="/" id="logo" onclick="closeCart();">
+				<img class="logo center" src="/branding/favicon192.webp"></a>
+			<!-- END MENU LOGO -->
+		{{ else }}
+			<a href="#" id="logo" onclick="closeCart();">
+				<img class="logo center" src="/branding/favicon192.webp"></a>
+			<!-- END MENU LOGO -->
+		{{ end }}
 		</ul>
 		{{ if and (not .IsHome)}}
 			<ul id="menublock">
