@@ -11,7 +11,7 @@
       <header>
         {{ partial "header.html" . }}
       </header>
-      
+      {{ partialCached "ttms-dashboard/dashboard.html" . }}
       {{ partial "search.html" . }}
       {{ partial "adbanner.html" . }}
       
