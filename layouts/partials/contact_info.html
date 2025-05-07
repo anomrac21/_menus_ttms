@@ -4,15 +4,17 @@
 			{{ if .Params.locations }}
 			<li class="locations">
 				{{ range .Params.locations }}
-		          <a href="https://ttms-app.netlify.app/?lat={{ .lat }}&lng={{ .lon }}&zoom=16&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
-		            <img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
-		            {{ .address }}
-		          </a>
-												{{ if .fooddrop }}
-												<a href="{{ .fooddrop }}" class="locbtn btn"  target="_blank">
-		            <img src="https://ct.ttmenus.com/icons/utilities/fooddrop.webp" alt="Location">
-		          </a>
-												{{ end }}
+					<div style="display: flex; margin-block-end: .4em;">
+			          	<a href="https://ttms-app.netlify.app/?lat={{ .lat }}&lng={{ .lon }}&zoom=16&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
+			            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
+			            	{{ .address }}
+			          	</a>
+					  	{{ if .fooddrop }}
+							<a href="{{ .fooddrop }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #7881be;">
+			            		<img src="/branding/other/fd.webp" alt="Location" style="max-width: 4em;">
+			          		</a>
+						{{ end }}
+					</div>
 		        {{ end }}
 			</li>
 			{{ end }}
