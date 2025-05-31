@@ -12,11 +12,13 @@
   {{ partial "contact_info.html" . }}
   <div class="hero-content">
     {{ .Content }}
+
   </div>
   <div class="main-body">
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
       {{ $title:= .LinkTitle }}
+      {{ $titleurl := .RelPermalink }}  
       {{ if eq $title ("Advertisments") }}
         <div class="main-menu {{ .LinkTitle }} item" >
           <div class="menu-header">
@@ -47,7 +49,7 @@
         </div>
       {{ else }}
         {{ if .RegularPages }}
-          {{ if not (or (eq $title ("Categories")) (eq $title ("Tags"))) }} 
+          {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "ingredients")) }}
               <div class="main-menu {{ .LinkTitle }} item">
                 <div class="menu-header">
                   <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
@@ -59,13 +61,15 @@
                       <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
                     </h2>
                   </div>
-                  <h4 class="menu-summary item">{{ .Summary }}</h4>
+                  <div class="menu-summary item">
+                    {{ .Summary }}
+                  </div>
                 </div>
                 <table class="menu">
                   <tbody>
                     {{ $category := .LinkTitle }}
                     {{ $categoryurl := .RelPermalink }}            
-                    {{ range .RegularPages.ByTitle }}
+                    {{ range .RegularPages.ByWeight }}
                       
                       {{$sizes := slice}}
                       {{range .Params.prices}}

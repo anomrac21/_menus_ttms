@@ -11,10 +11,8 @@
       <header>
         {{ partial "header.html" . }}
       </header>
-      
+      {{ partialCached "ttms-dashboard/dashboard.html" . }}
       {{ partial "search.html" . }}
-      {{ partial "adbanner.html" . }}
-      
       <main id="main">
         {{ block "main" . }}{{ end }}
         <div id="ad-slot-footer" data-placement="footer">

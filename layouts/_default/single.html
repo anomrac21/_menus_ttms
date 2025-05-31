@@ -41,6 +41,21 @@
           {{$sides = $sides | append $side}}
         {{end}}
 
+        {{$sideconfig := slice}}
+        {{range .Params.side_config }}
+          {{$config := slice}}
+          {{$config = $config | append .all_max}}
+          {{$config = $config | append .all_valuecount}}
+          {{$config = $config | append .all_value}}
+          {{$config = $config | append .regular_max}}
+          {{$config = $config | append .regular_valuecount}}
+          {{$config = $config | append .regular_value}}
+          {{$config = $config | append .premium_max}}
+          {{$config = $config | append .premium_valuecount}}
+          {{$config = $config | append .premium_value}}
+          {{$sideconfig = $sideconfig | append $config}}
+        {{end}}
+
         {{$additions := slice}}
         {{range .Params.additions }}
           {{$addition := slice}}
@@ -73,9 +88,7 @@
                   'flavours': {{ sort $flavours }},
                   'items': {{ $prices }},
                   'sides': {{ $sides }},
-                  'sideoptions':  { 'all':{'maxcount':1 ,'valuecount':1, 'value':0},
-                                    'regular':{'maxcount':1 ,'valuecount':1, 'value':0},
-                                    'premium':{'maxcount':1 ,'valuecount':1, 'value':0} },
+                  'sideoptions':  {{ $sideconfig }},
                   'additions': {{ $additions }},
                   'modifications': {{ $modifications }}
                   } );">
@@ -134,4 +147,5 @@
     </div>
   {{ end }}
   {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+  {{ partial "terms.html" (dict "taxonomy" "ingredients" "page" .) }}
 {{ end }}

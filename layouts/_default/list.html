@@ -9,7 +9,9 @@
       <img class="food item listpageimage" src="/{{ .Params.image }}">
     {{ end }}
 
-    <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
+    <div class="headerstyle item">
+      <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
+    </div>
     <h4 class="menu-summary item">{{ .Content }}</h4>
     <table class="listpagemenu menu w-{{ .Params.weight }}">
       <tbody>
