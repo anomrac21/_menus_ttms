@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 html{
     scroll-behavior: smooth;
 }
@@ -509,6 +510,8 @@ html{
     display: block;
     width: -webkit-fill-available;
 }
+=======
+>>>>>>> fcf745df4d31c801ce1c844c11ea44c6c4616dc4
 #dashboardBtn{
     box-shadow: 0px 2px 5px #111111;
     background: linear-gradient(#d73301ee, #800000ee);
