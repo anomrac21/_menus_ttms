@@ -70,7 +70,7 @@
                     {{ $category := .LinkTitle }}
                     {{ $categoryurl := .RelPermalink }}            
                     {{ range .RegularPages.ByWeight }}
-                      
+
                       {{$sizes := slice}}
                       {{range .Params.prices}}
                         {{if not (in $sizes .size)}}
@@ -138,6 +138,7 @@
                       {{range .Params.images }}
                         {{$images = $images | append .image}}
                       {{end}}
+   
                       <tr class="item" onclick="openItem(this,{
                                 'category': '{{ $category }}',
                                 'categoryurl': '{{ $categoryurl }}',
@@ -192,9 +193,10 @@
                             {{ end }}                       
                           </th>
                       </tr>
+                      
                     {{ end }}
                   </tbody>
-                </table>
+                </table> 
               </div>
             
           {{ end }}
