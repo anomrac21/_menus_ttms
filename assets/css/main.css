@@ -1,6 +1,84 @@
 html{
     scroll-behavior: smooth;
 }
+.taxonomy ul{
+    display: flex;
+    flex-wrap: wrap;
+}
+.taxonomy ul li{
+    padding-inline: .4em;
+    font-size: larger;
+}
+.taxonomy ul li a{
+    text-wrap-mode: nowrap;
+}
+.main-header {
+    background-color: var(--header-color);
+    border-bottom: 1px solid var(--header-bordercolor-1);
+}
+.main-header .container{
+  max-width: 2560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.main-header ul{
+    display: flex;
+  overflow: scroll;
+  overflow-y: hidden;
+}
+.main-header ul::-webkit-scrollbar {
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.main-header ul {
+    /* IE and Edge */
+    /* Firefox */
+}
+.main-header #logo {
+    min-width: 4em;
+    min-height: 4em;
+}.main-header .logo {
+    width: 4em;
+    height: 4em;
+    border-right: 1px solid var(--header-bordercolor-1);
+    border-left: 1px solid var(--header-bordercolor-1);
+}
+.main-header .icon {
+    width: 2.4em;
+    padding-inline: 14px;
+    padding-block-start: 7px;
+}
+
+.main-header .container {
+    max-width: 2560px;
+    margin: 0 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
+.main-header ul {
+    display: flex;
+    overflow: scroll;
+    overflow-y: hidden;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;
+}
+#menublock li {
+    border-right: 1px solid var(--header-bordercolor-2);
+}
+#menublock span {
+    color: #fff;
+    font-size: xx-small;
+    font-variant: all-petite-caps;
+    text-align: center;
+    display: block;
+    width: -webkit-fill-available;
+}.main-header ul::-webkit-scrollbar {
+    height: .2em !important;
+}
 *::-webkit-scrollbar,#menufeaturedimages::-webkit-scrollbar,.location-images::-webkit-scrollbar,.apps::-webkit-scrollbar {
     width: .4em;
     height: .4em
@@ -223,7 +301,10 @@ html{
     font-size: x-small;
 }
 .menu .sizes li:not(:last-child), .menu .flavours li:not(:last-child){
-    border-right: 1px solid #fff;
+    border-right: 1px solid var(--button-text-color1);
+}
+.menu .selected .sizes li:not(:last-child), .menu .selected .flavours li:not(:last-child) {
+    border-right: 1px solid var(--selected-text-color1);
 }
 .menu .item p{
     font-size: xx-small; 
@@ -313,7 +394,6 @@ html{
 #itemModControl .container, 
 #itemAdditionControl .container{
     height: 100vh;
-    background: var(--modal-bg-container-color);
     display: flex;
     flex-direction: column;
 }
@@ -839,8 +919,7 @@ html{
 
 .singlepagemenu {
     width: 100%;
-    min-height: calc(100vh - 4em);
-    padding-block-end:4em;background: linear-gradient(var(--button-color1),var(--button-color2));
+    background: linear-gradient(var(--button-color1),var(--button-color2));
     color: var(--button-text-color1)
 }
 
