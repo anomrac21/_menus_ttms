@@ -11,6 +11,13 @@
       "date"   $page.Date
       "images" ($page.Params.images | default slice)
       "body"   ($page.Params.body | default "")
+      "tags"   ($page.Params.tags | default slice)
+      "categories"  ($page.Params.categories | default slice)
+      "subcategories"  ($page.Params.subcategories | default slice)
+      "types"  ($page.Params.types | default slice)
+      "specials"  ($page.Params.specials | default slice)
+      "events" ($page.Params.events | default slice)
+      "ingredients" ($page.Params.ingredients | default slice)
   -}}
 
   {{- if eq $.Section "advertisments" }}

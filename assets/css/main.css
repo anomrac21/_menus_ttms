@@ -1,6 +1,11 @@
 html{
     scroll-behavior: smooth;
 }
+.slideinimg {
+    right: 0;
+    bottom: -50%;
+    position: absolute;
+}
 .taxonomy ul{
     display: flex;
     flex-wrap: wrap;
@@ -332,7 +337,6 @@ html{
     background-size: 96% 86%;
     background-position: center;
     background-repeat: no-repeat;
-    padding: 1.2em;
     position: relative;
 }#orderModal{
     position: fixed;

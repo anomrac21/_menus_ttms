@@ -11,6 +11,7 @@
     {{- $locationData := dict
         "location" $loc.location
         "address"  $loc.address
+        "subcategories"  $loc.subcategories
         "lat"      $loc.lat
         "lon"      $loc.lon
         "opening_hours" $loc.opening_hours
@@ -41,6 +42,7 @@
       "locations" $locations
       "social_links" $social
       "features" $features
+      "categories"  (.Params.categories | default "")
   -}}
 
   {{ $json | jsonify }}

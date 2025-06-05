@@ -5,11 +5,11 @@
 		{{ partialCached "ttms-dashboard/button.html" . }}
 		<!-- MENU LOGO -->
 		{{ if and (not .IsHome)}}
-			<a href="/" id="logo" onclick="closeCart();">
+			<a href="/" onclick="closeCart();">
 				<img class="logo center" src="/branding/favicon192.webp"></a>
 			<!-- END MENU LOGO -->
 		{{ else }}
-			<a href="#" id="logo" onclick="closeCart();">
+			<a href="#" onclick="closeCart();">
 				<img class="logo center" src="/branding/favicon192.webp"></a>
 			<!-- END MENU LOGO -->
 		{{ end }}
