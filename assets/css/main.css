@@ -746,7 +746,6 @@ html{
 
 .hero-content,.main-content {
     background: linear-gradient(var(--menu-bg-color-1),var(--menu-bg-color-2));
-    margin-block:.4em;margin-inline:.4em;padding: .8em .4em;
     border-radius: .4em
 }
 
