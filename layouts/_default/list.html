@@ -11,6 +11,9 @@
 
     <div class="headerstyle item">
       <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
+      {{ range .Params.slidein }}
+        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="/{{ .image }}">
+      {{ end }}
     </div>
     <h4 class="menu-summary item">{{ .Content }}</h4>
     <table class="listpagemenu menu w-{{ .Params.weight }}">
