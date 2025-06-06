@@ -49,7 +49,7 @@
         </div>
       {{ else }}
         {{ if .RegularPages }}
-          {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "ingredients")) }}
+          {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods")) }}
               <div class="main-menu {{ .LinkTitle }} item">
                 <div class="menu-header">
                   <a class="menu-anchor" id="{{ .LinkTitle }}"></a>

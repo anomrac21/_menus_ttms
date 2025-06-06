@@ -79,7 +79,7 @@
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(function(OneSignal) {
     OneSignal.init({
-      appId: "{{ site.Data.menudata.onesignal }}",
+      appId: "{{ site.Params.services.onesignalid }}",
     });
   });
 </script>
@@ -96,7 +96,7 @@
   _paq.push(['enableLinkTracking']);
 
   /* Add second tracker: wingit.ttmenus.com (Site ID 6) */
-  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Data.menudata.analyticsid }}']);
+  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Params.services.analyticsid }}']);
   _paq.push(['trackPageView']);
   _paq.push(['enableLinkTracking']);
 

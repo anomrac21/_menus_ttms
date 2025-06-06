@@ -1,10 +1,14 @@
 html{
     scroll-behavior: smooth;
 }
+.logo-container{
+    min-width: 4em !important;
+}
 .slideinimg {
     right: 0;
     bottom: -50%;
     position: absolute;
+    height: 100px;
 }
 .taxonomy ul{
     display: flex;
@@ -678,7 +682,8 @@ html{
 
 .advertisments .singlepageimages img {
     height: auto!important;
-    max-width: 480px!important
+    max-width: 480px!important;
+    margin-inline: auto;
 }
 
 .Advertisments .container,.listpageimages {
@@ -773,7 +778,9 @@ html{
     z-index: 1;
     max-width: 3em
 }
-
+#askforserver svg{
+    fill: #ffffff;
+}
 #askforserver img {
     max-width: 2.2em
 }
