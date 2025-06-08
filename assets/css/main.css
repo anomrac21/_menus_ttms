@@ -334,6 +334,7 @@ html{
     margin-block-end: .8em;
     transition: 0.15s;
     width: 90% !important;
+    max-width: -webkit-fill-available;
     margin-inline: auto !important;
 }
 .headerstyle {
@@ -935,7 +936,8 @@ html{
 
 .singlepagemenu .prices {
     display: flex;
-    flex-wrap: wrap
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .singlepagemenu .prices li {

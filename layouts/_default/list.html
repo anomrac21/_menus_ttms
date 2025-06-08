@@ -20,7 +20,7 @@
       <tbody>
         {{ $category := .LinkTitle }}
         {{ $categoryurl := .RelPermalink }}            
-        {{ range .RegularPages.ByTitle }}
+        {{ range .RegularPages.ByWeight }}
           {{ if eq $category ("Advertisments") }}
             <div class="main-menu {{ $category }} item">
               <div class="menu-header">

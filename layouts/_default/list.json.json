@@ -15,9 +15,9 @@
       "categories"  ($page.Params.categories | default slice)
       "subcategories"  ($page.Params.subcategories | default slice)
       "types"  ($page.Params.types | default slice)
-      "specials"  ($page.Params.specials | default slice)
       "events" ($page.Params.events | default slice)
       "ingredients" ($page.Params.ingredients | default slice)
+      "cookingmethods" ($page.Params.cookingmethods | default slice)
   -}}
 
   {{- if eq $.Section "advertisments" }}
