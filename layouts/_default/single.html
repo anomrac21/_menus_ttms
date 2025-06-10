@@ -125,11 +125,11 @@
   {{ else }}
     <div class="singlepagemenu {{ .Section }}">
       {{ if gt (len .Params.images) 0 }}
-        <div class="singlepageimages">
+        <a href="{{ .Params.link }}" class="singlepageimages">
           {{ range .Params.images }}
             <img src="/{{ .image }}">
           {{ end }}
-        </div>
+        </a>
       {{ else }}
         <img id="singlepageimage" src="/branding/favicon-400x200.webp">  
       {{ end }}  
@@ -148,5 +148,7 @@
   {{ end }}
   {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
   {{ partial "terms.html" (dict "taxonomy" "ingredients" "page" .) }}
-  {{ partial "terms.html" (dict "taxonomy" "subcategories" "page" .) }}
+  {{ partial "terms.html" (dict "taxonomy" "cookingmethods" "page" .) }}
+  {{ partial "terms.html" (dict "taxonomy" "types" "page" .) }}
+  {{ partial "terms.html" (dict "taxonomy" "events" "page" .) }}
 {{ end }}

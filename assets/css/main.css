@@ -1,6 +1,15 @@
 html{
     scroll-behavior: smooth;
 }
+.contactinfo .btn svg{
+    width: 3em;
+    position: relative;
+    top: 0.4em;
+}
+.contactinfo .btn span{
+    position: relative;
+    top: -.4em;
+}
 .logo-container{
     min-width: 4em !important;
 }

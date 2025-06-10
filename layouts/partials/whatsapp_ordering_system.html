@@ -1,6 +1,7 @@
 <script>
 const number = '{{ site.Params.orderingsystem.whatsapp }}';
 const name = '{{ site.Params.title }}'
+const hastables = {{ default false site.Params.orderingsystem.hastables }};
 const messageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
 let messageBody = '';
 const messageEnd = '\nThank You!\nLooking forward to confirming this order';
@@ -723,6 +724,19 @@ function serviceCalc(){
 }
 
 
+function advanceOrder(){
+	if (hastables) {
+		openTableModal();
+	}else{
+		confirm();
+	}
+}
+
+function confirm(){
+	constructWAMessage();
+	confirmSendOrder();
+}
+
 function constructWAMessage(){
 	var subTotalTxt='';
 	var vatTxt='';
@@ -743,19 +757,9 @@ function constructWAMessage(){
 	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+myTable+'\n'+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
 }
 
-function confirm(){
-		//if(isOpen()){
-		if(true){
-			constructWAMessage();
-			confirmSendOrder();
-		}else {
-			closeTableModal();
-			closeShop();
-			closeCart();
-			scrollTo('openhours');
-		}
+function confirmSendOrder(){
+	window.open(message, "_blank" );
 }
-
 
 //Dine modes
 function toggleDiningMode(ele){
@@ -916,11 +920,7 @@ function askforserver(){
 	confirmSendOrder();
 }
 
-function confirmSendOrder(){
-	//if(price>0){
-	window.open(message, "_blank" );
-	//}
-}
+
 
 document.addEventListener("DOMContentLoaded", function() {
   requestAnimationFrame(() => { // Ensures DOM is ready before applying scroll

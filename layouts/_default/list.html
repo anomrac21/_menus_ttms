@@ -24,11 +24,19 @@
           {{ if eq $category ("Advertisments") }}
             <div class="main-menu {{ $category }} item">
               <div class="menu-header">
+                {{ if .Params.link }}
+                <a href="{{ .Params.link }}" class="listpageimages">
+                  {{ range .Params.images }}
+                    <img src="/{{ .image }}">
+                  {{ end }}
+                </a>
+                {{ else }}
                 <a href="{{ .RelPermalink }}" class="listpageimages">
                   {{ range .Params.images }}
                     <img src="/{{ .image }}">
                   {{ end }}
                 </a>
+                {{ end }}
                 <div class="headerstyle item">
                   <h2 class="center title">
                     <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>

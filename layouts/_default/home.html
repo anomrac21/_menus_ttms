@@ -35,15 +35,28 @@
           </div>        
             {{ range .RegularPages.ByTitle }}
               <div class="item">
-                  <a href="{{ .RelPermalink }}">
-                    <div class="container">
-                      {{ range .Params.images }}
-                        <img src="/{{ .image }}">
-                      {{ end }}
-                    </div>
-                    <h3 class="title">{{ .LinkTitle }}</h3>
-                    {{ .Summary }}
-                  </a>
+                {{ if .Params.link }}
+                <a href="{{ .Params.link }}">
+                  <div class="container">
+                    {{ range .Params.images }}
+                      <img src="/{{ .image }}">
+                    {{ end }}
+                  </div>
+                  <h3 class="title">{{ .LinkTitle }}</h3>
+                  {{ .Summary }}
+                </a>
+                {{ else }}
+                <a href="{{ .RelPermalink }}">
+                  <div class="container">
+                    {{ range .Params.images }}
+                      <img src="/{{ .image }}">
+                    {{ end }}
+                  </div>
+                  <h3 class="title">{{ .LinkTitle }}</h3>
+                  {{ .Summary }}
+                </a>
+                {{ end }}
+                  
               </div>
             {{ end }}
         </div>

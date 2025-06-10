@@ -21,10 +21,10 @@
   -}}
 
   {{- if eq $.Section "advertisments" }}
-    {{ warnf "  ↪ Ad: %s | Location: %s | Recurring: %v" $page.Title ($page.Params.location | default "N/A") ($page.Params.recuring | default false) }}
+    {{ warnf "  ↪ Ad: %s | Location: %s | Recurring: %v" $page.Title ($page.Params.locations | default "N/A") ($page.Params.recuring | default false) }}
 
     {{- $item = merge $item (dict
-      "location" ($page.Params.location | default "")
+      "locations" ($page.Params.locations | default "")
       "recuring" ($page.Params.recuring | default false)
       "youtube"  ($page.Params.youtube | default slice)
     ) }}
