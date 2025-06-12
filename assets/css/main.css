@@ -973,8 +973,18 @@ html {
 #ad-slot-top,#ad-slot-footer {
     background: linear-gradient(transparent,#0ff5);
     min-height: 256px;
-    text-align: center
+    text-align: center;
+    display: flex;
+    overflow-x: scroll;
+    align-items: flex-end;
+    padding: 0;
+    margin: 0;
 }
+#ad-slot-top a{
+    min-width: 100%;
+}
+#ad-slot-footer a{min-width: -webkit-fill-available;}
+#ad-slot-footer a img{margin-inline: auto;}
 
 .Advertisments .listpageimages,.Advertisments .container {
     max-height: initial!important
@@ -1431,10 +1441,7 @@ footer {
 .grad1 {
     background: #000000ee;
     border-top: 1px solid #fefefeaa !important;
-    padding-inline: .8em; padding-block The padding-block CSS property defines the logical block start and end padding of an element, which maps to physical padding properties depending on the element's writing mode, directionality, and text orientation.
-Learn more Don't show: .4e;
-    padding-block The padding-block CSS property defines the logical block start and end padding of an element, which maps to physical padding properties depending on the element's writing mode, directionality, and text orientation.
-Learn more Don't show: .4em;
+    padding-inline: .8em; 
     padding-block: .4em; padding-block: .4em .1em !important; }
 
 .grad2 {
