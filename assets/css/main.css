@@ -979,12 +979,24 @@ html {
     align-items: flex-end;
     padding: 0;
     margin: 0;
+    position: relative;
+}
+#ad-slot-top span,
+#ad-slot-footer span{
+    right: .4em;
+    position: absolute;
+    top: .4em;
+    background: #0ff5;
+    padding-inline: .4em;
+    border-radius: 3em;
+    font-size: x-small;
+    font-weight: bold;
 }
 #ad-slot-top a{
     min-width: 100%;
 }
 #ad-slot-footer a{min-width: -webkit-fill-available;}
-#ad-slot-footer a img{margin-inline: auto;}
+#ad-slot-top a img,#ad-slot-footer a img{margin-inline: auto; max-width: 100%;}
 
 .Advertisments .listpageimages,.Advertisments .container {
     max-height: initial!important
