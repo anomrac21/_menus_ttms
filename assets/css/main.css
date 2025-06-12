@@ -1,6 +1,208 @@
 html{
     scroll-behavior: smooth;
 }
+#search{
+    max-width: 640px;
+    margin: auto;
+}
+#search{
+    display:flex;
+    position: fixed;
+    z-index: 2;
+    width: -webkit-fill-available;
+    height: 4.3em;
+    transition: 0.26s;
+}
+#search .icon {
+    padding: 1em;
+    width: 2.3em;
+}
+#searchClose {
+    position: relative;
+    float: right;
+    z-index: 1001;
+    right: 0px;
+    margin: 0;
+    background: #000000da;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+#searchbox {
+    width: -webkit-fill-available;
+    padding: 0.5em;
+    font-size: large;
+    display: block;
+    background: #fefefeee;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: none;
+}
+#searchresultheader{
+    padding-block-start: 1em;
+    color: var(--main-text-color);
+    padding-inline: 1em;
+    max-width: 640px;
+    margin-inline: auto;
+}
+#cart {
+    background: #000000dd;
+    border: 1px solid #fff;
+    border-radius: .8em;
+    height: calc(100vh - 9.6em);
+    margin-block-end: .4em;
+    overflow: hidden;
+    text-align: left;
+    margin-inline: auto;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    position: relative;
+    transition: 0.25s;
+    max-width: 480px;
+    width: calc(100dvw - 1.6em);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}#cart .titleRow{
+        text-align: center;
+        width: -webkit-fill-available;
+        padding: .4em;
+        display: block;
+        font-weight: bolder;
+        text-shadow: 0px 0px 5px black;
+        font-family: sans-serif;
+        background: linear-gradient(#0dc143, #003506);
+        text-transform: capitalize;
+        text-transform: capitalize;
+        font-size: larger;
+        margin-top: -1px;
+        color: #fff;
+        border-bottom: 1px solid;
+ }
+#cart .titleRow:active,
+#cart .close{
+    background: #000;
+}
+.waBtn {
+    display: flex;
+    position: sticky;
+    max-height: 3em;
+    overflow: hidden;
+    top:0;
+    background: #000;
+}
+#cartcount{
+    position: absolute;
+    background: #00aa00cc;
+    border-radius: 5em;
+    padding: 0.4em .8em;
+    text-decoration: none;
+    top: -0.8em;
+    margin-left: .4em;
+    font-size: .6em;
+    transition: 0.1s ease-out;
+}
+.cartopen #cartcount{
+    background: #00aa00;
+    border: 2px solid #fff;
+    border-radius: 5em;
+    top: calc(-100vh + 10em);
+    right: 2em;
+    font-size: 0.8em;
+    font-weight: 900;
+    padding: .4em .8em;
+    rotate: -25deg;
+}
+#cart td, #cart th {
+    padding: .4em;
+    font-size: x-small;
+}
+#itemNo{
+    vertical-align: top;
+}
+#itemNo, #itemCost{
+    text-align: right;
+}
+#itemSize{
+    text-align: center;
+}
+#itemXBtn a{
+    padding: 0;
+    color: #f11;
+    font-size: large;
+    text-align: center;
+    width: -webkit-fill-available;
+    display: block;
+}
+#itemName, #itemDesc, #itemCost{
+    width: -webkit-fill-available;
+    color: #fff;
+    margin-block: 0.4em;
+} 
+#itemDesc{
+    overflow: scroll;
+    overflow-x: hidden;
+}
+#cart #itemDesc{
+  max-width: 42vw;
+  overflow-y: hidden;
+  overflow-x: scroll !important;
+  text-transform: capitalize !important;
+}
+
+#itemAmt{
+    color:#FFF;
+    font-size: x-large;
+    margin: auto;
+  padding: 0.5em;
+  text-align: center;
+}
+#itemPrice{
+    color: #FFF;
+    margin: auto;
+    font-size: xx-large;
+    text-align: right;
+    width: 150%;
+}
+#cart td, #cart th {
+    padding: .4em;
+    font-size: small;
+}#cart .order {
+    height: calc(100vh - 18em);
+    overflow-y: scroll;
+}
+#itemNo{
+    vertical-align: top;
+}
+#itemNo, #itemCost{
+    text-align: right;
+}
+#itemSize{
+    text-align: center;
+}
+#whatsappOrder{
+    width: -webkit-fill-available;
+}
+#whatsappOrderBtn{
+    width: -webkit-fill-available;
+    padding-inline: .8em;
+    padding-block: 0;
+}
+#whatsappOrderBtn button{
+    display: block;
+    margin: auto;
+}
+
+
+
+@media (min-width:300px) {}
+@media (min-width:500px) {}
+@media (min-width:961px)  { /* big landscape tablets, laptops, and desktops */}
+@media (min-width:1025px) { /* big landscape tablets, laptops, and desktops */}
+@media (min-width:1281px) { /* hi-res laptops and desktops */}
+@media (min-width:1440px) { /* hi-res laptops and desktops */}
+
 .contactinfo .btn svg{
     width: 3em;
     position: relative;
@@ -690,7 +892,9 @@ html{
 .Advertisments img {
     min-width: 100%!important
 }
-
+.Advertisments .item{
+    margin-block-end: 2em;
+}
 .advertisments h1 {
     text-align: center
 }
@@ -731,7 +935,7 @@ html{
 #ttmsmodal .close {
     position: absolute;
     top: .8em;
-    right: .8em
+    right: 1.8em;
 }
 
 #ttmsmodal .title {
@@ -879,9 +1083,15 @@ html{
 }
 
 #ttmenusModal {
-    height: calc(100vh - 3.3em);
-    background: #000c;
-    transition: .13s
+    height: max-content;
+    background: #000d;
+    width: calc(100dvw - 3.2em);
+    margin-inline: auto;
+    transition: .13s;
+    border-radius: .4em;
+    padding-inline: .4em;
+    padding-block-end: .4em;
+    border: 1px solid #fefefe55;
 }
 
 #ttmenusModal .container {
@@ -1103,6 +1313,79 @@ footer {
     width: -webkit-fill-available;
     z-index: 2 ;
 }
+/*FOOTER STYLES*/
+#footer{
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 0;
+    color: #ffffff;
+    text-align: center;
+    z-index: 100;
+    display: inline-block;
+    transition: 0.5s;
+}
+#footer .icon {
+    min-width: 24px;
+    width: 24px;
+    max-width: 32px;
+}
+#footerBtns{
+    transition: 0.2s;
+    width: max-content;
+    border-radius: 3em;
+    border-top: 1px solid #fefefe55;
+    margin-inline: auto;
+    margin-block-end: 1.2em;
+    padding-block: .4em;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.grad1{
+    background: #000000ee;
+    border-top: 1px solid #fefefeaa !important;
+    padding-inline: .8em;
+    padding-block
+The padding-block CSS property defines the logical block start and end padding of an element, which maps to physical padding properties depending on the element's writing mode, directionality, and text orientation.
+Learn more
+Don't show: .4e;
+    padding-block
+The padding-block CSS property defines the logical block start and end padding of an element, which maps to physical padding properties depending on the element's writing mode, directionality, and text orientation.
+Learn more
+Don't show: .4em;
+    padding-block: .4em;
+    padding-block: .4em .1em !important;
+}
+.grad2{
+    background-image: linear-gradient(transparent, #00000055, #000);
+}
+#footerBtns div{
+    margin:0 auto;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .2em;
+}
+#footerBtns a{
+    color: #ffffff;
+    max-width: 100px;
+  width: 15vw;
+  min-width: 36px;
+  display: inline-block;
+}
+.smallfont{
+  font-size: small;
+}
+.largefont{
+  font-size: large;
+}
+.bigfont img{
+  width: 32px!important;
+  transition: .2s;
+}
+
+/*END FOOTER STYLES*/
 
 @media (min-width: 300px) {
     .singlepageimages img {

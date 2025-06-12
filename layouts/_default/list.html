@@ -11,8 +11,8 @@
 
     <div class="headerstyle item">
       <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
-      {{ range .Params.slidein }}
-        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="/{{ .image }}">
+      {{ if .Params.slidein }}
+        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="/{{ .Params.slidein.slideinimage }}">
       {{ end }}
     </div>
     <h4 class="menu-summary item">{{ .Content }}</h4>

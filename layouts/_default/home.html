@@ -72,8 +72,8 @@
                   <div class="headerstyle item" >
                     <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
                       <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
-                      {{ range .Params.slidein }}
-                        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ .image }}">
+                      {{ if .Params.slidein }}
+                        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="{{ .Params.slidein.slideinimage }}">
                       {{ end }}
                     </h2>
                     
