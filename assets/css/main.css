@@ -1336,7 +1336,7 @@ footer {
     border-radius: 3em;
     border-top: 1px solid #fefefe55;
     margin-inline: auto;
-    margin-block-end: 1.2em;
+    margin-block-end: .8em;
     padding-block: .4em;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
