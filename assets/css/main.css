@@ -472,7 +472,7 @@ html {
     margin-block:auto}
 
 .subbtn img {
-    margin-inline:0;margin-block:auto}
+    margin-inline: 0 .4em !important;margin-block:auto}
 
 .contactinfo .btn img {
     max-width: 28px;
@@ -972,30 +972,37 @@ html {
 
 #ad-slot-top,#ad-slot-footer {
     background: linear-gradient(transparent,#0ff5);
+    min-height: 256px;
     text-align: center;
     display: flex;
     overflow-x: scroll;
     align-items: flex-end;
     padding: 0;
     margin: 0;
-    position: relative;
+    position: relative
 }
-#ad-slot-top span,
-#ad-slot-footer span{
+
+#ad-slot-top span,#ad-slot-footer span {
     right: .4em;
     position: absolute;
     top: .4em;
     background: #0ff5;
-    padding-inline: .4em;
-    border-radius: 3em;
+    padding-inline:.4em;border-radius: 3em;
     font-size: x-small;
-    font-weight: bold;
+    font-weight: 700
 }
-#ad-slot-top a{
-    min-width: 100%;
+
+#ad-slot-top a {
+    min-width: 100%
 }
-#ad-slot-footer a{min-width: -webkit-fill-available;}
-#ad-slot-top a img,#ad-slot-footer a img{margin-inline: auto; max-width: 100%;}
+
+#ad-slot-footer a {
+    min-width: -webkit-fill-available
+}
+
+#ad-slot-top a img,#ad-slot-footer a img {
+    margin-inline:auto;max-width: 100%
+}
 
 .Advertisments .listpageimages,.Advertisments .container {
     max-height: initial!important
@@ -1452,8 +1459,7 @@ footer {
 .grad1 {
     background: #000000ee;
     border-top: 1px solid #fefefeaa !important;
-    padding-inline: .8em; 
-    padding-block: .4em; padding-block: .4em .1em !important; }
+    padding-inline: .8em; padding-block: .4em; padding-block: .4em .1em !important; }
 
 .grad2 {
     background-image: linear-gradient(transparent, #00000055, #000);
