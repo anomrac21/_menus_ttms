@@ -972,7 +972,6 @@ html {
 
 #ad-slot-top,#ad-slot-footer {
     background: linear-gradient(transparent,#0ff5);
-    min-height: 256px;
     text-align: center;
     display: flex;
     overflow-x: scroll;

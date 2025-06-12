@@ -80,17 +80,17 @@
               {{end}}
 
               {{$sideconfig := slice}}
-              {{range .Params.side_config }}
+              {{if .Params.side_config }}
                 {{$config := slice}}
-                {{$config = $config | append .all_max}}
-                {{$config = $config | append .all_valuecount}}
-                {{$config = $config | append .all_value}}
-                {{$config = $config | append .regular_max}}
-                {{$config = $config | append .regular_valuecount}}
-                {{$config = $config | append .regular_value}}
-                {{$config = $config | append .premium_max}}
-                {{$config = $config | append .premium_valuecount}}
-                {{$config = $config | append .premium_value}}
+                {{$config = $config | append .Params.side_config.all_max}}
+                {{$config = $config | append .Params.side_config.all_valuecount}}
+                {{$config = $config | append .Params.side_config.all_value}}
+                {{$config = $config | append .Params.side_config.regular_max}}
+                {{$config = $config | append .Params.side_config.regular_valuecount}}
+                {{$config = $config | append .Params.side_config.regular_value}}
+                {{$config = $config | append .Params.side_config.premium_max}}
+                {{$config = $config | append .Params.side_config.premium_valuecount}}
+                {{$config = $config | append .Params.side_config.premium_value}}
                 {{$sideconfig = $sideconfig | append $config}}
               {{end}}
 
