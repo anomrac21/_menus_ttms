@@ -472,7 +472,7 @@ html {
     margin-block:auto}
 
 .subbtn img {
-    margin-inline: 0 .4em !important;margin-block:auto}
+    margin-inline:0 .4em!important;margin-block:auto}
 
 .contactinfo .btn img {
     max-width: 28px;
@@ -978,17 +978,17 @@ html {
     align-items: flex-end;
     padding: 0;
     margin: 0;
-    position: relative
 }
 
 #ad-slot-top span,#ad-slot-footer span {
     right: .4em;
     position: absolute;
-    top: .4em;
+    top: .8em;
     background: #0ff5;
     padding-inline:.4em;border-radius: 3em;
     font-size: x-small;
-    font-weight: 700
+    font-weight: 700;
+    mix-blend-mode: difference;
 }
 
 #ad-slot-top a {
