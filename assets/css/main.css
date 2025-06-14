@@ -690,9 +690,11 @@ html {
     display: flex;
     flex-direction: column
 }
-#itemSides div{
-    height: calc(100vh - 14em);
+
+#itemSides div {
+    height: calc(100vh - 14em)
 }
+
 #wamodal,#itemSides,#itemMods,#itemAddMods {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
     margin: 1.2em auto auto;
@@ -901,7 +903,8 @@ html {
 
 #dashboard {
     display: flex;
-    width: 100dvh;
+    width: 100dvw;
+    height: 100dvh;
     position: fixed;
     z-index: 2;
     color: #000;
@@ -979,7 +982,7 @@ html {
     overflow-x: scroll;
     align-items: flex-end;
     padding: 0;
-    margin: 0;
+    margin: 0
 }
 
 #ad-slot-top span,#ad-slot-footer span {
@@ -990,7 +993,7 @@ html {
     padding-inline:.4em;border-radius: 3em;
     font-size: x-small;
     font-weight: 700;
-    mix-blend-mode: difference;
+    mix-blend-mode: difference
 }
 
 #ad-slot-top a {
@@ -1364,9 +1367,7 @@ header {
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em;
-    padding-block-end: 4em;
-    background: var(--main-bg);
+    padding-block-start: 4em; padding-block-end: 4em; background: var(--main-bg);
     background-size: auto;
     background-position: top center;
 }
