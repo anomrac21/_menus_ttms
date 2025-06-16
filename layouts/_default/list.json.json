@@ -11,13 +11,20 @@
       "date"   $page.Date
       "images" ($page.Params.images | default slice)
       "body"   ($page.Params.body | default "")
+      "tags"   ($page.Params.tags | default slice)
+      "categories"  ($page.Params.categories | default slice)
+      "subcategories"  ($page.Params.subcategories | default slice)
+      "types"  ($page.Params.types | default slice)
+      "events" ($page.Params.events | default slice)
+      "ingredients" ($page.Params.ingredients | default slice)
+      "cookingmethods" ($page.Params.cookingmethods | default slice)
   -}}
 
   {{- if eq $.Section "advertisments" }}
-    {{ warnf "  ↪ Ad: %s | Location: %s | Recurring: %v" $page.Title ($page.Params.location | default "N/A") ($page.Params.recuring | default false) }}
+    {{ warnf "  ↪ Ad: %s | Location: %s | Recurring: %v" $page.Title ($page.Params.locations | default "N/A") ($page.Params.recuring | default false) }}
 
     {{- $item = merge $item (dict
-      "location" ($page.Params.location | default "")
+      "locations" ($page.Params.locations | default "")
       "recuring" ($page.Params.recuring | default false)
       "youtube"  ($page.Params.youtube | default slice)
     ) }}

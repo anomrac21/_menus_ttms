@@ -105,3 +105,18 @@ function showAppleMsg(x) {
     var dashboard = document.getElementById("dashboard");
     dashboard.classList.add('loader-hide-left');
   }
+
+  function toggleDelivery(ele){
+    if(ele.nextElementSibling.classList.contains('hide')){
+      ele.nextElementSibling.classList.remove('hide');
+      console.log('unhide');
+    }else{
+      ele.nextElementSibling.classList.add('hide');
+      console.log('hide');
+    }
+  }
+  
+  function closeDelivery(){
+    var fooddrop = document.getElementById("fooddropBtn");
+    fooddrop.classList.add('hide');
+  }

@@ -31,13 +31,13 @@
 <link rel="stylesheet" href="{{ site.BaseURL}}css/custom.css"/>
 
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
-<link rel="stylesheet" href="https://ct.ttmenus.com/css/cart.css"/>
+<!-- <link rel="stylesheet" href="https://ct.ttmenus.com/css/cart.css"/> -->
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/apple_instructions.css"/>
 
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/>
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/>
-<link rel="stylesheet" href="https://ct.ttmenus.com/css/footer.css"/>
+<!-- <link rel="stylesheet" href="https://ct.ttmenus.com/css/footer.css"/> -->
 
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
@@ -79,11 +79,20 @@
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(function(OneSignal) {
     OneSignal.init({
-      appId: "{{ site.Data.menudata.onesignal }}",
+      appId: "{{ site.Params.services.onesignalid }}",
     });
   });
 </script>
-
+<!-- Matomo Tag Manager -->
+<script>
+  var _mtm = window._mtm = window._mtm || [];
+  _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+  (function() {
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Tag Manager -->
 <!-- Matomo Global and Client Tracking -->
 <script>
   var _paq = window._paq = window._paq || [];
@@ -96,7 +105,7 @@
   _paq.push(['enableLinkTracking']);
 
   /* Add second tracker: wingit.ttmenus.com (Site ID 6) */
-  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Data.menudata.analyticsid }}']);
+  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Params.services.analyticsid }}']);
   _paq.push(['trackPageView']);
   _paq.push(['enableLinkTracking']);
 

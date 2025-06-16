@@ -1,43 +1,44 @@
 <script>
-var number = '{{ site.Params.social.whatsapp }}';
-var name = '{{ site.Params.title }}'
-var messageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
-var messageBody = '';
-var messageEnd = '\nThank You!\nLooking forward to confirming this order';
+const number = '{{ site.Params.orderingsystem.whatsapp }}';
+const name = '{{ site.Params.title }}'
+const hastables = {{ default false site.Params.orderingsystem.hastables }};
+const messageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
+let messageBody = '';
+const messageEnd = '\nThank You!\nLooking forward to confirming this order';
 
-var modes =  [ 	{'name':'takeaway'},{'name':'dinein'}];
-var currentMode = 'dinein'; 
+let modes =  [ 	{'name':'takeaway'},{'name':'dinein'}];
+let currentMode = 'dinein'; 
 
-var orderSize = '';
-var orderFlav = '';
+let orderSize = '';
+let orderFlav = '';
 
-var order = [];
-var basePrice = 0;
+let order = [];
+let basePrice = 0;
 
-var orderSides = [];
-var sidePrice = 0;
-var regAmt=0;
-var premAmt=0;
+let orderSides = [];
+let sidePrice = 0;
+let regAmt=0;
+let premAmt=0;
 
-var orderAdd = [];
-var addPrice = 0;
+let orderAdd = [];
+let addPrice = 0;
 
-var orderMod = [];
-var modPrice = 0;
+let orderMod = [];
+let modPrice = 0;
 
-var vat = {{ site.Params.vat }};
-var vatcost = 0;
+let vat = {{ site.Params.orderingsystem.vat }};
+let vatcost = 0;
 
-var service = {{ site.Params.servicecharge }};
-var servicecost = 0;
+let service = {{ site.Params.orderingsystem.servicecharge }};
+let servicecost = 0;
 
-var price = 0;
+let price = 0;
 
-var myTable='';
+let myTable='';
 
-var currentoptions;
+let currentoptions;
 
-var sizePrice=0;
+let sizePrice=0;
 
 function showShop(){
 	document.getElementById("orderModal").classList.remove('order-hidden');
@@ -723,6 +724,19 @@ function serviceCalc(){
 }
 
 
+function advanceOrder(){
+	if (hastables) {
+		openTableModal();
+	}else{
+		confirm();
+	}
+}
+
+function confirm(){
+	constructWAMessage();
+	confirmSendOrder();
+}
+
 function constructWAMessage(){
 	var subTotalTxt='';
 	var vatTxt='';
@@ -743,19 +757,9 @@ function constructWAMessage(){
 	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+myTable+'\n'+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
 }
 
-function confirm(){
-		//if(isOpen()){
-		if(true){
-			constructWAMessage();
-			confirmSendOrder();
-		}else {
-			closeTableModal();
-			closeShop();
-			closeCart();
-			scrollTo('openhours');
-		}
+function confirmSendOrder(){
+	window.open(message, "_blank" );
 }
-
 
 //Dine modes
 function toggleDiningMode(ele){
@@ -916,11 +920,7 @@ function askforserver(){
 	confirmSendOrder();
 }
 
-function confirmSendOrder(){
-	//if(price>0){
-	window.open(message, "_blank" );
-	//}
-}
+
 
 document.addEventListener("DOMContentLoaded", function() {
   requestAnimationFrame(() => { // Ensures DOM is ready before applying scroll

@@ -1,7 +1,10 @@
 {{ define "main" }}
 {{ if eq .LinkTitle ("Advertisments") }}
   <div id="ad-slot-top" data-placement="top">
-    <!-- Top ad will load here -->
+    <span>Sponsored</span>
+    <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/ttmenus.webp"></a>
+    <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/hog1.webp"></a>
+    <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/hog2.webp"></a>
   </div>
 {{ end }}
   <div class="main-content">
@@ -11,21 +14,32 @@
 
     <div class="headerstyle item">
       <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
+      {{ if .Params.slidein }}
+        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="/{{ .Params.slidein.slideinimage }}">
+      {{ end }}
     </div>
     <h4 class="menu-summary item">{{ .Content }}</h4>
     <table class="listpagemenu menu w-{{ .Params.weight }}">
       <tbody>
         {{ $category := .LinkTitle }}
         {{ $categoryurl := .RelPermalink }}            
-        {{ range .RegularPages.ByTitle }}
+        {{ range .RegularPages.ByWeight }}
           {{ if eq $category ("Advertisments") }}
             <div class="main-menu {{ $category }} item">
               <div class="menu-header">
+                {{ if .Params.link }}
+                <a href="{{ .Params.link }}" class="listpageimages">
+                  {{ range .Params.images }}
+                    <img src="/{{ .image }}">
+                  {{ end }}
+                </a>
+                {{ else }}
                 <a href="{{ .RelPermalink }}" class="listpageimages">
                   {{ range .Params.images }}
                     <img src="/{{ .image }}">
                   {{ end }}
                 </a>
+                {{ end }}
                 <div class="headerstyle item">
                   <h2 class="center title">
                     <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
@@ -68,17 +82,17 @@
               {{end}}
 
               {{$sideconfig := slice}}
-              {{range .Params.side_config }}
+              {{if .Params.side_config }}
                 {{$config := slice}}
-                {{$config = $config | append .all_max}}
-                {{$config = $config | append .all_valuecount}}
-                {{$config = $config | append .all_value}}
-                {{$config = $config | append .regular_max}}
-                {{$config = $config | append .regular_valuecount}}
-                {{$config = $config | append .regular_value}}
-                {{$config = $config | append .premium_max}}
-                {{$config = $config | append .premium_valuecount}}
-                {{$config = $config | append .premium_value}}
+                {{$config = $config | append .Params.side_config.all_max}}
+                {{$config = $config | append .Params.side_config.all_valuecount}}
+                {{$config = $config | append .Params.side_config.all_value}}
+                {{$config = $config | append .Params.side_config.regular_max}}
+                {{$config = $config | append .Params.side_config.regular_valuecount}}
+                {{$config = $config | append .Params.side_config.regular_value}}
+                {{$config = $config | append .Params.side_config.premium_max}}
+                {{$config = $config | append .Params.side_config.premium_valuecount}}
+                {{$config = $config | append .Params.side_config.premium_value}}
                 {{$sideconfig = $sideconfig | append $config}}
               {{end}}
 

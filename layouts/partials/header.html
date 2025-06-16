@@ -5,11 +5,11 @@
 		{{ partialCached "ttms-dashboard/button.html" . }}
 		<!-- MENU LOGO -->
 		{{ if and (not .IsHome)}}
-			<a href="/" id="logo" onclick="closeCart();">
+			<a class="logo-container" href="/" onclick="closeCart();">
 				<img class="logo center" src="/branding/favicon192.webp"></a>
 			<!-- END MENU LOGO -->
 		{{ else }}
-			<a href="#" id="logo" onclick="closeCart();">
+			<a href="#" class="logo-container" onclick="closeCart();">
 				<img class="logo center" src="/branding/favicon192.webp"></a>
 			<!-- END MENU LOGO -->
 		{{ end }}
@@ -20,7 +20,7 @@
 						{{ if and (not .IsPage) (not .IsHome)}}
 							{{ $title:= .LinkTitle }}
 							{{ $titleurl := .RelPermalink }}  
-							{{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "ingredients")) }}
+							{{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods")) }}
 							<li class="item">
 								{{ if eq $title $pagetitle }}
 									<a href="#" >
@@ -46,7 +46,7 @@
 						{{ if and (not .IsPage) (not .IsHome) }}
 							{{ $title:= .LinkTitle }}
 							{{ $titleurl := .RelPermalink }}  
-							{{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "ingredients")) }}
+							{{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods")) }}
 							<li class="item">
 								<a href="#{{ .LinkTitle }}" onclick="closeCart();">
 									{{ range .Site.Data.menudata.menu }}
