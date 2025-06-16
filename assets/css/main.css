@@ -914,7 +914,7 @@ html {
     background: rgba(254,254,254,.984);
     transition: .26s;
     left: 0;
-    max-width: 600px
+    max-width: 600px;
 }
 
 #dashboard * {
@@ -927,11 +927,12 @@ html {
 #dashboard .header {
     height: 4em;
     background: linear-gradient(#d73301ee,#800000ee);
-    display: flex
+    display: flex;
+    justify-content: space-between;
 }
 
 #dashboard .header a {
-    display: flex
+    display: flex;
 }
 
 #dashboard li {
@@ -943,7 +944,7 @@ html {
     margin: .4em;
     background: #1111;
     border-radius: .4em;
-    box-shadow: -1px -1px 1px #11111111,1px 1px 1px #11111155
+    box-shadow: -1px -1px 1px #11111111,1px 1px 1px #11111155;
 }
 
 #dashboard li b {
@@ -956,23 +957,23 @@ html {
 #dashboard .dashboardfooter {
     display: flex;
     justify-content: space-around;
-    padding-block-end:4em}
+    padding-block-end:4em;}
 
 #dashboard .dashboardfooter .container {
     display: flex;
-    flex-direction: column
+    flex-direction: column;
 }
 
 #subTotalcontainer {
     border-top: 1px solid;
-    border-bottom: 2px solid #ffffff19
+    border-bottom: 2px solid #ffffff19;
 }
 
 #subTotalcontainer,#vatCalccontainer,#serviceCalccontainer {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: flex-end
+    justify-content: flex-end;
 }
 
 #ad-slot-top,#ad-slot-footer {
@@ -982,7 +983,7 @@ html {
     overflow-x: scroll;
     align-items: flex-end;
     padding: 0;
-    margin: 0
+    margin: 0;
 }
 
 #ad-slot-top span,#ad-slot-footer span {
@@ -993,7 +994,7 @@ html {
     padding-inline:.4em;border-radius: 3em;
     font-size: x-small;
     font-weight: 700;
-    mix-blend-mode: difference
+    mix-blend-mode: difference;
 }
 
 #ad-slot-top a {
@@ -1001,27 +1002,26 @@ html {
 }
 
 #ad-slot-footer a {
-    min-width: -webkit-fill-available
+    min-width: -webkit-fill-available;
 }
 
 #ad-slot-top a img,#ad-slot-footer a img {
-    margin-inline:auto;max-width: 100%
+    margin-inline:auto;max-width: 100%;
 }
 
 .Advertisments .listpageimages,.Advertisments .container {
-    max-height: initial!important
+    max-height: initial!important;
 }
 
 .Advertisments img {
-    min-width: 100%!important
+    min-width: 100%!important;
 }
 
 .Advertisments .item {
-    margin-block-end:2em}
+    margin-block-end:2em;}
 
 .advertisments h1 {
-    text-align: center
-}
+    text-align: center;}
 
 .advertisments .singlepageimages img {
     height: auto!important;
