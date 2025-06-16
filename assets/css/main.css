@@ -691,8 +691,10 @@ html {
     flex-direction: column
 }
 
-#itemSides div {
-    height: calc(100vh - 14em)
+#itemSides div, #itemMods div ,#itemAddMods div  {
+    height: calc(100vh - 14em);
+    overflow-y: scroll;
+    position: relative;
 }
 
 #wamodal,#itemSides,#itemMods,#itemAddMods {
@@ -830,10 +832,11 @@ html {
 }
 
 #itemSideControl p {
-    position: absolute;
+    position: relative;
     color: #fff;
     font-size: xx-large;
-    right: 2%;
+    left: 90%;
+    top: -5%;
     margin-top: -45px;
     padding: 0
 }

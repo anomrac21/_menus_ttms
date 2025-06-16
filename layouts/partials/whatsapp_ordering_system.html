@@ -87,7 +87,7 @@ function openItem(ele,options){
 		document.getElementById("itemImages").setAttribute('href','#');
 	}
 
-	document.getElementById("addicon").innerText = "{{ site.Params.orderingsystem.vat | default "Sides" }}";
+	document.getElementById("addicon").innerText = "{{ site.Params.orderingmenu.sidesname | default "Sides" }}";
 	
 	document.getElementById("itemName").innerText=(options.name);
 	if (!currentPageName.startsWith(options.name)) { 
@@ -181,7 +181,7 @@ function makeModificationsHtml(modificationsHtml,index) {
 		modificationsHtml = modificationsHtml+'<a onclick="selectToggle(this);ModPrice(this,'+currentoptions.modifications[index+1]+');">'+currentoptions.modifications[index]+'</a>'
 		makeModificationsHtml(modificationsHtml,index+2);
 	} else {
-		document.getElementById("itemMods").innerHTML='<h3 class="title center main-text-color">Modifications</h3><div class="container">'+modificationsHtml+'</div><button onclick="openModMenu();">Close</button>';
+		document.getElementById("itemMods").innerHTML='<h3 class="title center main-text-color">Modifications</h3><div>'+modificationsHtml+'</div><button onclick="openModMenu();">Close</button>';
 		document.getElementById("itemModContainer").classList.remove("hide");
 	}
 
@@ -194,7 +194,7 @@ function makeAdditionsHtml(additionsHtml,index) {
 		additionsHtml = additionsHtml+'<a onclick="selectToggle(this);AddPrice(this,'+currentoptions.additions[index+1]+');'+'">'+currentoptions.additions[index]+'</a>'
 		makeAdditionsHtml(additionsHtml,index+2);
 	} else {
-		document.getElementById("itemAddMods").innerHTML ='<h3 class="title center main-text-color">Additional Modifications</h3><div class="container">'+additionsHtml+'</div><button onclick="openAddMenu();">Close</button>';
+		document.getElementById("itemAddMods").innerHTML ='<h3 class="title center main-text-color">Additional Modifications</h3><div>'+additionsHtml+'</div><button onclick="openAddMenu();">Close</button>';
 		document.getElementById("itemAddContainer").classList.remove("hide");
 	}
 
@@ -211,7 +211,7 @@ function makeSidesHtml(sideHtml,index) {
 		}
 		makeSidesHtml(sideHtml,index+3);
 	} else {
-		document.getElementById("itemSides").innerHTML='<h3 class="title center main-text-color">Sides</h3><div >'+sideHtml+'</div><button onclick="openSideMenu();">Close</button>';
+		document.getElementById("itemSides").innerHTML='<h3 class="title center main-text-color">Sides</h3><div>'+sideHtml+'</div><button onclick="openSideMenu();">Close</button>';
 		document.getElementById("itemSideContainer").classList.remove("hide");
 	}
 
@@ -228,8 +228,8 @@ function addSides(ele){
 			}
 		}else if(ele.classList.contains('premiumside')){
 			premAmt=premAmt+1;
-			if(premAmt>=currentoptions.sideoptions[7].premium.valuecount){
-				sidePrice=sidePrice+currentoptions.sideoptions[8].premium.value;
+			if(premAmt>=currentoptions.sideoptions[7]){
+				sidePrice=sidePrice+currentoptions.sideoptions[8];
 			}
 		}
 
