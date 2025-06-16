@@ -178,7 +178,7 @@ function makeModificationsHtml(modificationsHtml,index) {
 	console.log(index+' modificationsHtml:- '+modificationsHtml);
 	if(currentoptions.modifications.length>index){
 		console.log(currentoptions.modifications.length+'>'+index);
-		modificationsHtml = modificationsHtml+'<a onclick="selectToggle(this);ModPrice(this,'+currentoptions.modifications[index+1]+');">'+currentoptions.modifications[index]+'</a>'
+		modificationsHtml = modificationsHtml+'<a onclick="selectToggle(this);ModPrice(this,'+currentoptions.modifications[index+1]+');">'+currentoptions.modifications[index]+'</a><b class="hide">$'+currentoptions.modifications[index+1]+'</b>'
 		makeModificationsHtml(modificationsHtml,index+2);
 	} else {
 		document.getElementById("itemMods").innerHTML='<h3 class="title center main-text-color">Modifications</h3><div>'+modificationsHtml+'</div><button onclick="openModMenu();">Close</button>';
@@ -191,7 +191,7 @@ function makeAdditionsHtml(additionsHtml,index) {
 	console.log(index+' additionsHtml:- '+additionsHtml);
 	if(currentoptions.additions.length>index){
 		console.log(currentoptions.sides.length+'>'+index);
-		additionsHtml = additionsHtml+'<a onclick="selectToggle(this);AddPrice(this,'+currentoptions.additions[index+1]+');'+'">'+currentoptions.additions[index]+'</a>'
+		additionsHtml = additionsHtml+'<a onclick="selectToggle(this);AddPrice(this,'+currentoptions.additions[index+1]+');'+'">'+currentoptions.additions[index]+'</a><b class="hide">$'+currentoptions.additions[index+1]+'</b>'
 		makeAdditionsHtml(additionsHtml,index+2);
 	} else {
 		document.getElementById("itemAddMods").innerHTML ='<h3 class="title center main-text-color">Additional Modifications</h3><div>'+additionsHtml+'</div><button onclick="openAddMenu();">Close</button>';
