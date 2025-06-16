@@ -472,11 +472,7 @@ html {
     margin-block:auto}
 
 .subbtn img {
-<<<<<<< HEAD
-    margin-inline: 0 .4em !important;margin-block:auto}
-=======
     margin-inline:0 .4em!important;margin-block:auto}
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 
 .contactinfo .btn img {
     max-width: 28px;
@@ -695,13 +691,10 @@ html {
     flex-direction: column
 }
 
-<<<<<<< HEAD
-=======
 #itemSides div {
     height: calc(100vh - 14em)
 }
 
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 #wamodal,#itemSides,#itemMods,#itemAddMods {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
     margin: 1.2em auto auto;
@@ -910,12 +903,8 @@ html {
 
 #dashboard {
     display: flex;
-<<<<<<< HEAD
-    width: 100dvh;
-=======
     width: 100dvw;
     height: 100dvh;
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
     position: fixed;
     z-index: 2;
     color: #000;
@@ -925,11 +914,7 @@ html {
     background: rgba(254,254,254,.984);
     transition: .26s;
     left: 0;
-<<<<<<< HEAD
-    max-width: 600px
-=======
     max-width: 600px;
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 }
 
 #dashboard * {
@@ -942,20 +927,12 @@ html {
 #dashboard .header {
     height: 4em;
     background: linear-gradient(#d73301ee,#800000ee);
-<<<<<<< HEAD
-    display: flex
-}
-
-#dashboard .header a {
-    display: flex
-=======
     display: flex;
     justify-content: space-between;
 }
 
 #dashboard .header a {
     display: flex;
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 }
 
 #dashboard li {
@@ -967,11 +944,7 @@ html {
     margin: .4em;
     background: #1111;
     border-radius: .4em;
-<<<<<<< HEAD
-    box-shadow: -1px -1px 1px #11111111,1px 1px 1px #11111155
-=======
     box-shadow: -1px -1px 1px #11111111,1px 1px 1px #11111155;
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 }
 
 #dashboard li b {
@@ -984,15 +957,11 @@ html {
 #dashboard .dashboardfooter {
     display: flex;
     justify-content: space-around;
-<<<<<<< HEAD
-    padding-block-end:4em}
-=======
     padding-block-end:4em;}
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 
 #dashboard .dashboardfooter .container {
     display: flex;
-    flex-direction: column
+    flex-direction: column;
 }
 
 #subTotalcontainer {
@@ -1015,29 +984,17 @@ html {
     align-items: flex-end;
     padding: 0;
     margin: 0;
-<<<<<<< HEAD
-    position: relative
-=======
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 }
 
 #ad-slot-top span,#ad-slot-footer span {
     right: .4em;
     position: absolute;
-<<<<<<< HEAD
-    top: .4em;
-    background: #0ff5;
-    padding-inline:.4em;border-radius: 3em;
-    font-size: x-small;
-    font-weight: 700
-=======
     top: .8em;
     background: #0ff5;
     padding-inline:.4em;border-radius: 3em;
     font-size: x-small;
     font-weight: 700;
     mix-blend-mode: difference;
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 }
 
 #ad-slot-top a {
@@ -1045,19 +1002,11 @@ html {
 }
 
 #ad-slot-footer a {
-<<<<<<< HEAD
-    min-width: -webkit-fill-available
-}
-
-#ad-slot-top a img,#ad-slot-footer a img {
-    margin-inline:auto;max-width: 100%
-=======
     min-width: -webkit-fill-available;
 }
 
 #ad-slot-top a img,#ad-slot-footer a img {
     margin-inline:auto;max-width: 100%;
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 }
 
 .Advertisments .listpageimages,.Advertisments .container {
@@ -1069,11 +1018,7 @@ html {
 }
 
 .Advertisments .item {
-<<<<<<< HEAD
-    margin-block-end:2em}
-=======
     margin-block-end:2em;}
->>>>>>> 326fb3ae4779744055f7d8fc01e8e4a52dcdf2f9
 
 .advertisments h1 {
     text-align: center;}
