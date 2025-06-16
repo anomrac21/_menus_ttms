@@ -87,6 +87,8 @@ function openItem(ele,options){
 		document.getElementById("itemImages").setAttribute('href','#');
 	}
 
+	document.getElementById("addicon").innerText = "{{ site.Params.orderingsystem.vat | default "Sides" }}";
+	
 	document.getElementById("itemName").innerText=(options.name);
 	if (!currentPageName.startsWith(options.name)) { 
 		document.getElementById("itemName").setAttribute('href',options.url); 
