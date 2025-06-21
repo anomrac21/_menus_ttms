@@ -329,8 +329,7 @@ html {
 }
 
 #menublock li {
-    border-right: 1px solid var(--header-bordercolor-2);
-    max-width: 4em
+    border-right: 1px solid var(--header-bordercolor-2)
 }
 
 #menublock span {
@@ -510,9 +509,7 @@ html {
 
 .main-body {
     column-count: 1;
-    padding-block-start: 4em;
-    padding-inline: .4em;
-    }
+    margin-block-start:4em;margin-inline:.4em}
 
 @media(min-width: 600px) {
     .main-body {
@@ -697,6 +694,7 @@ html {
 #itemSides div,#itemMods div,#itemAddMods div {
     height: calc(100vh - 14em);
     overflow-y: scroll;
+    overflow-x: hidden;
     position: relative
 }
 
@@ -1360,8 +1358,9 @@ ul,p {
 }
 
 body {
-    main-text-color);font-family: sans-serif;
+    main-text-color); font-family: sans-serif;
     line-height: 1.5;
+    color: var(--main-text-color);
 }
 
 header {
@@ -1373,9 +1372,7 @@ header {
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em;
-    padding-block-end: 4em;
-    background: #00000000;
+    padding-block-start: 4em; padding-block-end: 4em; background: var(--main-bg);
     background-size: auto;
     background-position: top center;
 }
