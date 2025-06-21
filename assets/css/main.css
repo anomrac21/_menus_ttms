@@ -330,7 +330,7 @@ html {
 
 #menublock li {
     border-right: 1px solid var(--header-bordercolor-2);
-    max-width: 4em;
+    max-width: 4em
 }
 
 #menublock span {
@@ -510,7 +510,7 @@ html {
 
 .main-body {
     column-count: 1;
-    margin-block-start:4em;margin-inline:.4em}
+    padding-block-start: 4em;padding-inline: .4em;}
 
 @media(min-width: 600px) {
     .main-body {
@@ -1358,9 +1358,8 @@ ul,p {
 }
 
 body {
-    main-text-color); font-family: sans-serif;
+    main-text-color);font-family: sans-serif;
     line-height: 1.5;
-    color: var(--main-text-color);
 }
 
 header {
