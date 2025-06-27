@@ -329,7 +329,8 @@ html {
 }
 
 #menublock li {
-    border-right: 1px solid var(--header-bordercolor-2)
+    border-right: 1px solid var(--header-bordercolor-2);
+    max-width: 4em
 }
 
 #menublock span {
@@ -509,7 +510,9 @@ html {
 
 .main-body {
     column-count: 1;
-    margin-block-start:4em;margin-inline:.4em}
+    padding-block-start: 4em;
+    padding-inline: .4em;
+    }
 
 @media(min-width: 600px) {
     .main-body {
@@ -630,7 +633,8 @@ html {
     background-size: 96% 86%;
     background-position: 50%;
     background-repeat: no-repeat;
-    position: relative
+    position: relative;
+    color: var(--main-text-color);
 }
 
 #orderModal {
@@ -694,7 +698,6 @@ html {
 #itemSides div,#itemMods div,#itemAddMods div {
     height: calc(100vh - 14em);
     overflow-y: scroll;
-    overflow-x: hidden;
     position: relative
 }
 
@@ -768,6 +771,7 @@ html {
     max-width: -webkit-fill-available;
     object-fit: cover;
     background-size: cover;
+    mix-blend-mode: revert;
     overflow: hidden
 }
 
@@ -1358,9 +1362,8 @@ ul,p {
 }
 
 body {
-    main-text-color); font-family: sans-serif;
+    main-text-color);font-family: sans-serif;
     line-height: 1.5;
-    color: var(--main-text-color);
 }
 
 header {
@@ -1372,7 +1375,9 @@ header {
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em; padding-block-end: 4em; background: var(--main-bg);
+    padding-block-start: 4em;
+    padding-block-end: 4em;
+    background: #00000000;
     background-size: auto;
     background-position: top center;
 }
