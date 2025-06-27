@@ -1290,7 +1290,6 @@ html {
 .singlepagemenu .prices {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center
 }
 
 .singlepagemenu .prices li {
