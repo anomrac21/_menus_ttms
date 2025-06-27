@@ -5,7 +5,7 @@
 			<li class="locations">
 				{{ range .Params.locations }}
 					<div style="display: flex; margin-block-end: .4em;">
-			          	<a href="https://ttms-app.netlify.app/?lat={{ .lat }}&lng={{ .lon }}&zoom=16&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
+			          	<a href="https://www.ttmenus.com/?lat={{ .lat }}&lng={{ .lon }}&zoom=16&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
 			            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
 			            	{{ .address }}
 			          	</a>
