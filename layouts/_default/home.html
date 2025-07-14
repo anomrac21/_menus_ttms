@@ -6,7 +6,7 @@
     <img id="bg" src="/main/bg.webp">
   {{ end }}
   <div class="logo_container">
-    <img id="logo" src="/branding/favicon512.webp">
+    <a href="#openhours"><img id="logo" src="/branding/favicon512.webp"></a>
   </div>
   </div> 
   {{ partial "contact_info.html" . }}
@@ -14,212 +14,177 @@
     {{ .Content }}
 
   </div>
-  <div class="main-body">
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
       {{ $title:= .LinkTitle }}
       {{ $titleurl := .RelPermalink }}  
       {{ if eq $title ("Advertisments") }}
-        <div class="main-menu {{ .LinkTitle }} item" >
-          <div class="menu-header">
-            <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
-            <div id="ad-slot-top" data-placement="top">
-              <!-- <a href="#"><img src="https://ct.ttmenus.com/adimages/ttmenus.jpg"></a> -->
-              <span>Sponsored</span>
-              <a href="tel:18683645662" target="_blank"><img src="https://ct.ttmenus.com/adimages/ttmenus.webp"></a>
-              <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/hog1.webp"></a>
-              <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/hog2.webp"></a>
-            </div>
-            <div class="headerstyle item">
-              <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
-                <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
-              </h2>
-            </div>
-            <h4 class="menu-summary item">{{ .Summary }}</h4>
-          </div>        
-            {{ range .RegularPages.ByTitle }}
-              <div class="item">
-                {{ if .Params.link }}
-                <a href="{{ .Params.link }}">
-                  <div class="container">
-                    {{ range .Params.images }}
-                      <img src="/{{ .image }}">
-                    {{ end }}
-                  </div>
-                  <h3 class="title">{{ .LinkTitle }}</h3>
-                  {{ .Summary }}
-                </a>
-                {{ else }}
-                <a href="{{ .RelPermalink }}">
-                  <div class="container">
-                    {{ range .Params.images }}
-                      <img src="/{{ .image }}">
-                    {{ end }}
-                  </div>
-                  <h3 class="title">{{ .LinkTitle }}</h3>
-                  {{ .Summary }}
-                </a>
-                {{ end }}
-                  
-              </div>
-            {{ end }}
-        </div>
-      {{ else }}
+      {{ partial "ads/clientads.html" . }} 
+      {{ end }}
+    {{ end }}
+  {{ end }}
+  <div class="main-body">
+  {{ range site.Pages.ByWeight }}
+    {{ if and (not .IsPage) (not .IsHome)}}
+      {{ $title:= .LinkTitle }}
+      {{ $titleurl := .RelPermalink }}  
+      {{ if ne $title ("Advertisments") }}
         {{ if .RegularPages }}
           {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods")) }}
-              <div class="main-menu {{ .LinkTitle }} item">
-                <div class="menu-header">
-                  <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
-                  {{ if .Params.image }}
-                    <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ .Params.image }}"></a>
-                  {{ end }}
-                  <div class="headerstyle item" >
-                    <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
-                      <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
-                      {{ if .Params.slidein }}
-                        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="{{ .Params.slidein.slideinimage }}">
-                      {{ end }}
-                    </h2>
-                    
-                  </div>
-                  <div class="menu-summary item">
-                    {{ .Summary }}
-                  </div>
-                </div>
-                <table class="menu">
-                  <tbody>
-                    {{ $category := .LinkTitle }}
-                    {{ $categoryurl := .RelPermalink }}            
-                    {{ range .RegularPages.ByWeight }}
-
-                      {{$sizes := slice}}
-                      {{range .Params.prices}}
-                        {{if not (in $sizes .size)}}
-                          {{$sizes = $sizes | append .size}}
-                        {{end}}
-                      {{end}}
-
-                      {{$flavours := slice}}
-                      {{range .Params.prices}}
-                        {{if not (in $flavours .flavour)}}
-                          {{$flavours = $flavours | append .flavour}}
-                        {{end}}
-                      {{end}}
-
-                      {{$prices := slice}}
-                      {{range .Params.prices}}
-                        {{$price := slice}}
-                        {{$price = $price | append .size}}
-                        {{$price = $price | append .flavour}}
-                        {{$price = $price | append .price}}
-                        {{$prices = $prices | append $price}}
-                      {{end}}
-
-                      {{$sides := slice}}
-                      {{range .Params.sides }}
-                        {{$side := slice}}
-                        {{$side = $side | append .name}}
-                        {{$side = $side | append .type}}
-                        {{$side = $side | append .price}}
-                        {{$sides = $sides | append $side}}
-                      {{end}}
-
-                      {{$sideconfig := slice}}
-                      {{if .Params.side_config }}
-                        {{$config := slice}}
-                        {{$config = $config | append .Params.side_config.all_max}}
-                        {{$config = $config | append .Params.side_config.all_valuecount}}
-                        {{$config = $config | append .Params.side_config.all_value}}
-                        {{$config = $config | append .Params.side_config.regular_max}}
-                        {{$config = $config | append .Params.side_config.regular_valuecount}}
-                        {{$config = $config | append .Params.side_config.regular_value}}
-                        {{$config = $config | append .Params.side_config.premium_max}}
-                        {{$config = $config | append .Params.side_config.premium_valuecount}}
-                        {{$config = $config | append .Params.side_config.premium_value}}
-                        {{$sideconfig = $sideconfig | append $config}}
-                      {{end}}
-
-                      {{$additions := slice}}
-                      {{range .Params.additions }}
-                        {{$addition := slice}}
-                        {{$addition = $addition | append .name}}
-                        {{$addition = $addition | append .price}}
-                        {{$additions = $additions | append $addition}}
-                      {{end}}
-                      
-                      {{$modifications := slice}}
-                      {{range .Params.modifications }}
-                        {{$modification := slice}}
-                        {{$modification = $modification | append .name}}
-                        {{$modification = $modification | append .price}}
-                        {{$modifications = $modifications | append $modification}}
-                      {{end}}
-                      
-                      {{$images := slice}}
-                      {{range .Params.images }}
-                        {{$images = $images | append .image}}
-                      {{end}}
-   
-                      <tr class="item" onclick="openItem(this,{
-                                'category': '{{ $category }}',
-                                'categoryurl': '{{ $categoryurl }}',
-                                'name': '{{ .LinkTitle }}',
-                                'url': '{{ .RelPermalink }}', 
-                                'images': {{ $images }}, 
-                                'desc': '{{ .Summary }}',  
-                                'sizes': {{ $sizes }},
-                                'flavours': {{ sort $flavours }},
-                                'items': {{ $prices }},
-                                'sides': {{ $sides }},
-                                'sideoptions':  {{ $sideconfig }},
-                                'additions': {{ $additions }},
-                                'modifications': {{ $modifications }}
-                                } );">
-                          <td>
-                            <h3 class="title">{{ .LinkTitle }}</h3>
-                            {{ .Summary }}
-                            <ul class="sizes">
-                              {{ range $index, $currentItem := $sizes }}
-                                {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
-                                  <li>
-                                    {{ $currentItem }}
-                                  </li>
-                                {{ end }}
-                              {{ end }}
-                            </ul>
-                            <ul class="flavours">
-                              {{ range $index, $currentItem := $flavours }}
-                                {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
-                                  <li>
-                                    {{ $currentItem }}
-                                  </li>
-                                {{ end }}
-                              {{ end }}
-                            </ul> 
-                          </td>
-                          <th>
-                            {{$counter := 0}}
-                            {{$number := slice}}
-                            {{$total := 0}}
-                            {{range .Params.prices}}
-                              {{$counter = add $counter 1}}
-                              {{$number = $number | append .price}}
-                              {{$total = add $total .price}}
-                            {{end}} 
-                            {{$number := sort $number}}
-                            {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
-                              ${{index $number (sub $counter 1)}}
-                            {{else }}
-                              ${{index $number 0}} | ${{index $number (sub $counter 1)}}      
-                            {{ end }}                       
-                          </th>
-                      </tr>
-                      
+              <div class="main-menu-bg {{ .LinkTitle }}">
+                <div class="main-menu {{ .LinkTitle }} item">
+                  <div class="menu-header">
+                    <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
+                    {{ if .Params.image }}
+                      <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ .Params.image }}"></a>
                     {{ end }}
-                  </tbody>
-                </table> 
+                    <div class="headerstyle item" >
+                      <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+                        <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+                        {{ if .Params.slidein }}
+                          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="{{ .Params.slidein.slideinimage }}">
+                        {{ end }}
+                      </h2>
+                      
+                    </div>
+                    <div class="menu-summary item">
+                      {{ .Summary }}
+                    </div>
+                  </div>
+                  <table class="menu">
+                    <tbody>
+                      {{ $category := .LinkTitle }}
+                      {{ $categoryurl := .RelPermalink }}            
+                      {{ range .RegularPages.ByWeight }}
+
+                        {{$sizes := slice}}
+                        {{range .Params.prices}}
+                          {{if not (in $sizes .size)}}
+                            {{$sizes = $sizes | append .size}}
+                          {{end}}
+                        {{end}}
+
+                        {{$flavours := slice}}
+                        {{range .Params.prices}}
+                          {{if not (in $flavours .flavour)}}
+                            {{$flavours = $flavours | append .flavour}}
+                          {{end}}
+                        {{end}}
+
+                        {{$prices := slice}}
+                        {{range .Params.prices}}
+                          {{$price := slice}}
+                          {{$price = $price | append .size}}
+                          {{$price = $price | append .flavour}}
+                          {{$price = $price | append .price}}
+                          {{$prices = $prices | append $price}}
+                        {{end}}
+
+                        {{$sides := slice}}
+                        {{range .Params.sides }}
+                          {{$side := slice}}
+                          {{$side = $side | append .name}}
+                          {{$side = $side | append .type}}
+                          {{$side = $side | append .price}}
+                          {{$sides = $sides | append $side}}
+                        {{end}}
+
+                        {{$sideconfig := slice}}
+                        {{if .Params.side_config }}
+                          {{$config := slice}}
+                          {{$config = $config | append .Params.side_config.all_max}}
+                          {{$config = $config | append .Params.side_config.all_valuecount}}
+                          {{$config = $config | append .Params.side_config.all_value}}
+                          {{$config = $config | append .Params.side_config.regular_max}}
+                          {{$config = $config | append .Params.side_config.regular_valuecount}}
+                          {{$config = $config | append .Params.side_config.regular_value}}
+                          {{$config = $config | append .Params.side_config.premium_max}}
+                          {{$config = $config | append .Params.side_config.premium_valuecount}}
+                          {{$config = $config | append .Params.side_config.premium_value}}
+                          {{$sideconfig = $sideconfig | append $config}}
+                        {{end}}
+
+                        {{$additions := slice}}
+                        {{range .Params.additions }}
+                          {{$addition := slice}}
+                          {{$addition = $addition | append .name}}
+                          {{$addition = $addition | append .price}}
+                          {{$additions = $additions | append $addition}}
+                        {{end}}
+                        
+                        {{$modifications := slice}}
+                        {{range .Params.modifications }}
+                          {{$modification := slice}}
+                          {{$modification = $modification | append .name}}
+                          {{$modification = $modification | append .price}}
+                          {{$modifications = $modifications | append $modification}}
+                        {{end}}
+                        
+                        {{$images := slice}}
+                        {{range .Params.images }}
+                          {{$images = $images | append .image}}
+                        {{end}}
+     
+                        <tr class="item" onclick="openItem(this,{
+                                  'category': '{{ $category }}',
+                                  'categoryurl': '{{ $categoryurl }}',
+                                  'name': '{{ .LinkTitle }}',
+                                  'url': '{{ .RelPermalink }}', 
+                                  'images': {{ $images }}, 
+                                  'desc': '{{ .Summary }}',  
+                                  'sizes': {{ $sizes }},
+                                  'flavours': {{ sort $flavours }},
+                                  'items': {{ $prices }},
+                                  'sides': {{ $sides }},
+                                  'sideoptions':  {{ $sideconfig }},
+                                  'additions': {{ $additions }},
+                                  'modifications': {{ $modifications }}
+                                  } );">
+                            <td>
+                              <h3 class="title">{{ .LinkTitle }}</h3>
+                              {{ .Summary }}
+                              <ul class="sizes">
+                                {{ range $index, $currentItem := $sizes }}
+                                  {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
+                                    <li>
+                                      {{ $currentItem }}
+                                    </li>
+                                  {{ end }}
+                                {{ end }}
+                              </ul>
+                              <ul class="flavours">
+                                {{ range $index, $currentItem := $flavours }}
+                                  {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
+                                    <li>
+                                      {{ $currentItem }}
+                                    </li>
+                                  {{ end }}
+                                {{ end }}
+                              </ul> 
+                            </td>
+                            <th>
+                              {{$counter := 0}}
+                              {{$number := slice}}
+                              {{$total := 0}}
+                              {{range .Params.prices}}
+                                {{$counter = add $counter 1}}
+                                {{$number = $number | append .price}}
+                                {{$total = add $total .price}}
+                              {{end}} 
+                              {{$number := sort $number}}
+                              {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
+                                ${{index $number (sub $counter 1)}}
+                              {{else }}
+                                ${{index $number 0}} | ${{index $number (sub $counter 1)}}      
+                              {{ end }}                       
+                            </th>
+                        </tr>
+                        
+                      {{ end }}
+                    </tbody>
+                  </table> 
+                </div>
               </div>
-            
           {{ end }}
         {{ end }}
       {{ end }}

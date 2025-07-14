@@ -15,23 +15,29 @@
       {{ partial "search.html" . }}
       <main id="main">
         {{ block "main" . }}{{ end }}
-        <div id="ad-slot-footer" data-placement="footer">
+        {{ partial "ads/frontpageads.html" . }} 
+        <!-- <div id="ad-slot-footer" data-placement="footer">
           <span>Sponsored</span>
           <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/hog1.webp"></a>
           <a href="https://www.whatsapp.com/catalog/18683645662/?app_absent=0" target="_blank"><img src="https://ct.ttmenus.com/adimages/hog2.webp"></a>
           <a href="tel:18683645662" target="_blank"><img src="https://ct.ttmenus.com/adimages/ttmenus.webp"></a>
-          <!-- <a href="#"><img src="https://ct.ttmenus.com/adimages/ttmenus.jpg"></a> -->
-        </div>
+          <a href="#"><img src="https://ct.ttmenus.com/adimages/ttmenus.jpg"></a>
+        </div> -->
       </main>
     </div>
   </div>
+
   <footer>
     {{ partial "order_modal.html" . }}
     {{ partial "footer.html" . }}
   </footer>
   
-  <!--script src="https://ct.ttmenus.com/js/loader.js"></script-->
-  <script src="https://code.jquery.com/jquery-2.2.0.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- unpkg -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/jquery.ScrollMagic.min.js"></script>
 
   <script src="{{ site.BaseURL}}/src/app.js"></script>
   <!-- <script src="{{ site.BaseURL}}/js/test.js"></script> -->
@@ -154,6 +160,7 @@
                 },
                 async enter(data) {
                   window.scrollTo(0, 100);
+                  initFrontPageAdsScrollEffects();
                   document.getElementById('menublock').scrollTo(12, 0);
                   closeCart();
                   closeShop();
@@ -165,10 +172,13 @@
                       document.getElementById("menublock").scrollLeft = savedScroll;
                     });
                   }
+                  initOpeninghoursDisplay();
                   window.scrollTo(0, 0);
                 },
                 async once(data) {
                   await new Promise(resolve => setTimeout(resolve, 3000));
+                  initFrontPageAdsScrollEffects();
+                  initOpeninghoursDisplay();
                   hideLoader();
                   document.getElementById("menuImage").classList.add('hide');
                
@@ -256,7 +266,58 @@
     }
   })();
   </script>
+  <script>
+    function initFrontPageAdsScrollEffects() {
+      var ctrl = new ScrollMagic.Controller({
+        globalSceneOptions: {
+          triggerHook: 'onLeave'
+        }
+      });
+
+      $("section").each(function() {
+        var name = $(this).attr('id');
+        new ScrollMagic.Scene({
+          triggerElement: this,
+          offset: -64
+        })
+        .setPin(this)
+        .loglevel(3)
+        .addTo(ctrl);
+        // .addIndicators({
+        //   colorStart: "rgba(255,255,255,0.5)",
+        //   colorEnd: "rgba(255,255,255,0.5)", 
+        //   colorTrigger : "rgba(255,255,255,1)",
+        //   name: name
+        // })
+      });
+
+      var wh = window.innerHeight;
+      new ScrollMagic.Scene({
+        offset: wh * 3
+      })
+      .setClassToggle("section#four", "is-active")
+      .addTo(ctrl);
+    }
+  </script>
   {{ partial "whatsapp_ordering_system.html" . }}
+  <script>
+function initOpeninghoursDisplay() {
+  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const today = days[new Date().getDay()];
+
+  document.querySelectorAll("[data-opening-hours]").forEach(section => {
+    const todayList = section.querySelector(".today-hours");
+    const allItems = section.querySelectorAll(".all-hours li");
+
+    allItems.forEach(li => {
+      if (li.dataset.day === today) {
+        todayList.appendChild(li.cloneNode(true));
+      }
+    });
+  });
+}
+</script>
+
 
 </body>
 </html>

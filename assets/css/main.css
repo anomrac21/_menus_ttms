@@ -1,7 +1,61 @@
 html {
     scroll-behavior: smooth
 }
+.location-block{
+    background: #000000aa;
+}
+.location-block .accordion{
+    font-size: small;
+}
 
+.hours {
+  margin-bottom: 6em;
+}
+
+.hours ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.hours li {
+  margin-bottom: 0.25rem;
+}
+
+summary {
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+details[open] summary::after {
+  content: " ▲";
+}
+
+details summary::after {
+  content: " ▼";
+}
+
+details ul.all-hours[hidden] {
+  display: none;
+}
+
+details[open] ul.all-hours {
+  display: block;
+}
+
+.clientad-heading{
+    background: linear-gradient(#00000055, #000000);
+    color: #fefefe;
+    padding-block-start: .8em;
+    position: relative;
+    z-index: 1;
+}
+.main-menu-bg{
+    background-color: var(--main-bg);
+    position: relative;
+    z-index: 1;
+}
 #search {
     max-width: 640px;
     margin: auto
@@ -510,7 +564,9 @@ html {
 
 .main-body {
     column-count: 1;
-    padding-block-start:4em;padding-inline:.4em}
+    background: var(--main-bg);
+    position: relative;
+    }
 
 @media(min-width: 600px) {
     .main-body {
@@ -551,10 +607,13 @@ html {
 
 .main-menu {
     width: -webkit-fill-available;
-    margin-inline:auto;max-width: 480px;
+    margin-inline:auto;
+    max-width: 480px;
     overflow: hidden;
     position: relative;
-    margin-block-start:0;margin-block-end:.8em;border-radius: .4em;
+    margin-block-start:0;
+    padding-block-end: .8em;
+    border-radius: .4em;
     background: linear-gradient( var(--menu-bg-color-1),var(--menu-bg-color-2))
 }
 
@@ -632,7 +691,8 @@ html {
     background-position: 50%;
     background-repeat: no-repeat;
     position: relative;
-    color: var(--main-text-color)
+    color: var(--main-text-color);
+    background-color: var(--main-bg);
 }
 
 #orderModal {
@@ -701,7 +761,7 @@ html {
 
 #wamodal,#itemSides,#itemMods,#itemAddMods {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
-    margin: 1.2em auto auto;
+    margin: 5.2em auto auto;
     width: 90dvw;
     max-height: calc(100dvh - 8em);
     min-height: calc(100dvh - 12em);
@@ -712,7 +772,8 @@ html {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block:1em;border-radius: .4em;
+    padding-block:1em;
+    border-radius: .4em;
     overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
@@ -912,7 +973,7 @@ html {
     width: 100dvw;
     height: 100dvh;
     position: fixed;
-    z-index: 2;
+    z-index: 4;
     color: #000;
     box-shadow: #111 0 2px 5px;
     flex-direction: column;
@@ -957,13 +1018,14 @@ html {
     margin-inline-start:.4em}
 
 #dashboard .body {
-    height: calc(-13em + 100dvh)
+    height: calc(-12em + 100dvh);
 }
 
 #dashboard .dashboardfooter {
     display: flex;
     justify-content: space-around;
-    padding-block-end:4em}
+    padding-block-end: 2em;
+    }
 
 #dashboard .dashboardfooter .container {
     display: flex;
@@ -1033,7 +1095,9 @@ html {
 .advertisments .singlepageimages img {
     height: auto!important;
     max-width: 480px!important;
-    margin-inline:auto}
+    margin-inline:auto;
+    scroll-snap-align: start;
+    }
 
 .Advertisments .container,.listpageimages {
     display: flex;
@@ -1073,7 +1137,11 @@ html {
 
 #itemImages,.singlepageimages {
     display: flex;
-    overflow-x: scroll!important
+    overflow-x: scroll!important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    flex-direction: row;
+    flex-wrap: nowrap;
 }
 
 .singlepageimages img {
@@ -1123,7 +1191,7 @@ html {
 #askforserver {
     position: absolute;
     right: .5em;
-    z-index: 1;
+    z-index: 2;
     max-width: 3em
 }
 
@@ -1342,11 +1410,10 @@ html,body {
     padding: 0!important
 }
 
-h1,h3,h4,h5,h6 {
-    margin-block:.4em .2em}
-
-h2 {
-    margin-block:.4em;padding-inline:.4em}
+h1,h2,h3,h4,h5,h6 {
+    padding: .4em;
+    margin: 0;
+}
 
 #orderModal h2,#orderModal h3 {
     margin-block:.4em;padding-inline:.4em;color: var(--selected-text-color1)
@@ -1367,7 +1434,7 @@ header {
     position: fixed;
     top: 0px;
     width: -webkit-fill-available;
-    z-index: 1;
+    z-index: 3;
 }
 
 main {
@@ -1378,7 +1445,7 @@ main {
 }
 
 main img {
-    max-width: 80%;
+    max-width: 100%;
     display: block;
 }
 
@@ -1397,7 +1464,9 @@ main img {
     display: block;
     z-index: 1;
     position: relative;
-    margin-inline: auto; }
+    max-height: 66dvh;
+    margin-inline: auto;
+    }
 
 #bg {
     position: absolute;
@@ -1409,7 +1478,9 @@ main img {
 }
 
 .menu-summary {
-    margin: 0 .8em .8em;
+    padding-inline: .8em;
+    background: var(--main-bg);
+    position: relative;
 }
 
 .main-menu .food {
@@ -1487,7 +1558,7 @@ footer {
 #footerBtns a {
     color: #ffffff;
     max-width: 100px;
-    width: 10dvh;
+    width: 8dvh;
     min-width: 36px;
     display: inline-block;
 }
