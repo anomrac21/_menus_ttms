@@ -109,7 +109,11 @@
     justify-content: flex-end;
 }
 #pageadscontainer section .inner .ad-panel img, #clientad .inner .ad-panel img{
+<<<<<<< HEAD
     height: calc(100vh - 4em) !important;
+=======
+    height: calc(100dvh - 4em) !important;
+>>>>>>> f21e547616ff964266d3dd48cdc9c460de4b849b
     width: 100dvw;
     max-width: -webkit-fill-available;
     margin-inline:  auto !important;
