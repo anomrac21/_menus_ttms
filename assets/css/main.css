@@ -820,12 +820,19 @@ details[open] ul.all-hours {
 
 #orderModal .image {
     max-height: 200px;
+    max-height
+Allows authors to constrain content height to a certain range.
+Learn more
+
+Don't show: 200px;';
+    min-height: 128px;
     min-width: -webkit-fill-available;
     overflow: hidden
 }
 
 #orderModal .image img {
     max-height: 200px;
+    min-height: auto;
     min-width: -webkit-fill-available;
     max-width: -webkit-fill-available;
     object-fit: cover;
