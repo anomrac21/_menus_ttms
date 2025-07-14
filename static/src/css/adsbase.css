@@ -74,6 +74,8 @@
     overflow-y: hidden;
     flex-direction: row;
     flex-wrap: nowrap;
+    position: sticky;
+    top: 0;
 }
 #four .inner{
     min-height: 100% !important;
@@ -104,9 +106,10 @@
 
 #pageadscontainer section .inner .ad-panel, #clientad .inner .ad-panel ,#four .ad-panel{
     width: 100dvw;
-    height: calc(100dvh - 4em);
+    height: calc(100vh - 4em);
     left: 0px;
     position: relative;
+    top: 0;
     flex: 0 0 auto;
     display: flex;
     scroll-snap-align: start;
@@ -114,6 +117,7 @@
     flex-direction: column;
     justify-content: flex-end;
     transition: height 0.33s ease, transform 0.33s ease;
+    pointer-events: all;
 }
 #pageadscontainer section .inner .ad-panel img, #clientad .inner .ad-panel img{
 
@@ -129,12 +133,13 @@ object-fit: cover;
 
 position: absolute;
 
+z-index: 1;
+
 left: 0;
 
 top: 0;
 
 transition: height 0.33s ease, transform 0.33s ease;
-
 }
 #pageadscontainer section .inner .ad-panel h1 , 
 #pageadscontainer section .inner .ad-panel p,
@@ -187,6 +192,7 @@ transition: height 0.33s ease, transform 0.33s ease;
     top: revert-layer;
     backdrop-filter: blur(0px);
     border: none;
+    pointer-events: none;
 }
 
 #pageadscontainer section#four.is-active .inner {
