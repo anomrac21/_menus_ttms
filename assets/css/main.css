@@ -50,6 +50,7 @@ details[open] ul.all-hours {
     padding-block-start: .8em;
     position: relative;
     z-index: 1;
+    margin-block-start: 4em;
 }
 .main-menu-bg{
     background-color: var(--main-bg);
