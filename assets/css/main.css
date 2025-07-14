@@ -1447,7 +1447,8 @@ header {
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em;padding-block-end: 4em;background: var(--main-bg);
+    padding-block-start: 4em;
+    background: var(--main-bg);
     background-size: auto;
     background-position: top center;
 }

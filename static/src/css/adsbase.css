@@ -44,7 +44,7 @@
     color: #ffffff;
 }
 
-#pageadscontainer section, #clientad {
+#pageadscontainer section, #clientad ,#pageadscontainer #four{
     height: calc(100dvh - 4em);
     color: white;
     position: relative;
@@ -56,7 +56,7 @@
     max-width: -webkit-fill-available !important;
     border: 1px solid var(--main-bg);
 }
-#pageadscontainer section .inner, #clientad .inner{
+#pageadscontainer section .inner, #clientad .inner,#pageadscontainer #four .inner{
     margin: 0 auto;
     width: -webkit-fill-available !important;
     min-width: -webkit-fill-available !important;
@@ -96,7 +96,7 @@
     font-size: smaller;
 }
 
-#pageadscontainer section .inner .ad-panel, #clientad .inner .ad-panel{
+#pageadscontainer section .inner .ad-panel, #clientad .inner .ad-panel ,#pageadscontainer #four .ad-panel{
     width: 100dvw;
     height: calc(100dvh - 4em);
     left: 0px;
@@ -171,7 +171,7 @@ transition: height 0.33s ease, transform 0.33s ease;
     background-position: top right;
 }
 
-#pageadscontainer section#four {
+#pageadscontainer #four {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: top right;
