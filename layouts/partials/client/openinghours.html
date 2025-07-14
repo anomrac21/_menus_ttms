@@ -1,0 +1,61 @@
+{{ $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" }}
+{{ range site.Data.locations.locations }}
+        <li class="ad-panel">
+          <div class="location-block">
+            <h3>
+              <a href="https://www.ttmenus.com/map/?lat={{ .lat }}&lng={{ .lon }}&zoom=19&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
+                    {{ .address }}
+              </a>
+            </h3>
+            {{ with .opening_hours }}
+            {{ $oh := . }}
+            <div class="hours" data-opening-hours>
+              <ul class="today-hours">
+                <!-- JavaScript can populate today’s hours here -->
+              </ul>
+
+              <details class="accordion">
+                <summary>Show All Hours</summary>
+                <ul class="all-hours">
+                  {{ range $days }}
+                    {{ $day := . }}
+                    {{ with index $oh $day }}
+                      {{ $entries := index $oh $day }}
+                      {{ $openList := where $entries "type" "Open" }}
+                      {{ $closeList := where $entries "type" "Close" }}
+                      {{ $open := index $openList 0 }}
+                      {{ $close := index $closeList 0 }}
+                      <li data-day="{{ $day }}">
+                        <strong>{{ $day | title }}:</strong>
+                        {{ if and $open $close }}
+                          {{ $openH := int $open.hour }}
+                          {{ $openM := printf "%02d" (int $open.minute) }}
+                          {{ $openAMPM := cond (ge $openH 12) "PM" "AM" }}
+                          {{ $open12 := mod $openH 12 | default 12 }}
+
+                          {{ $closeH := int $close.hour }}
+                          {{ $closeM := printf "%02d" (int $close.minute) }}
+                          {{ $closeAMPM := cond (ge $closeH 12) "PM" "AM" }}
+                          {{ $close12 := mod $closeH 12 | default 12 }}
+
+                          {{ printf "%d:%s%s – %d:%s%s" $open12 $openM (lower $openAMPM) $close12 $closeM (lower $closeAMPM) }}
+                          
+                        {{ else }}
+                          Closed
+                        {{ end }}
+                      </li>
+                    {{ else }}
+                      <li data-day="{{ $day }}"><strong>{{ $day | title }}:</strong> Closed</li>
+                    {{ end }}
+                  {{ end }}
+                </ul>
+              </details>
+            </div>
+          {{ else }}
+            <p><em>No hours listed</em></p>
+          {{ end }}
+        </div>
+        </li>
+{{ end }}
+      
+
