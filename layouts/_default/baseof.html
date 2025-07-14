@@ -16,12 +16,14 @@
       <main id="main">
         {{ block "main" . }}{{ end }}
         {{ partial "ads/frontpageads.html" . }}
+
         <div id="four">
-    <ul class="inner">
-      {{ partial "client/openinghours.html" . }}
-    </ul>
-  </div>
-<a class="menu-anchor" id="openhours"></a> 
+          <div class="ad-margin-top"></div>
+          <ul class="inner">
+            {{ partial "client/openinghours.html" . }}
+          </ul>
+        </div>
+      <a class="menu-anchor" id="openhours"></a> 
       </main>
     </div>
   </div>

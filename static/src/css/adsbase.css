@@ -182,8 +182,9 @@ transition: height 0.33s ease, transform 0.33s ease;
     background-repeat: no-repeat;
     background-position: top right;
     background-color: #00000000;
-    padding-block-start: 4em;
     display: flex;
+    padding-block-start: 100dvh;
+    top: revert-layer;
     backdrop-filter: blur(0px);
     border: none;
 }
