@@ -114,7 +114,7 @@
     height: calc(100vh - 4em) !important;
 =======height: calc(100dvh - 4em) !important;
 >>>>>>>f21e547616ff964266d3dd48cdc9c460de4b849b
-    width: 100dvw;max-width: -webkit-fill-available;margin-inline:  auto !important;object-fit: cover;position: absolute;height: -webkit-fill-available;left: 0;top: 0;}
+    width: 100dvw;max-width: -webkit-fill-available;margin-inline:  auto !important;object-fit: cover;position: absolute;left: 0;top: 0;}
 #pageadscontainer section .inner .ad-panel h1 , 
 #pageadscontainer section .inner .ad-panel p,
 #clientad .inner .ad-panel h1,
