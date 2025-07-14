@@ -107,7 +107,7 @@
     text-decoration: none;
     flex-direction: column;
     justify-content: flex-end;
-    transition: height 0.1s ease-in-out, transform 0.1s ease;
+    transition: height 0.33s ease, transform 0.33s ease;
 }
 #pageadscontainer section .inner .ad-panel img, #clientad .inner .ad-panel img{
 
@@ -127,7 +127,7 @@ left: 0;
 
 top: 0;
 
-transition: height 0.1s ease-in-out, transform 0.1s ease;
+transition: height 0.33s ease, transform 0.33s ease;
 
 }
 #pageadscontainer section .inner .ad-panel h1 , 
