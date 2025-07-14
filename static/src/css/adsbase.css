@@ -107,7 +107,7 @@
     text-decoration: none;
     flex-direction: column;
     justify-content: flex-end;
-    transition: .33s;
+    transition: 3s height;
 }
 #pageadscontainer section .inner .ad-panel img, #clientad .inner .ad-panel img{
 <<<<<<<HEAD
