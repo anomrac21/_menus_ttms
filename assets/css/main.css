@@ -1,66 +1,69 @@
 html {
     scroll-behavior: smooth
 }
+
 #footerBtns.visible {
-  opacity: 1 !important;
-  pointer-events: all  ;
+    opacity: 1!important;
+    pointer-events: all
 }
-.location-block{
-    background: #000000aa;
+
+.location-block {
+    background: #000a
 }
-.location-block .accordion{
-    font-size: small;
+
+.location-block .accordion {
+    font-size: small
 }
 
 .hours {
-  margin-bottom: 6em;
+    margin-bottom: 6em
 }
 
 .hours ul {
-  list-style: none;
-  padding: 0;
-  margin: 0.5rem 0;
+    list-style: none;
+    padding: 0;
+    margin: .5rem 0
 }
 
 .hours li {
-  margin-bottom: 0.25rem;
+    margin-bottom: .25rem
 }
 
 summary {
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 0.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: .5rem
 }
 
 details[open] summary::after {
-  content: " ▲";
+    content: " ▲"
 }
 
 details summary::after {
-  content: " ▼";
+    content: " ▼"
 }
 
 details ul.all-hours[hidden] {
-  display: none;
+    display: none
 }
 
 details[open] ul.all-hours {
-  display: block;
+    display: block
 }
 
-.clientad-heading{
-    background: linear-gradient(#00000055, #000000);
+.clientad-heading {
+    background: linear-gradient(#00000055,#000000);
     color: #fefefe;
-    padding-block-start: .8em;
-    position: relative;
+    padding-block-start:.8em;position: relative;
     z-index: 1;
-    margin-block-start: 4em;
-}
-.main-menu-bg{
+    margin-block-start: 8em;}
+
+.main-menu-bg {
     background-color: var(--main-bg);
     position: relative;
-    z-index: 1;
+    z-index: 1
 }
+
 #search {
     max-width: 640px;
     margin: auto
@@ -571,8 +574,7 @@ details[open] ul.all-hours {
     column-count: 1;
     background: var(--main-bg);
     position: relative;
-    margin-block-start: 4em;
-    }
+    margin-block-start:4em}
 
 @media(min-width: 600px) {
     .main-body {
@@ -613,13 +615,10 @@ details[open] ul.all-hours {
 
 .main-menu {
     width: -webkit-fill-available;
-    margin-inline:auto;
-    max-width: 480px;
+    margin-inline:auto;max-width: 480px;
     overflow: hidden;
     position: relative;
-    margin-block-start:0;
-    padding-block-end: .8em;
-    border-radius: .4em;
+    margin-block-start:0;padding-block-end:.8em;border-radius: .4em;
     background: linear-gradient( var(--menu-bg-color-1),var(--menu-bg-color-2))
 }
 
@@ -698,7 +697,7 @@ details[open] ul.all-hours {
     background-repeat: no-repeat;
     position: relative;
     color: var(--main-text-color);
-    background-color: var(--main-bg);
+    background-color: var(--main-bg)
 }
 
 #orderModal {
@@ -778,8 +777,7 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block:1em;
-    border-radius: .4em;
+    padding-block:1em;border-radius: .4em;
     overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
@@ -826,12 +824,7 @@ details[open] ul.all-hours {
 
 #orderModal .image {
     max-height: 200px;
-    max-height
-Allows authors to constrain content height to a certain range.
-Learn more
-
-Don't show: 200px;';
-    min-height: 128px;
+    max-height Allows authors to constrain content height to a certain range. Learn more Don't show: 200px;';min-height: 128px;
     min-width: -webkit-fill-available;
     overflow: hidden
 }
@@ -1031,14 +1024,13 @@ Don't show: 200px;';
     margin-inline-start:.4em}
 
 #dashboard .body {
-    height: calc(-12em + 100dvh);
+    height: calc(-12em + 100dvh)
 }
 
 #dashboard .dashboardfooter {
     display: flex;
     justify-content: space-around;
-    padding-block-end: 2em;
-    }
+    padding-block-end:2em}
 
 #dashboard .dashboardfooter .container {
     display: flex;
@@ -1108,9 +1100,8 @@ Don't show: 200px;';
 .advertisments .singlepageimages img {
     height: auto!important;
     max-width: 480px!important;
-    margin-inline:auto;
-    scroll-snap-align: start;
-    }
+    margin-inline:auto;scroll-snap-align: start
+}
 
 .Advertisments .container,.listpageimages {
     display: flex;
@@ -1154,7 +1145,7 @@ Don't show: 200px;';
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap
 }
 
 .singlepageimages img {
@@ -1176,11 +1167,13 @@ Don't show: 200px;';
 
 .hero-content {
     background: linear-gradient(var(--menu-bg-color-1),var(--menu-bg-color-2));
-    border-radius: .4em;
-}.main-content {
+    border-radius: .4em
+}
+
+.main-content {
     background: linear-gradient(var(--menu-bg-color-1),var(--menu-bg-color-2));
     border-radius: .4em;
-    min-height: 100dvh;
+    min-height: 100dvh
 }
 
 .main-header .container {
@@ -1370,12 +1363,12 @@ Don't show: 200px;';
     width: 100%;
     background: linear-gradient(var(--button-color1),var(--button-color2));
     color: var(--button-text-color1);
-    min-height: 100dvh;
+    min-height: 100dvh
 }
 
 .singlepagemenu .prices {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap
 }
 
 .singlepagemenu .prices li {
@@ -1430,7 +1423,7 @@ html,body {
 
 h1,h2,h3,h4,h5,h6 {
     padding: .4em;
-    margin: 0;
+    margin: 0
 }
 
 #orderModal h2,#orderModal h3 {
@@ -1457,8 +1450,7 @@ header {
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em;
-    background: var(--main-bg);
+    padding-block-start: 4em; background: var(--main-bg);
     background-size: auto;
     background-position: top center;
 }
@@ -1484,8 +1476,7 @@ main img {
     z-index: 1;
     position: relative;
     max-height: 66dvh;
-    margin-inline: auto;
-    }
+    margin-inline: auto; }
 
 #bg {
     position: absolute;
@@ -1497,8 +1488,7 @@ main img {
 }
 
 .menu-summary {
-    padding-inline: .8em;
-    background: var(--main-bg);
+    padding-inline: .8em; background: var(--main-bg);
     position: relative;
 }
 

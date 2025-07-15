@@ -18,7 +18,16 @@
         {{ partial "ads/frontpageads.html" . }}
 
         <div id="four">
+
           <div class="ad-margin-top"></div>
+          <div class="nav-btns">
+            <button class="l-btn">
+              <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"/></g></svg>
+            </button>
+            <button class="r-btn">
+              <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"/></g></svg>
+            </button>
+          </div>
           <ul class="inner" style="background: url(/branding/favicon512.webp); background-size: 90% auto !important;background-color: #000000;">
             {{ partial "client/openinghours.html" . }}
           </ul>
@@ -349,8 +358,39 @@ function initOpeninghoursDisplay() {
   targets.forEach(target => observer.observe(target));
 }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("section").forEach(section => {
+    const ul = section.querySelector(".inner");
+    const items = ul.querySelectorAll("li");
+    const leftBtn = section.querySelector(".l-btn");
+    const rightBtn = section.querySelector(".r-btn");
+    let currentIndex = 0;
 
+    if (items.length <= 1) {
+      leftBtn.style.display = "none";
+      rightBtn.style.display = "none";
+    }
 
+    function updateScroll() {
+      ul.scrollTo({
+        left: items[currentIndex].offsetLeft,
+        behavior: 'smooth'
+      });
+    }
+
+    leftBtn.addEventListener("click", () => {
+      currentIndex = (currentIndex - 1 + items.length) % items.length;
+      updateScroll();
+    });
+
+    rightBtn.addEventListener("click", () => {
+      currentIndex = (currentIndex + 1) % items.length;
+      updateScroll();
+    });
+  });
+});
+</script>
 
 </body>
 </html>

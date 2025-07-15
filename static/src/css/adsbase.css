@@ -177,3 +177,32 @@
 #pageadscontainer section#four.is-active .inner {
     background-color: #222222dd;
 }
+.nav-btns {
+    display: flex;
+    position: absolute;
+    z-index: 2;
+    justify-content: space-between;
+    width: 100vw;
+    height: 66dvh;
+    align-items: center;
+    pointer-events: none;
+}
+.l-btn, .r-btn{
+    pointer-events: all;
+    height: -webkit-fill-available;
+    background: none;
+    margin-block-start: 5em;
+    border: none;
+    color: #fefefe;
+}
+.l-btn{
+    /*background: linear-gradient(90deg, #000000, transparent);*/
+}
+ .r-btn{
+    /*background: linear-gradient(-90deg, #000000, transparent);*/
+}
+.l-btn svg, .r-btn svg{
+    width: 32px;
+    height: 64px;
+    fill:#ffffff;
+}
