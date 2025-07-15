@@ -2,7 +2,6 @@
     height: 4.8em;
 }
 .content-panel{
-    display: flex;
     height: -webkit-fill-available !important;
     width: -webkit-fill-available !important;
 }
@@ -119,28 +118,7 @@
     transition: height 0.33s ease, transform 0.33s ease;
     pointer-events: all;
 }
-#pageadscontainer section .inner .ad-panel img, #clientad .inner .ad-panel img{
-
-height: calc(100dvh - 4em) !important;
-
-width: 100dvw;
-
-max-width: -webkit-fill-available;
-
-margin-inline:  auto !important;
-
-object-fit: cover;
-
-position: absolute;
-
-z-index: 1;
-
-left: 0;
-
-top: 0;
-
-transition: height 0.33s ease, transform 0.33s ease;
-}
+#pageadscontainer section .inner .ad-panel img, #clientad .inner .ad-panel img{height: calc(100dvh - 4em) !important;width: 100dvw;max-width: -webkit-fill-available;margin-inline:  auto !important;object-fit: contain;object-position: top;background-position: top;position: absolute;z-index: 1;left: 0;top: 0;transition: height 0.33s ease, transform 0.33s ease;}
 #pageadscontainer section .inner .ad-panel h1 , 
 #pageadscontainer section .inner .ad-panel p,
 #clientad .inner .ad-panel h1,
