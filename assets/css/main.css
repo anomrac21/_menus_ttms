@@ -3,6 +3,7 @@ html {
 }
 #footerBtns.visible {
   opacity: 1 !important;
+  pointer-events: all  ;
 }
 .location-block{
     background: #000000aa;
@@ -1360,7 +1361,7 @@ Don't show: 200px;';
 }
 
 #singlepageimage {
-    max-width: 100%;
+    max-width: 100dvw;
     object-fit: cover;
     width: -webkit-fill-available
 }
@@ -1368,7 +1369,8 @@ Don't show: 200px;';
 .singlepagemenu {
     width: 100%;
     background: linear-gradient(var(--button-color1),var(--button-color2));
-    color: var(--button-text-color1)
+    color: var(--button-text-color1);
+    min-height: 100dvh;
 }
 
 .singlepagemenu .prices {
@@ -1554,6 +1556,7 @@ footer {
     border-top: 1px solid #fefefe55;
     margin-inline: auto; margin-block-end: .8em; padding-block: .4em; backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    pointer-events: none;
 }
 
 .grad1 {

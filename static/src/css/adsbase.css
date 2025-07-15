@@ -167,7 +167,8 @@ transition: height 0.33s ease, transform 0.33s ease;
     color: #fefefe;
     border: none;
     background: #aa1;
-    max-width: calc(100dvw - 4em);
+    width: calc(100dvw - 4em);
+    max-width: 366px;
     margin-inline: auto;
 }
 #pageadscontainer section#one {
