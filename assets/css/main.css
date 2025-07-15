@@ -56,7 +56,7 @@ details[open] ul.all-hours {
     color: #fefefe;
     padding-block-start:.8em;position: relative;
     z-index: 1;
-    margin-block-start: 8em;}
+    margin-block-start:8em}
 
 .main-menu-bg {
     background-color: var(--main-bg);
@@ -637,7 +637,10 @@ details[open] ul.all-hours {
 .menu tr td {
     width: -webkit-fill-available;
     margin-inline:0 auto;font-size: medium;
-    pointer-events: none
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .menu tr th {
@@ -688,7 +691,7 @@ details[open] ul.all-hours {
     margin-block-end:.8em;transition: .15s;
     width: 90%!important;
     max-width: -webkit-fill-available;
-    margin-inline:auto!important}
+    margin-inline:auto!important;}
 
 .headerstyle {
     background-image: url(/images/headerbg.webp);
