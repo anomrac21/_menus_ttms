@@ -1,6 +1,10 @@
 {{ $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" }}
 {{ range site.Data.locations.locations }}
         <li class="ad-panel">
+          <div class="openstatus center aos-init aos-animate hide" data-aos="zoom-in" data-aos-anchor="#home">
+              <a href="#openhours" id="opensign" class="locbtn btn open" >Open</a>
+              <a href="#openhours" id="closedsign" class="locbtn btn close hide">Closed</a>
+          </div>
           <div class="location-block">
             <h3>
               <a href="https://www.ttmenus.com/map/?lat={{ .lat }}&lng={{ .lon }}&zoom=19&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
@@ -55,7 +59,7 @@
             <p><em>No hours listed</em></p>
           {{ end }}
         </div>
-        <div class="ad-margin-top"></div>
+        <div style="height: 4em;"></div>
         </li>
 {{ end }}
       
