@@ -35,7 +35,8 @@
       {{ range .Params.images }}
         <li class="ad-panel">
           <a href="{{ $adurl }}" class="content-panel">
-          <img src="{{ site.BaseURL}}/{{ .image }}">
+          <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait-bg">
+          <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait">
           <div class="adbottomspacer"></div>
           </a>
         </li>

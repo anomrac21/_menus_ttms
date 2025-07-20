@@ -1,66 +1,78 @@
-{{ $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" }}
-{{ range site.Data.locations.locations }}
-        <li class="ad-panel">
-          <div class="openstatus center aos-init aos-animate hide" data-aos="zoom-in" data-aos-anchor="#home">
-              <a href="#openhours" id="opensign" class="locbtn btn open" >Open</a>
-              <a href="#openhours" id="closedsign" class="locbtn btn close hide">Closed</a>
-          </div>
-          <div class="location-block">
-            <h3>
-              <a href="https://www.ttmenus.com/map/?lat={{ .lat }}&lng={{ .lon }}&zoom=19&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
-                    {{ .address }}
-              </a>
-            </h3>
-            {{ with .opening_hours }}
-            {{ $oh := . }}
-            <div class="hours" data-opening-hours>
-              <ul class="today-hours">
-                <!-- JavaScript can populate today’s hours here -->
-              </ul>
+<div id="client-openinghours">
 
-              <details class="accordion">
-                <summary>Show All Hours</summary>
-                <ul class="all-hours">
-                  {{ range $days }}
-                    {{ $day := . }}
-                    {{ with index $oh $day }}
-                      {{ $entries := index $oh $day }}
-                      {{ $openList := where $entries "type" "Open" }}
-                      {{ $closeList := where $entries "type" "Close" }}
-                      {{ $open := index $openList 0 }}
-                      {{ $close := index $closeList 0 }}
-                      <li data-day="{{ $day }}">
-                        <strong>{{ $day | title }}:</strong>
-                        {{ if and $open $close }}
-                          {{ $openH := int $open.hour }}
-                          {{ $openM := printf "%02d" (int $open.minute) }}
-                          {{ $openAMPM := cond (ge $openH 12) "PM" "AM" }}
-                          {{ $open12 := mod $openH 12 | default 12 }}
-
-                          {{ $closeH := int $close.hour }}
-                          {{ $closeM := printf "%02d" (int $close.minute) }}
-                          {{ $closeAMPM := cond (ge $closeH 12) "PM" "AM" }}
-                          {{ $close12 := mod $closeH 12 | default 12 }}
-
-                          {{ printf "%d:%s%s – %d:%s%s" $open12 $openM (lower $openAMPM) $close12 $closeM (lower $closeAMPM) }}
-                          
-                        {{ else }}
-                          Closed
-                        {{ end }}
-                      </li>
-                    {{ else }}
-                      <li data-day="{{ $day }}"><strong>{{ $day | title }}:</strong> Closed</li>
-                    {{ end }}
-                  {{ end }}
-                </ul>
-              </details>
-            </div>
-          {{ else }}
-            <p><em>No hours listed</em></p>
-          {{ end }}
+  <div class="ad-margin-top"></div>
+  {{ partial "ads/adsnavbtn.html" . }}
+  <ul class="inner" style="background: url(/branding/favicon512.webp);     background-size: clamp(100px, 90%, 512px) !important;background-color: #000000;">
+    {{ $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" }}
+    {{ range $i, $loc := site.Data.locations.locations }}
+      {{ $index := printf "loc-%d" $i }}
+      <li class="ad-panel">
+        <div class="openstatus center aos-init aos-animate hide" data-aos="zoom-in" data-aos-anchor="#home">
+          <a id="opensign-{{ $index }}" class="locbtn btn open hide">Open</a>
+          <a id="closedsign-{{ $index }}" class="locbtn btn close hide">Closed</a>
+          <a id="soonopen-{{ $index }}" class="locbtn btn open soon hide">Opens Soon</a>
+          <a id="soonclose-{{ $index }}" class="locbtn btn close soon hide">Closes Soon</a>
         </div>
-        <div style="height: 4em;"></div>
-        </li>
-{{ end }}
-      
+
+
+        <div class="location-block">
+          <h3>
+            <a href="https://www.ttmenus.com/map/?lat={{ .lat }}&lng={{ .lon }}&zoom=19&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
+              {{ .address }}
+            </a>
+          </h3>
+          {{ with .opening_hours }}
+          {{ $oh := . }}
+          <div class="hours" data-opening-hours>
+            <ul class="today-hours">
+              <!-- JavaScript can populate today’s hours here -->
+            </ul>
+
+            <details class="accordion">
+              <summary>Show All Hours</summary>
+              <ul class="all-hours">
+                {{ range $days }}
+                  {{ $day := . }}
+                  {{ with index $oh $day }}
+                    {{ $entries := index $oh $day }}
+                    {{ $openList := where $entries "type" "Open" }}
+                    {{ $closeList := where $entries "type" "Close" }}
+                    {{ $open := index $openList 0 }}
+                    {{ $close := index $closeList 0 }}
+                    <li data-day="{{ $day }}">
+                      <strong>{{ $day | title }}:</strong>
+                      {{ if and $open $close }}
+                        {{ $openH := int $open.hour }}
+                        {{ $openM := printf "%02d" (int $open.minute) }}
+                        {{ $openAMPM := cond (ge $openH 12) "PM" "AM" }}
+                        {{ $open12 := mod $openH 12 | default 12 }}
+
+                        {{ $closeH := int $close.hour }}
+                        {{ $closeM := printf "%02d" (int $close.minute) }}
+                        {{ $closeAMPM := cond (ge $closeH 12) "PM" "AM" }}
+                        {{ $close12 := mod $closeH 12 | default 12 }}
+
+                        {{ printf "%d:%s%s – %d:%s%s" $open12 $openM (lower $openAMPM) $close12 $closeM (lower $closeAMPM) }}
+                        
+                      {{ else }}
+                        Closed
+                      {{ end }}
+                    </li>
+                  {{ else }}
+                    <li data-day="{{ $day }}"><strong>{{ $day | title }}:</strong> Closed</li>
+                  {{ end }}
+                {{ end }}
+              </ul>
+            </details>
+          </div>
+        {{ else }}
+          <p><em>No hours listed</em></p>
+        {{ end }}
+      </div>
+      <div style="height: 4em;"></div>
+      </li>
+    {{ end }}
+  </ul>      
+</div>
+<a class="menu-anchor" id="openhours"></a> 
 

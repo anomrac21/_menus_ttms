@@ -1,27 +1,42 @@
 html {
     scroll-behavior: smooth
 }
-.openstatus .open{
+
+.status-badge {
     color: #fff;
     text-shadow: 0 0 7px #0f0, 0 0 10px #0f0, 0 0 21px #0f0, 0 0 42px #0f0, 0 0 82px #0f0, 0 0 92px #0f0, 0 0 102px #0f0, 0 0 151px #0f0;
-    font-size: x-large !important;
-    max-width: 66%;
-    margin: auto;
+    font-size: large !important;
+    display: flex;
+    width: fit-content;
+    margin-inline: auto;
+    margin-block: .4em;
     border: 3px solid;
     padding: 0.1em 0.5em;
     border-radius: 2.5em;
     background: #000;
+    align-items: center;
+    justify-content: center;
 }
-.openstatus .close{
+
+/* Status-specific styles */
+.status-badge.open {
+   text-shadow: 0 0 7px #0f0, 0 0 10px #0f0, 0 0 21px #0f0, 0 0 42px #0f0, 0 0 82px #0f0, 0 0 92px #0f0, 0 0 102px #0f0, 0 0 151px #0f0;
     color: #fff;
+}
+
+.status-badge.closed {
     text-shadow: 0 0 7px #f00, 0 0 10px #f00, 0 0 21px #f00, 0 0 42px #f00, 0 0 82px #f00, 0 0 92px #f00, 0 0 102px #f00, 0 0 151px #f00;
-    font-size: x-large !important;
-    max-width: 66%;
-    margin: auto;
-    border: 3px solid;
-    padding: 0.1em 0.5em;
-    border-radius: 2.5em;
-    background: #000;
+    color: #fff;
+}
+
+.status-badge.soon-open {
+  background-color: #ffc107; /* yellow */
+  color: #000;
+}
+
+.status-badge.soon-close {
+  background-color: #fd7e14; /* orange */
+  color: #000;
 }
 #footerBtns.visible {
     opacity: 1!important;

@@ -16,23 +16,7 @@
       <main id="main">
         {{ block "main" . }}{{ end }}
         {{ partial "ads/frontpageads.html" . }}
-
-        <div id="four">
-
-          <div class="ad-margin-top"></div>
-          <div class="nav-btns">
-            <button class="l-btn">
-              <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"/></g></svg>
-            </button>
-            <button class="r-btn">
-              <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"/></g></svg>
-            </button>
-          </div>
-          <ul class="inner" style="background: url(/branding/favicon512.webp); background-size: 90% auto !important;background-color: #000000;">
-            {{ partial "client/openinghours.html" . }}
-          </ul>
-        </div>
-      <a class="menu-anchor" id="openhours"></a> 
+        {{ partial "client/openinghours.html" . }}
       </main>
     </div>
   </div>
@@ -184,6 +168,8 @@
                     });
                   }
                   initOpeninghoursDisplay();
+                  initDisplayNavBar();
+                  getOpenSigns();
                   window.scrollTo(0, 0);
 
                 },
@@ -191,6 +177,8 @@
                   await new Promise(resolve => setTimeout(resolve, 3000));
                   initFrontPageAdsScrollEffects();
                   initOpeninghoursDisplay();
+                  initDisplayNavBar();
+                  getOpenSigns();
                   hideLoader();
                
                 }
@@ -239,44 +227,7 @@
       AOS.refresh();
     });
   </script>
-  <script>
-  (async () => {
-    const siteId = "your-real-site-id"; // 🔥 Replace this with your real Hugo site ID
-    const page = window.location.pathname;
-
-    try {
-      const response = await fetch(`https://ads.ttmenus.com/ads?hugo_site_id=${siteId}&page=${page}`);
-      if (!response.ok) {
-        console.error("Failed to fetch ads:", response.statusText);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("✅ Ads fetched successfully:", data);
-
-      if (!data.ads || data.ads.length === 0) {
-        console.warn("⚠️ No ads received for this page.");
-      } else {
-        ["top", "footer"].forEach(placement => {
-          const slot = document.querySelector(`[data-placement="${placement}"]`);
-          const ad = data.ads.find(a => a.placement === placement);
-          
-          if (slot && ad) {
-            slot.innerHTML = `
-              <a href="${ad.link}" target="_blank" rel="noopener noreferrer">
-                <img src="${ad.image}" alt="Advertisement" style="max-width: 100%; height: auto; display: block; margin: auto;" />
-              </a>
-            `;
-          } else if (slot) {
-            console.warn(`⚠️ No ad available for placement: '${placement}'`);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("🚨 Error fetching ads:", error);
-    }
-  })();
-  </script>
+  {{ partial "scripts/opensignjs.html" . }}
   <script>
     function initFrontPageAdsScrollEffects() {
       var ctrl = new ScrollMagic.Controller({
@@ -312,21 +263,24 @@
   </script>
   {{ partial "whatsapp_ordering_system.html" . }}
   <script>
-function initOpeninghoursDisplay() {
-  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  const today = days[new Date().getDay()];
+    function initOpeninghoursDisplay() {
+      const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+      const today = days[new Date().getDay()];
 
-  document.querySelectorAll("[data-opening-hours]").forEach(section => {
-    const todayList = section.querySelector(".today-hours");
-    const allItems = section.querySelectorAll(".all-hours li");
+      document.querySelectorAll("[data-opening-hours]").forEach(section => {
+        const todayList = section.querySelector(".today-hours");
+        const allItems = section.querySelectorAll(".all-hours li");
 
-    allItems.forEach(li => {
-      if (li.dataset.day === today) {
-        todayList.appendChild(li.cloneNode(true));
-      }
-    });
-  });
+        allItems.forEach(li => {
+          if (li.dataset.day === today) {
+            todayList.appendChild(li.cloneNode(true));
+          }
+        });
+      });
 
+    }
+
+function initDisplayNavBar() {
   const targets = document.querySelectorAll(".frontpageads");
   const fadeEl = document.getElementById("footerBtns");
   if (!targets.length || !fadeEl) {
