@@ -1,47 +1,34 @@
-<div id="pageadscontainer" class="frontpageads">
-  <section>
-    <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-      <li class="ad-panel" >
-        <span data-aos="zoom-out-right">Sponsored</span>
-        
-        <!-- Background image (optional blur effect) -->
-        <img src="https://www.ttmenus.com/images/ttms_ad.webp" class="ad-portrait-bg">
-
-        <!-- Video element replacing img tag -->
-        <video class="ad-portrait .ad-video" autoplay muted loop playsinline>
-          <source src="/images/ad1.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+<div id="pageadscontainer" class="frontpage-hero">
+  <section id="landing" >
+    <ul class="inner" style="background-size: 300px !important; background-repeat: repeat !important;">
+      <li class="ad-panel">
+        <div class="content-container">
+          <h1>Welcome to TTMenus</h1>
+          <p>Find your <strong>Food</strong>.</p>
+          <!-- <input id="search" placeholder="Search" onfocus="openMap();"> -->
+          <ul class="taxonomy-links">
+            {{ range $name, $taxonomy := .Site.Taxonomies.categories }}
+              <li><a href="{{ $taxonomy.Page.RelPermalink }}">{{ $name }}</a></li>
+            {{ end }}
+          </ul>
+        </div>
       </li>
-    </ul>
-  </section>
-  <div class="ad-margin-top"></div>
-  <section>
-    <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-      <li class="ad-panel" onclick="window.open('https://islandetickets.com/event/Atherlysafterdark?fbclid=PAQ0xDSwLZQJNleHRuA2FlbQIxMQABpxes8X0qB2xCS4W3KWxTFQpA1Lpf7UVq1A_YfwIj272EDpYbNsE68pHWmrgf_aem_ypxBiLhdGStxChmWNm3gcg', '_blank');">
-          <span data-aos="zoom-out-right">Sponsored</span>
-           <!-- Background image (optional blur effect) -->
-          <img src="https://www.ttmenus.com/images/ttms_ad.webp" class="ad-portrait-bg">
-
-          <!-- Video element replacing img tag -->
-          <video class="ad-portrait .ad-video" autoplay muted loop playsinline>
-            <source src="/images/ad2.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-        </li>
-    </ul>
-  </section>
-  <div class="ad-margin-top"></div>
-  <section>
-    {{ partial "ads/adsnavbtn.html" . }}
-    <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-      <li class="ad-panel" onclick="window.open('https://www.whatsapp.com/catalog/18683645662/?app_absent=0', '_blank');">
-        <span data-aos="zoom-out-right">Sponsored</span>
-        <img src="/images/ad3.jpg" class="ad-portrait-bg">
-        <img src="/images/ad3.jpg" class="ad-portrait">
+      <li class="ad-panel" style="background:#00000066" href="#">
+        <span>Sponsored</span>
+        <div class="content-container">
+          <h1>Join Our Directory</h1>
+          <p>Add your location to <strong>TTMenus</strong>.</p>
+          <button>Join</button>
+        </div>
+      </li>
+      <li class="ad-panel" style="background:#000000aa" href="#">
+        <span>Sponsored</span>
+        <div class="content-container">
+          <h1>Advertise on TTMenus</h1>
+          <p>Link to <strong>Anything</strong>.</p>
+          <button>Click Me</button>
+        </div>
       </li>
     </ul>
   </section>
 </div>
-<div class="ad-margin-top"></div>
-
