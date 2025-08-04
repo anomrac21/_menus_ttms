@@ -64,6 +64,10 @@ html {
 .hours li {
     margin-bottom: .25rem
 }
+.today-hours li span{
+    margin-inline: auto !important;
+    position: relative !important;
+}
 
 summary {
     font-weight: 700;

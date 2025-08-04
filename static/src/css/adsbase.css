@@ -1,6 +1,12 @@
 .ad-portrait-bg {
     object-fit: cover !important;
     filter: brightness(0.4) blur(6px) !important;
+    position: absolute;
+    z-index: -1;
+    height: -webkit-fill-available;
+}
+.ad-panel{
+    height: calc(100vh - 4em);
 }
 .ad-margin-top{
     height: 16em;
@@ -190,7 +196,23 @@
     border: none;
     pointer-events: none;
 }
-
+.ad-portrait{
+    max-width:100vw;
+    margin-block: auto;
+}
+.ad-panel span{
+    position: absolute;
+    color: #fff;
+    z-index: 2;
+    font-size: x-small;
+    background: #111;
+    padding: .2em .4em;
+    border-radius: 1em;
+    border: 2px solid #ffffffaa;
+    margin: .4em !important;
+    right: .4em;
+    font-weight: 600;
+}
 
 .nav-btns {
     display: flex;
