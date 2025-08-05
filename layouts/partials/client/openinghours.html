@@ -1,8 +1,7 @@
 <div id="client-openinghours">
-
   <div class="ad-margin-top"></div>
   {{ partial "ads/adsnavbtn.html" . }}
-  <ul class="inner" style="background: url(/branding/favicon512.webp);     background-size: clamp(100px, 90%, 512px) !important;background-color: #000000;">
+  <ul class="inner">
     {{ $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" }}
     {{ range $i, $loc := site.Data.locations.locations }}
       {{ $index := printf "loc-%d" $i }}

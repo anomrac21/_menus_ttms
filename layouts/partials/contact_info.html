@@ -9,7 +9,7 @@
 			            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
 			            	{{ .address }}
 			          	</a>
-					  	{{ if .delivery }}
+					  	{{ if .Params.delivery }}
 							<a id="deliveryBtn" class="btn" onclick="toggleDelivery(this);" style="width: 8em;">
 			            		<svg version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#fefefe">
 								<g id="SVGRepo_bgCarrier" stroke-width="0"/>
@@ -19,14 +19,14 @@
 								<span>Delivery</span>
 			          		</a>
 			          		<div class="hide" style="display:flex">
-			          		{{ range .delivery }}
-								{{ if .fooddrop }}
-									<a id="fooddropBtn" href="{{ .fooddrop }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #7881be;">
+			          		{{ range .Params.delivery }}
+								{{ if .Params.delivery.fooddrop }}
+									<a id="fooddropBtn" href="{{ .Params.delivery.fooddrop }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #7881be;">
 					            		<img src="/branding/other/fd.webp" alt="Location" style="max-width: 4em;">
 					          		</a>
 								{{ end }}
-								{{ if .neighbourhoodmunchies }}
-									<a id="neighbourhoodmunchies" href="{{ .neighbourhoodmunchies }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #e8cc45;">
+								{{ if .Params.delivery.neighbourhoodmunchies }}
+									<a id="neighbourhoodmunchies" href="{{ .Params.delivery.neighbourhoodmunchies }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #e8cc45;">
 					            		<img src="/branding/other/nm.webp" alt="Location" style="max-width: 4em;">
 					          		</a>
 								{{ end }}

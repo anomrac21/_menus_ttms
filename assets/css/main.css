@@ -1,7 +1,20 @@
 html {
     scroll-behavior: smooth
 }
-
+#client-openinghours .inner{
+    background: url(/branding/favicon512.webp);
+    background-size: clamp(100px, 66%, 512px) !important;
+    background-color: #000000;
+    color: #fff;
+    text-align: center;
+    background-position: center 4em;
+    background-repeat: no-repeat;
+    height: 100vh;
+    z-index: 2;
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse;
+}
 .status-badge {
     color: #fff;
     text-shadow: 0 0 7px #0f0, 0 0 10px #0f0, 0 0 21px #0f0, 0 0 42px #0f0, 0 0 82px #0f0, 0 0 92px #0f0, 0 0 102px #0f0, 0 0 151px #0f0;
@@ -52,7 +65,7 @@ html {
 }
 
 .hours {
-    margin-bottom: 2em;
+    margin-bottom: .4em;
 }
 
 .hours ul {
@@ -146,9 +159,13 @@ details[open] ul.all-hours {
 }
 
 #searchresultheader {
-    padding-block-start:1em;color: var(--main-text-color);
-    padding-inline:1em;max-width: 640px;
-    margin-inline:auto}
+    padding-block-start: 4em !important;
+    background-color: var(--main-bg) !important;
+    color: var(--main-text-color) !important;
+    padding-inline: 1em !important;
+    max-width: 640px !important;
+    margin-inline: auto !important;
+    }
 
 #cart {
     background: #000d;

@@ -1,25 +1,8 @@
 <a class="menu-anchor " id="{{ .LinkTitle }}"></a>
-<div id="pageadscontainer item" class="frontpageads">
-  <section>
-    <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-      <li class="ad-panel" onclick="window.open('https://www.whatsapp.com/catalog/18683645662/?app_absent=0', '_blank');">
-          <span data-aos="zoom-out-right">Sponsored</span>
-          <img src="https://www.ttmenus.com//images/ad3.jpg" class="ad-portrait-bg">
-          <img src="https://www.ttmenus.com//images/ad3.jpg" class="ad-portrait">
-        </li>
-    </ul>
-  </section>
+<div id="pageadscontainer" class="frontpageads item">
   {{ range .RegularPages.ByWeight }}
   <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10"><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
   <section id="clientad">
-    <div class="nav-btns">
-      <button class="l-btn">
-        <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"/></g></svg>
-      </button>
-      <button class="r-btn">
-        <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"/></g></svg>
-      </button>
-    </div>
     <span data-aos="zoom-out-right">Promotion</span>
     <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
       {{ $adstitle := .LinkTitle }}
