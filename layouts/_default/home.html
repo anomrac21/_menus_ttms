@@ -14,7 +14,6 @@
     {{ .Content }}
 
   </div>
-  {{ partial "ads/frontpageads.html" . }}
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
       {{ $title:= .LinkTitle }}
@@ -24,6 +23,7 @@
       {{ end }}
     {{ end }}
   {{ end }}
+  {{ partial "ads/frontpageads.html" . }}
   <div class="item" style="height: 80vh;position: relative;z-index: 2;pointer-events: none;"></div>
   <div class="main-body">
   {{ range site.Pages.ByWeight }}

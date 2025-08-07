@@ -107,9 +107,9 @@ details[open] ul.all-hours {
 .clientad-heading {
     background: linear-gradient(#00000055,#000000);
     color: #fefefe;
-    padding-block-start:.8em;position: relative;
+    position: relative;
     z-index: 1;
-    margin-block-start:8em}
+    }
 
 .main-menu-bg {
     background-color: var(--main-bg);
