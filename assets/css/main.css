@@ -732,7 +732,9 @@ details[open] ul.all-hours {
 
 .menu .item p {
     font-size: xx-small;
-    margin-block-end:5px}
+    margin-block-end:5px;
+    color: var(--button-text-color2) !important;
+    }
 
 .menu tr {
     transform-style: preserve-3d;
