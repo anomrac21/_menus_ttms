@@ -1,56 +1,56 @@
 html {
     scroll-behavior: smooth
 }
-#client-openinghours .inner{
+
+#client-openinghours .inner {
     background: url(/branding/favicon512.webp);
-    background-size: clamp(100px, 66%, 512px) !important;
-    background-color: #000000;
+    background-size: clamp(100px,66%,512px)!important;
+    background-color: #000;
     color: #fff;
     text-align: center;
-    background-position: center 4em;
+    background-position: 50% 4em;
     background-repeat: no-repeat;
     height: 100vh;
     z-index: 2;
     position: relative;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column-reverse
 }
+
 .status-badge {
     color: #fff;
-    text-shadow: 0 0 7px #0f0, 0 0 10px #0f0, 0 0 21px #0f0, 0 0 42px #0f0, 0 0 82px #0f0, 0 0 92px #0f0, 0 0 102px #0f0, 0 0 151px #0f0;
-    font-size: large !important;
+    text-shadow: 0 0 7px #0f0,0 0 10px #0f0,0 0 21px #0f0,0 0 42px #0f0,0 0 82px #0f0,0 0 92px #0f0,0 0 102px #0f0,0 0 151px #0f0;
+    font-size: large!important;
     display: flex;
     width: fit-content;
-    margin-inline: auto;
-    margin-block: .4em;
-    border: 3px solid;
-    padding: 0.1em 0.5em;
+    margin-inline:auto;margin-block:.4em;border: 3px solid;
+    padding: .1em .5em;
     border-radius: 2.5em;
     background: #000;
     align-items: center;
-    justify-content: center;
+    justify-content: center
 }
 
-/* Status-specific styles */
 .status-badge.open {
-   text-shadow: 0 0 7px #0f0, 0 0 10px #0f0, 0 0 21px #0f0, 0 0 42px #0f0, 0 0 82px #0f0, 0 0 92px #0f0, 0 0 102px #0f0, 0 0 151px #0f0;
-    color: #fff;
+    text-shadow: 0 0 7px #0f0,0 0 10px #0f0,0 0 21px #0f0,0 0 42px #0f0,0 0 82px #0f0,0 0 92px #0f0,0 0 102px #0f0,0 0 151px #0f0;
+    color: #fff
 }
 
 .status-badge.closed {
-    text-shadow: 0 0 7px #f00, 0 0 10px #f00, 0 0 21px #f00, 0 0 42px #f00, 0 0 82px #f00, 0 0 92px #f00, 0 0 102px #f00, 0 0 151px #f00;
-    color: #fff;
+    text-shadow: 0 0 7px red,0 0 10px red,0 0 21px red,0 0 42px red,0 0 82px red,0 0 92px red,0 0 102px red,0 0 151px red;
+    color: #fff
 }
 
 .status-badge.soon-open {
-  background-color: #ffc107; /* yellow */
-  color: #000;
+    background-color: #ffc107;
+    color: #000
 }
 
 .status-badge.soon-close {
-  background-color: #fd7e14; /* orange */
-  color: #000;
+    background-color: #fd7e14;
+    color: #000
 }
+
 #footerBtns.visible {
     opacity: 1!important;
     pointer-events: all
@@ -65,7 +65,7 @@ html {
 }
 
 .hours {
-    margin-bottom: .4em;
+    margin-bottom: .4em
 }
 
 .hours ul {
@@ -77,9 +77,9 @@ html {
 .hours li {
     margin-bottom: .25rem
 }
-.today-hours li span{
-    margin-inline: auto !important;
-    position: relative !important;
+
+.today-hours li span {
+    margin-inline:auto!important;position: relative!important
 }
 
 summary {
@@ -108,8 +108,8 @@ details[open] ul.all-hours {
     background: linear-gradient(#00000055,#000000);
     color: #fefefe;
     position: relative;
-    z-index: 1;
-    }
+    z-index: 1
+}
 
 .main-menu-bg {
     background-color: var(--main-bg);
@@ -159,13 +159,10 @@ details[open] ul.all-hours {
 }
 
 #searchresultheader {
-    padding-block-start: 4em !important;
-    background-color: var(--main-bg) !important;
-    color: var(--main-text-color) !important;
-    padding-inline: 1em !important;
-    max-width: 640px !important;
-    margin-inline: auto !important;
-    }
+    padding-block-start:4em!important;background-color: var(--main-bg)!important;
+    color: var(--main-text-color)!important;
+    padding-inline:1em!important;max-width: 640px!important;
+    margin-inline:auto!important}
 
 #cart {
     background: #000d;
@@ -697,7 +694,7 @@ details[open] ul.all-hours {
     pointer-events: none;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-start
 }
 
 .menu tr th {
@@ -714,7 +711,7 @@ details[open] ul.all-hours {
 .menu .sizes,.menu .flavours {
     display: flex;
     flex-wrap: wrap;
-    margin-block-end:5px;left: -5px;
+    margin-block-end:5px;margin-inline: .4em;left: -5px;
     position: relative
 }
 
@@ -732,9 +729,8 @@ details[open] ul.all-hours {
 
 .menu .item p {
     font-size: xx-small;
-    margin-block-end:5px;
-    color: var(--button-text-color2) !important;
-    }
+    margin-block-end:5px;color: var(--button-text-color2)!important
+}
 
 .menu tr {
     transform-style: preserve-3d;
@@ -750,7 +746,7 @@ details[open] ul.all-hours {
     margin-block-end:.8em;transition: .15s;
     width: 90%!important;
     max-width: -webkit-fill-available;
-    margin-inline:auto!important;}
+    margin-inline:auto!important}
 
 .headerstyle {
     background-image: url(/images/headerbg.webp);
