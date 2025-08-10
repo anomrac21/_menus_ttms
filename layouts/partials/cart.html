@@ -31,6 +31,10 @@
 			<div id="serviceCalc"></div>
 		</div>
 		<div id="itemTotal">TOTAL $0</div>
-		<button class="placeOrder" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+		{{ if site.Params.orderingsystem.usephonecall }}
+			<a class="placeOrder" href='tel:{{ site.Params.orderingsystem.phone }}'><i class="fa fa-phone"></i> Order Now</a>
+		{{ else }}
+			<button class="placeOrder" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+		{{ end }}
 	</div>
 </div>

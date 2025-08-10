@@ -120,3 +120,5 @@ function showAppleMsg(x) {
     var fooddrop = document.getElementById("fooddropBtn");
     fooddrop.classList.add('hide');
   }
+
+  
