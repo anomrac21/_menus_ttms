@@ -2,6 +2,121 @@ html {
     scroll-behavior: smooth
 }
 
+#client-openinghours .inner {
+    background: url(/branding/favicon512.webp);
+    background-size: clamp(100px,66%,512px)!important;
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    background-position: 50% 4em;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    z-index: 2;
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse
+}
+
+.status-badge {
+    color: #fff;
+    text-shadow: 0 0 7px #0f0,0 0 10px #0f0,0 0 21px #0f0,0 0 42px #0f0,0 0 82px #0f0,0 0 92px #0f0,0 0 102px #0f0,0 0 151px #0f0;
+    font-size: large!important;
+    display: flex;
+    width: fit-content;
+    margin-inline:auto;margin-block:.4em;border: 3px solid;
+    padding: .1em .5em;
+    border-radius: 2.5em;
+    background: #000;
+    align-items: center;
+    justify-content: center
+}
+
+.status-badge.open {
+    text-shadow: 0 0 7px #0f0,0 0 10px #0f0,0 0 21px #0f0,0 0 42px #0f0,0 0 82px #0f0,0 0 92px #0f0,0 0 102px #0f0,0 0 151px #0f0;
+    color: #fff
+}
+
+.status-badge.closed {
+    text-shadow: 0 0 7px red,0 0 10px red,0 0 21px red,0 0 42px red,0 0 82px red,0 0 92px red,0 0 102px red,0 0 151px red;
+    color: #fff
+}
+
+.status-badge.soon-open {
+    background-color: #ffc107;
+    color: #000
+}
+
+.status-badge.soon-close {
+    background-color: #fd7e14;
+    color: #000
+}
+
+#footerBtns.visible {
+    opacity: 1!important;
+    pointer-events: all
+}
+
+.location-block {
+    background: #000a
+}
+
+.location-block .accordion {
+    font-size: small
+}
+
+.hours {
+    margin-bottom: .4em
+}
+
+.hours ul {
+    list-style: none;
+    padding: 0;
+    margin: .5rem 0
+}
+
+.hours li {
+    margin-bottom: .25rem
+}
+
+.today-hours li span {
+    margin-inline:auto!important;position: relative!important
+}
+
+summary {
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: .5rem
+}
+
+details[open] summary::after {
+    content: " ▲"
+}
+
+details summary::after {
+    content: " ▼"
+}
+
+details ul.all-hours[hidden] {
+    display: none
+}
+
+details[open] ul.all-hours {
+    display: block
+}
+
+.clientad-heading {
+    background: linear-gradient(#00000055,#000000);
+    color: #fefefe;
+    position: relative;
+    z-index: 1
+}
+
+.main-menu-bg {
+    background-color: var(--main-bg);
+    position: relative;
+    z-index: 1
+}
+
 #search {
     max-width: 640px;
     margin: auto
@@ -44,9 +159,10 @@ html {
 }
 
 #searchresultheader {
-    padding-block-start:1em;color: var(--main-text-color);
-    padding-inline:1em;max-width: 640px;
-    margin-inline:auto}
+    padding-block-start:4em!important;background-color: var(--main-bg)!important;
+    color: var(--main-text-color)!important;
+    padding-inline:1em!important;max-width: 640px!important;
+    margin-inline:auto!important}
 
 #cart {
     background: #000d;
@@ -329,7 +445,8 @@ html {
 }
 
 #menublock li {
-    border-right: 1px solid var(--header-bordercolor-2)
+    border-right: 1px solid var(--header-bordercolor-2);
+    max-width: 4em
 }
 
 #menublock span {
@@ -509,7 +626,9 @@ html {
 
 .main-body {
     column-count: 1;
-    margin-block-start:4em;margin-inline:.4em}
+    background: var(--main-bg);
+    position: relative;
+    margin-block-start:4em}
 
 @media(min-width: 600px) {
     .main-body {
@@ -553,7 +672,7 @@ html {
     margin-inline:auto;max-width: 480px;
     overflow: hidden;
     position: relative;
-    margin-block-start:0;margin-block-end:.8em;border-radius: .4em;
+    margin-block-start:0;padding-block-end:.8em;border-radius: .4em;
     background: linear-gradient( var(--menu-bg-color-1),var(--menu-bg-color-2))
 }
 
@@ -572,7 +691,10 @@ html {
 .menu tr td {
     width: -webkit-fill-available;
     margin-inline:0 auto;font-size: medium;
-    pointer-events: none
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start
 }
 
 .menu tr th {
@@ -589,7 +711,7 @@ html {
 .menu .sizes,.menu .flavours {
     display: flex;
     flex-wrap: wrap;
-    margin-block-end:5px;left: -5px;
+    margin-block-end:5px;margin-inline:.4em;left: -5px;
     position: relative
 }
 
@@ -607,7 +729,8 @@ html {
 
 .menu .item p {
     font-size: xx-small;
-    margin-block-end:5px}
+    margin-block-end:5px;color: var(--button-text-color2)!important
+}
 
 .menu tr {
     transform-style: preserve-3d;
@@ -630,7 +753,9 @@ html {
     background-size: 96% 86%;
     background-position: 50%;
     background-repeat: no-repeat;
-    position: relative
+    position: relative;
+    color: var(--main-text-color);
+    background-color: var(--main-bg)
 }
 
 #orderModal {
@@ -691,15 +816,15 @@ html {
     flex-direction: column
 }
 
-#itemSides div, #itemMods div ,#itemAddMods div  {
+#itemSides div,#itemMods div,#itemAddMods div {
     height: calc(100vh - 14em);
     overflow-y: scroll;
-    position: relative;
+    position: relative
 }
 
 #wamodal,#itemSides,#itemMods,#itemAddMods {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
-    margin: 1.2em auto auto;
+    margin: 5.2em auto auto;
     width: 90dvw;
     max-height: calc(100dvh - 8em);
     min-height: calc(100dvh - 12em);
@@ -757,16 +882,19 @@ html {
 
 #orderModal .image {
     max-height: 200px;
+    max-height Allows authors to constrain content height to a certain range. Learn more Don't show: 200px;';min-height: 128px;
     min-width: -webkit-fill-available;
     overflow: hidden
 }
 
 #orderModal .image img {
     max-height: 200px;
+    min-height: auto;
     min-width: -webkit-fill-available;
     max-width: -webkit-fill-available;
     object-fit: cover;
     background-size: cover;
+    mix-blend-mode: revert;
     overflow: hidden
 }
 
@@ -909,7 +1037,7 @@ html {
     width: 100dvw;
     height: 100dvh;
     position: fixed;
-    z-index: 2;
+    z-index: 4;
     color: #000;
     box-shadow: #111 0 2px 5px;
     flex-direction: column;
@@ -917,7 +1045,7 @@ html {
     background: rgba(254,254,254,.984);
     transition: .26s;
     left: 0;
-    max-width: 600px;
+    max-width: 600px
 }
 
 #dashboard * {
@@ -931,11 +1059,11 @@ html {
     height: 4em;
     background: linear-gradient(#d73301ee,#800000ee);
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between
 }
 
 #dashboard .header a {
-    display: flex;
+    display: flex
 }
 
 #dashboard li {
@@ -947,36 +1075,36 @@ html {
     margin: .4em;
     background: #1111;
     border-radius: .4em;
-    box-shadow: -1px -1px 1px #11111111,1px 1px 1px #11111155;
+    box-shadow: -1px -1px 1px #11111111,1px 1px 1px #11111155
 }
 
 #dashboard li b {
     margin-inline-start:.4em}
 
 #dashboard .body {
-    height: calc(-13em + 100dvh)
+    height: calc(-12em + 100dvh)
 }
 
 #dashboard .dashboardfooter {
     display: flex;
     justify-content: space-around;
-    padding-block-end:4em;}
+    padding-block-end:2em}
 
 #dashboard .dashboardfooter .container {
     display: flex;
-    flex-direction: column;
+    flex-direction: column
 }
 
 #subTotalcontainer {
     border-top: 1px solid;
-    border-bottom: 2px solid #ffffff19;
+    border-bottom: 2px solid #ffffff19
 }
 
 #subTotalcontainer,#vatCalccontainer,#serviceCalccontainer {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: flex-end;
+    justify-content: flex-end
 }
 
 #ad-slot-top,#ad-slot-footer {
@@ -986,7 +1114,7 @@ html {
     overflow-x: scroll;
     align-items: flex-end;
     padding: 0;
-    margin: 0;
+    margin: 0
 }
 
 #ad-slot-top span,#ad-slot-footer span {
@@ -997,7 +1125,7 @@ html {
     padding-inline:.4em;border-radius: 3em;
     font-size: x-small;
     font-weight: 700;
-    mix-blend-mode: difference;
+    mix-blend-mode: difference
 }
 
 #ad-slot-top a {
@@ -1005,31 +1133,33 @@ html {
 }
 
 #ad-slot-footer a {
-    min-width: -webkit-fill-available;
+    min-width: -webkit-fill-available
 }
 
 #ad-slot-top a img,#ad-slot-footer a img {
-    margin-inline:auto;max-width: 100%;
+    margin-inline:auto;max-width: 100%
 }
 
 .Advertisments .listpageimages,.Advertisments .container {
-    max-height: initial!important;
+    max-height: initial!important
 }
 
 .Advertisments img {
-    min-width: 100%!important;
+    min-width: 100%!important
 }
 
 .Advertisments .item {
-    margin-block-end:2em;}
+    margin-block-end:2em}
 
 .advertisments h1 {
-    text-align: center;}
+    text-align: center
+}
 
 .advertisments .singlepageimages img {
     height: auto!important;
     max-width: 480px!important;
-    margin-inline:auto}
+    margin-inline:auto;scroll-snap-align: start
+}
 
 .Advertisments .container,.listpageimages {
     display: flex;
@@ -1069,7 +1199,11 @@ html {
 
 #itemImages,.singlepageimages {
     display: flex;
-    overflow-x: scroll!important
+    overflow-x: scroll!important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    flex-direction: row;
+    flex-wrap: nowrap
 }
 
 .singlepageimages img {
@@ -1089,9 +1223,15 @@ html {
     position: relative
 }
 
-.hero-content,.main-content {
+.hero-content {
     background: linear-gradient(var(--menu-bg-color-1),var(--menu-bg-color-2));
     border-radius: .4em
+}
+
+.main-content {
+    background: linear-gradient(var(--menu-bg-color-1),var(--menu-bg-color-2));
+    border-radius: .4em;
+    min-height: 100dvh
 }
 
 .main-header .container {
@@ -1119,7 +1259,7 @@ html {
 #askforserver {
     position: absolute;
     right: .5em;
-    z-index: 1;
+    z-index: 2;
     max-width: 3em
 }
 
@@ -1272,7 +1412,7 @@ html {
 }
 
 #singlepageimage {
-    max-width: 100%;
+    max-width: 100dvw;
     object-fit: cover;
     width: -webkit-fill-available
 }
@@ -1280,13 +1420,13 @@ html {
 .singlepagemenu {
     width: 100%;
     background: linear-gradient(var(--button-color1),var(--button-color2));
-    color: var(--button-text-color1)
+    color: var(--button-text-color1);
+    min-height: 100dvh
 }
 
 .singlepagemenu .prices {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center
+    flex-wrap: wrap
 }
 
 .singlepagemenu .prices li {
@@ -1339,11 +1479,10 @@ html,body {
     padding: 0!important
 }
 
-h1,h3,h4,h5,h6 {
-    margin-block:.4em .2em}
-
-h2 {
-    margin-block:.4em;padding-inline:.4em}
+h1,h2,h3,h4,h5,h6 {
+    padding: .4em;
+    margin: 0
+}
 
 #orderModal h2,#orderModal h3 {
     margin-block:.4em;padding-inline:.4em;color: var(--selected-text-color1)
@@ -1356,27 +1495,26 @@ ul,p {
 }
 
 body {
-    main-text-color); font-family: sans-serif;
+    main-text-color);font-family: sans-serif;
     line-height: 1.5;
-    color: var(--main-text-color);
 }
 
 header {
     position: fixed;
     top: 0px;
     width: -webkit-fill-available;
-    z-index: 1;
+    z-index: 3;
 }
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em; padding-block-end: 4em; background: var(--main-bg);
+    padding-block-start: 4em; background: var(--main-bg);
     background-size: auto;
     background-position: top center;
 }
 
 main img {
-    max-width: 80%;
+    max-width: 100%;
     display: block;
 }
 
@@ -1395,6 +1533,7 @@ main img {
     display: block;
     z-index: 1;
     position: relative;
+    max-height: 66dvh;
     margin-inline: auto; }
 
 #bg {
@@ -1407,7 +1546,8 @@ main img {
 }
 
 .menu-summary {
-    margin: 0 .8em .8em;
+    padding-inline: .8em; background: var(--main-bg);
+    position: relative;
 }
 
 .main-menu .food {
@@ -1418,7 +1558,8 @@ main img {
 }
 
 #main p {
-    margin-inline: .8em; }
+    margin-inline: .8em;color: var(--main-text-color);
+}
 
 main p:nth-child(3) img:nth-child(2) {
     display: block;
@@ -1456,11 +1597,14 @@ footer {
 
 #footerBtns {
     transition: 0.2s;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
     width: max-content;
     border-radius: 3em;
     border-top: 1px solid #fefefe55;
     margin-inline: auto; margin-block-end: .8em; padding-block: .4em; backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    pointer-events: none;
 }
 
 .grad1 {
@@ -1484,7 +1628,7 @@ footer {
 #footerBtns a {
     color: #ffffff;
     max-width: 100px;
-    width: 10dvh;
+    width: 8dvh;
     min-width: 36px;
     display: inline-block;
 }
