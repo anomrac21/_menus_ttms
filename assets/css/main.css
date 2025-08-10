@@ -10,12 +10,10 @@ html {
     text-align: center;
     background-position: 50% 4em;
     background-repeat: no-repeat;
-<<<<<<< HEAD
+    <<<<<<<HEAD background-attachment: fixed;
+    =======height: 100vh;
+    >>>>>>>c3d9162f891aecde74df497bf526ab29ebd99636 z-index: 2;
     background-attachment: fixed;
-=======
-    height: 100vh;
->>>>>>> c3d9162f891aecde74df497bf526ab29ebd99636
-    z-index: 2;
     position: relative;
     display: flex;
     flex-direction: column-reverse
@@ -715,12 +713,10 @@ details[open] ul.all-hours {
 .menu .sizes,.menu .flavours {
     display: flex;
     flex-wrap: wrap;
-<<<<<<< HEAD
-    margin-block-end:5px;margin-inline:.4em;left: -5px;
-=======
-    margin-block-end:5px;margin-inline: .4em;left: -5px;
->>>>>>> c3d9162f891aecde74df497bf526ab29ebd99636
-    position: relative
+    <<<<<<< HEAD margin-block-end: 5px;
+    margin-inline:.4em;left: -5px;
+    ======= margin-block-end:5px;margin-inline:.4em;left: -5px;
+    >>>>>>> c3d9162f891aecde74df497bf526ab29ebd99636 position: relative
 }
 
 .menu .sizes li,.menu .flavours li {
