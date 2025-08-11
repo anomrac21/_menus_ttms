@@ -10,13 +10,14 @@ html {
     text-align: center;
     background-position: 50% 4em;
     background-repeat: no-repeat;
-    <<<<<<<HEAD background-attachment: fixed;
-    =======height: 100vh;
-    >>>>>>>c3d9162f891aecde74df497bf526ab29ebd99636 z-index: 2;
+    background-attachment: fixed;
+    height: 100vh;
+    z-index: 2;
     background-attachment: fixed;
     position: relative;
     display: flex;
-    flex-direction: column-reverse
+    flex-direction: column-reverse;
+    min-height: 100vh;
 }
 
 .status-badge {
