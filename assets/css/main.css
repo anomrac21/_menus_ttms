@@ -10,14 +10,11 @@ html {
     text-align: center;
     background-position: 50% 4em;
     background-repeat: no-repeat;
-    background-attachment: fixed;
     height: 100vh;
     z-index: 2;
-    background-attachment: fixed;
     position: relative;
     display: flex;
-    flex-direction: column-reverse;
-    min-height: 100vh;
+    flex-direction: column-reverse
 }
 
 .status-badge {
@@ -714,10 +711,8 @@ details[open] ul.all-hours {
 .menu .sizes,.menu .flavours {
     display: flex;
     flex-wrap: wrap;
-    <<<<<<< HEAD margin-block-end: 5px;
-    margin-inline:.4em;left: -5px;
-    ======= margin-block-end:5px;margin-inline:.4em;left: -5px;
-    >>>>>>> c3d9162f891aecde74df497bf526ab29ebd99636 position: relative
+    margin-block-end:5px;margin-inline:.4em;left: -5px;
+    position: relative
 }
 
 .menu .sizes li,.menu .flavours li {
