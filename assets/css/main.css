@@ -11,7 +11,6 @@ html {
     background-position: 50% 4em;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    height: 100vh;
     z-index: 2;
     background-attachment: fixed;
     position: relative;
@@ -205,7 +204,9 @@ details[open] ul.all-hours {
 }
 
 #cart .titleRow:active,#cart .close {
-    background: #000
+    background: #000;
+    margin-block: auto;
+    padding-inline: .4em;
 }
 
 .waBtn {
@@ -829,8 +830,8 @@ details[open] ul.all-hours {
 
 #wamodal,#itemSides,#itemMods,#itemAddMods {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
-    margin: 5.2em auto auto;
-    width: 90dvw;
+    margin: 4.8em auto auto;
+    width: calc(100dvw - .8em);
     max-height: calc(100dvh - 8em);
     min-height: calc(100dvh - 12em);
     max-width: 400px;
@@ -840,7 +841,8 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block:1em;border-radius: .4em;
+    padding-block:1em;
+    border-radius: .4em;
     overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
@@ -1314,7 +1316,7 @@ details[open] ul.all-hours {
     box-shadow: 0 0 10px #fff;
     scroll-behavior: smooth;
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
-    margin: 1em auto auto
+    margin: 4.8em auto auto;
 }
 
 .modal h2,.modal .container a {
@@ -1565,7 +1567,9 @@ main img {
 #main p {
     margin-inline: .8em;color: var(--main-text-color);
 }
-
+#main .selected p {
+   color: var(--selected-text-color1);
+}
 main p:nth-child(3) img:nth-child(2) {
     display: block;
     margin: auto;
