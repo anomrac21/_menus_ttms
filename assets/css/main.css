@@ -215,7 +215,8 @@ details[open] ul.all-hours {
     max-height: 3em;
     overflow: hidden;
     top: 0;
-    background: #000
+    background: #000;
+    align-items: center;
 }
 
 #cartcount {
@@ -235,7 +236,7 @@ details[open] ul.all-hours {
     border: 2px solid #fff;
     border-radius: 5em;
     top: calc(-100dvh + 10em);
-    right: 4em;
+    left: -5vw;
     font-size: .8em;
     font-weight: 900;
     padding: .4em .8em;
@@ -510,25 +511,30 @@ details[open] ul.all-hours {
 }
 
 .contactinfo .locations {
-    display: block;
-    font-size: x-small
+    display: flex;
+    font-size: x-small;
+    overflow: scroll;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
 }
 
 .contactinfo .locations .all {
     width: 100dvh;
-    display: flex
+    display: flex;
 }
 
 .installBtn {
     margin: auto!important;
     width: fit-content!important;
-    padding-inline:1.2em!important}
+    padding-inline:1.2em!important;
+}
 
 .contactinfo .social {
-    padding-inline:1.2em!important;padding-block:.8em!important;!i;!}
+    padding-inline:1.2em!important;
+    padding-block:.8em!important;
+}
 
 .contactinfo .locbtn {
-    width: 98%!important
 }
 
 .onesignal-customlink-container {
@@ -715,10 +721,10 @@ details[open] ul.all-hours {
 .menu .sizes,.menu .flavours {
     display: flex;
     flex-wrap: wrap;
-    <<<<<<< HEAD margin-block-end: 5px;
-    margin-inline:.4em;left: -5px;
-    ======= margin-block-end:5px;margin-inline:.4em;left: -5px;
-    >>>>>>> c3d9162f891aecde74df497bf526ab29ebd99636 position: relative
+    margin-block-end: 5px;
+    margin-inline:.4em;
+    left: -5px;
+    position: relative;
 }
 
 .menu .sizes li,.menu .flavours li {
@@ -869,7 +875,9 @@ details[open] ul.all-hours {
     position: sticky;
     top: 0;
     z-index: 111;
-    margin-inline:.8em;margin-block:0}
+    margin-inline: .4em;
+    margin-block:0
+    }
 
 #wamodal .header img,.modal .header img {
     width: 1.6em;
@@ -1307,8 +1315,8 @@ details[open] ul.all-hours {
 
 .modal {
     margin: 50px auto auto;
-    padding: .5em;
-    width: 85dvw;
+    padding-block: .4em;
+    width: calc(100dvw - .8em);
     max-width: 420px;
     max-height: 70vh;
     overflow: scroll;
@@ -1335,7 +1343,7 @@ details[open] ul.all-hours {
 .modal .container div {
     display: flex;
     flex-wrap: wrap;
-    margin: 10px auto;
+    margin: .4em auto;
     width: 90%;
     align-items: center;
     justify-content: center
@@ -1702,4 +1710,525 @@ footer {
 }
 
 @media(min-width: 1440px) {
+}
+
+/* Location spacing and scroll-snap improvements */
+.locations {
+    
+    /* Ensure horizontal scroll works properly */
+    overflow-x: auto;
+    white-space: nowrap;
+    display: flex;
+    gap: 1em;
+}
+
+/* Make each location list item take up proper space */
+li.locations {
+    flex: 0 0 auto;
+     /* Ensure each location has enough width */
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+.location-item {
+    min-width: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+}
+
+.locations .locbtn {
+    transition: all 0.3s ease;
+}
+
+.locations .locbtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Ensure proper scroll-snap behavior */
+.locations > div {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+/* Hide nested elements from scroll-snap */
+.locations .hide {
+    scroll-snap-align: none;
+}
+
+/* Active location highlighting */
+.location-item.active-location {
+    background-color: rgba(76, 175, 80, 0.05);
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+}
+
+.location-item.active-location .locbtn {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Add a subtle indicator for non-active locations */
+.location-item:not(.active-location) {
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.location-item:not(.active-location):hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+/* Closest location button styling */
+a[onclick*="findClosestLocation"]:hover {
+    background-color: #4CAF50;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* Location search and navigation container */
+.location-controls-container {
+    text-align: center;
+}
+
+.location-controls-inner {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4em;
+    padding-inline: .4em;
+}
+
+.location-count-display {
+    margin-bottom: 0.5em;
+    color: #666;
+    font-size: 14px;
+}
+
+.location-search-container {
+}
+
+.location-search-input {
+    padding: .4em .8em;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    max-width: -webkit-fill-available;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.location-search-input:focus {
+    border-color: #4CAF50;
+}
+
+.find-closest-btn {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: x-small;
+    padding: .4em;
+    border: 1px solid #4CAF50;
+    border-radius: 20px;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.find-closest-btn:hover {
+    background-color: #4CAF50;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* Location navigation arrows container */
+.location-navigation-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 1em;
+}
+
+.location-nav-left,
+.location-nav-right {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.location-nav-left:hover,
+.location-nav-right:hover {
+    background: #45a049;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.location-nav-left:active,
+.location-nav-right:active {
+    transform: scale(0.95);
+}
+
+.location-nav-left {
+    title: "Previous location";
+}
+
+.location-nav-right {
+    title: "Next location";
+}
+
+/* Locations wrapper for proper sizing */
+.locations-wrapper {
+    flex: 1;
+    max-width: 480px;
+    width: 100%;
+}
+
+/* Cart location display */
+.cart-location {
+    font-size: xx-small;
+    color: #666;
+    margin-top: 2px;
+    text-align: center;
+    transition: color 0.3s ease;
+}
+
+.cart-location.active {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Delivery options styling */
+.delivery-toggle-btn {
+    transition: all 0.3s ease;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    flex-direction: column;
+}
+
+.delivery-toggle-btn:hover {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+.delivery-options {
+    display: flex;
+    gap: 0.5em;
+    margin-top: 0.5em;
+    transition: all 0.3s ease;
+}
+
+.delivery-options.hide {
+    display: none !important;
+}
+
+.delivery-option-btn {
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delivery-option-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Ensure delivery options don't interfere with scroll-snap */
+.delivery-toggle-btn,
+.delivery-options {
+    scroll-snap-align: none;
+}
+
+/* Table Selection Button Styling */
+.table-selection-btn {
+    background: linear-gradient(#ff6b35, #f7931e) !important;
+    color: white !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex !important;
+    align-items: center;
+    gap: 0.5em;
+    font-weight: 500;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.table-selection-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    color: white !important;
+    text-decoration: none;
+}
+
+.table-selection-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.table-selection-btn img {
+    filter: brightness(0) invert(1);
+}
+
+/* Table Selection Modal Styling */
+.location-selection-section {
+    margin-bottom: 1.5em;
+}
+
+.location-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-bottom: 1em;
+}
+
+.location-btn {
+    background: linear-gradient(#4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 0.5em 1em;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.location-btn:hover {
+    background: linear-gradient(#45a049, #3d8b40);
+    transform: translateY(-1px);
+}
+
+.location-btn.active {
+    background: linear-gradient(#2196F3, #1976D2);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+}
+
+.table-selection-section {
+    transition: all 0.3s ease;
+}
+
+.table-selection-section.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.table-selection-section.show {
+    opacity: 1;
+    max-height: 500px;
+    overflow: visible;
+}
+
+/* Ensure delivery options don't interfere with scroll-snap */
+.delivery-toggle-btn,
+.delivery-options {
+    scroll-snap-align: none;
+}
+
+/* Table Selection Modal Styling */
+.selected-location-display {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.selected-location-info {
+    color: #495057;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.selected-location-info strong {
+    color: #212529;
+    font-size: small;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.selected-location-info small {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.table-selection-section {
+    margin-top: 20px;
+}
+
+#dynamicTableButtons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: .4em;
+    margin: .4em;
+}
+
+.tableBtn {
+    display: inline-block;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.tableBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+.tableBtn.takeaway-btn {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    grid-column: span 2;
+}
+
+.tableBtn.takeaway-btn:hover {
+    background: linear-gradient(135deg, #f7931e 0%, #e67e22 100%);
+    box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+}
+
+.tableBtn.selected {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+    border: 2px solid #fff;
+}
+
+.tableBtn.selected:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%) !important;
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);
+}
+
+.sepline {
+    font-size: small;
+    font-weight: 700;
+    color: #495057;
+    text-align: center;
+    margin: 20px 0 16px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.location-display-section {
+    margin-bottom: 20px;
+}
+
+/* Order Summary Display Styling */
+.order-summary-display {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: .4em;
+    margin: .4em;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Hide confirmation modal by default */
+#confirmmodal {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#confirmmodal.show {
+    opacity: 1;
+    max-height: 500px;
+    overflow: visible;
+}
+
+.summary-location, .summary-order-type {
+    margin-bottom: 16px;
+}
+
+.summary-location:last-child, .summary-order-type:last-child {
+    margin-bottom: 0;
+}
+
+.summary-location strong, .summary-order-type strong {
+    color: #212529;
+    font-size: x-small;
+    display: block;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-location-info {
+    color: #495057;
+    font-size: small;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.summary-order-type-info {
+    margin-top: 8px;
+}
+
+.takeaway-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(255,107,53,0.3);
+}
+
+/* Responsive adjustments for table selection modal */
+@media (max-width: 768px) {
+    #dynamicTableButtons {
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+        gap: .4em;
+    }
+    
+    .tableBtn {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .selected-location-display {
+        padding: .4em;
+    }
+    
+    .selected-location-info {
+        font-size: 14px;
+    }
+    
+    .selected-location-info strong {
+        font-size: small;
+    }
 }

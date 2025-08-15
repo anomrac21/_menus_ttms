@@ -1,7 +1,101 @@
 <script>
-const number = '{{ site.Params.orderingsystem.whatsapp }}';
+// Dynamic location detection - will be updated based on visible location
+let number = '{{ site.Params.orderingsystem.whatsapp }}'; // Fallback number
 const name = '{{ site.Params.title }}'
 const hastables = {{ default false site.Params.orderingsystem.hastables }};
+
+// Function to update WhatsApp number based on visible location
+function updateWhatsAppNumber() {
+	console.log('updateWhatsAppNumber called - checking horizontal position');
+	const visibleLocation = getVisibleLocation();
+	
+	if (visibleLocation) {
+		console.log('Found location element:', visibleLocation);
+		console.log('Location text:', visibleLocation.textContent.trim());
+		console.log('Location dataset:', visibleLocation.dataset);
+		console.log('Location data-whatsapp attribute:', visibleLocation.getAttribute('data-whatsapp'));
+		
+		// Get horizontal position info
+		const rect = visibleLocation.getBoundingClientRect();
+		const elementCenterX = rect.left + (rect.width / 2);
+		const viewportCenterX = window.innerWidth / 2;
+		const distanceFromCenter = Math.abs(elementCenterX - viewportCenterX);
+		
+		console.log('Horizontal positioning - Element center X:', elementCenterX.toFixed(1), 'Viewport center X:', viewportCenterX.toFixed(1), 'Distance from center:', distanceFromCenter.toFixed(1));
+		
+		if (visibleLocation.dataset.whatsapp && visibleLocation.dataset.whatsapp.trim() !== '') {
+			const oldNumber = number;
+			number = visibleLocation.dataset.whatsapp;
+			console.log('Updated WhatsApp number from', oldNumber, 'to:', number, 'for location:', visibleLocation.textContent.trim());
+			console.log('Location selected based on horizontal position (closest to viewport center)');
+			
+			// Also visually select this location
+			setActiveLocation(visibleLocation);
+			
+			// Update cart location display
+			updateCartLocation(visibleLocation);
+			
+			// Debug verification - show the switch happened
+			verifyWhatsAppSwitch(oldNumber, number, visibleLocation.textContent.trim());
+		} else {
+			console.log('No WhatsApp number found in dataset for location:', visibleLocation.textContent.trim());
+			console.log('Raw data-whatsapp attribute value:', visibleLocation.getAttribute('data-whatsapp'));
+		}
+	} else {
+		console.log('No visible location found - check if locations container exists');
+	}
+}
+
+// Function to verify and debug WhatsApp number switch
+function verifyWhatsAppSwitch(oldNumber, newNumber, locationName) {
+	console.log('🔍 VERIFICATION: WhatsApp number switch detected!');
+	console.log('📍 Location:', locationName);
+	console.log('📱 Old number:', oldNumber);
+	console.log('📱 New number:', newNumber);
+	console.log('✅ Switch successful:', oldNumber !== newNumber);
+	
+	// Also verify the global number variable was updated
+	console.log('🌐 Global number variable:', number);
+	console.log('🔗 Verification:', number === newNumber ? 'PASSED' : 'FAILED');
+	
+	// Show what will be used in WhatsApp messages
+	console.log('📤 Next WhatsApp message will use:', number);
+}
+
+// Function to get the currently visible location
+function getVisibleLocation() {
+	const locationElements = document.querySelectorAll('li.locations .locbtn');
+	
+	if (locationElements.length === 0) {
+		console.log('No location elements found');
+		return null;
+	}
+	
+	// Use horizontal coordinates since locations are arranged horizontally
+	let bestElement = null;
+	let bestScore = -Infinity;
+	const viewportCenterX = window.innerWidth / 2;
+	
+	for (let i = 0; i < locationElements.length; i++) {
+		const element = locationElements[i];
+		const rect = element.getBoundingClientRect();
+		const elementCenterX = rect.left + (rect.width / 2);
+		
+		// Calculate distance from viewport center (closer = higher score)
+		const distanceFromCenter = Math.abs(elementCenterX - viewportCenterX);
+		const score = 1000 - distanceFromCenter; // Higher score for closer to center
+		
+		console.log(`Location ${i + 1}: "${element.textContent.trim()}" - Score: ${score}, Center X: ${elementCenterX.toFixed(1)}, Viewport Center X: ${viewportCenterX.toFixed(1)}`);
+		
+		if (score > bestScore) {
+			bestScore = score;
+			bestElement = element;
+		}
+	}
+	
+	console.log('Best location element:', bestElement?.textContent.trim(), 'with score:', bestScore);
+	return bestElement;
+}
 const messageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
 let messageBody = '';
 const messageEnd = '\nThank You!\nLooking forward to confirming this order';
@@ -728,9 +822,129 @@ function serviceCalc(){
 
 function advanceOrder(){
 	if (hastables) {
-		openTableModal();
+		// Close the cart first
+		closeCart();
+		
+		// Get the currently selected location and pass it to the table modal
+		const currentLocation = getVisibleLocation();
+		if (currentLocation) {
+			// Get the location data from the DOM element
+			const locationData = getLocationDataFromElement(currentLocation);
+			if (locationData) {
+				openTableModalWithLocation(locationData);
+			} else {
+				// Fallback to default table modal
+				openTableModal();
+			}
+		} else {
+			// No location selected, show alert and fallback
+			alert('Please select a location first before placing your order.');
+			openTableModal();
+		}
 	}else{
+		// Close the cart first
+		closeCart();
 		confirm();
+	}
+}
+
+// Function to get location data from a DOM element
+function getLocationDataFromElement(locationElement) {
+	if (!locationElement) return null;
+	
+	// Try to get location data from the element's dataset or attributes
+	const locationAddress = locationElement.textContent.trim();
+	const locationWhatsApp = locationElement.dataset.whatsapp;
+	const locationLat = locationElement.dataset.lat;
+	const locationLng = locationElement.dataset.lng;
+	const orderingTables = locationElement.dataset.orderingtables;
+	
+	console.log('🔍 Extracting location data from element:', {
+		address: locationAddress,
+		whatsapp: locationWhatsApp,
+		lat: locationLat,
+		lng: locationLng,
+		orderingTables: orderingTables
+	});
+	
+	// If we have basic location info, create a location object
+	if (locationAddress) {
+		// Parse ordering tables if available
+		let parsedOrderingTables = [];
+		if (orderingTables && orderingTables.trim() !== '') {
+			parsedOrderingTables = orderingTables.split(',').map(table => table.trim());
+			console.log('📋 Parsed ordering tables:', parsedOrderingTables);
+		} else {
+			console.log('⚠️ No ordering tables found for location:', locationAddress);
+		}
+		
+		const locationData = {
+			address: locationAddress,
+			whatsapp: locationWhatsApp,
+			lat: locationLat,
+			lng: locationLng,
+			orderingtables: parsedOrderingTables
+		};
+		
+		console.log('✅ Final location data object:', locationData);
+		return locationData;
+	}
+	
+	return null;
+}
+
+// Function to open table modal with specific location data
+function openTableModalWithLocation(locationData) {
+    if (!locationData) {
+        console.error('❌ No location data provided');
+        return;
+    }
+    
+    // Store the selected location data
+    selectedLocationData = locationData;
+    
+    // Update the display with location info
+    updateSelectedLocationDisplay(locationData);
+    
+    // Populate table numbers
+    populateTableNumbers(locationData);
+    
+    // Show the table selection section
+    const tableSelectionSection = document.getElementById('tableSelectionSection');
+    if (tableSelectionSection) {
+        tableSelectionSection.classList.add('show');
+    }
+    
+    // Show the modal
+    document.getElementById('tableNumberModal').classList.remove('hide');
+}
+
+// Function to set table number from external sources (like table modal)
+function setTableNumber(tableNumber) {
+	console.log('🎯 Setting table number to:', tableNumber);
+	myTable = tableNumber;
+	
+	// Update the cart display if needed
+	updateCartLocationDisplay();
+}
+
+// Function to update cart location display with table info
+function updateCartLocationDisplay() {
+	const cartLocationDiv = document.getElementById('cartLocation');
+	if (cartLocationDiv) {
+		const currentLocation = getVisibleLocation();
+		if (currentLocation) {
+			const locationText = currentLocation.textContent.trim();
+			let displayText = `📍 ${locationText}`;
+			
+			// Add table number if available
+			if (myTable && myTable.trim() !== '') {
+				displayText += ` - Table ${myTable}`;
+			}
+			
+			cartLocationDiv.innerHTML = displayText;
+			cartLocationDiv.classList.add('active');
+		}
 	}
 }
 
@@ -743,7 +957,17 @@ function constructWAMessage(){
 	var subTotalTxt='';
 	var vatTxt='';
 	var servicext='';
-	var label='Takeaway';
+	var label='';
+	
+	// Determine the correct label based on global order type variables
+	if (currentOrderType === 'takeaway') {
+		label = 'Takeaway';
+	} else if (currentOrderType === 'table' && currentTableNumber && currentTableNumber.trim() !== '') {
+		label = `Table #${currentTableNumber}`;
+	} else {
+		label = 'Takeaway'; // Default fallback
+	}
+	
 	if(vat>0 || service>0){
 		subTotalTxt='\nSub Total $ '+price.toFixed(2);
 		if(vat>0){
@@ -753,14 +977,16 @@ function constructWAMessage(){
 			servicext='\nService Charge '+service*100+'% $ '+servicecost.toFixed(2);
 		}
 	}
-	if(currentMode=='dinein'){
-		label=' Table#';
-	}
-	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+myTable+'\n'+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
+	
+	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+'\n'+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
 }
 
 function confirmSendOrder(){
 	window.open(message, "_blank" );
+	
+	// Clear the order type variables after sending the order
+	currentOrderType = 'takeaway';
+	currentTableNumber = '';
 }
 
 //Dine modes
@@ -887,16 +1113,92 @@ function openTableModal(state){
 	}
 	
 }
-function closeTableModal(){
-	
-	document.getElementById("tableNumberModal").classList.add('hide');
+function closeTableModal() {
+    document.getElementById('tableNumberModal').classList.add('hide');
+    document.getElementById('confirmmodal').classList.remove('show');
+    document.querySelector('.input').classList.remove('hide');
+    
+    // Hide the table selection section
+    const tableSelectionSection = document.getElementById('tableSelectionSection');
+    if (tableSelectionSection) {
+        tableSelectionSection.classList.remove('show');
+    }
+    
+    // Remove selected class from all table buttons
+    const allTableButtons = document.querySelectorAll('.tableBtn');
+    allTableButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    // Hide the order summary display
+    const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+    if (orderSummaryDisplay) {
+        orderSummaryDisplay.classList.add('hide');
+    }
+    
+    // Clear the order summary display
+    const summaryLocationInfo = document.getElementById('summaryLocationInfo');
+    if (summaryLocationInfo) {
+        summaryLocationInfo.innerHTML = '';
+    }
+    
+    // Reset selected table info
+    window.selectedTableInfo = null;
+    selectedLocationData = null;
+    
+    // Clear the current order location
+    window.currentOrderLocation = null;
 }
 
-function selectTable(ele) {
-	myTable =''+ele.innerText;
-	selectOnly(ele);
-	document.getElementById("myTableNum").innerText=ele.innerText;
-	
+// Enhanced selectTable function to include location context
+function selectTable(buttonElement) {
+    if (!selectedLocationData) {
+        console.error('❌ No location data available for table selection');
+        alert('Please select a location first');
+        return;
+    }
+    
+    // Remove selected class from all table buttons
+    const allTableButtons = document.querySelectorAll('.tableBtn');
+    allTableButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    // Add selected class to the clicked button
+    buttonElement.classList.add('selected');
+    
+    const tableNumber = buttonElement.textContent;
+    const isTakeaway = buttonElement.classList.contains('takeaway-btn');
+    
+    // Store selected table info
+    window.selectedTableInfo = {
+        tableNumber: tableNumber,
+        isTakeaway: isTakeaway,
+        location: selectedLocationData
+    };
+    
+    // Set global order type variables for WhatsApp message
+    currentOrderType = isTakeaway ? 'takeaway' : 'table';
+    currentTableNumber = tableNumber;
+    
+    // Update the modal to show confirmation
+    const tableNumElement = document.getElementById('myTableNum');
+    if (tableNumElement) {
+        if (isTakeaway) {
+            tableNumElement.textContent = 'Ready to place your takeaway order?';
+        } else {
+            tableNumElement.textContent = `Table: ${tableNumber} at ${selectedLocationData.address}`;
+        }
+    }
+    
+    if (isTakeaway) {
+        // For takeaway, update the summary display and go to order confirmation
+        updateOrderSummary(selectedLocationData);
+        // Show the summary for takeaway orders
+        document.getElementById('orderSummaryDisplay').classList.remove('hide');
+    } else {
+        // For table orders, hide the summary
+        document.getElementById('orderSummaryDisplay').classList.add('hide');
+    }
+    
+    // Show the confirmation modal
+    document.getElementById('confirmmodal').classList.add('show');
 }
 
 function confirmTable(state){
@@ -922,14 +1224,891 @@ function askforserver(){
 	confirmSendOrder();
 }
 
+// Function to find closest location, scroll to it, and select it
+function findClosestLocation() {
+	console.log('🔍 Finding closest location...');
+	
+	// Check if geolocation is supported
+	if (!navigator.geolocation) {
+		console.log('❌ Geolocation not supported');
+		alert('Geolocation is not supported by this browser. Please manually select a location.');
+		return;
+	}
+	
+	console.log('✅ Geolocation supported, requesting permission...');
+	
+	// Show loading state
+	const closestBtn = document.querySelector('a[onclick*="findClosestLocation"]');
+	const originalText = closestBtn.innerHTML;
+	closestBtn.innerHTML = '📍 Finding...';
+	closestBtn.style.opacity = '0.7';
+	
+	// Get user's current position with better error handling
+	navigator.geolocation.getCurrentPosition(
+		function(position) {
+			console.log('✅ Location permission granted!');
+			const userLat = position.coords.latitude;
+			const userLng = position.coords.longitude;
+			console.log('📍 User location:', userLat, userLng);
+			
+			// Find closest location
+			const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
+			let closestLocation = null;
+			let shortestDistance = Infinity;
+			
+			console.log(`🔍 Checking ${locationElements.length} locations...`);
+			
+			locationElements.forEach((location, index) => {
+				const lat = parseFloat(location.dataset.lat);
+				const lng = parseFloat(location.dataset.lng);
+				
+				if (!isNaN(lat) && !isNaN(lng)) {
+					// Calculate distance using Haversine formula
+					const distance = calculateDistance(userLat, userLng, lat, lng);
+					console.log(`Location ${index + 1}: ${location.textContent.trim()} - Distance: ${distance.toFixed(2)} km`);
+					
+					if (distance < shortestDistance) {
+						shortestDistance = distance;
+						closestLocation = location;
+					}
+				} else {
+					console.log(`⚠️ Location ${index + 1}: Invalid coordinates - lat: ${lat}, lng: ${lng}`);
+				}
+			});
+			
+			if (closestLocation) {
+				console.log('🎯 Closest location found:', closestLocation.textContent.trim(), `(${shortestDistance.toFixed(2)} km)`);
+				
+				// Scroll to the closest location
+				scrollToLocation(closestLocation);
+				
+				// Select it as the active location
+				setActiveLocation(closestLocation);
+				
+				// Show success message
+				closestBtn.innerHTML = '✅ Found!';
+				closestBtn.style.color = '#4CAF50';
+				setTimeout(() => {
+					closestBtn.innerHTML = originalText;
+					closestBtn.style.opacity = '1';
+					closestBtn.style.color = '#4CAF50';
+				}, 2000);
+				
+			} else {
+				console.log('❌ No valid locations found');
+				alert('Could not find any valid locations. Please check your data.');
+				closestBtn.innerHTML = originalText;
+				closestBtn.style.opacity = '1';
+			}
+		},
+		function(error) {
+			console.log('❌ Error getting location:', error);
+			console.log('Error code:', error.code);
+			console.log('Error message:', error.message);
+			
+			let errorMessage = 'Could not get your location. ';
+			switch(error.code) {
+				case error.PERMISSION_DENIED:
+					errorMessage += 'Location permission was denied. Please allow location access in your browser settings and try again.';
+					break;
+				case error.POSITION_UNAVAILABLE:
+					errorMessage += 'Location information is unavailable. Please try again.';
+					break;
+				case error.TIMEOUT:
+					errorMessage += 'Location request timed out. Please try again.';
+					break;
+				default:
+					errorMessage += 'An unknown error occurred. Please try again.';
+			}
+			
+			alert(errorMessage);
+			closestBtn.innerHTML = originalText;
+			closestBtn.style.opacity = '1';
+		},
+		{
+			enableHighAccuracy: true,
+			timeout: 15000, // Increased timeout to 15 seconds
+			maximumAge: 60000
+		}
+	);
+}
+
+// Function to calculate distance between two coordinates using Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+	const R = 6371; // Radius of the Earth in kilometers
+	const dLat = (lat2 - lat1) * Math.PI / 180;
+	const dLon = (lon2 - lon1) * Math.PI / 180;
+	const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+		Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+		Math.sin(dLon/2) * Math.sin(dLon/2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+	return R * c;
+}
+
+// Function to scroll to a specific location
+function scrollToLocation(locationElement) {
+	console.log('🎯 Scrolling to location:', locationElement.textContent.trim());
+	
+	// Find the scrollable container (could be .locations or its parent)
+	const locationItem = locationElement.closest('.location-item');
+	const locationsContainer = document.querySelector('.locations');
+	
+	if (!locationItem || !locationsContainer) {
+		console.log('❌ Could not find location item or container');
+		return;
+	}
+	
+	console.log('📍 Location item found:', locationItem);
+	console.log('📦 Container found:', locationsContainer);
+	
+	// Get the scrollable parent (the one with horizontal scroll)
+	let scrollableContainer = locationsContainer;
+	while (scrollableContainer && !scrollableContainer.scrollWidth > scrollableContainer.clientWidth) {
+		scrollableContainer = scrollableContainer.parentElement;
+	}
+	
+	if (!scrollableContainer || scrollableContainer.scrollWidth <= scrollableContainer.clientWidth) {
+		console.log('❌ No scrollable container found');
+		return;
+	}
+	
+	console.log('🔄 Scrollable container:', scrollableContainer);
+	console.log('📏 Container scroll width:', scrollableContainer.scrollWidth, 'client width:', scrollableContainer.clientWidth);
+	
+	// Method 1: Use scrollIntoView with horizontal centering
+	try {
+		console.log('🔄 Method 1: Using scrollIntoView');
+		locationItem.scrollIntoView({
+			behavior: 'smooth',
+			block: 'nearest',
+			inline: 'center'
+		});
+		
+		// Wait a bit then verify the scroll position
+		setTimeout(() => {
+			const finalRect = locationItem.getBoundingClientRect();
+			const containerRect = scrollableContainer.getBoundingClientRect();
+			const isCentered = Math.abs((finalRect.left + finalRect.width/2) - (containerRect.left + containerRect.width/2)) < 50;
+			
+			console.log('✅ Scroll completed');
+			console.log('📍 Final position - Left:', finalRect.left, 'Center:', finalRect.left + finalRect.width/2);
+			console.log('📦 Container center:', containerRect.left + containerRect.width/2);
+			console.log('🎯 Centered:', isCentered ? 'YES' : 'NO');
+			
+			if (!isCentered) {
+				console.log('⚠️ Not perfectly centered, trying manual adjustment...');
+				// Manual adjustment if needed
+				const adjustment = (finalRect.left + finalRect.width/2) - (containerRect.left + containerRect.width/2);
+				scrollableContainer.scrollBy({
+					left: -adjustment,
+					behavior: 'smooth'
+				});
+			}
+		}, 500);
+		
+	} catch (error) {
+		console.log('❌ scrollIntoView failed:', error);
+		
+		// Method 2: Manual scroll calculation as fallback
+		console.log('🔄 Method 2: Manual scroll calculation');
+		
+		const containerRect = scrollableContainer.getBoundingClientRect();
+		const itemRect = locationItem.getBoundingClientRect();
+		
+		// Calculate the current scroll position needed
+		const currentScrollLeft = scrollableContainer.scrollLeft;
+		const itemOffsetLeft = locationItem.offsetLeft;
+		const containerWidth = scrollableContainer.clientWidth;
+		const itemWidth = locationItem.offsetWidth;
+		
+		// Calculate target scroll position to center the item
+		const targetScrollLeft = itemOffsetLeft - (containerWidth / 2) + (itemWidth / 2);
+		
+		console.log('📊 Scroll calculations:');
+		console.log('  Current scroll left:', currentScrollLeft);
+		console.log('  Item offset left:', itemOffsetLeft);
+		console.log('  Container width:', containerWidth);
+		console.log('  Item width:', itemWidth);
+		console.log('  Target scroll left:', targetScrollLeft);
+		
+		// Smooth scroll to the target position
+		scrollableContainer.scrollTo({
+			left: targetScrollLeft,
+			behavior: 'smooth'
+		});
+		
+		// Verify scroll position after completion
+		setTimeout(() => {
+			const finalScrollLeft = scrollableContainer.scrollLeft;
+			const scrollDiff = Math.abs(finalScrollLeft - targetScrollLeft);
+			console.log('✅ Manual scroll completed');
+			console.log('📏 Final scroll left:', finalScrollLeft);
+			console.log('🎯 Scroll accuracy:', scrollDiff < 10 ? 'PERFECT' : 'CLOSE');
+		}, 500);
+	}
+}
+
+// Function to manually set active location
+function setActiveLocation(locationElement) {
+	if (locationElement && locationElement.dataset.whatsapp) {
+		const oldNumber = number;
+		number = locationElement.dataset.whatsapp;
+		console.log('🎯 MANUAL: Set active location to:', locationElement.textContent.trim());
+		console.log('📱 WhatsApp number changed from', oldNumber, 'to:', number);
+		
+		// Update visual state - remove active class from all location items
+		document.querySelectorAll('.location-item').forEach(item => {
+			item.classList.remove('active-location');
+		});
+		
+		// Add active class to the selected location item
+		locationElement.closest('.location-item').classList.add('active-location');
+		
+		// Update cart location display immediately
+		updateCartLocation(locationElement);
+		
+		// Also update the global current order location for table modal
+		if (locationElement.dataset.orderingtables) {
+			window.currentOrderLocation = {
+				address: locationElement.textContent.trim(),
+				whatsapp: locationElement.dataset.whatsapp,
+				lat: locationElement.dataset.lat,
+				lng: locationElement.dataset.lng,
+				orderingtables: locationElement.dataset.orderingtables.split(',').map(table => table.trim())
+			};
+			console.log('✅ Updated currentOrderLocation for table modal:', window.currentOrderLocation);
+		}
+		
+		// Verify the switch happened
+		verifyWhatsAppSwitch(oldNumber, number, locationElement.textContent.trim());
+	}
+}
+
+// Function to search locations based on user input
+function searchLocations(searchTerm) {
+	console.log('🔍 Searching for:', searchTerm);
+	
+	const searchInput = document.getElementById('locationSearch');
+	const locationItems = document.querySelectorAll('.locations .location-item');
+	
+	if (!searchTerm || searchTerm.trim() === '') {
+		// Show all locations when search is empty
+		locationItems.forEach(item => {
+			item.style.display = 'flex';
+			item.style.opacity = '1';
+			item.style.transform = 'scale(1)';
+		});
+		
+		// Remove any search highlighting
+		document.querySelectorAll('.location-item .locbtn').forEach(btn => {
+			btn.style.backgroundColor = '';
+			btn.style.color = '';
+			btn.style.fontWeight = '';
+		});
+		
+		console.log('✅ Showing all locations');
+		return;
+	}
+	
+	const searchLower = searchTerm.toLowerCase().trim();
+	let foundCount = 0;
+	
+	locationItems.forEach(item => {
+		const locationText = item.querySelector('.locbtn').textContent.toLowerCase();
+		const isMatch = locationText.includes(searchLower);
+		
+		if (isMatch) {
+			// Show and highlight matching locations
+			item.style.display = 'flex';
+			item.style.opacity = '1';
+			item.style.transform = 'scale(1.02)';
+			
+			// Highlight the matching text
+			const btn = item.querySelector('.locbtn');
+			btn.style.backgroundColor = '#4CAF50';
+			btn.style.color = 'white';
+			btn.style.fontWeight = 'bold';
+			
+			foundCount++;
+			console.log('✅ Match found:', item.querySelector('.locbtn').textContent.trim());
+		} else {
+			// Hide non-matching locations
+			item.style.display = 'none';
+		}
+	});
+	
+	console.log(`🔍 Search complete: ${foundCount} location(s) found`);
+	
+	// Show search results count
+	if (searchInput) {
+		const currentPlaceholder = searchInput.placeholder;
+		if (foundCount > 0) {
+			searchInput.style.borderColor = '#4CAF50';
+			searchInput.placeholder = `Found ${foundCount} location(s)`;
+		} else {
+			searchInput.style.borderColor = '#f44336';
+			searchInput.placeholder = 'No locations found';
+		}
+		
+		// Reset placeholder after 3 seconds
+		setTimeout(() => {
+			searchInput.placeholder = currentPlaceholder;
+			searchInput.style.borderColor = '#ddd';
+		}, 3000);
+	}
+}
+
+// Function to clear search and show all locations
+function clearLocationSearch() {
+	const searchInput = document.getElementById('locationSearch');
+	if (searchInput) {
+		searchInput.value = '';
+		searchLocations(''); // This will show all locations
+	}
+}
+
+// Function to update the cart location display
+function updateCartLocation(locationElement) {
+	const cartLocationDiv = document.getElementById('cartLocation');
+	if (cartLocationDiv && locationElement) {
+		const locationText = locationElement.textContent.trim();
+		cartLocationDiv.innerHTML = `📍 ${locationText}`;
+		cartLocationDiv.classList.add('active');
+		console.log('🛒 Cart location updated to:', locationText);
+	} else if (cartLocationDiv) {
+		cartLocationDiv.innerHTML = '📍 Select a location';
+		cartLocationDiv.classList.remove('active');
+		console.log('🛒 Cart location reset to default');
+	}
+}
+
+// Function to update search placeholder with location count
+function updateSearchPlaceholder() {
+	const searchInput = document.getElementById('locationSearch');
+	const totalLocations = document.querySelectorAll('.locations .location-item').length;
+	
+	if (searchInput && totalLocations > 0) {
+		searchInput.placeholder = `Search ${totalLocations} locations...`;
+		console.log('🔍 Updated search placeholder to show', totalLocations, 'locations');
+	} else if (searchInput) {
+		// Fallback if no locations found
+		searchInput.placeholder = 'Search locations...';
+		console.log('⚠️ No locations found, using fallback placeholder');
+	}
+}
+
+// Function to navigate locations using arrow buttons
+function scrollLocations(direction) {
+	const locationsContainer = document.querySelector('.locations');
+	if (!locationsContainer) {
+		console.log('❌ Locations container not found');
+		return;
+	}
+	
+	const currentScrollLeft = locationsContainer.scrollLeft;
+	const containerWidth = locationsContainer.clientWidth;
+	const scrollAmount = containerWidth * 0.8; // Scroll 80% of container width
+	
+	let newScrollLeft;
+	if (direction === 'left') {
+		newScrollLeft = currentScrollLeft - scrollAmount;
+		console.log('⬅️ Scrolling left from', currentScrollLeft, 'to', newScrollLeft);
+	} else if (direction === 'right') {
+		newScrollLeft = currentScrollLeft + scrollAmount;
+		console.log('➡️ Scrolling right from', currentScrollLeft, 'to', newScrollLeft);
+	} else {
+		console.log('❌ Invalid direction:', direction);
+		return;
+	}
+	
+	// Smooth scroll to the new position
+	locationsContainer.scrollTo({
+		left: newScrollLeft,
+		behavior: 'smooth'
+	});
+	
+	// Update WhatsApp number after scrolling
+	setTimeout(() => {
+		updateWhatsAppNumber();
+	}, 300); // Small delay to allow scroll to complete
+}
+
+// Function to toggle delivery options visibility
+function toggleDelivery(button) {
+	const deliveryOptions = button.nextElementSibling;
+	if (deliveryOptions && deliveryOptions.classList.contains('delivery-options')) {
+		deliveryOptions.classList.toggle('hide');
+		
+		// Update button text to show current state
+		const buttonText = button.querySelector('span');
+		if (buttonText) {
+			if (deliveryOptions.classList.contains('hide')) {
+				buttonText.textContent = 'Delivery';
+			} else {
+				buttonText.textContent = 'Hide';
+			}
+		}
+		
+		console.log('🛵 Delivery options toggled for location');
+	} else {
+		console.log('❌ Delivery options container not found');
+	}
+}
 
 
 document.addEventListener("DOMContentLoaded", function() {
   requestAnimationFrame(() => { // Ensures DOM is ready before applying scroll
     loadCart();  // Load saved cart from localStorage
     updateCart(order.length);
+    updateSearchPlaceholder(); // Call this function when the page loads
+    
+    // Initial update of WhatsApp number
+    updateWhatsAppNumber();
+    
+    // Add scroll listener to update WhatsApp number when scrolling
+    window.addEventListener('scroll', function() {
+      // Only handle horizontal scrolling for location detection
+      // Vertical scrolling should not affect location selection
+      if (!window.scrollTimeout) {
+        window.scrollTimeout = setTimeout(function() {
+          // Only update if there's significant horizontal movement
+          const currentScrollLeft = document.querySelector('.locations')?.scrollLeft || 0;
+          if (window.lastScrollLeft !== undefined && Math.abs(currentScrollLeft - window.lastScrollLeft) > 10) {
+            updateWhatsAppNumber();
+          }
+          window.lastScrollLeft = currentScrollLeft;
+          window.scrollTimeout = null;
+        }, 100);
+      }
+    });
+    
+    // Add scroll listener specifically to the locations container for better detection
+    const locationsContainer = document.querySelector('.locations');
+    if (locationsContainer) {
+      locationsContainer.addEventListener('scroll', function() {
+        // Update WhatsApp number immediately when scrolling horizontally within locations
+        updateWhatsAppNumber();
+      });
+      
+      // Add click event handlers for immediate location selection
+      const locationButtons = document.querySelectorAll('li.locations .locbtn');
+      locationButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+          console.log('📍 Location clicked:', this.textContent.trim());
+          // Immediately select this location
+          setActiveLocation(this);
+          // Update WhatsApp number immediately
+          updateWhatsAppNumber();
+        });
+      });
+      
+      // Also add intersection observer for more precise detection
+      const locationObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            // When a location becomes visible, update the WhatsApp number and visual selection
+            setTimeout(updateWhatsAppNumber, 50); // Small delay to ensure DOM is updated
+          }
+        });
+      }, {
+        threshold: 0.5, // Trigger when 50% of the element is visible
+        rootMargin: '0px -20% 0px -20%' // Consider element visible when it's 20% from left/right edges
+      });
+      
+      // Observe all location buttons
+      locationButtons.forEach(function(button) {
+        locationObserver.observe(button);
+      });
+    }
+    
+    // Add manual trigger for testing
+    window.testWhatsAppUpdate = function() {
+      console.log('🔧 Manual test triggered');
+      console.log('📱 Current WhatsApp number before update:', number);
+      updateWhatsAppNumber();
+      console.log('📱 Current WhatsApp number after update:', number);
+    };
+    
+    // Add debug function to show current state
+    window.debugWhatsAppState = function() {
+      console.log('🔍 DEBUG: Current WhatsApp State');
+      console.log('📱 Current number:', number);
+      console.log('📍 Available locations:');
+      const locationElements = document.querySelectorAll('li.locations .locbtn');
+      locationElements.forEach((loc, index) => {
+        console.log(`  ${index + 1}. ${loc.textContent.trim()} - WhatsApp: ${loc.dataset.whatsapp || 'NOT SET'}`);
+      });
+      console.log('👁️ Most visible location:', getVisibleLocation()?.textContent.trim() || 'None');
+    };
+    
+    // Add function to test location detection
+    window.testLocationDetection = function() {
+      console.log('🧪 TESTING: Location Detection');
+      const locationElements = document.querySelectorAll('li.locations .locbtn');
+      console.log(`Found ${locationElements.length} location elements`);
+      
+      locationElements.forEach((loc, index) => {
+        const rect = loc.getBoundingClientRect();
+        console.log(`Location ${index + 1}: "${loc.textContent.trim()}"`);
+        console.log(`  WhatsApp: ${loc.dataset.whatsapp || 'NOT SET'}`);
+        console.log(`  Position: Left: ${rect.left}, Right: ${rect.right}, Center X: ${(rect.left + rect.width/2).toFixed(1)}`);
+        console.log(`  Viewport Width: ${window.innerWidth}, Center X: ${(window.innerWidth/2).toFixed(1)}`);
+        console.log(`  Is Visible: ${rect.left < window.innerWidth && rect.right > 0}`);
+      });
+      
+      const visibleLocation = getVisibleLocation();
+      console.log('Best visible location:', visibleLocation?.textContent.trim() || 'None');
+    };
+    
+    // Add function to test geolocation
+    window.testGeolocation = function() {
+      console.log('🧪 TESTING: Geolocation');
+      console.log('navigator.geolocation exists:', !!navigator.geolocation);
+      
+      if (navigator.geolocation) {
+        console.log('✅ Geolocation is supported');
+        console.log('Requesting permission...');
+        
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            console.log('✅ SUCCESS: Location permission granted!');
+            console.log('Coordinates:', position.coords.latitude, position.coords.longitude);
+            console.log('Accuracy:', position.coords.accuracy, 'meters');
+          },
+          function(error) {
+            console.log('❌ ERROR: Location permission denied or error occurred');
+            console.log('Error code:', error.code);
+            console.log('Error message:', error.message);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+          }
+        );
+      } else {
+        console.log('❌ Geolocation not supported');
+      }
+    };
+    
+    // Add function to test scrolling to specific locations
+    window.testScrollToLocation = function(locationIndex = 0) {
+      console.log('🧪 TESTING: Scroll to Location');
+      const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
+      
+      if (locationElements.length === 0) {
+        console.log('❌ No location elements found');
+        return;
+      }
+      
+      const targetLocation = locationElements[locationIndex];
+      if (!targetLocation) {
+        console.log(`❌ Location at index ${locationIndex} not found`);
+        console.log(`Available locations: 0 to ${locationElements.length - 1}`);
+        return;
+      }
+      
+      console.log(`🎯 Testing scroll to location ${locationIndex}:`, targetLocation.textContent.trim());
+      console.log('📍 Current scroll position:', document.querySelector('.locations')?.scrollLeft || 'N/A');
+      
+      // Test the scroll function
+      scrollToLocation(targetLocation);
+    };
+    
+    // Add function to test all locations scrolling
+    window.testAllLocationsScrolling = function() {
+      console.log('🧪 TESTING: All Locations Scrolling');
+      const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
+      
+      if (locationElements.length === 0) {
+        console.log('❌ No location elements found');
+        return;
+      }
+      
+      console.log(`🔍 Found ${locationElements.length} locations`);
+      
+      // Test scrolling to each location with delays
+      locationElements.forEach((location, index) => {
+        setTimeout(() => {
+          console.log(`\n🎯 Testing location ${index + 1}/${locationElements.length}:`, location.textContent.trim());
+          scrollToLocation(location);
+        }, index * 2000); // 2 second delay between each test
+      });
+    };
+    
+    // Add function to test location search
+    window.testLocationSearch = function(searchTerm = 'Port') {
+      console.log('🧪 TESTING: Location Search');
+      console.log('Search term:', searchTerm);
+      
+      // Test the search function
+      searchLocations(searchTerm);
+      
+      // Show current search state
+      const searchInput = document.getElementById('locationSearch');
+      if (searchInput) {
+        console.log('🔍 Search input value:', searchInput.value);
+        console.log('🔍 Search input placeholder:', searchInput.placeholder);
+      }
+      
+      // Count visible locations
+      const visibleLocations = document.querySelectorAll('.locations .location-item[style*="display: flex"]');
+      const hiddenLocations = document.querySelectorAll('.locations .location-item[style*="display: none"]');
+      
+      console.log('📍 Visible locations:', visibleLocations.length);
+      console.log('🚫 Hidden locations:', hiddenLocations.length);
+      
+      // Show visible location names
+      visibleLocations.forEach((item, index) => {
+        const text = item.querySelector('.locbtn').textContent.trim();
+        console.log(`  ${index + 1}. ${text}`);
+      });
+    };
+    
+    // Add function to test cart location updates
+    window.testCartLocation = function() {
+      console.log('🧪 TESTING: Cart Location Updates');
+      
+      const cartLocationDiv = document.getElementById('cartLocation');
+      if (cartLocationDiv) {
+        console.log('✅ Cart location div found');
+        console.log('📍 Current cart location text:', cartLocationDiv.innerHTML);
+        console.log('🎨 Current cart location color:', cartLocationDiv.style.color);
+      } else {
+        console.log('❌ Cart location div not found');
+      }
+      
+      // Test updating with a sample location
+      const sampleLocation = document.querySelector('.locations .location-item .locbtn');
+      if (sampleLocation) {
+        console.log('🎯 Testing with sample location:', sampleLocation.textContent.trim());
+        updateCartLocation(sampleLocation);
+      } else {
+        console.log('❌ No sample location found to test with');
+      }
+    };
+    
+    // Add function to test search placeholder updates
+    window.testSearchPlaceholder = function() {
+      console.log('🧪 TESTING: Search Placeholder');
+      
+      const searchInput = document.getElementById('locationSearch');
+      if (searchInput) {
+        console.log('✅ Search input found');
+        console.log('🔍 Current placeholder:', searchInput.placeholder);
+        console.log('📍 Total locations found:', document.querySelectorAll('.locations .location-item').length);
+      } else {
+        console.log('❌ Search input not found');
+      }
+      
+      // Test updating the placeholder
+      console.log('🧪 Testing placeholder update...');
+      updateSearchPlaceholder();
+      
+      if (searchInput) {
+        console.log('🔍 New placeholder:', searchInput.placeholder);
+      }
+    };
+    
+    // Add function to test location navigation
+    window.testLocationNavigation = function() {
+      console.log('🧪 TESTING: Location Navigation');
+      
+      const leftBtn = document.getElementById('locationNavLeft');
+      const rightBtn = document.getElementById('locationNavRight');
+      const locationsContainer = document.querySelector('.locations');
+      
+      if (leftBtn && rightBtn) {
+        console.log('✅ Navigation buttons found');
+        console.log('⬅️ Left button:', leftBtn);
+        console.log('➡️ Right button:', rightBtn);
+      } else {
+        console.log('❌ Navigation buttons not found');
+      }
+      
+      if (locationsContainer) {
+        console.log('✅ Locations container found');
+        console.log('📏 Container width:', locationsContainer.clientWidth);
+        console.log('📏 Scroll width:', locationsContainer.scrollWidth);
+        console.log('📍 Current scroll left:', locationsContainer.scrollLeft);
+        console.log('🔄 Can scroll:', locationsContainer.scrollWidth > locationsContainer.clientWidth);
+      } else {
+        console.log('❌ Locations container not found');
+      }
+      
+      // Test navigation functions
+      console.log('🧪 Testing navigation functions...');
+      console.log('⬅️ Left scroll function:', typeof scrollLocations);
+      console.log('➡️ Right scroll function:', typeof scrollLocations);
+    };
+    
+    // Add function to test delivery options
+    window.testDeliveryOptions = function() {
+      console.log('🧪 TESTING: Delivery Options');
+      
+      const deliveryButtons = document.querySelectorAll('.delivery-toggle-btn');
+      const deliveryOptions = document.querySelectorAll('.delivery-options');
+      
+      console.log('🛵 Found delivery buttons:', deliveryButtons.length);
+      console.log('📦 Found delivery options containers:', deliveryOptions.length);
+      
+      // Test each delivery button
+      deliveryButtons.forEach((btn, index) => {
+        const locationText = btn.closest('.location-item')?.querySelector('.locbtn')?.textContent.trim();
+        const isHidden = btn.nextElementSibling?.classList.contains('hide');
+        
+        console.log(`Location ${index + 1}: "${locationText}" - Options hidden: ${isHidden}`);
+        
+        // Test toggle functionality
+        console.log(`Testing toggle for location ${index + 1}...`);
+        toggleDelivery(btn);
+      });
+      
+      // Show current state
+      setTimeout(() => {
+        console.log('\n📊 Current delivery options state:');
+        deliveryButtons.forEach((btn, index) => {
+          const locationText = btn.closest('.location-item')?.querySelector('.locbtn')?.textContent.trim();
+          const isHidden = btn.nextElementSibling?.classList.contains('hide');
+          const buttonText = btn.querySelector('span')?.textContent;
+          
+          console.log(`Location ${index + 1}: "${locationText}" - Button: "${buttonText}", Hidden: ${isHidden}`);
+        });
+      }, 500);
+    };
+    
+    // Add function to test locations data loading
+    window.testLocationsData = function() {
+      console.log('🧪 TESTING: Locations Data Loading');
+      
+      // Check if locations are in the DOM
+      const locationItems = document.querySelectorAll('.locations .location-item');
+      const locationButtons = document.querySelectorAll('.locations .locbtn');
+      
+      console.log('📍 Location items found:', locationItems.length);
+      console.log('🔗 Location buttons found:', locationButtons.length);
+      
+      if (locationItems.length > 0) {
+        console.log('✅ Locations are loaded in DOM');
+        
+        // Check each location's data
+        locationItems.forEach((item, index) => {
+          const btn = item.querySelector('.locbtn');
+          if (btn) {
+            console.log(`Location ${index + 1}:`);
+            console.log(`  Address: ${btn.textContent.trim()}`);
+            console.log(`  WhatsApp: ${btn.dataset.whatsapp || 'NOT SET'}`);
+            console.log(`  Lat: ${btn.dataset.lat || 'NOT SET'}`);
+            console.log(`  Lng: ${btn.dataset.lng || 'NOT SET'}`);
+          }
+        });
+      } else {
+        console.log('❌ No locations found in DOM');
+        console.log('🔍 Checking for debug comments in HTML...');
+        
+        // Look for debug comments
+        const debugComments = document.querySelectorAll('html').length > 0 ? 
+          'HTML structure found' : 'No HTML structure';
+        console.log('📄 HTML Status:', debugComments);
+      }
+      
+      // Check search functionality
+      const searchInput = document.getElementById('locationSearch');
+      if (searchInput) {
+        console.log('🔍 Search input found, placeholder:', searchInput.placeholder);
+      } else {
+        console.log('❌ Search input not found');
+      }
+    };
+    
+    // WhatsApp ordering system loaded. Use testWhatsAppUpdate() to test manually.
   });
 });
+
+// Make functions globally available for table modal integration
+window.setTableNumber = setTableNumber;
+window.confirm = confirm;
+window.advanceOrder = advanceOrder;
+window.openTableModalWithLocation = openTableModalWithLocation;
+window.getLocationDataFromElement = getLocationDataFromElement;
+window.updateCartLocationDisplay = updateCartLocationDisplay;
+
+// Add debugging and testing functions
+window.testTableModalIntegration = function() {
+	console.log('🧪 TESTING: Table Modal Integration');
+	console.log('📍 Current location:', getVisibleLocation()?.textContent.trim() || 'None');
+	console.log('📱 Current WhatsApp number:', number);
+	console.log('🪑 Current table:', myTable);
+	console.log('🛒 Current order mode:', currentMode);
+	console.log('📦 Cart items:', order.length);
+	console.log('🌐 Global functions available:', {
+		setTableNumber: typeof window.setTableNumber,
+		confirm: typeof window.confirm,
+		advanceOrder: typeof window.advanceOrder,
+		openTableModal: typeof window.openTableModal
+	});
+	
+	// Test location data extraction
+	const currentLocation = getVisibleLocation();
+	if (currentLocation) {
+		const locationData = getLocationDataFromElement(currentLocation);
+		console.log('🔍 Extracted location data:', locationData);
+	} else {
+		console.log('❌ No visible location found');
+	}
+};
+
+window.testLocationDataAttributes = function() {
+	console.log('🧪 TESTING: Location Data Attributes');
+	
+	const locationElements = document.querySelectorAll('li.locations .locbtn');
+	console.log(`Found ${locationElements.length} location elements`);
+	
+	locationElements.forEach((element, index) => {
+		console.log(`\n📍 Location ${index + 1}: "${element.textContent.trim()}"`);
+		console.log('  Data attributes:');
+		console.log('    data-whatsapp:', element.dataset.whatsapp || 'NOT SET');
+		console.log('    data-lat:', element.dataset.lat || 'NOT SET');
+		console.log('    data-lng:', element.dataset.lng || 'NOT SET');
+		console.log('    data-orderingtables:', element.dataset.orderingtables || 'NOT SET');
+		
+		// Test data extraction
+		const locationData = getLocationDataFromElement(element);
+		if (locationData) {
+			console.log('  ✅ Data extraction successful:', locationData);
+		} else {
+			console.log('  ❌ Data extraction failed');
+		}
+	});
+};
+
+window.testTableSelection = function() {
+	console.log('🧪 TESTING: Table Selection Process');
+	
+	// Simulate the complete flow
+	const currentLocation = getVisibleLocation();
+	if (currentLocation) {
+		console.log('🎯 Testing with location:', currentLocation.textContent.trim());
+		
+		// Test location data extraction
+		const locationData = getLocationDataFromElement(currentLocation);
+		if (locationData) {
+			console.log('✅ Location data extracted successfully');
+			
+			// Test opening table modal
+			console.log('🚀 Opening table modal...');
+			openTableModalWithLocation(locationData);
+		} else {
+			console.log('❌ Failed to extract location data');
+		}
+	} else {
+		console.log('❌ No location selected, cannot test table selection');
+	}
+};
+
+// WhatsApp ordering system loaded with table modal integration
+// Available global functions: setTableNumber, confirm, advanceOrder
+// Testing functions: testTableModalIntegration, testTableSelection, testLocationDataAttributes
 
 // var lastScrollTop = 0;
 // document.addEventListener("scroll", function(){ // or window.addEventListener("scroll"....
@@ -979,4 +2158,427 @@ function toggleTTMS(){
     footerBtns.classList.remove('bigfont');
     footerBtns.classList.add('smallfont');
 	}
+
+// ===== TABLE MODAL FUNCTIONS =====
+
+// Global variable to store the selected location data
+let selectedLocationData = null;
+
+// Global variables to store order type information
+let currentOrderType = 'takeaway'; // 'takeaway' or 'table'
+let currentTableNumber = '';
+
+// Function to populate table numbers based on selected location
+function populateTableNumbers(locationData) {
+    const tableButtonsContainer = document.getElementById('dynamicTableButtons');
+    
+    if (!locationData || !locationData.orderingtables) {
+        // Fallback to default table numbers if no location data
+        tableButtonsContainer.innerHTML = `
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">1</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">2</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">3</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">4</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">5</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">6</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">7</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">8</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">9</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">10</a>
+        `;
+        return;
+    }
+    
+    // Clear existing buttons
+    tableButtonsContainer.innerHTML = '';
+    
+    // Process each ordering table option
+    locationData.orderingtables.forEach((tableOption, index) => {
+        if (tableOption === "Takeway Only") {
+            // Add takeaway option
+            const takeawayBtn = document.createElement('a');
+            takeawayBtn.className = 'tableBtn takeaway-btn';
+            takeawayBtn.href = '#here';
+            takeawayBtn.onclick = function() { selectTable(this); };
+            takeawayBtn.textContent = 'Takeaway';
+            takeawayBtn.style.background = 'linear-gradient(#ff6b35, #f7931e)';
+            tableButtonsContainer.appendChild(takeawayBtn);
+        } else if (tableOption.startsWith('Tables')) {
+            // Extract table numbers from "Tables1", "Tables2", etc.
+            const tableNumber = tableOption.replace('Tables', '');
+            const tableBtn = document.createElement('a');
+            tableBtn.className = 'tableBtn';
+            tableBtn.href = '#here';
+            tableBtn.onclick = function() { selectTable(this); };
+            tableBtn.textContent = tableNumber;
+            tableButtonsContainer.appendChild(tableBtn);
+        } else {
+            // Handle other table options
+            const tableBtn = document.createElement('a');
+            tableBtn.className = 'tableBtn';
+            tableBtn.href = '#here';
+            tableBtn.onclick = function() { selectTable(this); };
+            tableBtn.textContent = tableOption;
+            tableButtonsContainer.appendChild(tableBtn);
+        }
+    });
+}
+
+// Function to open table modal with location data from WhatsApp ordering system
+function openTableModal() {
+    // Check if we have location data from the WhatsApp ordering system
+    if (window.currentOrderLocation) {
+        // Set the selected location data
+        selectedLocationData = window.currentOrderLocation;
+        
+        // Update the location display
+        updateSelectedLocationDisplay(window.currentOrderLocation);
+        
+        // Check if the location has ordering tables
+        if (window.currentOrderLocation.orderingtables && window.currentOrderLocation.orderingtables.length > 0) {
+            selectedLocationData = window.currentOrderLocation;
+            populateTableNumbers(window.currentOrderLocation);
+        } else {
+            // Use fallback table numbers
+            populateTableNumbers(null);
+        }
+        
+        // Update modal title
+        document.querySelector('.title').textContent = `Select Table - ${window.currentOrderLocation.address}`;
+        
+    } else {
+        alert('Please select a location first before placing your order.');
+        return;
+    }
+    
+    // Show the modal
+    document.getElementById('tableNumberModal').classList.remove('hide');
+    
+    // Show table selection section immediately since we have location data
+    document.getElementById('tableSelectionSection').classList.remove('hide');
+}
+
+// Function to update the selected location display
+function updateSelectedLocationDisplay(locationData) {
+    const locationDisplay = document.getElementById('selectedLocationDisplay');
+    if (locationDisplay && locationData) {
+        locationDisplay.innerHTML = `
+            <div class="selected-location-info">
+                <strong>📍 ${locationData.address}</strong>
+                ${locationData.whatsapp ? `<br><small>📱 ${locationData.whatsapp}</small>` : ''}
+                ${locationData.phone ? `<br><small>📞 ${locationData.phone}</small>` : ''}
+            </div>
+        `;
+    }
+}
+
+// Function to update the order summary display for takeaway orders
+function updateOrderSummary(locationData) {
+    const summaryLocationInfo = document.getElementById('summaryLocationInfo');
+    if (summaryLocationInfo && locationData) {
+        summaryLocationInfo.innerHTML = `
+            <div>${locationData.address}</div>
+            ${locationData.whatsapp ? `<small>📱 ${locationData.whatsapp}</small>` : ''}
+            ${locationData.phone ? `<small>📞 ${locationData.phone}</small>` : ''}
+        `;
+    }
+}
+
+// ===== TESTING FUNCTIONS =====
+
+// Simple test function to manually test the table modal
+window.testTableModalManually = function() {
+    console.log('🧪 MANUAL TEST: Opening table modal with test data');
+    
+    const testLocationData = {
+        address: 'Test Location - 123 Test Street',
+        whatsapp: '+1234567890',
+        lat: '40.7128',
+        lng: '-74.0060',
+        orderingtables: ['Takeway Only', 'Tables1', 'Tables2', 'Tables3']
+    };
+    
+    console.log('📍 Test location data:', testLocationData);
+    
+    // Call the function directly
+    openTableModalWithLocation(testLocationData);
+};
+
+// Simple function to just show the modal without data
+window.showTableModal = function() {
+    document.getElementById('tableNumberModal').classList.remove('hide');
+    console.log('✅ Table modal should now be visible');
+};
+
+// Test table modal functions
+window.testTableModal = function() {
+    console.log('🧪 TESTING: Table Modal Functions');
+    console.log('📍 Selected location data:', selectedLocationData);
+    console.log('🌐 Current order location:', window.currentOrderLocation);
+    console.log('🔧 Functions available:', {
+        populateTableNumbers: typeof populateTableNumbers,
+        openTableModal: typeof openTableModal,
+        openTableModalWithLocation: typeof openTableModalWithLocation,
+        selectTable: typeof selectTable,
+        closeTableModal: typeof closeTableModal,
+        confirmTable: typeof confirmTable,
+        updateSelectedLocationDisplay: typeof updateSelectedLocationDisplay
+    });
+    
+    // Test location data
+    if (window.currentOrderLocation) {
+        console.log('🔍 Testing location data...');
+        console.log('✅ Location data found:', window.currentOrderLocation);
+        
+        if (window.currentOrderLocation.orderingtables) {
+            console.log('📋 Ordering tables available:', window.currentOrderLocation.orderingtables);
+        }
+    }
+};
+
+// Test table population
+window.testTablePopulation = function() {
+    console.log('🧪 TESTING: Table Population');
+    
+    if (selectedLocationData) {
+        console.log('📍 Using selected location:', selectedLocationData);
+        populateTableNumbers(selectedLocationData);
+    } else if (window.currentOrderLocation) {
+        console.log('📍 Using current order location:', window.currentOrderLocation);
+        if (window.currentOrderLocation.orderingtables) {
+            populateTableNumbers(window.currentOrderLocation);
+        }
+    } else {
+        console.log('❌ No location data available for testing');
+    }
+};
+
+    // Add function to test horizontal scrolling specifically
+    window.testHorizontalScrolling = function() {
+      console.log('🧪 TESTING: Horizontal Scrolling and Location Detection');
+      
+      const locationsContainer = document.querySelector('.locations');
+      if (locationsContainer) {
+        console.log('✅ Locations container found');
+        console.log('📏 Container scroll width:', locationsContainer.scrollWidth);
+        console.log('📏 Container client width:', locationsContainer.clientWidth);
+        console.log('📍 Current scroll left:', locationsContainer.scrollLeft);
+        console.log('🔄 Can scroll horizontally:', locationsContainer.scrollWidth > locationsContainer.clientWidth);
+        
+        // Test each location's horizontal position
+        const locationButtons = document.querySelectorAll('li.locations .locbtn');
+        console.log(`\n🔍 Testing ${locationButtons.length} locations for horizontal positioning:`);
+        
+        locationButtons.forEach((btn, index) => {
+          const rect = btn.getBoundingClientRect();
+          const elementCenterX = rect.left + (rect.width / 2);
+          const viewportCenterX = window.innerWidth / 2;
+          const distanceFromCenter = Math.abs(elementCenterX - viewportCenterX);
+          
+          console.log(`Location ${index + 1}: "${btn.textContent.trim()}"`);
+          console.log(`  Position: Left: ${rect.left.toFixed(1)}, Right: ${rect.right.toFixed(1)}`);
+          console.log(`  Center X: ${elementCenterX.toFixed(1)}, Viewport Center: ${viewportCenterX.toFixed(1)}`);
+          console.log(`  Distance from center: ${distanceFromCenter.toFixed(1)}`);
+          console.log(`  WhatsApp: ${btn.dataset.whatsapp || 'NOT SET'}`);
+        });
+        
+        // Test the current visible location
+        const visibleLocation = getVisibleLocation();
+        if (visibleLocation) {
+          console.log(`\n🎯 Current best location: "${visibleLocation.textContent.trim()}"`);
+          console.log(`📱 WhatsApp number: ${visibleLocation.dataset.whatsapp || 'NOT SET'}`);
+        } else {
+          console.log('\n❌ No visible location detected');
+        }
+        
+      } else {
+        console.log('❌ Locations container not found');
+      }
+    };
+    
+    // Add function to manually scroll to test horizontal positioning
+    window.testHorizontalScroll = function(direction = 'right') {
+      console.log(`🧪 TESTING: Manual horizontal scroll ${direction}`);
+      
+      const locationsContainer = document.querySelector('.locations');
+      if (locationsContainer) {
+        const currentScroll = locationsContainer.scrollLeft;
+        const scrollAmount = locationsContainer.clientWidth * 0.8; // Scroll 80% of container width
+        
+        let newScroll;
+        if (direction === 'left') {
+          newScroll = Math.max(0, currentScroll - scrollAmount);
+        } else {
+          newScroll = Math.min(locationsContainer.scrollWidth - locationsContainer.clientWidth, currentScroll + scrollAmount);
+        }
+        
+        console.log(`Scrolling from ${currentScroll} to ${newScroll}`);
+        
+        locationsContainer.scrollTo({
+          left: newScroll,
+          behavior: 'smooth'
+        });
+        
+        // Check location after scroll
+        setTimeout(() => {
+          console.log('📍 Scroll completed, checking location...');
+          updateWhatsAppNumber();
+        }, 500);
+        
+      } else {
+        console.log('❌ Locations container not found');
+      }
+    };
+    
+    // Add function to manually select a location by index for testing
+    window.selectLocationByIndex = function(index = 0) {
+      console.log(`🧪 TESTING: Manually selecting location at index ${index}`);
+      
+      const locationButtons = document.querySelectorAll('li.locations .locbtn');
+      if (locationButtons.length === 0) {
+        console.log('❌ No location buttons found');
+        return;
+      }
+      
+      if (index >= locationButtons.length) {
+        console.log(`❌ Index ${index} is out of range. Available indices: 0 to ${locationButtons.length - 1}`);
+        return;
+      }
+      
+      const targetLocation = locationButtons[index];
+      console.log(`🎯 Selecting location: "${targetLocation.textContent.trim()}"`);
+      
+      // Manually trigger the click event
+      targetLocation.click();
+      
+      // Also manually call setActiveLocation for immediate effect
+      setActiveLocation(targetLocation);
+      
+      console.log('✅ Location selection completed');
+    };
+    
+    // Add function to show all available locations
+    window.showAllLocations = function() {
+      console.log('🧪 TESTING: Show all available locations');
+      
+      const locationButtons = document.querySelectorAll('li.locations .locbtn');
+      console.log(`Found ${locationButtons.length} locations:`);
+      
+      locationButtons.forEach((btn, index) => {
+        console.log(`${index}: "${btn.textContent.trim()}" - WhatsApp: ${btn.dataset.whatsapp || 'NOT SET'}`);
+      });
+      
+      console.log('\nUse selectLocationByIndex(index) to select a specific location');
+    };
+
+    // Function to close table modal
+    function closeTableModal() {
+        document.getElementById('tableNumberModal').classList.add('hide');
+        document.getElementById('confirmmodal').classList.remove('show');
+        document.querySelector('.input').classList.remove('hide');
+        
+        // Hide the table selection section
+        const tableSelectionSection = document.getElementById('tableSelectionSection');
+        if (tableSelectionSection) {
+            tableSelectionSection.classList.remove('show');
+        }
+        
+        // Remove selected class from all table buttons
+        const allTableButtons = document.querySelectorAll('.tableBtn');
+        allTableButtons.forEach(btn => btn.classList.remove('selected'));
+        
+        // Hide the order summary display
+        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+        if (orderSummaryDisplay) {
+            orderSummaryDisplay.classList.add('hide');
+        }
+        
+        // Clear the order summary display
+        const summaryLocationInfo = document.getElementById('summaryLocationInfo');
+        if (summaryLocationInfo) {
+            summaryLocationInfo.innerHTML = '';
+        }
+        
+        // Reset selected table info
+        window.selectedTableInfo = null;
+        selectedLocationData = null;
+        
+        // Clear the current order location
+        window.currentOrderLocation = null;
+        
+        // NOTE: Do NOT clear currentOrderType and currentTableNumber here
+        // They are needed for the WhatsApp message construction
+    }
+
+    // Function to confirm table selection
+    function confirmTable(action) {
+        if (!window.selectedTableInfo) {
+            console.error('❌ No table selected');
+            alert('No table selected. Please try again.');
+            return;
+        }
+        
+        const { tableNumber, isTakeaway, location } = window.selectedTableInfo;
+        
+        // Both table and takeaway orders go directly to WhatsApp order
+        console.log(`📋 Placing order for ${isTakeaway ? 'takeaway' : 'table'} ${tableNumber} at location: ${location.address}`);
+        
+        // Set the table number in the WhatsApp ordering system
+        if (typeof window.setTableNumber === 'function') {
+            window.setTableNumber(tableNumber);
+        } else {
+            // Fallback: try to set the table number directly
+            if (window.myTable !== undefined) {
+                window.myTable = tableNumber;
+            }
+        }
+        
+        // Close the modal and proceed with order
+        closeTableModal();
+        
+        // Trigger the order confirmation in the WhatsApp ordering system
+        if (typeof window.confirm === 'function') {
+            window.confirm();
+        } else {
+            console.error('❌ Confirm function not found');
+        }
+    }
+
+    // ===== TESTING FUNCTIONS =====
+
+    // Add function to test order type variables
+    window.testOrderTypeVariables = function() {
+    	console.log('🧪 TESTING: Order Type Variables');
+    	console.log('📍 Current order type:', currentOrderType);
+    	console.log('🪑 Current table number:', currentTableNumber);
+    	console.log('📱 Current WhatsApp number:', number);
+    	console.log('🛒 Current order mode:', currentMode);
+    	console.log('🌐 Global functions available:', {
+    		setTableNumber: typeof window.setTableNumber,
+    		confirm: typeof window.confirm,
+    		advanceOrder: typeof window.advanceOrder
+    	});
+    	
+    	// Test the message construction
+    	console.log('🧪 Testing message construction...');
+    	const testMessageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
+    	const testMessageBody = '#1 | Test Item | Qty1 $10\n';
+    	const testMessageEnd = '\nThank You!\nLooking forward to confirming this order';
+    	
+    	let testLabel = '';
+    	if (currentOrderType === 'takeaway') {
+    		testLabel = 'Takeaway';
+    	} else if (currentOrderType === 'table' && currentTableNumber && currentTableNumber.trim() !== '') {
+    		testLabel = `Table #${currentTableNumber}`;
+    	} else {
+    		testLabel = 'Takeaway'; // Default fallback
+    	}
+    	
+    	const testMessage = testMessageStart + testLabel + '\n' + testMessageBody + testMessageEnd;
+    	console.log('📝 Test message preview:');
+    	console.log(testMessage);
+    	console.log('✅ Label used:', testLabel);
+    };
+
+    // WhatsApp ordering system loaded with table modal integration
 </script>
