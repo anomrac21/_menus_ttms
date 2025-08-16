@@ -1,5 +1,5 @@
 html {
-    scroll-behavior: smooth
+    scroll-behavior: smooth;
 }
 
 #client-openinghours .inner {
@@ -16,7 +16,7 @@ html {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
-    min-height: 100vh
+    min-height: 100vh;
 }
 
 .status-badge {
@@ -30,7 +30,7 @@ html {
     border-radius: 2.5em;
     background: #000;
     align-items: center;
-    justify-content: center
+    justify-content: center;
 }
 
 .status-badge.open {
@@ -200,7 +200,6 @@ details[open] ul.all-hours {
     font-size: larger;
     margin-top: -1px;
     color: #fff;
-    border-bottom: 1px solid
 }
 
 #cart .titleRow:active,#cart .close {
@@ -325,7 +324,8 @@ details[open] ul.all-hours {
 }
 
 #whatsappOrder {
-    width: -webkit-fill-available
+    width: -webkit-fill-available;
+    border-top: 1px solid;
 }
 
 #whatsappOrderBtn {
@@ -489,6 +489,7 @@ details[open] ul.all-hours {
 .select {
     transform: translate3d(0,-2px,10px)!important;
     padding: .4em .8em!important;
+    z-index: 1;
     background: linear-gradient(#0dc143,#003506)!important;
     box-shadow: 0 0 10px var(--selected-button-color3);
     color: var(--selected-text-color1)!important
@@ -892,12 +893,12 @@ details[open] ul.all-hours {
     position: sticky;
     bottom: 0;
     z-index: 1100;
-    margin-inline:.4em;transition: 2s
+    margin-inline:.4em;transition: 2s;
 }
 
 #orderModal .image {
     max-height: 200px;
-    max-height Allows authors to constrain content height to a certain range. Learn more Don't show: 200px;';min-height: 128px;
+    min-height: 128px;
     min-width: -webkit-fill-available;
     overflow: hidden
 }
@@ -1334,10 +1335,10 @@ details[open] ul.all-hours {
 .options {
     margin: auto;
     width: fit-content;
-    padding: 15px;
     display: flex;
     flex-wrap: wrap;
-    justify-content: center
+    justify-content: center;
+    gap: .4em;
 }
 
 .modal .container div {
@@ -1359,6 +1360,73 @@ details[open] ul.all-hours {
     transition: .25s;
     display: block;
     color: #fff
+}
+
+/* Enhanced button styles for table selection modal */
+.btn-confirm {
+    background: linear-gradient(135deg, #25d366, #128c7e) !important;
+    border-color: #25d366 !important;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 1.1em !important;
+    padding: 0.7em 1.5em !important;
+    border-radius: 25px !important;
+    min-width: 120px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-confirm:hover {
+    background: linear-gradient(135deg, #128c7e, #075e54) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+
+.btn-confirm:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.3);
+}
+
+.btn-confirm:focus {
+    outline: none;
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+}
+
+.btn-cancel {
+    background: linear-gradient(135deg, #ff4757, #c44569) !important;
+    border-color: #ff4757 !important;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 1.1em !important;
+    padding: 0.7em 1.5em !important;
+    border-radius: 25px !important;
+    min-width: 120px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-cancel:hover {
+    background: linear-gradient(135deg, #c44569, #a55a4a) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+}
+
+.btn-cancel:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(255, 71, 87, 0.3);
+}
+
+.btn-cancel:focus {
+    outline: none;
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.3);
 }
 
 .modal .container a {
@@ -1510,7 +1578,7 @@ ul,p {
 }
 
 body {
-    main-text-color);font-family: sans-serif;
+    font-family: sans-serif;
     line-height: 1.5;
 }
 
@@ -1814,11 +1882,12 @@ a[onclick*="findClosestLocation"]:hover {
 
 .location-search-input {
     padding: .4em .8em;
-    border: 2px solid #ddd;
+    border: 1px solid #ddd;
     border-radius: 20px;
     max-width: -webkit-fill-available;
-    font-size: 14px;
+    font-size: 16px;
     outline: none;
+    background: #fefefe11;
     transition: border-color 0.3s ease;
 }
 
@@ -1831,11 +1900,13 @@ a[onclick*="findClosestLocation"]:hover {
     text-decoration: none;
     font-weight: bold;
     font-size: x-small;
-    padding: .4em;
+    padding: .4em .8em;
     border: 1px solid #4CAF50;
     border-radius: 20px;
-    display: inline-block;
+    height: -webkit-fill-available;
+    display: flex;
     transition: all 0.3s ease;
+    align-items: center;
 }
 
 .find-closest-btn:hover {
@@ -2071,7 +2142,7 @@ a[onclick*="findClosestLocation"]:hover {
 
 .selected-location-info small {
     color: #6c757d;
-    font-size: 14px;
+    font-size: x-small;
 }
 
 .table-selection-section {
@@ -2168,7 +2239,7 @@ a[onclick*="findClosestLocation"]:hover {
 }
 
 .summary-location, .summary-order-type {
-    margin-bottom: 16px;
+    margin-bottom: .4em;
 }
 
 .summary-location:last-child, .summary-order-type:last-child {
@@ -2229,6 +2300,6 @@ a[onclick*="findClosestLocation"]:hover {
     }
     
     .selected-location-info strong {
-        font-size: small;
+        font-size: x-small;
     }
 }

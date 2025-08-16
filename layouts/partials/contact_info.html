@@ -4,7 +4,7 @@
 			<input type="text" id="locationSearch" class="location-search-input" placeholder="Search locations..." oninput="searchLocations(this.value)">
 		</div>
 		<a href="#" onclick="findClosestLocation(); return false;" class="find-closest-btn">
-			📍 Nearest Me
+			<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location" style="width: 12px;height: 12px;margin-right: .4em;"> Nearest
 		</a>
 	</div>
 </div>
@@ -48,7 +48,7 @@
 				<!-- Debug: {{ len $locations }} locations found -->
 				<div class="location-navigation-container">
 					<button id="locationNavLeft" onclick="scrollLocations('left')" class="location-nav-left" title="Previous location">
-						←
+						<svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"></path></g></svg>
 					</button>
 					<div class="locations-wrapper">
 						<li class="locations">
@@ -127,7 +127,7 @@
 						</li>
 					</div>
 					<button id="locationNavRight" onclick="scrollLocations('right')" class="location-nav-right" title="Next location">
-						→
+						<svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"></path></g></svg>
 					</button>
 				</div>
 			{{ else }}
