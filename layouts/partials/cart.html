@@ -2,7 +2,7 @@
 	<div class="order">
 		<div class="waBtn">
 			<a id="titleRow" class="titleRow" onclick="toggleCart();"><i class="fa fa-arrow-right"></i> My Order</a>
-			<div id="cartLocation" class="cart-location">📍<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location" style="width: 12px;height: 12px;margin-right: .4em;"> Select a location</div>
+			<div id="cartLocation" class="cart-location">📍 Select a location</div>
 			<div class="button hide" id="button-5">
 		      <input type="checkbox" class="checkbox" id="dining-mode-checkbox-2" onclick="toggleDiningMode(this);"/>
 		      <div class="knobs">
@@ -35,7 +35,7 @@
 		{{ if site.Params.orderingsystem.usephonecall }}
 			<a class="placeOrder" href='tel:{{ site.Params.orderingsystem.phone }}'><i class="fa fa-phone"></i> Order Now</a>
 		{{ else }}
-			<button class="placeOrder" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+			<button class="btn-place-order" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
 		{{ end }}
 	</div>
 </div>

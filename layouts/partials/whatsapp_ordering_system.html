@@ -209,15 +209,15 @@ function openItem(ele,options){
 	//Size Options
 	var sizeHtml = '';
 	for (var i = 0; i<=options.sizes.length - 1;  i++) {
-			if(i==0){
-				if(options.sizes[i]=='-'){
-					sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="hide select">'+options.sizes[i]+'</a>';
-				}else{
-					sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="select">'+options.sizes[i]+'</a>';
-				}
+					if(i==0){
+			if(options.sizes[i]=='-'){
+				sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option hide select">'+options.sizes[i]+'</a>';
 			}else{
-				sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="">'+options.sizes[i]+'</a>';
+				sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option select">'+options.sizes[i]+'</a>';
 			}
+		}else{
+			sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option">'+options.sizes[i]+'</a>';
+		}
 	}
 	document.getElementById("itemSizeControl").innerHTML=sizeHtml;
 	setBaseSize(document.getElementById("itemSizeControl").childNodes[0]);
@@ -225,15 +225,15 @@ function openItem(ele,options){
 //Flavours Options
 	var flavoursHtml = '';
 	for (var i = 0; i<=options.flavours.length - 1;  i++) {
-			if(i==0){
-				if(options.flavours[i]=='-'){
-						flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="hide select">'+options.flavours[i]+'</a>';
-					}else{
-						flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="select">'+options.flavours[i]+'</a>';
-					}
+					if(i==0){
+			if(options.flavours[i]=='-'){
+				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option hide select">'+options.flavours[i]+'</a>';
 			}else{
-				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'">'+options.flavours[i]+'</a>';
+				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="select">'+options.flavours[i]+'</a>';
 			}
+		}else{
+			flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option">'+options.flavours[i]+'</a>';
+		}
 	}
 	document.getElementById("itemFlavourControl").innerHTML=flavoursHtml;
 	setBaseFlav(document.getElementById("itemFlavourControl").childNodes[0]);
@@ -272,10 +272,10 @@ function makeModificationsHtml(modificationsHtml,index) {
 	console.log(index+' modificationsHtml:- '+modificationsHtml);
 	if(currentoptions.modifications.length>index){
 		console.log(currentoptions.modifications.length+'>'+index);
-		modificationsHtml = modificationsHtml+'<a onclick="selectToggle(this);ModPrice(this,'+currentoptions.modifications[index+1]+');">'+currentoptions.modifications[index]+'</a><b class="hide">$'+currentoptions.modifications[index+1]+'</b>'
+		modificationsHtml = modificationsHtml+'<a class="btn-mod-option" onclick="selectToggle(this);ModPrice(this,'+currentoptions.modifications[index+1]+');">'+currentoptions.modifications[index]+'</a><b class="hide">$'+currentoptions.modifications[index+1]+'</b>'
 		makeModificationsHtml(modificationsHtml,index+2);
 	} else {
-		document.getElementById("itemMods").innerHTML='<h3 class="title center main-text-color">Modifications</h3><div>'+modificationsHtml+'</div><button onclick="openModMenu();">Close</button>';
+		document.getElementById("itemMods").innerHTML='<h3 class="title center main-text-color">Modifications</h3><div>'+modificationsHtml+'</div><button class="btn-close-menu" onclick="openModMenu();"><i class="fa fa-times"></i> Close</button>';
 		document.getElementById("itemModContainer").classList.remove("hide");
 	}
 
@@ -285,10 +285,10 @@ function makeAdditionsHtml(additionsHtml,index) {
 	console.log(index+' additionsHtml:- '+additionsHtml);
 	if(currentoptions.additions.length>index){
 		console.log(currentoptions.sides.length+'>'+index);
-		additionsHtml = additionsHtml+'<a onclick="selectToggle(this);AddPrice(this,'+currentoptions.additions[index+1]+');'+'">'+currentoptions.additions[index]+'</a><b class="hide">$'+currentoptions.additions[index+1]+'</b>'
+		additionsHtml = additionsHtml+'<a class="btn-add-option" onclick="selectToggle(this);AddPrice(this,'+currentoptions.additions[index+1]+');'+'">'+currentoptions.additions[index]+'</a><b class="hide">$'+currentoptions.additions[index+1]+'</b>'
 		makeAdditionsHtml(additionsHtml,index+2);
 	} else {
-		document.getElementById("itemAddMods").innerHTML ='<h3 class="title center main-text-color">Additional Modifications</h3><div>'+additionsHtml+'</div><button onclick="openAddMenu();">Close</button>';
+		document.getElementById("itemAddMods").innerHTML ='<h3 class="title center main-text-color">Additional Modifications</h3><div>'+additionsHtml+'</div><button class="btn-close-menu" onclick="openAddMenu();"><i class="fa fa-times"></i> Close</button>';
 		document.getElementById("itemAddContainer").classList.remove("hide");
 	}
 
@@ -299,13 +299,13 @@ function makeSidesHtml(sideHtml,index) {
 	if(currentoptions.sides.length>index){
 		console.log(currentoptions.sides.length+'>'+index);
 		if(currentoptions.sides[index+1]=='Regular'){
-			sideHtml = sideHtml+'<b class="hide">1</b><a  class="regularside" onclick="selectAmt(this);">'+currentoptions.sides[index]+'</a><p class="hide" onclick="addExtra(this);"><i class="fa fa-plus"></i></p>';
+			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option regularside" onclick="selectAmt(this);">'+currentoptions.sides[index]+'</a><p class="btn-add-extra hide" onclick="addExtra(this);"><i class="fa fa-plus"></i></p>';
 		}else if(currentoptions.sides[index+1]=='Premium'){
-			sideHtml = sideHtml+'<b class="hide">1</b><a  class="premiumside" onclick="selectAmt(this);">'+currentoptions.sides[index]+' <i class="fa fa-star"></i></a><p onclick="addExtra(this);" class="hide"><i class="fa fa-plus"></i></p>';	
+			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option premiumside" onclick="selectAmt(this);">'+currentoptions.sides[index]+' <i class="fa fa-star"></i></a><p class="btn-add-extra" onclick="addExtra(this);" class="hide"><i class="fa fa-plus"></i></p>';	
 		}
 		makeSidesHtml(sideHtml,index+3);
 	} else {
-		document.getElementById("itemSides").innerHTML='<h3 class="title center main-text-color">Sides</h3><div>'+sideHtml+'</div><button onclick="openSideMenu();">Close</button>';
+		document.getElementById("itemSides").innerHTML='<h3 class="title center main-text-color">Sides</h3><div>'+sideHtml+'</div><button class="btn-close-menu" onclick="openSideMenu();"><i class="fa fa-times"></i> Close</button>';
 		document.getElementById("itemSideContainer").classList.remove("hide");
 	}
 

@@ -5,7 +5,7 @@
 			<div class="header">
 				<img src="/branding/favicon192.webp" >
 				<h3 class="title"><a id="itemCategory"></a></h3>
-				<a id="itemClose" class="close" onclick="closeShop();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a></a>
+				<a id="itemClose" class="btn-close" onclick="closeShop();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a>
 			</div>
 			<a id="itemImages" class="image">
 				
@@ -14,40 +14,41 @@
 			<h2 class="title"><a id="itemName"></a></h2>
 			<div id="itemDesc" class="title"></div>
 			<div id="itemSizeContainer" class="">
-				<a id="size" class="title hide" onclick="">Sizes</a>
-			<div id="itemSizeControl"></div>
+				<a id="size" class="btn-section-header hide" onclick="">Sizes</a>
+				<div id="itemSizeControl"></div>
 			</div>
 
 			<div id="itemFlavourContainer" class="">
-				<a id="flav" class="title hide" onclick="">Flavours</a>
-			<div id="itemFlavourControl"></div>
+				<a id="flav" class="btn-section-header hide" onclick="">Flavours</a>
+				<div id="itemFlavourControl"></div>
 			</div>
 
 			<div id="itemSideContainer" class="hide">
-				<a id="reg" class="title " onclick="openSideMenu();"><i id="addicon" class="fa fa-plus"> Sides</i></a>
+				<a id="reg" class="btn-section-header" onclick="openSideMenu();"><i id="addicon" class="fa fa-plus"></i> Sides</a>
 				<div id="sideList" class=""></div>
 			</div>
 
 			<div id="itemModContainer" class="hide">
-				<a id="mod" class="title" onclick="openModMenu();"><i id="modicon" class="fa fa-plus"> Modifications</i></a>
-				
+				<a id="mod" class="btn-section-header" onclick="openModMenu();"><i id="modicon" class="fa fa-plus"></i> Modifications</a>
 				<div id="modList" class=""></div>
 			</div>
 			<div id="itemAddContainer" class="hide">
-				<a id="add" class="title" onclick="openAddMenu();"><i id="addicon" class="fa fa-plus"> Additions</i></a>
-				
+				<a id="add" class="btn-section-header" onclick="openAddMenu();"><i id="addicon" class="fa fa-plus"></i> Additions</a>
 				<div id="addModList" class=""></div>
 			</div>
 
 			<div id="itemAmtContainer">	
 				<div id="itemAmtcontrol">
-					<a id="itemDown" onclick="itemAmtCalc(-1);"><i class="fa fa-chevron-down"></i></a>
+					<a id="itemDown" class="btn-quantity" onclick="itemAmtCalc(-1);"><i class="fa fa-chevron-down"></i></a>
 					<div id="itemAmt">1</div>
-					<a id="itemDown" onclick="itemAmtCalc(1);"><i class="fa fa-chevron-up"></i></a>
+					<a id="itemUp" class="btn-quantity" onclick="itemAmtCalc(1);"><i class="fa fa-chevron-up"></i></a>
 					<div id="itemPrice">$25</div>
 				</div>
 			</div>
-			<button id="itemAddCart"><i class="fa fa-cart-plus"></i></button>
+			<button id="itemAddCart">
+				<i class="fa fa-cart-plus"></i>
+				<span>Add to Cart</span>
+			</button>
 			
 		</div>
 	</div>

@@ -169,11 +169,13 @@ details[open] ul.all-hours {
 #cart {
     background: #000d;
     border: 1px solid #fff;
-    border-radius: .8em;
+    border-radius: 17px;
     height: calc(100dvh - 9.6em);
-    margin-block-end:.4em;overflow: hidden;
+    margin-block-end:.4em;
+    overflow: hidden;
     text-align: left;
-    margin-inline:auto;backdrop-filter: blur(6px);
+    margin-inline:auto;
+    backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     position: relative;
     transition: .25s;
@@ -298,7 +300,6 @@ details[open] ul.all-hours {
     margin: auto;
     font-size: xx-large;
     text-align: right;
-    width: 150%
 }
 
 #cart td,#cart th {
@@ -334,7 +335,7 @@ details[open] ul.all-hours {
 
 #whatsappOrderBtn button {
     display: block;
-    margin: auto
+    margin: .8em auto;
 }
 
 @media(min-width: 300px) {
@@ -488,19 +489,76 @@ details[open] ul.all-hours {
 
 .select {
     transform: translate3d(0,-2px,10px)!important;
-    padding: .4em .8em!important;
     z-index: 1;
-    background: linear-gradient(#0dc143,#003506)!important;
-    box-shadow: 0 0 10px var(--selected-button-color3);
-    color: var(--selected-text-color1)!important
+    background: linear-gradient(135deg, #28a745, #20c997)!important;
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.6), 0 4px 20px rgba(0, 0, 0, 0.3)!important;
+    color: white!important;
+    border: 2px solid rgba(255, 255, 255, 0.3)!important;
+    border-radius: 12px!important;
+    transition: all 0.3s ease!important;
+    position: relative!important;
+}
+
+.select::before {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, #28a745, #20c997, #17a2b8);
+    border-radius: 14px;
+    z-index: -1;
+    opacity: 0.7;
+    animation: selectGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes selectGlow {
+    0% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
 }
 
 .selected {
     transform: translate3d(0,-2px,10px)!important;
     padding: .8em!important;
-    background: linear-gradient(var(--selected-button-color1),var(--selected-button-color2))!important;
-    box-shadow: 0 0 10px var(--selected-button-color3);
-    color: var(--selected-text-color1)!important
+    background: linear-gradient(135deg, #17a2b8, #138496)!important;
+    box-shadow: 0 0 20px rgba(23, 162, 184, 0.7), 0 6px 25px rgba(0, 0, 0, 0.4)!important;
+    color: white!important;
+    border: 2px solid rgba(255, 255, 255, 0.4)!important;
+    border-radius: 15px!important;
+    transition: all 0.3s ease!important;
+    position: relative!important;
+}
+
+.selected::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, #17a2b8, #138496, #0dcaf0);
+    border-radius: 17px;
+    z-index: -1;
+    opacity: 0.8;
+    animation: selectedGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes selectedGlow {
+    0% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.03);
+    }
 }
 
 .contactinfo {
@@ -749,17 +807,19 @@ details[open] ul.all-hours {
     transform-style: preserve-3d;
     font-size: large;
     border: 1px solid #000a;
-    border-radius: .4em;
+    border-radius: 17px;
     border: 1px solid #fffa;
     background: linear-gradient(var(--button-color1),var(--button-color2));
     color: var(--button-text-color1);
     font-family: sans-serif;
     display: flex;
     padding: .4em;
-    margin-block-end:.8em;transition: .15s;
+    margin-block-end:.8em;
+    transition: .15s;
     width: 90%!important;
     max-width: -webkit-fill-available;
-    margin-inline:auto!important}
+    margin-inline:auto!important;
+    }
 
 .headerstyle {
     background-image: url(/images/headerbg.webp);
@@ -812,7 +872,6 @@ details[open] ul.all-hours {
     font-size: xx-large;
     color: #fff;
     text-align: center;
-    margin: .4em;
     display: block
 }
 
@@ -842,6 +901,7 @@ details[open] ul.all-hours {
     max-height: calc(100dvh - 8em);
     min-height: calc(100dvh - 12em);
     max-width: 400px;
+    border-radius: 17px;
     height: min-content;
     position: relative;
     opacity: 1;
@@ -849,7 +909,6 @@ details[open] ul.all-hours {
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
     padding-block:1em;
-    border-radius: .4em;
     overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
@@ -877,7 +936,9 @@ details[open] ul.all-hours {
     top: 0;
     z-index: 111;
     margin-inline: .4em;
-    margin-block:0
+    margin-block:0;
+    justify-content: center;
+    align-items: center;
     }
 
 #wamodal .header img,.modal .header img {
@@ -886,14 +947,1045 @@ details[open] ul.all-hours {
     position: relative
 }
 
+/* ===== MOBILE-FIRST ORDER MODAL BUTTON SYSTEM ===== */
+
+/* Base button styles - Mobile First */
+.btn-close,
+.btn-section-header,
+.btn-quantity,
 #itemAddCart {
-    padding: .4em;
-    font-size: xx-large;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Close Button - Mobile First */
+.btn-close {
+    color: white;
+    z-index: 1000;
+    border-radius: 50%;
+}
+
+.btn-close:hover {
+    transform: scale(1.1);
+}
+
+.btn-close:active {
+    transform: scale(0.95);
+}
+
+.btn-close img {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+    transition: transform 0.3s ease;
+}
+
+.btn-close:hover img {
+    transform: rotate(90deg);
+}
+
+/* Section Header Buttons - Mobile First */
+.btn-section-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 0.95em;
+    margin: 0.4em 0;
+    width: 100%;
+    text-align: center;
+    gap: 0.5em;
+    min-height: 48px;
+}
+
+.btn-section-header:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-section-header:active {
+    transform: translateY(0);
+}
+
+.btn-section-header i {
+    font-size: 1.1em;
+    transition: transform 0.3s ease;
+}
+
+.btn-section-header:hover i {
+    transform: scale(1.1);
+}
+
+/* Quantity Control Buttons - Mobile First */
+.btn-quantity {
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.1em;
+    margin: 0 0.3em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-quantity:hover {
+    transform: scale(1.1);
+}
+
+.btn-quantity:active {
+    transform: scale(0.95);
+}
+
+/* Quantity Display - Mobile First */
+#itemAmt {
+    border-radius: 8px;
+    font-size: 1.3em;
+    font-weight: 700;
+    text-align: center;
+}
+
+#itemPrice {
+    color: white;
+    border-radius: 8px;
+    font-size: 1.3em;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Quantity Control Container - Mobile First */
+#itemAmtcontrol {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 0.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin: 0.8em 0;
+}
+
+/* Cart Button - Mobile First */
+#itemAddCart {
+    padding: 0.8em 1.2em;
+    font-size: 1em;
     width: -webkit-fill-available;
     position: sticky;
     bottom: 0;
     z-index: 1100;
-    margin-inline:.4em;transition: 2s;
+    margin: 0.8em;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    color: white;
+    border-radius: 20px;
+    gap: 0.5em;
+    min-height: 50px;
+}
+
+
+
+/* ===== RESPONSIVE BREAKPOINTS - MOBILE FIRST APPROACH ===== */
+
+/* Tablet Breakpoint (768px and up) */
+@media (min-width: 768px) {
+    .btn-close {
+        width: 45px;
+        height: 45px;
+        top: 1em;
+        right: 1em;
+    }
+    
+    .btn-close img {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .btn-section-header {
+        padding: 1em 1.2em;
+        font-size: 1em;
+        margin: 0.5em 0;
+        min-height: 52px;
+    }
+    
+    .btn-quantity {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2em;
+        margin: 0 0.4em;
+    }
+    
+    #itemAmt, #itemPrice {
+        font-size: 1.4em;
+        padding: 0.6em 1em;
+    }
+    
+    #itemAmtcontrol {
+        padding: 1em;
+        gap: 1em;
+        margin: 1em 0;
+    }
+    
+    #itemAddCart {
+        padding: 1em 1.5em;
+        font-size: 1.1em;
+        margin: 1em;
+        min-height: 55px;
+    }
+    
+    #itemAddCart i {
+        font-size: 1.3em;
+    }
+    
+    #itemAddCart span {
+        font-size: 1.1em;
+    }
+    
+    /* Flavour and Size Control buttons responsive scaling */
+    #itemSizeControl a, #itemFlavourControl a {
+        padding: 1em 1.5em;
+        font-size: 0.95em;
+        margin: 0.5em;
+        border-radius: 15px;
+    }
+    
+    /* Generated buttons responsive scaling */
+    .btn-close-menu {
+        padding: 0.8em 1.1em;
+        font-size: 0.9em;
+        min-width: 110px;
+    }
+    
+    .btn-size-option, .btn-flavour-option {
+        padding: 0.6em 0.9em;
+        font-size: 0.85em;
+        min-width: 75px;
+    }
+    
+    .btn-side-option, .btn-mod-option, .btn-add-option {
+        padding: 0.6em 0.9em;
+        font-size: 0.85em;
+        min-width: 95px;
+    }
+    
+    .btn-place-order {
+        padding: 0.9em 1.8em;
+        font-size: 1em;
+        min-width: 180px;
+    }
+    
+    .btn-nav-location {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .btn-nav-location svg {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* Desktop Breakpoint (1024px and up) */
+@media (min-width: 1024px) {
+    .btn-close {
+        width: 50px;
+        height: 50px;
+        top: 1.2em;
+        right: 1.2em;
+    }
+    
+    .btn-close img {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .btn-section-header {
+        padding: 1.2em 1.5em;
+        font-size: 1.1em;
+        margin: 0.6em 0;
+        min-height: 56px;
+    }
+    
+    .btn-quantity {
+        width: 55px;
+        height: 55px;
+        font-size: 1.3em;
+        margin: 0 0.5em;
+    }
+    
+    #itemAmt, #itemPrice {
+        font-size: 1.5em;
+        padding: 0.7em 1.2em;
+    }
+    
+    #itemAmtcontrol {
+        padding: 1.2em;
+        gap: 1.2em;
+        margin: 1.2em 0;
+    }
+    
+    #itemAddCart {
+        padding: 1.2em 2em;
+        font-size: 1.2em;
+        margin: 1.2em;
+        min-height: 60px;
+        border-radius: 25px;
+    }
+    
+    #itemAddCart i {
+        font-size: 1.4em;
+    }
+    
+    #itemAddCart span {
+        font-size: 1.2em;
+    }
+    
+    /* Flavour and Size Control buttons responsive scaling */
+    #itemSizeControl a, #itemFlavourControl a {
+        padding: 1.2em 2em;
+        font-size: 1em;
+        margin: 0.6em;
+        border-radius: 18px;
+    }
+}
+
+/* Large Desktop Breakpoint (1440px and up) */
+@media (min-width: 1440px) {
+    .btn-section-header {
+        padding: 1.5em 2em;
+        font-size: 1.2em;
+        min-height: 60px;
+    }
+    
+    .btn-quantity {
+        width: 60px;
+        height: 60px;
+        font-size: 1.4em;
+    }
+    
+    #itemAmt, #itemPrice {
+        font-size: 1.6em;
+        padding: 0.8em 1.5em;
+    }
+    
+    #itemAddCart {
+        padding: 1.5em 2.5em;
+        font-size: 1.3em;
+        min-height: 65px;
+    }
+    
+    /* Generated buttons responsive scaling */
+    .btn-close-menu {
+        padding: 1em 1.5em;
+        font-size: 1em;
+        min-width: 140px;
+    }
+    
+    .btn-size-option, .btn-flavour-option {
+        padding: 0.8em 1.2em;
+        font-size: 1em;
+        min-width: 90px;
+    }
+    
+    /* Flavour and Size Control buttons responsive scaling */
+    #itemSizeControl a, #itemFlavourControl a {
+        padding: 1.5em 2.5em;
+        font-size: 1.1em;
+        margin: 0.8em;
+        border-radius: 20px;
+    }
+    
+    .btn-side-option, .btn-mod-option, .btn-add-option {
+        padding: 0.8em 1.2em;
+        font-size: 1em;
+        min-width: 110px;
+    }
+    
+    .btn-place-order {
+        padding: 1.2em 2.5em;
+        font-size: 1.2em;
+        min-width: 220px;
+    }
+    
+    .btn-nav-location {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .btn-nav-location svg {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* ===== GENERATED BUTTONS FROM WHATSAPP ORDERING SYSTEM ===== */
+
+/* Close menu buttons - Mobile First */
+.btn-close-menu {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.7em 1em;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-block-start: .4em;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.btn-close-menu:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+}
+
+.btn-close-menu:active {
+    transform: translateY(0);
+}
+
+.btn-close-menu:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Size option buttons - Mobile First */
+.btn-size-option {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0.2em;
+    text-align: center;
+    min-width: 70px;
+}
+
+.btn-size-option:hover {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+}
+
+.btn-size-option:active {
+    transform: translateY(0);
+}
+
+.btn-size-option.select {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    position: relative;
+}
+
+.btn-size-option.select::before {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes checkmarkPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Enhanced focus states for select buttons */
+.btn-size-option.select:focus,
+.btn-flavour-option.select:focus,
+.btn-side-option.select:focus,
+.btn-mod-option.select:focus,
+.btn-add-option.select:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 4px;
+    box-shadow: 0 0 25px rgba(40, 167, 69, 0.8), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+/* High contrast mode support for select states */
+@media (prefers-contrast: high) {
+    .select,
+    .selected,
+    .btn-size-option.select,
+    .btn-flavour-option.select,
+    .btn-side-option.select,
+    .btn-mod-option.select,
+    .btn-add-option.select {
+        border-width: 3px;
+        border-color: #fff;
+        box-shadow: 0 0 20px #fff, 0 4px 20px #000;
+    }
+}
+
+/* Reduced motion support for select animations */
+@media (prefers-reduced-motion: reduce) {
+    .select::before,
+    .selected::before,
+    .btn-size-option.select::before,
+    .btn-flavour-option.select::before,
+    .btn-side-option.select::before,
+    .btn-mod-option.select::before,
+    .btn-add-option.select::before {
+        animation: none;
+    }
+    
+    .select,
+    .selected,
+    .btn-size-option.select,
+    .btn-flavour-option.select,
+    .btn-side-option.select,
+    .btn-mod-option.select,
+    .btn-add-option.select {
+        transition: none;
+    }
+}
+
+/* Flavour option buttons - Mobile First */
+.btn-flavour-option {
+    background: linear-gradient(135deg, #e83e8c, #d63384);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(232, 62, 140, 0.3);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0.2em;
+    text-align: center;
+}
+
+.btn-flavour-option:hover {
+    background: linear-gradient(135deg, #d63384, #c2255c);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(232, 62, 140, 0.4);
+}
+
+.btn-flavour-option:active {
+    transform: translateY(0);
+}
+
+.btn-flavour-option.select {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    position: relative;
+}
+
+.btn-flavour-option.select::before {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite;
+}
+
+/* Side option buttons - Mobile First */
+.btn-side-option {
+    background: linear-gradient(135deg, #fd7e14, #e55a00);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5em 0.8em;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0.2em;
+    text-align: center;
+    min-width: 90px;
+}
+
+.btn-side-option:hover {
+    background: linear-gradient(135deg, #e55a00, #cc5200);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(253, 126, 20, 0.4);
+}
+
+.btn-side-option:active {
+    transform: translateY(0);
+}
+
+.btn-side-option.select {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    position: relative;
+}
+
+.btn-side-option.select::before {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite;
+}
+
+.btn-side-option.premiumside {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+}
+
+.btn-side-option.premiumside:hover {
+    background: linear-gradient(135deg, #e0a800, #d39e00);
+}
+
+.btn-side-option.premiumside.select {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+/* Add extra button - Mobile First */
+.btn-add-extra {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.2em;
+    font-size: 0.75em;
+}
+
+.btn-add-extra:hover {
+    background: linear-gradient(135deg, #5a32a3, #4c2a8a);
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4);
+}
+
+.btn-add-extra:active {
+    transform: scale(0.95);
+}
+
+/* Modification option buttons - Mobile First */
+.btn-mod-option {
+    background: linear-gradient(135deg, #20c997, #17a2b8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5em 0.8em;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(32, 201, 151, 0.3);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0.2em;
+    text-align: center;
+    min-width: 90px;
+}
+
+.btn-mod-option:hover {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(32, 201, 151, 0.4);
+}
+
+.btn-mod-option:active {
+    transform: translateY(0);
+}
+
+.btn-mod-option.select {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    position: relative;
+}
+
+.btn-mod-option.select::before {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite;
+}
+
+/* Addition option buttons - Mobile First */
+.btn-add-option {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5em 0.8em;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0.2em;
+    text-align: center;
+    min-width: 90px;
+}
+
+.btn-add-option:hover {
+    background: linear-gradient(135deg, #5a32a3, #4c2a8a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4);
+}
+
+.btn-add-option:active {
+    transform: translateY(0);
+}
+
+.btn-add-option.select {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    position: relative;
+}
+
+.btn-add-option.select::before {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #28a745;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite;
+}
+
+/* Place order button - Mobile First */
+.btn-place-order {
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.8em 1.5em;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0.8em auto;
+    min-width: 100%;
+    justify-content: center;
+    letter-spacing: 0.5px;
+}
+
+.btn-place-order:hover {
+    background: linear-gradient(135deg, #128c7e, #075e54);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+
+.btn-place-order:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.3);
+}
+
+.btn-place-order:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.btn-place-order i {
+    font-size: 1.2em;
+    transition: transform 0.3s ease;
+}
+
+.btn-place-order:hover i {
+    transform: scale(1.1);
+}
+
+/* Location navigation buttons - Mobile First */
+.btn-nav-location {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    z-index: 10;
+}
+
+.btn-nav-location:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+.btn-nav-location:active {
+    transform: scale(0.95);
+}
+
+.btn-nav-location:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.btn-nav-location svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+.btn-nav-location:hover svg {
+    transform: scale(1.1);
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Focus indicators for keyboard navigation */
+.btn-close:focus,
+.btn-section-header:focus,
+.btn-quantity:focus,
+#itemAddCart:focus,
+.btn-close-menu:focus,
+.btn-size-option:focus,
+.btn-flavour-option:focus,
+.btn-side-option:focus,
+.btn-add-extra:focus,
+.btn-mod-option:focus,
+.btn-add-option:focus,
+.btn-place-order:focus,
+.btn-nav-location:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn-close,
+    .btn-section-header,
+    .btn-quantity,
+    #itemAddCart {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .btn-close,
+    .btn-section-header,
+    .btn-quantity,
+    #itemAddCart {
+        transition: none;
+    }
+    
+    .btn-close:hover img,
+    .btn-section-header:hover i,
+    .btn-quantity:hover,
+    #itemAddCart:hover i {
+        transform: none;
+    }
+}
+
+#itemAddCart:hover {
+    background: linear-gradient(135deg, #128c7e, #075e54);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+
+#itemAddCart:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.3);
+}
+
+#itemAddCart:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+}
+
+#itemAddCart i {
+    font-size: 1.3em;
+    transition: transform 0.3s ease;
+}
+
+#itemAddCart:hover i {
+    transform: scale(1.1);
+}
+
+#itemAddCart span {
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Add a subtle pulse animation to draw attention */
+@keyframes cartPulse {
+    0% {
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    }
+}
+
+#itemAddCart {
+    animation: cartPulse 2s ease-in-out infinite;
+}
+
+#itemAddCart:hover {
+    animation: none;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    #itemAddCart {
+        padding: 0.8em 1.2em;
+        font-size: 1em;
+        min-height: 50px;
+    }
+    
+    #itemAddCart span {
+        font-size: 1em;
+    }
+    
+    #itemAddCart i {
+        font-size: 1.2em;
+    }
+}
+
+/* Loading state for the button */
+#itemAddCart.loading {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    cursor: not-allowed;
+    animation: none;
+}
+
+#itemAddCart.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success state animation */
+#itemAddCart.success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    animation: successBounce 0.6s ease-in-out;
+}
+
+@keyframes successBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
 }
 
 #orderModal .image {
@@ -916,7 +2008,6 @@ details[open] ul.all-hours {
 
 #orderModal h3 {
     margin: 0;
-    width: -webkit-fill-available
 }
 
 #itemSizeControl,#itemFlavourControl {
@@ -934,17 +2025,88 @@ details[open] ul.all-hours {
     font-size: medium;
     color: #fff;
     text-align: center;
-    background: #000;
-    border: 1px solid #fffa;
-    border-radius: .4em;
-    margin: .4em;
-    padding: .4em;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    margin: 0.4em;
+    min-height: 32px;
     display: block;
-    transition: .25s;
+    transition: all 0.3s ease;
     position: relative;
-    box-shadow: 1px solid #fff;
-    transition: .5s;
-    height: min-content
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    height: min-content;
+    cursor: pointer;
+    display: flex;
+    font-weight: 600;
+    padding-inline: .8em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    justify-content: center;
+    align-items: center;
+}
+
+#itemSizeControl a:hover,#itemFlavourControl a:hover,#itemSideControl a:hover,#itemAdditionControl a:hover,#itemModControl a:hover {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#itemSizeControl a:active,#itemFlavourControl a:active,#itemSideControl a:active,#itemAdditionControl a:active,#itemModControl a:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Special styling for flavour control buttons */
+#itemFlavourControl a {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border-color: rgba(231, 76, 60, 0.4);
+}
+
+#itemFlavourControl a:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    border-color: rgba(231, 76, 60, 0.6);
+}
+
+/* Special styling for size control buttons */
+#itemSizeControl a {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border-color: rgba(52, 152, 219, 0.4);
+}
+
+#itemSizeControl a:hover {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    border-color: rgba(52, 152, 219, 0.6);
+}
+
+/* Focus states for accessibility */
+#itemSizeControl a:focus,
+#itemFlavourControl a:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    #itemSizeControl a,
+    #itemFlavourControl a {
+        border-width: 3px;
+        border-color: #fff;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    #itemSizeControl a,
+    #itemFlavourControl a {
+        transition: none;
+    }
+    
+    #itemSizeControl a:hover,
+    #itemFlavourControl a:hover {
+        transform: none;
+    }
 }
 
 #itemSideControl a,#itemAdditionControl a,#itemModControl a {
@@ -953,14 +2115,96 @@ details[open] ul.all-hours {
 
 #itemModControl b {
     position: absolute;
-    right: 0;
-    margin-top: -36px;
-    rotate: 25deg;
-    background: #000;
-    padding: .4em;
+    display: inline-block;
+    left: 78vw;
+    margin-top: -3.6em;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: #fff;
+    padding: 0.4em;
     z-index: 1000;
-    font-size: small
+    font-size: 0.9em;
+    font-weight: 700;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transform: rotate(15deg);
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    min-width: 24px;
+    text-align: center;
+    line-height: 1;
+    letter-spacing: 0.5px;
+    vertical-align: top;
+}
+
+#itemModControl b:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    transform: rotate(15deg) scale(1.1);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#itemModControl b:active {
+    transform: rotate(15deg) scale(0.95);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Add a subtle glow effect */
+#itemModControl b::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b, #d63031);
+    border-radius: 22px;
+    z-index: -1;
+    opacity: 0.6;
+    animation: modControlGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes modControlGlow {
+    0% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+/* Focus state for accessibility */
+#itemModControl b:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3), 0 6px 20px rgba(231, 76, 60, 0.6);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    #itemModControl b {
+        border-width: 3px;
+        border-color: #fff;
+        box-shadow: 0 0 20px #fff, 0 4px 20px #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    #itemModControl b::before {
+        animation: none;
+    }
+    
+    #itemModControl b {
+        transition: none;
+    }
+    
+    #itemModControl b:hover {
+        transform: rotate(15deg);
+    }
 }
 
 #itemSideControl b {
@@ -1002,7 +2246,6 @@ details[open] ul.all-hours {
     font-size: xx-large;
     color: #fff;
     text-align: center;
-    margin: .4em;
     display: block
 }
 
@@ -1289,7 +2532,6 @@ details[open] ul.all-hours {
 
 .header h3 {
     margin: 0;
-    width: -webkit-fill-available
 }
 
 .confirm {
@@ -1320,7 +2562,7 @@ details[open] ul.all-hours {
     width: calc(100dvw - .8em);
     max-width: 420px;
     height: calc(100dvh - 10em);
-    max-height: 70vh;
+    max-height: min-content;
     overflow: scroll;
     overflow-x: hidden;
     box-shadow: 0 0 10px #fff;
@@ -1514,23 +2756,118 @@ details[open] ul.all-hours {
 }
 
 .singlepagemenu .prices li {
-    font-size: smaller;
+    font-size: 0.9em;
     color: #fff;
     text-align: center;
-    background: #000;
-    border: 1px solid #fffa;
-    border-radius: .25em;
-    margin: .15em;
-    padding: .25em .5em;
-    display: block;
-    transition: .25s;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    margin: 0.3em;
+    padding: 0.6em 1em;
+    display: inline-block;
+    transition: all 0.3s ease;
     position: relative;
-    box-shadow: 1px solid #fff;
-    transition: .25s
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    min-width: 80px;
+    overflow: hidden;
+}
+
+.singlepagemenu .prices li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.singlepagemenu .prices li:hover {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.singlepagemenu .prices li:hover::before {
+    left: 100%;
+}
+
+.singlepagemenu .prices li:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(255, 255, 255, 0.1);
+}
+
+.singlepagemenu .prices li:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3), 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .singlepagemenu .prices li {
+        border-width: 3px;
+        border-color: #fff;
+        box-shadow: 0 0 20px #fff, 0 4px 20px #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .singlepagemenu .prices li::before {
+        transition: none;
+    }
+    
+    .singlepagemenu .prices li {
+        transition: none;
+    }
+    
+    .singlepagemenu .prices li:hover {
+        transform: none;
+    }
+}
+
+/* Responsive design for price buttons */
+@media (min-width: 768px) {
+    .singlepagemenu .prices li {
+        padding: 0.8em 1.2em;
+        font-size: 1em;
+        margin: 0.4em;
+        min-width: 100px;
+    }
+    
+    .singlepagemenu .prices li b {
+        font-size: 1.2em;
+    }
+}
+
+@media (min-width: 1024px) {
+    .singlepagemenu .prices li {
+        padding: 1em 1.5em;
+        font-size: 1.1em;
+        margin: 0.5em;
+        min-width: 120px;
+    }
+    
+    .singlepagemenu .prices li b {
+        font-size: 1.3em;
+    }
 }
 
 .singlepagemenu .prices li b {
-    font-size: larger
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    display: block;
+    margin-top: 0.2em;
+    letter-spacing: 0.5px;
 }
 
 .listpageimage {
@@ -1569,7 +2906,9 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 #orderModal h2,#orderModal h3 {
-    margin-block:.4em;padding-inline:.4em;color: var(--selected-text-color1)
+    color: var(--selected-text-color1);
+    padding-block: 0;
+    width: -webkit-fill-available;
 }
 
 ul,p {
@@ -1811,7 +3150,6 @@ li.locations {
 }
 
 .locations .locbtn:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
