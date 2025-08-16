@@ -1536,20 +1536,16 @@ details[open] ul.all-hours {
 }
 
 .btn-add-extra {
-    background: linear-gradient(135deg,#6f42c1,#5a32a3);
-    color: #fff;
     border: none;
     border-radius: 50%;
     width: 28px;
     height: 28px;
     cursor: pointer;
     transition: all .3s ease;
-    box-shadow: 0 2px 8px rgba(111,66,193,.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: .2em;
-    font-size: .75em
+    z-index: 1;
 }
 
 .btn-add-extra:hover {
