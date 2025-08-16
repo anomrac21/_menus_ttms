@@ -1319,6 +1319,7 @@ details[open] ul.all-hours {
     padding-block: .4em;
     width: calc(100dvw - .8em);
     max-width: 420px;
+    height: calc(100dvh - 10em);
     max-height: 70vh;
     overflow: scroll;
     overflow-x: hidden;
