@@ -1903,7 +1903,6 @@ a[onclick*="findClosestLocation"]:hover {
     padding: .4em .8em;
     border: 1px solid #4CAF50;
     border-radius: 20px;
-    height: -webkit-fill-available;
     display: flex;
     transition: all 0.3s ease;
     align-items: center;
