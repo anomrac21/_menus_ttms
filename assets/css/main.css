@@ -109,7 +109,8 @@ details[open] ul.all-hours {
     background: linear-gradient(#00000055,#000000);
     color: #fefefe;
     position: relative;
-    z-index: 1
+    z-index: 1;
+    margin-block-end: -2px;
 }
 
 .main-menu-bg {
@@ -230,12 +231,13 @@ details[open] ul.all-hours {
     background: #0a0;
     border: 2px solid #fff;
     border-radius: 5em;
-    top: calc(-100dvh + 10em);
-    left: -5vw;
+    top: calc(-100dvh + 10.4em);
+    right: clamp(43vw, 100%, 80vw);
     font-size: .8em;
     font-weight: 900;
     padding: .4em .8em;
-    rotate: -25deg
+    rotate: -25deg;
+    position: fixed;
 }
 
 #cart td,#cart th {
