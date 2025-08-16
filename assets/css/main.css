@@ -837,7 +837,7 @@ details[open] ul.all-hours {
     top: 0;
     width: -webkit-fill-available;
     height: 100dvh;
-    z-index: 222;
+    z-index: 2222 !important;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     font-family: sans-serif
@@ -3533,7 +3533,6 @@ a[onclick*=findClosestLocation]:hover {
 #itemSideControl,
 #itemModControl,
 #itemAdditionControl {
-    z-index: 222 !important;
 }
 
 /* Add cart button - highest priority */
