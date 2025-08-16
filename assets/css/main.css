@@ -891,8 +891,8 @@ details[open] ul.all-hours {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
     margin: 4.8em auto auto;
     width: calc(100dvw - .8em);
-    max-height: calc(100dvh - 8em);
-    min-height: calc(100dvh - 12em);
+    max-height: calc(100dvh - 12em);
+    min-height: min-content;
     max-width: 400px;
     border-radius: 17px;
     height: min-content;
@@ -901,7 +901,8 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block:1em;overflow: hidden;
+    padding-block:1em;
+    overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
     color: var(--selected-text-color1);
