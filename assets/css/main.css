@@ -8,9 +8,8 @@ html {
     background-color: #000;
     color: #fff;
     text-align: center;
-    background-position: 50% 4em;
+    background-position: 50% 33%;
     background-repeat: no-repeat;
-    background-attachment: fixed;
     z-index: 2;
     background-attachment: fixed;
     position: relative;
@@ -892,7 +891,6 @@ details[open] ul.all-hours {
     margin: 4.8em auto auto;
     width: calc(100dvw - .8em);
     max-height: calc(100dvh - 12em);
-    min-height: min-content;
     max-width: 400px;
     border-radius: 17px;
     height: min-content;
