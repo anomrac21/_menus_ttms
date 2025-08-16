@@ -1,5 +1,5 @@
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: smooth
 }
 
 #client-openinghours .inner {
@@ -16,7 +16,7 @@ html {
     position: relative;
     display: flex;
     flex-direction: column-reverse;
-    min-height: 100vh;
+    min-height: 100vh
 }
 
 .status-badge {
@@ -30,7 +30,7 @@ html {
     border-radius: 2.5em;
     background: #000;
     align-items: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .status-badge.open {
@@ -171,11 +171,9 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     border-radius: 17px;
     height: calc(100dvh - 9.6em);
-    margin-block-end:.4em;
-    overflow: hidden;
+    margin-block-end:.4em;overflow: hidden;
     text-align: left;
-    margin-inline:auto;
-    backdrop-filter: blur(6px);
+    margin-inline:auto;backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     position: relative;
     transition: .25s;
@@ -201,14 +199,12 @@ details[open] ul.all-hours {
     text-transform: capitalize;
     font-size: larger;
     margin-top: -1px;
-    color: #fff;
+    color: #fff
 }
 
 #cart .titleRow:active,#cart .close {
     background: #000;
-    margin-block: auto;
-    padding-inline: .4em;
-}
+    margin-block:auto;padding-inline:.4em}
 
 .waBtn {
     display: flex;
@@ -217,7 +213,7 @@ details[open] ul.all-hours {
     overflow: hidden;
     top: 0;
     background: #000;
-    align-items: center;
+    align-items: center
 }
 
 #cartcount {
@@ -299,7 +295,7 @@ details[open] ul.all-hours {
     color: #fff;
     margin: auto;
     font-size: xx-large;
-    text-align: right;
+    text-align: right
 }
 
 #cart td,#cart th {
@@ -326,7 +322,7 @@ details[open] ul.all-hours {
 
 #whatsappOrder {
     width: -webkit-fill-available;
-    border-top: 1px solid;
+    border-top: 1px solid
 }
 
 #whatsappOrderBtn {
@@ -335,7 +331,7 @@ details[open] ul.all-hours {
 
 #whatsappOrderBtn button {
     display: block;
-    margin: .8em auto;
+    margin: .8em auto
 }
 
 @media(min-width: 300px) {
@@ -489,14 +485,13 @@ details[open] ul.all-hours {
 
 .select {
     transform: translate3d(0,-2px,10px)!important;
-    z-index: 1;
-    background: linear-gradient(135deg, #28a745, #20c997)!important;
-    box-shadow: 0 0 15px rgba(40, 167, 69, 0.6), 0 4px 20px rgba(0, 0, 0, 0.3)!important;
-    color: white!important;
-    border: 2px solid rgba(255, 255, 255, 0.3)!important;
+    background: linear-gradient(135deg,#28a745,#20c997)!important;
+    box-shadow: 0 0 15px rgba(40,167,69,.6),0 4px 20px rgba(0,0,0,.3)!important;
+    color: #fff!important;
+    border: 2px solid rgba(255,255,255,.3)!important;
     border-radius: 12px!important;
-    transition: all 0.3s ease!important;
-    position: relative!important;
+    transition: all .3s ease!important;
+    position: relative!important
 }
 
 .select::before {
@@ -506,34 +501,35 @@ details[open] ul.all-hours {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(135deg, #28a745, #20c997, #17a2b8);
+    background: linear-gradient(135deg,#28a745,#20c997,#17a2b8);
     border-radius: 14px;
     z-index: -1;
-    opacity: 0.7;
-    animation: selectGlow 2s ease-in-out infinite alternate;
+    opacity: .7;
+    animation: selectGlow 2s ease-in-out infinite alternate
 }
 
 @keyframes selectGlow {
     0% {
-        opacity: 0.7;
-        transform: scale(1);
+        opacity: .7;
+        transform: scale(1)
     }
+
     100% {
-        opacity: 0.9;
-        transform: scale(1.02);
+        opacity: .9;
+        transform: scale(1.02)
     }
 }
 
 .selected {
     transform: translate3d(0,-2px,10px)!important;
     padding: .8em!important;
-    background: linear-gradient(135deg, #17a2b8, #138496)!important;
-    box-shadow: 0 0 20px rgba(23, 162, 184, 0.7), 0 6px 25px rgba(0, 0, 0, 0.4)!important;
-    color: white!important;
-    border: 2px solid rgba(255, 255, 255, 0.4)!important;
+    background: linear-gradient(135deg,#17a2b8,#138496)!important;
+    box-shadow: 0 0 20px rgba(23,162,184,.7),0 6px 25px rgba(0,0,0,.4)!important;
+    color: #fff!important;
+    border: 2px solid rgba(255,255,255,.4)!important;
     border-radius: 15px!important;
-    transition: all 0.3s ease!important;
-    position: relative!important;
+    transition: all .3s ease!important;
+    position: relative!important
 }
 
 .selected::before {
@@ -543,21 +539,22 @@ details[open] ul.all-hours {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(135deg, #17a2b8, #138496, #0dcaf0);
+    background: linear-gradient(135deg,#17a2b8,#138496,#0dcaf0);
     border-radius: 17px;
     z-index: -1;
-    opacity: 0.8;
-    animation: selectedGlow 2.5s ease-in-out infinite alternate;
+    opacity: .8;
+    animation: selectedGlow 2.5s ease-in-out infinite alternate
 }
 
 @keyframes selectedGlow {
     0% {
-        opacity: 0.8;
-        transform: scale(1);
+        opacity: .8;
+        transform: scale(1)
     }
+
     100% {
         opacity: 1;
-        transform: scale(1.03);
+        transform: scale(1.03)
     }
 }
 
@@ -574,24 +571,21 @@ details[open] ul.all-hours {
     font-size: x-small;
     overflow: scroll;
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch
 }
 
 .contactinfo .locations .all {
     width: 100dvh;
-    display: flex;
+    display: flex
 }
 
 .installBtn {
     margin: auto!important;
     width: fit-content!important;
-    padding-inline:1.2em!important;
-}
+    padding-inline:1.2em!important}
 
 .contactinfo .social {
-    padding-inline:1.2em!important;
-    padding-block:.8em!important;
-}
+    padding-inline:1.2em!important;padding-block:.8em!important}
 
 .contactinfo .locbtn {
 }
@@ -738,10 +732,13 @@ details[open] ul.all-hours {
 
 .main-menu {
     width: -webkit-fill-available;
-    margin-inline:auto;max-width: 480px;
+    margin-inline:auto;
+    max-width: 480px;
     overflow: hidden;
     position: relative;
-    margin-block-start:0;padding-block-end:.8em;border-radius: .4em;
+    margin-block-start:0;
+    padding-block-end:.8em;
+    border-radius: 17px;
     background: linear-gradient( var(--menu-bg-color-1),var(--menu-bg-color-2))
 }
 
@@ -780,10 +777,8 @@ details[open] ul.all-hours {
 .menu .sizes,.menu .flavours {
     display: flex;
     flex-wrap: wrap;
-    margin-block-end: 5px;
-    margin-inline:.4em;
-    left: -5px;
-    position: relative;
+    margin-block-end:5px;margin-inline:.4em;left: -5px;
+    position: relative
 }
 
 .menu .sizes li,.menu .flavours li {
@@ -814,12 +809,10 @@ details[open] ul.all-hours {
     font-family: sans-serif;
     display: flex;
     padding: .4em;
-    margin-block-end:.8em;
-    transition: .15s;
+    margin-block-end:.8em;transition: .15s;
     width: 90%!important;
     max-width: -webkit-fill-available;
-    margin-inline:auto!important;
-    }
+    margin-inline:auto!important}
 
 .headerstyle {
     background-image: url(/images/headerbg.webp);
@@ -908,8 +901,7 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block:1em;
-    overflow: hidden;
+    padding-block:1em;overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
     color: var(--selected-text-color1);
@@ -935,11 +927,9 @@ details[open] ul.all-hours {
     position: sticky;
     top: 0;
     z-index: 111;
-    margin-inline: .4em;
-    margin-block:0;
-    justify-content: center;
-    align-items: center;
-    }
+    margin-inline:.4em;margin-block:0;justify-content: center;
+    align-items: center
+}
 
 #wamodal .header img,.modal .header img {
     width: 1.6em;
@@ -947,459 +937,430 @@ details[open] ul.all-hours {
     position: relative
 }
 
-/* ===== MOBILE-FIRST ORDER MODAL BUTTON SYSTEM ===== */
-
-/* Base button styles - Mobile First */
-.btn-close,
-.btn-section-header,
-.btn-quantity,
-#itemAddCart {
+.btn-close,.btn-section-header,.btn-quantity,#itemAddCart {
     border: none;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: inherit;
     font-weight: 600;
-    letter-spacing: 0.3px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    letter-spacing: .3px;
+    text-shadow: 0 1px 2px rgba(0,0,0,.3)
 }
 
-/* Close Button - Mobile First */
 .btn-close {
-    color: white;
+    color: #fff;
     z-index: 1000;
-    border-radius: 50%;
+    border-radius: 50%
 }
 
 .btn-close:hover {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
 .btn-close:active {
-    transform: scale(0.95);
+    transform: scale(.95)
 }
 
 .btn-close img {
     width: 18px;
     height: 18px;
-    filter: brightness(0) invert(1);
-    transition: transform 0.3s ease;
+    filter: brightness(0)invert(1);
+    transition: transform .3s ease
 }
 
 .btn-close:hover img {
-    transform: rotate(90deg);
+    transform: rotate(90deg)
 }
 
-/* Section Header Buttons - Mobile First */
 .btn-section-header {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    font-size: 0.95em;
-    margin: 0.4em 0;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    font-size: .95em;
+    margin: .4em 0;
     width: 100%;
     text-align: center;
-    gap: 0.5em;
-    min-height: 48px;
+    gap: .5em;
+    min-height: 48px
 }
 
 .btn-section-header:hover {
-    background: linear-gradient(135deg, #764ba2, #667eea);
+    background: linear-gradient(135deg,#764ba2,#667eea);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(102,126,234,.4)
 }
 
 .btn-section-header:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-section-header i {
     font-size: 1.1em;
-    transition: transform 0.3s ease;
+    transition: transform .3s ease
 }
 
 .btn-section-header:hover i {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
-/* Quantity Control Buttons - Mobile First */
 .btn-quantity {
-    color: white;
+    color: #fff;
     border: none;
     border-radius: 50%;
     font-size: 1.1em;
-    margin: 0 0.3em;
+    margin: 0 .3em;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .btn-quantity:hover {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
 .btn-quantity:active {
-    transform: scale(0.95);
+    transform: scale(.95)
 }
 
-/* Quantity Display - Mobile First */
 #itemAmt {
     border-radius: 8px;
     font-size: 1.3em;
     font-weight: 700;
-    text-align: center;
+    text-align: center
 }
 
 #itemPrice {
-    color: white;
+    color: #fff;
     border-radius: 8px;
     font-size: 1.3em;
     font-weight: 700;
-    text-align: center;
+    text-align: center
 }
 
-/* Quantity Control Container - Mobile First */
 #itemAmtcontrol {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255,255,255,.1);
     border-radius: 15px;
-    padding: 0.8em;
+    padding: .8em;
     display: flex;
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    margin: 0.8em 0;
+    border: 1px solid rgba(255,255,255,.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,.1);
+    margin: .8em 0
 }
 
-/* Cart Button - Mobile First */
 #itemAddCart {
-    padding: 0.8em 1.2em;
+    padding: .8em 1.2em;
     font-size: 1em;
     width: -webkit-fill-available;
     position: sticky;
     bottom: 0;
     z-index: 1100;
-    margin: 0.8em;
-    background: linear-gradient(135deg, #25d366, #128c7e);
-    color: white;
+    margin: .8em;
+    background: linear-gradient(135deg,#25d366,#128c7e);
+    color: #fff;
     border-radius: 20px;
-    gap: 0.5em;
-    min-height: 50px;
+    gap: .5em;
+    min-height: 50px
 }
 
-
-
-/* ===== RESPONSIVE BREAKPOINTS - MOBILE FIRST APPROACH ===== */
-
-/* Tablet Breakpoint (768px and up) */
-@media (min-width: 768px) {
+@media(min-width: 768px) {
     .btn-close {
-        width: 45px;
+        width:45px;
         height: 45px;
         top: 1em;
-        right: 1em;
+        right: 1em
     }
-    
+
     .btn-close img {
         width: 20px;
-        height: 20px;
+        height: 20px
     }
-    
+
     .btn-section-header {
         padding: 1em 1.2em;
         font-size: 1em;
-        margin: 0.5em 0;
-        min-height: 52px;
+        margin: .5em 0;
+        min-height: 52px
     }
-    
+
     .btn-quantity {
         width: 50px;
         height: 50px;
         font-size: 1.2em;
-        margin: 0 0.4em;
+        margin: 0 .4em
     }
-    
-    #itemAmt, #itemPrice {
+
+    #itemAmt,#itemPrice {
         font-size: 1.4em;
-        padding: 0.6em 1em;
+        padding: .6em 1em
     }
-    
+
     #itemAmtcontrol {
         padding: 1em;
         gap: 1em;
-        margin: 1em 0;
+        margin: 1em 0
     }
-    
+
     #itemAddCart {
         padding: 1em 1.5em;
         font-size: 1.1em;
         margin: 1em;
-        min-height: 55px;
+        min-height: 55px
     }
-    
+
     #itemAddCart i {
-        font-size: 1.3em;
+        font-size: 1.3em
     }
-    
+
     #itemAddCart span {
-        font-size: 1.1em;
+        font-size: 1.1em
     }
-    
-    /* Flavour and Size Control buttons responsive scaling */
-    #itemSizeControl a, #itemFlavourControl a {
+
+    #itemSizeControl a,#itemFlavourControl a {
         padding: 1em 1.5em;
-        font-size: 0.95em;
-        margin: 0.5em;
-        border-radius: 15px;
+        font-size: .95em;
+        margin: .5em;
+        border-radius: 15px
     }
-    
-    /* Generated buttons responsive scaling */
+
     .btn-close-menu {
-        padding: 0.8em 1.1em;
-        font-size: 0.9em;
-        min-width: 110px;
+        padding: .8em 1.1em;
+        font-size: .9em;
+        min-width: 110px
     }
-    
-    .btn-size-option, .btn-flavour-option {
-        padding: 0.6em 0.9em;
-        font-size: 0.85em;
-        min-width: 75px;
+
+    .btn-size-option,.btn-flavour-option {
+        padding: .6em .9em;
+        font-size: .85em;
+        min-width: 75px
     }
-    
-    .btn-side-option, .btn-mod-option, .btn-add-option {
-        padding: 0.6em 0.9em;
-        font-size: 0.85em;
-        min-width: 95px;
+
+    .btn-side-option,.btn-mod-option,.btn-add-option {
+        padding: .6em .9em;
+        font-size: .85em;
+        min-width: 95px
     }
-    
+
     .btn-place-order {
-        padding: 0.9em 1.8em;
+        padding: .9em 1.8em;
         font-size: 1em;
-        min-width: 180px;
+        min-width: 180px
     }
-    
+
     .btn-nav-location {
         width: 48px;
-        height: 48px;
+        height: 48px
     }
-    
+
     .btn-nav-location svg {
         width: 22px;
-        height: 22px;
+        height: 22px
     }
 }
 
-/* Desktop Breakpoint (1024px and up) */
-@media (min-width: 1024px) {
+@media(min-width: 1024px) {
     .btn-close {
-        width: 50px;
+        width:50px;
         height: 50px;
         top: 1.2em;
-        right: 1.2em;
+        right: 1.2em
     }
-    
+
     .btn-close img {
         width: 22px;
-        height: 22px;
+        height: 22px
     }
-    
+
     .btn-section-header {
         padding: 1.2em 1.5em;
         font-size: 1.1em;
-        margin: 0.6em 0;
-        min-height: 56px;
+        margin: .6em 0;
+        min-height: 56px
     }
-    
+
     .btn-quantity {
         width: 55px;
         height: 55px;
         font-size: 1.3em;
-        margin: 0 0.5em;
+        margin: 0 .5em
     }
-    
-    #itemAmt, #itemPrice {
+
+    #itemAmt,#itemPrice {
         font-size: 1.5em;
-        padding: 0.7em 1.2em;
+        padding: .7em 1.2em
     }
-    
+
     #itemAmtcontrol {
         padding: 1.2em;
         gap: 1.2em;
-        margin: 1.2em 0;
+        margin: 1.2em 0
     }
-    
+
     #itemAddCart {
         padding: 1.2em 2em;
         font-size: 1.2em;
         margin: 1.2em;
         min-height: 60px;
-        border-radius: 25px;
+        border-radius: 25px
     }
-    
+
     #itemAddCart i {
-        font-size: 1.4em;
+        font-size: 1.4em
     }
-    
+
     #itemAddCart span {
-        font-size: 1.2em;
+        font-size: 1.2em
     }
-    
-    /* Flavour and Size Control buttons responsive scaling */
-    #itemSizeControl a, #itemFlavourControl a {
+
+    #itemSizeControl a,#itemFlavourControl a {
         padding: 1.2em 2em;
         font-size: 1em;
-        margin: 0.6em;
-        border-radius: 18px;
+        margin: .6em;
+        border-radius: 18px
     }
 }
 
-/* Large Desktop Breakpoint (1440px and up) */
-@media (min-width: 1440px) {
+@media(min-width: 1440px) {
     .btn-section-header {
-        padding: 1.5em 2em;
+        padding:1.5em 2em;
         font-size: 1.2em;
-        min-height: 60px;
+        min-height: 60px
     }
-    
+
     .btn-quantity {
         width: 60px;
         height: 60px;
-        font-size: 1.4em;
+        font-size: 1.4em
     }
-    
-    #itemAmt, #itemPrice {
+
+    #itemAmt,#itemPrice {
         font-size: 1.6em;
-        padding: 0.8em 1.5em;
+        padding: .8em 1.5em
     }
-    
+
     #itemAddCart {
         padding: 1.5em 2.5em;
         font-size: 1.3em;
-        min-height: 65px;
+        min-height: 65px
     }
-    
-    /* Generated buttons responsive scaling */
+
     .btn-close-menu {
         padding: 1em 1.5em;
         font-size: 1em;
-        min-width: 140px;
+        min-width: 140px
     }
-    
-    .btn-size-option, .btn-flavour-option {
-        padding: 0.8em 1.2em;
+
+    .btn-size-option,.btn-flavour-option {
+        padding: .8em 1.2em;
         font-size: 1em;
-        min-width: 90px;
+        min-width: 90px
     }
-    
-    /* Flavour and Size Control buttons responsive scaling */
-    #itemSizeControl a, #itemFlavourControl a {
+
+    #itemSizeControl a,#itemFlavourControl a {
         padding: 1.5em 2.5em;
         font-size: 1.1em;
-        margin: 0.8em;
-        border-radius: 20px;
+        margin: .8em;
+        border-radius: 20px
     }
-    
-    .btn-side-option, .btn-mod-option, .btn-add-option {
-        padding: 0.8em 1.2em;
+
+    .btn-side-option,.btn-mod-option,.btn-add-option {
+        padding: .8em 1.2em;
         font-size: 1em;
-        min-width: 110px;
+        min-width: 110px
     }
-    
+
     .btn-place-order {
         padding: 1.2em 2.5em;
         font-size: 1.2em;
-        min-width: 220px;
+        min-width: 220px
     }
-    
+
     .btn-nav-location {
         width: 55px;
-        height: 55px;
+        height: 55px
     }
-    
+
     .btn-nav-location svg {
         width: 28px;
-        height: 28px;
+        height: 28px
     }
 }
 
-/* ===== GENERATED BUTTONS FROM WHATSAPP ORDERING SYSTEM ===== */
-
-/* Close menu buttons - Mobile First */
 .btn-close-menu {
-    background: linear-gradient(135deg, #6c757d, #495057);
-    color: white;
+    background: linear-gradient(135deg,#6c757d,#495057);
+    color: #fff;
     border: none;
     border-radius: 12px;
-    padding: 0.7em 1em;
-    font-size: 0.9em;
+    padding: .7em 1em;
+    font-size: .9em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(108,117,125,.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
     display: flex;
     align-items: center;
-    gap: 0.4em;
-    margin-block-start: .4em;
-    min-width: 100px;
-    justify-content: center;
+    gap: .4em;
+    margin-block-start:.4em;min-width: 100px;
+    justify-content: center
 }
 
 .btn-close-menu:hover {
-    background: linear-gradient(135deg, #495057, #343a40);
+    background: linear-gradient(135deg,#495057,#343a40);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+    box-shadow: 0 4px 15px rgba(108,117,125,.4)
 }
 
 .btn-close-menu:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-close-menu:focus {
     outline: 2px solid #007bff;
-    outline-offset: 2px;
+    outline-offset: 2px
 }
 
-/* Size option buttons - Mobile First */
 .btn-size-option {
-    background: linear-gradient(135deg, #17a2b8, #138496);
-    color: white;
+    background: linear-gradient(135deg,#17a2b8,#138496);
+    color: #fff;
     border: none;
     border-radius: 8px;
-    font-size: 0.85em;
+    font-size: .85em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(23,162,184,.3);
     text-decoration: none;
     display: inline-block;
-    margin: 0.2em;
+    margin: .2em;
     text-align: center;
-    min-width: 70px;
+    min-width: 70px
 }
 
 .btn-size-option:hover {
-    background: linear-gradient(135deg, #138496, #117a8b);
+    background: linear-gradient(135deg,#138496,#117a8b);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+    box-shadow: 0 4px 15px rgba(23,162,184,.4)
 }
 
 .btn-size-option:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-size-option.select {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg,#28a745,#20c997);
+    box-shadow: 0 0 20px rgba(40,167,69,.6),0 6px 25px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.4);
     transform: translateY(-3px);
-    position: relative;
+    position: relative
 }
 
 .btn-size-option.select::before {
@@ -1408,7 +1369,7 @@ details[open] ul.all-hours {
     top: -8px;
     right: -8px;
     background: #28a745;
-    color: white;
+    color: #fff;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1416,102 +1377,77 @@ details[open] ul.all-hours {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    animation: checkmarkPulse 1.5s ease-in-out infinite;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite
 }
 
 @keyframes checkmarkPulse {
-    0%, 100% {
-        transform: scale(1);
+    0%,100% {
+        transform: scale(1)
     }
+
     50% {
-        transform: scale(1.1);
+        transform: scale(1.1)
     }
 }
 
-/* Enhanced focus states for select buttons */
-.btn-size-option.select:focus,
-.btn-flavour-option.select:focus,
-.btn-side-option.select:focus,
-.btn-mod-option.select:focus,
-.btn-add-option.select:focus {
+.btn-size-option.select:focus,.btn-flavour-option.select:focus,.btn-side-option.select:focus,.btn-mod-option.select:focus,.btn-add-option.select:focus {
     outline: 2px solid #007bff;
     outline-offset: 4px;
-    box-shadow: 0 0 25px rgba(40, 167, 69, 0.8), 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 0 25px rgba(40,167,69,.8),0 8px 30px rgba(0,0,0,.4),0 0 0 4px rgba(0,123,255,.3)
 }
 
-/* High contrast mode support for select states */
-@media (prefers-contrast: high) {
-    .select,
-    .selected,
-    .btn-size-option.select,
-    .btn-flavour-option.select,
-    .btn-side-option.select,
-    .btn-mod-option.select,
-    .btn-add-option.select {
+@media(prefers-contrast:high) {
+    .select,.selected,.btn-size-option.select,.btn-flavour-option.select,.btn-side-option.select,.btn-mod-option.select,.btn-add-option.select {
         border-width: 3px;
         border-color: #fff;
-        box-shadow: 0 0 20px #fff, 0 4px 20px #000;
+        box-shadow: 0 0 20px #fff,0 4px 20px #000
     }
 }
 
-/* Reduced motion support for select animations */
-@media (prefers-reduced-motion: reduce) {
-    .select::before,
-    .selected::before,
-    .btn-size-option.select::before,
-    .btn-flavour-option.select::before,
-    .btn-side-option.select::before,
-    .btn-mod-option.select::before,
-    .btn-add-option.select::before {
-        animation: none;
+@media(prefers-reduced-motion:reduce) {
+    .select::before,.selected::before,.btn-size-option.select::before,.btn-flavour-option.select::before,.btn-side-option.select::before,.btn-mod-option.select::before,.btn-add-option.select::before {
+        animation: none
     }
-    
-    .select,
-    .selected,
-    .btn-size-option.select,
-    .btn-flavour-option.select,
-    .btn-side-option.select,
-    .btn-mod-option.select,
-    .btn-add-option.select {
-        transition: none;
+
+    .select,.selected,.btn-size-option.select,.btn-flavour-option.select,.btn-side-option.select,.btn-mod-option.select,.btn-add-option.select {
+        transition: none
     }
 }
 
-/* Flavour option buttons - Mobile First */
 .btn-flavour-option {
-    background: linear-gradient(135deg, #e83e8c, #d63384);
-    color: white;
+    background: linear-gradient(135deg,#e83e8c,#d63384);
+    color: #fff;
     border: none;
     border-radius: 8px;
-    font-size: 0.85em;
+    font-size: .85em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(232, 62, 140, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(232,62,140,.3);
     text-decoration: none;
     display: inline-block;
-    margin: 0.2em;
-    text-align: center;
+    margin: .2em;
+    text-align: center
 }
 
 .btn-flavour-option:hover {
-    background: linear-gradient(135deg, #d63384, #c2255c);
+    background: linear-gradient(135deg,#d63384,#c2255c);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(232, 62, 140, 0.4);
+    box-shadow: 0 4px 15px rgba(232,62,140,.4)
 }
 
 .btn-flavour-option:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-flavour-option.select {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg,#28a745,#20c997);
+    box-shadow: 0 0 20px rgba(40,167,69,.6),0 6px 25px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.4);
     transform: translateY(-3px);
-    position: relative;
+    position: relative
 }
 
 .btn-flavour-option.select::before {
@@ -1520,7 +1456,7 @@ details[open] ul.all-hours {
     top: -8px;
     right: -8px;
     background: #28a745;
-    color: white;
+    color: #fff;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1528,46 +1464,45 @@ details[open] ul.all-hours {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    animation: checkmarkPulse 1.5s ease-in-out infinite;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite
 }
 
-/* Side option buttons - Mobile First */
 .btn-side-option {
-    background: linear-gradient(135deg, #fd7e14, #e55a00);
-    color: white;
+    background: linear-gradient(135deg,#fd7e14,#e55a00);
+    color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 0.5em 0.8em;
-    font-size: 0.85em;
+    padding: .5em .8em;
+    font-size: .85em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(253,126,20,.3);
     text-decoration: none;
     display: inline-block;
-    margin: 0.2em;
+    margin: .2em;
     text-align: center;
-    min-width: 90px;
+    min-width: 90px
 }
 
 .btn-side-option:hover {
-    background: linear-gradient(135deg, #e55a00, #cc5200);
+    background: linear-gradient(135deg,#e55a00,#cc5200);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(253, 126, 20, 0.4);
+    box-shadow: 0 4px 15px rgba(253,126,20,.4)
 }
 
 .btn-side-option:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-side-option.select {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg,#28a745,#20c997);
+    box-shadow: 0 0 20px rgba(40,167,69,.6),0 6px 25px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.4);
     transform: translateY(-3px);
-    position: relative;
+    position: relative
 }
 
 .btn-side-option.select::before {
@@ -1576,7 +1511,7 @@ details[open] ul.all-hours {
     top: -8px;
     right: -8px;
     background: #28a745;
-    color: white;
+    color: #fff;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1584,88 +1519,86 @@ details[open] ul.all-hours {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    animation: checkmarkPulse 1.5s ease-in-out infinite;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite
 }
 
 .btn-side-option.premiumside {
-    background: linear-gradient(135deg, #ffc107, #e0a800);
-    color: #212529;
+    background: linear-gradient(135deg,#ffc107,#e0a800);
+    color: #212529
 }
 
 .btn-side-option.premiumside:hover {
-    background: linear-gradient(135deg, #e0a800, #d39e00);
+    background: linear-gradient(135deg,#e0a800,#d39e00)
 }
 
 .btn-side-option.premiumside.select {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
+    background: linear-gradient(135deg,#28a745,#20c997);
+    color: #fff
 }
 
-/* Add extra button - Mobile First */
 .btn-add-extra {
-    background: linear-gradient(135deg, #6f42c1, #5a32a3);
-    color: white;
+    background: linear-gradient(135deg,#6f42c1,#5a32a3);
+    color: #fff;
     border: none;
     border-radius: 50%;
     width: 28px;
     height: 28px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(111,66,193,.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0.2em;
-    font-size: 0.75em;
+    margin: .2em;
+    font-size: .75em
 }
 
 .btn-add-extra:hover {
-    background: linear-gradient(135deg, #5a32a3, #4c2a8a);
+    background: linear-gradient(135deg,#5a32a3,#4c2a8a);
     transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4);
+    box-shadow: 0 4px 15px rgba(111,66,193,.4)
 }
 
 .btn-add-extra:active {
-    transform: scale(0.95);
+    transform: scale(.95)
 }
 
-/* Modification option buttons - Mobile First */
 .btn-mod-option {
-    background: linear-gradient(135deg, #20c997, #17a2b8);
-    color: white;
+    background: linear-gradient(135deg,#20c997,#17a2b8);
+    color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 0.5em 0.8em;
-    font-size: 0.85em;
+    padding: .5em .8em;
+    font-size: .85em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(32, 201, 151, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(32,201,151,.3);
     text-decoration: none;
     display: inline-block;
-    margin: 0.2em;
+    margin: .2em;
     text-align: center;
-    min-width: 90px;
+    min-width: 90px
 }
 
 .btn-mod-option:hover {
-    background: linear-gradient(135deg, #17a2b8, #138496);
+    background: linear-gradient(135deg,#17a2b8,#138496);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(32, 201, 151, 0.4);
+    box-shadow: 0 4px 15px rgba(32,201,151,.4)
 }
 
 .btn-mod-option:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-mod-option.select {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg,#28a745,#20c997);
+    box-shadow: 0 0 20px rgba(40,167,69,.6),0 6px 25px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.4);
     transform: translateY(-3px);
-    position: relative;
+    position: relative
 }
 
 .btn-mod-option.select::before {
@@ -1674,7 +1607,7 @@ details[open] ul.all-hours {
     top: -8px;
     right: -8px;
     background: #28a745;
-    color: white;
+    color: #fff;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1682,46 +1615,45 @@ details[open] ul.all-hours {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    animation: checkmarkPulse 1.5s ease-in-out infinite;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite
 }
 
-/* Addition option buttons - Mobile First */
 .btn-add-option {
-    background: linear-gradient(135deg, #6f42c1, #5a32a3);
-    color: white;
+    background: linear-gradient(135deg,#6f42c1,#5a32a3);
+    color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 0.5em 0.8em;
-    font-size: 0.85em;
+    padding: .5em .8em;
+    font-size: .85em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 2px 8px rgba(111,66,193,.3);
     text-decoration: none;
     display: inline-block;
-    margin: 0.2em;
+    margin: .2em;
     text-align: center;
-    min-width: 90px;
+    min-width: 90px
 }
 
 .btn-add-option:hover {
-    background: linear-gradient(135deg, #5a32a3, #4c2a8a);
+    background: linear-gradient(135deg,#5a32a3,#4c2a8a);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4);
+    box-shadow: 0 4px 15px rgba(111,66,193,.4)
 }
 
 .btn-add-option:active {
-    transform: translateY(0);
+    transform: translateY(0)
 }
 
 .btn-add-option.select {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6), 0 6px 25px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg,#28a745,#20c997);
+    box-shadow: 0 0 20px rgba(40,167,69,.6),0 6px 25px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.4);
     transform: translateY(-3px);
-    position: relative;
+    position: relative
 }
 
 .btn-add-option.select::before {
@@ -1730,7 +1662,7 @@ details[open] ul.all-hours {
     top: -8px;
     right: -8px;
     background: #28a745;
-    color: white;
+    color: #fff;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -1738,253 +1670,224 @@ details[open] ul.all-hours {
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    animation: checkmarkPulse 1.5s ease-in-out infinite;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    animation: checkmarkPulse 1.5s ease-in-out infinite
 }
 
-/* Place order button - Mobile First */
 .btn-place-order {
-    background: linear-gradient(135deg, #25d366, #128c7e);
-    color: white;
+    background: linear-gradient(135deg,#25d366,#128c7e);
+    color: #fff;
     border: none;
     border-radius: 20px;
-    padding: 0.8em 1.5em;
+    padding: .8em 1.5em;
     font-size: 1em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: all .3s ease;
+    box-shadow: 0 4px 15px rgba(37,211,102,.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
     display: flex;
     align-items: center;
-    gap: 0.5em;
-    margin: 0.8em auto;
+    gap: .5em;
+    margin: .8em auto;
     min-width: 100%;
     justify-content: center;
-    letter-spacing: 0.5px;
+    letter-spacing: .5px
 }
 
 .btn-place-order:hover {
-    background: linear-gradient(135deg, #128c7e, #075e54);
+    background: linear-gradient(135deg,#128c7e,#075e54);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 6px 20px rgba(37,211,102,.4)
 }
 
 .btn-place-order:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 2px 10px rgba(37,211,102,.3)
 }
 
 .btn-place-order:focus {
     outline: 2px solid #007bff;
-    outline-offset: 2px;
+    outline-offset: 2px
 }
 
 .btn-place-order i {
     font-size: 1.2em;
-    transition: transform 0.3s ease;
+    transition: transform .3s ease
 }
 
 .btn-place-order:hover i {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
-/* Location navigation buttons - Mobile First */
 .btn-nav-location {
-    background: linear-gradient(135deg, #6c757d, #495057);
-    color: white;
+    color: #fff;
     border: none;
+    background: none;
     border-radius: 50%;
-    width: 45px;
     height: 45px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    transition: all .3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
     position: relative;
-    z-index: 10;
+    z-index: 10
 }
 
 .btn-nav-location:hover {
-    background: linear-gradient(135deg, #495057, #343a40);
+    background: linear-gradient(135deg,#495057,#343a40);
     transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    box-shadow: 0 6px 20px rgba(108,117,125,.4)
 }
 
 .btn-nav-location:active {
-    transform: scale(0.95);
+    transform: scale(.95)
 }
 
 .btn-nav-location:focus {
     outline: 2px solid #007bff;
-    outline-offset: 2px;
+    outline-offset: 2px
 }
 
 .btn-nav-location svg {
-    width: 20px;
-    height: 20px;
-    transition: transform 0.3s ease;
+    width: 32px;
+    height: 30px;
+    transition: transform .3s ease
 }
 
 .btn-nav-location:hover svg {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
-/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
-
-/* Focus indicators for keyboard navigation */
-.btn-close:focus,
-.btn-section-header:focus,
-.btn-quantity:focus,
-#itemAddCart:focus,
-.btn-close-menu:focus,
-.btn-size-option:focus,
-.btn-flavour-option:focus,
-.btn-side-option:focus,
-.btn-add-extra:focus,
-.btn-mod-option:focus,
-.btn-add-option:focus,
-.btn-place-order:focus,
-.btn-nav-location:focus {
+.btn-close:focus,.btn-section-header:focus,.btn-quantity:focus,#itemAddCart:focus,.btn-close-menu:focus,.btn-size-option:focus,.btn-flavour-option:focus,.btn-side-option:focus,.btn-add-extra:focus,.btn-mod-option:focus,.btn-add-option:focus,.btn-place-order:focus,.btn-nav-location:focus {
     outline: 2px solid #007bff;
-    outline-offset: 2px;
+    outline-offset: 2px
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .btn-close,
-    .btn-section-header,
-    .btn-quantity,
-    #itemAddCart {
-        border: 2px solid currentColor;
+@media(prefers-contrast:high) {
+    .btn-close,.btn-section-header,.btn-quantity,#itemAddCart {
+        border: 2px solid
     }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    .btn-close,
-    .btn-section-header,
-    .btn-quantity,
-    #itemAddCart {
-        transition: none;
+@media(prefers-reduced-motion:reduce) {
+    .btn-close,.btn-section-header,.btn-quantity,#itemAddCart {
+        transition: none
     }
-    
-    .btn-close:hover img,
-    .btn-section-header:hover i,
-    .btn-quantity:hover,
-    #itemAddCart:hover i {
-        transform: none;
+
+    .btn-close:hover img,.btn-section-header:hover i,.btn-quantity:hover,#itemAddCart:hover i {
+        transform: none
     }
 }
 
 #itemAddCart:hover {
-    background: linear-gradient(135deg, #128c7e, #075e54);
+    background: linear-gradient(135deg,#128c7e,#075e54);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 6px 20px rgba(37,211,102,.4)
 }
 
 #itemAddCart:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 2px 10px rgba(37,211,102,.3)
 }
 
 #itemAddCart:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 0 0 3px rgba(37,211,102,.3)
 }
 
 #itemAddCart i {
     font-size: 1.3em;
-    transition: transform 0.3s ease;
+    transition: transform .3s ease
 }
 
 #itemAddCart:hover i {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
 #itemAddCart span {
     font-size: 1.1em;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all .3s ease
 }
 
-/* Add a subtle pulse animation to draw attention */
 @keyframes cartPulse {
     0% {
-        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        box-shadow: 0 4px 15px rgba(37,211,102,.3)
     }
+
     50% {
-        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
+        box-shadow: 0 4px 20px rgba(37,211,102,.5)
     }
+
     100% {
-        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        box-shadow: 0 4px 15px rgba(37,211,102,.3)
     }
 }
 
 #itemAddCart {
-    animation: cartPulse 2s ease-in-out infinite;
+    animation: cartPulse 2s ease-in-out infinite
 }
 
 #itemAddCart:hover {
-    animation: none;
+    animation: none
 }
 
-/* Responsive design for smaller screens */
-@media (max-width: 768px) {
+@media(max-width: 768px) {
     #itemAddCart {
-        padding: 0.8em 1.2em;
+        padding:.8em 1.2em;
         font-size: 1em;
-        min-height: 50px;
+        min-height: 50px
     }
-    
+
     #itemAddCart span {
-        font-size: 1em;
+        font-size: 1em
     }
-    
+
     #itemAddCart i {
-        font-size: 1.2em;
+        font-size: 1.2em
     }
 }
 
-/* Loading state for the button */
 #itemAddCart.loading {
-    background: linear-gradient(135deg, #6c757d, #495057);
+    background: linear-gradient(135deg,#6c757d,#495057);
     cursor: not-allowed;
-    animation: none;
+    animation: none
 }
 
 #itemAddCart.loading i {
-    animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite
 }
 
 @keyframes spin {
     from {
-        transform: rotate(0deg);
+        transform: rotate(0)
     }
+
     to {
-        transform: rotate(360deg);
+        transform: rotate(360deg)
     }
 }
 
-/* Success state animation */
 #itemAddCart.success {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    animation: successBounce 0.6s ease-in-out;
+    background: linear-gradient(135deg,#28a745,#20c997);
+    animation: successBounce .6s ease-in-out
 }
 
 @keyframes successBounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
+    0%,20%,50%,80%,100% {
+        transform: translateY(0)
     }
+
     40% {
-        transform: translateY(-10px);
+        transform: translateY(-10px)
     }
+
     60% {
-        transform: translateY(-5px);
+        transform: translateY(-5px)
     }
 }
 
@@ -2007,7 +1910,7 @@ details[open] ul.all-hours {
 }
 
 #orderModal h3 {
-    margin: 0;
+    margin: 0
 }
 
 #itemSizeControl,#itemFlavourControl {
@@ -2025,87 +1928,77 @@ details[open] ul.all-hours {
     font-size: medium;
     color: #fff;
     text-align: center;
-    background: linear-gradient(135deg, #2c3e50, #34495e);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg,#2c3e50,#34495e);
+    border: 2px solid rgba(255,255,255,.3);
     border-radius: 12px;
-    margin: 0.4em;
+    margin: .4em;
     min-height: 32px;
     display: block;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     position: relative;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,.3);
     height: min-content;
     cursor: pointer;
     display: flex;
     font-weight: 600;
-    padding-inline: .8em;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    padding-inline:.8em;text-shadow: 0 1px 2px rgba(0,0,0,.5);
     backdrop-filter: blur(10px);
     justify-content: center;
-    align-items: center;
+    align-items: center
 }
 
 #itemSizeControl a:hover,#itemFlavourControl a:hover,#itemSideControl a:hover,#itemAdditionControl a:hover,#itemModControl a:hover {
-    background: linear-gradient(135deg, #34495e, #2c3e50);
+    background: linear-gradient(135deg,#34495e,#2c3e50);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 20px rgba(0,0,0,.4);
+    border-color: rgba(255,255,255,.5)
 }
 
 #itemSizeControl a:active,#itemFlavourControl a:active,#itemSideControl a:active,#itemAdditionControl a:active,#itemModControl a:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 10px rgba(0,0,0,.3)
 }
 
-/* Special styling for flavour control buttons */
 #itemFlavourControl a {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    border-color: rgba(231, 76, 60, 0.4);
+    background: linear-gradient(135deg,#e74c3c,#c0392b);
+    border-color: rgba(231,76,60,.4)
 }
 
 #itemFlavourControl a:hover {
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
-    border-color: rgba(231, 76, 60, 0.6);
+    background: linear-gradient(135deg,#c0392b,#e74c3c);
+    border-color: rgba(231,76,60,.6)
 }
 
-/* Special styling for size control buttons */
 #itemSizeControl a {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border-color: rgba(52, 152, 219, 0.4);
+    background: linear-gradient(135deg,#3498db,#2980b9);
+    border-color: rgba(52,152,219,.4)
 }
 
 #itemSizeControl a:hover {
-    background: linear-gradient(135deg, #2980b9, #3498db);
-    border-color: rgba(52, 152, 219, 0.6);
+    background: linear-gradient(135deg,#2980b9,#3498db);
+    border-color: rgba(52,152,219,.6)
 }
 
-/* Focus states for accessibility */
-#itemSizeControl a:focus,
-#itemFlavourControl a:focus {
+#itemSizeControl a:focus,#itemFlavourControl a:focus {
     outline: 2px solid #007bff;
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 0 0 4px rgba(0,123,255,.3)
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    #itemSizeControl a,
-    #itemFlavourControl a {
+@media(prefers-contrast:high) {
+    #itemSizeControl a,#itemFlavourControl a {
         border-width: 3px;
-        border-color: #fff;
+        border-color: #fff
     }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    #itemSizeControl a,
-    #itemFlavourControl a {
-        transition: none;
+@media(prefers-reduced-motion:reduce) {
+    #itemSizeControl a,#itemFlavourControl a {
+        transition: none
     }
-    
-    #itemSizeControl a:hover,
-    #itemFlavourControl a:hover {
-        transform: none;
+
+    #itemSizeControl a:hover,#itemFlavourControl a:hover {
+        transform: none
     }
 }
 
@@ -2116,41 +2009,40 @@ details[open] ul.all-hours {
 #itemModControl b {
     position: absolute;
     display: inline-block;
-    left: 78vw;
+    left: 88%;
     margin-top: -3.6em;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    background: linear-gradient(135deg,#e74c3c,#c0392b);
     color: #fff;
-    padding: 0.4em;
+    padding: .4em;
     z-index: 1000;
-    font-size: 0.9em;
+    font-size: .9em;
     font-weight: 700;
     border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(231,76,60,.4),0 2px 8px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.3);
     transform: rotate(15deg);
-    transition: all 0.3s ease;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: all .3s ease;
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
     backdrop-filter: blur(10px);
     min-width: 24px;
     text-align: center;
     line-height: 1;
-    letter-spacing: 0.5px;
-    vertical-align: top;
+    letter-spacing: .5px;
+    vertical-align: top
 }
 
 #itemModControl b:hover {
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
-    transform: rotate(15deg) scale(1.1);
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: linear-gradient(135deg,#c0392b,#e74c3c);
+    transform: rotate(15deg)scale(1.1);
+    box-shadow: 0 6px 20px rgba(231,76,60,.6),0 4px 12px rgba(0,0,0,.4);
+    border-color: rgba(255,255,255,.5)
 }
 
 #itemModControl b:active {
-    transform: rotate(15deg) scale(0.95);
-    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+    transform: rotate(15deg)scale(.95);
+    box-shadow: 0 2px 8px rgba(231,76,60,.4),0 1px 4px rgba(0,0,0,.3)
 }
 
-/* Add a subtle glow effect */
 #itemModControl b::before {
     content: '';
     position: absolute;
@@ -2158,52 +2050,50 @@ details[open] ul.all-hours {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(135deg, #e74c3c, #c0392b, #d63031);
+    background: linear-gradient(135deg,#e74c3c,#c0392b,#d63031);
     border-radius: 22px;
     z-index: -1;
-    opacity: 0.6;
-    animation: modControlGlow 2s ease-in-out infinite alternate;
+    opacity: .6;
+    animation: modControlGlow 2s ease-in-out infinite alternate
 }
 
 @keyframes modControlGlow {
     0% {
-        opacity: 0.6;
-        transform: scale(1);
+        opacity: .6;
+        transform: scale(1)
     }
+
     100% {
-        opacity: 0.8;
-        transform: scale(1.05);
+        opacity: .8;
+        transform: scale(1.05)
     }
 }
 
-/* Focus state for accessibility */
 #itemModControl b:focus {
     outline: 2px solid #007bff;
     outline-offset: 3px;
-    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3), 0 6px 20px rgba(231, 76, 60, 0.6);
+    box-shadow: 0 0 0 4px rgba(0,123,255,.3),0 6px 20px rgba(231,76,60,.6)
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
+@media(prefers-contrast:high) {
     #itemModControl b {
         border-width: 3px;
         border-color: #fff;
-        box-shadow: 0 0 20px #fff, 0 4px 20px #000;
+        box-shadow: 0 0 20px #fff,0 4px 20px #000
     }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
+@media(prefers-reduced-motion:reduce) {
     #itemModControl b::before {
-        animation: none;
+        animation: none
     }
-    
+
     #itemModControl b {
-        transition: none;
+        transition: none
     }
-    
+
     #itemModControl b:hover {
-        transform: rotate(15deg);
+        transform: rotate(15deg)
     }
 }
 
@@ -2259,8 +2149,8 @@ details[open] ul.all-hours {
 #orderModal #itemName {
     position: sticky;
     top: 1.2em;
-    text-shadow: 0 1px 1px #000,0 -1px 1px #000,1px 0 1px #000,-1px 0 1px #000,1px 1px 1px #000,-1px -1px 1px #000,1px -1px 1px #000,-1px 1px 1px #000;
-    z-index: 11
+    text-shadow: 0 1px 1px #000, 0 -1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000;
+    z-index: 11;
 }
 
 #orderModal #itemPrice {
@@ -2532,6 +2422,7 @@ details[open] ul.all-hours {
 
 .header h3 {
     margin: 0;
+    width: -webkit-fill-available;
 }
 
 .confirm {
@@ -2558,8 +2449,7 @@ details[open] ul.all-hours {
 
 .modal {
     margin: 50px auto auto;
-    padding-block: .4em;
-    width: calc(100dvw - .8em);
+    padding-block:.4em;width: calc(100dvw - .8em);
     max-width: 420px;
     height: calc(100dvh - 10em);
     max-height: min-content;
@@ -2568,7 +2458,7 @@ details[open] ul.all-hours {
     box-shadow: 0 0 10px #fff;
     scroll-behavior: smooth;
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
-    margin: 4.8em auto auto;
+    margin: 4.8em auto auto
 }
 
 .modal h2,.modal .container a {
@@ -2581,7 +2471,7 @@ details[open] ul.all-hours {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: .4em;
+    gap: .4em
 }
 
 .modal .container div {
@@ -2605,71 +2495,70 @@ details[open] ul.all-hours {
     color: #fff
 }
 
-/* Enhanced button styles for table selection modal */
 .btn-confirm {
-    background: linear-gradient(135deg, #25d366, #128c7e) !important;
-    border-color: #25d366 !important;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    font-size: 1.1em !important;
-    padding: 0.7em 1.5em !important;
-    border-radius: 25px !important;
+    background: linear-gradient(135deg,#25d366,#128c7e)!important;
+    border-color: #25d366!important;
+    box-shadow: 0 4px 15px rgba(37,211,102,.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
+    font-size: 1.1em!important;
+    padding: .7em 1.5em!important;
+    border-radius: 25px!important;
     min-width: 120px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     border: 2px solid transparent;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: .5px
 }
 
 .btn-confirm:hover {
-    background: linear-gradient(135deg, #128c7e, #075e54) !important;
+    background: linear-gradient(135deg,#128c7e,#075e54)!important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 6px 20px rgba(37,211,102,.4)
 }
 
 .btn-confirm:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 2px 10px rgba(37,211,102,.3)
 }
 
 .btn-confirm:focus {
     outline: none;
     border-color: #fff;
-    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 0 0 3px rgba(37,211,102,.3)
 }
 
 .btn-cancel {
-    background: linear-gradient(135deg, #ff4757, #c44569) !important;
-    border-color: #ff4757 !important;
-    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    font-size: 1.1em !important;
-    padding: 0.7em 1.5em !important;
-    border-radius: 25px !important;
+    background: linear-gradient(135deg,#ff4757,#c44569)!important;
+    border-color: #ff4757!important;
+    box-shadow: 0 4px 15px rgba(255,71,87,.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,.3);
+    font-size: 1.1em!important;
+    padding: .7em 1.5em!important;
+    border-radius: 25px!important;
     min-width: 120px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     border: 2px solid transparent;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: .5px
 }
 
 .btn-cancel:hover {
-    background: linear-gradient(135deg, #c44569, #a55a4a) !important;
+    background: linear-gradient(135deg,#c44569,#a55a4a)!important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+    box-shadow: 0 6px 20px rgba(255,71,87,.4)
 }
 
 .btn-cancel:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(255, 71, 87, 0.3);
+    box-shadow: 0 2px 10px rgba(255,71,87,.3)
 }
 
 .btn-cancel:focus {
     outline: none;
     border-color: #fff;
-    box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.3);
+    box-shadow: 0 0 0 3px rgba(255,71,87,.3)
 }
 
 .modal .container a {
@@ -2756,24 +2645,24 @@ details[open] ul.all-hours {
 }
 
 .singlepagemenu .prices li {
-    font-size: 0.9em;
+    font-size: .9em;
     color: #fff;
     text-align: center;
-    background: linear-gradient(135deg, #2c3e50, #34495e);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg,#2c3e50,#34495e);
+    border: 2px solid rgba(255,255,255,.3);
     border-radius: 12px;
-    margin: 0.3em;
-    padding: 0.6em 1em;
+    margin: .3em;
+    padding: .6em 1em;
     display: inline-block;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     position: relative;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,.3),0 2px 8px rgba(255,255,255,.1);
     cursor: pointer;
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
     backdrop-filter: blur(10px);
     min-width: 80px;
-    overflow: hidden;
+    overflow: hidden
 }
 
 .singlepagemenu .prices li::before {
@@ -2783,80 +2672,77 @@ details[open] ul.all-hours {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+    transition: left .6s ease
 }
 
 .singlepagemenu .prices li:hover {
-    background: linear-gradient(135deg, #34495e, #2c3e50);
+    background: linear-gradient(135deg,#34495e,#2c3e50);
     transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 20px rgba(0,0,0,.4),0 4px 12px rgba(255,255,255,.2);
+    border-color: rgba(255,255,255,.5)
 }
 
 .singlepagemenu .prices li:hover::before {
-    left: 100%;
+    left: 100%
 }
 
 .singlepagemenu .prices li:active {
     transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 3px 10px rgba(0,0,0,.3),0 2px 6px rgba(255,255,255,.1)
 }
 
 .singlepagemenu .prices li:focus {
     outline: 2px solid #007bff;
     outline-offset: 3px;
-    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3), 0 6px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 4px rgba(0,123,255,.3),0 6px 20px rgba(0,0,0,.4)
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
+@media(prefers-contrast:high) {
     .singlepagemenu .prices li {
         border-width: 3px;
         border-color: #fff;
-        box-shadow: 0 0 20px #fff, 0 4px 20px #000;
+        box-shadow: 0 0 20px #fff,0 4px 20px #000
     }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
+@media(prefers-reduced-motion:reduce) {
     .singlepagemenu .prices li::before {
-        transition: none;
+        transition: none
     }
-    
+
     .singlepagemenu .prices li {
-        transition: none;
+        transition: none
     }
-    
+
     .singlepagemenu .prices li:hover {
-        transform: none;
+        transform: none
     }
 }
 
-/* Responsive design for price buttons */
-@media (min-width: 768px) {
+@media(min-width: 768px) {
     .singlepagemenu .prices li {
-        padding: 0.8em 1.2em;
+        padding:.8em 1.2em;
         font-size: 1em;
-        margin: 0.4em;
-        min-width: 100px;
+        margin: .4em;
+        min-width: 100px
     }
-    
+
     .singlepagemenu .prices li b {
-        font-size: 1.2em;
+        font-size: 1.2em
     }
 }
 
-@media (min-width: 1024px) {
+@media(min-width: 1024px) {
     .singlepagemenu .prices li {
-        padding: 1em 1.5em;
+        padding:1em 1.5em;
         font-size: 1.1em;
-        margin: 0.5em;
-        min-width: 120px;
+        margin: .5em;
+        min-width: 120px
     }
-    
+
     .singlepagemenu .prices li b {
-        font-size: 1.3em;
+        font-size: 1.3em
     }
 }
 
@@ -2864,10 +2750,10 @@ details[open] ul.all-hours {
     font-size: 1.1em;
     font-weight: 700;
     color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
     display: block;
-    margin-top: 0.2em;
-    letter-spacing: 0.5px;
+    margin-top: .2em;
+    letter-spacing: .5px
 }
 
 .listpageimage {
@@ -2907,8 +2793,9 @@ h1,h2,h3,h4,h5,h6 {
 
 #orderModal h2,#orderModal h3 {
     color: var(--selected-text-color1);
-    padding-block: 0;
+    padding-block:0;
     width: -webkit-fill-available;
+    text-align: center;
 }
 
 ul,p {
@@ -2919,37 +2806,37 @@ ul,p {
 
 body {
     font-family: sans-serif;
-    line-height: 1.5;
+    line-height: 1.5
 }
 
 header {
     position: fixed;
-    top: 0px;
+    top: 0;
     width: -webkit-fill-available;
-    z-index: 3;
+    z-index: 3
 }
 
 main {
     min-height: calc(100vh - 4em);
-    padding-block-start: 4em; background: var(--main-bg);
+    padding-block-start:4em;background: var(--main-bg);
     background-size: auto;
-    background-position: top center;
+    background-position: 50% 0
 }
 
 main img {
     max-width: 100%;
-    display: block;
+    display: block
 }
 
 .hero_logo_container {
     overflow: hidden;
-    position: relative;
+    position: relative
 }
 
 .logo_container {
-    box-shadow: inset 0px -.4em 0.4em 0.4em var(--hero-bg-color);
+    box-shadow: inset 0 -.4em .4em .4em var(--hero-bg-color);
     z-index: 1;
-    position: relative;
+    position: relative
 }
 
 #logo {
@@ -2957,7 +2844,7 @@ main img {
     z-index: 1;
     position: relative;
     max-height: 66dvh;
-    margin-inline: auto; }
+    margin-inline:auto}
 
 #bg {
     position: absolute;
@@ -2965,41 +2852,43 @@ main img {
     max-height: 512px;
     object-fit: cover;
     min-height: -webkit-fill-available;
-    min-width: -webkit-fill-available;
+    min-width: -webkit-fill-available
 }
 
 .menu-summary {
-    padding-inline: .8em; background: var(--main-bg);
-    position: relative;
+    padding-inline:.8em;background: var(--main-bg);
+    position: relative
 }
 
 .main-menu .food {
     max-height: 200px;
     object-fit: cover;
     min-height: auto;
-    min-width: -webkit-fill-available;
+    min-width: -webkit-fill-available
 }
 
 #main p {
-    margin-inline: .8em;color: var(--main-text-color);
-}
-#main .selected p {
-   color: var(--selected-text-color1);
-}
-main p:nth-child(3) img:nth-child(2) {
-    display: block;
-    margin: auto;
+    margin-inline:.8em;color: var(--main-text-color)
 }
 
-main p:nth-child(3) a img, main p:nth-child(4) a img {
-    max-width: 32px !important;
+#main .selected p {
+    color: var(--selected-text-color1)
+}
+
+main p:nth-child(3) img:nth-child(2) {
+    display: block;
+    margin: auto
+}
+
+main p:nth-child(3) a img,main p:nth-child(4) a img {
+    max-width: 32px!important
 }
 
 footer {
     position: fixed;
-    bottom: 0px;
+    bottom: 0;
     width: -webkit-fill-available;
-    z-index: 2 ;
+    z-index: 2
 }
 
 #footer {
@@ -3007,38 +2896,38 @@ footer {
     bottom: 0;
     width: 100%;
     padding: 0;
-    color: #ffffff;
+    color: #fff;
     text-align: center;
     z-index: 100;
     display: inline-block;
-    transition: 0.5s;
+    transition: .5s
 }
 
 #footer .icon {
     min-width: 24px;
     width: 24px;
-    max-width: 32px;
+    max-width: 32px
 }
 
 #footerBtns {
-    transition: 0.2s;
+    transition: .2s;
     opacity: 0;
-    transition: opacity 0.6s ease-in-out;
+    transition: opacity .6s ease-in-out;
     width: max-content;
     border-radius: 3em;
     border-top: 1px solid #fefefe55;
-    margin-inline: auto; margin-block-end: .8em; padding-block: .4em; backdrop-filter: blur(6px);
+    margin-inline:auto;margin-block-end:.8em;padding-block:.4em;backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    pointer-events: none;
+    pointer-events: none
 }
 
 .grad1 {
-    background: #000000ee;
-    border-top: 1px solid #fefefeaa !important;
-    padding-inline: .8em; padding-block: .4em; padding-block: .4em .1em !important; }
+    background: #000e;
+    border-top: 1px solid #fefefeaa!important;
+    padding-inline:.8em;padding-block:.4em;padding-block:.4em .1em!important}
 
 .grad2 {
-    background-image: linear-gradient(transparent, #00000055, #000);
+    background-image: linear-gradient(transparent,#00000055,#000)
 }
 
 #footerBtns div {
@@ -3047,33 +2936,33 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .2em;
+    gap: .2em
 }
 
 #footerBtns a {
-    color: #ffffff;
+    color: #fff;
     max-width: 100px;
     width: 8dvh;
     min-width: 36px;
-    display: inline-block;
+    display: inline-block
 }
 
 .smallfont {
-    font-size: small;
+    font-size: small
 }
 
 .largefont {
-    font-size: large;
+    font-size: large
 }
 
 .bigfont img {
     width: 32px!important;
-    transition: .2s;
+    transition: .2s
 }
 
-@media (min-width: 300px) {
+@media(min-width: 300px) {
     .singlepageimages img {
-        height: 256px
+        height:256px
     }
 }
 
@@ -3120,85 +3009,71 @@ footer {
 @media(min-width: 1440px) {
 }
 
-/* Location spacing and scroll-snap improvements */
 .locations {
-    
-    /* Ensure horizontal scroll works properly */
     overflow-x: auto;
     white-space: nowrap;
     display: flex;
-    gap: 1em;
+    gap: 1em
 }
 
-/* Make each location list item take up proper space */
 li.locations {
-    flex: 0 0 auto;
-     /* Ensure each location has enough width */
+    flex: none;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
-}
+    scroll-snap-stop:always}
 
 .location-item {
     min-width: 100%;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
-    display: flex;
+    scroll-snap-stop:always;display: flex
 }
 
 .locations .locbtn {
-    transition: all 0.3s ease;
+    transition: all .3s ease
 }
 
 .locations .locbtn:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0,0,0,.3)
 }
 
-/* Ensure proper scroll-snap behavior */
-.locations > div {
+.locations>div {
     scroll-snap-align: start;
-    scroll-snap-stop: always;
-}
+    scroll-snap-stop:always}
 
-/* Hide nested elements from scroll-snap */
 .locations .hide {
-    scroll-snap-align: none;
+    scroll-snap-align: none
 }
 
-/* Active location highlighting */
 .location-item.active-location {
-    background-color: rgba(76, 175, 80, 0.05);
+    background-color: rgba(76,175,80,5%);
     transform: scale(1.01);
-    transition: all 0.3s ease;
+    transition: all .3s ease
 }
 
 .location-item.active-location .locbtn {
-    background-color: #4CAF50 !important;
-    color: white !important;
-    font-weight: bold;
+    background-color: #4caf50!important;
+    color: #fff!important;
+    font-weight: 700
 }
 
-/* Add a subtle indicator for non-active locations */
 .location-item:not(.active-location) {
-    opacity: 0.9;
-    transition: all 0.3s ease;
+    opacity: .9;
+    transition: all .3s ease
 }
 
 .location-item:not(.active-location):hover {
     opacity: 1;
-    transform: translateY(-1px);
+    transform: translateY(-1px)
 }
 
-/* Closest location button styling */
-a[onclick*="findClosestLocation"]:hover {
-    background-color: #4CAF50;
-    color: white !important;
+a[onclick*=findClosestLocation]:hover {
+    background-color: #4caf50;
+    color: #fff!important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 4px 8px rgba(76,175,80,.3)
 }
 
-/* Location search and navigation container */
 .location-controls-container {
-    text-align: center;
+    text-align: center
 }
 
 .location-controls-inner {
@@ -3207,13 +3082,12 @@ a[onclick*="findClosestLocation"]:hover {
     align-items: center;
     justify-content: center;
     gap: .4em;
-    padding-inline: .4em;
-}
+    padding-inline:.4em}
 
 .location-count-display {
-    margin-bottom: 0.5em;
+    margin-bottom: .5em;
     color: #666;
-    font-size: 14px;
+    font-size: 14px
 }
 
 .location-search-container {
@@ -3227,46 +3101,44 @@ a[onclick*="findClosestLocation"]:hover {
     font-size: 16px;
     outline: none;
     background: #fefefe11;
-    transition: border-color 0.3s ease;
+    transition: border-color .3s ease
 }
 
 .location-search-input:focus {
-    border-color: #4CAF50;
+    border-color: #4caf50
 }
 
 .find-closest-btn {
-    color: #4CAF50;
+    color: #4caf50;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 700;
     font-size: x-small;
     padding: .4em .8em;
-    border: 1px solid #4CAF50;
+    border: 1px solid #4caf50;
     border-radius: 20px;
     display: flex;
-    transition: all 0.3s ease;
-    align-items: center;
+    transition: all .3s ease;
+    align-items: center
 }
 
 .find-closest-btn:hover {
-    background-color: #4CAF50;
-    color: white;
+    background-color: #4caf50;
+    color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 4px 8px rgba(76,175,80,.3)
 }
 
-/* Location navigation arrows container */
 .location-navigation-container {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
-.location-nav-left,
-.location-nav-right {
-    background: #4CAF50;
-    color: white;
+.location-nav-left,.location-nav-right {
+    background: #4caf50;
+    color: #fff;
     border: none;
     border-radius: 50%;
     width: 40px;
@@ -3276,265 +3148,252 @@ a[onclick*="findClosestLocation"]:hover {
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    transition: all .3s ease
 }
 
-.location-nav-left:hover,
-.location-nav-right:hover {
+.location-nav-left:hover,.location-nav-right:hover {
     background: #45a049;
     transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 8px rgba(0,0,0,.3)
 }
 
-.location-nav-left:active,
-.location-nav-right:active {
-    transform: scale(0.95);
+.location-nav-left:active,.location-nav-right:active {
+    transform: scale(.95)
 }
 
 .location-nav-left {
-    title: "Previous location";
+    title: "Previous location"
 }
 
 .location-nav-right {
-    title: "Next location";
+    title: "Next location"
 }
 
-/* Locations wrapper for proper sizing */
 .locations-wrapper {
     flex: 1;
     max-width: 480px;
-    width: 100%;
+    width: 100%
 }
 
-/* Cart location display */
 .cart-location {
     font-size: xx-small;
     color: #666;
     margin-top: 2px;
     text-align: center;
-    transition: color 0.3s ease;
+    transition: color .3s ease
 }
 
 .cart-location.active {
-    color: #4CAF50;
-    font-weight: bold;
+    color: #4caf50;
+    font-weight: 700
 }
 
-/* Delivery options styling */
 .delivery-toggle-btn {
-    transition: all 0.3s ease;
-    display: flex !important;
+    transition: all .3s ease;
+    display: flex!important;
     align-items: center;
     justify-content: center;
-    gap: 0.5em;
-    flex-direction: column;
+    gap: .5em;
+    flex-direction: column
 }
 
 .delivery-toggle-btn:hover {
-    background-color: #4CAF50 !important;
-    color: white !important;
-    transform: translateY(-1px);
+    background-color: #4caf50!important;
+    color: #fff!important;
+    transform: translateY(-1px)
 }
 
 .delivery-options {
     display: flex;
-    gap: 0.5em;
-    margin-top: 0.5em;
-    transition: all 0.3s ease;
+    gap: .5em;
+    margin-top: .5em;
+    transition: all .3s ease
 }
 
 .delivery-options.hide {
-    display: none !important;
+    display: none!important
 }
 
 .delivery-option-btn {
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .delivery-option-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 8px rgba(0,0,0,.3)
 }
 
-/* Ensure delivery options don't interfere with scroll-snap */
-.delivery-toggle-btn,
-.delivery-options {
-    scroll-snap-align: none;
+.delivery-toggle-btn,.delivery-options {
+    scroll-snap-align: none
 }
 
-/* Table Selection Button Styling */
 .table-selection-btn {
-    background: linear-gradient(#ff6b35, #f7931e) !important;
-    color: white !important;
+    background: linear-gradient(#ff6b35,#f7931e)!important;
+    color: #fff!important;
     text-decoration: none;
-    transition: all 0.3s ease;
-    display: flex !important;
+    transition: all .3s ease;
+    display: flex!important;
     align-items: center;
-    gap: 0.5em;
+    gap: .5em;
     font-weight: 500;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,.2)
 }
 
 .table-selection-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    color: white !important;
-    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,.3);
+    color: #fff!important;
+    text-decoration: none
 }
 
 .table-selection-btn:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,.2)
 }
 
 .table-selection-btn img {
-    filter: brightness(0) invert(1);
+    filter: brightness(0)invert(1)
 }
 
-/* Table Selection Modal Styling */
 .location-selection-section {
-    margin-bottom: 1.5em;
+    margin-bottom: 1.5em
 }
 
 .location-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5em;
-    margin-bottom: 1em;
+    gap: .5em;
+    margin-bottom: 1em
 }
 
 .location-btn {
-    background: linear-gradient(#4CAF50, #45a049);
-    color: white;
+    background: linear-gradient(#4CAF50,#45a049);
+    color: #fff;
     border: none;
-    padding: 0.5em 1em;
+    padding: .5em 1em;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9em;
+    transition: all .3s ease;
+    font-size: .9em;
     max-width: 200px;
     text-overflow: ellipsis;
     overflow: hidden;
-    white-space: nowrap;
+    white-space: nowrap
 }
 
 .location-btn:hover {
-    background: linear-gradient(#45a049, #3d8b40);
-    transform: translateY(-1px);
+    background: linear-gradient(#45a049,#3d8b40);
+    transform: translateY(-1px)
 }
 
 .location-btn.active {
-    background: linear-gradient(#2196F3, #1976D2);
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+    background: linear-gradient(#2196F3,#1976D2);
+    box-shadow: 0 2px 8px rgba(33,150,243,.4)
 }
 
 .table-selection-section {
-    transition: all 0.3s ease;
+    transition: all .3s ease
 }
 
 .table-selection-section.hide {
     opacity: 0;
-    pointer-events: none;
+    pointer-events: none
 }
 
 .table-selection-section.show {
     opacity: 1;
     max-height: 500px;
-    overflow: visible;
+    overflow: visible
 }
 
-/* Ensure delivery options don't interfere with scroll-snap */
-.delivery-toggle-btn,
-.delivery-options {
-    scroll-snap-align: none;
+.delivery-toggle-btn,.delivery-options {
+    scroll-snap-align: none
 }
 
-/* Table Selection Modal Styling */
 .selected-location-display {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);
     border: 2px solid #dee2e6;
     border-radius: 12px;
     padding: 16px;
     margin: 16px 0;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,.1)
 }
 
 .selected-location-info {
     color: #495057;
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.5
 }
 
 .selected-location-info strong {
     color: #212529;
     font-size: small;
     display: block;
-    margin-bottom: 8px;
 }
 
 .selected-location-info small {
     color: #6c757d;
-    font-size: x-small;
+    font-size: x-small
 }
 
 .table-selection-section {
-    margin-top: 20px;
+    margin-top: 20px
 }
 
 #dynamicTableButtons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    grid-template-columns: repeat(auto-fit,minmax(80px,1fr));
     gap: .4em;
-    margin: .4em;
+    margin: .4em
 }
 
 .tableBtn {
     display: inline-block;
     padding: 12px 16px;
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
+    background: linear-gradient(135deg,#007bff 0%,#0056b3 100%);
+    color: #fff;
     text-decoration: none;
     border-radius: 8px;
     text-align: center;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 16px
 }
 
 .tableBtn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    box-shadow: 0 4px 12px rgba(0,123,255,.3);
+    background: linear-gradient(135deg,#0056b3 0%,#004085 100%)
 }
 
 .tableBtn.takeaway-btn {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    grid-column: span 2;
+    background: linear-gradient(135deg,#ff6b35 0%,#f7931e 100%);
+    grid-column: span 2
 }
 
 .tableBtn.takeaway-btn:hover {
-    background: linear-gradient(135deg, #f7931e 0%, #e67e22 100%);
-    box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+    background: linear-gradient(135deg,#f7931e 0%,#e67e22 100%);
+    box-shadow: 0 4px 12px rgba(255,107,53,.3)
 }
 
 .tableBtn.selected {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    background: linear-gradient(135deg,#28a745 0%,#20c997 100%)!important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
-    border: 2px solid #fff;
+    box-shadow: 0 6px 16px rgba(40,167,69,.4);
+    border: 2px solid #fff
 }
 
 .tableBtn.selected:hover {
-    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%) !important;
-    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);
+    background: linear-gradient(135deg,#20c997 0%,#17a2b8 100%)!important;
+    box-shadow: 0 8px 20px rgba(40,167,69,.5)
 }
 
 .sepline {
@@ -3542,102 +3401,99 @@ a[onclick*="findClosestLocation"]:hover {
     font-weight: 700;
     color: #495057;
     text-align: center;
-    margin: 20px 0 16px 0;
+    margin: 20px 0 16px;
     padding: 8px 0;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6
 }
 
 .location-display-section {
-    margin-bottom: 20px;
+    margin-bottom: 20px
 }
 
-/* Order Summary Display Styling */
 .order-summary-display {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);
     border: 2px solid #dee2e6;
     border-radius: 12px;
     padding: .4em;
     margin: .4em;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,.1)
 }
 
-/* Hide confirmation modal by default */
 #confirmmodal {
     opacity: 0;
     max-height: 0;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all .3s ease
 }
 
 #confirmmodal.show {
     opacity: 1;
     max-height: 500px;
-    overflow: visible;
+    overflow: visible
 }
 
-.summary-location, .summary-order-type {
-    margin-bottom: .4em;
+.summary-location,.summary-order-type {
+    margin-bottom: .4em
 }
 
-.summary-location:last-child, .summary-order-type:last-child {
-    margin-bottom: 0;
+.summary-location:last-child,.summary-order-type:last-child {
+    margin-bottom: 0
 }
 
-.summary-location strong, .summary-order-type strong {
+.summary-location strong,.summary-order-type strong {
     color: #212529;
     font-size: x-small;
     display: block;
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: .5px
 }
 
 .summary-location-info {
     color: #495057;
     font-size: small;
     font-weight: 600;
-    line-height: 1.4;
+    line-height: 1.4
 }
 
 .summary-order-type-info {
-    margin-top: 8px;
+    margin-top: 8px
 }
 
 .takeaway-badge {
     display: inline-block;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    color: white;
+    background: linear-gradient(135deg,#ff6b35 0%,#f7931e 100%);
+    color: #fff;
     padding: 8px 16px;
     border-radius: 20px;
     font-weight: 600;
     font-size: 14px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(255,107,53,0.3);
+    letter-spacing: .5px;
+    box-shadow: 0 2px 4px rgba(255,107,53,.3)
 }
 
-/* Responsive adjustments for table selection modal */
-@media (max-width: 768px) {
+@media(max-width: 768px) {
     #dynamicTableButtons {
-        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-        gap: .4em;
+        grid-template-columns:repeat(auto-fit,minmax(70px,1fr));
+        gap: .4em
     }
-    
+
     .tableBtn {
         padding: 10px 14px;
-        font-size: 14px;
+        font-size: 14px
     }
-    
+
     .selected-location-display {
-        padding: .4em;
+        padding: .4em
     }
-    
+
     .selected-location-info {
-        font-size: 14px;
+        font-size: 14px
     }
-    
+
     .selected-location-info strong {
-        font-size: x-small;
+        font-size: x-small
     }
 }
