@@ -1,0 +1,33 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("section").forEach(section => {
+    const ul = section.querySelector(".inner");
+    const items = ul.querySelectorAll("li");
+    const leftBtn = section.querySelector(".l-btn");
+    const rightBtn = section.querySelector(".r-btn");
+    let currentIndex = 0;
+
+    if (items.length <= 1) {
+      leftBtn.style.display = "none";
+      rightBtn.style.display = "none";
+    }
+
+    function updateScroll() {
+      ul.scrollTo({
+        left: items[currentIndex].offsetLeft,
+        behavior: 'smooth'
+      });
+    }
+
+    leftBtn.addEventListener("click", () => {
+      currentIndex = (currentIndex - 1 + items.length) % items.length;
+      updateScroll();
+    });
+
+    rightBtn.addEventListener("click", () => {
+      currentIndex = (currentIndex + 1) % items.length;
+      updateScroll();
+    });
+  });
+});
+</script>

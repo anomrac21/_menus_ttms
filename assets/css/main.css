@@ -109,8 +109,8 @@ details[open] ul.all-hours {
     background: linear-gradient(#00000055,#000000);
     color: #fefefe;
     position: relative;
+    margin-block-end: -5.6em;
     z-index: 1;
-    margin-block-end: -2px;
 }
 
 .main-menu-bg {
@@ -888,7 +888,7 @@ details[open] ul.all-hours {
 #wamodal,#itemSides,#itemMods,#itemAddMods {
     background: linear-gradient(var(--selected-button-color4),var(--selected-button-color2));
     margin: 4.8em auto auto;
-    width: calc(100dvw - .8em);
+    width: calc(100dvw - 1.6em);
     max-height: calc(100dvh - 12em);
     max-width: 400px;
     border-radius: 17px;
@@ -898,7 +898,7 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block:1em;
+    padding-block: .8em;
     overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
@@ -1715,20 +1715,24 @@ details[open] ul.all-hours {
 .btn-place-order:hover i {
     transform: scale(1.1)
 }
-
+#locationNavRight{
+    right: .4em;
+}
+#locationNavLeft{
+    left: .4em;
+}
 .btn-nav-location {
     color: #fff;
     border: none;
     background: none;
     border-radius: 50%;
-    height: 45px;
     cursor: pointer;
     transition: all .3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    position: relative;
+    position: absolute;
     z-index: 10
 }
 
@@ -1749,7 +1753,7 @@ details[open] ul.all-hours {
 
 .btn-nav-location svg {
     width: 32px;
-    height: 30px;
+    height: 32px;
     transition: transform .3s ease
 }
 
@@ -2031,7 +2035,7 @@ details[open] ul.all-hours {
 #itemModControl b {
     position: absolute;
     display: inline-block;
-    left: 88%;
+    right: 3%;
     margin-top: -3.6em;
     background: linear-gradient(135deg,#e74c3c,#c0392b);
     color: #fff;

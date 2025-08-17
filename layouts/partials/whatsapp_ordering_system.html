@@ -229,7 +229,7 @@ function openItem(ele,options){
 			if(options.flavours[i]=='-'){
 				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option hide select">'+options.flavours[i]+'</a>';
 			}else{
-				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="select">'+options.flavours[i]+'</a>';
+				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option select">'+options.flavours[i]+'</a>';
 			}
 		}else{
 			flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option">'+options.flavours[i]+'</a>';
@@ -301,7 +301,7 @@ function makeSidesHtml(sideHtml,index) {
 		if(currentoptions.sides[index+1]=='Regular'){
 			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option regularside" onclick="selectAmt(this);">'+currentoptions.sides[index]+'</a><p class="btn-add-extra hide" onclick="addExtra(this);"><i class="fa fa-plus"></i></p>';
 		}else if(currentoptions.sides[index+1]=='Premium'){
-			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option premiumside" onclick="selectAmt(this);">'+currentoptions.sides[index]+' <i class="fa fa-star"></i></a><p class="btn-add-extra" onclick="addExtra(this);" class="hide"><i class="fa fa-plus"></i></p>';	
+			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option premiumside" onclick="selectAmt(this);">'+currentoptions.sides[index]+' <i class="fa fa-star"></i></a><p class="btn-add-extra" onclick="addExtra(this);" class="btn-add-extra hide"><i class="fa fa-plus"></i></p>';	
 		}
 		makeSidesHtml(sideHtml,index+3);
 	} else {

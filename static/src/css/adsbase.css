@@ -17,7 +17,7 @@
     margin: 0;
     overflow: hidden;
     position: relative;
-    background: #000;
+    pointer-events: none;
 }#pageadscontainer .scrollmagic-pin-spacer{
     scroll-snap-align:start;
 }
@@ -55,7 +55,7 @@
 #pageadscontainer section, #clientad ,#four{
     height: calc(100dvh - 4em);
     color: white;
-    position: relative;
+    top: 4em !important;
     text-align: center;
     text-shadow: 1px 1px 1px #00000055;
     background: #000000;
