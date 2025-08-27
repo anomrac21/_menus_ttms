@@ -1,30 +1,6 @@
 {{ define "main" }}
   {{ if eq .LinkTitle ("Advertisments") }}
-    <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
-    {{ partial "ads/frontpageads.html" . }}
-    <div id="pageadscontainer">
-        {{ $category := .LinkTitle }}
-        {{ $categoryurl := .RelPermalink }}            
-        {{ range .RegularPages.ByWeight }}
-          <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10"><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h2>
-          <section id="clientad">
-            <span data-aos="zoom-out">Promotion</span>
-            <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-              {{ $adstitle := .LinkTitle }}
-              {{ $adurl := .RelPermalink }}   
-              {{ $adlink := .Params.link }}   
-              {{ range .Params.images }}
-                <li class="ad-panel">
-                  <a href="{{ $adurl }}" class="content-panel">
-                  <img src="{{ site.BaseURL}}/{{ .image }}">
-                  <div class="adbottomspacer"></div>
-                  </a>
-                </li>
-              {{ end }}
-            </ul>
-          </section>
-        {{ end }}
-    </div>
+    {{ partial "ads/clientads.html" . }}
   {{ else }}
     <div class="main-content">
       

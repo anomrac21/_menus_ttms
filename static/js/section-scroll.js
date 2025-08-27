@@ -1,4 +1,3 @@
-<script>
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("section").forEach(section => {
     const ul = section.querySelector(".inner");
@@ -30,4 +29,3 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
-</script>

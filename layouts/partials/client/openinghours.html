@@ -16,7 +16,7 @@
 
         <div class="location-block">
           <h3>
-            <a href="https://www.ttmenus.com/map/?lat={{ .lat }}&lng={{ .lon }}&zoom=19&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
+            <a href="https://www.ttmenus.com/map/?lat={{ index .latlon 0 }}&lng={{ index .latlon 1 }}&zoom=19&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
               {{ .address }}
             </a>
           </h3>
@@ -41,17 +41,27 @@
                     <li data-day="{{ $day }}">
                       <strong>{{ $day | title }}:</strong>
                       {{ if and $open $close }}
-                        {{ $openH := int $open.hour }}
-                        {{ $openM := printf "%02d" (int $open.minute) }}
-                        {{ $openAMPM := cond (ge $openH 12) "PM" "AM" }}
-                        {{ $open12 := mod $openH 12 | default 12 }}
-
-                        {{ $closeH := int $close.hour }}
-                        {{ $closeM := printf "%02d" (int $close.minute) }}
-                        {{ $closeAMPM := cond (ge $closeH 12) "PM" "AM" }}
-                        {{ $close12 := mod $closeH 12 | default 12 }}
-
-                        {{ printf "%d:%s%s – %d:%s%s" $open12 $openM (lower $openAMPM) $close12 $closeM (lower $closeAMPM) }}
+                        {{ $openTime := $open.time }}
+                        {{ $closeTime := $close.time }}
+                        
+                        {{ if and $openTime $closeTime }}
+                          {{ $openParts := split $openTime ":" }}
+                          {{ $closeParts := split $closeTime ":" }}
+                          
+                          {{ $openHour := int (index $openParts 0) }}
+                          {{ $openMin := index $openParts 1 }}
+                          {{ $openAMPM := cond (ge $openHour 12) "PM" "AM" }}
+                          {{ $open12 := mod $openHour 12 | default 12 }}
+                          
+                          {{ $closeHour := int (index $closeParts 0) }}
+                          {{ $closeMin := index $closeParts 1 }}
+                          {{ $closeAMPM := cond (ge $closeHour 12) "PM" "AM" }}
+                          {{ $close12 := mod $closeHour 12 | default 12 }}
+                          
+                          {{ printf "%d:%s%s – %d:%s%s" $open12 $openMin (lower $openAMPM) $close12 $closeMin (lower $closeAMPM) }}
+                        {{ else }}
+                          Closed
+                        {{ end }}
                         
                       {{ else }}
                         Closed

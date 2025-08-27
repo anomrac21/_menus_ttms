@@ -1,0 +1,22 @@
+{{ if .Params.clienttourimages }}
+<div class="client-tour-slideshow">
+  <div class="slideshow-container">
+    {{ range $index, $image := .Params.clienttourimages }}
+    <div class="slide {{ if eq $index 0 }}active{{ end }}" data-slide="{{ $index }}">
+      <img src="{{ $image.image }}" alt="Client Tour Image {{ add $index 1 }}" loading="lazy">
+    </div>
+    {{ end }}
+    
+    <!-- Navigation arrows -->
+    <button class="slideshow-nav prev" onclick="changeSlide(-1)">&#10094;</button>
+    <button class="slideshow-nav next" onclick="changeSlide(1)">&#10095;</button>
+    
+    <!-- Dots indicator -->
+    <div class="slideshow-dots">
+      {{ range $index, $image := .Params.clienttourimages }}
+      <span class="dot {{ if eq $index 0 }}active{{ end }}" onclick="currentSlide({{ add $index 1 }})"></span>
+      {{ end }}
+    </div>
+  </div>
+</div>
+{{ end }}

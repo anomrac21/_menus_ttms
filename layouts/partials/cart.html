@@ -2,7 +2,16 @@
 	<div class="order">
 		<div class="waBtn">
 			<a id="titleRow" class="titleRow" onclick="toggleCart();"><i class="fa fa-arrow-right"></i> My Order</a>
-			<div id="cartLocation" class="cart-location">📍 Select a location</div>
+			<div class="location-selector-container">
+				<select id="locationSelect" class="location-dropdown" onchange="selectLocation(this.value)">
+					<option value="">📍 Select a location</option>
+					{{ range $index, $location := site.Data.locations.locations }}
+					<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}" {{ if eq $index 0 }}selected{{ end }}>
+						{{ $location.address }}
+					</option>
+					{{ end }}
+				</select>
+			</div>
 			<div class="button hide" id="button-5">
 		      <input type="checkbox" class="checkbox" id="dining-mode-checkbox-2" onclick="toggleDiningMode(this);"/>
 		      <div class="knobs">

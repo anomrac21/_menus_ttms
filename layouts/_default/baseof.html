@@ -15,9 +15,12 @@
       {{ partial "search.html" . }}
       <main id="main">
         {{ block "main" . }}{{ end }}
-        {{ partial "ads/frontpageads.html" . }}
-        {{ partial "client/openinghours.html" . }}
+        
       </main>
+      <div class="bottomads">
+          {{ partial "ads/frontpageads.html" . }}
+      </div>
+        {{ partial "client/openinghours.html" . }}
     </div>
   </div>
 
@@ -33,7 +36,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/jquery.ScrollMagic.min.js"></script>
 
-  <script src="{{ site.BaseURL}}/src/app.js"></script>
+  <script src="{{ site.BaseURL}}js/app.js"></script>
   <!-- <script src="{{ site.BaseURL}}/js/test.js"></script> -->
   <script src="{{ site.BaseURL}}js/custom.js"></script> 
   <script src="{{ site.BaseURL}}js/ads-sticky.js"></script> 
@@ -50,14 +53,13 @@
 
   <!-- jsdelivr -->
   <script src="https://cdn.jsdelivr.net/npm/@barba/core"></script>
-  {{ partial "scripts/loader.html" . }}
-
-  {{ partial "scripts/aos.html" . }}
-  {{ partial "scripts/opensignjs.html" . }}
-  {{ partial "scripts/scrollmagic.html" . }}
+  <script src="{{ site.BaseURL}}js/loader.js"></script>
+      <script src="{{ site.BaseURL}}js/client-ad-manager.js"></script>
+  <script src="{{ site.BaseURL}}js/aos.js"></script>
+  <script src="{{ site.BaseURL}}js/scrollmagic.js"></script>
   {{ partial "whatsapp_ordering_system.html" . }}
-  {{ partial "scripts/openinghours.html" . }}
-{{ partial "scripts/section-scroll.html" . }}
+  <script src="{{ site.BaseURL}}js/openinghours.js"></script>
+  <script src="{{ site.BaseURL}}js/section-scroll.js"></script>
 
 </body>
 </html>

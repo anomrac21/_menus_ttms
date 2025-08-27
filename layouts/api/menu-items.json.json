@@ -1,0 +1,30 @@
+{{- $menuItems := slice -}}
+
+{{- range site.Sections -}}
+  {{- if ne .Section "content" -}}
+    {{- $category := dict
+        "name" .Title
+        "url" .RelPermalink
+        "section" .Section
+        "items" slice
+    -}}
+    
+    {{- range .Pages -}}
+      {{- $item := dict
+          "name" .Title
+          "url" .RelPermalink
+          "section" .Parent.Section
+          "category" .Parent.Title
+      -}}
+      {{- $menuItems = $menuItems | append $item -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $json := dict
+    "menu_items" $menuItems
+    "total_count" (len $menuItems)
+    "generated_at" now
+-}}
+
+{{ $json | jsonify }}

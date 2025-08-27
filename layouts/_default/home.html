@@ -12,14 +12,18 @@
   {{ partial "contact_info.html" . }}
   <div class="hero-content">
     {{ .Content }}
-
+    {{ partial "client/clienttourimages.html" . }}
+  
   </div>
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
       {{ $title:= .LinkTitle }}
       {{ $titleurl := .RelPermalink }}  
       {{ if eq $title ("Advertisments") }}
-      {{ partial "ads/clientads.html" . }} 
+        <h2 id="{{ $title }}" class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+          <a href="{{ $titleurl }}">{{ $title }}</a>
+        </h2>
+        {{ partial "ads/homepageclientads.html" . }} 
       {{ end }}
     {{ end }}
   {{ end }}
