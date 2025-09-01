@@ -102,14 +102,64 @@ class ClientAdManager {
       const timestamp = new Date().getTime();
       const cacheBusting = `?t=${timestamp}`;
       
-      // Load ads from individual advertisement JSON endpoints
-      const adEndpoints = [
-        '/advertisments/karaoke-tuesday/index.json',
-        '/advertisments/all-fours-wednesday/index.json'
+      // Try multiple approaches to load ads
+      console.log('Attempting to load advertisements...');
+      
+      // Approach 1: Try to get the list of all advertisements from the main index
+      const mainIndexUrl = `/advertisments/index.json${cacheBusting}`;
+      console.log('Loading advertisements index from:', mainIndexUrl);
+      
+      const indexResponse = await fetch(mainIndexUrl, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (indexResponse.ok) {
+        const indexData = await indexResponse.json();
+        console.log('Advertisements index loaded:', indexData);
+        
+        // The ads are directly in the items array
+        if (indexData && indexData.items && indexData.items.length > 0) {
+          this.ads = indexData.items;
+          console.log('Successfully loaded ads from index:', this.ads);
+          return;
+        } else {
+          console.log('No ads found in index items');
+        }
+      } else {
+        console.log('Failed to load advertisements index, trying fallback method');
+      }
+      
+      // Approach 2: Try to load ads directly from the main advertisements section
+      const fallbackUrl = `/advertisments/index.json${cacheBusting}`;
+      const fallbackResponse = await fetch(fallbackUrl);
+      
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        if (fallbackData && fallbackData.items) {
+          this.ads = fallbackData.items;
+          console.log('Loaded ads from fallback method:', this.ads);
+          return;
+        } else {
+          console.log('No ads found in fallback data');
+        }
+      } else {
+        console.log('Fallback method also failed');
+      }
+      
+      // Approach 3: Try to load individual ads directly
+      console.log('Trying to load individual ads directly...');
+      const individualAdUrls = [
+        '/advertisments/more-ish-monday/index.json',
+        '/advertisments/wonderful-wednesday/index.json'
       ];
       
-      const adPromises = adEndpoints.map(endpoint => 
-        fetch(`${endpoint}${cacheBusting}`, {
+      const individualPromises = individualAdUrls.map(url => 
+        fetch(`${url}${cacheBusting}`, {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -119,61 +169,25 @@ class ClientAdManager {
         }).then(response => response.json()).catch(() => null)
       );
       
-      const adResults = await Promise.all(adPromises);
-      const validAds = adResults.filter(ad => ad !== null);
+      const individualResults = await Promise.all(individualPromises);
+      const validIndividualAds = individualResults.filter(ad => ad !== null);
       
-      if (validAds.length > 0) {
-        this.ads = validAds;
-        console.log('Successfully loaded ads from JSON endpoints:', this.ads);
+      if (validIndividualAds.length > 0) {
+        this.ads = validIndividualAds;
+        console.log('Successfully loaded individual ads:', this.ads);
+        return;
       } else {
-        console.log('No ads loaded from JSON endpoints, using fallback data for testing');
-        // Fallback data for testing when JSON endpoints fail
-        this.ads = [
-          {
-            title: "Karaoke Tuesday",
-            url: "/advertisments/karaoke-tuesday/",
-            recurring: true,
-            daysofweek: ["Tuesday"],
-            images: [
-              { image: "images/karaoke-tuesday.jpg" }
-            ]
-          },
-          {
-            title: "All Fours Wednesday",
-            url: "/advertisments/all-fours-wednesday/",
-            recurring: true,
-            daysofweek: ["Wednesday"],
-            images: [
-              { image: "images/allfours.gif" }
-            ]
-          }
-        ];
+        console.log('No individual ads loaded');
       }
+      
+      // If all approaches fail, set empty array
+      console.log('All loading approaches failed, setting empty ads array');
+      this.ads = [];
       
     } catch (error) {
       console.error('Error loading ads:', error);
-      console.log('Using fallback data for testing');
-      // Fallback data for testing when JSON endpoints fail
-      this.ads = [
-        {
-          title: "Karaoke Tuesday",
-          url: "/advertisments/karaoke-tuesday/",
-          recurring: true,
-          daysofweek: ["Tuesday"],
-          images: [
-            { image: "images/karaoke-tuesday.jpg" }
-          ]
-        },
-        {
-          title: "All Fours Wednesday",
-          url: "/advertisments/all-fours-wednesday/",
-          recurring: true,
-          daysofweek: ["Wednesday"],
-          images: [
-            { image: "images/allfours.gif" }
-          ]
-        }
-      ];
+      console.log('No ads loaded due to error');
+      this.ads = [];
     }
     
     // Don't call populateAds here - let init() handle it
@@ -347,6 +361,8 @@ class ClientAdManager {
 
   // Override populateAds to respect the showAllAds flag
   populateAds() {
+    console.log('populateAds called - hasPopulated:', this.hasPopulated, 'ads count:', this.ads ? this.ads.length : 0);
+    
     // Prevent multiple population of the same container
     if (this.hasPopulated) {
       console.log('Ads already populated, skipping...');
@@ -370,6 +386,12 @@ class ClientAdManager {
     // Determine which container to populate based on page context
     let container = null;
     let containerType = '';
+    
+    console.log('Looking for ad containers...');
+    console.log('homepage-ads-container exists:', !!document.getElementById('homepage-ads-container'));
+    console.log('client-ads-container exists:', !!document.getElementById('client-ads-container'));
+    console.log('frontpage-ads-container exists:', !!document.getElementById('frontpage-ads-container'));
+    console.log('pageadscontainer exists:', !!document.getElementById('pageadscontainer'));
     
     // Check for different ad containers in order of priority
     if (document.getElementById('homepage-ads-container')) {
