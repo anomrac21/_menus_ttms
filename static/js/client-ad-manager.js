@@ -56,7 +56,16 @@ class ClientAdManager {
     console.log('Generating HTML for ad:', ad.title, 'with images:', images);
     
     // Determine the final URL - prioritize custom link over default URL
-    const finalUrl = ad.link && ad.link.trim() !== '' ? ad.link : ad.url;
+    let finalUrl = '';
+    if (ad.link && ad.link.trim() !== '') {
+      finalUrl = ad.link;
+    } else if (ad.url && ad.url.trim() !== '') {
+      finalUrl = ad.url;
+    } else {
+      // Generate URL from advertisement title as fallback
+      const slug = ad.title ? ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'advertisement';
+      finalUrl = `/advertisments/${slug}/`;
+    }
     console.log('Final URL for ad:', ad.title, 'is:', finalUrl, '(link:', ad.link, ', url:', ad.url, ')');
     
     const imageHTML = images.map(img => {
