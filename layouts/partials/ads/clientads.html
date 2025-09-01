@@ -6,9 +6,13 @@
       {{ $adstitle := .LinkTitle }}
       {{ $adurl := .RelPermalink }}   
       {{ $adlink := .Params.link }}   
+      {{ $finalurl := $adurl }}
+      {{ if $adlink }}
+        {{ $finalurl = $adlink }}
+      {{ end }}
       
       <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
-        <a href="{{ $adurl }}">{{ $adstitle }}</a>
+        <a href="{{ $finalurl }}">{{ $adstitle }}</a>
       </h2>
       
       <section id="clientad">
@@ -16,7 +20,7 @@
         <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
           {{ range .Params.images }}
             <li class="ad-panel">
-              <a href="{{ $adurl }}" class="content-panel">
+              <a href="{{ $finalurl }}" class="content-panel">
                 <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait-bg">
                 <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait">
                 <div class="adbottomspacer"></div>

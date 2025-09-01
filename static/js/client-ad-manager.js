@@ -55,6 +55,10 @@ class ClientAdManager {
     const images = ad.images || [];
     console.log('Generating HTML for ad:', ad.title, 'with images:', images);
     
+    // Determine the final URL - prioritize custom link over default URL
+    const finalUrl = ad.link && ad.link.trim() !== '' ? ad.link : ad.url;
+    console.log('Final URL for ad:', ad.title, 'is:', finalUrl, '(link:', ad.link, ', url:', ad.url, ')');
+    
     const imageHTML = images.map(img => {
       // Fix image path - remove leading slash if present and ensure correct path
       let imagePath = img.image;
@@ -74,7 +78,7 @@ class ClientAdManager {
       
       return `
         <li class="ad-panel">
-          <a href="${ad.url}" class="content-panel">
+          <a href="${finalUrl}" class="content-panel">
             <img src="${finalPath}" class="ad-portrait-bg">
             <img src="${finalPath}" class="ad-portrait">
             <div class="adbottomspacer"></div>
@@ -85,7 +89,7 @@ class ClientAdManager {
 
     return `
       <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
-        <a href="${ad.url}">${ad.title}</a>
+        <a href="${finalUrl}">${ad.title}</a>
       </h2>
       <section id="clientad">
         <span data-aos="zoom-out-right">Promotion</span>
