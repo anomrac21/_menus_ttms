@@ -1,41 +1,130 @@
 <div class="contactinfobg">
 	<div class="contactinfo item">
 		<ul>
-			{{ if .Params.locations }}
-			<li class="locations">
-				{{ range .Params.locations }}
-					<div style="display: flex; margin-block-end: .4em;">
-			          	<a href="https://ttms-app.netlify.app/?lat={{ .lat }}&lng={{ .lon }}&zoom=16&client={{ $.Title | urlize }}" class="locbtn btn"  target="_blank">
-			            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
-			            	{{ .address }}
-			          	</a>
-					  	{{ if .delivery }}
-							<a id="deliveryBtn" class="btn" onclick="toggleDelivery(this);" style="width: 8em;">
-			            		<svg version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#fefefe">
-								<g id="SVGRepo_bgCarrier" stroke-width="0"/>
-								<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-								<g id="SVGRepo_iconCarrier"> <style type="text/css"> .st0{fill:#fefefe;} </style> <g> <path class="st0" d="M311.069,130.515c-0.963-5.641-5.851-9.768-11.578-9.768H35.43c-7.61,0-13.772,6.169-13.772,13.765 c0,7.61,6.162,13.772,13.772,13.772h64.263c7.61,0,13.772,6.17,13.772,13.773c0,7.603-6.162,13.772-13.772,13.772H13.772 C6.169,175.829,0,181.998,0,189.601c0,7.603,6.169,13.764,13.772,13.764h117.114c6.72,0,12.172,5.46,12.172,12.18 c0,6.72-5.452,12.172-12.172,12.172H68.665c-7.61,0-13.772,6.17-13.772,13.773c0,7.602,6.162,13.772,13.772,13.772h45.857 c6.726,0,12.179,5.452,12.179,12.172c0,6.719-5.453,12.172-12.179,12.172H51.215c-7.61,0-13.772,6.169-13.772,13.772 c0,7.603,6.162,13.772,13.772,13.772h87.014l5.488,31.042h31.52c-1.854,4.504-2.911,9.421-2.911,14.598 c0,21.245,17.218,38.464,38.464,38.464c21.237,0,38.456-17.219,38.456-38.464c0-5.177-1.057-10.094-2.911-14.598h100.04 L311.069,130.515z M227.342,352.789c0,9.146-7.407,16.553-16.553,16.553c-9.152,0-16.56-7.407-16.56-16.553 c0-6.364,3.627-11.824,8.892-14.598h15.329C223.714,340.965,227.342,346.424,227.342,352.789z"/> <path class="st0" d="M511.598,314.072l-15.799-77.941l-57.689-88.759H333.074l32.534,190.819h38.42 c-1.846,4.504-2.904,9.421-2.904,14.598c0,21.245,17.219,38.464,38.456,38.464c21.246,0,38.464-17.219,38.464-38.464 c0-5.177-1.057-10.094-2.91-14.598h16.741c6.039,0,11.759-2.708,15.582-7.386C511.273,326.136,512.8,319.988,511.598,314.072z M392.529,182.882h26.314l34.162,52.547h-51.512L392.529,182.882z M456.14,352.789c0,9.146-7.407,16.553-16.56,16.553 c-9.138,0-16.552-7.407-16.552-16.553c0-6.364,3.635-11.824,8.892-14.598h15.329C452.513,340.965,456.14,346.424,456.14,352.789z"/> </g> </g>
-								</svg>
-								<span>Delivery</span>
-			          		</a>
-			          		<div class="hide" style="display:flex">
-			          		{{ range .delivery }}
-								{{ if .fooddrop }}
-									<a id="fooddropBtn" href="{{ .fooddrop }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #7881be;">
-					            		<img src="/branding/other/fd.webp" alt="Location" style="max-width: 4em;">
-					          		</a>
-								{{ end }}
-								{{ if .neighbourhoodmunchies }}
-									<a id="neighbourhoodmunchies" href="{{ .neighbourhoodmunchies }}" target="_blank" class="btn" style="padding: 0; width: 8em; background: #e8cc45;">
-					            		<img src="/branding/other/nm.webp" alt="Location" style="max-width: 4em;">
-					          		</a>
-								{{ end }}
+			{{ $locations := site.Data.locations }}
+			
+			<!-- Debug: Data loading -->
+			<!-- Debug: site.Data exists: {{ if site.Data }}YES{{ else }}NO{{ end }} -->
+			<!-- Debug: site.Data.locations exists: {{ if site.Data.locations }}YES{{ else }}NO{{ end }} -->
+			<!-- Debug: locations type: {{ printf "%T" $locations }} -->
+			<!-- Debug: locations length: {{ if $locations }}{{ if reflect.IsSlice $locations }}{{ len $locations }}{{ else }}MAP{{ end }}{{ else }}0{{ end }} -->
+			
+			<!-- Debug: Data structure analysis -->
+			{{ if $locations }}
+				{{ if reflect.IsSlice $locations }}
+					<!-- Debug: Data is a slice/array -->
+					{{ with index $locations 0 }}
+					<!-- Debug: First location type: {{ printf "%T" . }} -->
+					<!-- Debug: First location keys: {{ range $key, $value := . }}{{ $key }}:{{ printf "%T" $value }} {{ end }} -->
+					{{ end }}
+				{{ else }}
+					<!-- Debug: Data is a map - converting to slice -->
+					{{ $locations = slice }}
+					{{ range $key, $value := site.Data.locations }}
+						{{ $locations = $locations | append $value }}
+					{{ end }}
+					<!-- Debug: Converted map to slice, length: {{ len $locations }} -->
+				{{ end }}
+			{{ end }}
+			
+			<!-- Try alternative data access if primary fails -->
+			{{ if not $locations }}
+				{{ $locations = getJSON "data/locations.yaml" }}
+				<!-- Debug: getJSON attempt - locations: {{ if $locations }}YES{{ else }}NO{{ end }} -->
+			{{ end }}
+			
+			
+			{{ if $locations }}
+				<!-- Debug: {{ len $locations }} locations found -->
+				<div class="location-navigation-container">
+					<button id="locationNavLeft" onclick="scrollLocations('left')" class="btn-nav-location" title="Previous location">
+						<svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"></path></g></svg>
+					</button>
+					<div class="locations-wrapper">
+						<li class="locations">
+							{{ if reflect.IsSlice $locations }}
+								{{ range $locations }}
+								<div class="location-item">
+						          	<!-- Debug: WhatsApp={{ .whatsapp }}, Address={{ .address }} -->
+						          	{{ if and .whatsapp .address .latlon }}
+						          	<a href="https://www.ttmenus.com/map/?lat={{ index .latlon 0 }}&lng={{ index .latlon 1 }}&zoom=19&client={{ site.Title | urlize }}" class="locbtn btn" data-whatsapp="{{ .whatsapp }}" data-lat="{{ index .latlon 0 }}" data-lng="{{ index .latlon 1 }}" data-orderingtables="{{ if .orderingtables }}{{ delimit .orderingtables "," }}{{ end }}" target="_blank">
+						            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
+						            	{{ .address }}
+						          	</a>
+								  	{{ if .delivery }}
+										<a class="delivery-toggle-btn btn" onclick="toggleDelivery(this);" style="width: 8em; scroll-snap-align: none">
+						            		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#fefefe" style="width: 32px; height: 32px;">
+											<g> <path d="M311.069,130.515c-0.963-5.641-5.851-9.768-11.578-9.768H35.43c-7.61,0-13.772,6.169-13.772,13.765 c0,7.61,6.162,13.772,13.772,13.772h64.263c7.61,0,13.772,6.17,13.772,13.773c0,7.603-6.162,13.772-13.772,13.772H13.772 C6.169,175.829,0,181.998,0,189.601c0,7.603,6.169,13.764,13.772,13.764h117.114c6.72,0,12.172,5.46,12.172,12.18 c0,6.72-5.452,12.172-12.172,12.172H68.665c-7.61,0-13.772,6.17-13.772,13.773c0,7.602,6.162,13.772,13.772,13.772h45.857 c6.726,0,12.179,5.452,12.179,12.172c0,6.719-5.453,12.172-12.179,12.172H51.215c-7.61,0-13.772,6.169-13.772,13.772 c0,7.603,6.162,13.772,13.772,13.772h87.014l5.488,31.042h31.52c-1.854,4.504-2.911,9.421-2.911,14.598 c0,21.245,17.218,38.464,38.464,38.464c21.237,0,38.456-17.219,38.456-38.464c0-5.177-1.057-10.094-2.911-14.598h100.04 L311.069,130.515z M227.342,352.789c0,9.146-7.407,16.553-16.553,16.553c-9.152,0-16.56-7.407-16.56-16.553 c0-6.364,3.627-11.824,8.892-14.598h15.329C223.714,340.965,227.342,346.424,227.342,352.789z"/> <path d="M511.598,314.072l-15.799-77.941l-57.689-88.759H333.074l32.534,190.819h38.42 c-1.854,4.504-2.904,9.421-2.904,14.598c0,21.245,17.218,38.464,38.456,38.464c21.246,0,38.464-17.219,38.464-38.464 c0-5.177-1.057-10.094-2.91-14.598h16.741c6.039,0,11.759-2.708,15.582-7.386C511.273,326.136,512.8,319.988,511.598,314.072z M392.529,182.882h26.314l34.162,52.547h-51.512L392.529,182.882z M456.14,352.789c0,9.146-7.407,16.553-16.56,16.553 c-9.138,0-16.552-7.407-16.552-16.553c0-6.364,3.635-11.824,8.892-14.598h15.329C452.513,340.965,456.14,346.424,456.14,352.789z"/> </g>
+											</svg>
+											<span>Delivery</span>
+						          		</a>
+						          		<div class="delivery-options hide" style="display: flex; scroll-snap-align: none;">
+						          			{{ if .delivery.fooddrop }}
+												<a href="{{ .delivery.fooddrop }}" target="_blank" class="delivery-option-btn btn" style="padding: 0; width: 8em; background: #7881be;scroll-snap-align: none;">
+							            		<img src="/branding/other/fd.webp" alt="FoodDrop" style="max-width: 4em;">
+							          		</a>
+											{{ end }}
+											{{ if .delivery.neighbourhoodmunchies }}
+												<a href="{{ .delivery.neighbourhoodmunchies }}" target="_blank" class="delivery-option-btn btn" style="padding: 0; width: 8em; background: #e8cc45;scroll-snap-align: none;">
+							            		<img src="/branding/other/nm.webp" alt="Neighbourhood Munchies" style="max-width: 4em;">
+							          		</a>
+											{{ end }}
+										</div>
+									{{ end }}
+									{{ else }}
+									<!-- Debug: Missing required fields for location -->
+									<!-- Debug: whatsapp={{ .whatsapp }}, address={{ .address }}, latlon={{ .latlon }} -->
+									{{ end }}
+								</div>
+						        {{ end }}
+							{{ else }}
+								<!-- Alternative: Direct iteration over site.Data.locations -->
+								{{ range $key, $value := site.Data.locations }}
+								<div class="location-item">
+						          	<!-- Debug: Key={{ $key }}, WhatsApp={{ $value.whatsapp }}, Address={{ $value.address }} -->
+						          	{{ if and $value.whatsapp $value.address $value.latlon }}
+						          	<a href="https://www.ttmenus.com/map/?lat={{ index $value.latlon 0 }}&lng={{ index $value.latlon 1 }}&zoom=19&client={{ site.Title | urlize }}" class="locbtn btn" data-whatsapp="{{ $value.whatsapp }}" data-lat="{{ index $value.latlon 0 }}" data-lng="{{ index $value.latlon 1 }}" data-orderingtables="{{ if $value.orderingtables }}{{ delimit $value.orderingtables "," }}{{ end }}" target="_blank">
+						            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
+						            	{{ $value.address }}
+						          	</a>
+								  	{{ if $value.delivery }}
+										<a class="delivery-toggle-btn btn" onclick="toggleDelivery(this);" style="width: 8em; scroll-snap-align: none">
+						            		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#fefefe" style="width: 1.2em; height: 1.2em;">
+											<g> <path d="M311.069,130.515c-0.963-5.641-5.851-9.768-11.578-9.768H35.43c-7.61,0-13.772,6.169-13.772,13.765 c0,7.61,6.162,13.772,13.772,13.772h64.263c7.61,0,13.772,6.17,13.772,13.773c0,7.603-6.162,13.772-13.772,13.772H13.772 C6.169,175.829,0,181.998,0,189.601c0,7.603,6.169,13.764,13.772,13.764h117.114c6.72,0,12.172,5.46,12.172,12.18 c0,6.72-5.452,12.172-12.172,12.172H68.665c-7.61,0-13.772,6.17-13.772,13.773c0,7.602,6.162,13.772,13.772,13.772h45.857 c6.726,0,12.179,5.452,12.179,12.172c0,6.719-5.453,12.172-12.179,12.172H51.215c-7.61,0-13.772,6.169-13.772,13.772 c0,7.603,6.162,13.772,13.772,13.772h87.014l5.488,31.042h31.52c-1.854,4.504-2.911,9.421-2.911,14.598 c0,21.245,17.218,38.464,38.464,38.464c21.237,0,38.456-17.219,38.456-38.464c0-5.177-1.057-10.094-2.911-14.598h100.04 L311.069,130.515z M227.342,352.789c0,9.146-7.407,16.553-16.553,16.553c-9.152,0-16.56-7.407-16.56-16.553 c0-6.364,3.627-11.824,8.892-14.598h15.329C223.714,340.965,227.342,346.424,227.342,352.789z"/> <path d="M511.598,314.072l-15.799-77.941l-57.689-88.759H333.074l32.534,190.819h38.42 c-1.854,4.504-2.904,9.421-2.904,14.598c0,21.245,17.218,38.464,38.456,38.464c21.246,0,38.464-17.219,38.464-38.464 c0-5.177-1.057-10.094-2.91-14.598h16.741c6.039,0,11.759-2.708,15.582-7.386C511.273,326.136,512.8,319.988,511.598,314.072z M392.529,182.882h26.314l34.162,52.547h-51.512L392.529,182.882z M456.14,352.789c0,9.146-7.407,16.553-16.56,16.553 c-9.138,0-16.552-7.407-16.552-16.553c0-6.364,3.635-11.824,8.892-14.598h15.329C452.513,340.965,456.14,346.424,456.14,352.789z"/> </g>
+											</svg>
+											<span>Delivery</span>
+						          		</a>
+						          		<div class="delivery-options hide" style="display: flex; scroll-snap-align: none;">
+						          			{{ if $value.delivery.fooddrop }}
+												<a href="{{ $value.delivery.fooddrop }}" target="_blank" class="delivery-option-btn btn" style="padding: 0; width: 8em; background: #7881be;">
+							            		<img src="/branding/other/fd.webp" alt="FoodDrop" style="max-width: 4em;">
+							          		</a>
+											{{ end }}
+											{{ if $value.delivery.neighbourhoodmunchies }}
+												<a href="{{ $value.delivery.neighbourhoodmunchies }}" target="_blank" class="delivery-option-btn btn" style="padding: 0; width: 8em; background: #e8cc45;">
+							            		<img src="/branding/other/nm.webp" alt="Neighbourhood Munchies" style="max-width: 4em;">
+							          		</a>
+											{{ end }}
+										</div>
+									{{ end }}
+									{{ else }}
+									<!-- Debug: Missing required fields for location -->
+									<!-- Debug: whatsapp={{ $value.whatsapp }}, address={{ $value.address }}, latlon={{ $value.latlon }} -->
+									{{ end }}
+								</div>
+						        {{ end }}
 							{{ end }}
-							</div>
-						{{ end }}
+						</li>
 					</div>
-		        {{ end }}
-			</li>
+					<button id="locationNavRight" onclick="scrollLocations('right')" class="btn-nav-location" title="Next location">
+						<svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"></path></g></svg>
+					</button>
+				</div>
+			{{ else }}
+			<!-- Debug: No locations data found -->
+			<!-- Debug: Trying alternative data access methods -->
+			<!-- Debug: site.Data keys: {{ range $key, $value := site.Data }}{{ $key }} {{ end }} -->
+			<!-- Debug: site.Data.locations direct: {{ site.Data.locations }} -->
 			{{ end }}
 			<li class="socialmedia">
 				{{ if .Params.facebook }}

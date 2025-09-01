@@ -1,14 +1,24 @@
 <div id="cart" class="cart-hidden">
 	<div class="order">
 		<div class="waBtn">
-			<a id="titleRow" class="titleRow" onclick="toggleCart();"><i class="fa fa-arrow-right"></i> Order</a>
+			<a id="titleRow" class="titleRow" onclick="toggleCart();"><i class="fa fa-arrow-right"></i> My Order</a>
+			<div class="location-selector-container">
+				<select id="locationSelect" class="location-dropdown" onchange="selectLocation(this.value)">
+					<option value="">📍 Select a location</option>
+					{{ range $index, $location := site.Data.locations.locations }}
+					<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}" {{ if eq $index 0 }}selected{{ end }}>
+						{{ $location.address }}
+					</option>
+					{{ end }}
+				</select>
+			</div>
 			<div class="button hide" id="button-5">
 		      <input type="checkbox" class="checkbox" id="dining-mode-checkbox-2" onclick="toggleDiningMode(this);"/>
 		      <div class="knobs">
 		        <span></span>
 		      </div>
 		      <div class="layer"></div>
-		    </div><!--a class="close" onclick="toggleCart();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a-->
+		    </div><a class="btn-close close" onclick="toggleCart();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a>
 		</div>
 		
 		<table id="whatsappOrder">
@@ -34,7 +44,11 @@
 		{{ if site.Params.orderingsystem.usephonecall }}
 			<a class="placeOrder" href='tel:{{ site.Params.orderingsystem.phone }}'><i class="fa fa-phone"></i> Order Now</a>
 		{{ else }}
+<<<<<<< HEAD
 			<button class="placeOrder" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+=======
+			<button class="btn-place-order" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+>>>>>>> f76a3f7a4030137766dc3938f864769d769b6681
 		{{ end }}
 	</div>
 </div>

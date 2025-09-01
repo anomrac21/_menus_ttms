@@ -21,11 +21,29 @@
   -}}
 
   {{- if eq $.Section "advertisments" }}
-    {{ warnf "  ↪ Ad: %s | Location: %s | Recurring: %v" $page.Title ($page.Params.locations | default "N/A") ($page.Params.recuring | default false) }}
+    {{- $adLocations := slice -}}
+    {{- with site.Data.locations.locations }}
+      {{- range . }}
+        {{- $locationData := dict
+            "address"  .address
+            "city"     .city
+            "island"   .island
+            "subcategories"  .subcategories
+            "latlon"    .latlon
+            "phone"    .phone
+            "delivery" .delivery
+            "opening_hours" .opening_hours
+          -}}
+        {{- $adLocations = $adLocations | append $locationData -}}
+      {{- end }}
+    {{- end }}
+
+    {{ warnf "  ↪ Ad: %s | Locations: %d | Recurring: %v" $page.Title (len $adLocations) ($page.Params.recurring | default false) }}
 
     {{- $item = merge $item (dict
-      "locations" ($page.Params.locations | default "")
-      "recuring" ($page.Params.recuring | default false)
+      "locations" $adLocations
+      "recurring" ($page.Params.recurring | default false)
+      "daysofweek" ($page.Params.daysofweek | default slice)
       "youtube"  ($page.Params.youtube | default slice)
     ) }}
 
@@ -42,11 +60,8 @@
 
   {{- else }}
     {{- $item = merge $item (dict
-        "prices"        ($page.Params.prices | default slice)
-        "additions"     ($page.Params.additions | default slice)
-        "modifications" ($page.Params.modifications | default slice)
-        "sides"         ($page.Params.sides | default slice)
-        "side_config"   ($page.Params.side_config | default slice)
+        "url"           $page.RelPermalink
+        "link"          ($page.Params.link | default "")
     ) }}
   {{- end }}
 
