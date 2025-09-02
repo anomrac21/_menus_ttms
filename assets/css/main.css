@@ -569,7 +569,8 @@ details[open] ul.all-hours {
     padding: .4em .4em 2.4em;
     background: linear-gradient(var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),transparent);
     z-index: 1;
-    position: relative
+    position: relative;
+    max-width: 500px;
 }
 
 .contactinfo .locations {
@@ -617,7 +618,7 @@ details[open] ul.all-hours {
 
 .contactinfo .btn {
     text-decoration: none;
-    padding-block:.4em;
+    padding: .4em;
     display: flex;
     text-align: center;
     margin-inline:.4em;
@@ -3054,7 +3055,8 @@ li.locations {
 }
 
 .locations .locbtn {
-    transition: all .3s ease
+    transition: all .3s ease;
+    text-wrap-mode: wrap;
 }
 
 .locations .locbtn:hover {
