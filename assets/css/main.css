@@ -1,15 +1,18 @@
 html {
     scroll-behavior: smooth
 }
-.bottomads{
+
+.bottomads {
     background: var(--main-bg);
     z-index: 1;
-    position: relative;
+    position: relative
 }
+
 .taxonomy {
-    color:var(--text-light);
-    padding: .4em;
+    color: var(--text-light);
+    padding: .4em
 }
+
 #client-openinghours .inner {
     background: url(/branding/favicon512.webp);
     background-size: clamp(100px,66%,512px)!important;
@@ -117,8 +120,7 @@ details[open] ul.all-hours {
     background: linear-gradient(#00000055,#000000);
     color: #fefefe;
     position: relative;
-    margin-block-end: -5.6em;
-    z-index: 1;
+    margin-block-end:-5.6em;z-index: 1
 }
 
 .main-menu-bg {
@@ -229,7 +231,7 @@ details[open] ul.all-hours {
     border-radius: 5em;
     padding: .4em .8em;
     text-decoration: none;
-    top: -0.8em;
+    top: -.8em;
     margin-left: .4em;
     font-size: .8em;
     transition: .1s ease-out
@@ -240,12 +242,12 @@ details[open] ul.all-hours {
     border: 2px solid #fff;
     border-radius: 5em;
     top: calc(-100dvh + 9.4em);
-    right: clamp(43vw, 100%, 80vw);
+    right: clamp(43vw,100%,80vw);
     font-size: .8em;
     font-weight: 900;
     padding: .4em .8em;
     rotate: -25deg;
-    position: fixed;
+    position: fixed
 }
 
 #cart td,#cart th {
@@ -570,13 +572,12 @@ details[open] ul.all-hours {
     background: linear-gradient(var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),transparent);
     z-index: 1;
     position: relative;
-    max-width: 500px;
 }
 
 .contactinfo .locations {
     display: flex;
     font-size: x-small;
-    flex-direction: column;
+    flex-direction: column
 }
 
 .contactinfo .locations .all {
@@ -621,8 +622,7 @@ details[open] ul.all-hours {
     padding: .4em;
     display: flex;
     text-align: center;
-    margin-inline:.4em;
-    border: 1px solid #fffa;
+    margin-inline:.4em;border: 1px solid #fffa;
     border-radius: 5em;
     max-width: 500px;
     width: -webkit-fill-available;
@@ -631,7 +631,7 @@ details[open] ul.all-hours {
     background: linear-gradient(#000000aa,#00000055);
     align-items: center;
     align-content: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .contactinfo ul {
@@ -663,7 +663,7 @@ details[open] ul.all-hours {
     margin-inline:0 .4em!important;margin-block:auto}
 
 .contactinfo .btn img {
-    max-width: 28px;
+    max-width: 28px
 }
 
 .socialmedia {
@@ -739,13 +739,10 @@ details[open] ul.all-hours {
 
 .main-menu {
     width: -webkit-fill-available;
-    margin-inline:auto;
-    max-width: 480px;
+    margin-inline:auto;max-width: 480px;
     overflow: hidden;
     position: relative;
-    margin-block-start:0;
-    padding-block-end:.8em;
-    border-radius: 17px;
+    margin-block-start:0;padding-block-end:.8em;border-radius: 17px;
     background: linear-gradient( var(--menu-bg-color-1),var(--menu-bg-color-2))
 }
 
@@ -848,7 +845,7 @@ details[open] ul.all-hours {
     top: 0;
     width: -webkit-fill-available;
     height: 100dvh;
-    z-index: 2222 !important;
+    z-index: 2222!important;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     font-family: sans-serif
@@ -907,8 +904,7 @@ details[open] ul.all-hours {
     border: 1px solid #fff;
     box-shadow: 0 0 10px var(--selected-button-color3)!important;
     scrollbar-color: black;
-    padding-block: .8em;
-    overflow: hidden;
+    padding-block:.8em;overflow: hidden;
     transform-style: preserve-3d;
     display: flex;
     color: var(--selected-text-color1);
@@ -1177,7 +1173,7 @@ details[open] ul.all-hours {
     }
 
     .btn-section-header {
-        font-size: 1.1em;
+        font-size: 1.1em
     }
 
     .btn-quantity {
@@ -1535,11 +1531,11 @@ details[open] ul.all-hours {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1;
+    z-index: 1
 }
 
 .btn-add-extra:hover {
-    transform: scale(1.1);
+    transform: scale(1.1)
 }
 
 .btn-add-extra:active {
@@ -1701,16 +1697,19 @@ details[open] ul.all-hours {
 .btn-place-order:hover i {
     transform: scale(1.1)
 }
-#locationNavRight{
-    right: .4em;
+
+#locationNavRight {
+    right: .4em
 }
-#locationNavLeft{
-    left: .4em;
+
+#locationNavLeft {
+    left: .4em
 }
+
 .btn-nav-location {
     color: #fff;
     border: none;
-    background: none;
+    background: 0 0;
     border-radius: 50%;
     cursor: pointer;
     transition: all .3s ease;
@@ -1720,7 +1719,7 @@ details[open] ul.all-hours {
     padding: 0;
     position: absolute;
     z-index: 10;
-    display: none;
+    display: none
 }
 
 .btn-nav-location:hover {
@@ -1863,28 +1862,24 @@ details[open] ul.all-hours {
     animation: successBounce .6s ease-in-out
 }
 
-/* Ensure add cart button always stays on top, especially on iOS */
 #itemAddCart {
-    z-index: 9999 !important;
-    position: sticky !important;
-    bottom: 0 !important;
+    z-index: 9999!important;
+    position: sticky!important;
+    bottom: 0!important
 }
 
-/* iOS-specific fixes for z-index issues */
-@supports (-webkit-touch-callout: none) {
+@supports(-webkit-touch-callout:none) {
     #itemAddCart {
-        z-index: 9999 !important;
-        position: sticky !important;
-        bottom: 0 !important;
+        z-index: 9999!important;
+        position: sticky!important;
+        bottom: 0!important;
         transform: translateZ(0);
-        -webkit-transform: translateZ(0);
+        -webkit-transform: translateZ(0)
     }
-    
-    /* Ensure flavour control elements don't interfere */
-    #itemFlavourControl a,
-    #itemSizeControl a {
-        z-index: 1 !important;
-        position: relative !important;
+
+    #itemFlavourControl a,#itemSizeControl a {
+        z-index: 1!important;
+        position: relative!important
     }
 }
 
@@ -2112,27 +2107,27 @@ details[open] ul.all-hours {
 
 #itemSideControl b {
     right: 8px;
-    rotate: 0deg;
+    rotate: 0;
     position: absolute;
     margin-top: 0;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    background: linear-gradient(135deg,#e74c3c,#c0392b);
     color: #fff;
     padding: .4em;
     z-index: 1000;
     font-size: .9em;
     font-weight: 700;
     border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, .4), 0 2px 8px rgba(0, 0, 0, .3);
-    border: 2px solid rgba(255, 255, 255, .3);
+    box-shadow: 0 4px 15px rgba(231,76,60,.4),0 2px 8px rgba(0,0,0,.3);
+    border: 2px solid rgba(255,255,255,.3);
     transform: rotate(15deg);
     transition: all .3s ease;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
     backdrop-filter: blur(10px);
     min-width: 24px;
     text-align: center;
     line-height: 1;
     letter-spacing: .5px;
-    vertical-align: top;
+    vertical-align: top
 }
 
 #itemSideControl p {
@@ -2176,8 +2171,8 @@ details[open] ul.all-hours {
 #orderModal #itemName {
     position: sticky;
     top: 1.2em;
-    text-shadow: 0 1px 1px #000, 0 -1px 1px #000, 1px 0 1px #000, -1px 0 1px #000, 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000;
-    z-index: 11;
+    text-shadow: 0 1px 1px #000,0 -1px 1px #000,1px 0 1px #000,-1px 0 1px #000,1px 1px 1px #000,-1px -1px 1px #000,1px -1px 1px #000,-1px 1px 1px #000;
+    z-index: 11
 }
 
 #orderModal #itemPrice {
@@ -2449,7 +2444,7 @@ details[open] ul.all-hours {
 
 .header h3 {
     margin: 0;
-    width: -webkit-fill-available;
+    width: -webkit-fill-available
 }
 
 .confirm {
@@ -2662,7 +2657,7 @@ details[open] ul.all-hours {
 .singlepagemenu {
     width: 100%;
     background: linear-gradient(var(--button-color1),var(--button-color2));
-    color: var(--button-text-color1);
+    color: var(--button-text-color1)
 }
 
 .singlepagemenu .prices {
@@ -2815,14 +2810,13 @@ html,body {
 h1,h2,h3,h4,h5,h6 {
     padding: .4em;
     margin: 0;
-    color: var(--main-text-color);
+    color: var(--main-text-color)
 }
 
 #orderModal h2,#orderModal h3 {
     color: var(--selected-text-color1);
-    padding-block:0;
-    width: -webkit-fill-available;
-    text-align: center;
+    padding-block:0;width: -webkit-fill-available;
+    text-align: center
 }
 
 ul,p {
@@ -3056,7 +3050,7 @@ li.locations {
 
 .locations .locbtn {
     transition: all .3s ease;
-    text-wrap-mode: wrap;
+    text-wrap-mode: wrap
 }
 
 .locations .locbtn:hover {
@@ -3363,7 +3357,7 @@ a[onclick*=findClosestLocation]:hover {
 .selected-location-info strong {
     color: #212529;
     font-size: small;
-    display: block;
+    display: block
 }
 
 .selected-location-info small {
@@ -3527,65 +3521,49 @@ a[onclick*=findClosestLocation]:hover {
     }
 }
 
-/* ===== Z-INDEX MANAGEMENT ===== */
-/* Ensure proper layering for all interactive elements */
-
-/* Modal layers */
 #orderModal {
-    z-index: 1000 !important;
+    z-index: 1000!important
 }
 
-#itemSideControl,
-#itemModControl,
-#itemAdditionControl {
+#itemSideControl,#itemModControl,#itemAdditionControl {
 }
 
-/* Add cart button - highest priority */
 #itemAddCart {
-    z-index: 9999 !important;
-    position: sticky !important;
-    bottom: 0 !important;
+    z-index: 9999!important;
+    position: sticky!important;
+    bottom: 0!important
 }
 
-/* Control elements - lower priority */
-#itemSizeControl a,
-#itemFlavourControl a,
-#itemSideControl a,
-#itemAdditionControl a,
-#itemModControl a {
-    z-index: 1 !important;
-    position: relative !important;
+#itemSizeControl a,#itemFlavourControl a,#itemSideControl a,#itemAdditionControl a,#itemModControl a {
+    z-index: 1!important;
+    position: relative!important
 }
 
-/* iOS-specific z-index fixes */
-@supports (-webkit-touch-callout: none) {
+@supports(-webkit-touch-callout:none) {
     #itemAddCart {
-        z-index: 9999 !important;
-        position: sticky !important;
-        bottom: 0 !important;
+        z-index: 9999!important;
+        position: sticky!important;
+        bottom: 0!important;
         transform: translateZ(0);
         -webkit-transform: translateZ(0);
-        will-change: transform;
+        will-change: transform
     }
-    
-    /* Force hardware acceleration for iOS */
-    #itemAddCart,
-    #itemAddCart * {
+
+    #itemAddCart,#itemAddCart * {
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
         backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
+        -webkit-backface-visibility: hidden
     }
 }
 
-/* Ensure add cart button is always visible */
 #itemAddCart:not(.hide) {
-    z-index: 9999 !important;
-    position: sticky !important;
-    bottom: 0 !important;
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    z-index: 9999!important;
+    position: sticky!important;
+    bottom: 0!important;
+    display: flex!important;
+    visibility: visible!important;
+    opacity: 1!important
 }
 
 .cart-location.active {
@@ -3593,278 +3571,261 @@ a[onclick*=findClosestLocation]:hover {
     font-weight: 700
 }
 
-/* Location Dropdown Styles */
 .location-selector-container {
     text-align: center;
     height: -webkit-fill-available;
     width: -webkit-fill-available;
-    display: flex;
+    display: flex
 }
 
 .location-dropdown {
     width: 100%;
     min-height: -webkit-fill-available;
     border: 2px solid #ddd;
-    padding-inline: .4em;
-    background-color: none;
+    padding-inline:.4em;background-color: none;
     color: #333;
     font-size: xx-small;
     text-wrap-mode: wrap;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all .3s ease;
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right 0px center;
+    background-position: 100%;
     background-size: 16px;
-    padding-right: 16px;
+    padding-right: 16px
 }
 
 .location-dropdown:hover {
     border-color: #4caf50;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+    box-shadow: 0 2px 8px rgba(76,175,80,.2)
 }
 
 .location-dropdown:focus {
     outline: none;
     border-color: #4caf50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    box-shadow: 0 0 0 3px rgba(76,175,80,.1)
 }
 
 .location-dropdown option {
     padding: 8px;
     font-size: 12px;
     background-color: #fff;
-    color: #333;
+    color: #333
 }
 
 .location-dropdown option:checked {
     background-color: #4caf50;
-    color: #fff;
+    color: #fff
 }
 
 .location-dropdown option:hover {
-    background-color: #e8f5e8;
+    background-color: #e8f5e8
 }
 
 .delivery-toggle-btn {
 }
 
-/* Taxonomy Tags Styles */
 .taxonomytags {
     margin: 10px 0;
-    padding: 0;
+    padding: 0
 }
 
 .tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    justify-content: center;
+    justify-content: center
 }
 
 .tag {
     display: inline-block;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+    color: #fff;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    cursor: default;
+    letter-spacing: .5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    transition: all .3s ease;
+    cursor: default
 }
 
 .tag:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,.2)
 }
 
-/* Specific tag categories */
-.tag:contains("Chicken"),
-.tag:contains("Beef"),
-.tag:contains("Pork"),
-.tag:contains("Fish"),
-.tag:contains("Seafood") {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+.tag:contains("Chicken"),.tag:contains("Beef"),.tag:contains("Pork"),.tag:contains("Fish"),.tag:contains("Seafood") {
+    background: linear-gradient(135deg,#ff6b6b 0%,#ee5a24 100%)
 }
 
-.tag:contains("Vegetarian"),
-.tag:contains("Vegan") {
-    background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+.tag:contains("Vegetarian"),.tag:contains("Vegan") {
+    background: linear-gradient(135deg,#00b894 0%,#00a085 100%)
 }
 
-.tag:contains("Alcoholic"),
-.tag:contains("Cocktail"),
-.tag:contains("Shot") {
-    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+.tag:contains("Alcoholic"),.tag:contains("Cocktail"),.tag:contains("Shot") {
+    background: linear-gradient(135deg,#fdcb6e 0%,#e17055 100%)
 }
 
-.tag:contains("Spicy"),
-.tag:contains("Hot") {
-    background: linear-gradient(135deg, #e84393 0%, #fd79a8 100%);
+.tag:contains("Spicy"),.tag:contains("Hot") {
+    background: linear-gradient(135deg,#e84393 0%,#fd79a8 100%)
 }
 
-.tag:contains("Premium"),
-.tag:contains("Signature") {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-    border: 2px solid #fdcb6e;
+.tag:contains("Premium"),.tag:contains("Signature") {
+    background: linear-gradient(135deg,#6c5ce7 0%,#a29bfe 100%);
+    border: 2px solid #fdcb6e
 }
 
 .tag:contains("Gluten Free") {
-    background: linear-gradient(135deg, #00cec9 0%, #81ecec 100%);
-    color: #2d3436;
+    background: linear-gradient(135deg,#00cec9 0%,#81ecec 100%);
+    color: #2d3436
 }
 
-.tag:contains("Healthy"),
-.tag:contains("Fresh") {
-    background: linear-gradient(135deg, #00b894 0%, #55a3ff 100%);
+.tag:contains("Healthy"),.tag:contains("Fresh") {
+    background: linear-gradient(135deg,#00b894 0%,#55a3ff 100%)
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media(max-width: 768px) {
     .tags-container {
-        gap: 6px;
+        gap:6px
     }
-    
+
     .tag {
         font-size: 10px;
-        padding: 3px 10px;
+        padding: 3px 10px
     }
 }
 
-/* Client Tour Slideshow Styles */
 .client-tour-slideshow {
-  width: 100%;
-  max-width: 800px;
-  margin: 2rem auto;
-  position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 2rem auto;
+    position: relative
 }
 
 .slideshow-container {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.3)
 }
 
 .slide {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity .5s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center
 }
 
 .slide.active {
-  opacity: 1;
+    opacity: 1
 }
 
 .slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px
 }
 
 .slideshow-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  color: white;
-  border: none;
-  padding: 16px 12px;
-  cursor: pointer;
-  font-size: 18px;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: 0 0;
+    color: #fff;
+    border: none;
+    padding: 16px 12px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .3s ease;
+    z-index: 10
 }
 
 .slideshow-nav:hover {
-  transform: translateY(-50%) scale(1.1);
+    transform: translateY(-50%)scale(1.1)
 }
 
 .slideshow-nav.prev {
-  left: 20px;
+    left: 20px
 }
 
 .slideshow-nav.next {
-  right: 20px;
+    right: 20px
 }
 
 .slideshow-dots {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
-  z-index: 1;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 1
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: all 0.3s ease;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.5);
+    cursor: pointer;
+    transition: all .3s ease
 }
 
 .dot:hover {
-  background: rgba(255, 255, 255, 0.8);
-  transform: scale(1.2);
+    background: rgba(255,255,255,.8);
+    transform: scale(1.2)
 }
 
 .dot.active {
-  background: white;
-  transform: scale(1.3);
+    background: #fff;
+    transform: scale(1.3)
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .slideshow-container {
-    height: 300px;
-  }
-  
-  .slideshow-nav {
-    width: 40px;
-    height: 40px;
-    padding: 12px 8px;
-    font-size: 16px;
-  }
-  
-  .slideshow-nav.prev {
-    left: 10px;
-  }
-  
-  .slideshow-nav.next {
-    right: 10px;
-  }
-  
-  .slideshow-dots {
-    bottom: 15px;
-    gap: 8px;
-  }
-  
-  .dot {
-    width: 10px;
-    height: 10px;
-  }
+@media(max-width: 768px) {
+    .slideshow-container {
+        height:300px
+    }
+
+    .slideshow-nav {
+        width: 40px;
+        height: 40px;
+        padding: 12px 8px;
+        font-size: 16px
+    }
+
+    .slideshow-nav.prev {
+        left: 10px
+    }
+
+    .slideshow-nav.next {
+        right: 10px
+    }
+
+    .slideshow-dots {
+        bottom: 15px;
+        gap: 8px
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px
+    }
 }
