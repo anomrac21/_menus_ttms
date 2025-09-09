@@ -617,9 +617,11 @@ details[open] ul.all-hours {
 
 .contactinfo .btn {
     text-decoration: none;
-    padding-block:.4em;display: block;
+    padding-block:.4em;
+    display: flex;
     text-align: center;
-    margin-inline:.4em;border: 1px solid #fffa;
+    margin-inline:.4em;
+    border: 1px solid #fffa;
     border-radius: 5em;
     max-width: 500px;
     width: -webkit-fill-available;
@@ -627,7 +629,8 @@ details[open] ul.all-hours {
     color: #fff;
     background: linear-gradient(#000000aa,#00000055);
     align-items: center;
-    align-content: center
+    align-content: center;
+    justify-content: center;
 }
 
 .contactinfo ul {
@@ -660,7 +663,6 @@ details[open] ul.all-hours {
 
 .contactinfo .btn img {
     max-width: 28px;
-    margin: auto
 }
 
 .socialmedia {
