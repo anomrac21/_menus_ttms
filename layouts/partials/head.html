@@ -121,3 +121,20 @@
 </script>
 <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 <!-- End Matomo Code -->
+
+{{- if site.Params.posintegration.enabled -}}
+<script>
+// POS Integration Configuration
+window.POS_CONFIG = {
+    enabled: {{ site.Params.posintegration.enabled }},
+    provider: "{{ site.Params.posintegration.provider }}",
+    apiUrl: "{{ site.Params.posintegration.api_url }}",
+    accessToken: "{{ site.Params.posintegration.access_token }}",
+    storeId: "{{ site.Params.posintegration.store_id }}",
+    syncMenu: {{ site.Params.posintegration.sync_menu }},
+    autoProcessOrders: {{ site.Params.posintegration.auto_process_orders }},
+    fallbackToWhatsapp: {{ site.Params.posintegration.fallback_to_whatsapp }}
+};
+</script>
+<script src="/js/pos-integration.js"></script>
+{{- end -}}

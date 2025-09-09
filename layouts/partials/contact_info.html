@@ -46,7 +46,7 @@
 								{{ range $locations }}
 								<div class="location-item">
 						          	<!-- Debug: WhatsApp={{ .whatsapp }}, Address={{ .address }} -->
-						          	{{ if and .whatsapp .address .latlon }}
+						          	{{ if and .address .latlon }}
 						          	<a href="https://www.ttmenus.com/map/?lat={{ index .latlon 0 }}&lng={{ index .latlon 1 }}&zoom=19&client={{ site.Title | urlize }}" class="locbtn btn" data-whatsapp="{{ .whatsapp }}" data-lat="{{ index .latlon 0 }}" data-lng="{{ index .latlon 1 }}" data-orderingtables="{{ if .orderingtables }}{{ delimit .orderingtables "," }}{{ end }}" target="_blank">
 						            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
 						            	{{ .address }}
