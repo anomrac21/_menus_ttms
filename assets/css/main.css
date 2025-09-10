@@ -571,7 +571,7 @@ details[open] ul.all-hours {
     padding: .4em .4em 2.4em;
     background: linear-gradient(var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),transparent);
     z-index: 1;
-    position: relative
+    position: relative;
 }
 
 .contactinfo .locations {

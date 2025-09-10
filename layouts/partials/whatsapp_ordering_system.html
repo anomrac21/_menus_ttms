@@ -962,6 +962,11 @@ function constructWAMessage(){
 function confirmSendOrder(){
 	window.open(message, "_blank" );
 	
+	// Process order with POS system if enabled
+	if (window.posIntegration && window.posIntegration.isPOSEnabled) {
+		window.posIntegration.processOrderWithPOS();
+	}
+	
 	// Clear the order type variables after sending the order
 	currentOrderType = 'takeaway';
 	currentTableNumber = '';
