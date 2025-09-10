@@ -571,7 +571,7 @@ details[open] ul.all-hours {
     padding: .4em .4em 2.4em;
     background: linear-gradient(var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),transparent);
     z-index: 1;
-    position: relative;
+    position: relative
 }
 
 .contactinfo .locations {
@@ -3031,21 +3031,15 @@ footer {
 }
 
 .locations {
-    overflow-x: auto;
-    white-space: nowrap;
     display: flex;
     gap: 1em
 }
 
 li.locations {
-    flex: none;
     scroll-snap-align: start;
     scroll-snap-stop:always}
 
 .location-item {
-    min-width: 100%;
-    scroll-snap-align: start;
-    scroll-snap-stop:always;display: flex
 }
 
 .locations .locbtn {
