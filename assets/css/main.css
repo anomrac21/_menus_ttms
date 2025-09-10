@@ -573,7 +573,7 @@ details[open] ul.all-hours {
     z-index: 1;
     position: relative;
     max-width: 500px;
-    margin-inline: auto;}
+    margin-inline:auto}
 
 .contactinfo .locations {
     display: flex;
@@ -623,8 +623,7 @@ details[open] ul.all-hours {
     padding: .4em;
     display: flex;
     text-align: center;
-    margin-inline:.4em;
-    border: 1px solid #fffa;
+    margin-inline:.4em;border: 1px solid #fffa;
     border-radius: 5em;
     max-width: 100%;
     width: 100%;
@@ -633,7 +632,7 @@ details[open] ul.all-hours {
     background: linear-gradient(#000000aa,#00000055);
     align-items: center;
     align-content: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .contactinfo ul {
@@ -665,7 +664,7 @@ details[open] ul.all-hours {
     margin-inline:0 .4em!important;margin-block:auto}
 
 .contactinfo .btn img {
-    max-width: 28px;
+    max-width: 28px
 }
 
 .socialmedia {
@@ -3042,6 +3041,7 @@ li.locations {
     scroll-snap-stop:always}
 
 .location-item {
+    display: flex;
 }
 
 .locations .locbtn {
