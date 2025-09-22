@@ -623,10 +623,12 @@ details[open] ul.all-hours {
     padding: .4em;
     display: flex;
     text-align: center;
-    margin-inline:.4em;border: 1px solid #fffa;
+    margin-inline:.4em;
+    border: 1px solid #fffa;
     border-radius: 5em;
     max-width: 100%;
-    width: 100%;
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
     scroll-snap-align: start;
     color: #fff;
     background: linear-gradient(#000000aa,#00000055);
