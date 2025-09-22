@@ -628,7 +628,7 @@ details[open] ul.all-hours {
     border-radius: 5em;
     max-width: 100%;
     width: -webkit-fill-available;
-    height: -webkit-fill-available;
+    min-height: 62px;
     scroll-snap-align: start;
     color: #fff;
     background: linear-gradient(#000000aa,#00000055);
