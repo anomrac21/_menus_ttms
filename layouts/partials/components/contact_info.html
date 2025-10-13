@@ -126,28 +126,28 @@
 			<!-- Debug: site.Data keys: {{ range $key, $value := site.Data }}{{ $key }} {{ end }} -->
 			<!-- Debug: site.Data.locations direct: {{ site.Data.locations }} -->
 			{{ end }}
-			<li class="socialmedia">
-				{{ if .Params.facebook }}
-					<a href="{{ .Params.facebook }}" class="social btn" target="_blank"><img src="https://ct.ttmenus.com/icons/socialmedia/fb.svg" alt="Facebook"></a>
-				{{ end }}
-				{{ if .Params.instagram }}
-					<a href="{{ .Params.instagram }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/ig.svg" alt="Instagram"></a>
-				{{ end }}
-				{{ if .Params.youtube }}
-					<a href="{{ .Params.youtube }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/yt.svg" alt="Youtube"></a>
-				{{ end }}
-				{{ if .Params.tiktok }}
-					<a href="{{ .Params.tiktok }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/tk.svg" alt="TikTok"></a>
-				{{ end }}
-			</li>
-			<li class="contact">
-				{{ if .Params.whatsapp }}
-					<a href="https://wa.me/{{ .Params.whatsapp }}" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/whatsapp.svg" alt="Whatsapp"></a>
-				{{ end }}
-				{{ if .Params.phone }}
-					<a href="tel:{{ .Params.phone }}" class="social btn"><img src="https://ct.ttmenus.com/icons/utilities/phone.svg" alt="Phone"></a>
-				{{ end }}
-			</li>
+		<li class="socialmedia">
+			{{ if .Site.Params.social.facebook }}
+				<a href="{{ .Site.Params.social.facebook }}" class="social btn" target="_blank"><img src="https://ct.ttmenus.com/icons/socialmedia/fb.svg" alt="Facebook"></a>
+			{{ end }}
+			{{ if .Site.Params.social.instagram }}
+				<a href="{{ .Site.Params.social.instagram }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/ig.svg" alt="Instagram"></a>
+			{{ end }}
+			{{ if .Site.Params.social.youtube }}
+				<a href="{{ .Site.Params.social.youtube }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/yt.svg" alt="Youtube"></a>
+			{{ end }}
+			{{ if .Site.Params.social.tiktok }}
+				<a href="{{ .Site.Params.social.tiktok }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/tk.svg" alt="TikTok"></a>
+			{{ end }}
+		</li>
+		<li class="contact">
+			{{ if .Site.Params.orderingsystem.whatsapp }}
+				<a href="https://wa.me/{{ .Site.Params.orderingsystem.whatsapp }}" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/whatsapp.svg" alt="Whatsapp"></a>
+			{{ end }}
+			{{ if .Site.Params.social.phone }}
+				<a href="tel:{{ .Site.Params.social.phone }}" class="social btn"><img src="https://ct.ttmenus.com/icons/utilities/phone.svg" alt="Phone"></a>
+			{{ end }}
+		</li>
 			<!-- APP FUNCTIONALITY BUTTON -->
 			<li class="subscribe" >
 				<a id="btn_SubInfo" class="social btn" onclick="expandAppMenu();">
