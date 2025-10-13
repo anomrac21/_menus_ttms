@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/auth.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/update-ui.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/admin.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    
+    {{ partial "dashboard-header.html" . }}
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+
+      <!-- User Stats -->
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title">Total Users</h3>
+            <span class="card-icon">👥</span>
+          </div>
+          <p class="card-value" id="totalUsers">--</p>
+          <p class="card-description">All registered users</p>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title">Active Users</h3>
+            <span class="card-icon">✅</span>
+          </div>
+          <p class="card-value" id="activeUsers">--</p>
+          <p class="card-description">Currently active accounts</p>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title">Verified Users</h3>
+            <span class="card-icon">📧</span>
+          </div>
+          <p class="card-value" id="verifiedUsers">--</p>
+          <p class="card-description">Email verified accounts</p>
+        </div>
+      </div>
+
+      <!-- Add User Section -->
+      <div class="update-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 class="section-title" style="margin: 0; border: none; padding: 0;">Add New User</h2>
+          <button class="btn-primary" onclick="toggleAddUserForm()" style="width: auto; padding: 10px 20px;">
+            + Add User
+          </button>
+        </div>
+
+        <!-- Add User Form (Hidden by default) -->
+        <div id="addUserForm" style="display: none; margin-top: 20px;">
+          <form id="createUserForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input type="text" id="newFirstName" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input type="text" id="newLastName" class="form-input" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="newEmail" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Password (Temporary)</label>
+              <input type="password" id="newPassword" class="form-input" required>
+              <small style="color: #666; font-size: 12px;">User should change this after first login</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select id="newRole" class="form-input">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div id="createUserAlert"></div>
+
+            <div style="display: flex; gap: 10px;">
+              <button type="submit" class="btn-primary" id="createUserBtn" style="width: auto; padding: 10px 20px;">
+                Create User
+              </button>
+              <button type="button" class="btn-secondary" onclick="toggleAddUserForm()" style="width: auto; padding: 10px 20px;">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Users List -->
+      <div class="update-section">
+        <h2 class="section-title">All Users</h2>
+        
+        <div id="userListContainer">
+          <p style="text-align: center; color: #666;">Loading users...</p>
+        </div>
+
+        <!-- Pagination -->
+        <div id="paginationContainer" style="margin-top: 20px; text-align: center; display: none;">
+          <button class="btn-secondary" onclick="loadUserList(currentPage - 1)" id="prevBtn" style="width: auto; padding: 8px 16px; margin: 0 5px;">
+            ← Previous
+          </button>
+          <span id="pageInfo" style="margin: 0 15px; color: #666;"></span>
+          <button class="btn-secondary" onclick="loadUserList(currentPage + 1)" id="nextBtn" style="width: auto; padding: 8px 16px; margin: 0 5px;">
+            Next →
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Admin Users Script -->
+  <script>
+    let currentPage = 0;
+    const usersPerPage = 10;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Protect this page - require admin access
+      const isProtected = AuthMiddleware.protectPage({
+        redirectUrl: '/login/',
+        requireAdmin: true, // Only admins can access
+      });
+
+      if (!isProtected) {
+        return;
+      }
+
+      // Load user stats
+      await loadUserStats();
+
+      // Load user list
+      await loadUserList(0);
+
+      // Setup create user form
+      setupCreateUserForm();
+    });
+
+    async function loadUserStats() {
+      const result = await AdminUserManager.getUserStats();
+      
+      if (result.success && result.data) {
+        document.getElementById('totalUsers').textContent = result.data.total_users || 0;
+        document.getElementById('activeUsers').textContent = result.data.active_users || 0;
+        document.getElementById('verifiedUsers').textContent = result.data.verified_users || 0;
+      }
+    }
+
+    async function loadUserList(page = 0) {
+      if (page < 0) return;
+      
+      currentPage = page;
+      const offset = page * usersPerPage;
+
+      const result = await AdminUserManager.listUsers({
+        limit: usersPerPage,
+        offset: offset,
+      });
+
+      if (result.success && result.data) {
+        const users = result.data.users || [];
+        AdminUserManager.renderUserTable(users, 'userListContainer');
+
+        // Update pagination
+        const totalCount = result.data.pagination?.total_count || 0;
+        const totalPages = Math.ceil(totalCount / usersPerPage);
+        
+        if (totalPages > 1) {
+          document.getElementById('paginationContainer').style.display = 'block';
+          document.getElementById('pageInfo').textContent = `Page ${page + 1} of ${totalPages}`;
+          document.getElementById('prevBtn').disabled = page === 0;
+          document.getElementById('nextBtn').disabled = page >= totalPages - 1;
+        } else {
+          document.getElementById('paginationContainer').style.display = 'none';
+        }
+      } else {
+        document.getElementById('userListContainer').innerHTML = 
+          '<p style="text-align: center; color: #f44336;">Failed to load users: ' + result.error + '</p>';
+      }
+    }
+
+    function toggleAddUserForm() {
+      const form = document.getElementById('addUserForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      
+      if (form.style.display === 'none') {
+        document.getElementById('createUserForm').reset();
+        document.getElementById('createUserAlert').innerHTML = '';
+      }
+    }
+
+    function setupCreateUserForm() {
+      const form = document.getElementById('createUserForm');
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn = document.getElementById('createUserBtn');
+        const alertDiv = document.getElementById('createUserAlert');
+
+        // Get form values
+        const userData = {
+          first_name: document.getElementById('newFirstName').value.trim(),
+          last_name: document.getElementById('newLastName').value.trim(),
+          email: document.getElementById('newEmail').value.trim(),
+          password: document.getElementById('newPassword').value,
+          confirm_password: document.getElementById('newPassword').value,
+          roles: [document.getElementById('newRole').value],
+        };
+
+        // Show loading
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Creating...';
+
+        // Create user via signup endpoint (admin creates user)
+        const result = await AuthClient.signup(userData);
+
+        if (result.success) {
+          alertDiv.innerHTML = '<div class="alert alert-success">User created successfully!</div>';
+          
+          // Reset form
+          setTimeout(() => {
+            form.reset();
+            toggleAddUserForm();
+            loadUserList(currentPage);
+            loadUserStats();
+          }, 1500);
+        } else {
+          alertDiv.innerHTML = '<div class="alert alert-error">' + result.error + '</div>';
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = 'Create User';
+      });
+    }
+
+    // Make function global for onclick handlers
+    window.loadUserList = loadUserList;
+  </script>
+</body>
+</html>
+

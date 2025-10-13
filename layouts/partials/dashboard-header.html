@@ -1,0 +1,19 @@
+<div class="dashboard-header">
+  <!-- Admin Navigation -->
+  <div class="dashboard-nav">
+    <a href="/update-ui/" class="dashboard-nav-link {{ if eq .RelPermalink "/update-ui/" }}active{{ end }}">
+      📋 Dashboard
+    </a>
+    <a href="/admin/users/" class="dashboard-nav-link {{ if eq .RelPermalink "/admin/users/" }}active{{ end }}">
+      👥 Users
+    </a>
+  </div>
+  <div class="dashboard-user">
+    <div class="user-info">
+      <span class="user-name" data-user-name>Loading...</span>
+      <span class="user-email" data-user-email></span>
+    </div>
+    <button class="btn-logout" data-logout>Logout</button>
+  </div>
+</div>
+

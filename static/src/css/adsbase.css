@@ -1,9 +1,26 @@
+/* Scroll Progress Bar */
+.scroll-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.scroll-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1);
+    transition: width 0.1s ease-out;
+    box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+}
+
 .ad-portrait-bg {
     object-fit: cover !important;
     filter: brightness(0.4) blur(6px) !important;
-}
-.ad-margin-top{
-    height: 16em;
 }
 .adbottomspacer{
     height: 4em;
@@ -26,6 +43,7 @@
 #client-ads-container .scrollmagic-pin-spacer,
 #frontpage-ads-container .scrollmagic-pin-spacer{
     scroll-snap-align:start;
+    min-height: 256vh !important;
 }
 #pageadscontainer span,
 #homepage-ads-container span,

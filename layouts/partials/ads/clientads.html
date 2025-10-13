@@ -13,11 +13,13 @@
         {{ $finalurl = $adurl }}
       {{ end }}
       
-      <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
-        <a href="{{ $finalurl }}">{{ $adstitle }}</a>
-      </h2>
-      
       <section id="clientad">
+        <div class="scroll-progress-bar">
+          <div class="scroll-progress-fill"></div>
+        </div>
+        <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
+          <a href="{{ $finalurl }}">{{ $adstitle }}</a>
+        </h2>
         <span data-aos="zoom-out-right">Promotion</span>
         <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
           {{ range .Params.images }}

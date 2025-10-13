@@ -125,8 +125,8 @@ document.addEventListener('DOMContentLoaded', function() {
         AOS.refresh();
         document.getElementById("footerBtns").classList.add("visible");
         
-        // Ensure ads are loaded when loader hides
-        setTimeout(() => ensureAdsLoaded(), 100);
+        // Note: Ad loading is now handled by barba transitions for better control
+        // Removed ensureAdsLoaded() call to prevent race conditions
         
         // console.log("hide loader");
     }
@@ -146,25 +146,22 @@ document.addEventListener('DOMContentLoaded', function() {
             window.adManager.populateAds();
         }
         
-        // Also try to refresh front page ads scroll effects
-        if (typeof initFrontPageAdsScrollEffects === 'function') {
-            initFrontPageAdsScrollEffects();
-        }
+        // Note: ScrollMagic initialization is handled separately in barba transitions
         
-            // Force a refresh of any ad containers
-    const adContainers = document.querySelectorAll('#homepage-ads-container, #client-ads-container, #frontpage-ads-container, .frontpageads');
-    adContainers.forEach(container => {
-        if (container.innerHTML.includes('Loading ads...') || container.innerHTML.includes('Ads loading...')) {
-            console.log(`Container ${container.id} still shows loading text, triggering refresh...`);
-            // If ads are still loading, trigger a refresh
-            setTimeout(() => {
-                if (window.adManager && typeof window.adManager.populateAds === 'function') {
-                    console.log(`Refreshing ads for container ${container.id}...`);
-                    window.adManager.populateAds();
-                }
-            }, 1000);
-        }
-    });
+        // Force a refresh of any ad containers
+        const adContainers = document.querySelectorAll('#homepage-ads-container, #client-ads-container, #frontpage-ads-container, .frontpageads');
+        adContainers.forEach(container => {
+            if (container.innerHTML.includes('Loading ads...') || container.innerHTML.includes('Ads loading...')) {
+                console.log(`Container ${container.id} still shows loading text, triggering refresh...`);
+                // If ads are still loading, trigger a refresh
+                setTimeout(() => {
+                    if (window.adManager && typeof window.adManager.populateAds === 'function') {
+                        console.log(`Refreshing ads for container ${container.id}...`);
+                        window.adManager.populateAds();
+                    }
+                }, 1000);
+            }
+        });
     }
 
     barba.init({
@@ -173,12 +170,23 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'fade',
             async leave(data) {
                 localStorage.setItem("headerScroll", document.getElementById("menublock").scrollLeft);
+                
+                // Destroy ScrollMagic controller before page transition
+                if (typeof scrollMagicController !== 'undefined' && scrollMagicController) {
+                    console.log('Barba leave: Destroying ScrollMagic controller');
+                    try {
+                        scrollMagicController.destroy(true);
+                        scrollMagicController = null;
+                    } catch (error) {
+                        console.warn('Barba leave: Error destroying ScrollMagic controller:', error);
+                    }
+                }
+                
                 showLoader();
                 await new Promise(resolve => setTimeout(resolve, 366));
             },
             async enter(data) {
                 window.scrollTo(0, 100);
-                initFrontPageAdsScrollEffects();
                 document.getElementById('menublock').scrollTo(12, 0);
                 closeCart();
                 closeShop();
@@ -192,8 +200,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 window.scrollTo(0, 0);
 
-                // Ensure ads are loaded after page transition
-                setTimeout(() => ensureAdsLoaded(), 100);
+                // Wait for DOM to settle, then refresh AOS and load ads
+                setTimeout(() => {
+                    console.log('=== Barba enter: Post-navigation setup ===');
+                    
+                    // Check if ad containers exist
+                    const containers = ['homepage-ads-container', 'client-ads-container', 'frontpage-ads-container'];
+                    const foundContainers = containers.filter(id => document.getElementById(id));
+                    console.log('Ad containers found:', foundContainers);
+                    
+                    // Refresh AOS after content is loaded
+                    if (typeof AOS !== 'undefined') {
+                        console.log('Barba enter: Refreshing AOS');
+                        AOS.refresh();
+                    }
+                    
+                    // Force ad reload after barba navigation with fresh state
+                    console.log('Barba enter: Forcing ad reload');
+                    console.log('window.adManager exists:', !!window.adManager);
+                    
+                    if (window.adManager) {
+                        console.log('Calling populateAds with forceRepopulate=true');
+                        // Directly call populateAds with force flag
+                        window.adManager.populateAds(true);
+                        
+                        // Also try again after a delay in case DOM wasn't fully ready
+                        setTimeout(() => {
+                            console.log('Secondary ad population attempt...');
+                            window.adManager.populateAds(true);
+                            
+                            // Force AOS to properly animate the ad elements
+                            setTimeout(() => {
+                                if (typeof AOS !== 'undefined') {
+                                    console.log('Barba enter: Final AOS refresh for ads');
+                                    AOS.refreshHard();
+                                }
+                            }, 100);
+                            
+                            // Initialize ScrollMagic AFTER ads are populated and DOM is fully stable
+                            setTimeout(() => {
+                                if (typeof initFrontPageAdsScrollEffects === 'function') {
+                                    console.log('Barba enter: Initializing ScrollMagic after ads populated');
+                                    initFrontPageAdsScrollEffects();
+                                }
+                                
+                                // Refresh scroll progress bars after ScrollMagic is initialized
+                                setTimeout(() => {
+                                    if (window.adScrollProgressManager) {
+                                        window.adScrollProgressManager.refresh();
+                                    }
+                                }, 500);
+                            }, 300);
+                        }, 500);
+                    } else {
+                        console.error('AdManager not available during barba transition!');
+                    }
+                }, 300);
                 
                 // Reload opening hours functionality after page transition
                 setTimeout(() => {
@@ -206,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (typeof reloadAppJS === 'function') {
                         reloadAppJS();
                     }
-                }, 200);
+                }, 400);
             },
             async once(data) {
                 await new Promise(resolve => setTimeout(resolve, 3000));

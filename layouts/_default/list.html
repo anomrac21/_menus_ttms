@@ -34,76 +34,10 @@
                       {{$flavours = $flavours | append .flavour}}
                     {{end}}
                   {{end}}
-
-                  {{$prices := slice}}
-                  {{range .Params.prices}}
-                    {{$price := slice}}
-                    {{$price = $price | append .size}}
-                    {{$price = $price | append .flavour}}
-                    {{$price = $price | append .price}}
-                    {{$prices = $prices | append $price}}
-                  {{end}}
-
-                  {{$sides := slice}}
-                  {{range .Params.sides }}
-                    {{$side := slice}}
-                    {{$side = $side | append .name}}
-                    {{$side = $side | append .type}}
-                    {{$side = $side | append .price}}
-                    {{$sides = $sides | append $side}}
-                  {{end}}
-
-                  {{$sideconfig := slice}}
-                  {{if .Params.side_config }}
-                    {{$config := slice}}
-                    {{$config = $config | append .Params.side_config.all_max}}
-                    {{$config = $config | append .Params.side_config.all_valuecount}}
-                    {{$config = $config | append .Params.side_config.all_value}}
-                    {{$config = $config | append .Params.side_config.regular_max}}
-                    {{$config = $config | append .Params.side_config.regular_valuecount}}
-                    {{$config = $config | append .Params.side_config.regular_value}}
-                    {{$config = $config | append .Params.side_config.premium_max}}
-                    {{$config = $config | append .Params.side_config.premium_valuecount}}
-                    {{$config = $config | append .Params.side_config.premium_value}}
-                    {{$sideconfig = $sideconfig | append $config}}
-                  {{end}}
-
-                  {{$additions := slice}}
-                  {{range .Params.additions }}
-                    {{$addition := slice}}
-                    {{$addition = $addition | append .name}}
-                    {{$addition = $addition | append .price}}
-                    {{$additions = $additions | append $addition}}
-                  {{end}}
                   
-                  {{$modifications := slice}}
-                  {{range .Params.modifications }}
-                    {{$modification := slice}}
-                    {{$modification = $modification | append .name}}
-                    {{$modification = $modification | append .price}}
-                    {{$modifications = $modifications | append $modification}}
-                  {{end}}
-                  
-                  {{$images := slice}}
-                  {{range .Params.images }}
-                    {{$images = $images | append .image}}
-                  {{end}}
-                  
-                  <tr class="item" onclick="openItem(this,{
-                            'category': '{{ $category }}',
-                            'categoryurl': '{{ $categoryurl }}',
-                            'name': '{{ .LinkTitle }}',
-                            'url': '{{ .RelPermalink }}', 
-                            'images': {{ $images }}, 
-                            'desc': '{{ .Summary }}',  
-                            'sizes': {{ $sizes }},
-                            'flavours': {{ sort $flavours }},
-                            'items': {{ $prices }},
-                            'sides': {{ $sides }},
-                            'sideoptions': {{ $sideconfig }},
-                            'additions': {{ $additions }},
-                            'modifications': {{ $modifications }}
-                            } );">
+                  <tr class="item" 
+                      data-item-url="{{ .RelPermalink }}"
+                      onclick="openItem(this, '{{ .RelPermalink }}');">
                       <td>
                         <h3 class="title">{{ .LinkTitle }}</h3>
                         {{ .Summary }}

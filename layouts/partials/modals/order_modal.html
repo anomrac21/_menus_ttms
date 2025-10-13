@@ -24,8 +24,12 @@
 				<div id="itemFlavourControl"></div>
 			</div>
 
+			<!-- Dynamic side category buttons will be inserted here -->
+			<div id="sideCategoriesButtonsContainer"></div>
+			
+			<!-- Legacy single sides button (for backward compatibility) -->
 			<div id="itemSideContainer" class="hide">
-				<a id="reg" class="btn-section-header" onclick="openSideMenu();"><i id="addicon" class="fa fa-plus"></i> Sides</a>
+				<a id="reg" class="btn-section-header" onclick="openSideMenu();"><i class="fa fa-plus"></i> <span id="sidesButtonText">Sides</span></a>
 				<div id="sideList" class=""></div>
 			</div>
 
@@ -54,11 +58,8 @@
 		</div>
 	</div>
 </div>
-<div id="itemSideControl" class="hide fadein">
-<div class="container">
-	<div id="itemSides" class=""></div>
-</div>
-</div>
+<!-- Side category overlays container (used for both new multi-category and legacy single category) -->
+<div id="itemSideControl" class="hide"></div>
 <div id="itemModControl" class="hide fadein">
 <div class="container">
 	<div id="itemMods" class=""></div>

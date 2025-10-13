@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Update Menu | Menu Demo</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+<meta property="og:title" content="Update Menu | Menu Demo"/>
+
+
+ 
+   <meta property="og:image" content="/branding/favicon152.webp"/>
+
+
+
+<meta name="apple-mobile-web-app-title" content="Menu Demo">
+<meta name="description" content=" "/>
+<meta property="og:description" content=" Digital Menu"/>
+
+
+<meta property="og:url" content="http://localhost:1313/" />
+
+
+<meta name="theme-color" content="#000000"/>
+
+
+<link rel="stylesheet" href="http://localhost:1313/css/colors.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/custom.css"/>
+
+<link rel="stylesheet" href="http://localhost:1313/src/css/adsbase.css"/>
+<link rel="stylesheet" href="http://localhost:1313/src/css/apple.css"/>
+<link rel="stylesheet" href="http://localhost:1313/src/css/ordering-system.css"/>
+
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
+
+
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/>
+
+
+
+<link rel="manifest" href="/manifest.json" />
+
+
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shortcut icon" sizes="16x16" href="/branding/favicon16.webp">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon.ico">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon196.webp">
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shorcut icon" href="/branding/favicon512.webp"/>
+<link rel="apple-touch-icon-precomposed" href="/branding/favicon152.webp">
+
+
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+
+
+<script>
+    if (typeof navigator.serviceWorker !== 'undefined') {
+        navigator.serviceWorker.register('http:\/\/localhost:1313\/OneSignalSDKWorker.js?v=2')
+        .then(function(registration) {
+        console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(function(error) {
+        console.error('Service Worker registration failed:', error);
+        });
+    }
+</script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.init({
+      appId: "b4b1ddce-85b7-43bd-8e11-d91c8cd1540d",
+    });
+  });
+</script>
+
+<script>
+  var _mtm = window._mtm = window._mtm || [];
+  _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+  (function() {
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+
+
+<script>
+  var _paq = window._paq = window._paq || [];
+
+   
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+  _paq.push(["setCookieDomain", "*.ttmenus.com"]);
+  _paq.push(["setDomains", ["*.ttmenus.com"]]);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+
+   
+  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '5']);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+
+  (function() {
+    var u="//analytics.ttmenus.com/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
+
+
+
+<script src="http://localhost:1313/js/analytics-tracking.js"></script><script>
+
+window.AUTH_CONFIG = {
+    apiUrl: "https:\/\/auth.ttmenus.com\/api\/v1"
+};
+</script>
+<script src="http://localhost:1313/js/auth-client.js"></script>
+<script src="http://localhost:1313/js/auth-middleware.js"></script>
+<script src="http://localhost:1313/js/admin-users.js"></script>
+  <link rel="stylesheet" href="http://localhost:1313/src/css/auth.css">
+  <link rel="stylesheet" href="http://localhost:1313/src/css/update-ui.css">
+</head>
+<body>
+  
+  <div class="dashboard-container">
+    
+    {{ partial "dashboard-header.html" . }}
+
+    
+    <div class="tab-navigation">
+      <button class="tab-btn active" data-tab="pending" id="pendingTabBtn">
+        <span>📋 Pending Changes</span>
+        <span id="pendingTabCount" class="pending-count-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="menu-items">Menu Items</button>
+      <button class="tab-btn" data-tab="advertisements">Advertisements</button>
+      <button class="tab-btn" data-tab="locations">Locations</button>
+      <button class="tab-btn" data-tab="branding">Branding</button>
+      <button class="tab-btn" data-tab="colors">Colors & Theme</button>
+      <button class="tab-btn" data-tab="config">Configuration</button>
+      <button class="tab-btn" data-tab="manifest">PWA Manifest</button>
+    </div>
+
+    
+    <div class="dashboard-content">
+      
+      
+      <!-- Pending Changes Tab -->
+      <div class="tab-content active" data-tab-content="pending">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">📋 Pending Changes</h2>
+              <p>Review all draft changes before publishing to the live site.</p>
+            </div>
+            <div class="section-header-actions" id="pendingActions" style="display: none;">
+              <button class="btn btn-secondary" onclick="UpdateUI.discardAllDraftsGlobal()">🔄 Discard All</button>
+              <button class="btn btn-success" onclick="UpdateUI.publishAllChanges()">✅ Publish All Changes</button>
+            </div>
+      </div>
+          
+          <div id="pendingSummary">
+            <div class="loading">Loading pending changes...</div>
+        </div>
+      </div>
+    </div>
+
+      
+      <div class="tab-content" data-tab-content="menu-items">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Menu Items</h2>
+              <p>Changes are saved as drafts. Click "Publish" to commit to live site.</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardMenuItems" onclick="UpdateUI.discardAllDrafts('menuItems')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-primary" onclick="openMenuItemModal()">+ Add Item</button>
+        </div>
+      </div>
+
+          <div class="form-group">
+            <input type="text" class="form-input" id="searchItems" placeholder="Search across all categories and items...">
+          </div>
+          
+          <div id="menuItemsList">
+            <div class="loading">Loading complete menu...</div>
+          </div>
+          </div>
+        </div>
+
+      
+      <!-- Advertisements Tab -->
+      <div class="tab-content" data-tab-content="advertisements">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Advertisements</h2>
+              <p>Manage promotional ads, daily specials, and announcements. Changes saved as drafts.</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardAdvertisements" onclick="UpdateUI.discardAllDrafts('advertisements')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-primary" onclick="openAdModal()">+ Add Advertisement</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <input type="text" class="form-input" id="searchAds" placeholder="Search advertisements...">
+        </div>
+
+          <div id="advertisementsList">
+            <div class="loading">Loading advertisements...</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="locations">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Locations</h2>
+              <p>Manage your restaurant locations. Changes saved as drafts.</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardLocations" onclick="UpdateUI.discardAllDrafts('locations')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-primary" onclick="openLocationModal()">+ Add Location</button>
+            </div>
+          </div>
+
+          <div id="locationsList">
+            <div class="loading">Loading locations...</div>
+          </div>
+            </div>
+          </div>
+
+      
+      <div class="tab-content" data-tab-content="branding">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Branding Assets</h2>
+              <p>Manage your logos, favicons, and brand images from /branding/</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardBranding" onclick="UpdateUI.discardAllDrafts('branding')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-success" id="publishBranding" onclick="UpdateUI.publishBrandingImages()" style="display: none;">✅ Publish Changes</button>
+            </div>
+            </div>
+          
+          <div id="brandingImagesList">
+            <div class="loading">Loading branding images...</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="colors">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Color Scheme</h2>
+              <p>Customize your menu's color palette. Changes are saved as drafts locally.</p>
+            </div>
+            <button class="btn btn-secondary" id="discardColors" onclick="UpdateUI.discardAllDrafts('colors')" style="display: none;">🔄 Discard All</button>
+          </div>
+          
+          <div class="alert alert-info spacing-bottom">
+            <strong>How it works:</strong> Edit colors below (saved automatically as draft). Click "Publish Colors" to commit to live site via content-service. Rebuild Hugo to see changes.
+          </div>
+          
+          <div id="colorInputs">
+            <div class="loading">Loading colors...</div>
+          </div>
+          
+          <div class="action-buttons" id="colorActions" style="display: none;">
+            <button class="btn btn-success" onclick="saveColors()">Publish Colors</button>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="config">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Hugo Configuration</h2>
+              <p>Manage your site configuration settings.</p>
+        </div>
+            <button class="btn btn-secondary" id="discardConfig" onclick="UpdateUI.discardAllDrafts('config')" style="display: none;">🔄 Discard All</button>
+      </div>
+
+          <div id="configForm">
+            <div class="loading">Loading configuration...</div>
+          </div>
+            </div>
+          </div>
+
+      
+      <div class="tab-content" data-tab-content="manifest">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">PWA Manifest</h2>
+              <p>Configure your Progressive Web App settings.</p>
+            </div>
+            <button class="btn btn-secondary" id="discardManifest" onclick="UpdateUI.discardAllDrafts('manifest')" style="display: none;">🔄 Discard All</button>
+          </div>
+
+          <div id="manifestForm">
+            <div class="loading">Loading manifest...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <div class="modal" id="menuItemModal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="menuItemModalTitle">Add Menu Item</h3>
+        <button class="btn-close" onclick="closeMenuItemModal()">&times;</button>
+      </div>
+      <form id="menuItemForm" onsubmit="saveMenuItem(event)">
+        <input type="hidden" id="itemId">
+        <input type="hidden" id="itemCategory">
+        
+        <!-- Basic Info -->
+        <h4 class="form-section-title">📝 Basic Information</h4>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select class="form-select" id="itemCategorySelect" required></select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Weight (display order)</label>
+            <input type="number" class="form-input" id="itemWeight" min="0" value="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-input" id="itemTitle" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea class="form-textarea" id="itemDescription" rows="3" required></textarea>
+        </div>
+        
+        <!-- Prices Section -->
+        <h4 class="form-section-title">💰 Pricing</h4>
+        <div id="pricesContainer">
+          <!-- Prices will be added dynamically -->
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addPriceEntry()">+ Add Another Price</button>
+        
+        <!-- Images Section -->
+        <h4 class="form-section-title">🖼️ Images</h4>
+        <div id="imagesContainer">
+          <!-- Images will be added dynamically -->
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addImageEntry()">+ Add Another Image</button>
+        
+        <!-- Taxonomies -->
+        <h4 class="form-section-title">🏷️ Classifications</h4>
+        
+        <div class="form-group">
+          <label class="form-label">Tags</label>
+          <div class="tags-container" id="tagsContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="tagInput" placeholder="Add a tag (e.g., Main, Sushi, Special)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('tags');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('tags')">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Ingredients</label>
+          <div class="tags-container" id="ingredientsContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="ingredientInput" placeholder="Add an ingredient (e.g., Chicken, Shrimp)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('ingredients');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('ingredients')">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Cooking Methods</label>
+          <div class="tags-container" id="cookingMethodsContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="cookingMethodInput" placeholder="Add a cooking method (e.g., Grilled, Fried)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('cookingmethods');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('cookingmethods')">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Types</label>
+          <div class="tags-container" id="typesContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="typeInput" placeholder="Add a type (e.g., Asian, Japanese)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('types');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('types')">+ Add</button>
+          </div>
+        </div>
+        
+        <!-- Side Categories Section -->
+        <h4 class="form-section-title">🍱 Side Categories (Optional)</h4>
+        <p class="form-helper">For combo items that allow customers to choose sides</p>
+        
+        <div id="sideCategoriesContainer"></div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addSideCategory()">+ Add Side Category</button>
+        
+        <div class="modal-form-actions">
+          <button type="submit" class="btn btn-success">💾 Save Item</button>
+          <button type="button" class="btn btn-secondary" onclick="closeMenuItemModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <div class="modal" id="locationModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="locationModalTitle">Add Location</h3>
+        <button class="btn-close" onclick="closeLocationModal()">&times;</button>
+      </div>
+      <form id="locationForm" onsubmit="saveLocation(event)">
+        <input type="hidden" id="locationIndex">
+        
+        <div class="form-group">
+          <label class="form-label">Address *</label>
+          <input type="text" class="form-input" id="locationAddress" required>
+        </div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">City *</label>
+            <input type="text" class="form-input" id="locationCity" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Island *</label>
+            <input type="text" class="form-input" id="locationIsland" required>
+          </div>
+        </div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" id="locationPhone">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">WhatsApp</label>
+            <input type="tel" class="form-input" id="locationWhatsapp">
+          </div>
+        </div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" class="form-input" id="locationLat" step="any">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" class="form-input" id="locationLon" step="any">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Subcategories (comma separated)</label>
+          <input type="text" class="form-input" id="locationSubcategories" placeholder="Restaurant, Bar">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Ordering Tables (comma separated)</label>
+          <input type="text" class="form-input" id="locationOrderingTables" placeholder="Takeaway Only, Dine In">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">FoodDrop URL</label>
+          <input type="url" class="form-input" id="locationFoodDrop" placeholder="https://fooddropcaribbean.com/...">
+        </div>
+        
+        <h4 class="form-section-title">🕐 Opening Hours</h4>
+        
+        <div class="form-group">
+          <label class="form-label">General Mode</label>
+          <select class="form-select" id="locationHoursMode">
+            <option value="Auto">Auto (Set specific hours below)</option>
+            <option value="AlwaysOpen">Always Open (24/7)</option>
+            <option value="AlwaysClosed">Always Closed</option>
+          </select>
+        </div>
+        
+        <div id="openingHoursDaysContainer">
+          <div class="hours-day-section" data-day="mon">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Monday</h5>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('mon')">+ Add Entry</button>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_mon"></div>
+          </div>
+          
+          <div class="hours-day-section" data-day="tue">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Tuesday</h5>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('tue', 'mon')">↑ Copy Monday</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('tue')">+ Add Entry</button>
+              </div>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_tue"></div>
+          </div>
+          
+          <div class="hours-day-section" data-day="wed">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Wednesday</h5>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('wed', 'tue')">↑ Copy Tuesday</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('wed')">+ Add Entry</button>
+              </div>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_wed"></div>
+          </div>
+          
+          <div class="hours-day-section" data-day="thu">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Thursday</h5>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('thu', 'wed')">↑ Copy Wednesday</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('thu')">+ Add Entry</button>
+              </div>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_thu"></div>
+          </div>
+          
+          <div class="hours-day-section" data-day="fri">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Friday</h5>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('fri', 'thu')">↑ Copy Thursday</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('fri')">+ Add Entry</button>
+              </div>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_fri"></div>
+          </div>
+          
+          <div class="hours-day-section" data-day="sat">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Saturday</h5>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('sat', 'fri')">↑ Copy Friday</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('sat')">+ Add Entry</button>
+              </div>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_sat"></div>
+          </div>
+          
+          <div class="hours-day-section" data-day="sun">
+            <div class="hours-day-header">
+              <h5 class="form-subsection-title">Sunday</h5>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('sun', 'sat')">↑ Copy Saturday</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('sun')">+ Add Entry</button>
+              </div>
+            </div>
+            <div class="hours-entries-container" id="hoursEntries_sun"></div>
+          </div>
+        </div>
+        
+        <div class="modal-form-actions">
+          <button type="submit" class="btn btn-success">💾 Save Location</button>
+          <button type="button" class="btn btn-danger" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">🗑️ Delete Location</button>
+          <button type="button" class="btn btn-secondary" onclick="closeLocationModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Advertisement Modal -->
+  <div class="modal" id="adModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="adModalTitle">Add Advertisement</h3>
+        <button class="btn-close" onclick="closeAdModal()">&times;</button>
+      </div>
+      <form id="adForm" onsubmit="saveAd(event)">
+        <input type="hidden" id="adId">
+        
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-input" id="adTitle" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="adDescription"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Link URL (optional)</label>
+          <input type="url" class="form-input" id="adLink" placeholder="/specials/your-special/">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Weight (display order)</label>
+          <input type="number" class="form-input" id="adWeight" min="0" value="1">
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="adRecurring">
+            <span class="form-label">Recurring Advertisement</span>
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Days of Week (comma separated)</label>
+          <input type="text" class="form-input" id="adDaysOfWeek" placeholder="Monday, Wednesday, Friday">
+          <small class="form-helper">Leave empty for all days</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Locations (comma separated)</label>
+          <input type="text" class="form-input" id="adLocations" placeholder="Rodney Rd, Southern Main Road">
+          <small class="form-helper">Leave empty for all locations</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Image</label>
+          <input type="file" class="form-input" id="adImage" accept="image/*">
+        </div>
+        
+        <div class="modal-form-actions">
+          <button type="submit" class="btn btn-success">Save Advertisement</button>
+          <button type="button" class="btn btn-secondary" onclick="closeAdModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <script src="http://localhost:1313/js/auth-client.js"></script>
+  <script src="http://localhost:1313/js/auth-middleware.js"></script>
+  <script src="http://localhost:1313/js/update-ui.js"></script>
+</body>
+</html>

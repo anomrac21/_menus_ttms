@@ -7,6 +7,76 @@ const hastables = {{ default false site.Params.orderingsystem.hastables }};
 // Location storage key
 const LOCATION_STORAGE_KEY = 'ttms_selected_location';
 
+// Menu items cache
+let menuItemsCache = null;
+let menuItemsCachePromise = null;
+
+// Track selections per category
+let categorySidesTracking = {};
+
+// Function to fetch menu items JSON
+async function fetchMenuItems() {
+	if (menuItemsCache) {
+		console.log('📦 Using cached menu items');
+		return menuItemsCache;
+	}
+	
+	if (menuItemsCachePromise) {
+		console.log('⏳ Waiting for existing fetch to complete');
+		return menuItemsCachePromise;
+	}
+	
+	console.log('🔄 Fetching menu items from JSON API...');
+	menuItemsCachePromise = fetch('/api/menu-items.json')
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log('✅ Menu items loaded:', data.total_count, 'items');
+			menuItemsCache = data.menu_items;
+			menuItemsCachePromise = null;
+			return menuItemsCache;
+		})
+		.catch(error => {
+			console.error('❌ Error fetching menu items:', error);
+			menuItemsCachePromise = null;
+			return null;
+		});
+	
+	return menuItemsCachePromise;
+}
+
+// Function to find menu item by URL
+function findMenuItemByUrl(url) {
+	if (!menuItemsCache) {
+		console.error('❌ Menu items not loaded yet');
+		return null;
+	}
+	
+	const item = menuItemsCache.find(item => item.url === url);
+	if (!item) {
+		console.error('❌ Menu item not found for URL:', url);
+	}
+	return item;
+}
+
+// Function to find menu item by ID
+function findMenuItemById(id) {
+	if (!menuItemsCache) {
+		console.error('❌ Menu items not loaded yet');
+		return null;
+	}
+	
+	const item = menuItemsCache.find(item => item.id === id);
+	if (!item) {
+		console.error('❌ Menu item not found for ID:', id);
+	}
+	return item;
+}
+
 // Function to handle location selection from dropdown
 function selectLocation(whatsappNumber) {
 	if (whatsappNumber && whatsappNumber.trim() !== '') {
@@ -170,7 +240,7 @@ function closeShop(){
   footerBtns.classList.remove('grad1');
   footerBtns.classList.remove('bigfont');
   footerBtns.classList.add('smallfont');
-	var addbtn = document.getElementById("addicon");
+	var addbtn = document.getElementById("sidesButtonText");
 	var modbtn = document.getElementById("modicon");
 	orderSides=[];
   orderAdd=[];
@@ -179,8 +249,55 @@ function closeShop(){
 	premAmt=0;
 	//console.log(orderMod);
 }
-function openItem(ele,options){
+// Updated openItem function - supports both inline data and dynamic fetching
+async function openItem(ele, options) {
 	addFocus(ele);
+	
+	// Check if options is a string (URL or ID) - then fetch data
+	if (typeof options === 'string') {
+		console.log("🔄 Loading item dynamically:", options);
+		
+		// Ensure menu items are loaded
+		await fetchMenuItems();
+		
+		// Try to find by URL first, then by ID
+		let itemData = findMenuItemByUrl(options);
+		if (!itemData) {
+			itemData = findMenuItemById(options);
+		}
+		
+		if (!itemData) {
+			console.error('❌ Could not find item:', options);
+			alert('Sorry, this item could not be loaded. Please try again.');
+			return;
+		}
+		
+		// Convert JSON data to the format expected by the rest of the code
+		options = {
+			category: itemData.category,
+			categoryurl: itemData.categoryUrl,
+			name: itemData.linkTitle || itemData.name,
+			url: itemData.url,
+			images: itemData.images || [],
+			desc: itemData.summary || '',
+			sizes: itemData.sizes || [],
+			flavours: itemData.flavours || [],
+			items: itemData.prices || [],
+			side_categories: itemData.side_categories || [],
+			sides: itemData.sides || [],
+			sideoptions: itemData.sideconfig || [],
+			additions: itemData.additions || [],
+			modifications: itemData.modifications || [],
+			tags: itemData.tags || [],
+			ingredients: itemData.ingredients || [],
+			cookingmethods: itemData.cookingmethods || [],
+			types: itemData.types || [],
+			events: itemData.events || []
+		};
+		
+		console.log("✅ Item data loaded:", options.name);
+	}
+	
 	console.log("openShop");
 	showShop();
 	regAmt=0;
@@ -193,6 +310,11 @@ function openItem(ele,options){
 	document.getElementById("sideList").innerText='';
 	document.getElementById("modList").innerText='';
 	document.getElementById("addModList").innerText='';
+	
+	// Clear side categories containers and tracking
+	document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
+	document.getElementById("itemSideControl").innerHTML = '';
+	categorySidesTracking = {}; // Reset category tracking
 
 	document.getElementById("itemCategory").innerText=(options.category);
 	const currentPageName = document.title;
@@ -204,7 +326,7 @@ function openItem(ele,options){
 		document.getElementById("itemImages").setAttribute('href','#');
 	}
 
-	document.getElementById("addicon").innerText = "{{ site.Params.orderingmenu.sidesname | default "Sides" }}";
+	document.getElementById("sidesButtonText").innerText = "{{ site.Params.orderingmenu.sidesname | default "Sides" }}";
 	
 	document.getElementById("itemName").innerText=(options.name);
 	if (!currentPageName.startsWith(options.name)) { 
@@ -219,7 +341,7 @@ function openItem(ele,options){
 	// Display taxonomy tags if available
 	displayTaxonomyTags(options);
 
-	if(options.images.length>0){
+	if(options.images && options.images.length>0){
 		var imgHtml = '';
 		for (var i = 0; i<=options.images.length - 1;  i++) {
 			imgHtml = imgHtml+'<img src="/'+options.images[i]+'">';
@@ -233,7 +355,7 @@ function openItem(ele,options){
 	//Size Options
 	var sizeHtml = '';
 	for (var i = 0; i<=options.sizes.length - 1;  i++) {
-					if(i==0){
+				if(i==0){
 			if(options.sizes[i]=='-'){
 				sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option hide select">'+options.sizes[i]+'</a>';
 			}else{
@@ -249,7 +371,7 @@ function openItem(ele,options){
 //Flavours Options
 	var flavoursHtml = '';
 	for (var i = 0; i<=options.flavours.length - 1;  i++) {
-					if(i==0){
+				if(i==0){
 			if(options.flavours[i]=='-'){
 				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option hide select">'+options.flavours[i]+'</a>';
 			}else{
@@ -262,17 +384,43 @@ function openItem(ele,options){
 	document.getElementById("itemFlavourControl").innerHTML=flavoursHtml;
 	setBaseFlav(document.getElementById("itemFlavourControl").childNodes[0]);
 
-	//Sides Options
+	//Sides Options - Handle both new side_categories and old sides structure
 	var sideHtml = '';
-	if(options.sides.length>0){
+	
+	// Check for new side_categories structure first
+	if(options.side_categories && options.side_categories.length > 0){
+		// Hide legacy sides container
+		document.getElementById("itemSideContainer").classList.add("hide");
+		
+		// Render individual buttons and overlays for each category
+		renderSideCategoryButtons(options.side_categories);
+		
+		console.log(`✅ ${options.side_categories.length} side categories configured`);
+	} 
+	// Fall back to old sides structure for backward compatibility
+	else if(options.sides && options.sides.length>0){
+		// Clear any dynamic buttons
+		document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
+		
+		// Show legacy button container
+		document.getElementById("itemSideContainer").classList.remove("hide");
+		
+		// Ensure button uses old function
+		const sideButton = document.getElementById("reg");
+		if (sideButton) sideButton.setAttribute("onclick", "openSideMenu();");
+		
+		// Create legacy overlay structure inside itemSideControl
 		makeSidesHtml(sideHtml,0);
 	} else {
+		// No sides at all - hide and clear everything
 		document.getElementById("itemSideContainer").classList.add("hide");
+		document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
+		document.getElementById("itemSideControl").innerHTML = '';
 	}
 	
 	//Additional Options
 	var additionsHtml = '';
-	if(options.additions.length>0){
+	if(options.additions && options.additions.length>0){
 		makeAdditionsHtml(additionsHtml,0);
 	} else {
 		document.getElementById("itemAddContainer").classList.add("hide");
@@ -280,7 +428,7 @@ function openItem(ele,options){
 	
 	//Mods Options
 	var modificationsHtml = '';
-	if(options.modifications.length>0){
+	if(options.modifications && options.modifications.length>0){
 		makeModificationsHtml(modificationsHtml,0);
 	} else {
 		document.getElementById("itemModContainer").classList.add("hide");
@@ -290,6 +438,537 @@ function openItem(ele,options){
 	orderAdd=[];
 	orderMod=[];
 	updatePrices();
+}
+
+// New function to render individual buttons and overlays for each category
+function renderSideCategoryButtons(sideCategories) {
+	console.log('🔧 Creating separate buttons for', sideCategories.length, 'categories');
+	
+	const buttonsContainer = document.getElementById("sideCategoriesButtonsContainer");
+	const overlaysContainer = document.getElementById("itemSideControl");
+	
+	if (!buttonsContainer || !overlaysContainer) {
+		console.error('❌ Category containers not found');
+		return;
+	}
+	
+	// Clear previous buttons and overlays
+	buttonsContainer.innerHTML = '';
+	overlaysContainer.innerHTML = '';
+	
+	// Create a button and overlay for each category
+	sideCategories.forEach((category, categoryIndex) => {
+		const categoryName = category.category_name || `category_${categoryIndex}`;
+		const displayName = category.display_name || 'Choose Options';
+		const rawItems = category.items || [];
+		const configArray = category.config || [];
+		
+		// Convert config array to object
+		const config = {
+			all_max: configArray[0] || 0,
+			all_valuecount: configArray[1] || 0,
+			all_value: configArray[2] || 0,
+			regular_max: configArray[3] || 0,
+			regular_valuecount: configArray[4] || 0,
+			regular_value: configArray[5] || 0,
+			premium_max: configArray[6] || 0,
+			premium_valuecount: configArray[7] || 0,
+			premium_value: configArray[8] || 0
+		};
+		
+		// Store config globally
+		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
+		window.sideCategoryConfigs[categoryName] = config;
+		
+		// Create button HTML
+		const buttonHtml = `
+			<div id="itemSideContainer_${categoryName}" class="">
+				<a id="reg_${categoryName}" class="btn-section-header" onclick="openSingleCategoryMenu('${categoryName}');">
+					<i class="fa fa-plus"></i> <span>${displayName}</span>
+				</a>
+				<div id="sideList_${categoryName}" class=""></div>
+			</div>
+		`;
+		buttonsContainer.innerHTML += buttonHtml;
+		
+		// Build items HTML for this category
+		let itemsHtml = '';
+		console.log(`📦 Category "${categoryName}" has ${rawItems.length / 3} items`);
+		
+		for (let i = 0; i < rawItems.length; i += 3) {
+			const name = rawItems[i];
+			const type = rawItems[i + 1];
+			const price = rawItems[i + 2];
+			
+			const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
+			const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+			
+			itemsHtml += `<div class="side-item-container"><b class="hide">1</b><a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${name}" data-item-type="${type}" data-item-price="${price}" onclick="selectSideItem(this, '${categoryName}');">${name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
+		}
+		
+		// Create overlay HTML for this category (match old itemSideControl structure exactly)
+		const overlayId = `itemSideControl_${categoryName}`;
+		
+		// Create a div element instead of using innerHTML to preserve event handlers
+		const overlayDiv = document.createElement('div');
+		overlayDiv.id = overlayId;
+		overlayDiv.className = 'hide fadein';
+		
+		const containerDiv = document.createElement('div');
+		containerDiv.className = 'container';
+		
+		const sidesDiv = document.createElement('div');
+		sidesDiv.id = `itemSides_${categoryName}`;
+		sidesDiv.innerHTML = `
+			<h3 class="title center main-text-color">${displayName}</h3>
+			<div class="side-items-scrollable">${itemsHtml}</div>
+			<button class="btn-close-menu" onclick="closeSingleCategoryMenu('${categoryName}');">Confirm</button>
+		`;
+		
+		containerDiv.appendChild(sidesDiv);
+		overlayDiv.appendChild(containerDiv);
+		overlaysContainer.appendChild(overlayDiv);
+		
+		console.log(`✅ Created button and overlay for category: ${categoryName}`);
+	});
+	
+	console.log('✅ All category buttons and overlays created');
+}
+
+// Function to open a single category menu
+function openSingleCategoryMenu(categoryName) {
+	const parentContainer = document.getElementById('itemSideControl');
+	const overlay = document.getElementById(`itemSideControl_${categoryName}`);
+	
+	if (overlay) {
+		// Show parent container first
+		if (parentContainer) {
+			parentContainer.classList.remove('hide');
+		}
+		
+		// Then show this specific overlay
+		overlay.classList.remove('hide');
+		console.log(`🎨 Opened category menu: ${categoryName}`);
+	} else {
+		console.error(`❌ Overlay not found for category: ${categoryName}`);
+	}
+}
+
+// Function to close a single category menu
+function closeSingleCategoryMenu(categoryName) {
+	const parentContainer = document.getElementById('itemSideControl');
+	const overlay = document.getElementById(`itemSideControl_${categoryName}`);
+	const summaryList = document.getElementById(`sideList_${categoryName}`);
+	
+	if (overlay) {
+		// Hide this specific overlay
+		overlay.classList.add('hide');
+		
+		// Update summary text for this category using category tracking
+		if (summaryList) {
+			const categoryItems = categorySidesTracking[categoryName] || [];
+			summaryList.innerText = printArray(categoryItems);
+			console.log(`📝 Summary for ${categoryName}:`, categoryItems);
+		}
+		
+		// Check if all overlays are now hidden - if so, hide parent container
+		if (parentContainer) {
+			const allOverlays = parentContainer.querySelectorAll('[id^="itemSideControl_"]');
+			const allHidden = Array.from(allOverlays).every(o => o.classList.contains('hide'));
+			
+			if (allHidden) {
+				parentContainer.classList.add('hide');
+			}
+		}
+		
+		console.log(`✅ Closed category menu: ${categoryName}`);
+	} else {
+		console.error(`❌ Overlay not found for category: ${categoryName}`);
+	}
+}
+
+// Old function kept for reference - now replaced with individual category approach
+function renderSideCategories(sideCategories) {
+	console.log('🔧 Rendering side categories:', sideCategories);
+	console.log(`📊 Total categories to render: ${sideCategories.length}`);
+	
+	const container = document.getElementById("itemSideContainer");
+	const sidesDiv = document.getElementById("itemSides");
+	
+	// Build HTML for all categories
+	let categoriesHtml = '';
+	
+	sideCategories.forEach((category, categoryIndex) => {
+		console.log(`\n📦 Processing category ${categoryIndex + 1}/${sideCategories.length}:`, category.category_name);
+		const categoryName = category.category_name || `category_${categoryIndex}`;
+		const displayName = category.display_name || 'Choose Options';
+		const rawItems = category.items || [];
+		const configArray = category.config || [];
+		
+		// Convert config array to object for easier access
+		const config = {
+			all_max: configArray[0] || 0,
+			all_valuecount: configArray[1] || 0,
+			all_value: configArray[2] || 0,
+			regular_max: configArray[3] || 0,
+			regular_valuecount: configArray[4] || 0,
+			regular_value: configArray[5] || 0,
+			premium_max: configArray[6] || 0,
+			premium_valuecount: configArray[7] || 0,
+			premium_value: configArray[8] || 0
+		};
+		
+		// Store category config globally (we'll need it for validation)
+		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
+		window.sideCategoryConfigs[categoryName] = config;
+		
+		console.log(`📋 Category: ${categoryName}, Items: ${rawItems.length / 3}, Max: ${config.all_max}`);
+		
+		// Build items HTML for this category
+		// Items come as flat array [name, type, price, name, type, price, ...]
+		let itemsHtml = '';
+		console.log(`📦 Raw items array for ${categoryName}:`, rawItems);
+		console.log(`📦 Total items to process: ${rawItems.length / 3}`);
+		
+		for (let i = 0; i < rawItems.length; i += 3) {
+			const name = rawItems[i];
+			const type = rawItems[i + 1];
+			const price = rawItems[i + 2];
+			
+			console.log(`  Item ${i/3 + 1}: ${name} (${type}) - $${price}`);
+			
+			const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
+			const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+			
+			// Wrap each item in a container div for proper element selection
+			itemsHtml += `<div class="side-item-container"><b class="hide">1</b><a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${name}" data-item-type="${type}" data-item-price="${price}" onclick="selectSideItem(this, '${categoryName}');">${name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
+		}
+		
+		console.log(`📦 Generated HTML length: ${itemsHtml.length} characters`);
+		
+		// Build category section (match old structure for CSS compatibility)
+		categoriesHtml += `
+			<div class="side-category" data-category="${categoryName}">
+				<h3 class="title center main-text-color">${displayName}</h3>
+				<div class="side-items-scrollable">${itemsHtml}</div>
+			</div>
+		`;
+	});
+	
+	// Add close button
+	categoriesHtml += '<button class="btn-close-menu" onclick="closeSideCategoriesMenu();">Confirm</button>';
+	
+	console.log('📝 Final HTML to insert (first 500 chars):', categoriesHtml.substring(0, 500));
+	console.log('📝 Total HTML length:', categoriesHtml.length);
+	
+	// Update the DOM
+	sidesDiv.innerHTML = categoriesHtml;
+	
+	// Verify insertion
+	const insertedContainers = sidesDiv.querySelectorAll('.side-item-container');
+	const insertedCategories = sidesDiv.querySelectorAll('.side-category');
+	console.log('🔍 After insertion, found', insertedCategories.length, 'category sections in DOM');
+	console.log('🔍 After insertion, found', insertedContainers.length, 'item containers in DOM');
+	
+	// Log each category that was inserted
+	insertedCategories.forEach((cat, idx) => {
+		const catName = cat.getAttribute('data-category');
+		const items = cat.querySelectorAll('.btn-side-option');
+		console.log(`  Category ${idx + 1}: "${catName}" with ${items.length} items`);
+	});
+	
+	container.classList.remove("hide");
+	
+	console.log('✅ Side categories rendered');
+}
+
+// Function to select a side item from a category
+function selectSideItem(element, categoryName) {
+	console.log(`🖱️ Click detected on item:`, element.dataset.itemName, `in category:`, categoryName);
+	
+	try {
+		const config = window.sideCategoryConfigs[categoryName];
+		if (!config) {
+			console.error(`❌ No config found for category: ${categoryName}`);
+			console.log('Available configs:', window.sideCategoryConfigs);
+			return;
+		}
+		
+		const type = element.dataset.itemType;
+		const isSelected = element.classList.contains('select');
+		
+		console.log(`   Is selected: ${isSelected}, Type: ${type}`);
+		
+		if (isSelected) {
+			// Deselect
+			console.log('   → Deselecting...');
+			removeSideItem(element, categoryName);
+		} else {
+			// Check if we can add more - COUNT TOTAL QUANTITY, not just number of items
+			console.log('   → Selecting...');
+			
+			// Find the overlay container for this category
+			const overlayId = `itemSideControl_${categoryName}`;
+			const overlay = document.getElementById(overlayId);
+			if (!overlay) {
+				console.error(`❌ Overlay not found: ${overlayId}`);
+				return;
+			}
+			
+			const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
+			const maxItems = config.all_max || 99;
+			
+			console.log(`   Current selected items: ${selectedItems.length}, Max: ${maxItems}`);
+		
+		// Calculate total quantity across all selected items
+		let totalQuantity = 0;
+		selectedItems.forEach(item => {
+			const itemParent = item.parentElement;
+			const qtyDisplay = itemParent.querySelector('b');
+			totalQuantity += qtyDisplay ? parseInt(qtyDisplay.innerText) || 1 : 1;
+		});
+		
+		console.log(`📊 Current total quantity: ${totalQuantity}, Max allowed: ${maxItems}`);
+		
+		// Check if adding this item (qty 1) would exceed max
+		if (totalQuantity < maxItems) {
+			element.classList.add('select');
+			addSideItem(element, categoryName);
+			
+			// Find quantity display and extra button (proper siblings)
+			const parent = element.parentElement;
+			const quantityDisplay = parent.querySelector('b');
+			const extraButton = parent.querySelector('.btn-add-extra');
+			
+			if (quantityDisplay) quantityDisplay.classList.remove('hide');
+			if (extraButton) extraButton.classList.remove('hide');
+		} else {
+			console.log(`⚠️ Maximum ${maxItems} items allowed for ${categoryName}. Currently at ${totalQuantity}.`);
+			alert(`You can only select ${maxItems} item(s) total.`);
+		}
+	}
+	} catch (error) {
+		console.error('❌ Error in selectSideItem:', error);
+		console.error('Stack trace:', error.stack);
+	}
+}
+
+// Function to add a side item to the order
+function addSideItem(element, categoryName) {
+	try {
+		console.log(`  📝 addSideItem called for:`, element.dataset.itemName);
+		
+		const name = element.dataset.itemName;
+		const type = element.dataset.itemType;
+		const price = parseFloat(element.dataset.itemPrice) || 0;
+	
+	// Get quantity from parent's <b> element
+	const parent = element.parentElement;
+	const quantityDisplay = parent.querySelector('b');
+	const quantity = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+	
+	// Add to order with quantity prefix
+	const orderItemName = `${quantity} ${name}`;
+	orderSides.push(orderItemName);
+	
+	// Track this item for this category
+	if (!categorySidesTracking[categoryName]) {
+		categorySidesTracking[categoryName] = [];
+	}
+	categorySidesTracking[categoryName].push(orderItemName);
+	
+	// Update pricing based on config (match old addSides logic exactly)
+	const config = window.sideCategoryConfigs[categoryName];
+	
+	if (type === 'Regular') {
+		regAmt = regAmt + quantity;
+		// Use >= to match old logic: if(regAmt>=currentoptions.sideoptions[4])
+		if (config && regAmt >= (config.regular_valuecount || 0)) {
+			sidePrice = sidePrice + (config.regular_value || price);
+		}
+	} else if (type === 'Premium') {
+		premAmt = premAmt + quantity;
+		// Use >= to match old logic: if(premAmt>=currentoptions.sideoptions[7])
+		if (config && premAmt >= (config.premium_valuecount || 0)) {
+			sidePrice = sidePrice + (config.premium_value || price);
+		}
+	}
+	
+	console.log(`➕ Added: ${orderItemName} (${type}), regAmt: ${regAmt}, premAmt: ${premAmt}, sidePrice: $${sidePrice}`);
+	updatePrices();
+	} catch (error) {
+		console.error('❌ Error in addSideItem:', error);
+		console.error('Stack trace:', error.stack);
+	}
+}
+
+// Function to remove a side item from the order
+function removeSideItem(element, categoryName) {
+	try {
+		console.log(`  🗑️ removeSideItem called for:`, element.dataset.itemName);
+	const name = element.dataset.itemName;
+	const type = element.dataset.itemType;
+	const config = window.sideCategoryConfigs[categoryName];
+	
+	// Get quantity from parent's <b> element
+	const parent = element.parentElement;
+	const quantityDisplay = parent.querySelector('b');
+	const quantity = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+	
+	// Remove from order
+	const orderItemName = `${quantity} ${name}`;
+	const index = orderSides.indexOf(orderItemName);
+	if (index > -1) {
+		orderSides.splice(index, 1);
+	}
+	
+	// Remove from category tracking
+	if (categorySidesTracking[categoryName]) {
+		const catIndex = categorySidesTracking[categoryName].indexOf(orderItemName);
+		if (catIndex > -1) {
+			categorySidesTracking[categoryName].splice(catIndex, 1);
+		}
+	}
+	
+	// Update pricing (match old removeSides logic exactly)
+	if (type === 'Regular') {
+		// Use >= to match old logic: if(regAmt>=currentoptions.sideoptions[4])
+		if (config && regAmt >= (config.regular_valuecount || 0)) {
+			sidePrice = sidePrice - (config.regular_value || 0);
+		}
+		regAmt = regAmt - quantity;
+	} else if (type === 'Premium') {
+		// Use >= to match old logic: if(premAmt>=currentoptions.sideoptions[7])
+		if (config && premAmt >= (config.premium_valuecount || 0)) {
+			sidePrice = sidePrice - (config.premium_value || 0);
+		}
+		premAmt = premAmt - quantity;
+	}
+	
+	// Update UI
+	element.classList.remove('select');
+	
+	// Find and hide quantity and extra button
+	const extraButton = parent.querySelector('.btn-add-extra');
+	if (quantityDisplay) {
+		quantityDisplay.classList.add('hide');
+		quantityDisplay.innerText = 1;
+	}
+	if (extraButton) {
+		extraButton.classList.add('hide');
+	}
+	
+	console.log(`➖ Removed: ${orderItemName} from order, regAmt: ${regAmt}, premAmt: ${premAmt}, sidePrice: $${sidePrice}`);
+	updatePrices();
+	} catch (error) {
+		console.error('❌ Error in removeSideItem:', error);
+		console.error('Stack trace:', error.stack);
+	}
+}
+
+// Function to add extra quantity to a side item
+function addExtraSide(element, categoryName) {
+	console.log(`➕ addExtraSide called for category: ${categoryName}`);
+	
+	const parent = element.parentElement;
+	const sideButton = parent.querySelector('.btn-side-option');
+	const quantityDisplay = parent.querySelector('b');
+	
+	if (!sideButton || !sideButton.classList.contains('select')) {
+		console.log('❌ Item not selected or button not found');
+		return;
+	}
+	
+	const config = window.sideCategoryConfigs[categoryName];
+	if (!config) {
+		console.error(`❌ No config found for category: ${categoryName}`);
+		return;
+	}
+	
+	const maxItems = config.all_max || 99;
+	
+	// Find the overlay for this category (NEW structure)
+	const overlayId = `itemSideControl_${categoryName}`;
+	const overlay = document.getElementById(overlayId);
+	
+	if (!overlay) {
+		console.error(`❌ Overlay not found: ${overlayId}`);
+		return;
+	}
+	
+	// Get all selected items within this overlay
+	const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
+	
+	// Calculate total quantity
+	let totalQuantity = 0;
+	selectedItems.forEach(item => {
+		const itemParent = item.parentElement;
+		const itemQty = itemParent.querySelector('b');
+		totalQuantity += itemQty ? parseInt(itemQty.innerText) || 1 : 1;
+	});
+	
+	console.log(`📊 Current total: ${totalQuantity}, Max: ${maxItems}`);
+	
+	if (totalQuantity < maxItems) {
+		const currentQty = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+		const itemName = sideButton.dataset.itemName;
+		
+		// Remove old entry from global order
+		const oldName = `${currentQty} ${itemName}`;
+		const index = orderSides.indexOf(oldName);
+		if (index > -1) {
+			orderSides.splice(index, 1);
+		}
+		
+		// Remove old entry from category tracking
+		if (categorySidesTracking[categoryName]) {
+			const catIndex = categorySidesTracking[categoryName].indexOf(oldName);
+			if (catIndex > -1) {
+				categorySidesTracking[categoryName].splice(catIndex, 1);
+			}
+		}
+		
+		// Update quantity
+		if (quantityDisplay) {
+			quantityDisplay.innerText = currentQty + 1;
+		}
+		
+		// Add new entry with updated quantity
+		addSideItem(sideButton, categoryName);
+		
+		console.log(`⬆️ Increased quantity for ${itemName} to ${currentQty + 1}`);
+	} else {
+		console.log(`⚠️ Cannot add more - at maximum (${maxItems})`);
+		alert(`You can only select ${maxItems} item(s) total.`);
+	}
+}
+
+// Function to open side categories menu
+function openSideCategoriesMenu() {
+	const con = document.getElementById("itemSideControl");
+	
+	// Open the overlay
+	if (con.classList.contains('hide')) {
+		con.classList.remove('hide');
+	}
+	
+	console.log('🎨 Side categories menu opened');
+}
+
+// Function to close side categories menu
+function closeSideCategoriesMenu() {
+	const list = document.getElementById("sideList");
+	const con = document.getElementById("itemSideControl");
+	
+	// Update the summary list
+	list.innerText = printArray(orderSides);
+	
+	// Close the overlay
+	if (!con.classList.contains('hide')) {
+		con.classList.add('hide');
+	}
+	
+	console.log('✅ Side categories menu closed, selections:', orderSides);
 }
 
 function makeModificationsHtml(modificationsHtml,index) {
@@ -329,7 +1008,19 @@ function makeSidesHtml(sideHtml,index) {
 		}
 		makeSidesHtml(sideHtml,index+3);
 	} else {
-		document.getElementById("itemSides").innerHTML='<h3 class="title center main-text-color">Sides</h3><div>'+sideHtml+'</div><button class="btn-close-menu" onclick="openSideMenu();">Confirm</button>';
+		// Create legacy overlay inside itemSideControl container
+		const overlayHtml = `
+			<div id="itemSideControl_legacy" class="hide fadein">
+				<div class="container">
+					<div id="itemSides">
+						<h3 class="title center main-text-color">Sides</h3>
+						<div>${sideHtml}</div>
+						<button class="btn-close-menu" onclick="openSideMenu();">Confirm</button>
+					</div>
+				</div>
+			</div>
+		`;
+		document.getElementById("itemSideControl").innerHTML = overlayHtml;
 		document.getElementById("itemSideContainer").classList.remove("hide");
 	}
 
@@ -507,7 +1198,15 @@ function updatePrices(){
 	var lineCost = parseInt(document.getElementById("itemAmt").innerText)*(basePrice+sidePrice+addPrice+modPrice);
 	document.getElementById("itemAddCart").innerHTML=('<i class="fa fa-cart-plus"></i> $'+lineCost);
 
-	var funcText = 'addItem("'+document.getElementById("itemName").innerText+'","'+orderSize+' '+orderFlav+'","'+orderSides+'","'+orderAdd+'","'+orderMod+'","'+document.getElementById("itemAmt").innerText+'",'+lineCost+');';
+	// Convert arrays to JSON, but for sides include category tracking
+	var sidesData = JSON.stringify({
+		items: orderSides,
+		categories: categorySidesTracking
+	});
+	var addsJson = JSON.stringify(orderAdd);
+	var modsJson = JSON.stringify(orderMod);
+	
+	var funcText = 'addItem("'+document.getElementById("itemName").innerText+'","'+orderSize+' '+orderFlav+'",'+sidesData+','+addsJson+','+modsJson+',"'+document.getElementById("itemAmt").innerText+'",'+lineCost+');';
 	document.getElementById("itemAddCart").setAttribute( "onclick", funcText);
 
 	//console.log(funcText);
@@ -627,12 +1326,66 @@ function toggleCart(){
 	}
 
   function addItem(item,size,sides,adds,mods,amt,cost){
-  order.push({"item":item,"size":size,"sides":sides,"adds":adds, "mods":mods, "amt":amt,"cost":cost});
+  // Handle new structure with category tracking
+  let sidesData = sides;
+  
+  // If sides is an object with categories, use it directly
+  if (typeof sides === 'object' && sides !== null && !Array.isArray(sides) && sides.categories) {
+    sidesData = sides; // Already in correct format
+  }
+  // If sides is an array (old format), convert to new format
+  else if (Array.isArray(sides)) {
+    sidesData = {
+      items: sides,
+      categories: { 'Sides': sides } // Default category name
+    };
+  }
+  // If sides is a string (backward compatibility)
+  else if (typeof sides === 'string' && sides.trim() !== '') {
+    const sidesArray = sides.split(',').map(s => s.trim()).filter(s => s);
+    sidesData = {
+      items: sidesArray,
+      categories: { 'Sides': sidesArray }
+    };
+  }
+  // Empty sides
+  else {
+    sidesData = {
+      items: [],
+      categories: {}
+    };
+  }
+  
+  // Handle adds and mods (arrays)
+  let addsArray = Array.isArray(adds) ? adds : [];
+  let modsArray = Array.isArray(mods) ? mods : [];
+  
+  if (typeof adds === 'string' && adds.trim() !== '') {
+    addsArray = adds.split(',').map(s => s.trim()).filter(s => s);
+  }
+  if (typeof mods === 'string' && mods.trim() !== '') {
+    modsArray = mods.split(',').map(s => s.trim()).filter(s => s);
+  }
+  
+  console.log('📦 Adding to cart:', {item, sidesData, adds: addsArray, mods: modsArray});
+  
+  order.push({"item":item,"size":size,"sides":sidesData,"adds":addsArray, "mods":modsArray, "amt":amt,"cost":cost});
   additemtocart();
   cartadditem();
   buildOrderText();
   saveCart();
   updateCart(1);
+  
+  // Track add to cart event
+  if (typeof window.trackAddToCart === 'function') {
+    window.trackAddToCart({
+      name: item,
+      title: item,
+      price: cost / amt, // Base price per unit
+      category: 'Menu Item'
+    }, amt, cost);
+  }
+  
   //openCart();
   //printValues();
 }
@@ -654,6 +1407,16 @@ function cartadditem(){
    
 } 
 function removeItem(i){
+	// Track removal before removing
+	if (typeof window.trackRemoveFromCart === 'function' && order[i]) {
+		const removedItem = order[i];
+		window.trackRemoveFromCart({
+			name: removedItem.item,
+			title: removedItem.item,
+			price: removedItem.cost
+		}, price); // price is the global cart total
+	}
+	
 	order.splice(i,1);
 	buildOrderText();
 	saveCart();
@@ -690,26 +1453,62 @@ function buildOrderText(){
 	var orderHtml='<tr><th id="itemNo">#</th><th>Size</th><th>Item</th><th>Amt</th><th>Cost</th><th style="text-align: center;"><a style="font-size: medium;" onclick="removeAllItems();"><i class="fa fa-trash-o"></i></a></th></tr>';
 
 	for (var i = 0; i <= order.length-1; i++) {
+		// Reset variables for each item
+		itemSides='';
+		itemAdds='';
+		itemMods='';
 		
-		if (order[i].sides.length>0){
-			itemSides = 'Sides:';
+		// Handle sides with category tracking (new format)
+		if (order[i].sides && typeof order[i].sides === 'object' && order[i].sides.categories) {
+			const categories = order[i].sides.categories;
+			const categoryNames = Object.keys(categories);
+			
+			if (categoryNames.length > 0) {
+				const categoryStrings = [];
+				categoryNames.forEach(function(catName) {
+					const catItems = categories[catName];
+					if (catItems && catItems.length > 0) {
+						let catStr = catName + ': ';
+						for (var j = 0; j < catItems.length; j++) {
+							catStr += catItems[j];
+							if (j < catItems.length - 1) {
+								catStr += ', ';
+							}
+						}
+						categoryStrings.push(catStr);
+					}
+				});
+				itemSides = categoryStrings.join('\n');
+			}
+		}
+		// Handle old format (array)
+		else if (order[i].sides && order[i].sides.length>0){
+			itemSides = 'Sides: ';
 			for (var j = 0; j <= order[i].sides.length-1; j++) {
 			 itemSides=itemSides+order[i].sides[j];
+			 if (j < order[i].sides.length-1) {
+			 	itemSides=itemSides+', ';
+			 }
 			}
 		}
 
 		if (order[i].adds.length>0){
-			itemAdds = 'Additional Mods:';
+			itemAdds = 'Additional Mods: ';
 			for (var j = 0; j <= order[i].adds.length-1; j++) {
 			 itemAdds=itemAdds+order[i].adds[j];
-
+			 if (j < order[i].adds.length-1) {
+			 	itemAdds=itemAdds+', ';
+			 }
 			}
 		}
 
 		if (order[i].mods.length>0){
-			itemMods = 'Mods:';
+			itemMods = 'Mods: ';
 			for (var j = 0; j <= order[i].mods.length-1; j++) {
 			 	itemMods=itemMods+order[i].mods[j];
+			 	if (j < order[i].mods.length-1) {
+			 		itemMods=itemMods+', ';
+			 	}
 			}
 		}
 
@@ -719,15 +1518,16 @@ function buildOrderText(){
 		//messageBody='#'+messageBody+(i+1)+' | '+'Qty'+order[i].amt+' | '+order[i].size+' '+order[i].item+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayAdds(i,itemAdds)+printArrayMods(i,itemMods)+'\n';
 		orderHtml = (orderHtml+'<tr><td id="itemNo">'+(i+1)+'</td><td id="itemSize">'+order[i].size+'</td><td id="itemDesc">'+order[i].item+printHtmlArraySides(i,itemSides)+printHtmlArrayMods(i,itemMods)+printHtmlArrayAdds(i,itemAdds)+'\n'+'</td><td>'+order[i].amt+' </td><th id="itemCost">$'+order[i].cost+'</th><td id="itemXBtn"><a onclick="removeItem('+i+');"><i class="fa fa-close"></i></a></td></tr>');
 		// console.log(orderHtml);
-		itemAdds=[];
-		itemMods=[];
-		orderSides=[];
 	}
 
 	priceCalc();
 	vatCalc();
 	serviceCalc();
 	document.getElementById("whatsappOrder").innerHTML=orderHtml;
+	
+	// Build card-based UI
+	buildCartCards();
+	
 	if(vat>0 || service>0){
 		document.getElementById("subTotal").innerText=(price.toFixed(2));
 		document.getElementById("subTotalcontainer").classList.remove('hide');
@@ -754,15 +1554,121 @@ function buildOrderText(){
 	constructWAMessage();
 }
 
+function buildCartCards() {
+	const cartContainer = document.getElementById("cartItemsContainer");
+	const emptyState = document.getElementById("cartEmptyState");
+	
+	if (!cartContainer) return;
+	
+	// Show/hide empty state
+	if (order.length === 0) {
+		if (emptyState) emptyState.style.display = 'flex';
+		cartContainer.innerHTML = '';
+		return;
+	}
+	
+	if (emptyState) emptyState.style.display = 'none';
+	
+	// Build card HTML for each item
+	let cardsHtml = '';
+	
+	for (let i = 0; i < order.length; i++) {
+		const item = order[i];
+		let itemSides = '';
+		let itemAdds = '';
+		let itemMods = '';
+		let hasDetails = false;
+		
+		// Handle sides with category tracking (new format)
+		if (item.sides && typeof item.sides === 'object' && item.sides.categories) {
+			const categories = item.sides.categories;
+			const categoryNames = Object.keys(categories);
+			
+			if (categoryNames.length > 0) {
+				hasDetails = true;
+				const categoryStrings = [];
+				categoryNames.forEach(function(catName) {
+					const catItems = categories[catName];
+					if (catItems && catItems.length > 0) {
+						categoryStrings.push(`<div class="cart-item-category"><strong>${catName}:</strong> ${catItems.join(', ')}</div>`);
+					}
+				});
+				itemSides = categoryStrings.join('');
+			}
+		}
+		// Handle old format (array)
+		else if (item.sides && item.sides.length > 0) {
+			hasDetails = true;
+			itemSides = `<div class="cart-item-category"><strong>Sides:</strong> ${item.sides.join(', ')}</div>`;
+		}
+		
+		if (item.adds && item.adds.length > 0) {
+			hasDetails = true;
+			itemAdds = `<div class="cart-item-category"><strong>Additional Mods:</strong> ${item.adds.join(', ')}</div>`;
+		}
+		
+		if (item.mods && item.mods.length > 0) {
+			hasDetails = true;
+			itemMods = `<div class="cart-item-category"><strong>Modifications:</strong> ${item.mods.join(', ')}</div>`;
+		}
+		
+		// Build the card with collapsible feature
+		cardsHtml += `
+			<div class="cart-item-card collapsed" data-item-index="${i}">
+				<div class="cart-item-header">
+					<div class="cart-item-number">#${i + 1}</div>
+					<button class="cart-item-remove" onclick="event.stopPropagation(); removeItem(${i});" title="Remove item">
+						<i class="fa fa-times"></i>
+					</button>
+				</div>
+				<div class="cart-item-body" onclick="toggleCartItem(${i})">
+					<div class="cart-item-main-info">
+						<div class="cart-item-name-row">
+							<div class="cart-item-name">${item.item}</div>
+							${hasDetails ? '<i class="fa fa-chevron-down cart-expand-icon"></i>' : ''}
+						</div>
+						${item.size ? `<div class="cart-item-size">${item.size}</div>` : ''}
+					</div>
+					${hasDetails ? `
+						<div class="cart-item-details">
+							${itemSides}
+							${itemMods}
+							${itemAdds}
+						</div>
+					` : ''}
+				</div>
+				<div class="cart-item-footer">
+					<div class="cart-item-quantity">
+						<i class="fa fa-times" style="font-size: 0.8em; opacity: 0.7;"></i> ${item.amt}
+					</div>
+					<div class="cart-item-price">$${item.cost.toFixed(2)}</div>
+				</div>
+			</div>
+		`;
+	}
+	
+	cartContainer.innerHTML = cardsHtml;
+}
+
+// Toggle individual cart item expansion
+function toggleCartItem(index) {
+	const card = document.querySelector(`.cart-item-card[data-item-index="${index}"]`);
+	if (card) {
+		card.classList.toggle('collapsed');
+	}
+}
+
 function openSideMenu() {
 	var list = document.getElementById("sideList");
-  var con = document.getElementById("itemSideControl");
-  list.innerText=printArray(orderSides);
-     if(con.classList.contains('hide')){
-      con.classList.remove('hide');
-    }else{
-      con.classList.add('hide');
-    }
+	var con = document.getElementById("itemSideControl_legacy");
+	if (!con) return; // Safety check
+	if (list) list.innerText = printArray(orderSides);
+	
+	if(con.classList.contains('hide')){
+		con.classList.remove('hide');
+	}else{
+		con.classList.add('hide');
+	}
 }
 
 function openAddMenu() {
@@ -796,8 +1702,14 @@ function printArray(arr){
  }
 
 function printHtmlArraySides(i,itemSides){
-	if (order[i].sides.length>0){
-		return ('<br>'+itemSides);
+	// Check both new and old formats
+	const hasSides = (order[i].sides && order[i].sides.categories && Object.keys(order[i].sides.categories).length > 0) ||
+	                 (order[i].sides && order[i].sides.length > 0);
+	
+	if (hasSides && itemSides){
+		// Replace newlines with <br> for HTML display
+		const htmlSides = itemSides.replace(/\n/g, '<br>');
+		return ('<br>'+htmlSides);
 	}else return '';
 }
 function printHtmlArrayAdds(i,itemAdds){
@@ -812,7 +1724,11 @@ function printHtmlArrayMods(i,itemMods){
 }
 
 function printArraySides(i,itemSides){
-	if (order[i].sides.length>0){
+	// Check both new and old formats
+	const hasSides = (order[i].sides && order[i].sides.categories && Object.keys(order[i].sides.categories).length > 0) ||
+	                 (order[i].sides && order[i].sides.length > 0);
+	
+	if (hasSides && itemSides){
 		return ('\n'+itemSides);
 	}else return '';
 }
@@ -960,6 +1876,20 @@ function constructWAMessage(){
 }
 
 function confirmSendOrder(){
+	// Track order submission
+	if (typeof window.trackOrderSubmission === 'function') {
+		const locationSelect = document.getElementById('locationSelect');
+		const selectedLocation = locationSelect ? locationSelect.options[locationSelect.selectedIndex]?.text : 'Unknown';
+		
+		window.trackOrderSubmission({
+			items: order,
+			totalAmount: price + vatcost + servicecost,
+			orderMode: currentOrderType || currentMode || 'unknown',
+			location: selectedLocation,
+			tableNumber: currentTableNumber || myTable || null
+		});
+	}
+	
 	window.open(message, "_blank" );
 	
 	// Process order with POS system if enabled
@@ -1359,8 +2289,18 @@ function toggleDelivery(button) {
 
 document.addEventListener("DOMContentLoaded", function() {
   requestAnimationFrame(() => { // Ensures DOM is ready
+    // Initialize cart display (shows empty state if needed)
+    buildCartCards();
+    
     loadCart();  // Load saved cart from localStorage
     updateCart(order.length);
+    
+    // Preload menu items JSON for faster item loading
+    fetchMenuItems().then(() => {
+      console.log('✅ Menu items preloaded and ready');
+    }).catch(err => {
+      console.error('❌ Failed to preload menu items:', err);
+    });
     
     // Initialize location dropdown and load saved location
     const locationSelect = document.getElementById('locationSelect');
@@ -2129,23 +3069,67 @@ window.testTablePopulation = function() {
             return;
         }
         
-        // Check if the item has tags data
-        if (options.tags && Array.isArray(options.tags) && options.tags.length > 0) {
-            // Create tags HTML
-            let tagsHtml = '<div class="tags-container">';
-            options.tags.forEach(tag => {
-                tagsHtml += `<span class="tag">${tag}</span>`;
-            });
-            tagsHtml += '</div>';
+        // Helper function to slugify tag for URL
+        function slugify(text) {
+            return text.toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+        }
+        
+        // Define all taxonomy types with their display names and URL paths
+        const taxonomies = [
+            { key: 'tags', label: 'Tags', urlPath: '/tags/' },
+            { key: 'ingredients', label: 'Ingredients', urlPath: '/ingredients/' },
+            { key: 'cookingmethods', label: 'Cooking Methods', urlPath: '/cookingmethods/' },
+            { key: 'types', label: 'Cuisine Types', urlPath: '/types/' },
+            { key: 'events', label: 'Events', urlPath: '/events/' }
+        ];
+        
+        let allTagsHtml = '';
+        let hasAnyTags = false;
+        
+        // Loop through each taxonomy type
+        taxonomies.forEach(taxonomy => {
+            const items = options[taxonomy.key];
             
-            tagsContainer.innerHTML = tagsHtml;
+            if (items && Array.isArray(items) && items.length > 0) {
+                hasAnyTags = true;
+                
+                // Create section for this taxonomy
+                allTagsHtml += `<div class="taxonomy-section" data-taxonomy="${taxonomy.key}">`;
+                allTagsHtml += `<span class="taxonomy-label">${taxonomy.label}:</span> `;
+                
+                // Add each item as a clickable link
+                items.forEach((item, index) => {
+                    const slug = slugify(item);
+                    const url = `${taxonomy.urlPath}${slug}/`;
+                    allTagsHtml += `<a href="${url}" class="tag tag-${taxonomy.key}" title="View all items with ${item}">${item}</a>`;
+                    if (index < items.length - 1) {
+                        allTagsHtml += ' ';
+                    }
+                });
+                
+                allTagsHtml += '</div>';
+            }
+        });
+        
+        if (hasAnyTags) {
+            tagsContainer.innerHTML = `<div class="tags-container">${allTagsHtml}</div>`;
             tagsContainer.style.display = 'block';
-            console.log("✅ Tags displayed:", options.tags);
+            console.log("✅ Taxonomies displayed:", {
+                tags: options.tags?.length || 0,
+                ingredients: options.ingredients?.length || 0,
+                cookingmethods: options.cookingmethods?.length || 0,
+                types: options.types?.length || 0,
+                events: options.events?.length || 0
+            });
         } else {
             // Hide tags container if no tags
             tagsContainer.innerHTML = '';
             tagsContainer.style.display = 'none';
-            console.log("ℹ️ No tags to display");
+            console.log("ℹ️ No taxonomies to display");
         }
     }
 </script>

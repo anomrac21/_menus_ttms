@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img src="{{ site.BaseURL }}branding/ttmenus.gif" alt="TTMenus Logo" class="auth-logo">
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to access your dashboard</p>
+      </div>
+
+      <!-- Alert Messages -->
+      <div id="alertContainer"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          >
+          <div class="form-error" id="emailError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input" 
+            placeholder="Enter your password"
+            required
+            autocomplete="current-password"
+          >
+          <div class="form-error" id="passwordError"></div>
+        </div>
+
+        <div class="form-checkbox">
+          <input type="checkbox" id="rememberMe" name="rememberMe">
+          <label for="rememberMe">Remember me</label>
+        </div>
+
+        <button type="submit" class="btn-primary" id="loginBtn">
+          Sign In
+        </button>
+      </form>
+
+      <div class="auth-links">
+        <a href="/forgot-password/" class="auth-link">Forgot your password?</a>
+      </div>
+
+      <div class="auth-divider">
+        <span>Need access?</span>
+      </div>
+
+      <p style="text-align: center; color: #666; font-size: 14px; margin: 10px 0;">
+        Contact your administrator to create an account for you.
+      </p>
+
+      <div class="auth-links" style="margin-top: 20px;">
+        <a href="/" class="auth-link">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Page Script -->
+  <script>
+    // Wait for AuthClient to be loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('loginForm');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const loginBtn = document.getElementById('loginBtn');
+      const alertContainer = document.getElementById('alertContainer');
+
+      // Check if already logged in
+      if (AuthClient.isAuthenticated()) {
+        AuthMiddleware.redirectAfterLogin('/update-ui/');
+        return;
+      }
+
+      // Handle form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Clear previous errors
+        clearErrors();
+
+        // Get form values
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        // Basic validation
+        if (!email) {
+          showError('emailError', 'Email is required');
+          return;
+        }
+
+        if (!password) {
+          showError('passwordError', 'Password is required');
+          return;
+        }
+
+        // Show loading state
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spinner"></span> Signing In...';
+
+        try {
+          // Log attempt for debugging
+          console.log('🔐 Attempting login...');
+          console.log('📡 API URL:', AuthClient.config.apiUrl);
+          
+          // Attempt login
+          const result = await AuthClient.login(email, password);
+          console.log('📥 Login result:', result);
+
+          if (result.success) {
+            showAlert('success', 'Login successful! Redirecting...');
+            
+            // Redirect after short delay
+            setTimeout(() => {
+              AuthMiddleware.redirectAfterLogin('/update-ui/');
+            }, 1000);
+          } else {
+            console.error('❌ Login failed:', result.error);
+            showAlert('error', result.error || 'Login failed. Please check your credentials.');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'Sign In';
+          }
+        } catch (error) {
+          console.error('💥 Login exception:', error);
+          
+          // Provide more specific error messages
+          let errorMessage = 'An unexpected error occurred. ';
+          
+          if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
+            errorMessage = '⚠️ Cannot connect to authentication service. Please ensure the auth service is running on http://localhost:8080';
+            console.error('🔴 Auth service not reachable. Run: cd ttms-app-cluster/services/auth-service && go run cmd/main.go');
+          } else if (error.message.includes('CORS')) {
+            errorMessage = '⚠️ CORS error. Please check auth service CORS configuration.';
+          } else if (error.message.includes('NetworkError')) {
+            errorMessage = '⚠️ Network error. Please check your internet connection and auth service.';
+          }
+          
+          showAlert('error', errorMessage);
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = 'Sign In';
+        }
+      });
+
+      // Helper functions
+      function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.classList.add('show');
+          
+          // Also add error class to input
+          const inputId = elementId.replace('Error', '');
+          const input = document.getElementById(inputId);
+          if (input) {
+            input.classList.add('error');
+          }
+        }
+      }
+
+      function clearErrors() {
+        document.querySelectorAll('.form-error').forEach(el => {
+          el.textContent = '';
+          el.classList.remove('show');
+        });
+        document.querySelectorAll('.form-input').forEach(el => {
+          el.classList.remove('error');
+        });
+      }
+
+      function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alertDiv);
+      }
+
+      // Clear error on input
+      emailInput.addEventListener('input', () => {
+        emailInput.classList.remove('error');
+        document.getElementById('emailError').classList.remove('show');
+      });
+
+      passwordInput.addEventListener('input', () => {
+        passwordInput.classList.remove('error');
+        document.getElementById('passwordError').classList.remove('show');
+      });
+    });
+  </script>
+</body>
+</html>
+

@@ -1,6 +1,6 @@
 baseURL = 'https://example.org/'
 languageCode = 'en-US'
-title = 'My New Hugo Site'
+title = 'TTMenus'
 
 [[menus.main]]
 name = 'Home'
@@ -21,4 +21,11 @@ weight = 30
   [module.hugoVersion]
     extended = false
     min = "0.116.0"
+
+# Auth Service Configuration
+[params.auth]
+  enabled = true
+  apiUrl = "https://auth.ttmenus.com/api/v1"
+  # For local development, use:
+  # apiUrl = "http://localhost:8080/api/v1"
 

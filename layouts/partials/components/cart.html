@@ -1,0 +1,99 @@
+<div id="cart" class="cart-hidden">
+	<div class="order">
+		<!-- Modern Cart Header -->
+		<div class="cart-header-modern">
+			<!-- Title Bar -->
+			<div class="cart-title-bar">
+				<button class="cart-back-btn" onclick="toggleCart();" title="Close cart">
+					<i class="fa fa-arrow-left"></i>
+				</button>
+				<h2 class="cart-title">
+					<i class="fa fa-shopping-cart"></i>
+					<span>My Order</span>
+				</h2>
+				<button class="cart-close-btn" onclick="toggleCart();" title="Close cart">
+					<i class="fa fa-times"></i>
+				</button>
+			</div>
+
+			<!-- Location Selector -->
+			<div class="cart-location-section">
+				<div class="location-selector-modern">
+					<i class="fa fa-map-marker location-icon"></i>
+					<select id="locationSelect" class="location-dropdown-modern" onchange="selectLocation(this.value)">
+						<option value="">Select a location...</option>
+						{{ range $index, $location := site.Data.locations.locations }}
+						<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}" {{ if eq $index 0 }}selected{{ end }}>
+							{{ $location.address }}
+						</option>
+						{{ end }}
+					</select>
+					<i class="fa fa-chevron-down dropdown-arrow"></i>
+				</div>
+			</div>
+
+			<!-- Dining Mode Toggle -->
+			<div class="cart-dining-mode-section hide" id="button-5">
+				<div class="dining-mode-toggle-modern">
+					<div class="toggle-label">
+						<i class="fa fa-cutlery"></i>
+						<span>Dine In</span>
+					</div>
+					<label class="toggle-switch-modern">
+						<input type="checkbox" class="checkbox" id="dining-mode-checkbox-2" onclick="toggleDiningMode(this);"/>
+						<span class="toggle-slider-modern">
+							<span class="toggle-slider-inner"></span>
+						</span>
+					</label>
+					<div class="toggle-label">
+						<i class="fa fa-shopping-bag"></i>
+						<span>Takeaway</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Cart Items Container -->
+		<div class="cart-items-wrapper">
+			<div class="cart-empty-state" id="cartEmptyState">
+				<i class="fa fa-shopping-cart" style="font-size: 3em; opacity: 0.3;"></i>
+				<p>Your cart is empty</p>
+			</div>
+			<div id="cartItemsContainer" class="cart-items-list">
+				<!-- Cart items will be dynamically inserted here -->
+			</div>
+			<div class="cart-actions-row">
+				<button class="btn-clear-cart" onclick="removeAllItems();" title="Clear all items">
+					<i class="fa fa-trash-o"></i> Clear Cart
+				</button>
+			</div>
+		</div>
+		
+		<!-- Hidden table for backward compatibility (JavaScript still updates this) -->
+		<table id="whatsappOrder" style="display: none;">
+			<tr><th>#</th><th>Size</th><th>Item</th><th>Amt</th><th>Cost</th><th><i class="fa fa-trash-o"></i></th></tr>
+			<tr><td>-</td><td>-</td><th>-</th><th>-</th><td>-</td></tr>
+		</table>
+		
+	</div>
+	<div id="whatsappOrderBtn">
+		<div id="subTotalcontainer">
+			<div id="sub">Sub Total $</div>
+			<div id="subTotal">0</div>
+		</div>
+		<div id="vatCalccontainer">
+			<div id="vat"></div>
+			<div id="vatCalc"></div>
+		</div>
+		<div id="serviceCalccontainer">
+			<div id="service"></div>
+			<div id="serviceCalc"></div>
+		</div>
+		<div id="itemTotal">TOTAL $0</div>
+		{{ if site.Params.orderingsystem.usephonecall }}
+			<a class="placeOrder" href='tel:{{ site.Params.orderingsystem.phone }}'><i class="fa fa-phone"></i> Order Now</a>
+		{{ else }}
+			<button class="btn-place-order" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+		{{ end }}
+	</div>
+</div>

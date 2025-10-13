@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img src="{{ site.BaseURL }}branding/ttmenus.gif" alt="TTMenus Logo" class="auth-logo">
+        <h1 class="auth-title">Access Restricted</h1>
+        <p class="auth-subtitle">User registration is managed by administrators</p>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>Notice:</strong> Public signup is disabled. Please contact your system administrator to have an account created for you.
+      </div>
+
+      <a href="/login/" class="btn-primary" style="display: inline-block; text-align: center; text-decoration: none; margin-top: 20px;">
+        Go to Login
+      </a>
+
+      <div class="auth-links" style="margin-top: 20px;">
+        <a href="/" class="auth-link">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+<!-- Original signup form disabled -->
+<!--
+<div style="display: none;">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img src="{{ site.BaseURL }}branding/ttmenus.gif" alt="TTMenus Logo" class="auth-logo">
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Join TTMenus to manage your digital menus</p>
+      </div>
+
+      <!-- Alert Messages -->
+      <div id="alertContainer"></div>
+
+      <!-- Signup Form -->
+      <form id="signupForm" class="auth-form">
+        <div class="form-group">
+          <label for="firstName" class="form-label">First Name</label>
+          <input 
+            type="text" 
+            id="firstName" 
+            name="firstName" 
+            class="form-input" 
+            placeholder="John"
+            required
+            autocomplete="given-name"
+          >
+          <div class="form-error" id="firstNameError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="lastName" class="form-label">Last Name</label>
+          <input 
+            type="text" 
+            id="lastName" 
+            name="lastName" 
+            class="form-input" 
+            placeholder="Doe"
+            required
+            autocomplete="family-name"
+          >
+          <div class="form-error" id="lastNameError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          >
+          <div class="form-error" id="emailError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input" 
+            placeholder="Create a strong password"
+            required
+            autocomplete="new-password"
+          >
+          <ul class="password-requirements" id="passwordRequirements">
+            <li id="req-length">At least 8 characters</li>
+            <li id="req-uppercase">One uppercase letter</li>
+            <li id="req-lowercase">One lowercase letter</li>
+            <li id="req-number">One number</li>
+            <li id="req-special">One special character</li>
+          </ul>
+          <div class="form-error" id="passwordError"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            class="form-input" 
+            placeholder="Re-enter your password"
+            required
+            autocomplete="new-password"
+          >
+          <div class="form-error" id="confirmPasswordError"></div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="signupBtn">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-divider">
+        <span>Already have an account?</span>
+      </div>
+
+      <a href="/login/" class="btn-secondary" style="display: inline-block; text-align: center; text-decoration: none;">
+        Sign In
+      </a>
+
+      <div class="auth-links" style="margin-top: 20px;">
+        <a href="/" class="auth-link">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup Page Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('signupForm');
+      const firstNameInput = document.getElementById('firstName');
+      const lastNameInput = document.getElementById('lastName');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirmPassword');
+      const signupBtn = document.getElementById('signupBtn');
+      const alertContainer = document.getElementById('alertContainer');
+
+      // Check if already logged in
+      if (AuthClient.isAuthenticated()) {
+        window.location.href = '/update-ui/';
+        return;
+      }
+
+      // Password validation
+      const passwordRequirements = {
+        length: { regex: /.{8,}/, element: 'req-length' },
+        uppercase: { regex: /[A-Z]/, element: 'req-uppercase' },
+        lowercase: { regex: /[a-z]/, element: 'req-lowercase' },
+        number: { regex: /[0-9]/, element: 'req-number' },
+        special: { regex: /[!@#$%^&*(),.?":{}|<>]/, element: 'req-special' },
+      };
+
+      // Validate password on input
+      passwordInput.addEventListener('input', () => {
+        const password = passwordInput.value;
+        
+        Object.keys(passwordRequirements).forEach(key => {
+          const req = passwordRequirements[key];
+          const element = document.getElementById(req.element);
+          
+          if (req.regex.test(password)) {
+            element.classList.add('valid');
+            element.classList.remove('invalid');
+          } else {
+            element.classList.add('invalid');
+            element.classList.remove('valid');
+          }
+        });
+      });
+
+      // Handle form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Clear previous errors
+        clearErrors();
+
+        // Get form values
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        // Validation
+        let hasError = false;
+
+        if (!firstName) {
+          showError('firstNameError', 'First name is required');
+          hasError = true;
+        }
+
+        if (!lastName) {
+          showError('lastNameError', 'Last name is required');
+          hasError = true;
+        }
+
+        if (!email) {
+          showError('emailError', 'Email is required');
+          hasError = true;
+        }
+
+        // Validate password requirements
+        const passwordValid = Object.keys(passwordRequirements).every(key => 
+          passwordRequirements[key].regex.test(password)
+        );
+
+        if (!passwordValid) {
+          showError('passwordError', 'Password does not meet requirements');
+          hasError = true;
+        }
+
+        if (password !== confirmPassword) {
+          showError('confirmPasswordError', 'Passwords do not match');
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        // Show loading state
+        signupBtn.disabled = true;
+        signupBtn.innerHTML = '<span class="spinner"></span> Creating Account...';
+
+        try {
+          // Attempt signup
+          const result = await AuthClient.signup({
+            email,
+            password,
+            confirm_password: confirmPassword,
+            first_name: firstName,
+            last_name: lastName,
+          });
+
+          if (result.success) {
+            showAlert('success', result.message || 'Account created! Please check your email to verify your account.');
+            
+            // Redirect to login after delay
+            setTimeout(() => {
+              window.location.href = '/login/';
+            }, 3000);
+          } else {
+            showAlert('error', result.error || 'Signup failed. Please try again.');
+            signupBtn.disabled = false;
+            signupBtn.innerHTML = 'Create Account';
+          }
+        } catch (error) {
+          console.error('Signup error:', error);
+          showAlert('error', 'An unexpected error occurred. Please try again.');
+          signupBtn.disabled = false;
+          signupBtn.innerHTML = 'Create Account';
+        }
+      });
+
+      // Helper functions
+      function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.classList.add('show');
+          
+          const inputId = elementId.replace('Error', '');
+          const input = document.getElementById(inputId);
+          if (input) {
+            input.classList.add('error');
+          }
+        }
+      }
+
+      function clearErrors() {
+        document.querySelectorAll('.form-error').forEach(el => {
+          el.textContent = '';
+          el.classList.remove('show');
+        });
+        document.querySelectorAll('.form-input').forEach(el => {
+          el.classList.remove('error');
+        });
+      }
+
+      function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alertDiv);
+      }
+
+      // Clear errors on input
+      [firstNameInput, lastNameInput, emailInput, passwordInput, confirmPasswordInput].forEach(input => {
+        input.addEventListener('input', () => {
+          input.classList.remove('error');
+          const errorId = input.id + 'Error';
+          const errorElement = document.getElementById(errorId);
+          if (errorElement) {
+            errorElement.classList.remove('show');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+

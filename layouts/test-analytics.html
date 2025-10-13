@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Testing Page</title>
+    {{ partial "head.html" . }}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #333;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        #console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .metric {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 TTMS Analytics Testing Dashboard</h1>
+    
+    <div class="test-section">
+        <h2>📊 System Status</h2>
+        <div id="status-checks"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test Tracking Events</h2>
+        
+        <h3>Menu Item Tracking</h3>
+        <button class="test-button" onclick="testMenuItemView()">
+            Test Menu Item View
+        </button>
+        <button class="test-button" onclick="testMultipleViews()">
+            Test 5 Menu Views
+        </button>
+
+        <h3>Cart Tracking</h3>
+        <button class="test-button success" onclick="testAddToCart()">
+            Test Add to Cart
+        </button>
+        <button class="test-button warning" onclick="testRemoveFromCart()">
+            Test Remove from Cart
+        </button>
+        <button class="test-button success" onclick="testOrderSubmission()">
+            Test Order Submission
+        </button>
+
+        <h3>Advertisement Tracking</h3>
+        <button class="test-button" onclick="testAdImpression()">
+            Test Ad Impression
+        </button>
+        <button class="test-button" onclick="testAdClick()">
+            Test Ad Click
+        </button>
+
+        <h3>Location & Engagement</h3>
+        <button class="test-button" onclick="testLocationSelection()">
+            Test Location Selection
+        </button>
+        <button class="test-button" onclick="testDashboardAction()">
+            Test Dashboard Action
+        </button>
+
+        <h3>Social & External</h3>
+        <button class="test-button" onclick="testSocialInteraction()">
+            Test Social Click
+        </button>
+        <button class="test-button" onclick="testOutboundLink()">
+            Test Outbound Link
+        </button>
+
+        <h3>Other Events</h3>
+        <button class="test-button" onclick="testSearch()">
+            Test Search
+        </button>
+        <button class="test-button danger" onclick="testError()">
+            Test Error Tracking
+        </button>
+        <button class="test-button" onclick="testCustomEvent()">
+            Test Custom Event
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>📈 Session Metrics</h2>
+        <div id="session-metrics"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 Console Output</h2>
+        <button class="test-button" onclick="clearConsole()">Clear Console</button>
+        <button class="test-button" onclick="exportLogs()">Export Logs</button>
+        <div id="console-output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 Quick Links</h2>
+        <a href="https://analytics.ttmenus.com" target="_blank" class="test-button">
+            Open Matomo Dashboard
+        </a>
+        <a href="https://analytics.ttmenus.com/index.php?module=Live&action=indexVisitorLog" target="_blank" class="test-button">
+            Real-time Visitor Log
+        </a>
+        <a href="https://analytics.ttmenus.com/index.php?module=Events&action=index" target="_blank" class="test-button">
+            Events Report
+        </a>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalConsoleLog = console.log;
+        const consoleOutput = document.getElementById('console-output');
+        let logs = [];
+
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            logs.push({
+                time: new Date().toISOString(),
+                message: message
+            });
+            
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        // Status checks
+        function checkStatus() {
+            const statusDiv = document.getElementById('status-checks');
+            const checks = [];
+
+            // Check if Matomo is loaded
+            if (typeof _paq !== 'undefined') {
+                checks.push({ status: 'success', message: '✅ Matomo (_paq) is loaded' });
+            } else {
+                checks.push({ status: 'error', message: '❌ Matomo (_paq) not found' });
+            }
+
+            // Check if TTMS Analytics is loaded
+            if (window.ttmsAnalytics) {
+                checks.push({ status: 'success', message: '✅ TTMS Analytics is loaded' });
+                
+                if (window.ttmsAnalytics.enabled) {
+                    checks.push({ status: 'success', message: '✅ TTMS Analytics is enabled' });
+                } else {
+                    checks.push({ status: 'error', message: '❌ TTMS Analytics is not enabled' });
+                }
+            } else {
+                checks.push({ status: 'error', message: '❌ TTMS Analytics not found' });
+            }
+
+            // Check if integrations are loaded
+            if (typeof window.trackAddToCart === 'function') {
+                checks.push({ status: 'success', message: '✅ Cart tracking functions available' });
+            } else {
+                checks.push({ status: 'error', message: '❌ Cart tracking functions not found' });
+            }
+
+            statusDiv.innerHTML = checks.map(check => 
+                `<div class="status ${check.status}">${check.message}</div>`
+            ).join('');
+        }
+
+        // Update session metrics
+        function updateMetrics() {
+            if (!window.ttmsAnalytics) return;
+
+            const metricsDiv = document.getElementById('session-metrics');
+            metricsDiv.innerHTML = `
+                <div class="metric">
+                    <div>Session ID</div>
+                    <div class="metric-value">${window.ttmsAnalytics.sessionId}</div>
+                </div>
+                <div class="metric">
+                    <div>Device Type</div>
+                    <div class="metric-value">${window.ttmsAnalytics.getDeviceType()}</div>
+                </div>
+                <div class="metric">
+                    <div>Is PWA</div>
+                    <div class="metric-value">${window.ttmsAnalytics.isPWA() ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="metric">
+                    <div>Analytics Enabled</div>
+                    <div class="metric-value">${window.ttmsAnalytics.enabled ? 'Yes' : 'No'}</div>
+                </div>
+            `;
+        }
+
+        // Test functions
+        function testMenuItemView() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackMenuItemView({
+                title: 'Test Pizza Margherita',
+                url: '/menu/test-pizza',
+                category: 'Pizza',
+                price: 15.99
+            });
+            console.log('✅ Menu item view tracked');
+        }
+
+        function testMultipleViews() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            const items = ['Burger', 'Fries', 'Salad', 'Pasta', 'Steak'];
+            items.forEach((item, i) => {
+                setTimeout(() => {
+                    window.ttmsAnalytics.trackMenuItemView({
+                        title: `Test ${item}`,
+                        category: 'Main Course',
+                        price: (12.99 + i * 3)
+                    });
+                    console.log(`✅ Tracked view ${i + 1}: ${item}`);
+                }, i * 500);
+            });
+        }
+
+        function testAddToCart() {
+            if (!window.trackAddToCart) return alert('Cart tracking not loaded!');
+            window.trackAddToCart({
+                name: 'Test Cheeseburger',
+                price: 9.99,
+                category: 'Burgers'
+            }, 2, 19.98);
+            console.log('✅ Add to cart tracked');
+        }
+
+        function testRemoveFromCart() {
+            if (!window.trackRemoveFromCart) return alert('Cart tracking not loaded!');
+            window.trackRemoveFromCart({
+                name: 'Test Fries',
+                price: 3.99
+            }, 15.99);
+            console.log('✅ Remove from cart tracked');
+        }
+
+        function testOrderSubmission() {
+            if (!window.trackOrderSubmission) return alert('Order tracking not loaded!');
+            window.trackOrderSubmission({
+                items: [
+                    { item: 'Test Burger', cost: 9.99, amt: 1 },
+                    { item: 'Test Fries', cost: 3.99, amt: 2 }
+                ],
+                totalAmount: 17.97,
+                orderMode: 'takeaway',
+                location: 'Test Location',
+                tableNumber: null
+            });
+            console.log('✅ Order submission tracked');
+        }
+
+        function testAdImpression() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackAdImpression({
+                title: 'Test Summer Sale',
+                url: '/promotions/summer-sale',
+                id: 'test-ad-1'
+            });
+            console.log('✅ Ad impression tracked');
+        }
+
+        function testAdClick() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackAdClick({
+                title: 'Test Happy Hour',
+                url: '/promotions/happy-hour'
+            });
+            console.log('✅ Ad click tracked');
+        }
+
+        function testLocationSelection() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackLocationSelection({
+                name: 'Test Downtown Branch',
+                address: '123 Main St',
+                whatsapp: '18681234567'
+            });
+            console.log('✅ Location selection tracked');
+        }
+
+        function testDashboardAction() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackDashboardAction('Test Open', 'Testing dashboard tracking');
+            console.log('✅ Dashboard action tracked');
+        }
+
+        function testSocialInteraction() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackSocialInteraction('Facebook', 'Click', 'https://facebook.com/test');
+            console.log('✅ Social interaction tracked');
+        }
+
+        function testOutboundLink() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackOutboundLink('https://external-site.com', 'External Test Link');
+            console.log('✅ Outbound link tracked');
+        }
+
+        function testSearch() {
+            if (!window.trackSearch) return alert('Search tracking not loaded!');
+            window.trackSearch('test pizza', 5);
+            console.log('✅ Search tracked');
+        }
+
+        function testError() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackError('Test error message', 'Test Location');
+            console.log('✅ Error tracked');
+        }
+
+        function testCustomEvent() {
+            if (!window.ttmsAnalytics) return alert('Analytics not loaded!');
+            window.ttmsAnalytics.trackEvent('TestCategory', 'TestAction', 'Test Event', 100);
+            console.log('✅ Custom event tracked');
+        }
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+            logs = [];
+            console.log('Console cleared');
+        }
+
+        function exportLogs() {
+            const logsText = logs.map(log => `[${log.time}] ${log.message}`).join('\n');
+            const blob = new Blob([logsText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics-test-logs-${Date.now()}.txt`;
+            a.click();
+            console.log('✅ Logs exported');
+        }
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                checkStatus();
+                updateMetrics();
+                console.log('🎯 Analytics Testing Page Ready');
+                console.log('Open Network tab (F12) to see tracking requests to analytics.ttmenus.com');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+

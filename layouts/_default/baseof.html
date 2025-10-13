@@ -4,15 +4,15 @@
   {{ partial "head.html" . }}
 </head>
 <body>
-  {{ partial "loader.html" . }}
-  {{ partial "askofserver.html" . }}
+  {{ partial "layout/loader.html" . }}
+  {{ partial "features/askofserver.html" . }}
   <div data-barba="wrapper">
     <div data-barba="container" data-barba-namespace="{{ .Title }}">
       <header>
-        {{ partial "header.html" . }}
+        {{ partial "layout/header.html" . }}
       </header>
       {{ partialCached "ttms-dashboard/dashboard.html" . }}
-      {{ partial "search.html" . }}
+      {{ partial "components/search.html" . }}
       <main id="main">
         {{ block "main" . }}{{ end }}
         
@@ -25,8 +25,8 @@
   </div>
 
   <footer>
-    {{ partial "order_modal.html" . }}
-    {{ partial "footer.html" . }}
+    {{ partial "modals/order_modal.html" . }}
+    {{ partial "layout/footer.html" . }}
   </footer>
   
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -44,6 +44,7 @@
   <script src="https://ct.ttmenus.com/js/askforserver.js"></script>
   <script src="https://ct.ttmenus.com/js/cart.js"></script>
   <script src="https://ct.ttmenus.com/js/search.js"></script>
+  <script src="{{ site.BaseURL}}js/analytics-integrations.js"></script>
 
   <!--script src="https://ct.ttmenus.com/js/order_system.js"></script-->
   <!--script src="https://ct.ttmenus.com/js/script.js"></script>
@@ -55,9 +56,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@barba/core"></script>
   <script src="{{ site.BaseURL}}js/loader.js"></script>
       <script src="{{ site.BaseURL}}js/client-ad-manager.js"></script>
+  <script src="{{ site.BaseURL}}js/ad-scroll-progress.js"></script>
   <script src="{{ site.BaseURL}}js/aos.js"></script>
   <script src="{{ site.BaseURL}}js/scrollmagic.js"></script>
-  {{ partial "whatsapp_ordering_system.html" . }}
+  {{ partial "features/whatsapp_ordering_system.html" . }}
   <script src="{{ site.BaseURL}}js/openinghours.js"></script>
   <script src="{{ site.BaseURL}}js/section-scroll.js"></script>
 

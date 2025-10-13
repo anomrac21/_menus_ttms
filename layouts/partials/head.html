@@ -32,6 +32,7 @@
 
 <link rel="stylesheet" href="{{ site.BaseURL}}src/css/adsbase.css"/>
 <link rel="stylesheet" href="{{ site.BaseURL}}src/css/apple.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL}}src/css/ordering-system.css"/>
 
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
 <!-- <link rel="stylesheet" href="https://ct.ttmenus.com/css/cart.css"/> -->
@@ -122,6 +123,9 @@
 <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 <!-- End Matomo Code -->
 
+<!-- TTMS Analytics Tracking -->
+<script src="{{ site.BaseURL}}js/analytics-tracking.js"></script>
+
 {{- if site.Params.posintegration.enabled -}}
 <script>
 // POS Integration Configuration
@@ -137,4 +141,16 @@ window.POS_CONFIG = {
 };
 </script>
 <script src="/js/pos-integration.js"></script>
+{{- end -}}
+
+{{- if site.Params.auth.enabled -}}
+<script>
+// Auth Service Configuration
+window.AUTH_CONFIG = {
+    apiUrl: "{{ site.Params.auth.apiUrl }}"
+};
+</script>
+<script src="{{ site.BaseURL }}js/auth-client.js"></script>
+<script src="{{ site.BaseURL }}js/auth-middleware.js"></script>
+<script src="{{ site.BaseURL }}js/admin-users.js"></script>
 {{- end -}}

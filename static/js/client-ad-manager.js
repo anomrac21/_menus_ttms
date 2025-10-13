@@ -86,7 +86,7 @@ class ClientAdManager {
       console.log('Final image path:', finalPath);
       
       return `
-        <li class="ad-panel">
+        <li class="ad-panel" data-ad-title="${ad.title}" data-ad-url="${finalUrl}">
           <a href="${finalUrl}" class="content-panel">
             <img src="${finalPath}" class="ad-portrait-bg">
             <img src="${finalPath}" class="ad-portrait">
@@ -97,10 +97,13 @@ class ClientAdManager {
     }).join('');
 
     return `
-      <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
-        <a href="${finalUrl}">${ad.title}</a>
-      </h2>
-      <section id="clientad">
+      <section id="clientad" data-ad-title="${ad.title}" data-ad-url="${finalUrl}">
+        <div class="scroll-progress-bar">
+          <div class="scroll-progress-fill"></div>
+        </div>
+        <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
+          <a href="${finalUrl}">${ad.title}</a>
+        </h2>
         <span data-aos="zoom-out-right">Promotion</span>
         <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
           ${imageHTML}
@@ -263,28 +266,39 @@ class ClientAdManager {
     const sortedAds = this.sortAdsByEventDate();
     const adsHTML = sortedAds.map(ad => this.generateAdHTML(ad)).join('');
     container.innerHTML = adsHTML;
+    
+    // Ensure container is visible
+    container.style.display = '';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    console.log('showAllAds: HTML populated and container visibility set');
 
+    console.log('showAllAds: HTML populated, applying animations...');
 
-
-    // Apply animations and effects
-    if (typeof AOS !== 'undefined') {
-      AOS.refresh();
-    }
-    if (typeof initFrontPageAdsScrollEffects === 'function') {
-      setTimeout(() => {
-        try {
-          // Check if the required elements exist before calling ScrollMagic
-          const requiredElements = container.querySelectorAll('.clientad, .ad-panel, .frontpageads');
-          if (requiredElements.length > 0) {
-            initFrontPageAdsScrollEffects();
-          } else {
-            console.log('Required elements not found for ScrollMagic, skipping...');
-          }
-        } catch (error) {
-          console.warn('Error applying ScrollMagic effects:', error);
-        }
-      }, 100);
-    }
+    // Apply animations with proper timing
+    setTimeout(() => {
+      // Force AOS to detect and animate new elements
+      if (typeof AOS !== 'undefined') {
+        console.log('showAllAds: Reinitializing AOS for new elements');
+        
+        // First, remove AOS classes from new elements to reset them
+        const aosElements = container.querySelectorAll('[data-aos]');
+        aosElements.forEach(el => {
+          el.classList.remove('aos-init', 'aos-animate');
+        });
+        
+        // Refresh AOS to detect new elements
+        AOS.refresh();
+        
+        // Force immediate refresh to trigger animations
+        setTimeout(() => {
+          AOS.refreshHard();
+        }, 50);
+      }
+      
+      // Trigger custom event to notify scroll progress manager
+      window.dispatchEvent(new CustomEvent('adsPopulated'));
+    }, 150);
   }
 
 
@@ -373,12 +387,22 @@ class ClientAdManager {
 
 
   // Override populateAds to respect the showAllAds flag
-  populateAds() {
-    console.log('populateAds called - hasPopulated:', this.hasPopulated, 'ads count:', this.ads ? this.ads.length : 0);
+  populateAds(forceRepopulate = false) {
+    console.log('=== populateAds called ===');
+    console.log('hasPopulated:', this.hasPopulated);
+    console.log('forceRepopulate:', forceRepopulate);
+    console.log('ads count:', this.ads ? this.ads.length : 0);
+    
+    // If forcing repopulate (e.g., from barba navigation), reset the flag
+    if (forceRepopulate) {
+      console.log('Force repopulate requested, resetting hasPopulated flag');
+      this.hasPopulated = false;
+      this.populateRetries = 0;
+    }
     
     // Prevent multiple population of the same container
     if (this.hasPopulated) {
-      console.log('Ads already populated, skipping...');
+      console.log('Ads already populated, skipping... (use forceRepopulate=true to override)');
       return;
     }
     
@@ -388,7 +412,7 @@ class ClientAdManager {
         this.populateRetries++;
         console.log(`No ads loaded yet, retrying... (${this.populateRetries}/${this.maxRetries})`);
         // Try again in a moment if ads aren't loaded
-        setTimeout(() => this.populateAds(), 100);
+        setTimeout(() => this.populateAds(forceRepopulate), 100);
         return;
       } else {
         console.log('Max retries reached, ads not loaded');
@@ -457,7 +481,11 @@ class ClientAdManager {
     
     if (filteredAds.length === 0) {
       // Don't show any content when no ads are available
+      console.log('No ads to display, hiding container');
       container.innerHTML = '';
+      container.style.display = 'none';
+      container.style.height = '0';
+      container.style.visibility = 'hidden';
       return;
     }
 
@@ -495,35 +523,67 @@ class ClientAdManager {
     console.log(`Setting container ${container.id} HTML:`, adsHTML.substring(0, 200) + '...');
     container.innerHTML = adsHTML;
     console.log(`Container ${container.id} HTML after setting:`, container.innerHTML.substring(0, 200) + '...');
+    
+    // Ensure container is visible - remove any inline styles that might hide it
+    container.style.display = '';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    container.style.height = '';  // Remove any height: 0 that might hide it
+    
+    // Log computed styles to debug visibility issues
+    const computedStyle = window.getComputedStyle(container);
+    console.log(`Container ${container.id} visibility:`, {
+      display: computedStyle.display,
+      visibility: computedStyle.visibility,
+      opacity: computedStyle.opacity,
+      height: computedStyle.height,
+      position: computedStyle.position,
+      zIndex: computedStyle.zIndex,
+      overflow: computedStyle.overflow
+    });
+    
+    // Check if there are any child sections
+    const sections = container.querySelectorAll('section');
+    console.log(`Container ${container.id} has ${sections.length} section(s)`);
+    sections.forEach((section, index) => {
+      const sectionStyle = window.getComputedStyle(section);
+      console.log(`  Section ${index}:`, {
+        display: sectionStyle.display,
+        height: sectionStyle.height,
+        position: sectionStyle.position
+      });
+    });
 
     // Mark as populated and track time
     this.hasPopulated = true;
     this.lastPopulateTime = Date.now();
 
-    // Reinitialize AOS animations if they exist
-    if (typeof AOS !== 'undefined') {
-      AOS.refresh();
-    }
+    console.log('populateAds: HTML populated, applying animations...');
 
-    // Apply ScrollMagic effects to the newly generated ads
-    if (typeof initFrontPageAdsScrollEffects === 'function') {
-      console.log('Applying ScrollMagic effects to generated ads...');
-      setTimeout(() => {
-        try {
-          // Check if the required elements exist before calling ScrollMagic
-          const requiredElements = container.querySelectorAll('.clientad, .ad-panel, .frontpageads');
-          if (requiredElements.length > 0) {
-            initFrontPageAdsScrollEffects();
-          } else {
-            console.log('Required elements not found for ScrollMagic, skipping...');
-          }
-        } catch (error) {
-          console.warn('Error applying ScrollMagic effects:', error);
-        }
-      }, 100); // Small delay to ensure DOM is ready
-    } else {
-      console.log('initFrontPageAdsScrollEffects function not available');
-    }
+    // Apply animations with proper timing
+    setTimeout(() => {
+      // Force AOS to detect and animate new elements
+      if (typeof AOS !== 'undefined') {
+        console.log('populateAds: Reinitializing AOS for new elements');
+        
+        // First, remove AOS classes from new elements to reset them
+        const aosElements = container.querySelectorAll('[data-aos]');
+        aosElements.forEach(el => {
+          el.classList.remove('aos-init', 'aos-animate');
+        });
+        
+        // Refresh AOS to detect new elements
+        AOS.refresh();
+        
+        // Force immediate refresh to trigger animations
+        setTimeout(() => {
+          AOS.refreshHard();
+        }, 50);
+      }
+      
+      // Trigger custom event to notify scroll progress manager
+      window.dispatchEvent(new CustomEvent('adsPopulated'));
+    }, 150);
   }
 }
 
