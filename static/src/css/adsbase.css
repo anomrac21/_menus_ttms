@@ -44,6 +44,7 @@
 #frontpage-ads-container .scrollmagic-pin-spacer{
     scroll-snap-align:start;
     min-height: 256vh !important;
+    inset: 4em auto auto auto !important;
 }
 #pageadscontainer span,
 #homepage-ads-container span,
@@ -102,6 +103,7 @@
     min-width: -webkit-fill-available !important;
     max-width: -webkit-fill-available !important;
     border: 1px solid var(--main-bg);
+    position: relative;
 }
 #pageadscontainer section .inner, #clientad .inner,#four .inner,
 #homepage-ads-container section .inner,

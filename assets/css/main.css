@@ -1129,9 +1129,10 @@ details[open] ul.all-hours {
 }
 
 .installBtn {
-    margin: auto!important;
+    margin: 0px auto!important;
     width: fit-content!important;
-    padding-inline:1.2em!important}
+    padding-inline:1.2em!important
+    }
 
 .contactinfo .social {
     }
@@ -1163,10 +1164,11 @@ details[open] ul.all-hours {
 .contactinfo .btn {
     text-decoration: none;
     padding: .4em;
+    margin: 0;
     display: flex;
     text-align: center;
-    margin-inline:.4em;
     border: 1px solid #fffa;
+    gap: .4em;
     border-radius: 5em;
     max-width: 100%;
     width: -webkit-fill-available;
@@ -1182,13 +1184,16 @@ details[open] ul.all-hours {
 .contactinfo ul {
     padding: 0;
     list-style: none;
+    display: flex;
+    gap: .4em;
     margin: auto;
     width: -webkit-fill-available;
-    max-width: 480px
+    max-width: 480px;
+    flex-direction: column;
 }
 
 .contactinfo ul li {
-    margin-block:.4em}
+    }
 
 .contactinfo i {
     padding: 5px;
@@ -1214,17 +1219,20 @@ details[open] ul.all-hours {
 .socialmedia {
     display: flex;
     overflow-x: scroll;
+    gap: .4em;
     justify-content: space-around
 }
 
 .contact {
     display: flex;
+    gap: .4em;
     flex-wrap: nowrap
 }
 
 .subscribe {
     display: flex;
-    flex-wrap: nowrap
+    flex-wrap: nowrap;
+    gap: .4em;
 }
 
 @media(min-width: 300px) {
@@ -3580,6 +3588,9 @@ li.locations {
 
 .location-item {
     display: flex;
+    gap: .4em;
+    width: -webkit-fill-available;
+    max-width: 100%;
 }
 
 .locations .locbtn {
@@ -3690,7 +3701,6 @@ a[onclick*=findClosestLocation]:hover {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 1em
 }
 
 .location-nav-left,.location-nav-right {
