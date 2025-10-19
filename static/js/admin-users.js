@@ -11,6 +11,11 @@ const AdminUserManager = {
     const token = AuthClient.getAccessToken();
     
     if (!token || !AuthClient.isAdmin()) {
+      console.error('Admin check failed:', { 
+        hasToken: !!token, 
+        isAdmin: AuthClient.isAdmin(),
+        user: AuthClient.getCurrentUser()
+      });
       return { success: false, error: 'Admin access required' };
     }
 

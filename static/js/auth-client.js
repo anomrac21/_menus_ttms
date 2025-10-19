@@ -486,10 +486,17 @@ const AuthClient = {
   },
 
   /**
-   * Check if user is admin
+   * Check if user is admin (includes superadmin)
    */
   isAdmin() {
-    return this.hasRole('admin');
+    return this.hasRole('admin') || this.hasRole('superadmin');
+  },
+
+  /**
+   * Check if user is superadmin
+   */
+  isSuperadmin() {
+    return this.hasRole('superadmin');
   },
 
   /**
