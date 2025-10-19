@@ -3030,9 +3030,21 @@ const UpdateUI = {
 
     try {
       const method = item._isNew ? 'POST' : 'PUT';
+      
+      // Convert item ID to content-service format (category/filename)
+      // Hugo uses hash IDs, but content-service expects "Category/filename"
+      let apiItemId = itemId;
+      if (!item._isNew && item.url) {
+        // Extract from URL: /category/filename/ → Category/filename
+        apiItemId = this.convertUrlToItemId(item.url, item.category);
+        console.log('Converted ID:', itemId, '→', apiItemId);
+      }
+      
       const url = item._isNew
         ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
-        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${itemId}`;
+        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${apiItemId}`;
+
+      console.log('Publishing to:', url);
 
       const response = await this.authenticatedFetch(url, {
         method,
@@ -3085,9 +3097,17 @@ const UpdateUI = {
     for (const item of items) {
       try {
         const method = item._isNew ? 'POST' : 'PUT';
+        
+        // Convert item ID to content-service format
+        let apiItemId = item.id;
+        if (!item._isNew && item.url) {
+          apiItemId = this.convertUrlToItemId(item.url, item.category);
+          console.log('Converting ID:', item.id, '→', apiItemId);
+        }
+        
         const url = item._isNew
           ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
-          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${item.id}`;
+          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${apiItemId}`;
 
         const response = await this.authenticatedFetch(url, {
           method,
@@ -3143,6 +3163,28 @@ const UpdateUI = {
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  },
+
+  /**
+   * Helper: Convert Hugo URL to content-service item ID format
+   * Hugo URL: /category/filename/ → Category/filename
+   */
+  convertUrlToItemId(url, category) {
+    if (!url) return null;
+    
+    // Remove leading/trailing slashes: /category/filename/ → category/filename
+    const cleaned = url.replace(/^\/+|\/+$/g, '');
+    
+    // Split into parts: category/filename
+    const parts = cleaned.split('/');
+    if (parts.length >= 2) {
+      // Capitalize category to match folder structure
+      const categoryPart = category || (parts[0].charAt(0).toUpperCase() + parts[0].slice(1));
+      const filenamePart = parts[1];
+      return `${categoryPart}/${filenamePart}`;
+    }
+    
+    return cleaned;
   },
 
   /**
