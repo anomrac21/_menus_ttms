@@ -3245,18 +3245,56 @@ const UpdateUI = {
    * Show alert message
    */
   showAlert(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
-    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+    // Get or create notification container (stacked toasts)
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+      notificationContainer = document.createElement('div');
+      notificationContainer.id = 'notification-container';
+      notificationContainer.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      `;
+      document.body.appendChild(notificationContainer);
+    }
 
-    document.body.appendChild(alertDiv);
-
+    // Create notification toast
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.style.cssText = `
+      margin: 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: slideInRight 0.3s ease-out;
+    `;
+    
+    // Support multi-line messages
+    const formattedMessage = message.replace(/\n/g, '<br>');
+    
+    notification.innerHTML = `
+      <div style="white-space: pre-wrap;">${formattedMessage}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to container (stacks vertically)
+    notificationContainer.appendChild(notification);
+    
+    // Auto-remove after duration
+    const duration = type === 'success' ? 8000 : 5000;
     setTimeout(() => {
-      alertDiv.style.opacity = '0';
-      alertDiv.style.transition = 'opacity 0.3s';
-      setTimeout(() => alertDiv.remove(), 300);
-    }, 3000);
+      notification.style.animation = 'slideOutRight 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    }, duration);
+    
+    // Manual close
+    notification.querySelector('.btn-close').addEventListener('click', () => {
+      notification.style.animation = 'slideOutRight 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    });
   },
 };
 
