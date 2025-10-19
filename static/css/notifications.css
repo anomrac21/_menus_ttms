@@ -1,0 +1,43 @@
+/* Stacked Notification System */
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+#notification-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    #notification-container {
+        left: 10px;
+        right: 10px;
+        max-width: calc(100% - 20px);
+    }
+}
+

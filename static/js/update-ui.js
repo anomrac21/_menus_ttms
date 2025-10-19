@@ -3054,7 +3054,21 @@ const UpdateUI = {
       });
 
       if (response.ok) {
-        this.showSuccess(`"${item.title}" published successfully! Rebuild Hugo to see changes.`);
+        // Parse response to check if git push succeeded
+        const result = await response.json();
+        
+        if (result.git && result.git.status === 'pushed') {
+          // Git push succeeded - Netlify will auto-rebuild
+          this.showSuccess(
+            `✅ "${item.title}" published and pushed to GitHub!\n` +
+            `🚀 Netlify is rebuilding now. Changes will be live in ~2 minutes.\n` +
+            `Commit: ${result.git.commit || 'latest'}`
+          );
+        } else {
+          // Standard success (no git or git not configured)
+          this.showSuccess(`"${item.title}" published successfully! Rebuild Hugo to see changes.`);
+        }
+        
         this.clearDraft(itemId);
         await this.loadMenuItems();
       } else {
