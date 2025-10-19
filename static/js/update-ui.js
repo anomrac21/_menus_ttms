@@ -3500,6 +3500,9 @@ async function saveMenuItem(event) {
     displayImage = images[0];
   }
   
+  // Get the original item to preserve URL (needed for content-service API)
+  const originalItem = UpdateUI.state.menuItems.find(i => i.id === itemId);
+  
   const itemData = {
     id: itemId,
     title: document.getElementById('itemTitle').value,
@@ -3515,6 +3518,7 @@ async function saveMenuItem(event) {
     ingredients: getTagValues('ingredients'),
     cookingmethods: getTagValues('cookingmethods'),
     types: getTagValues('types'),
+    url: originalItem?.url || null, // Preserve URL for API conversion
     _isNew: isNew,
   };
 
