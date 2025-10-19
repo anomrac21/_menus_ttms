@@ -3040,9 +3040,12 @@ const UpdateUI = {
         console.log('Converted ID:', itemId, '→', apiItemId);
       }
       
+      // URL encode the itemId (slash becomes %2F for router)
+      const encodedItemId = encodeURIComponent(apiItemId);
+      
       const url = item._isNew
         ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
-        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${apiItemId}`;
+        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${encodedItemId}`;
 
       console.log('Publishing to:', url);
 
@@ -3105,9 +3108,12 @@ const UpdateUI = {
           console.log('Converting ID:', item.id, '→', apiItemId);
         }
         
+        // URL encode the itemId (slash becomes %2F for router)
+        const encodedItemId = encodeURIComponent(apiItemId);
+        
         const url = item._isNew
           ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
-          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${apiItemId}`;
+          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${encodedItemId}`;
 
         const response = await this.authenticatedFetch(url, {
           method,
