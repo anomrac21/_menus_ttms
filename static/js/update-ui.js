@@ -3058,17 +3058,19 @@ const UpdateUI = {
         this.clearDraft(itemId);
         await this.loadMenuItems();
       } else {
-        // Try to parse error response
+        // Get response as text first, then try to parse as JSON
+        const text = await response.text();
         let errorMessage = 'Failed to publish item';
+        
         try {
-          const errorData = await response.json();
+          const errorData = JSON.parse(text);
           errorMessage = errorData.error || errorMessage;
         } catch (parseErr) {
-          // Response wasn't JSON, get as text
-          const text = await response.text();
+          // Response wasn't JSON
           console.error('Non-JSON response:', text);
           errorMessage = `Server error (${response.status}): ${text.substring(0, 100)}`;
         }
+        
         throw new Error(errorMessage);
       }
     } catch (error) {
