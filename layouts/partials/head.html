@@ -149,8 +149,11 @@ window.POS_CONFIG = {
 window.AUTH_CONFIG = {
     apiUrl: "{{ site.Params.auth.apiUrl }}"
 };
+// Set current site's client ID for access control
+window.SITE_CLIENT_ID = "{{ .Site.Params.clientID }}";
 </script>
 <script src="{{ site.BaseURL }}js/auth-client.js"></script>
 <script src="{{ site.BaseURL }}js/auth-middleware.js"></script>
+<script src="{{ site.BaseURL }}js/auth-client-access.js"></script>
 <script src="{{ site.BaseURL }}js/admin-users.js"></script>
 {{- end -}}

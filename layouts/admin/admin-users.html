@@ -130,13 +130,13 @@
     const usersPerPage = 10;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Protect this page - require admin access
-      const isProtected = AuthMiddleware.protectPage({
-        redirectUrl: '/login/',
-        requireAdmin: true, // Only admins can access
+      // Protect this page - require admin access with client validation
+      const hasAccess = AuthClientAccess.protectAdminPage({
+        redirectUrl: '/',
+        showError: true,
       });
 
-      if (!isProtected) {
+      if (!hasAccess) {
         return;
       }
 
