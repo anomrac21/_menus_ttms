@@ -7,6 +7,10 @@ const UpdateUI = {
   // API Configuration - only used for POST/PUT/DELETE operations
   apiConfig: {
     baseUrl: window.UPDATE_API_URL || 'http://localhost:8083/api',
+    clientId: window.CLIENT_ID || '_ttms_menudemo',
+    getClientUrl: function() {
+      return `${this.baseUrl}/clients/${this.clientId}`;
+    },
     endpoints: {
       content: '/content',
       categories: '/categories',
@@ -1080,8 +1084,8 @@ const UpdateUI = {
     try {
       const method = ad._isNew ? 'POST' : 'PUT';
       const url = ad._isNew
-        ? `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT/advertisements`
-        : `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT/advertisements/${adId}`;
+        ? `${this.apiConfig.getClientUrl()}/advertisements`
+        : `${this.apiConfig.getClientUrl()}/advertisements/${adId}`;
       
       const response = await this.authenticatedFetch(url, {
         method,
@@ -2147,7 +2151,7 @@ const UpdateUI = {
     try {
       // TODO: Send to content-service API
       const response = await this.authenticatedFetch(
-        `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.locations}`,
+        `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.locations}`,
         {
           method: 'PUT',
           body: JSON.stringify(loc),
@@ -2345,7 +2349,7 @@ const UpdateUI = {
     
     try {
       const response = await this.authenticatedFetch(
-        `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.colors}`,
+        `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.colors}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -2447,7 +2451,7 @@ const UpdateUI = {
 
     try {
       const response = await this.authenticatedFetch(
-        `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.manifest}`,
+        `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.manifest}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -3027,8 +3031,8 @@ const UpdateUI = {
     try {
       const method = item._isNew ? 'POST' : 'PUT';
       const url = item._isNew
-        ? `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.content}`
-        : `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.content}/${itemId}`;
+        ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
+        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${itemId}`;
 
       const response = await this.authenticatedFetch(url, {
         method,
@@ -3082,8 +3086,8 @@ const UpdateUI = {
       try {
         const method = item._isNew ? 'POST' : 'PUT';
         const url = item._isNew
-          ? `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.content}`
-          : `${this.apiConfig.baseUrl}/clients/CLIENT_FROM_JWT${this.apiConfig.endpoints.content}/${item.id}`;
+          ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
+          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${item.id}`;
 
         const response = await this.authenticatedFetch(url, {
           method,

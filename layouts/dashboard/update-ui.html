@@ -125,8 +125,12 @@
 <script src="{{ site.BaseURL }}js/analytics-tracking.js"></script><script>
 
 window.AUTH_CONFIG = {
-    apiUrl: "https:\/\/auth.ttmenus.com\/api\/v1"
+    apiUrl: "{{ site.Params.auth.apiUrl }}"
 };
+
+// Content Service API URL for Update UI
+window.UPDATE_API_URL = "{{ site.Params.content.apiUrl }}";
+window.CLIENT_ID = "{{ site.Params.content.clientId }}";
 </script>
 <script src="{{ site.BaseURL }}js/auth-client.js"></script>
 <script src="{{ site.BaseURL }}js/auth-middleware.js"></script>
