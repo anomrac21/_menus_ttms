@@ -3040,12 +3040,10 @@ const UpdateUI = {
         console.log('Converted ID:', itemId, '→', apiItemId);
       }
       
-      // URL encode the itemId (slash becomes %2F for router)
-      const encodedItemId = encodeURIComponent(apiItemId);
-      
+      // Use query parameter instead of path to avoid slash encoding issues
       const url = item._isNew
         ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
-        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${encodedItemId}`;
+        : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}`;
 
       console.log('Publishing to:', url);
 
@@ -3060,8 +3058,18 @@ const UpdateUI = {
         this.clearDraft(itemId);
         await this.loadMenuItems();
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to publish item');
+        // Try to parse error response
+        let errorMessage = 'Failed to publish item';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseErr) {
+          // Response wasn't JSON, get as text
+          const text = await response.text();
+          console.error('Non-JSON response:', text);
+          errorMessage = `Server error (${response.status}): ${text.substring(0, 100)}`;
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error publishing item:', error);
@@ -3108,12 +3116,10 @@ const UpdateUI = {
           console.log('Converting ID:', item.id, '→', apiItemId);
         }
         
-        // URL encode the itemId (slash becomes %2F for router)
-        const encodedItemId = encodeURIComponent(apiItemId);
-        
+        // Use query parameter instead of path to avoid slash encoding issues
         const url = item._isNew
           ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}`
-          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}/${encodedItemId}`;
+          : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}`;
 
         const response = await this.authenticatedFetch(url, {
           method,
@@ -3174,6 +3180,7 @@ const UpdateUI = {
   /**
    * Helper: Convert Hugo URL to content-service item ID format
    * Hugo URL: /category/filename/ → Category/filename
+   * Slash is OK in query parameters (no router issues)
    */
   convertUrlToItemId(url, category) {
     if (!url) return null;
@@ -3187,6 +3194,7 @@ const UpdateUI = {
       // Capitalize category to match folder structure
       const categoryPart = category || (parts[0].charAt(0).toUpperCase() + parts[0].slice(1));
       const filenamePart = parts[1];
+      // Return with slash - it's fine in query parameters
       return `${categoryPart}/${filenamePart}`;
     }
     
