@@ -122,7 +122,7 @@
    */
   function setupAdClickTracking() {
     document.addEventListener('click', function(e) {
-      const adElement = e.target.closest('.ad-panel, #clientad a, [class*="ad-"]');
+      const adElement = e.target.closest('.ad-panel, .ads a, [class*="ad-"]');
       
       if (adElement) {
         const adData = {

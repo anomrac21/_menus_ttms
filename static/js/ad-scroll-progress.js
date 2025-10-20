@@ -37,90 +37,64 @@ class AdScrollProgressManager {
 
   // Find all ad sections and their progress bars
   findProgressBars() {
-    const sections = document.querySelectorAll('#clientad');
+    const sections = document.querySelectorAll('.ads');
+    console.log(`[Progress] Found ${sections.length} ad sections`);
+    
     this.progressBars = Array.from(sections).map(section => {
       const progressBar = section.querySelector('.scroll-progress-fill');
+      if (!progressBar) {
+        console.warn('[Progress] Section missing progress bar:', section.id);
+      }
       return {
         section,
-        progressBar,
-        spacer: section.closest('.scrollmagic-pin-spacer')
+        progressBar
       };
     });
     
+    console.log(`[Progress] Tracking ${this.progressBars.filter(p => p.progressBar).length} progress bars`);
     return this.progressBars;
   }
 
   // Update all progress bars based on scroll position
-  // Optimized to batch DOM reads and writes to prevent forced reflows
   updateProgressBars() {
     // Refresh the list of progress bars
     this.findProgressBars();
     
-    // BATCH READ PHASE - Read all layout properties first
     const scrollY = window.scrollY;
     const windowHeight = window.innerHeight;
     
-    const measurements = this.progressBars.map((item) => {
-      const { section, progressBar, spacer } = item;
+    this.progressBars.forEach((item) => {
+      const { section, progressBar } = item;
       
-      if (!progressBar) return null;
+      if (!progressBar || !section) return;
       
-      if (spacer) {
-        return {
-          progressBar,
-          spacerTop: spacer.offsetTop,
-          spacerHeight: spacer.offsetHeight,
-          sectionHeight: section.offsetHeight,
-          hasSpace: true
-        };
+      // Get section position using bounding rect for accuracy
+      const rect = section.getBoundingClientRect();
+      
+      // Progress should complete within 100vh (one viewport height)
+      // Progress starts at 0% when section top is at bottom of viewport
+      // Progress reaches 100% when section top reaches top of viewport
+      let progress = 0;
+      
+      if (rect.top <= 0) {
+        // Section top has reached or passed viewport top
+        progress = 100;
+      } else if (rect.top >= windowHeight) {
+        // Section hasn't entered viewport yet
+        progress = 0;
       } else {
-        return {
-          progressBar,
-          sectionTop: section.offsetTop,
-          sectionHeight: section.offsetHeight,
-          hasSpace: false
-        };
+        // Section is in viewport - calculate progress
+        // Progress fills as section moves from bottom to top of viewport
+        const distanceFromBottom = windowHeight - rect.top;
+        progress = (distanceFromBottom / windowHeight) * 100;
       }
-    });
-    
-    // BATCH WRITE PHASE - Update all styles at once
-    measurements.forEach((measurement) => {
-      if (!measurement) return;
       
-      const { progressBar, hasSpace } = measurement;
+      const clampedProgress = Math.max(0, Math.min(100, progress));
+      progressBar.style.width = `${clampedProgress.toFixed(2)}%`;
       
-      if (hasSpace) {
-        const { spacerTop, spacerHeight } = measurement;
-        const visualOffset = 936;
-        const scrollStart = spacerTop + visualOffset;
-        const scrollEnd = spacerTop + spacerHeight + 200;
-        const scrollRange = scrollEnd - scrollStart;
-        
-        if (scrollRange <= 0) {
-          progressBar.style.width = '0%';
-          return;
-        }
-        
-        const scrolledIntoSection = scrollY - scrollStart;
-        const progress = (scrolledIntoSection / scrollRange) * 100;
-        const clampedProgress = Math.max(0, Math.min(100, progress));
-        
-        progressBar.style.width = `${clampedProgress.toFixed(2)}%`;
-      } else {
-        const { sectionTop, sectionHeight } = measurement;
-        const scrollStart = sectionTop - windowHeight;
-        const scrollEnd = sectionTop + sectionHeight;
-        const scrollRange = scrollEnd - scrollStart;
-        
-        if (scrollRange <= 0) {
-          progressBar.style.width = '0%';
-          return;
-        }
-        
-        const progress = ((scrollY - scrollStart) / scrollRange) * 100;
-        const clampedProgress = Math.max(0, Math.min(100, progress));
-        
-        progressBar.style.width = `${clampedProgress.toFixed(2)}%`;
+      // Debug logging (can remove after testing)
+      if (section.id && clampedProgress > 0 && clampedProgress < 100) {
+        console.log(`[Progress] ${section.id}: ${clampedProgress.toFixed(1)}% (rect.top: ${rect.top.toFixed(0)}px)`);
       }
     });
   }
@@ -153,9 +127,11 @@ setTimeout(() => {
 
 // Listen for custom event to refresh progress bars
 window.addEventListener('adsPopulated', () => {
+  console.log('[Progress] Ads populated event received, refreshing...');
   setTimeout(() => {
     if (window.adScrollProgressManager) {
       window.adScrollProgressManager.refresh();
+      console.log('[Progress] Refresh complete after adsPopulated event');
     }
   }, 500);
 });

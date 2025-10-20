@@ -1,572 +1,147 @@
+// ClientAdManager - Only handles homepage-ads-container
+// clientads.html is pure Hugo template (no JS needed)
+
 class ClientAdManager {
   constructor() {
     this.ads = [];
     this.currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
     this.currentDate = new Date();
-    this.hasPopulated = false; // Flag to prevent multiple population
-    this.populateRetries = 0; // Track retry attempts
-    this.maxRetries = 10; // Maximum retry attempts
-    this.lastPopulateTime = 0; // Track when ads were last populated
+    this.hasPopulated = false;
+    console.log('ClientAdManager initialized for homepage only');
   }
 
-  // Check if ad should be shown based on recurring and daysofweek
-  shouldShowByDay(ad) {
-    // recurring: true → respect daysofweek
-    // recurring: false → ignore daysofweek
-    const result = !ad.recurring || !ad.daysofweek || ad.daysofweek.length === 0 || ad.daysofweek.includes(this.currentDay);
-    console.log(`${ad.title} - shouldShowByDay:`, result, `(recurring: ${ad.recurring}, daysofweek: ${JSON.stringify(ad.daysofweek)}, currentDay: ${this.currentDay})`);
-    return result;
-  }
-
-  // Check if ad should be shown based on event dates
-  shouldShowByDate(ad) {
-    // recurring: true → ignore eventdates
-    // recurring: false → respect eventdates
-    if (ad.recurring) {
-      console.log(`${ad.title} - shouldShowByDate: true (recurring: true, ignoring eventdates)`);
-      return true;
-    }
-    if (!ad.eventdates || ad.eventdates.length === 0) {
-      console.log(`${ad.title} - shouldShowByDate: true (no eventdates)`);
-      return true;
-    }
-    
-    for (const event of ad.eventdates) {
-      const endDate = new Date(event.end);
-      const result = this.currentDate <= endDate;
-      console.log(`${ad.title} - shouldShowByDate: ${result} (currentDate: ${this.currentDate}, endDate: ${endDate})`);
-      if (result) {
+  // Filter ads by day of week
+  filterAdsByDay() {
+    return this.ads.filter(ad => {
+      // If no daysofweek specified, show ad
+      if (!ad.daysofweek || ad.daysofweek.length === 0) {
         return true;
       }
-    }
-    console.log(`${ad.title} - shouldShowByDate: false (past all event dates)`);
+      // Check if current day matches
+      return ad.daysofweek.includes(this.currentDay);
+    });
+  }
+
+  // Load ads from JSON
+  async loadAds() {
+    try {
+      const url = `/advertisments/index.json?t=${Date.now()}`;
+      console.log('Loading ads from:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data && data.items) {
+        this.ads = data.items;
+        console.log('Loaded ads:', this.ads.length);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to load ads:', error);
     return false;
   }
-
-  // Filter ads based on current conditions
-  filterAds() {
-    return this.ads.filter(ad => 
-      this.shouldShowByDay(ad) && this.shouldShowByDate(ad)
-    );
   }
 
-  // Generate HTML for an ad - consistent with clientads.html structure
+  // Generate HTML for one ad
   generateAdHTML(ad) {
-    const images = ad.images || [];
-    console.log('Generating HTML for ad:', ad.title, 'with images:', images);
+    const finalUrl = ad.link || ad.url || `/advertisments/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
+    const adId = ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     
-    // Determine the final URL - prioritize custom link over default URL
-    let finalUrl = '';
-    if (ad.link && ad.link.trim() !== '') {
-      finalUrl = ad.link;
-    } else if (ad.url && ad.url.trim() !== '') {
-      finalUrl = ad.url;
-    } else {
-      // Generate URL from advertisement title as fallback
-      const slug = ad.title ? ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'advertisement';
-      finalUrl = `/advertisments/${slug}/`;
-    }
-    console.log('Final URL for ad:', ad.title, 'is:', finalUrl, '(link:', ad.link, ', url:', ad.url, ')');
-    
-    const imageHTML = images.map(img => {
-      // Fix image path - remove leading slash if present and ensure correct path
-      let imagePath = img.image;
-      console.log('Original image path:', imagePath);
-      
-      if (imagePath.startsWith('/')) {
-        imagePath = imagePath.substring(1);
-      }
-      if (imagePath.startsWith('images/')) {
-        imagePath = imagePath; // Keep as is
-      } else if (imagePath.startsWith('advertisments/')) {
-        imagePath = imagePath.replace('advertisments/', ''); // Remove advertisments/ prefix
-      }
-      
-      const finalPath = `/${imagePath}`;
-      console.log('Final image path:', finalPath);
-      
-      return `
-        <li class="ad-panel" data-ad-title="${ad.title}" data-ad-url="${finalUrl}">
+    const imagesHTML = (ad.images || []).map(img => `
+      <li class="ad-panel">
           <a href="${finalUrl}" class="content-panel">
-            <img src="${finalPath}" class="ad-portrait-bg">
-            <img src="${finalPath}" class="ad-portrait">
+          <img src="/${img.image}" class="ad-portrait-bg">
+          <img src="/${img.image}" class="ad-portrait">
             <div class="adbottomspacer"></div>
           </a>
         </li>
-      `;
-    }).join('');
+    `).join('');
 
     return `
-      <section id="clientad" data-ad-title="${ad.title}" data-ad-url="${finalUrl}">
+      <section id="menu-ad-${adId}" class="ads menu-ad sticky">
         <div class="scroll-progress-bar">
           <div class="scroll-progress-fill"></div>
         </div>
-        <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
+        <h2 class="center title clientad-heading">
           <a href="${finalUrl}">${ad.title}</a>
         </h2>
         <span data-aos="zoom-out-right">Promotion</span>
         <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-          ${imageHTML}
+          ${imagesHTML}
         </ul>
       </section>
     `;
   }
 
-  // Load ads from your JSON endpoints
-  async loadAds() {
-    try {
-      const timestamp = new Date().getTime();
-      const cacheBusting = `?t=${timestamp}`;
-      
-      // Try multiple approaches to load ads
-      console.log('Attempting to load advertisements...');
-      
-      // Approach 1: Try to get the list of all advertisements from the main index
-      const mainIndexUrl = `/advertisments/index.json${cacheBusting}`;
-      console.log('Loading advertisements index from:', mainIndexUrl);
-      
-      const indexResponse = await fetch(mainIndexUrl, {
-        method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-      
-      if (indexResponse.ok) {
-        const indexData = await indexResponse.json();
-        console.log('Advertisements index loaded:', indexData);
-        
-        // The ads are directly in the items array
-        if (indexData && indexData.items && indexData.items.length > 0) {
-          this.ads = indexData.items;
-          console.log('Successfully loaded ads from index:', this.ads);
-          return;
-        } else {
-          console.log('No ads found in index items');
-        }
-      } else {
-        console.log('Failed to load advertisements index, trying fallback method');
-      }
-      
-      // Approach 2: Try to load ads directly from the main advertisements section
-      const fallbackUrl = `/advertisments/index.json${cacheBusting}`;
-      const fallbackResponse = await fetch(fallbackUrl);
-      
-      if (fallbackResponse.ok) {
-        const fallbackData = await fallbackResponse.json();
-        if (fallbackData && fallbackData.items) {
-          this.ads = fallbackData.items;
-          console.log('Loaded ads from fallback method:', this.ads);
-          return;
-        } else {
-          console.log('No ads found in fallback data');
-        }
-      } else {
-        console.log('Fallback method also failed');
-      }
-      
-      // Approach 3: Try to load individual ads directly
-      console.log('Trying to load individual ads directly...');
-      const individualAdUrls = [
-        '/advertisments/more-ish-monday/index.json',
-        '/advertisments/wonderful-wednesday/index.json'
-      ];
-      
-      const individualPromises = individualAdUrls.map(url => 
-        fetch(`${url}${cacheBusting}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        }).then(response => response.json()).catch(() => null)
-      );
-      
-      const individualResults = await Promise.all(individualPromises);
-      const validIndividualAds = individualResults.filter(ad => ad !== null);
-      
-      if (validIndividualAds.length > 0) {
-        this.ads = validIndividualAds;
-        console.log('Successfully loaded individual ads:', this.ads);
-        return;
-      } else {
-        console.log('No individual ads loaded');
-      }
-      
-      // If all approaches fail, set empty array
-      console.log('All loading approaches failed, setting empty ads array');
-      this.ads = [];
-      
-    } catch (error) {
-      console.error('Error loading ads:', error);
-      console.log('No ads loaded due to error');
-      this.ads = [];
-    }
-    
-    // Don't call populateAds here - let init() handle it
-  }
-
-  // Initialize the ad manager
-  async init() {
-    await this.loadAds();
-    // Populate ads once after loading
-    this.populateAds();
-  }
-
-  // Method to manually apply ScrollMagic effects to ads
-  applyScrollMagicEffects() {
-    if (typeof initFrontPageAdsScrollEffects === 'function') {
-      console.log('Manually applying ScrollMagic effects to ads...');
-      try {
-        // Check if the required elements exist before calling ScrollMagic
-        const requiredElements = document.querySelectorAll('.clientad, .ad-panel, .frontpageads');
-        if (requiredElements.length > 0) {
-          initFrontPageAdsScrollEffects();
-        } else {
-          console.log('Required elements not found for ScrollMagic, skipping...');
-        }
-      } catch (error) {
-        console.warn('Error applying ScrollMagic effects:', error);
-      }
-    } else {
-      console.log('ScrollMagic function not available');
-    }
-  }
-
-  // Method to show all ads (for debugging/management)
-  showAllAds(containerType = null) {
-    console.log('Showing all ads regardless of day/date conditions...');
-    
-    // Get the appropriate container
-    let container = null;
-    if (containerType) {
-      container = document.getElementById(`${containerType}-ads-container`);
-    } else {
-      // Fallback to finding any available container
-      container = document.getElementById('homepage-ads-container') || 
-                  document.getElementById('client-ads-container') || 
-                  document.getElementById('frontpage-ads-container') || 
-                  document.getElementById('pageadscontainer');
-    }
-    
+  // Populate homepage container only
+  async populateHomepage(force = false) {
+    const container = document.getElementById('homepage-ads-container');
     if (!container) {
-      console.log('No container found for showAllAds');
-      return;
+      console.log('No homepage-ads-container found');
+          return;
     }
 
+    // Skip if already populated (unless forcing)
+    if (this.hasPopulated && !force) {
+      console.log('Homepage ads already populated, skipping...');
+          return;
+    }
+
+    console.log('Found homepage-ads-container, populating...');
+
+    // Remove loading indicator
+    const loading = container.querySelector('.ads-loading');
+    if (loading) {
+      loading.remove();
+    }
+
+    // Load ads if not already loaded
     if (this.ads.length === 0) {
-      container.innerHTML = '<p>No ads available</p>';
-      return;
-    }
-
-    // Sort ads by event date order for better presentation
-    const sortedAds = this.sortAdsByEventDate();
-    const adsHTML = sortedAds.map(ad => this.generateAdHTML(ad)).join('');
-    container.innerHTML = adsHTML;
-    
-    // Ensure container is visible
-    container.style.display = '';
-    container.style.visibility = 'visible';
-    container.style.opacity = '1';
-    console.log('showAllAds: HTML populated and container visibility set');
-
-    console.log('showAllAds: HTML populated, applying animations...');
-
-    // Apply animations with proper timing
-    setTimeout(() => {
-      // Force AOS to detect and animate new elements
-      if (typeof AOS !== 'undefined') {
-        console.log('showAllAds: Reinitializing AOS for new elements');
-        
-        // First, remove AOS classes from new elements to reset them
-        const aosElements = container.querySelectorAll('[data-aos]');
-        aosElements.forEach(el => {
-          el.classList.remove('aos-init', 'aos-animate');
-        });
-        
-        // Refresh AOS to detect new elements
-        AOS.refresh();
-        
-        // Force immediate refresh to trigger animations
-        setTimeout(() => {
-          AOS.refreshHard();
-        }, 50);
-      }
-      
-      // Trigger custom event to notify scroll progress manager
-      window.dispatchEvent(new CustomEvent('adsPopulated'));
-    }, 150);
-  }
-
-
-
-  // Method to get all ads with their current status
-  getAllAdsStatus() {
-    return this.ads.map(ad => ({
-      ...ad,
-      currentStatus: {
-        shouldShowByDay: this.shouldShowByDay(ad),
-        shouldShowByDate: this.shouldShowByDate(ad),
-        isCurrentlyVisible: this.shouldShowByDay(ad) && this.shouldShowByDate(ad),
-        currentDay: this.currentDay,
-        currentDate: this.currentDate
-      }
-    }));
-  }
-
-
-
-  // Method to calculate next occurrence date for recurring events
-  getNextOccurrenceDate(ad) {
-    if (!ad.recurring || !ad.daysofweek || ad.daysofweek.length === 0) {
-      return null;
-    }
-    
-    const today = new Date();
-    const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    // Find the next occurrence of this recurring event
-    for (let i = 0; i < 7; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(today.getDate() + i);
-      const checkDay = dayNames[checkDate.getDay()];
-      
-      if (ad.daysofweek.includes(checkDay)) {
-        return checkDate;
-      }
-    }
-    
-    // If no match found in next 7 days, return null (will be sorted alphabetically)
-    return null;
-  }
-
-  // Method to sort ads by event date order
-  sortAdsByEventDate() {
-    return [...this.ads].sort((a, b) => {
-      // Get next occurrence dates for recurring events
-      const aNextDate = this.getNextOccurrenceDate(a);
-      const bNextDate = this.getNextOccurrenceDate(b);
-      
-      // If both have next occurrence dates, sort by them
-      if (aNextDate && bNextDate) {
-        return aNextDate - bNextDate;
-      }
-      
-      // If only one has a next occurrence date, prioritize it
-      if (aNextDate) return -1;
-      if (bNextDate) return 1;
-      
-      // If both have event dates (non-recurring), sort by start date
-      if (a.eventdates && a.eventdates.length > 0 && b.eventdates && b.eventdates.length > 0) {
-        const aStart = new Date(a.eventdates[0].start);
-        const bStart = new Date(b.eventdates[0].start);
-        return aStart - bStart;
-      }
-      
-      // If only one has event dates, prioritize the one with dates
-      if (a.eventdates && a.eventdates.length > 0) return -1;
-      if (b.eventdates && b.eventdates.length > 0) return 1;
-      
-      // If neither has event dates or next occurrence dates, sort alphabetically by title
-      return a.title.localeCompare(b.title);
-    });
-  }
-
-  // Method to refresh ads data from endpoints
-  async refreshAds() {
-    console.log('Refreshing ads from endpoints...');
-    await this.loadAds();
-  }
-
-
-
-
-
-  // Override populateAds to respect the showAllAds flag
-  populateAds(forceRepopulate = false) {
-    console.log('=== populateAds called ===');
-    console.log('hasPopulated:', this.hasPopulated);
-    console.log('forceRepopulate:', forceRepopulate);
-    console.log('ads count:', this.ads ? this.ads.length : 0);
-    
-    // If forcing repopulate (e.g., from barba navigation), reset the flag
-    if (forceRepopulate) {
-      console.log('Force repopulate requested, resetting hasPopulated flag');
-      this.hasPopulated = false;
-      this.populateRetries = 0;
-    }
-    
-    // Prevent multiple population of the same container
-    if (this.hasPopulated) {
-      console.log('Ads already populated, skipping... (use forceRepopulate=true to override)');
-      return;
-    }
-    
-    // Check if ads are loaded
-    if (!this.ads || this.ads.length === 0) {
-      if (this.populateRetries < this.maxRetries) {
-        this.populateRetries++;
-        console.log(`No ads loaded yet, retrying... (${this.populateRetries}/${this.maxRetries})`);
-        // Try again in a moment if ads aren't loaded
-        setTimeout(() => this.populateAds(forceRepopulate), 100);
-        return;
-      } else {
-        console.log('Max retries reached, ads not loaded');
+      const loaded = await this.loadAds();
+      if (!loaded || this.ads.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 2em;">No promotions available</p>';
         return;
       }
     }
-    
-    // Determine which container to populate based on page context
-    let container = null;
-    let containerType = '';
-    
-    console.log('Looking for ad containers...');
-    console.log('homepage-ads-container exists:', !!document.getElementById('homepage-ads-container'));
-    console.log('client-ads-container exists:', !!document.getElementById('client-ads-container'));
-    console.log('frontpage-ads-container exists:', !!document.getElementById('frontpage-ads-container'));
-    console.log('pageadscontainer exists:', !!document.getElementById('pageadscontainer'));
-    
-    // Check for different ad containers in order of priority
-    if (document.getElementById('homepage-ads-container')) {
-      container = document.getElementById('homepage-ads-container');
-      containerType = 'homepage';
-      console.log('Found homepage-ads-container:', container);
-    } else if (document.getElementById('client-ads-container')) {
-      container = document.getElementById('client-ads-container');
-      containerType = 'client';
-      console.log('Found client-ads-container:', container);
-    } else if (document.getElementById('frontpage-ads-container')) {
-      container = document.getElementById('frontpage-ads-container');
-      containerType = 'frontpage';
-      console.log('Found frontpage-ads-container:', container);
-    } else if (document.getElementById('pageadscontainer')) {
-      // Fallback to old ID for backward compatibility
-      container = document.getElementById('pageadscontainer');
-      containerType = 'legacy';
-      console.log('Found legacy pageadscontainer:', container);
-    }
-    
-    if (!container) {
-      console.log('No ad container found on this page');
-      return;
-    }
-    
-    console.log(`Populating ${containerType} ads container:`, container.id);
 
-    // Special handling for client-ads-container - show all ads regardless of filtering
-    if (containerType === 'client') {
-      console.log('Client ads container detected - showing all ads without filtering');
-      this.showAllAds(containerType);
-      this.hasPopulated = true; // Mark as populated
-      return;
+    // Filter by current day
+    let filtered = this.filterAdsByDay();
+    console.log(`Current day: ${this.currentDay}, Filtered: ${filtered.length}/${this.ads.length} ads`);
+
+    // Fallback: show all ads if none match
+    if (filtered.length === 0) {
+      console.log('No ads match today, showing all as fallback');
+      filtered = this.ads;
     }
 
-    // For homepage and other containers, show filtered ads but fallback to all ads if none match
-    let filteredAds = this.filterAds();
-    
-    console.log('Current day:', this.currentDay);
-    console.log('Current date:', this.currentDate);
-    console.log('All ads:', this.ads);
-    console.log('Filtered ads:', filteredAds);
-    
-    // If no filtered ads, show all ads as fallback for homepage
-    if (filteredAds.length === 0 && containerType === 'homepage') {
-      console.log('No filtered ads for homepage, showing all ads as fallback');
-      filteredAds = this.ads;
-    }
-    
-    if (filteredAds.length === 0) {
-      // Don't show any content when no ads are available
-      console.log('No ads to display, hiding container');
-      container.innerHTML = '';
-      container.style.display = 'none';
-      container.style.height = '0';
-      container.style.visibility = 'hidden';
-      return;
-    }
-
-    // Sort filtered ads by event date order for better presentation
-    const sortedFilteredAds = filteredAds.sort((a, b) => {
-      // Get next occurrence dates for recurring events
-      const aNextDate = this.getNextOccurrenceDate(a);
-      const bNextDate = this.getNextOccurrenceDate(b);
-      
-      // If both have next occurrence dates, sort by them
-      if (aNextDate && bNextDate) {
-        return aNextDate - bNextDate;
-      }
-      
-      // If only one has a next occurrence date, prioritize it
-      if (aNextDate) return -1;
-      if (bNextDate) return 1;
-      
-      // If both have event dates (non-recurring), sort by start date
-      if (a.eventdates && a.eventdates.length > 0 && b.eventdates && b.eventdates.length > 0) {
-        const aStart = new Date(a.eventdates[0].start);
-        const bStart = new Date(b.eventdates[0].start);
-        return aStart - bStart;
-      }
-      
-      // If only one has event dates, prioritize the one with dates
-      if (a.eventdates && a.eventdates.length > 0) return -1;
-      if (b.eventdates && b.eventdates.length > 0) return 1;
-      
-      // If neither has event dates or next occurrence dates, sort alphabetically by title
-      return a.title.localeCompare(b.title);
-    });
-    
-    const adsHTML = sortedFilteredAds.map(ad => this.generateAdHTML(ad)).join('');
-    console.log(`Setting container ${container.id} HTML:`, adsHTML.substring(0, 200) + '...');
-    container.innerHTML = adsHTML;
-    console.log(`Container ${container.id} HTML after setting:`, container.innerHTML.substring(0, 200) + '...');
-    
-    // Ensure container is visible - remove any inline styles that might hide it
+    // Generate and display HTML
+    const html = filtered.map(ad => this.generateAdHTML(ad)).join('');
+    container.innerHTML = html;
     container.style.display = '';
     container.style.visibility = 'visible';
-    container.style.opacity = '1';
-    container.style.height = '';  // Remove any height: 0 that might hide it
-    
-    // Log computed styles to debug visibility issues
-    const computedStyle = window.getComputedStyle(container);
-    console.log(`Container ${container.id} visibility:`, {
-      display: computedStyle.display,
-      visibility: computedStyle.visibility,
-      opacity: computedStyle.opacity,
-      height: computedStyle.height,
-      position: computedStyle.position,
-      zIndex: computedStyle.zIndex,
-      overflow: computedStyle.overflow
-    });
-    
-    // Check if there are any child sections
-    const sections = container.querySelectorAll('section');
-    console.log(`Container ${container.id} has ${sections.length} section(s)`);
-    sections.forEach((section, index) => {
-      const sectionStyle = window.getComputedStyle(section);
-      console.log(`  Section ${index}:`, {
-        display: sectionStyle.display,
-        height: sectionStyle.height,
-        position: sectionStyle.position
-      });
-    });
 
-    // Mark as populated and track time
+    console.log('Homepage ads populated!');
     this.hasPopulated = true;
-    this.lastPopulateTime = Date.now();
 
-    console.log('populateAds: HTML populated, applying animations...');
+    // Force layout reflow before updating progress bars
+    void container.offsetHeight;
 
-    // Apply animations with proper timing
+    // Refresh scroll progress bars immediately
+    if (window.adScrollProgressManager) {
+      console.log('Refreshing scroll progress bars for new ads...');
+      window.adScrollProgressManager.refresh();
+    }
+
+    // Force AOS to reinitialize for new elements
     setTimeout(() => {
-      // Force AOS to detect and animate new elements
       if (typeof AOS !== 'undefined') {
-        console.log('populateAds: Reinitializing AOS for new elements');
+        console.log('Reinitializing AOS for ads...');
         
-        // First, remove AOS classes from new elements to reset them
+        // Remove AOS classes to reset
         const aosElements = container.querySelectorAll('[data-aos]');
         aosElements.forEach(el => {
           el.classList.remove('aos-init', 'aos-animate');
@@ -575,61 +150,65 @@ class ClientAdManager {
         // Refresh AOS to detect new elements
         AOS.refresh();
         
-        // Force immediate refresh to trigger animations
+        // Force hard refresh after a moment
         setTimeout(() => {
           AOS.refreshHard();
+          console.log('AOS refreshed for ads');
         }, 50);
       }
       
-      // Trigger custom event to notify scroll progress manager
+      // Refresh scroll progress again after animations settle
+      if (window.adScrollProgressManager) {
+        window.adScrollProgressManager.refresh();
+      }
+      
+      // Trigger custom event for other scripts
       window.dispatchEvent(new CustomEvent('adsPopulated'));
     }, 150);
   }
+
+  // Public API for barba.js compatibility
+  async populateAds(forceRepopulate = false) {
+    console.log('populateAds called, forceRepopulate:', forceRepopulate);
+    
+    // Reset state if forcing repopulate
+    if (forceRepopulate) {
+      this.hasPopulated = false;
+    }
+    
+    await this.populateHomepage(forceRepopulate);
+  }
+
+  // Public API
+  async init() {
+    await this.populateHomepage();
+  }
 }
 
-// Prevent multiple initializations
-let adManagerInitialized = false;
+// Initialize on page load
+let adManagerInstance = null;
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  if (adManagerInitialized) {
-    console.log('ClientAdManager: Already initialized, skipping...');
-    return;
-  }
-  
-  try {
-    console.log('ClientAdManager: DOMContentLoaded fired, creating instance...');
-    const adManager = new ClientAdManager();
-    adManager.init();
+function initAdManager() {
+  if (adManagerInstance) {
+    console.log('AdManager already exists');
+      return;
+    }
     
-    // Explicitly assign to window.adManager
-    window.adManager = adManager;
-    adManagerInitialized = true;
-    console.log('ClientAdManager: Instance created and assigned to window.adManager:', window.adManager);
-    
-    // Also trigger a custom event to notify other scripts
-    window.dispatchEvent(new CustomEvent('adManagerReady', { detail: adManager }));
-    
-  } catch (error) {
-    console.error('ClientAdManager: Error creating instance:', error);
-  }
-});
+  // Only initialize if homepage-ads-container exists
+  if (!document.getElementById('homepage-ads-container')) {
+    console.log('No homepage-ads-container, skipping ClientAdManager');
+      return;
+    }
 
-// Also try to initialize immediately if DOM is already ready
+  console.log('Initializing ClientAdManager...');
+  adManagerInstance = new ClientAdManager();
+  adManagerInstance.init();
+  window.adManager = adManagerInstance;
+}
+
+// Run on DOM ready
 if (document.readyState === 'loading') {
-  console.log('ClientAdManager: DOM still loading, waiting for DOMContentLoaded...');
-} else if (!adManagerInitialized) {
-  console.log('ClientAdManager: DOM already ready, creating instance immediately...');
-  try {
-    const adManager = new ClientAdManager();
-    adManager.init();
-    window.adManager = adManager;
-    adManagerInitialized = true;
-    console.log('ClientAdManager: Instance created immediately:', window.adManager);
-    window.dispatchEvent(new CustomEvent('adManagerReady', { detail: adManager }));
-  } catch (error) {
-    console.error('ClientAdManager: Error creating instance immediately:', error);
-  }
+  document.addEventListener('DOMContentLoaded', initAdManager);
+} else {
+  initAdManager();
 }
-
-

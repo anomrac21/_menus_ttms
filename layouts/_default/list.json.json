@@ -41,6 +41,8 @@
     {{ warnf "  ↪ Ad: %s | Locations: %d | Recurring: %v" $page.Title (len $adLocations) ($page.Params.recurring | default false) }}
 
     {{- $item = merge $item (dict
+      "url"       $page.RelPermalink
+      "link"      ($page.Params.link | default "")
       "locations" $adLocations
       "recurring" ($page.Params.recurring | default false)
       "daysofweek" ($page.Params.daysofweek | default slice)

@@ -6,7 +6,7 @@
     width: 100%;
     height: 2px;
     background: rgba(255, 255, 255, 0.1);
-    z-index: 100;
+    z-index: 2;
     overflow: hidden;
 }
 
@@ -35,13 +35,9 @@
 #frontpage-ads-container{
     height: 100%;
     margin: 0;
-    overflow: hidden;
+    overflow: visible;  /* Changed to visible for sticky to work */
     position: relative;
     pointer-events: none;
-}.scrollmagic-pin-spacer{
-    scroll-snap-align:start;
-    min-height: 166vh !important;
-    inset: 4em auto auto auto !important;
 }
 #pageadscontainer span,
 #homepage-ads-container span,
@@ -86,23 +82,55 @@
     color: #ffffff;
 }
 
+/* All ad containers - simplified without ScrollMagic */
+#pageadscontainer,
+#homepage-ads-container,
+#client-ads-container,
+#frontpage-ads-container {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+}
+
+/* All ad sections - stack vertically */
 #pageadscontainer section,
 #homepage-ads-container section,
 #client-ads-container section,
-#frontpage-ads-container section{
-    height: calc(100dvh - 4em);
+#frontpage-ads-container section,
+.menu-ad {
+    position: relative;
+    min-height: calc(100vh - 4em);
+    height: auto;
     color: white;
-    top: 4em !important;
     text-align: center;
     text-shadow: 1px 1px 1px #00000055;
     background: #000000;
-    width: -webkit-fill-available !important;
-    min-width: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
+    width: 100%;
     border: 1px solid var(--main-bg);
-    position: relative;
+    margin-bottom: 0;
 }
-#pageadscontainer section .inner, #clientad .inner,#four .inner,
+
+/* Sticky sections override */
+#pageadscontainer section.sticky,
+#homepage-ads-container section.sticky,
+#client-ads-container section.sticky,
+#frontpage-ads-container section.sticky,
+.menu-ad.sticky {
+    position: sticky !important;
+    top: 4em;
+    z-index: 2;
+}
+
+/* Remove sticky from inner when parent section is sticky */
+#pageadscontainer section.sticky .inner,
+#homepage-ads-container section.sticky .inner,
+#client-ads-container section.sticky .inner,
+#frontpage-ads-container section.sticky .inner,
+.menu-ad.sticky .inner {
+    position: relative !important;
+}
+
+#pageadscontainer section .inner, .menu-ad .inner,#four .inner,
 #homepage-ads-container section .inner,
 #client-ads-container section .inner,
 #frontpage-ads-container section .inner{
@@ -133,7 +161,7 @@
     position: relative;
 }
 #pageadscontainer ul,
-#clientad ul,
+.menu-ad ul,
 #homepage-ads-container ul,
 #client-ads-container ul,
 #frontpage-ads-container ul{
@@ -141,7 +169,7 @@
     font-variant-caps: petite-caps;
 }
 #pageadscontainer .taxonomy-links li a,
-#clientad .taxonomy-links li a,
+.menu-ad .taxonomy-links li a,
 #homepage-ads-container .taxonomy-links li a,
 #client-ads-container .taxonomy-links li a,
 #frontpage-ads-container .taxonomy-links li a{
@@ -160,7 +188,7 @@
     text-shadow: 1px 0px 1px #ffffff55, 0px -1px 1px #ffffff55, 1px 0px 1px #ffffff55, -1px 0px 1px #ffffff55;
 }
 
-#pageadscontainer section .inner .ad-panel, #clientad .inner .ad-panel ,#four .ad-panel,
+#pageadscontainer section .inner .ad-panel, .menu-ad .inner .ad-panel ,#four .ad-panel,
 #homepage-ads-container section .inner .ad-panel,
 #client-ads-container section .inner .ad-panel,
 #frontpage-ads-container section .inner .ad-panel{
@@ -179,9 +207,9 @@
     pointer-events: all;
 }
 #pageadscontainer section .inner .ad-panel img,
-#clientad .inner .ad-panel img,
+.menu-ad .inner .ad-panel img,
 #pageadscontainer section .inner .ad-panel video,
-#clientad .inner .ad-panel video,
+.menu-ad .inner .ad-panel video,
 #homepage-ads-container section .inner .ad-panel img,
 #client-ads-container section .inner .ad-panel img,
 #frontpage-ads-container section .inner .ad-panel img,
@@ -200,7 +228,7 @@
     transition: height 0.33s ease, transform 0.33s ease;
 }
 #pageadscontainer section .inner .ad-panel video,
-#clientad .inner .ad-panel video,
+.menu-ad .inner .ad-panel video,
 #homepage-ads-container section .inner .ad-panel video,
 #client-ads-container section .inner .ad-panel video,
 #frontpage-ads-container section .inner .ad-panel video{
@@ -211,10 +239,10 @@
 }
 #pageadscontainer section .inner .ad-panel h1 , 
 #pageadscontainer section .inner .ad-panel p,
-#clientad .inner .ad-panel h1,
-#clientad .inner .ad-panel p,
+.menu-ad .inner .ad-panel h1,
+.menu-ad .inner .ad-panel p,
 #pageadscontainer .inner .ad-panel button,
-#clientad .inner .ad-panel button,
+.menu-ad .inner .ad-panel button,
 #homepage-ads-container section .inner .ad-panel h1,
 #homepage-ads-container section .inner .ad-panel p,
 #client-ads-container section .inner .ad-panel h1,
@@ -234,7 +262,7 @@
     text-align: center;
 }
 #pageadscontainer .inner .ad-panel button,
-#clientad .inner .ad-panel button,
+.menu-ad .inner .ad-panel button,
 #homepage-ads-container .inner .ad-panel button,
 #client-ads-container .inner .ad-panel button,
 #frontpage-ads-container .inner .ad-panel button{
@@ -251,10 +279,9 @@
     max-width: 366px;
     margin-inline: auto;
 }
-#pageadscontainer section#one,
-#homepage-ads-container section#one,
-#client-ads-container section#one,
-#frontpage-ads-container section#one {
+
+#client-ads-container,#homepage-ads-container  {
+    margin-top: 2em;
 }
 
 #pageadscontainer section#two,
@@ -284,7 +311,10 @@
     border: none;
     pointer-events: none;
 }
-
+.sticky {
+  position: sticky !important;
+  top: 4em !important;
+}
 #pageadscontainer section#four.is-active .inner,
 #homepage-ads-container section#four.is-active .inner,
 #client-ads-container section#four.is-active .inner,

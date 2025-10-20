@@ -1,5 +1,6 @@
 {{ define "main" }}
   {{ if eq .LinkTitle ("Advertisments") }}
+    <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
     {{ partial "ads/clientads.html" . }}
   {{ else }}
     <div class="main-content">

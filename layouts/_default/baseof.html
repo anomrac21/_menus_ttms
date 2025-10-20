@@ -29,7 +29,7 @@
     {{ partial "layout/footer.html" . }}
   </footer>
   
-  <!-- Critical scripts loaded with defer for better performance -->
+  <!-- jQuery needed for external dependencies (askforserver.js, cart.js, search.js) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
   
   <!-- Core functionality - deferred -->
@@ -37,19 +37,16 @@
   <script src="{{ site.BaseURL}}js/custom.js" defer></script>
   <script src="{{ site.BaseURL}}js/loader.js" defer></script>
   
-  <!-- TTMenus core features - deferred -->
+  <!-- TTMenus core features - deferred (require jQuery) -->
   <script src="https://ct.ttmenus.com/js/askforserver.js" defer></script>
   <script src="https://ct.ttmenus.com/js/cart.js" defer></script>
   <script src="https://ct.ttmenus.com/js/search.js" defer></script>
   
   <!-- Non-critical third-party libraries -->
-  <!-- ScrollMagic requires jQuery, so must use defer to maintain load order -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/jquery.ScrollMagic.min.js" defer></script>
-  <!-- AOS and Barba can still load async as they don't depend on load order -->
+  <!-- AOS can load async as it doesn't depend on load order -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" async></script>
-  <script src="https://cdn.jsdelivr.net/npm/@barba/core" async></script>
+  <!-- Barba must use defer because loader.js depends on it -->
+  <script src="https://cdn.jsdelivr.net/npm/@barba/core" defer></script>
   
   <!-- Feature scripts - deferred -->
   <script src="{{ site.BaseURL}}js/ads-sticky.js" defer></script>
@@ -57,7 +54,6 @@
   <script src="{{ site.BaseURL}}js/client-ad-manager.js" defer></script>
   <script src="{{ site.BaseURL}}js/ad-scroll-progress.js" defer></script>
   <script src="{{ site.BaseURL}}js/aos.js" defer></script>
-  <script src="{{ site.BaseURL}}js/scrollmagic.js" defer></script>
   <script src="{{ site.BaseURL}}js/openinghours.js" defer></script>
   <script src="{{ site.BaseURL}}js/section-scroll.js" defer></script>
   

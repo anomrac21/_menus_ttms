@@ -23,7 +23,7 @@ function ensureAdsLoaded() {
             console.log('AdManager found! Checking if ads need refreshing...');
             try {
                 // Check if ads are actually visible in containers
-                const adContainers = document.querySelectorAll('#homepage-ads-container, #client-ads-container, #frontpage-ads-container');
+                const adContainers = document.querySelectorAll('#homepage-ads-container, #frontpage-ads-container');
                 let needsRefresh = false;
                 
                 adContainers.forEach(container => {
@@ -59,7 +59,7 @@ function ensureAdsLoaded() {
             console.log('Final check - window.adManager:', window.adManager);
             
             // Fallback: try to refresh any existing ads manually
-            const adContainers = document.querySelectorAll('#homepage-ads-container, #client-ads-container, #frontpage-ads-container, .frontpageads');
+            const adContainers = document.querySelectorAll('#homepage-ads-container, #frontpage-ads-container');
             adContainers.forEach(container => {
                 if (container.innerHTML.includes('Loading ads...')) {
                     container.innerHTML = '<p>Ads loading...</p>';
@@ -146,10 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
             window.adManager.populateAds();
         }
         
-        // Note: ScrollMagic initialization is handled separately in barba transitions
-        
         // Force a refresh of any ad containers
-        const adContainers = document.querySelectorAll('#homepage-ads-container, #client-ads-container, #frontpage-ads-container, .frontpageads');
+        const adContainers = document.querySelectorAll('#homepage-ads-container, #frontpage-ads-container');
         adContainers.forEach(container => {
             if (container.innerHTML.includes('Loading ads...') || container.innerHTML.includes('Ads loading...')) {
                 console.log(`Container ${container.id} still shows loading text, triggering refresh...`);
@@ -170,17 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'fade',
             async leave(data) {
                 localStorage.setItem("headerScroll", document.getElementById("menublock").scrollLeft);
-                
-                // Destroy ScrollMagic controller before page transition
-                if (typeof scrollMagicController !== 'undefined' && scrollMagicController) {
-                    console.log('Barba leave: Destroying ScrollMagic controller');
-                    try {
-                        scrollMagicController.destroy(true);
-                        scrollMagicController = null;
-                    } catch (error) {
-                        console.warn('Barba leave: Error destroying ScrollMagic controller:', error);
-                    }
-                }
                 
                 showLoader();
                 await new Promise(resolve => setTimeout(resolve, 366));
@@ -205,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('=== Barba enter: Post-navigation setup ===');
                     
                     // Check if ad containers exist
-                    const containers = ['homepage-ads-container', 'client-ads-container', 'frontpage-ads-container'];
+                    const containers = ['homepage-ads-container', 'frontpage-ads-container'];
                     const foundContainers = containers.filter(id => document.getElementById(id));
                     console.log('Ad containers found:', foundContainers);
                     
@@ -237,20 +224,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 }
                             }, 100);
                             
-                            // Initialize ScrollMagic AFTER ads are populated and DOM is fully stable
+                            // Refresh scroll progress bars
                             setTimeout(() => {
-                                if (typeof initFrontPageAdsScrollEffects === 'function') {
-                                    console.log('Barba enter: Initializing ScrollMagic after ads populated');
-                                    initFrontPageAdsScrollEffects();
+                                if (window.adScrollProgressManager) {
+                                    window.adScrollProgressManager.refresh();
                                 }
-                                
-                                // Refresh scroll progress bars after ScrollMagic is initialized
-                                setTimeout(() => {
-                                    if (window.adScrollProgressManager) {
-                                        window.adScrollProgressManager.refresh();
-                                    }
-                                }, 500);
-                            }, 300);
+                            }, 500);
                         }, 500);
                     } else {
                         console.error('AdManager not available during barba transition!');
@@ -272,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             async once(data) {
                 await new Promise(resolve => setTimeout(resolve, 3000));
-                initFrontPageAdsScrollEffects();
                 hideLoader();
                 
                 // Ensure ads are loaded after initial page load

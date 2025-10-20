@@ -1,7 +1,12 @@
-<a class="menu-anchor " id="ads-section"></a>
+<a class="menu-anchor" id="ads-section"></a>
+{{/* Client-side filtering: Container is populated by client-ad-manager.js */}}
+{{/* JavaScript will fetch ads from /advertisments/index.json and filter by day/date */}}
 <div id="homepage-ads-container" class="frontpageads item">
-  <!-- Ads will be populated dynamically by JavaScript -->
-  <div class="loading-ads">Loading ads...</div>
+  {{/* JavaScript (client-ad-manager.js) will populate this container with filtered ads */}}
+  {{/* Loading indicator while ads are being fetched */}}
+  <div class="ads-loading" style="text-align: center; padding: 2em; color: var(--text-color, #666);">
+    <p>Loading promotions...</p>
+  </div>
 </div>
 
 

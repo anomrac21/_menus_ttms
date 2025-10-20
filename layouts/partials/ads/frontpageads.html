@@ -1,38 +1,217 @@
-<div id="frontpage-ads-container" class="frontpageads item">
-  <section id="clientad">
+{{ if site.Params.ads.enabled }}
+<div id="frontpage-ads-container" class="frontpageads item" 
+     data-ads-api="{{ site.Params.ads.apiUrl }}" 
+     data-client-id="{{ site.Params.ads.clientId }}">
+  <section id="frontpage-ad-sponsored" class="ads menu-ad">
     <div class="scroll-progress-bar">
       <div class="scroll-progress-fill"></div>
     </div>
     <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
-      <!-- <li class="ad-panel" >
-        <span data-aos="zoom-out-right">Sponsored</span>
-        
-        
-        <img src="https://www.ttmenus.com/images/ttms_ad.webp" class="ad-portrait-bg">
-
-        
-        <video class="ad-portrait .ad-video" autoplay muted loop playsinline>
-          <source src="https://www.ttmenus.com/images/ad1.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      </li>
-      <li class="ad-panel" onclick="window.open('https://islandetickets.com/event/Atherlysafterdark?fbclid=PAQ0xDSwLZQJNleHRuA2FlbQIxMQABpxes8X0qB2xCS4W3KWxTFQpA1Lpf7UVq1A_YfwIj272EDpYbNsE68pHWmrgf_aem_ypxBiLhdGStxChmWNm3gcg', '_blank');">
-        <span data-aos="zoom-out-right">Sponsored</span>
-          
-        <img src="https://www.ttmenus.com/images/ttms_ad.webp" class="ad-portrait-bg">
-
-        
-        <video class="ad-portrait .ad-video" autoplay muted loop playsinline>
-          <source src="https://www.ttmenus.com/images/ad2.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      </li> -->
-      <li class="ad-panel" onclick="window.open('https://www.whatsapp.com/catalog/18683645662/?app_absent=0', '_blank');">
-        <span data-aos="zoom-out-right">Sponsored</span>
-        <img src="https://www.ttmenus.com/images/ad3.jpg" class="ad-portrait-bg" alt="Sponsored advertisement" loading="lazy">
-        <img src="https://www.ttmenus.com/images/ad3.jpg" class="ad-portrait" alt="Sponsored advertisement" loading="lazy">
+      <!-- Dynamic ads will be loaded here -->
+      <li class="ad-panel ad-loading">
+        <span class="loading-text">Loading ads...</span>
       </li>
     </ul>
   </section>
 </div>
+
+<script>
+(function() {
+  'use strict';
+  
+  // Ads Service Integration
+  const AdsManager = {
+    container: null,
+    adsApiUrl: null,
+    clientId: null,
+    sessionId: null,
+    
+    init() {
+      this.container = document.getElementById('frontpage-ads-container');
+      if (!this.container) return;
+      
+      this.adsApiUrl = this.container.getAttribute('data-ads-api');
+      this.clientId = this.container.getAttribute('data-client-id');
+      this.sessionId = this.generateSessionId();
+      
+      this.fetchAds();
+    },
+    
+    generateSessionId() {
+      // Generate or retrieve session ID for tracking
+      let sessionId = sessionStorage.getItem('ttmenus_session_id');
+      if (!sessionId) {
+        sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('ttmenus_session_id', sessionId);
+      }
+      return sessionId;
+    },
+    
+    async fetchAds() {
+      try {
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const url = `${this.adsApiUrl}/active-ads?client_id=${this.clientId}&day=${today}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        if (result.success && result.data && result.data.length > 0) {
+          this.renderAds(result.data);
+        } else {
+          this.hideAdsContainer();
+        }
+      } catch (error) {
+        console.error('Failed to fetch ads:', error);
+        this.hideAdsContainer();
+      }
+    },
+    
+    renderAds(ads) {
+      const ulElement = this.container.querySelector('ul.inner');
+      if (!ulElement) return;
+      
+      // Clear loading message
+      ulElement.innerHTML = '';
+      
+      // Render each ad
+      ads.forEach((ad, index) => {
+        const adElement = this.createAdElement(ad);
+        if (adElement) {
+          ulElement.appendChild(adElement);
+          // Track impression after a brief delay (ad is visible)
+          setTimeout(() => this.trackImpression(ad), 500);
+        }
+      });
+    },
+    
+    createAdElement(ad) {
+      const li = document.createElement('li');
+      li.className = 'ad-panel';
+      li.dataset.adId = ad.id;
+      
+      // Handle click if ad has a link
+      if (ad.link_url) {
+        li.onclick = () => {
+          this.trackClick(ad);
+          window.open(ad.link_url, '_blank');
+        };
+        li.style.cursor = 'pointer';
+      }
+      
+      // Add sponsored label
+      const sponsoredLabel = document.createElement('span');
+      sponsoredLabel.setAttribute('data-aos', 'zoom-out-right');
+      sponsoredLabel.textContent = 'Sponsored';
+      li.appendChild(sponsoredLabel);
+      
+      // Render images or video
+      if (ad.images && ad.images.length > 0) {
+        ad.images.forEach((image, idx) => {
+          const imageUrl = image.image_url;
+          const altText = image.alt_text || ad.title || 'Sponsored advertisement';
+          
+          // Check if it's a video
+          if (imageUrl.match(/\.(mp4|webm|ogg)$/i)) {
+            const video = document.createElement('video');
+            video.className = 'ad-portrait ad-video';
+            video.autoplay = true;
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            
+            const source = document.createElement('source');
+            source.src = imageUrl;
+            source.type = 'video/mp4';
+            video.appendChild(source);
+            
+            li.appendChild(video);
+          } else {
+            // Background image
+            const bgImg = document.createElement('img');
+            bgImg.src = imageUrl;
+            bgImg.className = 'ad-portrait-bg';
+            bgImg.alt = altText;
+            bgImg.loading = 'lazy';
+            li.appendChild(bgImg);
+            
+            // Foreground image
+            const fgImg = document.createElement('img');
+            fgImg.src = imageUrl;
+            fgImg.className = 'ad-portrait';
+            fgImg.alt = altText;
+            fgImg.loading = 'lazy';
+            li.appendChild(fgImg);
+          }
+        });
+      } else {
+        // No images available, show placeholder or skip
+        return null;
+      }
+      
+      return li;
+    },
+    
+    async trackImpression(ad) {
+      try {
+        const url = `${this.adsApiUrl}/tracking/impression`;
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ad_id: ad.id,
+            client_id: this.clientId,
+            session_id: this.sessionId,
+            device_type: this.getDeviceType(),
+            viewed_at: new Date().toISOString()
+          })
+        });
+      } catch (error) {
+        console.error('Failed to track impression:', error);
+      }
+    },
+    
+    async trackClick(ad) {
+      try {
+        const url = `${this.adsApiUrl}/tracking/click`;
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ad_id: ad.id,
+            clicked_at: new Date().toISOString(),
+            device_type: this.getDeviceType(),
+            referrer: window.location.href
+          })
+        });
+      } catch (error) {
+        console.error('Failed to track click:', error);
+      }
+    },
+    
+    getDeviceType() {
+      const ua = navigator.userAgent;
+      if (/mobile/i.test(ua)) return 'mobile';
+      if (/tablet/i.test(ua)) return 'tablet';
+      return 'desktop';
+    },
+    
+    hideAdsContainer() {
+      if (this.container) {
+        this.container.style.display = 'none';
+      }
+    }
+  };
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => AdsManager.init());
+  } else {
+    AdsManager.init();
+  }
+})();
+</script>
+{{ end }}
 

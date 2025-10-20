@@ -258,7 +258,7 @@ class TTMSAnalytics {
   observeAdImpressions() {
     // Wait a bit for ads to be populated
     setTimeout(() => {
-      const adElements = document.querySelectorAll('.ad-panel, #clientad, section[id*="ad"]');
+      const adElements = document.querySelectorAll('.ad-panel, .ads, section[id*="ad"]');
       
       if (adElements.length === 0) {
         console.log('No ads found to track, retrying...');

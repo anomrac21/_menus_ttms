@@ -9,7 +9,8 @@ html {
 .bottomads {
     background: var(--main-bg);
     z-index: 1;
-    position: relative
+    position: relative;
+    overflow: visible
 }
 
 .taxonomy {
@@ -3324,7 +3325,7 @@ a {
 }
 
 html,body {
-    overflow-x: hidden!important;
+    overflow-x: clip!important;
     width: -webkit-fill-available!important;
     margin: 0!important;
     padding: 0!important

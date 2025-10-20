@@ -13,7 +13,9 @@
         {{ $finalurl = $adurl }}
       {{ end }}
       
-      <section id="clientad">
+      {{ $adId := lower .LinkTitle | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" }}
+      
+      <section id="menu-ad-{{ $adId }}" class="ads menu-ad sticky" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
         <div class="scroll-progress-bar">
           <div class="scroll-progress-fill"></div>
         </div>
@@ -23,7 +25,7 @@
         <span data-aos="zoom-out-right">Promotion</span>
         <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
           {{ range .Params.images }}
-            <li class="ad-panel">
+            <li class="ad-panel" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
               <a href="{{ $finalurl }}" class="content-panel">
                 <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait-bg">
                 <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait">
