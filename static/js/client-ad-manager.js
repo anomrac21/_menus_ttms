@@ -119,7 +119,8 @@ class ClientAdManager {
     }
 
     // Generate and display HTML
-    const html = filtered.map(ad => this.generateAdHTML(ad)).join('');
+    const html = filtered.map(ad => this.generateAdHTML(ad)).join('') + 
+      '<section class="ads menu-ad sticky" style="height: 100vh; min-height: 0; background: none; border: none;"></section>';
     container.innerHTML = html;
     container.style.display = '';
     container.style.visibility = 'visible';
