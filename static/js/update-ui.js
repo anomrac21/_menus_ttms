@@ -260,11 +260,14 @@ const UpdateUI = {
         
         // Convert Hugo's format to our format
         this.state.menuItems = (data.menu_items || []).map(item => {
-          // Fix image paths - ensure they start with /
+          // Keep image paths as-is (without prepending /) for storage
+          // The / will be added only when displaying in DOM
           let images = [];
           if (item.images && item.images.length > 0) {
             images = item.images.map(img => {
-              return img.startsWith('/') ? img : '/' + img;
+              const path = typeof img === 'object' && img.image ? img.image : img;
+              // Remove leading / if present (normalize to no leading slash for storage)
+              return path.startsWith('/') ? path.substring(1) : path;
             });
           }
           
@@ -929,7 +932,7 @@ const UpdateUI = {
     
     return `
       <div class="${cardClasses.join(' ')}">
-        ${ad.image ? `<img src="${this.escapeHtml(ad.image)}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}">` : ''}
+        ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image)}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}">` : ''}
         
         <div class="menu-item-header">
           <h3 class="menu-item-title ${ad._isDeleted ? 'deleted' : ''}">${this.escapeHtml(ad.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
@@ -1523,7 +1526,7 @@ const UpdateUI = {
           <div>
             <h3 class="location-name">${this.escapeHtml(cat.name)}</h3>
             <p class="location-address">
-              ${cat.icon ? `<img src="${this.escapeHtml(cat.icon)}" alt="" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">` : ''}
+              ${cat.icon ? `<img src="${this.getDisplayImagePath(cat.icon)}" alt="" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">` : ''}
               Icon: ${this.escapeHtml(cat.icon || 'Not set')}
             </p>
           </div>
@@ -1640,7 +1643,7 @@ const UpdateUI = {
         <div class="category-section">
           <div class="category-header">
             <div class="category-header-left">
-              ${category.icon ? `<img src="${this.escapeHtml(category.icon)}" alt="" class="category-icon">` : ''}
+              ${category.icon ? `<img src="${this.getDisplayImagePath(category.icon)}" alt="" class="category-icon">` : ''}
               <div>
                 <h3 class="category-title">${this.escapeHtml(category.name)}</h3>
                 <p class="category-info">
@@ -1706,7 +1709,7 @@ const UpdateUI = {
     
     return `
       <div class="${cardClasses.join(' ')}" draggable="${!item._isDeleted}" ondragstart="UpdateUI.handleDragStart(event, '${this.escapeHtml(item.id)}')" ondragover="UpdateUI.handleDragOver(event)" ondrop="UpdateUI.handleDrop(event, '${this.escapeHtml(item.id)}')">
-        ${item.image ? `<img src="${this.escapeHtml(item.image)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}">` : ''}
+        ${item.image ? `<img src="${this.getDisplayImagePath(item.image)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}">` : ''}
         
         <div class="menu-item-header">
           <h3 class="menu-item-title ${item._isDeleted ? 'deleted' : ''}">${this.escapeHtml(item.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
@@ -3225,6 +3228,14 @@ const UpdateUI = {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  },
+
+  /**
+   * Helper: Normalize image path for display (add leading / if needed)
+   */
+  getDisplayImagePath(path) {
+    if (!path) return '';
+    return path.startsWith('/') ? path : '/' + path;
   },
 
   /**

@@ -14,4 +14,4 @@ document.addEventListener("barba:after", function () {
 
 window.addEventListener("scroll", () => {
   AOS.refresh();
-});
+}, { passive: true });

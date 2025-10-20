@@ -1,12 +1,12 @@
 {{ define "main" }}
   <div class="hero_logo_container item">
   {{ if .Params.image }}
-    <img id="bg" src="{{ .Params.image }}">
+    <img id="bg" src="{{ .Params.image }}" alt="{{ site.Title }} background" fetchpriority="high">
   {{ else }}
-    <img id="bg" src="/main/bg.webp">
+    <img id="bg" src="/main/bg.webp" alt="{{ site.Title }} background" fetchpriority="high">
   {{ end }}
   <div class="logo_container">
-    <a href="#openhours"><img id="logo" src="/branding/favicon512.webp"></a>
+    <a href="#openhours"><img id="logo" src="/branding/favicon512.webp" alt="{{ site.Title }} logo" width="512" height="512"></a>
   </div>
   </div> 
   {{ partial "components/contact_info.html" . }}
@@ -44,13 +44,13 @@
                   <div class="menu-header">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     {{ if .Params.image }}
-                      <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ .Params.image }}"></a>
+                      <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ .Params.image }}" alt="{{ .LinkTitle }}" loading="lazy"></a>
                     {{ end }}
                     <div class="headerstyle item" >
                       <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
                         <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
                         {{ if .Params.slidein }}
-                          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="{{ .Params.slidein.slideinimage }}">
+                          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="{{ .Params.slidein.slideinimage }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
                         {{ end }}
                       </h2>
                       

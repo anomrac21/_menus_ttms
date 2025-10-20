@@ -1,6 +1,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
+<meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ site.Params.description | default "Delicious food and drinks at great prices. View our digital menu and order online." }}{{ end }}">
+
+<!-- Preconnect to external domains for faster resource loading -->
+<link rel="preconnect" href="https://ct.ttmenus.com" crossorigin>
+<link rel="preconnect" href="https://cdn.onesignal.com" crossorigin>
+<link rel="preconnect" href="https://analytics.ttmenus.com" crossorigin>
+<link rel="preconnect" href="https://code.jquery.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
 {{ partialCached "head/css.html" . }}
 {{ partialCached "head/js.html" . }}
 <meta property="og:title" content="{{ .Title }} | {{ site.Title }}"/>
@@ -26,21 +37,29 @@
 <!-- APP THEME COLOR -->
 <meta name="theme-color" content="#000000"/>
 
-<!-- MAIN APP STYLE -->
+<!-- MAIN APP STYLE - Critical CSS loaded synchronously -->
 <link rel="stylesheet" href="{{ site.BaseURL}}css/colors.css"/>
 <link rel="stylesheet" href="{{ site.BaseURL}}css/custom.css"/>
-
-<link rel="stylesheet" href="{{ site.BaseURL}}src/css/adsbase.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}src/css/apple.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}src/css/ordering-system.css"/>
-
-<link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
-<!-- <link rel="stylesheet" href="https://ct.ttmenus.com/css/cart.css"/> -->
-
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
-<link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/>
-<link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/>
-<!-- <link rel="stylesheet" href="https://ct.ttmenus.com/css/footer.css"/> -->
+
+<!-- Non-critical CSS loaded with low priority -->
+<link rel="preload" href="{{ site.BaseURL}}src/css/adsbase.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="{{ site.BaseURL}}src/css/adsbase.css"/></noscript>
+
+<link rel="preload" href="{{ site.BaseURL}}src/css/apple.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="{{ site.BaseURL}}src/css/apple.css"/></noscript>
+
+<link rel="preload" href="{{ site.BaseURL}}src/css/ordering-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="{{ site.BaseURL}}src/css/ordering-system.css"/></noscript>
+
+<link rel="preload" href="https://ct.ttmenus.com/css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/></noscript>
+
+<link rel="preload" href="https://ct.ttmenus.com/css/dinein_select.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/></noscript>
+
+<link rel="preload" href="https://ct.ttmenus.com/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/></noscript>
 
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
@@ -54,10 +73,20 @@
 <link rel="shorcut icon" href="/branding/favicon512.webp"/>
 <link rel="apple-touch-icon-precomposed" href="/branding/favicon152.webp">
 
-<!--ANIMATE ON SCROLL ANIMATIONS-->
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<!--ANIMATE ON SCROLL ANIMATIONS - deferred -->
+<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"></noscript>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!-- Font Awesome with font-display optimization -->
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
+<style>
+  /* Font-display optimization for Font Awesome */
+  @font-face {
+    font-family: 'FontAwesome';
+    font-display: swap;
+  }
+</style>
 
 <!-- FONTS FOR THE MENU -->
 <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,45 +115,50 @@
     });
   });
 </script>
-<!-- Matomo Tag Manager -->
+<!-- Matomo Tag Manager - Deferred for performance -->
 <script>
-  var _mtm = window._mtm = window._mtm || [];
-  _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
-  (function() {
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
-  })();
+  // Defer analytics initialization
+  window.addEventListener('load', function() {
+    var _mtm = window._mtm = window._mtm || [];
+    _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+    (function() {
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
+    })();
+  });
 </script>
 <!-- End Matomo Tag Manager -->
-<!-- Matomo Global and Client Tracking -->
+<!-- Matomo Global and Client Tracking - Deferred -->
 <script>
-  var _paq = window._paq = window._paq || [];
+  window.addEventListener('load', function() {
+    var _paq = window._paq = window._paq || [];
 
-  /* Default tracker: ttmenus.com (Site ID 1) */
-  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-  _paq.push(["setCookieDomain", "*.ttmenus.com"]);
-  _paq.push(["setDomains", ["*.ttmenus.com"]]);
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
+    /* Default tracker: ttmenus.com (Site ID 1) */
+    _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+    _paq.push(["setCookieDomain", "*.ttmenus.com"]);
+    _paq.push(["setDomains", ["*.ttmenus.com"]]);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
 
-  /* Add second tracker: wingit.ttmenus.com (Site ID 6) */
-  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Params.services.analyticsid }}']);
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
+    /* Add second tracker: wingit.ttmenus.com (Site ID 6) */
+    _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Params.services.analyticsid }}']);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
 
-  (function() {
-    var u="//analytics.ttmenus.com/";
-    _paq.push(['setTrackerUrl', u+'matomo.php']);
-    _paq.push(['setSiteId', '1']);
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-  })();
+    (function() {
+      var u="//analytics.ttmenus.com/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '1']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  });
 </script>
 <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 <!-- End Matomo Code -->
 
-<!-- TTMS Analytics Tracking -->
-<script src="{{ site.BaseURL}}js/analytics-tracking.js"></script>
+<!-- TTMS Analytics Tracking - Deferred -->
+<script src="{{ site.BaseURL}}js/analytics-tracking.js" defer></script>
 
 {{- if site.Params.posintegration.enabled -}}
 <script>

@@ -7,13 +7,30 @@ class AdScrollProgressManager {
 
   // Initialize progress bars for all ad sections
   init() {
+    this.ticking = false;
     this.updateProgressBars();
     
-    // Update on scroll
-    window.addEventListener('scroll', () => this.updateProgressBars(), { passive: true });
+    // Update on scroll with requestAnimationFrame throttling
+    window.addEventListener('scroll', () => {
+      if (!this.ticking) {
+        window.requestAnimationFrame(() => {
+          this.updateProgressBars();
+          this.ticking = false;
+        });
+        this.ticking = true;
+      }
+    }, { passive: true });
     
-    // Update on resize
-    window.addEventListener('resize', () => this.updateProgressBars(), { passive: true });
+    // Update on resize with requestAnimationFrame throttling
+    window.addEventListener('resize', () => {
+      if (!this.ticking) {
+        window.requestAnimationFrame(() => {
+          this.updateProgressBars();
+          this.ticking = false;
+        });
+        this.ticking = true;
+      }
+    }, { passive: true });
     
     this.isInitialized = true;
   }
@@ -34,38 +51,49 @@ class AdScrollProgressManager {
   }
 
   // Update all progress bars based on scroll position
+  // Optimized to batch DOM reads and writes to prevent forced reflows
   updateProgressBars() {
     // Refresh the list of progress bars
     this.findProgressBars();
     
+    // BATCH READ PHASE - Read all layout properties first
     const scrollY = window.scrollY;
     const windowHeight = window.innerHeight;
     
-    this.progressBars.forEach((item, index) => {
+    const measurements = this.progressBars.map((item) => {
       const { section, progressBar, spacer } = item;
       
-      if (!progressBar) return;
+      if (!progressBar) return null;
       
-      // If there's a spacer, use it (ScrollMagic pinned section)
       if (spacer) {
-        const spacerTop = spacer.offsetTop;
-        const spacerHeight = spacer.offsetHeight;
-        const sectionHeight = section.offsetHeight;
-        
-        // ScrollMagic pins with triggerHook: 'onLeave', offset: -80
-        // Progress tracks from when ad is fully visible at top until it leaves
-        
-        // Based on visual testing: progress should be 0% when ad "fills screen" at the top
-        // The ad is considered "filling screen" when it's completely visible and pinned
-        // Account for header offset and when user actually sees it as "at top"
-        
-        // Progress = 0% when ad fills screen (fully visible at top)
-        // Progress = 100% when ad is leaving
-        
-        // Additional offset to match visual perception (header + other elements)
-        const visualOffset = 936; // Adjusted so scrollY=1000 = 0%
-        const scrollStart = spacerTop + visualOffset; // When ad fills the screen visually
-        const scrollEnd = spacerTop + spacerHeight + 200; // When ad leaves (adjusted to reach 100% at scrollY=1618)
+        return {
+          progressBar,
+          spacerTop: spacer.offsetTop,
+          spacerHeight: spacer.offsetHeight,
+          sectionHeight: section.offsetHeight,
+          hasSpace: true
+        };
+      } else {
+        return {
+          progressBar,
+          sectionTop: section.offsetTop,
+          sectionHeight: section.offsetHeight,
+          hasSpace: false
+        };
+      }
+    });
+    
+    // BATCH WRITE PHASE - Update all styles at once
+    measurements.forEach((measurement) => {
+      if (!measurement) return;
+      
+      const { progressBar, hasSpace } = measurement;
+      
+      if (hasSpace) {
+        const { spacerTop, spacerHeight } = measurement;
+        const visualOffset = 936;
+        const scrollStart = spacerTop + visualOffset;
+        const scrollEnd = spacerTop + spacerHeight + 200;
         const scrollRange = scrollEnd - scrollStart;
         
         if (scrollRange <= 0) {
@@ -73,21 +101,13 @@ class AdScrollProgressManager {
           return;
         }
         
-        // Calculate how far we've scrolled into the pinned area
         const scrolledIntoSection = scrollY - scrollStart;
         const progress = (scrolledIntoSection / scrollRange) * 100;
-        
-        // Bar FILLS from 0% to 100% as you scroll through the section
-        // 0% when ad is fully visible at top, 100% when ad is leaving
         const clampedProgress = Math.max(0, Math.min(100, progress));
         
         progressBar.style.width = `${clampedProgress.toFixed(2)}%`;
       } else {
-        // No spacer - section is not pinned
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.offsetHeight;
-        
-        // Progress from when section enters to when it leaves
+        const { sectionTop, sectionHeight } = measurement;
         const scrollStart = sectionTop - windowHeight;
         const scrollEnd = sectionTop + sectionHeight;
         const scrollRange = scrollEnd - scrollStart;

@@ -373,7 +373,7 @@ class TTMSAnalytics {
           this.trackEvent('Engagement', 'Scroll Depth', `${depth}%`);
         }
       });
-    });
+    }, { passive: true });
   }
 
   /**

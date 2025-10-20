@@ -6,11 +6,11 @@
 		<!-- MENU LOGO -->
 		{{ if and (not .IsHome)}}
 			<a class="logo-container" href="/" onclick="closeCart();">
-				<img class="logo center" src="/branding/favicon192.webp"></a>
+				<img class="logo center" src="/branding/favicon192.webp" alt="{{ site.Title }} logo" width="192" height="192" loading="lazy"></a>
 			<!-- END MENU LOGO -->
 		{{ else }}
 			<a href="#" class="logo-container" onclick="closeCart();">
-				<img class="logo center" src="/branding/favicon192.webp"></a>
+				<img class="logo center" src="/branding/favicon192.webp" alt="{{ site.Title }} logo" width="192" height="192" loading="lazy"></a>
 			<!-- END MENU LOGO -->
 		{{ end }}
 		{{ if and (not .IsHome)}}
@@ -29,7 +29,7 @@
 								{{ end }}
 									{{ range site.Data.menudata.menu }}
 										{{ if eq .name $title }}
-											<img class="icon center" src="{{ .icon }}">
+											<img class="icon center" src="{{ .icon }}" alt="{{ .name }} icon" loading="lazy">
 										{{ end }}
 									{{ end }}
 									<span>{{ .LinkTitle }}</span>
@@ -51,7 +51,7 @@
 								<a href="#{{ .LinkTitle}}" onclick="closeCart();">
 									{{ range .Site.Data.menudata.menu }}
 										{{ if eq .name $title }}
-											<img class="icon center" src="{{ .icon }}">
+											<img class="icon center" src="{{ .icon }}" alt="{{ .name }} icon" loading="lazy">
 										{{ end }}
 									{{ end }}
 									<span>{{ .LinkTitle }}</span>
@@ -65,7 +65,7 @@
 		{{ end }}
 				<li>
 					<a onclick="toggleSearch();">
-						<img class="icon center" src="https://ct.ttmenus.com/icons/utilities/search.svg">
+						<img class="icon center" src="https://ct.ttmenus.com/icons/utilities/search.svg" alt="Search" loading="lazy">
 						<span>search</span>
 					</a>
 				</li>

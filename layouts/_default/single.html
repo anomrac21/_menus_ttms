@@ -30,11 +30,11 @@
               {{if .Params.images }}
               <div class="singlepageimages">
                 {{range .Params.images }}
-                <img id="singlepageimage" src="/{{ .image }}">
+                <img id="singlepageimage" src="/{{ .image }}" alt="{{ $.Title }}" loading="lazy">
                 {{ end }}
               </div>
               {{ else }}
-                <img id="singlepageimage" src="/branding/favicon-400x200.webp">  
+                <img id="singlepageimage" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  
               {{ end }}  
               <h1>{{ .Title }}</h1>
               {{ .Content }}
@@ -61,11 +61,11 @@
       {{ if gt (len .Params.images) 0 }}
         <a href="{{ .Params.link }}" class="singlepageimages">
           {{ range .Params.images }}
-            <img src="/{{ .image }}">
+            <img src="/{{ .image }}" alt="{{ $.Title }}" loading="lazy">
           {{ end }}
         </a>
       {{ else }}
-        <img id="singlepageimage" src="/branding/favicon-400x200.webp">  
+        <img id="singlepageimage" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  
       {{ end }}  
       <h1>{{ .Title }}</h1>
       {{ range .Params.youtube }}
