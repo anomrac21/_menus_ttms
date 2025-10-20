@@ -112,8 +112,8 @@
   OneSignalDeferred.push(function(OneSignal) {
     const appId = "{{ site.Params.services.onesignalid }}";
     
-    // Only initialize if appId is provided and valid
-    if (appId && appId.trim() !== "" && !appId.includes("{{")) {
+    // Only initialize if appId is provided and valid (check if it's not empty and doesn't contain template syntax)
+    if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
       OneSignal.init({
         appId: appId,
       }).catch(function(error) {
