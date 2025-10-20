@@ -10,26 +10,6 @@
     overflow: hidden;
 }
 
-/* Smooth transitions for ScrollMagic on mobile */
-.scrollmagic-transitioning {
-    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    -webkit-transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-}
-
-/* Enable smooth scrolling globally */
-html {
-    scroll-behavior: smooth;
-}
-
-/* Optimize for touch devices */
-@media (hover: none) and (pointer: coarse) {
-    section {
-        -webkit-overflow-scrolling: touch;
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-    }
-}
-
 .scroll-progress-fill {
     height: 100%;
     width: 0%;
@@ -65,8 +45,6 @@ html {
     scroll-snap-align:start;
     min-height: 200vh !important;
     inset: 4em auto auto auto !important;
-    /* Smooth transition for pin/unpin */
-    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 #pageadscontainer span,
 #homepage-ads-container span,
@@ -126,12 +104,6 @@ html {
     max-width: -webkit-fill-available !important;
     border: 1px solid var(--main-bg);
     position: relative;
-    /* Smooth scrolling optimizations for mobile */
-    will-change: transform, opacity;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 #pageadscontainer section .inner, #clientad .inner,#four .inner,
 #homepage-ads-container section .inner,

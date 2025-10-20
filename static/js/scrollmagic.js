@@ -3,12 +3,6 @@ let scrollMagicController = null;
 let scrollMagicInitializing = false;
 let scrollMagicInitTimeout = null;
 
-// Detect mobile devices for optimized scroll behavior
-function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-    || window.innerWidth <= 768;
-}
-
 function initFrontPageAdsScrollEffects() {
   console.log('initFrontPageAdsScrollEffects: Called');
   
@@ -55,17 +49,10 @@ function initFrontPageAdsScrollEffects() {
         }
       }
 
-      // Detect mobile for smoother scrolling
-      const isMobile = isMobileDevice();
-      console.log('initFrontPageAdsScrollEffects: Mobile device detected:', isMobile);
-      
-      // Use a gentler triggerHook for mobile to prevent jumping
-      const triggerHookValue = isMobile ? 0.1 : 'onLeave';
-      
-      // Create new controller with optimized settings
+      // Create new controller
       scrollMagicController = new ScrollMagic.Controller({
         globalSceneOptions: {
-          triggerHook: triggerHookValue
+          triggerHook: 'onLeave'
         }
       });
 
@@ -73,10 +60,6 @@ function initFrontPageAdsScrollEffects() {
       let processedCount = 0;
       const sections = $("section");
       console.log('initFrontPageAdsScrollEffects: Found', sections.length, 'sections');
-      
-      // Mobile-optimized offset and duration
-      const offsetValue = isMobile ? -40 : -80;
-      const durationMultiplier = isMobile ? 1.2 : 1.0;
       
       sections.each(function() {
         // Check if element exists and is still in the DOM
@@ -95,35 +78,13 @@ function initFrontPageAdsScrollEffects() {
         console.log('initFrontPageAdsScrollEffects: Processing section:', name);
         
         try {
-          // Add smooth CSS class for mobile transitions
-          if (isMobile) {
-            $(this).css({
-              'transition': 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              '-webkit-transition': 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-            });
-          }
-          
-          const scene = new ScrollMagic.Scene({
+          new ScrollMagic.Scene({
             triggerElement: this,
-            offset: offsetValue,
-            duration: this.offsetHeight * durationMultiplier
+            offset: -80
           })
           .setPin(this)
           .loglevel(3)
           .addTo(scrollMagicController);
-          
-          // Add event listeners for smooth mobile transitions
-          if (isMobile) {
-            scene.on('start', function(event) {
-              $(event.target.triggerElement()).addClass('scrollmagic-transitioning');
-            });
-            
-            scene.on('end', function(event) {
-              setTimeout(function() {
-                $(event.target.triggerElement()).removeClass('scrollmagic-transitioning');
-              }, 500);
-            });
-          }
           
           processedCount++;
         } catch (error) {
