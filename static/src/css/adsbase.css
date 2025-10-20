@@ -43,7 +43,7 @@
 #client-ads-container .scrollmagic-pin-spacer,
 #frontpage-ads-container .scrollmagic-pin-spacer{
     scroll-snap-align:start;
-    min-height: 256vh !important;
+    min-height: 200vh !important;
     inset: 4em auto auto auto !important;
 }
 #pageadscontainer span,
