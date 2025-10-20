@@ -38,12 +38,9 @@
     overflow: hidden;
     position: relative;
     pointer-events: none;
-}#pageadscontainer .scrollmagic-pin-spacer,
-#homepage-ads-container .scrollmagic-pin-spacer,
-#client-ads-container .scrollmagic-pin-spacer,
-#frontpage-ads-container .scrollmagic-pin-spacer{
+}.scrollmagic-pin-spacer{
     scroll-snap-align:start;
-    min-height: 200vh !important;
+    min-height: 166vh !important;
     inset: 4em auto auto auto !important;
 }
 #pageadscontainer span,
@@ -89,7 +86,7 @@
     color: #ffffff;
 }
 
-#pageadscontainer section, #clientad ,#four,
+#pageadscontainer section,
 #homepage-ads-container section,
 #client-ads-container section,
 #frontpage-ads-container section{
