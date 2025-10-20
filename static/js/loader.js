@@ -1,6 +1,22 @@
 // Global flag to prevent multiple simultaneous ad loading attempts
 let isAdsLoading = false;
 let adManagerCheckCount = 0;
+let maxLoaderTimeout = null;
+
+// CRITICAL: Ensure loader is visible immediately, even before DOMContentLoaded
+// This runs as soon as the script is parsed
+(function() {
+    // Set up early loader timeout that starts immediately
+    maxLoaderTimeout = setTimeout(() => {
+        console.log('Emergency loader timeout - forcing hide');
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.opacity = '0';
+            loader.style.pointerEvents = 'none';
+            setTimeout(() => loader.style.display = 'none', 500);
+        }
+    }, 4000); // 4 second emergency timeout
+})();
 
 // Function to ensure ads are loaded with retry mechanism
 function ensureAdsLoaded() {
@@ -76,6 +92,18 @@ function ensureAdsLoaded() {
 document.addEventListener('DOMContentLoaded', function() {
     const loader = document.getElementById('loader');
     const loaderImage = document.getElementById('loaderImage');
+    
+    // Clear emergency timeout and set up proper one now that DOM is ready
+    if (maxLoaderTimeout) {
+        clearTimeout(maxLoaderTimeout);
+    }
+    
+    // Maximum timeout to hide loader (fallback in case page takes too long)
+    maxLoaderTimeout = setTimeout(() => {
+        console.log('Maximum loader timeout reached, force hiding loader...');
+        hideLoader();
+    }, 4000); // 4 seconds maximum
+    
     let animations = [  'loader-hide-up',
                         'loader-hide-up-right',
                         'loader-hide-right',
@@ -119,6 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function hideLoader() {
+        // Clear the maximum timeout since we're hiding the loader normally
+        if (maxLoaderTimeout) {
+            clearTimeout(maxLoaderTimeout);
+            maxLoaderTimeout = null;
+        }
+        
         randomAnim = animations[Math.floor(Math.random() * animations.length)];
         loader.classList.add(randomAnim);
         initAOS();

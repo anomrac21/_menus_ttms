@@ -116,6 +116,7 @@
 #client-ads-container section.sticky,
 #frontpage-ads-container section.sticky,
 .menu-ad.sticky {
+    position: -webkit-sticky !important;
     position: sticky !important;
     top: 4em;
     z-index: 2;
@@ -310,10 +311,6 @@
     backdrop-filter: blur(0px);
     border: none;
     pointer-events: none;
-}
-.sticky {
-  position: sticky !important;
-  top: 4em !important;
 }
 #pageadscontainer section#four.is-active .inner,
 #homepage-ads-container section#four.is-active .inner,

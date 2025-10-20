@@ -29,33 +29,34 @@
     {{ partial "layout/footer.html" . }}
   </footer>
   
-  <!-- jQuery needed for external dependencies (askforserver.js, cart.js, search.js) -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+  <!-- CRITICAL SCRIPTS - Load first with defer (in order) -->
+  <!-- Barba.js must load early as loader.js depends on it -->
+  <script src="https://cdn.jsdelivr.net/npm/@barba/core" defer></script>
   
-  <!-- Core functionality - deferred -->
-  <script src="{{ site.BaseURL}}js/app.js" defer></script>
-  <script src="{{ site.BaseURL}}js/custom.js" defer></script>
+  <!-- Loader script - High priority, loads after Barba -->
   <script src="{{ site.BaseURL}}js/loader.js" defer></script>
   
-  <!-- TTMenus core features - deferred (require jQuery) -->
+  <!-- Core app functionality - deferred -->
+  <script src="{{ site.BaseURL}}js/app.js" defer></script>
+  <script src="{{ site.BaseURL}}js/custom.js" defer></script>
+  
+  <!-- IMPORTANT DEPENDENCIES - jQuery and core features -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
   <script src="https://ct.ttmenus.com/js/askforserver.js" defer></script>
   <script src="https://ct.ttmenus.com/js/cart.js" defer></script>
   <script src="https://ct.ttmenus.com/js/search.js" defer></script>
   
-  <!-- Non-critical third-party libraries -->
-  <!-- AOS can load async as it doesn't depend on load order -->
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" async></script>
-  <!-- Barba must use defer because loader.js depends on it -->
-  <script src="https://cdn.jsdelivr.net/npm/@barba/core" defer></script>
-  
-  <!-- Feature scripts - deferred -->
-  <script src="{{ site.BaseURL}}js/ads-sticky.js" defer></script>
-  <script src="{{ site.BaseURL}}js/analytics-integrations.js" defer></script>
+  <!-- SECONDARY FEATURES - Load after core functionality -->
   <script src="{{ site.BaseURL}}js/client-ad-manager.js" defer></script>
-  <script src="{{ site.BaseURL}}js/ad-scroll-progress.js" defer></script>
-  <script src="{{ site.BaseURL}}js/aos.js" defer></script>
   <script src="{{ site.BaseURL}}js/openinghours.js" defer></script>
+  <script src="{{ site.BaseURL}}js/ads-sticky.js" defer></script>
+  <script src="{{ site.BaseURL}}js/ad-scroll-progress.js" defer></script>
   <script src="{{ site.BaseURL}}js/section-scroll.js" defer></script>
+  
+  <!-- NON-CRITICAL - Async load for performance -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" async></script>
+  <script src="{{ site.BaseURL}}js/aos.js" defer></script>
+  <script src="{{ site.BaseURL}}js/analytics-integrations.js" defer></script>
   
   {{ partial "features/whatsapp_ordering_system.html" . }}
 

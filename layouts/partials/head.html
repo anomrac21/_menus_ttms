@@ -3,6 +3,65 @@
 <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
 <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ site.Params.description | default "Delicious food and drinks at great prices. View our digital menu and order online." }}{{ end }}">
 
+<!-- Preload critical loader resources FIRST -->
+<link rel="preload" href="https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
+<link rel="preload" href="/branding/favicon144.webp" as="image" fetchpriority="high">
+<link rel="preload" href="https://ct.ttmenus.com/css/loader.css" as="style" fetchpriority="high">
+
+<!-- Inline critical loader CSS for instant rendering -->
+<style>
+  /* Critical loader styles - inline for instant display */
+  #loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--background-color, #000);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+  
+  #loader img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  #loaderImage {
+    
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  
+  #menuImage {
+    width: 80px;
+    height: 80px;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+  
+  /* Hide classes for loader animations - basic fallback */
+  #loader.loader-hide-up,
+  #loader.loader-hide-down,
+  #loader.loader-hide-left,
+  #loader.loader-hide-right {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  #loader.loader-hide-up { transform: translateY(-100%); }
+  #loader.loader-hide-down { transform: translateY(100%); }
+  #loader.loader-hide-left { transform: translateX(-100%); }
+  #loader.loader-hide-right { transform: translateX(100%); }
+</style>
+
 <!-- Preconnect to external domains for faster resource loading -->
 <link rel="preconnect" href="https://ct.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://cdn.onesignal.com" crossorigin>
@@ -43,8 +102,7 @@
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
 
 <!-- Non-critical CSS loaded with low priority -->
-<link rel="preload" href="{{ site.BaseURL}}src/css/adsbase.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="{{ site.BaseURL}}src/css/adsbase.css"/></noscript>
+<link rel="stylesheet" href="{{ site.BaseURL}}src/css/adsbase.css"/>
 
 <link rel="preload" href="{{ site.BaseURL}}src/css/apple.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="{{ site.BaseURL}}src/css/apple.css"/></noscript>
