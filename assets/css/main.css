@@ -646,7 +646,7 @@ details[open] ul.all-hours {
 
 .cart-item-card.collapsed {
     padding: .5em .6em;
-    position: relative;
+    position: relative
 }
 
 .cart-item-card.collapsed .cart-item-body {
@@ -3389,6 +3389,8 @@ main img {
     z-index: 1;
     position: relative;
     max-height: 66dvh;
+    width: auto;
+    height: auto;
     margin-inline:auto}
 
 #bg {
