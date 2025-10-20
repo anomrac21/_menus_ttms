@@ -110,9 +110,22 @@
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.init({
-      appId: "{{ site.Params.services.onesignalid }}",
-    });
+    const appId = "{{ site.Params.services.onesignalid }}";
+    
+    // Only initialize if appId is provided and valid
+    if (appId && appId.trim() !== "" && !appId.includes("{{")) {
+      OneSignal.init({
+        appId: appId,
+      }).catch(function(error) {
+        console.warn('OneSignal initialization error:', error.message);
+        // If there's an appId mismatch, we could clear the service worker
+        if (error.message.includes("AppID doesn't match")) {
+          console.log('OneSignal: AppID mismatch detected. Service worker may need to be cleared.');
+        }
+      });
+    } else {
+      console.warn('OneSignal: Invalid or missing appId, skipping initialization');
+    }
   });
 </script>
 <!-- Matomo Tag Manager - Deferred for performance -->

@@ -6,6 +6,19 @@ let scrollMagicInitTimeout = null;
 function initFrontPageAdsScrollEffects() {
   console.log('initFrontPageAdsScrollEffects: Called');
   
+  // Check if required dependencies are loaded
+  if (typeof $ === 'undefined' || typeof jQuery === 'undefined') {
+    console.warn('initFrontPageAdsScrollEffects: jQuery not loaded yet, deferring initialization');
+    setTimeout(initFrontPageAdsScrollEffects, 100);
+    return;
+  }
+  
+  if (typeof ScrollMagic === 'undefined') {
+    console.warn('initFrontPageAdsScrollEffects: ScrollMagic not loaded yet, deferring initialization');
+    setTimeout(initFrontPageAdsScrollEffects, 100);
+    return;
+  }
+  
   // Prevent multiple simultaneous initializations
   if (scrollMagicInitializing) {
     console.log('initFrontPageAdsScrollEffects: Already initializing, skipping...');
