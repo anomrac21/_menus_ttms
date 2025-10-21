@@ -3570,6 +3570,24 @@ li.locations {
     gap: .4em;
     width: 100vw;
     max-width: 480px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.location-item .locbtn {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.location-item .delivery-toggle-btn {
+    flex: 0 0 auto;
+    width: 8em !important;
+}
+
+.location-item .delivery-options {
+    flex: 0 0 100%;
+    width: 100%;
 }
 
 .locations .locbtn {
@@ -3741,7 +3759,8 @@ a[onclick*=findClosestLocation]:hover {
     align-items: center;
     justify-content: center;
     gap: .5em;
-    flex-direction: column
+    flex-direction: column;
+    flex-shrink: 0;
 }
 
 .delivery-toggle-btn:hover {
@@ -3754,7 +3773,8 @@ a[onclick*=findClosestLocation]:hover {
     display: flex;
     gap: .5em;
     margin-top: .5em;
-    transition: all .3s ease
+    transition: all .3s ease;
+    flex-wrap: nowrap;
 }
 
 .delivery-options.hide {
@@ -4219,6 +4239,37 @@ a[onclick*=findClosestLocation]:hover {
     .tag {
         font-size: 10px;
         padding: 3px 10px
+    }
+    
+    /* Fix for iPhone location button expansion issue */
+    .location-item {
+        flex-wrap: wrap;
+    }
+    
+    .location-item .locbtn {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto !important;
+    }
+    
+    .location-item .delivery-toggle-btn {
+        flex: 0 0 auto;
+        width: 8em !important;
+        min-width: 8em;
+        max-width: 8em;
+    }
+    
+    .location-item .delivery-options {
+        flex: 0 0 100%;
+        width: 100% !important;
+        max-width: 100%;
+    }
+    
+    .location-item .delivery-option-btn {
+        flex: 0 0 auto;
+        width: 8em !important;
+        min-width: 8em;
+        max-width: 8em;
     }
 }
 
