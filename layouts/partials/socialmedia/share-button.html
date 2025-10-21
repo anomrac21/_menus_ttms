@@ -87,13 +87,13 @@ function showShareNotification(message) {
     notification.classList.add('show');
   }, 10);
   
-  // Hide and remove after 3 seconds
+  // Hide and remove after 6 seconds (minimum for readability)
   setTimeout(() => {
     notification.classList.remove('show');
     setTimeout(() => {
       document.body.removeChild(notification);
     }, 300);
-  }, 3000);
+  }, 6000);
 }
 </script>
 

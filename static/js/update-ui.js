@@ -3256,6 +3256,12 @@ const UpdateUI = {
    * Show alert message
    */
   showAlert(message, type = 'info') {
+    console.log('🔔 showAlert called:', message, type);
+    
+    // Set duration FIRST (before using it)
+    const duration = type === 'success' ? 12000 : 10000;
+    console.log(`⏰ Duration set to: ${duration}ms (${duration/1000} seconds)`);
+    
     // Get or create notification container (stacked toasts)
     let notificationContainer = document.getElementById('notification-container');
     if (!notificationContainer) {
@@ -3274,38 +3280,114 @@ const UpdateUI = {
       document.body.appendChild(notificationContainer);
     }
 
-    // Create notification toast
+    // Map type to colors (Bootstrap-like but custom)
+    const typeColors = {
+      success: { bg: '#d1e7dd', border: '#badbcc', text: '#0f5132' },
+      error: { bg: '#f8d7da', border: '#f5c2c7', text: '#842029' },
+      danger: { bg: '#f8d7da', border: '#f5c2c7', text: '#842029' },
+      warning: { bg: '#fff3cd', border: '#ffecb5', text: '#664d03' },
+      info: { bg: '#cff4fc', border: '#b6effb', text: '#055160' }
+    };
+    const colors = typeColors[type] || typeColors.info;
+
+    // Create notification toast (NO Bootstrap JS interference)
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show`;
     notification.style.cssText = `
       margin: 0;
+      padding: 12px 45px 12px 15px;
+      border: 1px solid ${colors.border};
+      border-radius: 4px;
+      background-color: ${colors.bg};
+      color: ${colors.text};
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       animation: slideInRight 0.3s ease-out;
+      position: relative;
+      min-width: 250px;
     `;
     
     // Support multi-line messages
     const formattedMessage = message.replace(/\n/g, '<br>');
     
-    notification.innerHTML = `
-      <div style="white-space: pre-wrap;">${formattedMessage}</div>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    // Close button (custom, no Bootstrap)
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      color: ${colors.text};
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      opacity: 0.5;
     `;
+    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = 'white-space: pre-wrap; padding-right: 10px; font-weight: 500;';
+    messageDiv.innerHTML = formattedMessage;
+    
+    // Add countdown timer display
+    const timerDiv = document.createElement('div');
+    timerDiv.style.cssText = 'font-size: 10px; opacity: 0.6; margin-top: 5px; font-weight: normal;';
+    const seconds = Math.ceil(duration / 1000);
+    timerDiv.textContent = `Auto-dismiss in ${seconds}s`;
+    messageDiv.appendChild(timerDiv);
+    
+    console.log('📝 Timer div created, initial text:', timerDiv.textContent);
+    
+    // Update countdown every second
+    let remainingTime = seconds;
+    const countdownInterval = setInterval(() => {
+      remainingTime--;
+      console.log('⏱️ Countdown tick:', remainingTime);
+      if (remainingTime > 0) {
+        timerDiv.textContent = `Auto-dismiss in ${remainingTime}s`;
+      } else {
+        clearInterval(countdownInterval);
+      }
+    }, 1000);
+    
+    notification.appendChild(messageDiv);
+    notification.appendChild(closeBtn);
     
     // Add to container (stacks vertically)
     notificationContainer.appendChild(notification);
+    console.log('✅ Notification added to DOM');
     
-    // Auto-remove after duration
-    const duration = type === 'success' ? 8000 : 5000;
-    setTimeout(() => {
+    // Define removal function
+    const removeNotification = () => {
+      console.log('🗑️ Removing notification');
+      clearInterval(countdownInterval);
       notification.style.animation = 'slideOutRight 0.3s ease-in';
-      setTimeout(() => notification.remove(), 300);
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.remove();
+          console.log('💥 Notification removed from DOM');
+        }
+      }, 300);
+    };
+    
+    console.log(`⏰ Setting auto-remove timer for ${duration}ms`);
+    const autoRemoveTimer = setTimeout(() => {
+      console.log('⏰ Auto-remove timer fired!');
+      removeNotification();
     }, duration);
     
     // Manual close
-    notification.querySelector('.btn-close').addEventListener('click', () => {
-      notification.style.animation = 'slideOutRight 0.3s ease-in';
-      setTimeout(() => notification.remove(), 300);
+    closeBtn.addEventListener('click', () => {
+      console.log('👆 Manual close clicked');
+      clearTimeout(autoRemoveTimer);
+      removeNotification();
     });
+    
+    console.log('🎉 Notification setup complete');
   },
 };
 
