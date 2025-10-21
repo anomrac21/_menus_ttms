@@ -3568,7 +3568,8 @@ li.locations {
 .location-item {
     display: flex;
     gap: .4em;
-    width: 100vw;
+    width: -webkit-fill-available;
+    max-width: 100%;
     max-width: 480px;
     flex-wrap: wrap;
     align-items: flex-start;
