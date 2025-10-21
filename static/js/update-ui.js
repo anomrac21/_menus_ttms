@@ -3257,7 +3257,7 @@ const UpdateUI = {
    */
   showAlert(message, type = 'info') {
     // Set duration FIRST (before using it)
-    const duration = 6000; // 6 seconds for all messages
+    const duration = 12000; // 12 seconds for all messages
     
     // Get or create notification container (stacked toasts)
     let notificationContainer = document.getElementById('notification-container');
