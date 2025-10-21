@@ -13,8 +13,8 @@
   <div class="hero-content">
     {{ .Content }}
     {{ partial "client/clienttourimages.html" . }}
+    {{ partial "socialmedia/share-button.html" . }}
     
-  
   </div>
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
@@ -133,5 +133,5 @@
     {{ end }}
   {{ end }}
   </div>
-  {{ partial "socialmedia/social-share-all.html" . }}
+  
 {{ end }}

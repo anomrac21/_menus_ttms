@@ -2654,6 +2654,25 @@ function toggleTTMS(){
     footerBtns.classList.add('smallfont');
 	}
 
+// FOOTER SETTINGS/ACCESSIBILITY TOGGLE
+function toggleFooterAccessibility(){
+    var settings = document.getElementById("footerSettings");
+    var footerBtns = document.getElementById("footerBtns");
+    if(settings.classList.contains('hide')){
+      settings.classList.remove('hide');
+      footerBtns.classList.add('bigfont');
+      footerBtns.classList.remove('smallfont');
+      footerBtns.classList.add('grad1');
+      footerBtns.classList.remove('grad2');
+    }else{
+      settings.classList.add('hide');
+      footerBtns.classList.add('grad2');
+      footerBtns.classList.remove('grad1');
+      footerBtns.classList.remove('bigfont');
+      footerBtns.classList.add('smallfont');
+    }
+  }
+
 // ===== TABLE MODAL FUNCTIONS =====
 
 // Global variable to store the selected location data
