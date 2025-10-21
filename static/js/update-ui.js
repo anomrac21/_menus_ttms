@@ -3266,7 +3266,7 @@ const UpdateUI = {
       notificationContainer.id = 'notification-container';
       notificationContainer.style.cssText = `
         position: fixed;
-        top: 80px;
+        top: 1rem;
         right: 10px;
         left: 10px;
         z-index: 9999;
