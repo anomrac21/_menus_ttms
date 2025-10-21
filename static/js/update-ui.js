@@ -3256,11 +3256,8 @@ const UpdateUI = {
    * Show alert message
    */
   showAlert(message, type = 'info') {
-    console.log('🔔 showAlert called:', message, type);
-    
     // Set duration FIRST (before using it)
-    const duration = type === 'success' ? 12000 : 10000;
-    console.log(`⏰ Duration set to: ${duration}ms (${duration/1000} seconds)`);
+    const duration = 6000; // 6 seconds for all messages
     
     // Get or create notification container (stacked toasts)
     let notificationContainer = document.getElementById('notification-container');
@@ -3272,7 +3269,7 @@ const UpdateUI = {
         top: 80px;
         right: 20px;
         z-index: 9999;
-        max-width: 400px;
+        width: 100vw;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -3340,13 +3337,10 @@ const UpdateUI = {
     timerDiv.textContent = `Auto-dismiss in ${seconds}s`;
     messageDiv.appendChild(timerDiv);
     
-    console.log('📝 Timer div created, initial text:', timerDiv.textContent);
-    
     // Update countdown every second
     let remainingTime = seconds;
     const countdownInterval = setInterval(() => {
       remainingTime--;
-      console.log('⏱️ Countdown tick:', remainingTime);
       if (remainingTime > 0) {
         timerDiv.textContent = `Auto-dismiss in ${remainingTime}s`;
       } else {
@@ -3359,35 +3353,26 @@ const UpdateUI = {
     
     // Add to container (stacks vertically)
     notificationContainer.appendChild(notification);
-    console.log('✅ Notification added to DOM');
     
     // Define removal function
     const removeNotification = () => {
-      console.log('🗑️ Removing notification');
       clearInterval(countdownInterval);
       notification.style.animation = 'slideOutRight 0.3s ease-in';
       setTimeout(() => {
         if (notification.parentNode) {
           notification.remove();
-          console.log('💥 Notification removed from DOM');
         }
       }, 300);
     };
     
-    console.log(`⏰ Setting auto-remove timer for ${duration}ms`);
-    const autoRemoveTimer = setTimeout(() => {
-      console.log('⏰ Auto-remove timer fired!');
-      removeNotification();
-    }, duration);
+    // Auto-remove after duration
+    const autoRemoveTimer = setTimeout(removeNotification, duration);
     
     // Manual close
     closeBtn.addEventListener('click', () => {
-      console.log('👆 Manual close clicked');
       clearTimeout(autoRemoveTimer);
       removeNotification();
     });
-    
-    console.log('🎉 Notification setup complete');
   },
 };
 
