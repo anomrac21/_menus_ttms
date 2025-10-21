@@ -3568,8 +3568,8 @@ li.locations {
 .location-item {
     display: flex;
     gap: .4em;
-    width: 100%;
-    max-width: -webkit-fill-available;
+    width: 100vw;
+    max-width: 480px;
 }
 
 .locations .locbtn {
