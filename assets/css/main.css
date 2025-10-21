@@ -4267,9 +4267,8 @@ a[onclick*=findClosestLocation]:hover {
     
     .location-item .delivery-option-btn {
         flex: 0 0 auto;
-        width: 8em !important;
+        width: -webkit-fill-available !important;
         min-width: 8em;
-        max-width: 8em;
     }
 }
 
