@@ -1709,7 +1709,7 @@ const UpdateUI = {
     
     return `
       <div class="${cardClasses.join(' ')}" draggable="${!item._isDeleted}" ondragstart="UpdateUI.handleDragStart(event, '${this.escapeHtml(item.id)}')" ondragover="UpdateUI.handleDragOver(event)" ondrop="UpdateUI.handleDrop(event, '${this.escapeHtml(item.id)}')">
-        ${item.image ? `<img src="${this.getDisplayImagePath(item.image)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}">` : ''}
+        ${item.image ? `<img src="${this.getDisplayImagePath(item.image, item.id)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}">` : ''}
         
         <div class="menu-item-header">
           <h3 class="menu-item-title ${item._isDeleted ? 'deleted' : ''}">${this.escapeHtml(item.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
@@ -2927,7 +2927,12 @@ const UpdateUI = {
           await this.publishItemSilent(item.id, false); // false = don't push git yet
           successCount++;
           const action = item._isDeleted ? '🗑️' : (item._isNew ? '➕' : '📝');
-          successItems.push(`${action} ${item.title}`);
+          
+          // Check if item has pending image uploads
+          const hasPendingImages = sessionStorage.getItem(`pending_uploads_${item.id}`);
+          const imageIcon = hasPendingImages ? ' 📸' : '';
+          
+          successItems.push(`${action} ${item.title}${imageIcon}`);
         } catch (error) {
           failCount++;
           failedItems.push(`❌ ${item.title}: ${error.message}`);
@@ -3071,6 +3076,9 @@ const UpdateUI = {
 
       if (response.ok) {
         this.clearDraft(itemId);
+        // Clean up any pending uploads
+        sessionStorage.removeItem(`pending_uploads_${itemId}`);
+        sessionStorage.removeItem(`image_previews_${itemId}`);
         await this.loadMenuItems();
         return await response.json();
       } else {
@@ -3083,6 +3091,33 @@ const UpdateUI = {
           errorMessage = `Server error (${response.status})`;
         }
         throw new Error(errorMessage);
+      }
+    }
+
+    // Check for pending image uploads
+    const pendingUploadsJson = sessionStorage.getItem(`pending_uploads_${itemId}`);
+    const imagePreviewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
+    
+    if (pendingUploadsJson && imagePreviewsJson) {
+      try {
+        const pendingPaths = JSON.parse(pendingUploadsJson);
+        const imagePreviews = JSON.parse(imagePreviewsJson);
+        
+        // Upload images first
+        for (const imagePath of pendingPaths) {
+          const dataUrl = imagePreviews[imagePath];
+          if (dataUrl) {
+            console.log(`📤 Uploading image: ${imagePath}`);
+            await this.uploadImageFromDataUrl(dataUrl, imagePath);
+          }
+        }
+        
+        // Clean up after successful upload
+        sessionStorage.removeItem(`pending_uploads_${itemId}`);
+        sessionStorage.removeItem(`image_previews_${itemId}`);
+      } catch (uploadError) {
+        console.error('Image upload failed:', uploadError);
+        // Continue with item creation even if image upload fails
       }
     }
 
@@ -3119,6 +3154,36 @@ const UpdateUI = {
       }
       throw new Error(errorMessage);
     }
+  },
+
+  /**
+   * Upload image from data URL to server
+   */
+  async uploadImageFromDataUrl(dataUrl, targetPath) {
+    // Convert data URL to blob
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    
+    // Create FormData for upload
+    const formData = new FormData();
+    const filename = targetPath.split('/').pop();
+    formData.append('file', blob, filename);
+    formData.append('path', targetPath);
+    
+    // Upload to branding/upload endpoint (reuse for all images)
+    const uploadResponse = await this.authenticatedFetch(
+      `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+    
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to upload ${filename}`);
+    }
+    
+    return await uploadResponse.json();
   },
 
   /**
@@ -3442,9 +3507,27 @@ const UpdateUI = {
 
   /**
    * Helper: Normalize image path for display (add leading / if needed)
+   * Also checks for pending image uploads stored in sessionStorage
    */
-  getDisplayImagePath(path) {
+  getDisplayImagePath(path, itemId = null) {
     if (!path) return '';
+    
+    // Check if this is a pending upload (has data URL in sessionStorage)
+    if (itemId) {
+      const previewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
+      if (previewsJson) {
+        try {
+          const previews = JSON.parse(previewsJson);
+          if (previews[path]) {
+            return previews[path]; // Return data URL for preview
+          }
+        } catch (e) {
+          console.error('Error parsing image previews:', e);
+        }
+      }
+    }
+    
+    // Normal path handling
     return path.startsWith('/') ? path : '/' + path;
   },
 
@@ -3776,6 +3859,7 @@ async function saveMenuItem(event) {
   // Collect images
   const images = [];
   const pendingUploads = [];
+  const imageDataUrls = {}; // Store data URLs for preview
   
   document.querySelectorAll('.image-entry').forEach(entry => {
     const imagePath = entry.querySelector('.image-path').value.trim();
@@ -3787,6 +3871,12 @@ async function saveMenuItem(event) {
       
       // Check if there's a pending file upload
       if (fileInput && fileInput.files && fileInput.files[0]) {
+        // Get the data URL that was stored when file was selected
+        const storedDataUrl = sessionStorage.getItem(`image_preview_${itemId}_${imagePath}`);
+        if (storedDataUrl) {
+          imageDataUrls[imagePath] = storedDataUrl;
+        }
+        
         pendingUploads.push({
           file: fileInput.files[0],
           path: imagePath,
@@ -3798,8 +3888,13 @@ async function saveMenuItem(event) {
   // Store pending uploads for later (when publishing)
   if (pendingUploads.length > 0) {
     console.log('📸 Pending image uploads:', pendingUploads.map(u => u.file.name));
-    // Store file references for upload on publish
+    // Store file paths that need uploading
     sessionStorage.setItem(`pending_uploads_${itemId}`, JSON.stringify(pendingUploads.map(u => u.path)));
+  }
+  
+  // Store image preview data URLs
+  if (Object.keys(imageDataUrls).length > 0) {
+    sessionStorage.setItem(`image_previews_${itemId}`, JSON.stringify(imageDataUrls));
   }
   
   // Collect side categories
@@ -4234,14 +4329,23 @@ function handleImageFileSelect(fileInput, previewId) {
     return;
   }
   
-  // Show preview
+  // Show preview and store data URL for draft preview
   const reader = new FileReader();
   reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const fileName = `images/${file.name}`;
+    
     if (preview) {
-      const fileName = `images/${file.name}`;
-      preview.innerHTML = `<img src="${e.target.result}" alt="Preview"><div class="card-filename">${fileName}</div>`;
+      preview.innerHTML = `<img src="${dataUrl}" alt="Preview"><div class="card-filename">${fileName}</div>`;
       preview.classList.add('has-image');
       preview.style.display = '';
+    }
+    
+    // Store data URL in sessionStorage so it can be displayed in the draft card
+    // We'll retrieve this when rendering menu items
+    const itemId = document.getElementById('itemId')?.value;
+    if (itemId) {
+      sessionStorage.setItem(`image_preview_${itemId}_${fileName}`, dataUrl);
     }
   };
   reader.readAsDataURL(file);
