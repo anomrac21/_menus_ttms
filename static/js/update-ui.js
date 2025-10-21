@@ -2926,7 +2926,8 @@ const UpdateUI = {
         try {
           await this.publishItemSilent(item.id, false); // false = don't push git yet
           successCount++;
-          successItems.push(`✅ ${item.title}`);
+          const action = item._isDeleted ? '🗑️' : (item._isNew ? '➕' : '📝');
+          successItems.push(`${action} ${item.title}`);
         } catch (error) {
           failCount++;
           failedItems.push(`❌ ${item.title}: ${error.message}`);
@@ -2942,7 +2943,8 @@ const UpdateUI = {
           try {
             await this.publishAdSilent(ad.id, false);
             successCount++;
-            successItems.push(`✅ Ad: ${ad.title}`);
+            const action = ad._isDeleted ? '🗑️' : (ad._isNew ? '➕' : '📝');
+            successItems.push(`${action} Ad: ${ad.title}`);
           } catch (error) {
             failCount++;
             failedItems.push(`❌ Ad: ${ad.title}: ${error.message}`);
@@ -2959,7 +2961,8 @@ const UpdateUI = {
           try {
             await this.publishLocationSilent(loc._index, false);
             successCount++;
-            successItems.push(`✅ Location: ${loc.city}`);
+            const action = loc._isDeleted ? '🗑️' : (loc._isNew ? '➕' : '📝');
+            successItems.push(`${action} Location: ${loc.city}`);
           } catch (error) {
             failCount++;
             failedItems.push(`❌ Location: ${loc.city}: ${error.message}`);
@@ -3052,6 +3055,38 @@ const UpdateUI = {
       throw new Error('Draft not found');
     }
 
+    // Handle deletions separately
+    if (item._isDeleted) {
+      let apiItemId = itemId;
+      if (item.url) {
+        apiItemId = this.convertUrlToItemId(item.url, item.category);
+      }
+      
+      const url = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}`;
+      
+      const response = await this.authenticatedFetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        this.clearDraft(itemId);
+        await this.loadMenuItems();
+        return await response.json();
+      } else {
+        const text = await response.text();
+        let errorMessage = 'Failed to delete item';
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseErr) {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
+      }
+    }
+
+    // Handle create/update
     const method = item._isNew ? 'POST' : 'PUT';
     
     let apiItemId = itemId;
@@ -3098,6 +3133,25 @@ const UpdateUI = {
       throw new Error('Draft not found');
     }
     
+    // Handle deletions separately
+    if (ad._isDeleted) {
+      const url = `${this.apiConfig.getClientUrl()}/advertisements/${adId}?batch=true&pushGit=${pushGit}`;
+      
+      const response = await this.authenticatedFetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (response.ok) {
+        this.clearDraftAd(adId);
+        await this.loadAdvertisements();
+        return await response.json();
+      } else {
+        throw new Error('Failed to delete ad');
+      }
+    }
+    
+    // Handle create/update
     const method = ad._isNew ? 'POST' : 'PUT';
     const url = ad._isNew
       ? `${this.apiConfig.getClientUrl()}/advertisements?batch=true&pushGit=${pushGit}`
@@ -3127,6 +3181,26 @@ const UpdateUI = {
       throw new Error('Location not found');
     }
     
+    // Handle deletions separately
+    if (loc._isDeleted) {
+      const response = await this.authenticatedFetch(
+        `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.locations}/${index}?batch=true&pushGit=${pushGit}`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      
+      if (response.ok) {
+        this.clearDraftLocation(index);
+        await this.loadLocations();
+        return await response.json();
+      } else {
+        throw new Error('Failed to delete location');
+      }
+    }
+    
+    // Handle create/update
     const response = await this.authenticatedFetch(
       `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.locations}?batch=true&pushGit=${pushGit}`,
       {
