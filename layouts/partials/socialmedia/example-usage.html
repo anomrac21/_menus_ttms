@@ -1,0 +1,279 @@
+{{/*
+  Social Media Share Buttons - Example Usage
+  
+  This file demonstrates various ways to use the social media share button partials.
+  Copy and adapt these examples for your own pages.
+*/}}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Share Buttons - Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .example-section {
+            background: white;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .example-section h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .example-section p {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .code-block {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        .demo-area {
+            background: #fafafa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>🚀 Social Media Share Buttons</h1>
+        <p>Complete examples and usage guide</p>
+    </div>
+
+    <!-- Example 1: All Buttons Together -->
+    <section class="example-section">
+        <h2>Example 1: All Social Buttons (Horizontal Layout)</h2>
+        <p>Display all social media share buttons in a horizontal layout. Perfect for article footers or content pages.</p>
+        
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/social-share-all.html" . {{ "}}" }}</code>
+        </div>
+        
+        <div class="demo-area">
+            {{ partial "socialmedia/social-share-all.html" . }}
+        </div>
+    </section>
+
+    <!-- Example 2: Vertical Layout -->
+    <section class="example-section">
+        <h2>Example 2: All Buttons (Vertical Layout)</h2>
+        <p>Vertical layout is ideal for sidebars or mobile-first designs.</p>
+        
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/social-share-all.html" (dict "layout" "vertical" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <div class="demo-area">
+            {{ partial "socialmedia/social-share-all.html" (dict "layout" "vertical" "Page" .Page) }}
+        </div>
+    </section>
+
+    <!-- Example 3: Custom Text and URL -->
+    <section class="example-section">
+        <h2>Example 3: Custom Share Text and URL</h2>
+        <p>Customize the message and URL being shared. Great for specific promotions or campaigns.</p>
+        
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/social-share-all.html" (dict 
+  "text" "Check out our amazing restaurant menu! 🍕🍔" 
+  "url" "https://yourrestaurant.com/menu"
+  "instagram_username" "yourrestaurant"
+  "tiktok_username" "@yourrestaurant"
+  "Page" .Page
+) {{ "}}" }}</code>
+        </div>
+        
+        <div class="demo-area">
+            {{ partial "socialmedia/social-share-all.html" (dict 
+                "text" "Check out our amazing restaurant menu! 🍕🍔" 
+                "url" .Permalink
+                "instagram_username" "yourrestaurant"
+                "tiktok_username" "@yourrestaurant"
+                "Page" .Page
+            ) }}
+        </div>
+    </section>
+
+    <!-- Example 4: Individual Buttons -->
+    <section class="example-section">
+        <h2>Example 4: Individual Platform Buttons</h2>
+        <p>Use buttons individually for more control over layout and placement.</p>
+        
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/whatsapp-share.html" . {{ "}}" }}
+{{ "{{" }} partial "socialmedia/facebook-share.html" . {{ "}}" }}
+{{ "{{" }} partial "socialmedia/instagram-share.html" (dict "username" "yourhandle" "Page" .Page) {{ "}}" }}
+{{ "{{" }} partial "socialmedia/tiktok-share.html" (dict "username" "@yourhandle" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <div class="demo-area">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                {{ partial "socialmedia/whatsapp-share.html" . }}
+                {{ partial "socialmedia/facebook-share.html" . }}
+                {{ partial "socialmedia/instagram-share.html" (dict "username" "yourrestaurant" "Page" .Page) }}
+                {{ partial "socialmedia/tiktok-share.html" (dict "username" "@yourrestaurant" "Page" .Page) }}
+            </div>
+        </div>
+    </section>
+
+    <!-- Example 5: WhatsApp Only -->
+    <section class="example-section">
+        <h2>Example 5: WhatsApp Share Only</h2>
+        <p>Perfect for restaurant menus where WhatsApp is the primary sharing method.</p>
+        
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/whatsapp-share.html" (dict 
+  "text" "I just ordered from this amazing restaurant!" 
+  "url" .Permalink
+  "Page" .Page
+) {{ "}}" }}</code>
+        </div>
+        
+        <div class="demo-area" style="text-align: center;">
+            {{ partial "socialmedia/whatsapp-share.html" (dict 
+                "text" "I just ordered from this amazing restaurant!" 
+                "url" .Permalink
+                "Page" .Page
+            ) }}
+        </div>
+    </section>
+
+    <!-- Example 6: Social Profiles -->
+    <section class="example-section">
+        <h2>Example 6: Link to Social Media Profiles</h2>
+        <p>Use Instagram and TikTok buttons to link directly to your business profiles.</p>
+        
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/instagram-share.html" (dict "username" "yourrestaurant" "Page" .Page) {{ "}}" }}
+{{ "{{" }} partial "socialmedia/tiktok-share.html" (dict "username" "@yourrestaurant" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <div class="demo-area">
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                {{ partial "socialmedia/instagram-share.html" (dict "username" "yourrestaurant" "Page" .Page) }}
+                {{ partial "socialmedia/tiktok-share.html" (dict "username" "@yourrestaurant" "Page" .Page) }}
+            </div>
+        </div>
+    </section>
+
+    <!-- Example 7: In a Card -->
+    <section class="example-section">
+        <h2>Example 7: Share Buttons in a Content Card</h2>
+        <p>Integrate share buttons within content cards or menu items.</p>
+        
+        <div class="demo-area">
+            <div style="border: 2px solid #ddd; border-radius: 12px; padding: 1.5rem; background: white;">
+                <h3 style="margin-top: 0; color: #667eea;">🍕 Special Pizza of the Day</h3>
+                <p>Our delicious Margherita Pizza with fresh mozzarella, tomatoes, and basil. Only $12.99!</p>
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;">
+                <p style="margin-bottom: 0.5rem; font-weight: 600; color: #666;">Share this deal:</p>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    {{ partial "socialmedia/whatsapp-share.html" (dict 
+                        "text" "Check out today's pizza special! 🍕" 
+                        "Page" .Page
+                    ) }}
+                    {{ partial "socialmedia/facebook-share.html" . }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Implementation Tips -->
+    <section class="example-section">
+        <h2>💡 Implementation Tips</h2>
+        <ul style="line-height: 1.8;">
+            <li><strong>Mobile First:</strong> All buttons are responsive and work great on mobile devices.</li>
+            <li><strong>Performance:</strong> Icons are lazy-loaded for optimal performance.</li>
+            <li><strong>Accessibility:</strong> All buttons include ARIA labels and are keyboard-navigable.</li>
+            <li><strong>Customization:</strong> Override the CSS classes to match your brand colors.</li>
+            <li><strong>Instagram & TikTok:</strong> These use Web Share API on mobile, clipboard on desktop.</li>
+            <li><strong>Profile Links:</strong> Add username parameters to link directly to your social profiles.</li>
+        </ul>
+    </section>
+
+    <!-- Quick Reference -->
+    <section class="example-section">
+        <h2>📚 Quick Reference</h2>
+        
+        <h3>WhatsApp</h3>
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/whatsapp-share.html" (dict "text" "Your message" "url" "URL" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <h3>Facebook</h3>
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/facebook-share.html" (dict "url" "URL" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <h3>Instagram</h3>
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/instagram-share.html" (dict "username" "handle" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <h3>TikTok</h3>
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/tiktok-share.html" (dict "username" "@handle" "Page" .Page) {{ "}}" }}</code>
+        </div>
+        
+        <h3>All Platforms</h3>
+        <div class="code-block">
+            <code>{{ "{{" }} partial "socialmedia/social-share-all.html" (dict 
+  "text" "Message" 
+  "url" "URL" 
+  "instagram_username" "handle"
+  "tiktok_username" "@handle"
+  "layout" "horizontal"
+  "Page" .Page
+) {{ "}}" }}</code>
+        </div>
+    </section>
+
+</body>
+</html>
+

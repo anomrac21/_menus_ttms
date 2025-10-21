@@ -13,6 +13,7 @@
   <div class="hero-content">
     {{ .Content }}
     {{ partial "client/clienttourimages.html" . }}
+    
   
   </div>
   {{ range site.Pages.ByWeight }}
@@ -132,4 +133,5 @@
     {{ end }}
   {{ end }}
   </div>
+  {{ partial "socialmedia/social-share-all.html" . }}
 {{ end }}
