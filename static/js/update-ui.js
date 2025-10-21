@@ -2917,15 +2917,19 @@ const UpdateUI = {
     try {
       let successCount = 0;
       let failCount = 0;
+      let successItems = [];
+      let failedItems = [];
       
-      // Publish menu items
+      // Publish menu items (batch mode - no individual alerts)
       const draftItems = this.getDrafts();
       for (const item of Object.values(draftItems)) {
         try {
-          await this.publishItem(item.id);
+          await this.publishItemSilent(item.id, false); // false = don't push git yet
           successCount++;
+          successItems.push(`✅ ${item.title}`);
         } catch (error) {
           failCount++;
+          failedItems.push(`❌ ${item.title}: ${error.message}`);
           console.error('Failed to publish item:', item.id, error);
         }
       }
@@ -2936,10 +2940,12 @@ const UpdateUI = {
         const draftAds = JSON.parse(draftAdsJson);
         for (const ad of Object.values(draftAds)) {
           try {
-            await this.publishAd(ad.id);
+            await this.publishAdSilent(ad.id, false);
             successCount++;
+            successItems.push(`✅ Ad: ${ad.title}`);
           } catch (error) {
             failCount++;
+            failedItems.push(`❌ Ad: ${ad.title}: ${error.message}`);
             console.error('Failed to publish ad:', ad.id, error);
           }
         }
@@ -2951,52 +2957,48 @@ const UpdateUI = {
         const draftLocations = JSON.parse(draftLocationsJson);
         for (const loc of Object.values(draftLocations)) {
           try {
-            await this.publishLocation(loc._index);
+            await this.publishLocationSilent(loc._index, false);
             successCount++;
+            successItems.push(`✅ Location: ${loc.city}`);
           } catch (error) {
             failCount++;
+            failedItems.push(`❌ Location: ${loc.city}: ${error.message}`);
             console.error('Failed to publish location:', loc._index, error);
           }
         }
       }
       
-      // Publish branding images
-      if (localStorage.getItem(this.storageKeys.draftBranding)) {
-        try {
-          await this.publishBrandingImages();
-          // Don't double count - publishBrandingImages already shows success
-        } catch (error) {
-          failCount++;
-          console.error('Failed to publish branding:', error);
-        }
-      }
-      
-      // Publish colors
-      if (localStorage.getItem(this.storageKeys.draftColors)) {
-        try {
-          await this.publishColors();
-          successCount++;
-        } catch (error) {
-          failCount++;
-        }
-      }
-      
-      // Publish manifest
-      if (localStorage.getItem(this.storageKeys.draftManifest)) {
-        try {
-          await this.publishManifest();
-          successCount++;
-        } catch (error) {
-          failCount++;
-        }
-      }
-      
-      // Show results
+      // Now trigger single git push for all changes
       if (successCount > 0) {
-        this.showSuccess(`Successfully published ${successCount} change${successCount !== 1 ? 's' : ''}!`);
+        try {
+          const user = AuthClient.getCurrentUser();
+          const username = user?.email || user?.username || 'Unknown User';
+          
+          await this.triggerBatchCommit(username, successCount);
+        } catch (error) {
+          console.error('Git push failed:', error);
+          // Don't fail the whole operation, changes are saved
+        }
       }
-      if (failCount > 0) {
-        this.showError(`Failed to publish ${failCount} change${failCount !== 1 ? 's' : ''}`);
+      
+      // Show single summary alert
+      if (successCount > 0 && failCount === 0) {
+        this.showSuccess(
+          `🎉 Successfully published ${successCount} change${successCount !== 1 ? 's' : ''}!\n\n` +
+          `${successItems.slice(0, 5).join('\n')}${successItems.length > 5 ? `\n... and ${successItems.length - 5} more` : ''}\n\n` +
+          `🚀 Changes pushed to GitHub. Netlify will rebuild in ~2 minutes.`
+        );
+      } else if (successCount > 0 && failCount > 0) {
+        this.showSuccess(
+          `⚠️ Published ${successCount} of ${totalCount} changes\n\n` +
+          `Success:\n${successItems.slice(0, 3).join('\n')}\n\n` +
+          `Failed:\n${failedItems.slice(0, 3).join('\n')}`
+        );
+      } else if (failCount > 0) {
+        this.showError(
+          `❌ Failed to publish all ${failCount} change${failCount !== 1 ? 's' : ''}\n\n` +
+          `${failedItems.slice(0, 5).join('\n')}`
+        );
       }
       
       // Refresh pending summary
@@ -3006,6 +3008,140 @@ const UpdateUI = {
     } catch (error) {
       console.error('Error publishing all changes:', error);
       this.showError(`Failed to publish changes: ${error.message}`);
+    }
+  },
+
+  /**
+   * Trigger batch git commit after all changes
+   */
+  async triggerBatchCommit(username, changeCount) {
+    try {
+      const response = await this.authenticatedFetch(
+        `${this.apiConfig.getClientUrl()}/git/commit`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Published ${changeCount} change${changeCount !== 1 ? 's' : ''} by ${username}`,
+            author: username
+          }),
+        }
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Git commit successful:', result);
+        return result;
+      } else {
+        throw new Error('Git commit failed');
+      }
+    } catch (error) {
+      console.error('Batch commit error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Publish item without showing alert (for batch operations)
+   */
+  async publishItemSilent(itemId, pushGit = true) {
+    const drafts = this.getDrafts();
+    const item = drafts[itemId];
+    
+    if (!item) {
+      throw new Error('Draft not found');
+    }
+
+    const method = item._isNew ? 'POST' : 'PUT';
+    
+    let apiItemId = itemId;
+    if (!item._isNew && item.url) {
+      apiItemId = this.convertUrlToItemId(item.url, item.category);
+    }
+    
+    const url = item._isNew
+      ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?batch=true&pushGit=${pushGit}`
+      : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}`;
+
+    const response = await this.authenticatedFetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    });
+
+    if (response.ok) {
+      this.clearDraft(itemId);
+      await this.loadMenuItems();
+      return await response.json();
+    } else {
+      const text = await response.text();
+      let errorMessage = 'Failed to publish item';
+      try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.error || errorMessage;
+      } catch (parseErr) {
+        errorMessage = `Server error (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+  },
+
+  /**
+   * Publish ad without showing alert (for batch operations)
+   */
+  async publishAdSilent(adId, pushGit = true) {
+    const draftsJson = localStorage.getItem(this.storageKeys.draftAds) || '{}';
+    const drafts = JSON.parse(draftsJson);
+    const ad = drafts[adId];
+    
+    if (!ad) {
+      throw new Error('Draft not found');
+    }
+    
+    const method = ad._isNew ? 'POST' : 'PUT';
+    const url = ad._isNew
+      ? `${this.apiConfig.getClientUrl()}/advertisements?batch=true&pushGit=${pushGit}`
+      : `${this.apiConfig.getClientUrl()}/advertisements/${adId}?batch=true&pushGit=${pushGit}`;
+    
+    const response = await this.authenticatedFetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ad),
+    });
+    
+    if (response.ok) {
+      this.clearDraftAd(adId);
+      await this.loadAdvertisements();
+      return await response.json();
+    } else {
+      throw new Error('Failed to publish ad');
+    }
+  },
+
+  /**
+   * Publish location without showing alert (for batch operations)
+   */
+  async publishLocationSilent(index, pushGit = true) {
+    const loc = this.state.locations[index];
+    if (!loc) {
+      throw new Error('Location not found');
+    }
+    
+    const response = await this.authenticatedFetch(
+      `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.locations}?batch=true&pushGit=${pushGit}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loc),
+      }
+    );
+    
+    if (response.ok) {
+      this.clearDraftLocation(index);
+      await this.loadLocations();
+      return await response.json();
+    } else {
+      throw new Error('Failed to publish location');
     }
   },
 
