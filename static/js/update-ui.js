@@ -3096,7 +3096,9 @@ const UpdateUI = {
         throw new Error(`Cannot delete: missing URL and category/title information`);
       }
       
-      const url = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}`;
+      // Build URL with sessionId if provided
+      const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
+      const url = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}${sessionParam}`;
       
       console.log(`🗑️ DELETE request to: ${url}`);
       
