@@ -3048,7 +3048,7 @@ const UpdateUI = {
       } else {
         throw new Error('Git commit failed');
       }
-    } catch (error) {
+        } catch (error) {
       console.error('Batch commit error:', error);
       throw error;
     }
@@ -4365,7 +4365,7 @@ function handleImageFileSelect(fileInput, previewId) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const dataUrl = e.target.result;
-    const fileName = `images/${file.name}`;
+      const fileName = `images/${file.name}`;
     
     if (preview) {
       preview.innerHTML = `<img src="${dataUrl}" alt="Preview"><div class="card-filename">${fileName}</div>`;
