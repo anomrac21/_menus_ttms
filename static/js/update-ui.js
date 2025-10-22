@@ -3067,12 +3067,29 @@ const UpdateUI = {
 
     // Handle deletions separately
     if (item._isDeleted) {
+      // Build the proper itemId for deletion
       let apiItemId = itemId;
+      
       if (item.url) {
+        // Has URL - convert it
         apiItemId = this.convertUrlToItemId(item.url, item.category);
+        console.log(`🗑️ DELETE: Converting URL "${item.url}" → "${apiItemId}"`);
+      } else if (item.category && item.title) {
+        // No URL but has category/title - build it manually
+        // Convert title to filename format
+        const filename = item.title.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
+        apiItemId = `${item.category}/${filename}`;
+        console.log(`🗑️ DELETE: Built ID from category+title → "${apiItemId}"`);
+      } else {
+        console.error('❌ DELETE: Cannot determine item ID. Item data:', item);
+        throw new Error(`Cannot delete: missing URL and category/title information`);
       }
       
       const url = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}`;
+      
+      console.log(`🗑️ DELETE request to: ${url}`);
       
       const response = await this.authenticatedFetch(url, {
         method: 'DELETE',
@@ -3095,6 +3112,7 @@ const UpdateUI = {
         } catch (parseErr) {
           errorMessage = `Server error (${response.status})`;
         }
+        console.error(`❌ DELETE failed for "${item.title}":`, errorMessage);
         throw new Error(errorMessage);
       }
     }
