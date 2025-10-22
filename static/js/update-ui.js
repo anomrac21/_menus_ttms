@@ -2920,6 +2920,10 @@ const UpdateUI = {
     if (!confirmed) return;
     
     try {
+      // Generate session ID for batch operations
+      const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      console.log(`📦 Starting batch publish with session: ${sessionId}`);
+      
       let successCount = 0;
       let failCount = 0;
       let successItems = [];
@@ -2929,7 +2933,7 @@ const UpdateUI = {
       const draftItems = this.getDrafts();
       for (const item of Object.values(draftItems)) {
         try {
-          await this.publishItemSilent(item.id, false); // false = don't push git yet
+          await this.publishItemSilent(item.id, false, sessionId); // Pass sessionId
           successCount++;
           const action = item._isDeleted ? '🗑️' : (item._isNew ? '➕' : '📝');
           
@@ -2981,13 +2985,13 @@ const UpdateUI = {
         }
       }
       
-      // Now trigger single git push for all changes
+      // Now trigger single git push for all changes with sessionId
       if (successCount > 0) {
         try {
           const user = AuthClient.getCurrentUser();
           const username = user?.email || user?.username || 'Unknown User';
           
-          await this.triggerBatchCommit(username, successCount);
+          await this.triggerBatchCommit(username, successCount, sessionId);
         } catch (error) {
           console.error('Git push failed:', error);
           // Don't fail the whole operation, changes are saved
@@ -3027,8 +3031,10 @@ const UpdateUI = {
   /**
    * Trigger batch git commit after all changes
    */
-  async triggerBatchCommit(username, changeCount) {
+  async triggerBatchCommit(username, changeCount, sessionId) {
     try {
+      console.log(`📦 Triggering batch commit for session: ${sessionId}`);
+      
       const response = await this.authenticatedFetch(
         `${this.apiConfig.getClientUrl()}/git/commit`,
         {
@@ -3036,19 +3042,22 @@ const UpdateUI = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: `Published ${changeCount} change${changeCount !== 1 ? 's' : ''} by ${username}`,
-            author: username
+            author: username,
+            sessionId: sessionId  // Pass sessionId to backend
           }),
         }
       );
       
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Git commit successful:', result);
+        console.log('✅ Batch git commit successful:', result);
         return result;
       } else {
+        const errorText = await response.text();
+        console.error('Batch commit failed:', errorText);
         throw new Error('Git commit failed');
       }
-        } catch (error) {
+    } catch (error) {
       console.error('Batch commit error:', error);
       throw error;
     }
@@ -3057,7 +3066,7 @@ const UpdateUI = {
   /**
    * Publish item without showing alert (for batch operations)
    */
-  async publishItemSilent(itemId, pushGit = true) {
+  async publishItemSilent(itemId, pushGit = true, sessionId = null) {
     const drafts = this.getDrafts();
     const item = drafts[itemId];
     
@@ -3126,12 +3135,12 @@ const UpdateUI = {
         const pendingPaths = JSON.parse(pendingUploadsJson);
         const imagePreviews = JSON.parse(imagePreviewsJson);
         
-        // Upload images first
+        // Upload images first with batch=true&pushGit=false (don't push yet!)
         for (const imagePath of pendingPaths) {
           const dataUrl = imagePreviews[imagePath];
           if (dataUrl) {
-            console.log(`📤 Uploading image: ${imagePath}`);
-            await this.uploadImageFromDataUrl(dataUrl, imagePath);
+            console.log(`📤 Uploading image (batch mode, session: ${sessionId}): ${imagePath}`);
+            await this.uploadImageFromDataUrl(dataUrl, imagePath, false, sessionId); // Pass sessionId
           }
         }
         
@@ -3152,9 +3161,11 @@ const UpdateUI = {
       apiItemId = this.convertUrlToItemId(item.url, item.category);
     }
     
+    // Build URL with sessionId if provided
+    const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
     const url = item._isNew
-      ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?batch=true&pushGit=${pushGit}`
-      : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}`;
+      ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?batch=true&pushGit=${pushGit}${sessionParam}`
+      : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}${sessionParam}`;
 
     const response = await this.authenticatedFetch(url, {
       method,
@@ -3181,8 +3192,12 @@ const UpdateUI = {
 
   /**
    * Upload image from data URL to server
+   * @param {string} dataUrl - Base64 data URL of the image
+   * @param {string} targetPath - Destination path (e.g., "images/icon.webp")
+   * @param {boolean} pushGit - Whether to push to git immediately (false for batch)
+   * @param {string} sessionId - Batch session ID (for combining commits)
    */
-  async uploadImageFromDataUrl(dataUrl, targetPath) {
+  async uploadImageFromDataUrl(dataUrl, targetPath, pushGit = true, sessionId = null) {
     // Convert data URL to blob
     const response = await fetch(dataUrl);
     const blob = await response.blob();
@@ -3193,16 +3208,22 @@ const UpdateUI = {
     formData.append('file', blob, filename);
     formData.append('path', targetPath);
     
-    // Upload to branding/upload endpoint (reuse for all images)
-    const uploadResponse = await this.authenticatedFetch(
-      `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
+    // Upload to branding/upload endpoint with batch mode and sessionId support
+    const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
+    const url = pushGit 
+      ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}`
+      : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false${sessionParam}`;
+    
+    console.log(`📤 Uploading to: ${url}, pushGit=${pushGit}, sessionId=${sessionId}`);
+    
+    const uploadResponse = await this.authenticatedFetch(url, {
+      method: 'POST',
+      body: formData,
+    });
     
     if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error(`Upload failed for ${filename}:`, errorText);
       throw new Error(`Failed to upload ${filename}`);
     }
     
