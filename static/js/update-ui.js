@@ -378,7 +378,7 @@ const UpdateUI = {
         console.log('Menu items count:', data.menu_items?.length || 0);
         
         // Convert Hugo's format to our format
-        this.state.menuItems = (data.menu_items || []).map(item => {
+        const loadedItems = (data.menu_items || []).map(item => {
           // Keep image paths as-is (without prepending /) for storage
           // The / will be added only when displaying in DOM
           let images = [];
@@ -438,10 +438,31 @@ const UpdateUI = {
             prices: item.prices || [],
             side_categories: item.side_categories || [],
             url: item.url,
-            weight: item.weight || 0,
+            weight: item.weight,  // Keep original weight (might be undefined/null)
             _isDraft: false,
           };
         });
+        
+        // Assign sequential weights within each category for items without weights
+        const itemsByCategory = {};
+        loadedItems.forEach(item => {
+          if (!itemsByCategory[item.category]) {
+            itemsByCategory[item.category] = [];
+          }
+          itemsByCategory[item.category].push(item);
+        });
+        
+        // For each category, assign sequential weights if items don't have them
+        Object.keys(itemsByCategory).forEach(category => {
+          const categoryItems = itemsByCategory[category];
+          categoryItems.forEach((item, index) => {
+            if (item.weight === undefined || item.weight === null) {
+              item.weight = index;  // Assign sequential weight based on original order
+            }
+          });
+        });
+        
+        this.state.menuItems = loadedItems;
         
         // Merge with draft changes from localStorage
         this.mergeDraftItems();
@@ -541,7 +562,7 @@ const UpdateUI = {
     // Update action buttons
     this.updateTabActionButtons();
     
-    this.showSuccess('Draft saved locally');
+    // this.showSuccess('Draft saved locally');
   },
 
   /**
@@ -576,8 +597,7 @@ const UpdateUI = {
     this.state.hasPendingChanges = true;
     localStorage.setItem(this.storageKeys.pendingChanges, 'true');
     
-    // Update UI indicator
-    this.updatePendingIndicator();
+    // Pending indicator removed - changes tracked via pending tab count only
   },
 
   /**
@@ -586,7 +606,7 @@ const UpdateUI = {
   clearPendingChanges() {
     this.state.hasPendingChanges = false;
     localStorage.removeItem(this.storageKeys.pendingChanges);
-    this.updatePendingIndicator();
+    // Pending indicator removed - changes tracked via pending tab count only
   },
 
   /**
@@ -604,7 +624,7 @@ const UpdateUI = {
       localStorage.getItem(this.storageKeys.draftManifest) !== null;
     
     this.state.hasPendingChanges = hasDrafts;
-    this.updatePendingIndicator();
+    // Pending indicator removed - changes tracked via pending tab count only
     
     // Update pending tab count
     const totalCount = this.getPendingChangesCount();
@@ -695,261 +715,7 @@ const UpdateUI = {
   /**
    * Update pending changes indicator in UI
    */
-  updatePendingIndicator() {
-    // Add indicator to dashboard header
-    let indicator = document.getElementById('pendingIndicator');
-    
-    if (this.state.hasPendingChanges) {
-      const draftCount = this.getPendingChangesCount();
-      
-      if (!indicator) {
-        indicator = document.createElement('div');
-        indicator.id = 'pendingIndicator';
-        indicator.className = 'pending-indicator';
-        
-        const dashboardHeader = document.querySelector('.dashboard-header');
-        if (dashboardHeader) {
-          dashboardHeader.insertBefore(indicator, dashboardHeader.firstChild);
-        }
-      }
-      
-      // Update content with current count
-      indicator.innerHTML = `
-        <div class="pending-indicator-content">
-          <div class="pending-indicator-info">
-            <span class="pending-indicator-icon">⚠️</span>
-            <div class="pending-indicator-text">
-              <span class="pending-indicator-title">Unsaved Changes</span>
-              <span class="pending-indicator-count">${draftCount} draft${draftCount !== 1 ? 's' : ''}</span>
-            </div>
-          </div>
-          <div class="pending-indicator-actions">
-            <button onclick="UpdateUI.showPublishDialog()" class="btn-publish-now">
-              <span class="publish-icon">✓</span>
-              <span class="publish-text">Publish</span>
-            </button>
-            <button onclick="UpdateUI.dismissPendingIndicator()" class="btn-dismiss-indicator" title="Dismiss (will reappear on page reload)">
-              <span>✕</span>
-            </button>
-          </div>
-        </div>
-      `;
-      
-      // Add styles if not already present
-      if (!document.getElementById('pendingIndicatorStyles')) {
-        const style = document.createElement('style');
-        style.id = 'pendingIndicatorStyles';
-        style.textContent = `
-          .pending-indicator {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-            margin-bottom: 0.75rem;
-            animation: slideDown 0.3s ease-out;
-          }
-          
-          @keyframes slideDown {
-            from {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          @keyframes slideUp {
-            from {
-              opacity: 1;
-              transform: translateY(0);
-            }
-            to {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-          }
-          
-          .pending-indicator-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.875rem 1rem;
-            gap: 1rem;
-          }
-          
-          .pending-indicator-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex: 1;
-            min-width: 0;
-          }
-          
-          .pending-indicator-icon {
-            font-size: 1.25rem;
-            flex-shrink: 0;
-          }
-          
-          .pending-indicator-text {
-            display: flex;
-            flex-direction: column;
-            gap: 0.125rem;
-            min-width: 0;
-          }
-          
-          .pending-indicator-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            line-height: 1.2;
-          }
-          
-          .pending-indicator-count {
-            font-size: 0.75rem;
-            opacity: 0.9;
-            line-height: 1.2;
-          }
-          
-          .pending-indicator-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex-shrink: 0;
-          }
-          
-          .btn-publish-now {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: white;
-            color: #d97706;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          
-          .btn-publish-now:hover {
-            background: #fffbeb;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-          }
-          
-          .btn-publish-now:active {
-            transform: translateY(0);
-          }
-          
-          .publish-icon {
-            font-size: 1rem;
-            font-weight: bold;
-          }
-          
-          .btn-dismiss-indicator {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-          }
-          
-          .btn-dismiss-indicator:hover {
-            background: rgba(255, 255, 255, 0.3);
-          }
-          
-          /* Mobile Styles */
-          @media (max-width: 640px) {
-            .pending-indicator-content {
-              flex-direction: column;
-              align-items: stretch;
-              padding: 0.75rem;
-              gap: 0.75rem;
-            }
-            
-            .pending-indicator-info {
-              gap: 0.625rem;
-            }
-            
-            .pending-indicator-icon {
-              font-size: 1.125rem;
-            }
-            
-            .pending-indicator-title {
-              font-size: 0.8125rem;
-            }
-            
-            .pending-indicator-count {
-              font-size: 0.6875rem;
-            }
-            
-            .pending-indicator-actions {
-              width: 100%;
-            }
-            
-            .btn-publish-now {
-              flex: 1;
-              justify-content: center;
-              padding: 0.625rem 1rem;
-            }
-            
-            .btn-dismiss-indicator {
-              width: 36px;
-              height: 36px;
-            }
-          }
-          
-          /* Small Mobile */
-          @media (max-width: 380px) {
-            .pending-indicator-content {
-              padding: 0.625rem;
-            }
-            
-            .publish-text {
-              display: none;
-            }
-            
-            .btn-publish-now {
-              padding: 0.625rem;
-              min-width: 44px;
-            }
-            
-            .publish-icon {
-              margin: 0;
-            }
-          }
-        `;
-        document.head.appendChild(style);
-      }
-    } else {
-      if (indicator) {
-        indicator.remove();
-      }
-    }
-  },
-  
-  /**
-   * Dismiss pending indicator (temporary, until page reload)
-   */
-  dismissPendingIndicator() {
-    const indicator = document.getElementById('pendingIndicator');
-    if (indicator) {
-      indicator.style.animation = 'slideUp 0.3s ease-out';
-      setTimeout(() => {
-        indicator.remove();
-      }, 300);
-    }
-  },
+  // Pending indicator removed - functionality replaced by pending tab count badge
 
   /**
    * Setup auto-save for form inputs
@@ -1142,7 +908,7 @@ const UpdateUI = {
     localStorage.setItem(this.storageKeys.draftAds, JSON.stringify(drafts));
     this.markPendingChanges();
     this.updateTabActionButtons();
-    this.showSuccess('Advertisement draft saved locally');
+    // this.showSuccess('Advertisement draft saved locally');
   },
 
   /**
@@ -2700,16 +2466,18 @@ const UpdateUI = {
     const currentItem = categoryItems[currentIndex];
     const previousItem = categoryItems[currentIndex - 1];
     
-    // Swap weights
+    // Swap weights directly in state (these are references to state objects)
     const tempWeight = currentItem.weight || 0;
     currentItem.weight = previousItem.weight || 0;
     previousItem.weight = tempWeight;
     
-    // Save both items as drafts
+    console.log(`Swapped weights: ${currentItem.title} (${currentItem.weight}) ↔ ${previousItem.title} (${previousItem.weight})`);
+    
+    // Save both items as drafts WITH the new weights
     this.saveDraft({ ...currentItem, weight: currentItem.weight });
     this.saveDraft({ ...previousItem, weight: previousItem.weight });
     
-    // Re-render
+    // Re-render to show the change
     this.renderMenuByCategory();
     this.showSuccess(`Moved "${currentItem.title}" up. Publish to save.`);
   },
@@ -2733,16 +2501,18 @@ const UpdateUI = {
     const currentItem = categoryItems[currentIndex];
     const nextItem = categoryItems[currentIndex + 1];
     
-    // Swap weights
+    // Swap weights directly in state (these are references to state objects)
     const tempWeight = currentItem.weight || 0;
     currentItem.weight = nextItem.weight || 0;
     nextItem.weight = tempWeight;
     
-    // Save both items as drafts
+    console.log(`Swapped weights: ${currentItem.title} (${currentItem.weight}) ↔ ${nextItem.title} (${nextItem.weight})`);
+    
+    // Save both items as drafts WITH the new weights
     this.saveDraft({ ...currentItem, weight: currentItem.weight });
     this.saveDraft({ ...nextItem, weight: nextItem.weight });
     
-    // Re-render
+    // Re-render to show the change
     this.renderMenuByCategory();
     this.showSuccess(`Moved "${currentItem.title}" down. Publish to save.`);
   },
@@ -5049,7 +4819,7 @@ const UpdateUI = {
    */
   showAlert(message, type = 'info') {
     // Set duration FIRST (before using it)
-    const duration = 12000; // 12 seconds for all messages
+    const duration = 6000; // 6 seconds for all messages
     
     // Get or create notification container (stacked toasts)
     let notificationContainer = document.getElementById('notification-container');
@@ -5058,7 +4828,7 @@ const UpdateUI = {
       notificationContainer.id = 'notification-container';
       notificationContainer.style.cssText = `
         position: fixed;
-        top: 1rem;
+        top: 8rem;
         right: 10px;
         left: 10px;
         z-index: 9999;
