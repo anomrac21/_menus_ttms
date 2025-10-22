@@ -189,6 +189,48 @@ const AdminUserManager = {
   },
 
   /**
+   * Check if user card is collapsed
+   */
+  isUserCardCollapsed(userId) {
+    const collapsed = localStorage.getItem(`userCard_${userId}_collapsed`);
+    return collapsed === 'true';
+  },
+
+  /**
+   * Toggle user card collapse state
+   */
+  toggleUserCard(userId) {
+    if (!userId) {
+      console.error('toggleUserCard: userId is required');
+      return;
+    }
+    
+    const isCollapsed = this.isUserCardCollapsed(userId);
+    localStorage.setItem(`userCard_${userId}_collapsed`, String(!isCollapsed));
+    
+    // Update UI
+    const detailsSection = document.querySelector(`[data-user-details="${userId}"]`);
+    const actionsSection = document.querySelector(`[data-user-actions="${userId}"]`);
+    const collapseBtn = document.querySelector(`[data-user-collapse-btn="${userId}"]`);
+    
+    if (detailsSection && actionsSection && collapseBtn) {
+      if (isCollapsed) {
+        // Expand
+        detailsSection.style.display = 'block';
+        actionsSection.style.display = 'flex';
+        collapseBtn.innerHTML = '▼';
+      } else {
+        // Collapse
+        detailsSection.style.display = 'none';
+        actionsSection.style.display = 'none';
+        collapseBtn.innerHTML = '▶';
+      }
+    } else {
+      console.warn('toggleUserCard: Could not find elements for userId', userId);
+    }
+  },
+
+  /**
    * Render user list table
    */
   renderUserTable(users, containerId) {
@@ -206,9 +248,13 @@ const AdminUserManager = {
 
     const cardsHtml = `
       <div class="user-cards-grid">
-        ${users.map(user => `
-          <div class="user-card ${!user.is_active ? 'inactive' : ''}">
-            <div class="user-card-header">
+        ${users.map(user => {
+          // Use email as fallback ID if user.id is undefined
+          const userId = user.id || user.email;
+          const isCollapsed = this.isUserCardCollapsed(userId);
+          return `
+          <div class="user-card ${!user.is_active ? 'inactive' : ''}" data-user-id="${userId}">
+            <div class="user-card-header" onclick="AdminUserManager.toggleUserCard('${userId}')">
               <div class="user-avatar">
                 ${user.email.charAt(0).toUpperCase()}
               </div>
@@ -223,9 +269,15 @@ const AdminUserManager = {
                   </span>
                 </div>
               </div>
+              <button 
+                class="btn-collapse-user" 
+                data-user-collapse-btn="${userId}"
+                onclick="event.stopPropagation(); AdminUserManager.toggleUserCard('${userId}')">
+                ${isCollapsed ? '▶' : '▼'}
+              </button>
             </div>
             
-            <div class="user-card-details">
+            <div class="user-card-details" data-user-details="${userId}" style="display: ${isCollapsed ? 'none' : 'block'};">
               <div class="user-detail-item">
                 <span class="detail-label">📧 Email Verified</span>
                 <span class="detail-value">${user.email_verified ? 'Yes ✓' : 'No'}</span>
@@ -240,16 +292,17 @@ const AdminUserManager = {
               </div>
             </div>
             
-            <div class="user-card-actions">
-              <button class="btn btn-sm btn-secondary" onclick="AdminUserManager.editUser(${user.id})">✏️ Edit</button>
+            <div class="user-card-actions" data-user-actions="${userId}" style="display: ${isCollapsed ? 'none' : 'flex'};">
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); AdminUserManager.editUser(${user.id || 'undefined'})">✏️ Edit</button>
               ${user.is_active 
-                ? `<button class="btn btn-sm btn-warning" onclick="AdminUserManager.toggleUserStatus(${user.id}, false)">⏸️ Deactivate</button>`
-                : `<button class="btn btn-sm btn-success" onclick="AdminUserManager.toggleUserStatus(${user.id}, true)">▶️ Activate</button>`
+                ? `<button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); AdminUserManager.toggleUserStatus(${user.id || 'undefined'}, false)">⏸️ Deactivate</button>`
+                : `<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); AdminUserManager.toggleUserStatus(${user.id || 'undefined'}, true)">▶️ Activate</button>`
               }
-              <button class="btn btn-sm btn-danger" onclick="AdminUserManager.deleteUser(${user.id})">🗑️ Delete</button>
+              <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); AdminUserManager.deleteUser(${user.id || 'undefined'})">🗑️ Delete</button>
             </div>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `;
 

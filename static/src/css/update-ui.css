@@ -15,12 +15,14 @@
 
 .dashboard-header {
   color: white;
-  padding: 1rem;
+  padding: .4rem;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
+  background: linear-gradient(135deg, #242938 0%, #2b3140 100%);
   align-items: center;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  flex-direction: column-reverse;
+  flex-direction: row;
 }
 
 .dashboard-title {
@@ -63,7 +65,7 @@
   align-items: center;
   gap: .4rem;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
 }
 
@@ -73,6 +75,7 @@
 
 .user-name {
   display: block;
+  color: #fff;
   font-weight: 600;
   font-size: x-small;
 }
@@ -81,6 +84,7 @@
   display: block;
   font-size: x-small;
   opacity: 0.8;
+  color: #dedede;
 }
 
 .btn-logout {
@@ -1400,3 +1404,9 @@
   }
 }
 
+.dashboard-brand {
+    font-size: x-small;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+}

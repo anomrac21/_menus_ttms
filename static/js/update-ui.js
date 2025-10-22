@@ -101,7 +101,7 @@ const UpdateUI = {
         right: 24px;
         z-index: 9998;
         padding: 12px 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #5a6996 0%, #2b3140 100%);
         color: white;
         border: none;
         border-radius: 50px;
@@ -700,26 +700,254 @@ const UpdateUI = {
     let indicator = document.getElementById('pendingIndicator');
     
     if (this.state.hasPendingChanges) {
+      const draftCount = this.getPendingChangesCount();
+      
       if (!indicator) {
         indicator = document.createElement('div');
         indicator.id = 'pendingIndicator';
-        indicator.style.cssText = 'background: #f59e0b; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500;';
-        indicator.innerHTML = `
-          ⚠️ Unsaved drafts
-          <button onclick="UpdateUI.showPublishDialog()" style="background: white; color: #f59e0b; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; margin-left: 0.5rem; cursor: pointer; font-weight: 600;">
-            Publish Now
-          </button>
-        `;
+        indicator.className = 'pending-indicator';
         
-        const dashboardUser = document.querySelector('.dashboard-header');
-        if (dashboardUser) {
-          dashboardUser.insertBefore(indicator, dashboardUser.firstChild);
+        const dashboardHeader = document.querySelector('.dashboard-header');
+        if (dashboardHeader) {
+          dashboardHeader.insertBefore(indicator, dashboardHeader.firstChild);
         }
+      }
+      
+      // Update content with current count
+      indicator.innerHTML = `
+        <div class="pending-indicator-content">
+          <div class="pending-indicator-info">
+            <span class="pending-indicator-icon">⚠️</span>
+            <div class="pending-indicator-text">
+              <span class="pending-indicator-title">Unsaved Changes</span>
+              <span class="pending-indicator-count">${draftCount} draft${draftCount !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          <div class="pending-indicator-actions">
+            <button onclick="UpdateUI.showPublishDialog()" class="btn-publish-now">
+              <span class="publish-icon">✓</span>
+              <span class="publish-text">Publish</span>
+            </button>
+            <button onclick="UpdateUI.dismissPendingIndicator()" class="btn-dismiss-indicator" title="Dismiss (will reappear on page reload)">
+              <span>✕</span>
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Add styles if not already present
+      if (!document.getElementById('pendingIndicatorStyles')) {
+        const style = document.createElement('style');
+        style.id = 'pendingIndicatorStyles';
+        style.textContent = `
+          .pending-indicator {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            margin-bottom: 0.75rem;
+            animation: slideDown 0.3s ease-out;
+          }
+          
+          @keyframes slideDown {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          @keyframes slideUp {
+            from {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            to {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+          }
+          
+          .pending-indicator-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            gap: 1rem;
+          }
+          
+          .pending-indicator-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 0;
+          }
+          
+          .pending-indicator-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+          }
+          
+          .pending-indicator-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+            min-width: 0;
+          }
+          
+          .pending-indicator-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.2;
+          }
+          
+          .pending-indicator-count {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            line-height: 1.2;
+          }
+          
+          .pending-indicator-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+          }
+          
+          .btn-publish-now {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: white;
+            color: #d97706;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          
+          .btn-publish-now:hover {
+            background: #fffbeb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          }
+          
+          .btn-publish-now:active {
+            transform: translateY(0);
+          }
+          
+          .publish-icon {
+            font-size: 1rem;
+            font-weight: bold;
+          }
+          
+          .btn-dismiss-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+          }
+          
+          .btn-dismiss-indicator:hover {
+            background: rgba(255, 255, 255, 0.3);
+          }
+          
+          /* Mobile Styles */
+          @media (max-width: 640px) {
+            .pending-indicator-content {
+              flex-direction: column;
+              align-items: stretch;
+              padding: 0.75rem;
+              gap: 0.75rem;
+            }
+            
+            .pending-indicator-info {
+              gap: 0.625rem;
+            }
+            
+            .pending-indicator-icon {
+              font-size: 1.125rem;
+            }
+            
+            .pending-indicator-title {
+              font-size: 0.8125rem;
+            }
+            
+            .pending-indicator-count {
+              font-size: 0.6875rem;
+            }
+            
+            .pending-indicator-actions {
+              width: 100%;
+            }
+            
+            .btn-publish-now {
+              flex: 1;
+              justify-content: center;
+              padding: 0.625rem 1rem;
+            }
+            
+            .btn-dismiss-indicator {
+              width: 36px;
+              height: 36px;
+            }
+          }
+          
+          /* Small Mobile */
+          @media (max-width: 380px) {
+            .pending-indicator-content {
+              padding: 0.625rem;
+            }
+            
+            .publish-text {
+              display: none;
+            }
+            
+            .btn-publish-now {
+              padding: 0.625rem;
+              min-width: 44px;
+            }
+            
+            .publish-icon {
+              margin: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
       }
     } else {
       if (indicator) {
         indicator.remove();
       }
+    }
+  },
+  
+  /**
+   * Dismiss pending indicator (temporary, until page reload)
+   */
+  dismissPendingIndicator() {
+    const indicator = document.getElementById('pendingIndicator');
+    if (indicator) {
+      indicator.style.animation = 'slideUp 0.3s ease-out';
+      setTimeout(() => {
+        indicator.remove();
+      }, 300);
     }
   },
 
@@ -3103,12 +3331,75 @@ const UpdateUI = {
 
     const colorGroupsHTML = Object.entries(grouped)
       .filter(([_, items]) => items.length > 0)
-      .map(([category, items]) => `
-        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 1rem; color: #1e293b;">${category}</h3>
-        ${items.join('')}
-      `).join('');
+      .map(([category, items]) => {
+        const isCollapsed = this.isColorSectionCollapsed(category);
+        const categoryId = category.replace(/\s+/g, '-').toLowerCase();
+        
+        return `
+          <div class="color-section category-section" data-color-section="${this.escapeHtml(category)}" style="margin-bottom: 2rem;">
+            <div class="category-header" onclick="UpdateUI.toggleColorSection('${this.escapeHtml(category)}')" style="cursor: pointer;">
+              <div class="category-header-left">
+                <div>
+                  <h3 class="category-title">${category}</h3>
+                  <p class="category-info">
+                    ${items.length} color${items.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <div class="category-actions" onclick="event.stopPropagation();">
+                <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleColorSection('${this.escapeHtml(category)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
+                  ${isCollapsed ? '►' : '▼'}
+                </button>
+              </div>
+            </div>
+            
+            <div class="color-section-content" style="display: ${isCollapsed ? 'none' : 'block'}; padding-top: 1rem;">
+              ${items.join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
     
     container.innerHTML = colorGroupsHTML;
+  },
+  
+  /**
+   * Check if color section is collapsed
+   */
+  isColorSectionCollapsed(sectionName) {
+    const collapsedSections = JSON.parse(localStorage.getItem('ttmenus_collapsed_color_sections') || '[]');
+    return collapsedSections.includes(sectionName);
+  },
+  
+  /**
+   * Toggle color section collapse state
+   */
+  toggleColorSection(sectionName) {
+    const collapsedSections = JSON.parse(localStorage.getItem('ttmenus_collapsed_color_sections') || '[]');
+    const index = collapsedSections.indexOf(sectionName);
+    
+    if (index > -1) {
+      collapsedSections.splice(index, 1);
+    } else {
+      collapsedSections.push(sectionName);
+    }
+    
+    localStorage.setItem('ttmenus_collapsed_color_sections', JSON.stringify(collapsedSections));
+    
+    // Update UI
+    const colorSection = document.querySelector(`.color-section[data-color-section="${this.escapeHtml(sectionName)}"]`);
+    if (colorSection) {
+      const contentDiv = colorSection.querySelector('.color-section-content');
+      const collapseBtn = colorSection.querySelector('.btn-collapse');
+      
+      if (contentDiv) {
+        const isNowCollapsed = contentDiv.style.display === 'none';
+        contentDiv.style.display = isNowCollapsed ? 'block' : 'none';
+        if (collapseBtn) {
+          collapseBtn.textContent = isNowCollapsed ? '▼' : '►';
+        }
+      }
+    }
   },
   
   /**
@@ -3176,21 +3467,21 @@ const UpdateUI = {
     overlay.id = 'previewOverlay';
     overlay.style.cssText = `
       position: fixed;
-      top: 60px;
+      top: 20px;
       right: 20px;
-      width: calc(100vw - 40px);
-      height: calc(100vh - 80px);
+      width: calc(-40px + 100vw);
+      height: calc(-40px + 100dvh);
       background: white;
       border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: rgba(0, 0, 0, 0.3) 0px 8px 32px;
       z-index: 9999;
       display: none;
       flex-direction: column;
-      overflow: hidden;
+      overflow: hidden; 
     `;
     
     overlay.innerHTML = `
-      <div style="padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
+      <div style="padding: .4rem; background: linear-gradient(135deg, #5a6996 0%, #2b3140 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 1rem; font-weight: 600;">🎨 Live Preview</h3>
         <div style="display: flex; gap: 0.5rem;">
           <button onclick="UpdateUI.refreshPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">🔄</button>
