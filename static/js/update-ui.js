@@ -1707,9 +1707,14 @@ const UpdateUI = {
     // Format price
     const priceDisplay = item.price ? item.price.toFixed(0) : '0';
     
+    // Check for pending image upload
+    const hasPendingUpload = sessionStorage.getItem(`pending_uploads_${item.id}`) !== null;
+    const pendingBadge = hasPendingUpload ? '<span class="badge badge-warning" style="position: absolute; top: 5px; right: 5px; z-index: 1;">📸 Upload Pending</span>' : '';
+    
     return `
       <div class="${cardClasses.join(' ')}" draggable="${!item._isDeleted}" ondragstart="UpdateUI.handleDragStart(event, '${this.escapeHtml(item.id)}')" ondragover="UpdateUI.handleDragOver(event)" ondrop="UpdateUI.handleDrop(event, '${this.escapeHtml(item.id)}')">
-        ${item.image ? `<img src="${this.getDisplayImagePath(item.image, item.id)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}">` : ''}
+        ${pendingBadge}
+        ${item.image ? `<img src="${this.getDisplayImagePath(item.image, item.id)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}" onerror="console.error('Image load failed:', '${this.escapeHtml(item.image)}', 'itemId:', '${this.escapeHtml(item.id)}')">` : ''}
         
         <div class="menu-item-header">
           <h3 class="menu-item-title ${item._isDeleted ? 'deleted' : ''}">${this.escapeHtml(item.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
@@ -3514,11 +3519,18 @@ const UpdateUI = {
     
     // Check if this is a pending upload (has data URL in sessionStorage)
     if (itemId) {
+      // Try to get the preview data URL
       const previewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
+      console.log(`Checking image previews for ${itemId}, path: ${path}`);
+      console.log(`Session key: image_previews_${itemId}`, previewsJson ? 'FOUND' : 'NOT FOUND');
+      
       if (previewsJson) {
         try {
           const previews = JSON.parse(previewsJson);
+          console.log('Image previews object:', previews);
+          
           if (previews[path]) {
+            console.log(`✅ Using data URL preview for: ${path}`);
             return previews[path]; // Return data URL for preview
           }
         } catch (e) {
@@ -3528,7 +3540,9 @@ const UpdateUI = {
     }
     
     // Normal path handling
-    return path.startsWith('/') ? path : '/' + path;
+    const finalPath = path.startsWith('/') ? path : '/' + path;
+    console.log(`Using normal path: ${finalPath}`);
+    return finalPath;
   },
 
   /**
