@@ -27,10 +27,8 @@
 								{{ else }}
 									<a href="/{{ .LinkTitle | urlize }}" onclick="closeCart();"> 
 								{{ end }}
-									{{ range site.Data.menudata.menu }}
-										{{ if eq .name $title }}
-											<img class="icon center" src="{{ .icon }}" alt="{{ .name }} icon" loading="lazy">
-										{{ end }}
+									{{ if .Params.icon }}
+										<img class="icon center" src="{{ .Params.icon }}" alt="{{ $title }} icon" loading="lazy">
 									{{ end }}
 									<span>{{ .LinkTitle }}</span>
 								</a>
@@ -49,10 +47,8 @@
 							{{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods") (in $titleurl "admins") (in $titleurl "admin")) }}
 							<li class="item">
 								<a href="#{{ .LinkTitle}}" onclick="closeCart();">
-									{{ range .Site.Data.menudata.menu }}
-										{{ if eq .name $title }}
-											<img class="icon center" src="{{ .icon }}" alt="{{ .name }} icon" loading="lazy">
-										{{ end }}
+									{{ if .Params.icon }}
+										<img class="icon center" src="{{ .Params.icon }}" alt="{{ $title }} icon" loading="lazy">
 									{{ end }}
 									<span>{{ .LinkTitle }}</span>
 								</a>

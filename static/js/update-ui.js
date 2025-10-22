@@ -15,7 +15,6 @@ const UpdateUI = {
       content: '/content',
       categories: '/categories',
       locations: '/locations',
-      menudata: '/menudata',
       config: '/config',
       manifest: '/manifest',
       colors: '/colors',
@@ -54,6 +53,9 @@ const UpdateUI = {
   async init() {
     console.log('Initializing Update UI (Hugo + localStorage mode)...');
     
+    // Inject preview button styles
+    this.injectPreviewButtonStyles();
+    
     // Setup tab navigation FIRST (so active tab is ready)
     this.setupTabNavigation();
     
@@ -82,6 +84,47 @@ const UpdateUI = {
     this.setupAutoSave();
     
     console.log('✅ Update UI initialized and ready!');
+  },
+  
+  /**
+   * Inject preview button styles
+   */
+  injectPreviewButtonStyles() {
+    if (document.getElementById('previewButtonStyles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'previewButtonStyles';
+    style.textContent = `
+      .preview-toggle-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9998;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        display: none;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      }
+      
+      .preview-toggle-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      }
+      
+      .preview-toggle-btn:active {
+        transform: translateY(0);
+      }
+    `;
+    document.head.appendChild(style);
   },
 
   /**
@@ -132,6 +175,13 @@ const UpdateUI = {
    */
   async onTabActivated(tabName) {
     console.log('Tab activated:', tabName);
+    
+    // Show/hide preview button based on tab
+    if (tabName === 'colors') {
+      // Button will be shown when loadColors renders
+    } else {
+      this.hidePreviewToggleButton();
+    }
     
     // Don't reload menu-items if already loaded (happens on init)
     if (tabName === 'menu-items' && this.state.menuItems.length > 0) {
@@ -201,11 +251,11 @@ const UpdateUI = {
   async loadAllData() {
     console.log('Loading all data...');
     
-    // Load categories first (needed for rendering)
-    await this.loadCategories();
-    
-    // Then load menu items
+    // Load menu items first (categories are discovered from them)
     await this.loadMenuItems();
+    
+    // Then load categories (fetches icons from category _index.md files)
+    await this.loadCategories();
     
     // Load locations in background (not critical for menu tab)
     this.loadLocations().catch(err => console.log('Locations load failed:', err));
@@ -214,32 +264,101 @@ const UpdateUI = {
   },
 
   /**
-   * Load categories from menudata.json (Hugo data file)
+   * Load categories from category _index.md files
    */
   async loadCategories() {
-    console.log('Loading categories from /data/menudata.json...');
-    try {
-      // Load directly from Hugo's data file (no API needed!)
-      const menuDataResponse = await fetch('/data/menudata.json');
-      console.log('Categories fetch response:', menuDataResponse.status);
+    console.log('🔍 Loading categories from category pages...');
+    
+    // Discover categories from menu items first
+    const categoryNames = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
+    
+    console.log(`Found ${categoryNames.length} categories from menu items:`, categoryNames);
+    
+    // Fetch each category's JSON to get icon, weight, etc.
+    const categoryPromises = categoryNames.map(async (name) => {
+      const categoryPath = name.toLowerCase();
+      const possiblePaths = [
+        `/${categoryPath}/index.json`,
+        `/api/${categoryPath}/index.json`
+      ];
       
-      if (menuDataResponse.ok) {
-        const menuData = await menuDataResponse.json();
-        console.log('Categories data:', menuData);
-        this.state.categories = menuData.menu || [];
-        console.log('Loaded', this.state.categories.length, 'categories');
+      for (const path of possiblePaths) {
+        try {
+          const response = await fetch(path);
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`  ✅ Loaded ${name}:`, { icon: data.icon, weight: data.weight });
+            return {
+              name: data.title || name,
+              icon: data.icon || null,
+              weight: parseInt(data.weight) || 0,
+            };
+          }
+        } catch (error) {
+          console.log(`  Failed to load ${path}:`, error.message);
+        }
+      }
+      
+      // Fallback if no JSON found
+      console.warn(`  ⚠️ No JSON found for ${name}, using defaults`);
+      return {
+        name: name,
+        icon: null,
+        weight: 999,
+      };
+    });
+    
+    this.state.categories = await Promise.all(categoryPromises);
+    console.log('✅ Loaded', this.state.categories.length, 'categories with icons:', this.state.categories);
+    
+    // Clean up legacy menudata drafts if any exist
+    this.cleanupLegacyDrafts();
+    
+    // Re-render menu now that we have icons
+    this.renderMenuByCategory();
+    
         this.renderCategories();
         this.updateCategorySelects();
+  },
+
+  /**
+   * Auto-discover categories from existing menu items (DEPRECATED)
+   * Categories are now loaded from their _index.md files via loadCategories()
+   */
+  autoDiscoverCategories() {
+    console.log('⚠️ autoDiscoverCategories called - this should not happen anymore');
+    console.log('Categories should load from category _index.md files');
+    
+    // Fallback: create basic structure from menu items
+    if (this.state.menuItems && this.state.menuItems.length > 0) {
+      const categorySet = new Set();
+      this.state.menuItems.forEach(item => {
+        if (item.category) {
+          categorySet.add(item.category);
+        }
+      });
+      
+      this.state.categories = Array.from(categorySet).map(name => ({
+        name: name,
+        icon: null,
+        weight: 999,
+      }));
+      
+      console.log('⚠️ Fallback: Auto-discovered', this.state.categories.length, 'categories (no icons)');
       } else {
-        // 404 - menudata.json doesn't exist, that's okay
-        // We'll auto-discover categories from items
-        console.log('menudata.json not found (404), will auto-discover from items');
+      console.log('❌ No menu items yet, categories will be empty');
         this.state.categories = [];
       }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      // Don't throw - allow init to continue
-      this.state.categories = [];
+  },
+
+  /**
+   * Clean up legacy menudata drafts (icons now stored in category _index.md)
+   */
+  cleanupLegacyDrafts() {
+    const draftMenudata = localStorage.getItem('ttmenus_draft_menudata');
+    if (draftMenudata) {
+      console.log('🧹 Cleaning up legacy menudata draft from old system');
+      localStorage.removeItem('ttmenus_draft_menudata');
     }
   },
 
@@ -327,10 +446,10 @@ const UpdateUI = {
         // Merge with draft changes from localStorage
         this.mergeDraftItems();
         
-        console.log('Menu items loaded, rendering by category...');
+        console.log('✅ Menu items loaded. Categories will load next with icons.');
         
-        // Render grouped by category - THIS SHOULD SHOW ALL ITEMS!
-        this.renderMenuByCategory();
+        // Don't render yet - wait for categories to load with icons
+        // renderMenuByCategory() will be called by loadCategories()
       } else {
         throw new Error('Failed to load menu-items.json');
       }
@@ -930,14 +1049,29 @@ const UpdateUI = {
       ? `<span class="badge badge-primary">${ad.daysOfWeek.join(', ')}</span>`
       : '';
     
+    // Check if ad is collapsed
+    const isCollapsed = this.isAdCollapsed(ad.id);
+    const position = index + 1;
+    
     return `
-      <div class="${cardClasses.join(' ')}">
-        ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image)}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}">` : ''}
+      <div class="${cardClasses.join(' ')}" data-ad-id="${this.escapeHtml(ad.id)}">
         
-        <div class="menu-item-header">
+        <div class="menu-item-header" onclick="UpdateUI.toggleAd('${this.escapeHtml(ad.id)}')" style="cursor: pointer;">
           <h3 class="menu-item-title ${ad._isDeleted ? 'deleted' : ''}">${this.escapeHtml(ad.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
-          <span class="menu-item-position">#${index + 1}</span>
+          <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
+            ${!ad._isDeleted ? `
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdUp('${this.escapeHtml(ad.id)}')" title="Move up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↑</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdDown('${this.escapeHtml(ad.id)}')" title="Move down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↓</button>
+            ` : ''}
+            <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
+            <button class="btn-collapse-ad" onclick="event.stopPropagation(); UpdateUI.toggleAd('${this.escapeHtml(ad.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
+              ${isCollapsed ? '►' : '▼'}
+            </button>
+          </span>
         </div>
+        
+        <div class="ad-details" style="display: ${isCollapsed ? 'none' : 'block'};">
+          ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image)}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}">` : ''}
         
         ${ad.description ? `<p class="menu-item-description">${this.escapeHtml(ad.description).substring(0, 100)}</p>` : ''}
         
@@ -954,6 +1088,7 @@ const UpdateUI = {
             ${ad._isDraft ? `<button class="btn btn-sm btn-success" onclick="UpdateUI.publishAd('${this.escapeHtml(ad.id)}')">Publish</button>` : ''}
             <button class="btn btn-sm btn-danger" onclick="UpdateUI.deleteAd('${this.escapeHtml(ad.id)}')">Delete</button>
           `}
+          </div>
         </div>
       </div>
     `;
@@ -1144,12 +1279,13 @@ const UpdateUI = {
             const size = response.headers.get('content-length');
             const sizeKB = size ? Math.round(size / 1024) : null;
             
+            const typeInfo = this.getBrandingType(filename);
             this.state.brandingImages.push({
               id: filename,
               filename: filename,
               path: `/branding/${filename}`,
               size: sizeKB,
-              type: this.getBrandingType(filename),
+              type: typeInfo.type,
             });
           }
         } catch (err) {
@@ -1176,15 +1312,56 @@ const UpdateUI = {
   },
 
   /**
-   * Get branding image type/category
+   * Get branding image type/category with description
    */
   getBrandingType(filename) {
-    if (filename.includes('favicon')) return 'Favicon';
-    if (filename.includes('screenshot')) return 'Screenshot';
-    if (filename.includes('logo') || filename.includes('ttmenus')) return 'Logo';
-    if (filename.includes('server')) return 'UI Element';
-    if (filename.includes('mappin')) return 'Map Icon';
-    return 'Other';
+    if (filename === 'favicon-400x200.webp') {
+      return {
+        type: 'Fallback Images',
+        description: 'Menu item fallback image - displayed when a menu item does not contain an image.',
+        icon: '🖼️'
+      };
+    }
+    if (filename.includes('favicon')) {
+      return {
+        type: 'Favicon',
+        description: 'Browser tab icons & home screen icons - displayed when users bookmark your site or add it to their home screen. Multiple sizes for different devices.',
+        icon: '🔖'
+      };
+    }
+    if (filename.includes('screenshot')) {
+      return {
+        type: 'Screenshots',
+        description: 'PWA installation screenshots - shown in app stores and when users install your menu as a Progressive Web App.',
+        icon: '📱'
+      };
+    }
+    if (filename.includes('mappin')) {
+      return {
+        type: 'Map Icons',
+        description: 'Location markers - displayed on maps to show your restaurant locations.',
+        icon: '📍'
+      };
+    }
+    if (filename.includes('logo') || filename.includes('ttmenus')) {
+      return {
+        type: 'Logo',
+        description: 'Main branding logo - displayed throughout the site and app.',
+        icon: '🎨'
+      };
+    }
+    if (filename.includes('server')) {
+      return {
+        type: 'UI Elements',
+        description: 'Interface graphics - images used in the user interface.',
+        icon: '🖼️'
+      };
+    }
+    return {
+      type: 'Other',
+      description: 'Miscellaneous branding assets.',
+      icon: '📄'
+    };
   },
 
   /**
@@ -1206,21 +1383,51 @@ const UpdateUI = {
     
     // Group by type
     const grouped = {};
+    const typeInfo = {};
+    
     this.state.brandingImages.forEach(img => {
-      if (!grouped[img.type]) {
-        grouped[img.type] = [];
+      const info = this.getBrandingType(img.filename);
+      const typeName = info.type;
+      
+      if (!grouped[typeName]) {
+        grouped[typeName] = [];
+        typeInfo[typeName] = info;
       }
-      grouped[img.type].push(img);
+      grouped[typeName].push(img);
     });
     
     let html = '';
     
-    for (const [type, images] of Object.entries(grouped)) {
+    for (const [typeName, images] of Object.entries(grouped)) {
+      const info = typeInfo[typeName];
+      const isCollapsed = this.isBrandingTypeCollapsed(typeName);
+      
       html += `
-        <div class="detail-section">
-          <h3 class="detail-section-title">${type}</h3>
+        <div class="branding-section category-section" data-branding-type="${this.escapeHtml(typeName)}" style="margin-bottom: 2rem;">
+          <div class="category-header branding-section-header" onclick="UpdateUI.toggleBrandingType('${this.escapeHtml(typeName)}')" style="cursor: pointer; background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;">
+            <div class="category-header-left">
+              <span class="category-icon" style="font-size: 2rem;">${info.icon}</span>
+              <div>
+                <h3 class="category-title">${typeName}</h3>
+                <p class="category-info">
+                  ${images.length} file${images.length !== 1 ? 's' : ''}
+                </p>
+                <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.8); margin: 0.25rem 0 0 0; line-height: 1.4;">
+                  ${info.description}
+                </p>
+              </div>
+            </div>
+            <div class="category-actions" onclick="event.stopPropagation();">
+              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleBrandingType('${this.escapeHtml(typeName)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
+                ${isCollapsed ? '►' : '▼'}
+              </button>
+            </div>
+          </div>
+          
+          <div class="branding-section-content" style="display: ${isCollapsed ? 'none' : 'block'}; padding-top: 1rem;">
           <div class="grid-auto-sm">
             ${images.map(img => this.renderBrandingImageCard(img)).join('')}
+            </div>
           </div>
         </div>
       `;
@@ -1236,6 +1443,24 @@ const UpdateUI = {
     const sizeText = img.size ? `${img.size} KB` : 'Unknown size';
     const isIcon = img.filename.includes('favicon') && (img.filename.endsWith('.ico') || img.filename.endsWith('.png'));
     
+    // Get detailed info for this file
+    const fileDescriptions = {
+      'favicon.ico': 'Legacy favicon - 16x16px icon for older browsers',
+      'favicon.png': 'Standard PNG favicon - 32x32px',
+      'favicon16.webp': '16x16px WebP favicon',
+      'favicon144.webp': '144x144px - Windows tile icon',
+      'favicon152.webp': '152x152px - iOS home screen icon',
+      'favicon192.webp': '192x192px - Android home screen icon',
+      'favicon196.webp': '196x196px - Chrome for Android',
+      'favicon512.webp': '512x512px - High-res app icon',
+      'favicon-400x200.webp': '400x200px - Menu item fallback image',
+      'mappin.webp': 'Map marker icon for location pins',
+      'richscreenshot1.webp': 'PWA install screenshot #1',
+      'richscreenshot2.webp': 'PWA install screenshot #2',
+    };
+    
+    const fileDescription = fileDescriptions[img.filename] || 'Branding asset';
+    
     // Check if there's a draft replacement for this image
     const drafts = this.getBrandingDrafts();
     const hasDraft = drafts[img.filename];
@@ -1250,6 +1475,7 @@ const UpdateUI = {
         </div>
         <h4 class="card-filename">${this.escapeHtml(img.filename)}${draftBadge}</h4>
         <p class="card-filesize">${sizeText}</p>
+        <p style="font-size: 0.75rem; color: #6b7280; margin: 0.5rem 0;">${fileDescription}</p>
         <div class="card-actions">
           <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.downloadBrandingImage('${this.escapeHtml(displayPath)}', '${this.escapeHtml(img.filename)}')">Download</button>
           <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); UpdateUI.replaceBrandingImage('${this.escapeHtml(img.filename)}')">Replace</button>
@@ -1596,7 +1822,7 @@ const UpdateUI = {
       itemsByCategory[item.category].push(item);
     });
 
-    // Get category order from menudata.json (with weights)
+    // Get category order (from category _index.md files, loaded via loadCategories)
     let categoryOrder = this.state.categories.map((cat, index) => ({
       name: cat.name,
       icon: cat.icon,
@@ -1605,7 +1831,7 @@ const UpdateUI = {
 
     // If no categories defined, auto-discover from items
     if (categoryOrder.length === 0) {
-      console.log('No categories in menudata.json, discovering from items...');
+      console.log('No categories loaded, discovering from items...');
       const uniqueCategories = [...new Set(this.state.menuItems.map(item => item.category))];
       categoryOrder = uniqueCategories.map((name, index) => ({
         name: name,
@@ -1639,9 +1865,12 @@ const UpdateUI = {
       const itemCount = items.length;
       const draftCount = items.filter(i => i._isDraft).length;
 
+      // Check if category is collapsed (from localStorage)
+      const isCollapsed = this.isCategoryCollapsed(category.name);
+
       const html = `
-        <div class="category-section">
-          <div class="category-header">
+        <div class="category-section" data-category="${this.escapeHtml(category.name)}">
+          <div class="category-header" onclick="UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="cursor: pointer;">
             <div class="category-header-left">
               ${category.icon ? `<img src="${this.getDisplayImagePath(category.icon)}" alt="" class="category-icon">` : ''}
               <div>
@@ -1652,17 +1881,23 @@ const UpdateUI = {
                 </p>
               </div>
             </div>
-            <div class="category-actions">
-              <button class="btn btn-sm category-btn" onclick="UpdateUI.reorderCategory('${this.escapeHtml(category.name)}')">
-                ↕️ Reorder
+            <div class="category-actions" onclick="event.stopPropagation();">
+              <button class="btn btn-sm category-btn" onclick="UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
+                ↑
               </button>
-              <button class="btn btn-sm category-btn" onclick="UpdateUI.editCategoryIcon('${this.escapeHtml(category.name)}')">
-                🎨 Edit Icon
+              <button class="btn btn-sm category-btn" onclick="UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
+                ↓
+              </button>
+              <button class="btn btn-sm category-btn" onclick="UpdateUI.editCategory('${this.escapeHtml(category.name)}')">
+                Edit
+              </button>
+              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
+                ${isCollapsed ? '►' : '▼'}
               </button>
             </div>
           </div>
 
-          <div class="category-items">
+          <div class="category-items" style="display: ${isCollapsed ? 'none' : 'grid'};">
             ${items.map((item, idx) => this.renderMenuItem(item, idx)).join('')}
             
             <div class="add-item-card" onclick="openMenuItemModal(null, '${this.escapeHtml(category.name)}')">
@@ -1678,8 +1913,20 @@ const UpdateUI = {
       categoryHTML.push(html);
     });
 
+    // Add collapse/expand all controls at the top
+    const controlsHTML = `
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 1rem; padding: 0.5rem; background: #f9fafb; border-radius: 6px;">
+        <button class="btn btn-sm btn-secondary" onclick="UpdateUI.expandAllCategories()" style="font-size: 0.875rem;">
+          ▼ Expand All Categories
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="UpdateUI.collapseAllCategories()" style="font-size: 0.875rem;">
+          ► Collapse All Categories
+        </button>
+      </div>
+    `;
+
     // Set the HTML
-    container.innerHTML = categoryHTML.join('');
+    container.innerHTML = controlsHTML + categoryHTML.join('');
     
     console.log('Menu rendering complete!');
   },
@@ -1711,15 +1958,29 @@ const UpdateUI = {
     const hasPendingUpload = sessionStorage.getItem(`pending_uploads_${item.id}`) !== null;
     const pendingBadge = hasPendingUpload ? '<span class="badge badge-warning" style="position: absolute; top: 5px; right: 5px; z-index: 1;">📸 Upload Pending</span>' : '';
     
+    // Check if item is collapsed
+    const isCollapsed = this.isMenuItemCollapsed(item.id);
+    
     return `
-      <div class="${cardClasses.join(' ')}" draggable="${!item._isDeleted}" ondragstart="UpdateUI.handleDragStart(event, '${this.escapeHtml(item.id)}')" ondragover="UpdateUI.handleDragOver(event)" ondrop="UpdateUI.handleDrop(event, '${this.escapeHtml(item.id)}')">
+      <div class="${cardClasses.join(' ')}" data-item-id="${this.escapeHtml(item.id)}" draggable="${!item._isDeleted}" ondragstart="UpdateUI.handleDragStart(event, '${this.escapeHtml(item.id)}')" ondragover="UpdateUI.handleDragOver(event)" ondrop="UpdateUI.handleDrop(event, '${this.escapeHtml(item.id)}')">
         ${pendingBadge}
-        ${item.image ? `<img src="${this.getDisplayImagePath(item.image, item.id)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}" onerror="console.error('Image load failed:', '${this.escapeHtml(item.image)}', 'itemId:', '${this.escapeHtml(item.id)}')">` : ''}
         
-        <div class="menu-item-header">
+        <div class="menu-item-header" onclick="UpdateUI.toggleMenuItem('${this.escapeHtml(item.id)}')" style="cursor: pointer;">
           <h3 class="menu-item-title ${item._isDeleted ? 'deleted' : ''}">${this.escapeHtml(item.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
-          <span class="menu-item-position">#${position}</span>
+          <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
+            ${!item._isDeleted ? `
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemUp('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↑</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemDown('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↓</button>
+            ` : ''}
+            <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
+            <button class="btn-collapse-item" onclick="event.stopPropagation(); UpdateUI.toggleMenuItem('${this.escapeHtml(item.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
+              ${isCollapsed ? '►' : '▼'}
+            </button>
+          </span>
         </div>
+        
+        <div class="menu-item-details" style="display: ${isCollapsed ? 'none' : 'block'};">
+          ${item.image ? `<img src="${this.getDisplayImagePath(item.image, item.id)}" alt="${this.escapeHtml(item.title)}" class="menu-item-image ${item._isDeleted ? 'deleted' : ''}" onerror="console.error('Image load failed:', '${this.escapeHtml(item.image)}', 'itemId:', '${this.escapeHtml(item.id)}')">` : ''}
         
         <p class="menu-item-description">
           ${descriptionText}
@@ -1728,6 +1989,7 @@ const UpdateUI = {
         <div class="menu-item-price-row">
           <span class="menu-item-price">$${priceDisplay}</span>
         </div>
+        
         
         ${(() => {
           const tags = item.tags || [];
@@ -1759,8 +2021,7 @@ const UpdateUI = {
             <button class="btn btn-sm btn-danger" onclick="UpdateUI.deleteMenuItem('${this.escapeHtml(item.id)}')">Delete</button>
           `}
         </div>
-        
-        ${!item._isDeleted ? `<div class="menu-item-drag-handle">⋮⋮ Drag to reorder</div>` : ''}
+        </div>
       </div>
     `;
   },
@@ -1878,44 +2139,623 @@ const UpdateUI = {
   },
 
   /**
-   * Reorder category (move up/down in menu)
+   * Edit category (opens modal)
    */
-  reorderCategory(categoryName) {
-    // Show dialog or implement drag-and-drop for categories
-    alert(`Reorder category "${categoryName}" - Feature coming soon!\n\nYou can manually edit the order in menudata.json for now.`);
+  editCategory(categoryName) {
+    openCategoryModal(categoryName);
   },
 
   /**
-   * Edit category icon
+   * Check if category is collapsed
    */
-  editCategoryIcon(categoryName) {
-    const category = this.state.categories.find(c => c.name === categoryName);
-    if (!category) return;
+  isCategoryCollapsed(categoryName) {
+    const collapsedCategories = JSON.parse(localStorage.getItem('ttmenus_collapsed_categories') || '[]');
+    return collapsedCategories.includes(categoryName);
+  },
+
+  /**
+   * Toggle category collapse state
+   */
+  toggleCategory(categoryName) {
+    const collapsedCategories = JSON.parse(localStorage.getItem('ttmenus_collapsed_categories') || '[]');
+    const index = collapsedCategories.indexOf(categoryName);
     
-    const newIcon = prompt(`Enter icon URL for "${categoryName}":`, category.icon || '');
-    if (newIcon === null) return; // Cancelled
+    if (index > -1) {
+      // Currently collapsed, expand it
+      collapsedCategories.splice(index, 1);
+    } else {
+      // Currently expanded, collapse it
+      collapsedCategories.push(categoryName);
+    }
     
-    // Update in state
-    category.icon = newIcon;
+    localStorage.setItem('ttmenus_collapsed_categories', JSON.stringify(collapsedCategories));
     
-    // Save to draft menudata
-    const menuData = {
-      payments: false,
-      delivery: false,
-      notifications: true,
-      menu: this.state.categories.map(cat => ({
-        name: cat.name,
-        icon: cat.icon,
-      })),
+    // Update UI - find the category section and toggle its items
+    const categorySection = document.querySelector(`.category-section[data-category="${this.escapeHtml(categoryName)}"]`);
+    if (categorySection) {
+      const itemsContainer = categorySection.querySelector('.category-items');
+      const collapseBtn = categorySection.querySelector('.btn-collapse');
+      
+      if (itemsContainer) {
+        const isNowCollapsed = itemsContainer.style.display === 'none';
+        itemsContainer.style.display = isNowCollapsed ? 'grid' : 'none';
+        if (collapseBtn) {
+          collapseBtn.textContent = isNowCollapsed ? '▼' : '►';
+        }
+      }
+    }
+  },
+
+  /**
+   * Collapse all categories
+   */
+  collapseAllCategories() {
+    const allCategories = this.state.categories.map(c => c.name);
+    localStorage.setItem('ttmenus_collapsed_categories', JSON.stringify(allCategories));
+    
+    // Update UI - collapse all
+    document.querySelectorAll('.category-section').forEach(section => {
+      const itemsContainer = section.querySelector('.category-items');
+      const collapseBtn = section.querySelector('.btn-collapse');
+      
+      if (itemsContainer) {
+        itemsContainer.style.display = 'none';
+      }
+      if (collapseBtn) {
+        collapseBtn.textContent = '►';
+      }
+    });
+    
+    this.showSuccess('All categories collapsed');
+  },
+
+  /**
+   * Expand all categories
+   */
+  expandAllCategories() {
+    localStorage.setItem('ttmenus_collapsed_categories', JSON.stringify([]));
+    
+    // Update UI - expand all
+    document.querySelectorAll('.category-section').forEach(section => {
+      const itemsContainer = section.querySelector('.category-items');
+      const collapseBtn = section.querySelector('.btn-collapse');
+      
+      if (itemsContainer) {
+        itemsContainer.style.display = 'grid';
+      }
+      if (collapseBtn) {
+        collapseBtn.textContent = '▼';
+      }
+    });
+    
+    this.showSuccess('All categories expanded');
+  },
+
+  /**
+   * Check if menu item is collapsed
+   */
+  isMenuItemCollapsed(itemId) {
+    const collapsedItems = JSON.parse(localStorage.getItem('ttmenus_collapsed_items') || '[]');
+    return collapsedItems.includes(itemId);
+  },
+
+  /**
+   * Toggle menu item collapse state
+   */
+  toggleMenuItem(itemId) {
+    const collapsedItems = JSON.parse(localStorage.getItem('ttmenus_collapsed_items') || '[]');
+    const index = collapsedItems.indexOf(itemId);
+    
+    if (index > -1) {
+      collapsedItems.splice(index, 1);
+    } else {
+      collapsedItems.push(itemId);
+    }
+    
+    localStorage.setItem('ttmenus_collapsed_items', JSON.stringify(collapsedItems));
+    
+    // Update UI
+    const itemCard = document.querySelector(`.menu-item-card[data-item-id="${this.escapeHtml(itemId)}"]`);
+    if (itemCard) {
+      const detailsDiv = itemCard.querySelector('.menu-item-details');
+      const collapseBtn = itemCard.querySelector('.btn-collapse-item');
+      
+      if (detailsDiv) {
+        const isNowCollapsed = detailsDiv.style.display === 'none';
+        detailsDiv.style.display = isNowCollapsed ? 'block' : 'none';
+        if (collapseBtn) {
+          collapseBtn.textContent = isNowCollapsed ? '▼' : '►';
+        }
+      }
+    }
+  },
+
+  /**
+   * Check if branding type is collapsed
+   */
+  isBrandingTypeCollapsed(typeName) {
+    const collapsedTypes = JSON.parse(localStorage.getItem('ttmenus_collapsed_branding') || '[]');
+    return collapsedTypes.includes(typeName);
+  },
+
+  /**
+   * Toggle branding type collapse state
+   */
+  toggleBrandingType(typeName) {
+    const collapsedTypes = JSON.parse(localStorage.getItem('ttmenus_collapsed_branding') || '[]');
+    const index = collapsedTypes.indexOf(typeName);
+    
+    if (index > -1) {
+      collapsedTypes.splice(index, 1);
+    } else {
+      collapsedTypes.push(typeName);
+    }
+    
+    localStorage.setItem('ttmenus_collapsed_branding', JSON.stringify(collapsedTypes));
+    
+    // Update UI
+    const brandingSection = document.querySelector(`.branding-section[data-branding-type="${this.escapeHtml(typeName)}"]`);
+    if (brandingSection) {
+      const contentDiv = brandingSection.querySelector('.branding-section-content');
+      const collapseBtn = brandingSection.querySelector('.btn-collapse');
+      
+      if (contentDiv) {
+        const isNowCollapsed = contentDiv.style.display === 'none';
+        contentDiv.style.display = isNowCollapsed ? 'block' : 'none';
+        if (collapseBtn) {
+          collapseBtn.textContent = isNowCollapsed ? '▼' : '►';
+        }
+      }
+    }
+  },
+
+  /**
+   * Check if location is collapsed
+   */
+  isLocationCollapsed(locationIndex) {
+    const collapsedLocations = JSON.parse(localStorage.getItem('ttmenus_collapsed_locations') || '[]');
+    return collapsedLocations.includes(locationIndex);
+  },
+
+  /**
+   * Toggle location collapse state
+   */
+  toggleLocation(locationIndex) {
+    const collapsedLocations = JSON.parse(localStorage.getItem('ttmenus_collapsed_locations') || '[]');
+    const index = collapsedLocations.indexOf(locationIndex);
+    
+    if (index > -1) {
+      collapsedLocations.splice(index, 1);
+    } else {
+      collapsedLocations.push(locationIndex);
+    }
+    
+    localStorage.setItem('ttmenus_collapsed_locations', JSON.stringify(collapsedLocations));
+    
+    // Update UI
+    const locationCard = document.querySelector(`.location-card[data-location-index="${locationIndex}"]`);
+    if (locationCard) {
+      const detailsDiv = locationCard.querySelector('.location-details');
+      const collapseBtn = locationCard.querySelector('.btn-collapse-location');
+      
+      if (detailsDiv) {
+        const isNowCollapsed = detailsDiv.style.display === 'none';
+        detailsDiv.style.display = isNowCollapsed ? 'block' : 'none';
+        if (collapseBtn) {
+          collapseBtn.textContent = isNowCollapsed ? '▼' : '►';
+        }
+      }
+    }
+  },
+
+  /**
+   * Check if ad is collapsed
+   */
+  isAdCollapsed(adId) {
+    const collapsedAds = JSON.parse(localStorage.getItem('ttmenus_collapsed_ads') || '[]');
+    return collapsedAds.includes(adId);
+  },
+
+  /**
+   * Toggle ad collapse state
+   */
+  toggleAd(adId) {
+    const collapsedAds = JSON.parse(localStorage.getItem('ttmenus_collapsed_ads') || '[]');
+    const index = collapsedAds.indexOf(adId);
+    
+    if (index > -1) {
+      collapsedAds.splice(index, 1);
+    } else {
+      collapsedAds.push(adId);
+    }
+    
+    localStorage.setItem('ttmenus_collapsed_ads', JSON.stringify(collapsedAds));
+    
+    // Update UI
+    const adCard = document.querySelector(`.menu-item-card[data-ad-id="${this.escapeHtml(adId)}"]`);
+    if (adCard) {
+      const detailsDiv = adCard.querySelector('.ad-details');
+      const collapseBtn = adCard.querySelector('.btn-collapse-ad');
+      
+      if (detailsDiv) {
+        const isNowCollapsed = detailsDiv.style.display === 'none';
+        detailsDiv.style.display = isNowCollapsed ? 'block' : 'none';
+        if (collapseBtn) {
+          collapseBtn.textContent = isNowCollapsed ? '▼' : '►';
+        }
+      }
+    }
+  },
+
+  /**
+   * Move ad up in order
+   */
+  async moveAdUp(adId) {
+    const sorted = [...this.state.advertisements]
+      .filter(a => !a._isDeleted)
+      .sort((a, b) => (a.weight || 0) - (b.weight || 0));
+    
+    const currentIndex = sorted.findIndex(a => a.id === adId);
+    
+    if (currentIndex <= 0) {
+      this.showError('Advertisement is already first');
+      return;
+    }
+    
+    const currentAd = sorted[currentIndex];
+    const previousAd = sorted[currentIndex - 1];
+    
+    // Swap weights
+    const tempWeight = currentAd.weight || 0;
+    currentAd.weight = previousAd.weight || 0;
+    previousAd.weight = tempWeight;
+    
+    // Save both as drafts
+    this.saveDraftAd({ ...currentAd, weight: currentAd.weight });
+    this.saveDraftAd({ ...previousAd, weight: previousAd.weight });
+    
+    // Re-render
+    await this.loadAdvertisements();
+    this.renderPendingSummary();
+    this.showSuccess(`Moved "${currentAd.title}" up. Publish to save.`);
+  },
+
+  /**
+   * Move ad down in order
+   */
+  async moveAdDown(adId) {
+    const sorted = [...this.state.advertisements]
+      .filter(a => !a._isDeleted)
+      .sort((a, b) => (a.weight || 0) - (b.weight || 0));
+    
+    const currentIndex = sorted.findIndex(a => a.id === adId);
+    
+    if (currentIndex >= sorted.length - 1) {
+      this.showError('Advertisement is already last');
+      return;
+    }
+    
+    const currentAd = sorted[currentIndex];
+    const nextAd = sorted[currentIndex + 1];
+    
+    // Swap weights
+    const tempWeight = currentAd.weight || 0;
+    currentAd.weight = nextAd.weight || 0;
+    nextAd.weight = tempWeight;
+    
+    // Save both as drafts
+    this.saveDraftAd({ ...currentAd, weight: currentAd.weight });
+    this.saveDraftAd({ ...nextAd, weight: nextAd.weight });
+    
+    // Re-render
+    await this.loadAdvertisements();
+    this.renderPendingSummary();
+    this.showSuccess(`Moved "${currentAd.title}" down. Publish to save.`);
+  },
+
+  /**
+   * Move menu item up within its category
+   */
+  async moveMenuItemUp(itemId, categoryName) {
+    // Get all items in this category, sorted by weight
+    const categoryItems = this.state.menuItems
+      .filter(i => i.category === categoryName && !i._isDeleted)
+      .sort((a, b) => (a.weight || 0) - (b.weight || 0));
+    
+    const currentIndex = categoryItems.findIndex(i => i.id === itemId);
+    
+    if (currentIndex <= 0) {
+      this.showError('Item is already first in category');
+      return;
+    }
+    
+    const currentItem = categoryItems[currentIndex];
+    const previousItem = categoryItems[currentIndex - 1];
+    
+    // Swap weights
+    const tempWeight = currentItem.weight || 0;
+    currentItem.weight = previousItem.weight || 0;
+    previousItem.weight = tempWeight;
+    
+    // Save both items as drafts
+    this.saveDraft({ ...currentItem, weight: currentItem.weight });
+    this.saveDraft({ ...previousItem, weight: previousItem.weight });
+    
+    // Re-render
+    this.renderMenuByCategory();
+    this.showSuccess(`Moved "${currentItem.title}" up. Publish to save.`);
+  },
+
+  /**
+   * Move menu item down within its category
+   */
+  async moveMenuItemDown(itemId, categoryName) {
+    // Get all items in this category, sorted by weight
+    const categoryItems = this.state.menuItems
+      .filter(i => i.category === categoryName && !i._isDeleted)
+      .sort((a, b) => (a.weight || 0) - (b.weight || 0));
+    
+    const currentIndex = categoryItems.findIndex(i => i.id === itemId);
+    
+    if (currentIndex >= categoryItems.length - 1) {
+      this.showError('Item is already last in category');
+      return;
+    }
+    
+    const currentItem = categoryItems[currentIndex];
+    const nextItem = categoryItems[currentIndex + 1];
+    
+    // Swap weights
+    const tempWeight = currentItem.weight || 0;
+    currentItem.weight = nextItem.weight || 0;
+    nextItem.weight = tempWeight;
+    
+    // Save both items as drafts
+    this.saveDraft({ ...currentItem, weight: currentItem.weight });
+    this.saveDraft({ ...nextItem, weight: nextItem.weight });
+    
+    // Re-render
+    this.renderMenuByCategory();
+    this.showSuccess(`Moved "${currentItem.title}" down. Publish to save.`);
+  },
+
+  /**
+   * Move category up in order (decrease weight)
+   */
+  async moveCategoryUp(categoryName) {
+    // Sort categories by weight
+    const sorted = [...this.state.categories].sort((a, b) => a.weight - b.weight);
+    const currentIndex = sorted.findIndex(c => c.name === categoryName);
+    
+    if (currentIndex <= 0) {
+      this.showError(`"${categoryName}" is already first`);
+      return;
+    }
+    
+    const currentCat = sorted[currentIndex];
+    const previousCat = sorted[currentIndex - 1];
+    
+    // Swap weights
+    const tempWeight = currentCat.weight;
+    currentCat.weight = previousCat.weight;
+    previousCat.weight = tempWeight;
+    
+    // Save both categories as drafts
+    await this.saveCategoryWeight(currentCat.name, currentCat.weight);
+    await this.saveCategoryWeight(previousCat.name, previousCat.weight);
+    
+    // Re-render
+    this.renderMenuByCategory();
+    this.showSuccess(`Moved "${categoryName}" up. Publish to save order.`);
+  },
+
+  /**
+   * Move category down in order (increase weight)
+   */
+  async moveCategoryDown(categoryName) {
+    // Sort categories by weight
+    const sorted = [...this.state.categories].sort((a, b) => a.weight - b.weight);
+    const currentIndex = sorted.findIndex(c => c.name === categoryName);
+    
+    if (currentIndex >= sorted.length - 1) {
+      this.showError(`"${categoryName}" is already last`);
+      return;
+    }
+    
+    const currentCat = sorted[currentIndex];
+    const nextCat = sorted[currentIndex + 1];
+    
+    // Swap weights
+    const tempWeight = currentCat.weight;
+    currentCat.weight = nextCat.weight;
+    nextCat.weight = tempWeight;
+    
+    // Save both categories as drafts
+    await this.saveCategoryWeight(currentCat.name, currentCat.weight);
+    await this.saveCategoryWeight(nextCat.name, nextCat.weight);
+    
+    // Re-render
+    this.renderMenuByCategory();
+    this.showSuccess(`Moved "${categoryName}" down. Publish to save order.`);
+  },
+
+  /**
+   * Save category weight to draft
+   */
+  async saveCategoryWeight(categoryName, newWeight) {
+    // Load existing category data
+    const categoryPath = categoryName.toLowerCase();
+    const possiblePaths = [
+      `/${categoryPath}/index.json`,
+      `/api/${categoryPath}/index.json`
+    ];
+    
+    let existingData = {
+      title: categoryName,
+      icon: '',
+      image: '',
+      weight: newWeight,
+      slidein: {},
+      body: ''
     };
     
-    localStorage.setItem('ttmenus_draft_menudata', JSON.stringify(menuData));
+    // Try to fetch existing data
+    for (const path of possiblePaths) {
+      try {
+        const response = await fetch(path);
+        if (response.ok) {
+          const data = await response.json();
+          existingData = {
+            title: data.title || categoryName,
+            icon: data.icon || '',
+            image: data.image || '',
+            weight: newWeight, // Update weight
+            slidein: data.slidein || {},
+            body: data.body || ''
+          };
+          break;
+        }
+      } catch (error) {
+        console.log(`Could not load ${path}`);
+      }
+    }
+    
+    // Save to draft
+    const categoryData = {
+      frontmatter: {
+        title: existingData.title,
+        weight: newWeight,
+        icon: existingData.icon,
+        image: existingData.image,
+      },
+      body: existingData.body
+    };
+    
+    if (existingData.slidein && (existingData.slidein.slideinimage || existingData.slidein.direction)) {
+      categoryData.frontmatter.slidein = existingData.slidein;
+    }
+    
+    const draftKey = `ttmenus_draft_category_${categoryName}`;
+    localStorage.setItem(draftKey, JSON.stringify(categoryData));
     this.markPendingChanges();
+    
+    console.log(`✅ Saved weight ${newWeight} for "${categoryName}"`);
+  },
+
+  /**
+   * Discard all category changes (kept for compatibility, but now handled by discardCategoryLandingPage)
+   */
+  async discardCategoryChanges() {
+    const confirmed = confirm('Discard all category changes?\n\nThis will discard all pending category edits.');
+    if (!confirmed) return;
+    
+    // Remove all category drafts
+    const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
+    categoryLandingDrafts.forEach(key => localStorage.removeItem(key));
+    
+    // Clean up legacy menudata drafts
+    localStorage.removeItem('ttmenus_draft_menudata');
+    
+    // Reload categories from published data
+    await this.loadCategories();
+    
+    // Re-render menu
+    this.renderMenuByCategory();
+    
+    // Update pending summary
+    this.renderPendingSummary();
+    this.checkPendingChanges();
+    
+    this.showSuccess('All category changes discarded');
+  },
+
+  /**
+   * Discard category landing page changes
+   */
+  discardCategoryLandingPage(categoryName) {
+    const confirmed = confirm(`Discard landing page changes for "${categoryName}"?`);
+    if (!confirmed) return;
+    
+    const draftKey = `ttmenus_draft_category_${categoryName}`;
+    localStorage.removeItem(draftKey);
+    
+    // Update pending summary
+    this.renderPendingSummary();
+    this.checkPendingChanges();
+    
+    this.showSuccess(`Landing page changes discarded for "${categoryName}"`);
+  },
+
+  /**
+   * Save category changes to draft
+   * Updates state only - all data saved to category _index.md
+   */
+  saveCategoryDraft(originalName, newName, iconUrl, weight = 0) {
+    // Find and update the category in state
+    const category = this.state.categories.find(c => c.name === originalName);
+    if (!category) return;
+    
+    // Update category in state
+    category.name = newName;
+    category.icon = iconUrl;
+    category.weight = weight;
+    
+    // If name changed, update all menu items with this category
+    if (originalName !== newName) {
+      this.state.menuItems.forEach(item => {
+        if (item.category === originalName) {
+          item.category = newName;
+          // Mark item as draft to preserve the change
+          this.saveDraft({
+            ...item,
+            category: newName
+          });
+        }
+      });
+    }
     
     // Re-render
     this.renderMenuByCategory();
     
-    this.showSuccess(`Icon updated for "${categoryName}". Publish to save permanently.`);
+    console.log(`✅ Category "${newName}" updated in state (icon will be saved with landing page)`);
+  },
+
+  /**
+   * Save category landing page (_index.md) to draft
+   * Includes icon, hero image, slide-in, weight, and body
+   */
+  async saveCategoryLandingPage(categoryName, landingData) {
+    console.log(`Saving landing page for category: ${categoryName}`);
+    
+    // Build data structure for _index.md (frontmatter + body)
+    const categoryData = {
+      frontmatter: {
+        title: categoryName,
+        weight: landingData.weight || 0,
+        icon: landingData.icon || '',  // Icon is now part of _index.md
+        image: landingData.image || '',
+      },
+      body: landingData.body || ''
+    };
+    
+    // Add slidein if provided
+    if (landingData.slideImage || landingData.slideDirection) {
+      categoryData.frontmatter.slidein = {};
+      if (landingData.slideImage) {
+        categoryData.frontmatter.slidein.slideinimage = landingData.slideImage;
+      }
+      if (landingData.slideDirection) {
+        categoryData.frontmatter.slidein.direction = landingData.slideDirection;
+      }
+    }
+    
+    // Save to localStorage as draft
+    const draftKey = `ttmenus_draft_category_${categoryName}`;
+    localStorage.setItem(draftKey, JSON.stringify(categoryData));
+    this.markPendingChanges();
+    
+    console.log('✅ Category landing page (with icon) saved to draft');
+    this.showSuccess(`Category "${categoryName}" saved as draft. Publish to update.`);
   },
 
   /**
@@ -2024,6 +2864,10 @@ const UpdateUI = {
       if (loc._isDraft) cardClasses.push('draft');
       if (loc._isDeleted) cardClasses.push('deleted');
       
+      // Check if location is collapsed
+      const isCollapsed = this.isLocationCollapsed(index);
+      const position = index + 1;
+      
       // Build opening hours badges
       const hoursBadges = [];
       if (loc.opening_hours && loc.opening_hours.mode) {
@@ -2063,18 +2907,25 @@ const UpdateUI = {
       }
       
       return `
-        <div class="${cardClasses.join(' ')}">
-          <div class="menu-item-header">
+        <div class="${cardClasses.join(' ')}" data-location-index="${index}">
+          <div class="menu-item-header" onclick="UpdateUI.toggleLocation(${index})" style="cursor: pointer;">
             <h3 class="menu-item-title ${loc._isDeleted ? 'deleted' : ''}">${this.escapeHtml(loc.city)}${draftBadge}${newBadge}${deletedBadge}</h3>
-            <span class="menu-item-position">#${index + 1}</span>
+            <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
+              <button class="btn-collapse-location" onclick="event.stopPropagation(); UpdateUI.toggleLocation(${index})" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
+                ${isCollapsed ? '►' : '▼'}
+              </button>
+            </span>
           </div>
           
+          <div class="location-details" style="display: ${isCollapsed ? 'none' : 'block'};">
           <p class="menu-item-description">
             📍 ${this.escapeHtml(loc.address)}, ${this.escapeHtml(loc.island)}
           </p>
           
           <div class="menu-item-price-row">
             ${loc.phone ? `<span style="font-size: 0.875rem;">📞 ${this.escapeHtml(loc.phone)}</span>` : ''}
+              ${loc.whatsapp ? `<span style="font-size: 0.875rem; margin-left: 1rem;">💬 ${this.escapeHtml(loc.whatsapp)}</span>` : ''}
           </div>
           
           <div class="menu-item-tags">
@@ -2094,6 +2945,7 @@ const UpdateUI = {
               ${loc._isDraft ? `<button class="btn btn-sm btn-success" onclick="UpdateUI.publishLocation(${index})">Publish</button>` : ''}
               <button class="btn btn-sm btn-danger" onclick="UpdateUI.deleteLocation(${index})">Delete</button>
             `}
+            </div>
           </div>
         </div>
       `;
@@ -2187,6 +3039,9 @@ const UpdateUI = {
     const container = document.getElementById('colorInputs');
     if (!container) return;
 
+    // Show the floating preview button
+    this.showPreviewToggleButton();
+
     // Group colors by category
     const grouped = {
       'Header': [],
@@ -2246,12 +3101,213 @@ const UpdateUI = {
       else grouped['Main'].push(colorInput);
     });
 
-    container.innerHTML = Object.entries(grouped)
+    const colorGroupsHTML = Object.entries(grouped)
       .filter(([_, items]) => items.length > 0)
       .map(([category, items]) => `
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 1rem; color: #1e293b;">${category}</h3>
         ${items.join('')}
       `).join('');
+    
+    container.innerHTML = colorGroupsHTML;
+  },
+  
+  /**
+   * Show/hide preview toggle button
+   */
+  showPreviewToggleButton() {
+    let button = document.getElementById('previewToggleBtn');
+    
+    if (!button) {
+      button = document.createElement('button');
+      button.id = 'previewToggleBtn';
+      button.innerHTML = '👁️ Preview';
+      button.className = 'preview-toggle-btn';
+      button.onclick = () => this.togglePreviewOverlay();
+      document.body.appendChild(button);
+    }
+    
+    button.style.display = 'flex';
+  },
+  
+  /**
+   * Hide preview toggle button
+   */
+  hidePreviewToggleButton() {
+    const button = document.getElementById('previewToggleBtn');
+    if (button) {
+      button.style.display = 'none';
+    }
+  },
+  
+  /**
+   * Toggle preview overlay
+   */
+  togglePreviewOverlay() {
+    let overlay = document.getElementById('previewOverlay');
+    
+    if (!overlay) {
+      this.createPreviewOverlay();
+      overlay = document.getElementById('previewOverlay');
+    }
+    
+    const isVisible = overlay.style.display !== 'none';
+    
+    if (isVisible) {
+      overlay.style.display = 'none';
+      const button = document.getElementById('previewToggleBtn');
+      if (button) button.innerHTML = '👁️ Preview';
+    } else {
+      overlay.style.display = 'flex';
+      const button = document.getElementById('previewToggleBtn');
+      if (button) button.innerHTML = '✖️ Close';
+      
+      // Setup iframe if not already done
+      setTimeout(() => {
+        this.setupColorPreview();
+      }, 100);
+    }
+  },
+  
+  /**
+   * Create preview overlay
+   */
+  createPreviewOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'previewOverlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      width: calc(100vw - 40px);
+      height: calc(100vh - 80px);
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    `;
+    
+    overlay.innerHTML = `
+      <div style="padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1rem; font-weight: 600;">🎨 Live Preview</h3>
+        <div style="display: flex; gap: 0.5rem;">
+          <button onclick="UpdateUI.refreshPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">🔄</button>
+          <button onclick="UpdateUI.openPreviewFullscreen()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">⛶</button>
+          <button onclick="UpdateUI.togglePreviewOverlay()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">✖️</button>
+        </div>
+      </div>
+      <div style="flex: 1; overflow: hidden; background: #f3f4f6;">
+        <iframe id="colorPreviewFrame" src="/" style="width: 100%; height: 100%; border: none; display: block;"></iframe>
+      </div>
+      <div style="padding: 0.75rem; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 0.75rem; color: #6b7280;">
+        💡 Changes update in real-time. Drag to reposition.
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Make it draggable
+    this.makePreviewDraggable(overlay);
+  },
+  
+  /**
+   * Make preview overlay draggable
+   */
+  makePreviewDraggable(overlay) {
+    const header = overlay.querySelector('div');
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    
+    header.style.cursor = 'move';
+    
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.tagName === 'BUTTON') return;
+      
+      isDragging = true;
+      initialX = e.clientX - overlay.offsetLeft;
+      initialY = e.clientY - overlay.offsetTop;
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+        
+        overlay.style.left = currentX + 'px';
+        overlay.style.top = currentY + 'px';
+        overlay.style.right = 'auto';
+      }
+    });
+    
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+  },
+  
+  /**
+   * Setup color preview iframe
+   */
+  setupColorPreview() {
+    const iframe = document.getElementById('colorPreviewFrame');
+    if (!iframe) return;
+    
+    iframe.onload = () => {
+      this.updatePreviewColors();
+    };
+  },
+  
+  /**
+   * Update preview iframe colors
+   */
+  updatePreviewColors() {
+    const iframe = document.getElementById('colorPreviewFrame');
+    if (!iframe || !iframe.contentDocument) return;
+    
+    try {
+      const iframeDoc = iframe.contentDocument;
+      let styleTag = iframeDoc.getElementById('dashboard-color-override');
+      
+      if (!styleTag) {
+        styleTag = iframeDoc.createElement('style');
+        styleTag.id = 'dashboard-color-override';
+        iframeDoc.head.appendChild(styleTag);
+      }
+      
+      // Build CSS from current colors
+      const colorVars = Object.entries(this.state.colors)
+        .map(([key, value]) => `${key}: ${value};`)
+        .join('\n  ');
+      
+      styleTag.textContent = `:root {\n  ${colorVars}\n}`;
+      
+      console.log('✅ Preview colors updated');
+    } catch (error) {
+      console.error('Failed to update preview colors:', error);
+    }
+  },
+  
+  /**
+   * Refresh preview iframe
+   */
+  refreshPreview() {
+    const iframe = document.getElementById('colorPreviewFrame');
+    if (iframe) {
+      iframe.src = iframe.src;
+      this.showSuccess('Preview refreshed');
+    }
+  },
+  
+  /**
+   * Open preview in fullscreen
+   */
+  openPreviewFullscreen() {
+    window.open('/', '_blank');
   },
 
   /**
@@ -2284,8 +3340,14 @@ const UpdateUI = {
       alphaDisplay.textContent = `${alphaPercent}%`;
     }
     
+    // Save to state
+    this.state.colors[varName] = finalColor;
+    
     // Save draft
     this.saveDraftColor(varName, finalColor);
+    
+    // Update preview in real-time
+    this.updatePreviewColors();
   },
 
   /**
@@ -2325,8 +3387,14 @@ const UpdateUI = {
       alphaDisplay.textContent = `${alphaPercent}%`;
     }
     
+    // Save to state
+    this.state.colors[varName] = value;
+    
     // Save draft
     this.saveDraftColor(varName, value);
+    
+    // Update preview in real-time
+    this.updatePreviewColors();
   },
 
   /**
@@ -2751,6 +3819,45 @@ const UpdateUI = {
       `;
     }
     
+    // Category Landing Pages (now includes icons + all category data)
+    const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
+    if (categoryLandingDrafts.length > 0) {
+      html += `
+        <div class="detail-section">
+          <h3 class="detail-section-title">📂 Categories (${categoryLandingDrafts.length})</h3>
+          <div class="pending-changes-grid">
+            ${categoryLandingDrafts.map(draftKey => {
+              const categoryName = draftKey.replace('ttmenus_draft_category_', '');
+              const data = JSON.parse(localStorage.getItem(draftKey));
+              
+              // Support both old format (just frontmatter) and new format (frontmatter + body)
+              const frontmatter = data.frontmatter || data;
+              const body = data.body || '';
+              
+              return `
+                <div class="pending-change-card">
+                  <div class="pending-change-info">
+                    <strong>${this.escapeHtml(categoryName)}</strong>
+                    <div class="pending-change-status">
+                      <span class="status-edited">MODIFIED</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-top: 4px;">
+                      ${frontmatter.weight !== undefined ? `📊 Order: #${frontmatter.weight}` : ''}
+                      ${frontmatter.icon ? `<br>🎨 Icon updated` : ''}
+                      ${frontmatter.image ? `<br>🖼️ Hero: ${frontmatter.image.split('/').pop()}` : ''}
+                      ${frontmatter.slidein?.slideinimage ? `<br>✨ Slide: ${frontmatter.slidein.slideinimage.split('/').pop()}` : ''}
+                      ${body ? `<br>📝 Description (${body.length} chars)` : ''}
+                    </div>
+                  </div>
+                  <button class="btn btn-sm btn-secondary" onclick="UpdateUI.discardCategoryLandingPage('${this.escapeHtml(categoryName)}')">Discard</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+    
     // Branding Images
     const draftBranding = localStorage.getItem(this.storageKeys.draftBranding);
     if (draftBranding) {
@@ -2901,6 +4008,10 @@ const UpdateUI = {
       count += 1;
     }
     
+    // Count category landing pages (includes icons, images, and all category data)
+    const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
+    count += categoryLandingDrafts.length;
+    
     return count;
   },
 
@@ -2982,6 +4093,42 @@ const UpdateUI = {
             failedItems.push(`❌ Location: ${loc.city}: ${error.message}`);
             console.error('Failed to publish location:', loc._index, error);
           }
+        }
+      }
+      
+      // Publish category landing pages (_index.md files) - now includes icons!
+      const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
+      for (const draftKey of categoryLandingDrafts) {
+        const categoryName = draftKey.replace('ttmenus_draft_category_', '');
+        try {
+          const categoryData = JSON.parse(localStorage.getItem(draftKey));
+          
+          // Structure: { frontmatter: {...}, body: "..." }
+          const payload = {
+            frontmatter: categoryData.frontmatter || categoryData, // Support old format
+            body: categoryData.body || ''
+          };
+          
+          const response = await this.authenticatedFetch(
+            `${this.apiConfig.getClientUrl()}/content/${categoryName}/_index.md`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            }
+          );
+          
+          if (response.ok) {
+            successCount++;
+            successItems.push(`📄 Category "${categoryName}" landing page`);
+            localStorage.removeItem(draftKey);
+          } else {
+            throw new Error('Failed to publish category landing page');
+          }
+        } catch (error) {
+          failCount++;
+          failedItems.push(`❌ Category "${categoryName}" landing page: ${error.message}`);
+          console.error(`Failed to publish category landing page for ${categoryName}:`, error);
         }
       }
       
@@ -3581,6 +4728,12 @@ const UpdateUI = {
     }
     
     // Normal path handling
+    // Check if it's already an absolute URL (http:// or https://)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path; // Return as-is for external URLs
+    }
+    
+    // Add leading slash for local paths
     const finalPath = path.startsWith('/') ? path : '/' + path;
     console.log(`Using normal path: ${finalPath}`);
     return finalPath;
@@ -4237,6 +5390,31 @@ function openAdModal(adId = null) {
   const modal = document.getElementById('adModal');
   const title = document.getElementById('adModalTitle');
   
+  // Reset image preview
+  const imagePreview = document.getElementById('adCurrentImagePreview');
+  const imageThumb = document.getElementById('adCurrentImageThumb');
+  const imagePath = document.getElementById('adCurrentImagePath');
+  const currentImage = document.getElementById('adCurrentImage');
+  
+  // Populate locations checkboxes
+  const locationsContainer = document.getElementById('adLocationsContainer');
+  locationsContainer.innerHTML = '';
+  
+  // Get published locations (not drafts or deleted)
+  const publishedLocations = UpdateUI.state.locations.filter(loc => !loc._isDraft && !loc._isDeleted);
+  
+  publishedLocations.forEach(loc => {
+    const locationName = loc.city || loc.address;
+    const label = document.createElement('label');
+    label.className = 'checkbox-label';
+    label.style.margin = '0';
+    label.innerHTML = `
+      <input type="checkbox" name="adLocations" value="${UpdateUI.escapeHtml(locationName)}">
+      <span>${UpdateUI.escapeHtml(locationName)}</span>
+    `;
+    locationsContainer.appendChild(label);
+  });
+  
   if (adId) {
     title.textContent = 'Edit Advertisement';
     const ad = UpdateUI.state.advertisements.find(a => a.id === adId);
@@ -4247,13 +5425,40 @@ function openAdModal(adId = null) {
       document.getElementById('adLink').value = ad.link || '';
       document.getElementById('adWeight').value = ad.weight || 1;
       document.getElementById('adRecurring').checked = ad.recurring || false;
-      document.getElementById('adDaysOfWeek').value = ad.daysOfWeek ? ad.daysOfWeek.join(', ') : '';
-      document.getElementById('adLocations').value = ad.locations ? ad.locations.join(', ') : '';
+      
+      // Check appropriate days of week
+      const daysCheckboxes = document.querySelectorAll('input[name="adDaysOfWeek"]');
+      daysCheckboxes.forEach(checkbox => {
+        checkbox.checked = ad.daysOfWeek && ad.daysOfWeek.includes(checkbox.value);
+      });
+      
+      // Check appropriate locations
+      const locationsCheckboxes = document.querySelectorAll('input[name="adLocations"]');
+      locationsCheckboxes.forEach(checkbox => {
+        checkbox.checked = ad.locations && ad.locations.includes(checkbox.value);
+      });
+      
+      // Show existing image if available
+      if (ad.image) {
+        currentImage.value = ad.image;
+        imageThumb.src = ad.image;
+        imagePath.textContent = ad.image;
+        imagePreview.style.display = 'block';
+      } else {
+        currentImage.value = '';
+        imagePreview.style.display = 'none';
+      }
     }
   } else {
     title.textContent = 'Add Advertisement';
     document.getElementById('adForm').reset();
     document.getElementById('adId').value = 'new_ad_' + Date.now();
+    currentImage.value = '';
+    imagePreview.style.display = 'none';
+    
+    // Uncheck all checkboxes for new ad
+    document.querySelectorAll('input[name="adDaysOfWeek"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[name="adLocations"]').forEach(cb => cb.checked = false);
   }
   
   modal.classList.add('active');
@@ -4272,6 +5477,14 @@ async function saveAd(event) {
   const adId = document.getElementById('adId').value;
   const isNew = adId.startsWith('new_ad_');
   
+  // Collect checked days of week
+  const daysOfWeek = Array.from(document.querySelectorAll('input[name="adDaysOfWeek"]:checked'))
+    .map(checkbox => checkbox.value);
+  
+  // Collect checked locations
+  const locations = Array.from(document.querySelectorAll('input[name="adLocations"]:checked'))
+    .map(checkbox => checkbox.value);
+  
   const adData = {
     id: adId,
     title: document.getElementById('adTitle').value,
@@ -4279,16 +5492,21 @@ async function saveAd(event) {
     link: document.getElementById('adLink').value,
     weight: parseInt(document.getElementById('adWeight').value) || 1,
     recurring: document.getElementById('adRecurring').checked,
-    daysOfWeek: document.getElementById('adDaysOfWeek').value.split(',').map(d => d.trim()).filter(Boolean),
-    locations: document.getElementById('adLocations').value.split(',').map(l => l.trim()).filter(Boolean),
+    daysOfWeek: daysOfWeek,
+    locations: locations,
     _isNew: isNew,
   };
   
-  // Handle image upload if provided
+  // Handle image - preserve existing or add new
   const imageInput = document.getElementById('adImage');
+  const currentImage = document.getElementById('adCurrentImage').value;
+  
   if (imageInput && imageInput.files && imageInput.files[0]) {
-    // For now, just store the file name - actual upload happens on publish
+    // New image uploaded - store for publish
     adData.imagePending = imageInput.files[0].name;
+  } else if (currentImage) {
+    // No new image, preserve existing
+    adData.image = currentImage;
   }
   
   UpdateUI.saveDraftAd(adData);
@@ -4750,7 +5968,7 @@ function populateCategoryDropdown() {
   // Get unique categories from state
   let categories = [];
   
-  // Try to get from menudata first
+  // Try to get from categories state first
   if (UpdateUI.state.categories && UpdateUI.state.categories.length > 0) {
     categories = UpdateUI.state.categories.map(cat => cat.name);
   } else {
@@ -4792,6 +6010,390 @@ function populateCategoryDropdown() {
   });
 }
 
+// Category modal functions
+const ICON_LIBRARY = [
+  // Food icons
+  { url: 'https://ct.ttmenus.com/icons/food/icon-sashimi.webp', category: 'food', name: 'Sashimi' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-salads.webp', category: 'food', name: 'Salads' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-molca.webp', category: 'food', name: 'Savoury' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-Bento.webp', category: 'food', name: 'Bento' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-burger.webp', category: 'food', name: 'Burger' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-chicken.webp', category: 'food', name: 'Chicken' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-dessert.webp', category: 'food', name: 'Dessert' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-drinks.webp', category: 'food', name: 'Drinks' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-fish.webp', category: 'food', name: 'Fish' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-pizza.webp', category: 'food', name: 'Pizza' },
+  { url: 'https://ct.ttmenus.com/icons/food/icon-steak.webp', category: 'food', name: 'Steak' },
+  
+  // White icons
+  { url: 'https://ct.ttmenus.com/icons/white/icon-lunchspecial.webp', category: 'white', name: 'Lunch Special' },
+  { url: 'https://ct.ttmenus.com/icons/white/icon-sushi.webp', category: 'white', name: 'Sushi' },
+  { url: 'https://ct.ttmenus.com/icons/white/icon-rice.webp', category: 'white', name: 'Rice' },
+  { url: 'https://ct.ttmenus.com/icons/white/icon-appetizer.webp', category: 'white', name: 'Appetizer' },
+  { url: 'https://ct.ttmenus.com/icons/white/icon-cocktail.webp', category: 'white', name: 'Cocktail' },
+  { url: 'https://ct.ttmenus.com/icons/white/icon-soup.webp', category: 'white', name: 'Soup' },
+  
+  // Utilities
+  { url: 'https://ct.ttmenus.com/icons/utilities/advertising.svg', category: 'utilities', name: 'Advertising' },
+  { url: 'https://ct.ttmenus.com/icons/utilities/star.svg', category: 'utilities', name: 'Star' },
+];
+
+let currentIconFilter = '';
+
+async function openCategoryModal(categoryName) {
+  const modal = document.getElementById('categoryModal');
+  
+  if (!modal) {
+    console.error('Category modal element not found');
+    alert('Error: Modal not found. Please refresh the page.');
+    return;
+  }
+  
+  if (!UpdateUI.state.categories || UpdateUI.state.categories.length === 0) {
+    console.error('❌ Categories not loaded in state. Check console for details.');
+    console.log('State:', UpdateUI.state);
+    console.log('Menu items count:', UpdateUI.state.menuItems ? UpdateUI.state.menuItems.length : 0);
+    
+    alert('Error: Categories not loaded.\n\nPossible causes:\n1. No menu items exist\n2. Category _index.md files missing\n3. Data not initialized yet\n\nCheck browser console (F12) for details, then refresh the page.');
+    return;
+  }
+  
+  const category = UpdateUI.state.categories.find(c => c.name === categoryName);
+  
+  if (!category) {
+    console.error(`Category "${categoryName}" not found in state. Available:`, UpdateUI.state.categories.map(c => c.name));
+    alert(`Error: Category "${categoryName}" not found.`);
+    return;
+  }
+  
+  // Debug: Log category data
+  console.log('📝 Opening modal for category:', categoryName);
+  console.log('Category data:', category);
+  
+  // Set navigation fields
+  document.getElementById('categoryOriginalName').value = categoryName;
+  document.getElementById('categoryName').value = categoryName;
+  document.getElementById('categoryIconUrl').value = category.icon || '';
+  document.getElementById('categoryWeight').value = category.weight !== undefined ? category.weight : 0;
+  
+  console.log('✅ Set form values:', {
+    name: categoryName,
+    icon: category.icon || '(empty)',
+    weight: category.weight !== undefined ? category.weight : 0
+  });
+  
+  // Show icon preview if icon exists, otherwise show placeholder
+  updateIconPreview(category.icon);
+  
+  if (!category.icon) {
+    console.warn('⚠️ No icon found for category. Add icon to category _index.md file.');
+  }
+  
+  // Populate icon gallery
+  populateIconGallery();
+  
+  // Load landing page data from content/_index.md
+  // Hugo generates URLs in lowercase, so convert category name
+  const categoryPath = categoryName.toLowerCase();
+  
+  // Try multiple possible paths
+  const possiblePaths = [
+    `/${categoryPath}/index.json`,      // Hugo default (lowercase)
+    `/api/${categoryPath}/index.json`,  // API folder (lowercase)
+    `/api/${categoryName}/index.json`   // API folder (original case)
+  ];
+  
+  let landingPageLoaded = false;
+  
+  for (const path of possiblePaths) {
+    try {
+      console.log(`  🔍 Trying landing page at: ${path}`);
+      const response = await fetch(path);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`  ✅ Found landing page at: ${path}`, data);
+        
+        // Populate navigation fields from JSON (icon might be here if already saved)
+        if (data.icon && !category.icon) {
+          document.getElementById('categoryIconUrl').value = data.icon;
+          updateIconPreview(data.icon);
+        }
+        
+        // Populate landing page fields
+        const heroImage = data.image || '';
+        const slideImage = data.slidein?.slideinimage || '';
+        
+      document.getElementById('categoryHeroImage').value = heroImage;
+      document.getElementById('categorySlideImage').value = slideImage;
+      document.getElementById('categorySlideDirection').value = data.slidein?.direction || '';
+      document.getElementById('categoryBody').value = data.body || '';
+        
+        // Show hero image preview
+        if (heroImage) {
+          document.getElementById('categoryHeroImageCurrent').value = heroImage;
+          const heroPath = heroImage.startsWith('/') ? heroImage : `/${heroImage}`;
+          document.getElementById('categoryHeroPreviewImg').src = heroPath;
+          document.getElementById('categoryHeroPath').textContent = heroImage;
+          document.getElementById('categoryHeroPreview').style.display = 'block';
+        } else {
+          document.getElementById('categoryHeroImageCurrent').value = '';
+          document.getElementById('categoryHeroPreview').style.display = 'none';
+        }
+        
+        // Show slide image preview
+        if (slideImage) {
+          document.getElementById('categorySlideImageCurrent').value = slideImage;
+          const slidePath = slideImage.startsWith('/') ? slideImage : `/${slideImage}`;
+          document.getElementById('categorySlidePreviewImg').src = slidePath;
+          document.getElementById('categorySlidePath').textContent = slideImage;
+          document.getElementById('categorySlidePreview').style.display = 'block';
+        } else {
+          document.getElementById('categorySlideImageCurrent').value = '';
+          document.getElementById('categorySlidePreview').style.display = 'none';
+        }
+        
+        landingPageLoaded = true;
+        console.log('✅ Loaded landing page data for', categoryName);
+        break; // Success! Exit loop
+      } else {
+        console.log(`  ❌ ${path} returned ${response.status}`);
+      }
+    } catch (error) {
+      console.log(`  ❌ ${path} failed:`, error.message);
+    }
+  }
+  
+  // If no landing page found after trying all paths
+  if (!landingPageLoaded) {
+    console.warn('⚠️ No landing page found for', categoryName, 'in any location');
+    // Clear landing page fields
+      document.getElementById('categoryHeroImage').value = '';
+      document.getElementById('categorySlideImage').value = '';
+      document.getElementById('categorySlideDirection').value = '';
+      document.getElementById('categoryBody').value = '';
+      document.getElementById('categoryHeroImageCurrent').value = '';
+      document.getElementById('categorySlideImageCurrent').value = '';
+      document.getElementById('categoryHeroPreview').style.display = 'none';
+      document.getElementById('categorySlidePreview').style.display = 'none';
+  }
+  
+  // Setup file input change handlers
+  const heroFileInput = document.getElementById('categoryHeroImageFile');
+  const slideFileInput = document.getElementById('categorySlideImageFile');
+  
+  heroFileInput.onchange = function() {
+    if (this.files && this.files[0]) {
+      const file = this.files[0];
+      document.getElementById('categoryHeroImage').value = `images/${file.name}`;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('categoryHeroPreviewImg').src = e.target.result;
+        document.getElementById('categoryHeroPath').textContent = `📎 New file: ${file.name}`;
+        document.getElementById('categoryHeroPreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  slideFileInput.onchange = function() {
+    if (this.files && this.files[0]) {
+      const file = this.files[0];
+      document.getElementById('categorySlideImage').value = `images/${file.name}`;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('categorySlidePreviewImg').src = e.target.result;
+        document.getElementById('categorySlidePath').textContent = `📎 New file: ${file.name}`;
+        document.getElementById('categorySlidePreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Setup icon URL input listener for live preview (remove old listeners first)
+  const iconUrlInput = document.getElementById('categoryIconUrl');
+  const newInput = iconUrlInput.cloneNode(true);
+  iconUrlInput.parentNode.replaceChild(newInput, iconUrlInput);
+  
+  newInput.addEventListener('input', function() {
+    updateIconPreview(this.value);
+  });
+  
+  modal.classList.add('active');
+  modal.scrollTop = 0;
+}
+
+function closeCategoryModal() {
+  document.getElementById('categoryModal').classList.remove('active');
+}
+
+function updateIconPreview(iconUrl) {
+  const preview = document.getElementById('categoryIconPreview');
+  const placeholder = document.getElementById('categoryIconPlaceholder');
+  const img = document.getElementById('categoryIconPreviewImg');
+  const urlDisplay = document.getElementById('categoryIconUrlDisplay');
+  
+  if (iconUrl && iconUrl.trim() !== '') {
+    img.src = iconUrl;
+    if (urlDisplay) {
+      // Extract just the filename from the URL
+      const filename = iconUrl.split('/').pop(); // Gets "icon-salads.webp"
+      const iconName = filename.replace(/\.(webp|svg|png|jpg|jpeg)$/i, ''); // Removes extension: "icon-salads"
+      urlDisplay.textContent = iconName;
+    }
+    preview.style.display = 'block';
+    if (placeholder) {
+      placeholder.style.display = 'none';
+    }
+    
+    // Handle image load error
+    img.onerror = function() {
+      preview.style.display = 'none';
+      if (placeholder) {
+        placeholder.style.display = 'block';
+      }
+    };
+  } else {
+    preview.style.display = 'none';
+    if (placeholder) {
+      placeholder.style.display = 'block';
+    }
+  }
+}
+
+function populateIconGallery(filter = '') {
+  const gallery = document.getElementById('iconGallery');
+  const icons = filter ? ICON_LIBRARY.filter(icon => icon.category === filter) : ICON_LIBRARY;
+  
+  gallery.innerHTML = icons.map(icon => `
+    <div onclick="selectIcon('${icon.url}')" style="cursor: pointer; padding: 10px; background: #1f2937; border-radius: 6px; border: 2px solid #374151; transition: all 0.2s; text-align: center;" onmouseover="this.style.borderColor='#3b82f6'; this.style.background='#374151';" onmouseout="this.style.borderColor='#374151'; this.style.background='#1f2937';">
+      <img src="${icon.url}" alt="${icon.name}" style="width: 100%; height: 60px; object-fit: contain;" title="${icon.name}">
+    </div>
+  `).join('');
+}
+
+function filterIconsByCategory() {
+  const filter = document.getElementById('iconCategoryFilter').value;
+  currentIconFilter = filter;
+  populateIconGallery(filter);
+}
+
+function selectIcon(iconUrl) {
+  const iconUrlInput = document.getElementById('categoryIconUrl');
+  iconUrlInput.value = iconUrl;
+  
+  // Update preview to show selected icon
+  updateIconPreview(iconUrl);
+  
+  // Visual feedback - briefly highlight the selected icon
+  console.log('✅ Icon selected:', iconUrl);
+}
+
+async function saveCategory(event) {
+  event.preventDefault();
+  
+  const originalName = document.getElementById('categoryOriginalName').value;
+  const newName = document.getElementById('categoryName').value.trim();
+  const iconUrl = document.getElementById('categoryIconUrl').value.trim();
+  const weight = parseInt(document.getElementById('categoryWeight').value) || 0;
+  
+  // Landing page fields
+  let heroImage = document.getElementById('categoryHeroImage').value.trim();
+  let slideImage = document.getElementById('categorySlideImage').value.trim();
+  const slideDirection = document.getElementById('categorySlideDirection').value;
+  const body = document.getElementById('categoryBody').value.trim();
+  
+  // Check for file uploads
+  const heroFileInput = document.getElementById('categoryHeroImageFile');
+  const slideFileInput = document.getElementById('categorySlideImageFile');
+  
+  let hasPendingUploads = false;
+  const pendingUploads = [];
+  
+  if (heroFileInput.files && heroFileInput.files[0]) {
+    pendingUploads.push({
+      file: heroFileInput.files[0],
+      type: 'hero',
+      name: heroFileInput.files[0].name
+    });
+    heroImage = `images/${heroFileInput.files[0].name}`;
+    hasPendingUploads = true;
+  } else if (!heroImage) {
+    // Keep current image if no new upload and no path entered
+    heroImage = document.getElementById('categoryHeroImageCurrent').value;
+  }
+  
+  if (slideFileInput.files && slideFileInput.files[0]) {
+    pendingUploads.push({
+      file: slideFileInput.files[0],
+      type: 'slide',
+      name: slideFileInput.files[0].name
+    });
+    slideImage = `images/${slideFileInput.files[0].name}`;
+    hasPendingUploads = true;
+  } else if (!slideImage) {
+    // Keep current image if no new upload and no path entered
+    slideImage = document.getElementById('categorySlideImageCurrent').value;
+  }
+  
+  if (!newName || !iconUrl) {
+    alert('Please fill in all required fields (Name and Icon)');
+    return;
+  }
+  
+  // Check if name changed and new name already exists
+  if (originalName !== newName) {
+    const exists = UpdateUI.state.categories.find(c => c.name === newName && c.name !== originalName);
+    if (exists) {
+      alert(`Category "${newName}" already exists. Please choose a different name.`);
+      return;
+    }
+  }
+  
+  // Store pending uploads in sessionStorage (images will be uploaded on publish)
+  if (hasPendingUploads) {
+    const storageKey = `pending_category_uploads_${newName}`;
+    sessionStorage.setItem(storageKey, JSON.stringify({
+      uploads: pendingUploads.map(u => ({ type: u.type, name: u.name })),
+      timestamp: Date.now()
+    }));
+    console.log(`📸 Stored ${pendingUploads.length} pending image(s) for category "${newName}"`);
+  }
+  
+  // Update category in state
+  UpdateUI.saveCategoryDraft(originalName, newName, iconUrl, weight);
+  
+  // Save all category data to _index.md (including icon)
+  try {
+    await UpdateUI.saveCategoryLandingPage(newName, {
+      icon: iconUrl,          // Icon is now part of _index.md
+      image: heroImage,
+      slideImage: slideImage,
+      slideDirection: slideDirection,
+      weight: weight,
+      body: body
+    });
+      
+    // Show success message with upload info
+    if (hasPendingUploads) {
+      UpdateUI.showSuccess(`Category "${newName}" saved! ${pendingUploads.length} image(s) will upload when published.`);
+    }
+  } catch (error) {
+    console.error('Error saving category landing page:', error);
+    UpdateUI.showError(`Category save failed: ${error.message}`);
+  }
+  
+  // Close modal
+  closeCategoryModal();
+  
+  // Update pending summary
+  UpdateUI.renderPendingSummary();
+}
+
 // Export to window
 window.UpdateUI = UpdateUI;
 window.openMenuItemModal = openMenuItemModal;
@@ -4804,6 +6406,11 @@ window.deleteLocation = deleteLocation;
 window.openAdModal = openAdModal;
 window.closeAdModal = closeAdModal;
 window.saveAd = saveAd;
+window.openCategoryModal = openCategoryModal;
+window.closeCategoryModal = closeCategoryModal;
+window.saveCategory = saveCategory;
+window.filterIconsByCategory = filterIconsByCategory;
+window.selectIcon = selectIcon;
 window.saveColors = saveColors;
 window.resetColors = resetColors;
 window.addPriceEntry = addPriceEntry;

@@ -70,5 +70,17 @@
   {{- $items = $items | append $item -}}
 {{- end }}
 
+{{- /* Build JSON with both items AND section frontmatter */ -}}
 {{- $json := dict "items" $items -}}
+
+{{- /* Add section's own frontmatter data (for category landing pages) */ -}}
+{{- $json = merge $json (dict
+    "title" .Title
+    "icon" (.Params.icon | default "")
+    "image" (.Params.image | default "")
+    "weight" (.Params.weight | default 0)
+    "slidein" (.Params.slidein | default dict)
+    "body" (.Content | default "")
+) -}}
+
 {{- $json | jsonify -}}

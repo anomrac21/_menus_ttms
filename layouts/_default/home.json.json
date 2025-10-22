@@ -19,8 +19,10 @@
           "city"     .city
           "island"   .island
           "subcategories"  .subcategories
+          "orderingtables" .orderingtables
           "latlon"    .latlon
           "phone"    .phone
+          "whatsapp" .whatsapp
           "delivery" .delivery
           "opening_hours" .opening_hours
         -}}
@@ -35,8 +37,9 @@
   {{- with .Params.tiktok }}{{ $social = merge $social (dict "tiktok" .) }}{{ end }}
   
   {{- $features := dict -}}
-  {{- with site.Data.menudata }}
+  {{- with site.Params.features }}
     {{- with .payments }}{{ $features = merge $features (dict "payments" .) }}{{ end }}
+    {{- with .delivery }}{{ $features = merge $features (dict "delivery" .) }}{{ end }}
     {{- with .notifications }}{{ $features = merge $features (dict "notifications" .) }}{{ end }}
   {{- end }}
 
