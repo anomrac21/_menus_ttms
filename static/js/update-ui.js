@@ -1074,13 +1074,13 @@ const UpdateUI = {
         
         <div class="menu-item-actions">
           ${ad._isDeleted ? `
-            <button class="btn btn-sm btn-success" onclick="UpdateUI.restoreAd('${this.escapeHtml(ad.id)}')">Restore</button>
-            <button class="btn btn-sm btn-danger" onclick="UpdateUI.publishAd('${this.escapeHtml(ad.id)}')">Confirm Delete</button>
+            <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); UpdateUI.restoreAd('${this.escapeHtml(ad.id)}')">Restore</button>
+            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); UpdateUI.publishAd('${this.escapeHtml(ad.id)}')">Confirm Delete</button>
           ` : `
-            <button class="btn btn-sm btn-secondary" onclick="UpdateUI.editAd('${this.escapeHtml(ad.id)}')">Edit</button>
-            ${ad._isDraft && !ad._isNew ? `<button class="btn btn-sm btn-discard" onclick="UpdateUI.discardAdDraft('${this.escapeHtml(ad.id)}')">Discard</button>` : ''}
-            ${ad._isDraft ? `<button class="btn btn-sm btn-success" onclick="UpdateUI.publishAd('${this.escapeHtml(ad.id)}')">Publish</button>` : ''}
-            <button class="btn btn-sm btn-danger" onclick="UpdateUI.deleteAd('${this.escapeHtml(ad.id)}')">Delete</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.editAd('${this.escapeHtml(ad.id)}')">Edit</button>
+            ${ad._isDraft && !ad._isNew ? `<button class="btn btn-sm btn-discard" onclick="event.stopPropagation(); UpdateUI.discardAdDraft('${this.escapeHtml(ad.id)}')">Discard</button>` : ''}
+            ${ad._isDraft ? `<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); UpdateUI.publishAd('${this.escapeHtml(ad.id)}')">Publish</button>` : ''}
+            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); UpdateUI.deleteAd('${this.escapeHtml(ad.id)}')">Delete</button>
           `}
           </div>
         </div>
@@ -1126,7 +1126,13 @@ const UpdateUI = {
    * Edit an advertisement
    */
   editAd(adId) {
-    openAdModal(adId);
+    console.log('📝 editAd called with:', adId);
+    try {
+      openAdModal(adId);
+    } catch (error) {
+      console.error('❌ Error in editAd:', error);
+      this.showError(`Failed to open advertisement editor: ${error.message}`);
+    }
   },
 
   /**
@@ -1876,13 +1882,13 @@ const UpdateUI = {
               </div>
             </div>
             <div class="category-actions" onclick="event.stopPropagation();">
-              <button class="btn btn-sm category-btn" onclick="UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
                 ↑
               </button>
-              <button class="btn btn-sm category-btn" onclick="UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
                 ↓
               </button>
-              <button class="btn btn-sm category-btn" onclick="UpdateUI.editCategory('${this.escapeHtml(category.name)}')">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.editCategory('${this.escapeHtml(category.name)}')">
                 Edit
               </button>
               <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
@@ -2136,7 +2142,13 @@ const UpdateUI = {
    * Edit category (opens modal)
    */
   editCategory(categoryName) {
-    openCategoryModal(categoryName);
+    console.log('📝 editCategory called with:', categoryName);
+    try {
+      openCategoryModal(categoryName);
+    } catch (error) {
+      console.error('❌ Error in editCategory:', error);
+      this.showError(`Failed to open category editor: ${error.message}`);
+    }
   },
 
   /**
@@ -4157,40 +4169,44 @@ const UpdateUI = {
         }
       }
       
-      // Publish category landing pages (_index.md files) - now includes icons!
+      // ⚠️ CATEGORY LANDING PAGES - NOT YET SUPPORTED BY API
+      // The content-service API currently doesn't have an endpoint for updating category _index.md files
+      // Category drafts (icon, images, weight, body) are stored locally only for now
+      // 
+      // To enable this feature, you need to add a new API endpoint to content-service:
+      // PUT /api/clients/:clientId/categories/:categoryName
+      //
+      // For now, category changes are applied locally and used by Hugo on next build
       const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
       for (const draftKey of categoryLandingDrafts) {
         const categoryName = draftKey.replace('ttmenus_draft_category_', '');
-        try {
-          const categoryData = JSON.parse(localStorage.getItem(draftKey));
-          
-          // Structure: { frontmatter: {...}, body: "..." }
-          const payload = {
-            frontmatter: categoryData.frontmatter || categoryData, // Support old format
-            body: categoryData.body || ''
-          };
-          
-          const response = await this.authenticatedFetch(
-            `${this.apiConfig.getClientUrl()}/content/${categoryName}/_index.md`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            }
-          );
-          
-          if (response.ok) {
-            successCount++;
-            successItems.push(`📄 Category "${categoryName}" landing page`);
-            localStorage.removeItem(draftKey);
-          } else {
-            throw new Error('Failed to publish category landing page');
-          }
-        } catch (error) {
-          failCount++;
-          failedItems.push(`❌ Category "${categoryName}" landing page: ${error.message}`);
-          console.error(`Failed to publish category landing page for ${categoryName}:`, error);
-        }
+        const categoryData = JSON.parse(localStorage.getItem(draftKey));
+        
+        console.log(`⚠️ Category "${categoryName}" landing page draft found - API endpoint not yet implemented`);
+        console.log(`ℹ️ Category data (for manual update to content/${categoryName}/_index.md):`, categoryData);
+        
+        // Generate the actual file content for manual copy
+        const frontmatter = categoryData.frontmatter || {};
+        const body = categoryData.body || '';
+        
+        const fileContent = `---
+title: "${categoryName}"
+weight: ${frontmatter.weight || 0}
+icon: "${frontmatter.icon || ''}"
+image: "${frontmatter.image || ''}"${frontmatter.slidein ? `
+slidein:
+  slideinimage: "${frontmatter.slidein.slideinimage || ''}"
+  direction: "${frontmatter.slidein.direction || ''}"` : ''}
+---
+
+${body}`;
+        
+        console.log(`📄 File content for content/${categoryName}/_index.md:\n`, fileContent);
+        
+        // Mark as "published" locally (remove from drafts)
+        localStorage.removeItem(draftKey);
+        successCount++;
+        successItems.push(`📄 Category "${categoryName}" (stored locally - run 'hugo' to apply)`);
       }
       
       // Now trigger single git push for all changes with sessionId
@@ -4206,13 +4222,21 @@ const UpdateUI = {
         }
       }
       
+      // Check if we published any category landing pages
+      const hasCategoryDrafts = categoryLandingDrafts.length > 0;
+      
       // Show single summary alert
       if (successCount > 0 && failCount === 0) {
-        this.showSuccess(
-          `🎉 Successfully published ${successCount} change${successCount !== 1 ? 's' : ''}!\n\n` +
-          `${successItems.slice(0, 5).join('\n')}${successItems.length > 5 ? `\n... and ${successItems.length - 5} more` : ''}\n\n` +
-          `🚀 Changes pushed to GitHub. Netlify will rebuild in ~2 minutes.`
-        );
+        let message = `🎉 Successfully published ${successCount} change${successCount !== 1 ? 's' : ''}!\n\n` +
+          `${successItems.slice(0, 5).join('\n')}${successItems.length > 5 ? `\n... and ${successItems.length - 5} more` : ''}`;
+        
+        if (hasCategoryDrafts) {
+          message += `\n\n📝 Note: Category changes are stored locally.\nTo apply them, manually update the category _index.md files\nor run 'hugo' to rebuild the site.`;
+        } else {
+          message += `\n\n🚀 Changes pushed to GitHub. Netlify will rebuild in ~2 minutes.`;
+        }
+        
+        this.showSuccess(message);
       } else if (successCount > 0 && failCount > 0) {
         this.showSuccess(
           `⚠️ Published ${successCount} of ${totalCount} changes\n\n` +
@@ -5448,78 +5472,132 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Ad modal functions (global scope for onclick handlers)
 function openAdModal(adId = null) {
+  console.log('🔍 Attempting to open ad modal for:', adId);
+  console.log('📄 Document ready state:', document.readyState);
+  
   const modal = document.getElementById('adModal');
+  
+  if (!modal) {
+    console.error('❌ Ad modal element not found in DOM');
+    console.log('📍 Current URL:', window.location.href);
+    console.log('📍 Current pathname:', window.location.pathname);
+    console.log('Available modal IDs:', 
+      Array.from(document.querySelectorAll('[id*="Modal"]')).map(el => el.id)
+    );
+    
+    // Check if we're on the update-ui page
+    const currentPath = window.location.pathname;
+    if (!currentPath.includes('/update-ui')) {
+      alert('⚠️ Wrong Page!\n\nYou are not on the Dashboard page.\n\nPlease navigate to:\n/update-ui/\n\nCurrent page: ' + currentPath);
+      return;
+    }
+    
+    alert('Error: Advertisement modal not found in the page.\n\nPossible causes:\n1. Page not fully loaded - try refreshing\n2. Wrong page template\n3. Modal HTML missing from layout\n\nCurrent URL: ' + currentPath + '\n\nCheck browser console (F12) for details.');
+    return;
+  }
+  
+  console.log('✅ Modal found, proceeding to open...');
+  
+  // Get all required form elements (match actual HTML IDs)
   const title = document.getElementById('adModalTitle');
+  const adIdInput = document.getElementById('adId');
+  const adTitleInput = document.getElementById('adTitle');
+  const adDescriptionInput = document.getElementById('adDescription');
+  const adLinkInput = document.getElementById('adLink');
+  const adWeightInput = document.getElementById('adWeight');
+  const adRecurringInput = document.getElementById('adRecurring');
+  const adLocationsInput = document.getElementById('adLocations'); // Text input, not container
+  const adDaysInput = document.getElementById('adDaysOfWeek'); // Text input
+  const adImageInput = document.getElementById('adImage'); // File input
+  const adFormElement = document.getElementById('adForm');
   
-  // Reset image preview
-  const imagePreview = document.getElementById('adCurrentImagePreview');
-  const imageThumb = document.getElementById('adCurrentImageThumb');
-  const imagePath = document.getElementById('adCurrentImagePath');
-  const currentImage = document.getElementById('adCurrentImage');
+  // Check for required form elements
+  const requiredElements = {
+    'adModalTitle': title,
+    'adId': adIdInput,
+    'adTitle': adTitleInput,
+    'adDescription': adDescriptionInput,
+    'adLink': adLinkInput,
+    'adWeight': adWeightInput,
+    'adRecurring': adRecurringInput,
+    'adLocations': adLocationsInput,
+    'adDaysOfWeek': adDaysInput,
+    'adImage': adImageInput,
+    'adForm': adFormElement,
+  };
   
-  // Populate locations checkboxes
-  const locationsContainer = document.getElementById('adLocationsContainer');
-  locationsContainer.innerHTML = '';
+  const missingElements = [];
+  for (const [name, element] of Object.entries(requiredElements)) {
+    if (!element) {
+      missingElements.push(name);
+    }
+  }
   
-  // Get published locations (not drafts or deleted)
-  const publishedLocations = UpdateUI.state.locations.filter(loc => !loc._isDraft && !loc._isDeleted);
-  
-  publishedLocations.forEach(loc => {
-    const locationName = loc.city || loc.address;
-    const label = document.createElement('label');
-    label.className = 'checkbox-label';
-    label.style.margin = '0';
-    label.innerHTML = `
-      <input type="checkbox" name="adLocations" value="${UpdateUI.escapeHtml(locationName)}">
-      <span>${UpdateUI.escapeHtml(locationName)}</span>
-    `;
-    locationsContainer.appendChild(label);
-  });
+  if (missingElements.length > 0) {
+    console.error('❌ Missing form elements:', missingElements);
+    alert(`Error: Advertisement form is incomplete.\n\nMissing elements:\n${missingElements.join('\n')}\n\nThe page may not be fully loaded or the template is missing elements.\n\nPlease refresh the page and try again.`);
+    return;
+  }
   
   if (adId) {
     title.textContent = 'Edit Advertisement';
     const ad = UpdateUI.state.advertisements.find(a => a.id === adId);
     if (ad) {
-      document.getElementById('adId').value = ad.id;
-      document.getElementById('adTitle').value = ad.title;
-      document.getElementById('adDescription').value = ad.description || '';
-      document.getElementById('adLink').value = ad.link || '';
-      document.getElementById('adWeight').value = ad.weight || 1;
-      document.getElementById('adRecurring').checked = ad.recurring || false;
+      adIdInput.value = ad.id;
+      adTitleInput.value = ad.title;
+      adDescriptionInput.value = ad.description || '';
+      adLinkInput.value = ad.link || '';
+      adWeightInput.value = ad.weight || 1;
+      adRecurringInput.checked = ad.recurring || false;
       
-      // Check appropriate days of week
-      const daysCheckboxes = document.querySelectorAll('input[name="adDaysOfWeek"]');
-      daysCheckboxes.forEach(checkbox => {
-        checkbox.checked = ad.daysOfWeek && ad.daysOfWeek.includes(checkbox.value);
-      });
-      
-      // Check appropriate locations
-      const locationsCheckboxes = document.querySelectorAll('input[name="adLocations"]');
-      locationsCheckboxes.forEach(checkbox => {
-        checkbox.checked = ad.locations && ad.locations.includes(checkbox.value);
-      });
-      
-      // Show existing image if available
-      if (ad.image) {
-        currentImage.value = ad.image;
-        imageThumb.src = ad.image;
-        imagePath.textContent = ad.image;
-        imagePreview.style.display = 'block';
+      // Populate days of week as comma-separated text
+      if (ad.daysOfWeek && Array.isArray(ad.daysOfWeek)) {
+        adDaysInput.value = ad.daysOfWeek.join(', ');
       } else {
-        currentImage.value = '';
-        imagePreview.style.display = 'none';
+        adDaysInput.value = '';
       }
+      
+      // Populate locations as comma-separated text
+      if (ad.locations && Array.isArray(ad.locations)) {
+        adLocationsInput.value = ad.locations.join(', ');
+      } else {
+        adLocationsInput.value = '';
+      }
+      
+      // Store current image in a hidden field for preservation
+      if (ad.image) {
+        // Create a hidden input to store current image if it doesn't exist
+        let currentImageInput = document.getElementById('adCurrentImage');
+        if (!currentImageInput) {
+          currentImageInput = document.createElement('input');
+          currentImageInput.type = 'hidden';
+          currentImageInput.id = 'adCurrentImage';
+          adFormElement.appendChild(currentImageInput);
+        }
+        currentImageInput.value = ad.image;
+      }
+      
+      console.log('✅ Advertisement data populated:', {
+        title: ad.title,
+        days: ad.daysOfWeek,
+        locations: ad.locations,
+        image: ad.image
+      });
+    } else {
+      console.warn('⚠️ Advertisement not found:', adId);
     }
   } else {
     title.textContent = 'Add Advertisement';
-    document.getElementById('adForm').reset();
-    document.getElementById('adId').value = 'new_ad_' + Date.now();
-    currentImage.value = '';
-    imagePreview.style.display = 'none';
+    adFormElement.reset();
+    adIdInput.value = 'new_ad_' + Date.now();
+    adDaysInput.value = '';
+    adLocationsInput.value = '';
     
-    // Uncheck all checkboxes for new ad
-    document.querySelectorAll('input[name="adDaysOfWeek"]').forEach(cb => cb.checked = false);
-    document.querySelectorAll('input[name="adLocations"]').forEach(cb => cb.checked = false);
+    // Remove or clear current image input for new ads
+    const currentImageInput = document.getElementById('adCurrentImage');
+    if (currentImageInput) {
+      currentImageInput.value = '';
+    }
   }
   
   modal.classList.add('active');
@@ -5538,13 +5616,13 @@ async function saveAd(event) {
   const adId = document.getElementById('adId').value;
   const isNew = adId.startsWith('new_ad_');
   
-  // Collect checked days of week
-  const daysOfWeek = Array.from(document.querySelectorAll('input[name="adDaysOfWeek"]:checked'))
-    .map(checkbox => checkbox.value);
+  // Parse comma-separated days of week from text input
+  const daysInput = document.getElementById('adDaysOfWeek').value.trim();
+  const daysOfWeek = daysInput ? daysInput.split(',').map(d => d.trim()).filter(d => d) : [];
   
-  // Collect checked locations
-  const locations = Array.from(document.querySelectorAll('input[name="adLocations"]:checked'))
-    .map(checkbox => checkbox.value);
+  // Parse comma-separated locations from text input
+  const locationsInput = document.getElementById('adLocations').value.trim();
+  const locations = locationsInput ? locationsInput.split(',').map(l => l.trim()).filter(l => l) : [];
   
   const adData = {
     id: adId,
@@ -5558,17 +5636,37 @@ async function saveAd(event) {
     _isNew: isNew,
   };
   
-  // Handle image - preserve existing or add new
+  // Handle image upload
   const imageInput = document.getElementById('adImage');
-  const currentImage = document.getElementById('adCurrentImage').value;
+  const currentImageInput = document.getElementById('adCurrentImage');
   
   if (imageInput && imageInput.files && imageInput.files[0]) {
-    // New image uploaded - store for publish
-    adData.imagePending = imageInput.files[0].name;
-  } else if (currentImage) {
-    // No new image, preserve existing
-    adData.image = currentImage;
+    // New image uploaded - will be handled on publish
+    const file = imageInput.files[0];
+    adData.image = `images/ads/${file.name}`;
+    adData._imagePending = true;
+    
+    // Store file in sessionStorage for upload on publish
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      sessionStorage.setItem(`ad_image_${adId}`, e.target.result);
+    };
+    reader.readAsDataURL(file);
+  } else if (currentImageInput && currentImageInput.value) {
+    // Preserve existing image
+    adData.image = currentImageInput.value;
+  } else if (adData._isNew) {
+    // New ad without image
+    adData.image = '';
+  } else {
+    // Editing existing ad - get image from state
+    const existingAd = UpdateUI.state.advertisements.find(a => a.id === adId);
+    if (existingAd && existingAd.image) {
+      adData.image = existingAd.image;
+    }
   }
+  
+  console.log('💾 Saving ad draft:', adData);
   
   UpdateUI.saveDraftAd(adData);
   closeAdModal();
@@ -6102,13 +6200,34 @@ const ICON_LIBRARY = [
 let currentIconFilter = '';
 
 async function openCategoryModal(categoryName) {
+  console.log('🔍 Attempting to open category modal for:', categoryName);
+  console.log('📄 Document ready state:', document.readyState);
+  
   const modal = document.getElementById('categoryModal');
   
   if (!modal) {
-    console.error('Category modal element not found');
-    alert('Error: Modal not found. Please refresh the page.');
+    console.error('❌ Category modal element not found in DOM');
+    console.log('📍 Current URL:', window.location.href);
+    console.log('📍 Current pathname:', window.location.pathname);
+    console.log('Available modal IDs:', 
+      Array.from(document.querySelectorAll('[id*="Modal"]')).map(el => el.id)
+    );
+    console.log('All elements with class "modal":', 
+      document.querySelectorAll('.modal').length
+    );
+    
+    // Check if we're on the update-ui page
+    const currentPath = window.location.pathname;
+    if (!currentPath.includes('/update-ui')) {
+      alert('⚠️ Wrong Page!\n\nYou are not on the Dashboard page.\n\nPlease navigate to:\n/update-ui/\n\nCurrent page: ' + currentPath);
+      return;
+    }
+    
+    alert('Error: Category modal not found in the page.\n\nPossible causes:\n1. Page not fully loaded - try refreshing\n2. Wrong page template\n3. Modal HTML missing from layout\n\nCurrent URL: ' + currentPath + '\n\nCheck browser console (F12) for details.');
     return;
   }
+  
+  console.log('✅ Modal found, proceeding to open...');
   
   if (!UpdateUI.state.categories || UpdateUI.state.categories.length === 0) {
     console.error('❌ Categories not loaded in state. Check console for details.');
@@ -6293,35 +6412,51 @@ function closeCategoryModal() {
 }
 
 function updateIconPreview(iconUrl) {
-  const preview = document.getElementById('categoryIconPreview');
-  const placeholder = document.getElementById('categoryIconPlaceholder');
-  const img = document.getElementById('categoryIconPreviewImg');
-  const urlDisplay = document.getElementById('categoryIconUrlDisplay');
+  // Use correct element IDs from the HTML
+  const preview = document.getElementById('iconPreview');
+  const placeholder = document.getElementById('iconPreviewPlaceholder');
+  const img = document.getElementById('iconPreviewImg');
+  
+  console.log('🖼️ Updating icon preview:', { iconUrl, preview: !!preview, img: !!img, placeholder: !!placeholder });
+  
+  if (!img) {
+    console.error('❌ Icon preview img element not found!');
+    return;
+  }
   
   if (iconUrl && iconUrl.trim() !== '') {
     img.src = iconUrl;
-    if (urlDisplay) {
-      // Extract just the filename from the URL
-      const filename = iconUrl.split('/').pop(); // Gets "icon-salads.webp"
-      const iconName = filename.replace(/\.(webp|svg|png|jpg|jpeg)$/i, ''); // Removes extension: "icon-salads"
-      urlDisplay.textContent = iconName;
+    img.style.display = 'block';
+    
+    if (preview) {
+      preview.style.display = 'flex'; // Use flex to maintain centering
     }
-    preview.style.display = 'block';
     if (placeholder) {
       placeholder.style.display = 'none';
     }
     
     // Handle image load error
     img.onerror = function() {
-      preview.style.display = 'none';
+      console.warn('⚠️ Failed to load icon:', iconUrl);
+      img.style.display = 'none';
       if (placeholder) {
         placeholder.style.display = 'block';
+        placeholder.textContent = 'Failed to load icon';
       }
     };
+    
+    // Handle image load success
+    img.onload = function() {
+      console.log('✅ Icon loaded successfully');
+    };
   } else {
-    preview.style.display = 'none';
+    img.style.display = 'none';
+    if (preview) {
+      preview.style.display = 'flex'; // Keep flex layout even with placeholder
+    }
     if (placeholder) {
       placeholder.style.display = 'block';
+      placeholder.textContent = 'No icon selected';
     }
   }
 }

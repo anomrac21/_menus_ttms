@@ -662,6 +662,98 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
     </div>
   </div>
 
+  <!-- Category Modal -->
+  <div class="modal" id="categoryModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Category</h3>
+        <button class="btn-close" onclick="closeCategoryModal()">&times;</button>
+      </div>
+      <form id="categoryForm" onsubmit="saveCategory(event)">
+        <input type="hidden" id="categoryOriginalName">
+        
+        <h3 class="form-section-title">📋 Navigation</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" class="form-input" id="categoryName" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Icon URL</label>
+          <input type="text" class="form-input" id="categoryIconUrl" placeholder="https://example.com/icon.webp" style="display: none;">
+          
+          <!-- Icon Preview -->
+          <div id="iconPreview" style="margin-top: 0.5rem; margin-inline: auto; padding: 1rem; background: #1e293b; border-radius: 8px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px;">
+            <img id="iconPreviewImg" src="" alt="Icon preview" style="max-width: 64px; max-height: 64px; display: none; margin: auto;">
+            <p id="iconPreviewPlaceholder" style="color: #94a3b8; margin: 0;">No icon selected</p>
+          </div>
+          
+          <!-- Icon Gallery -->
+          <details style="margin-top: 1rem;">
+            <summary style="cursor: pointer; font-weight: 500; padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">Choose from icon gallery</summary>
+            <div id="iconGallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; margin-top: 1rem; padding: 1rem; background: #1e293b; border-radius: 8px; max-height: 300px; overflow-y: auto;"></div>
+          </details>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Weight (display order)</label>
+          <input type="number" class="form-input" id="categoryWeight" min="0" value="0">
+        </div>
+        
+        <h3 class="form-section-title">🎨 Landing Page</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Hero Image</label>
+          <input type="hidden" id="categoryHeroImageCurrent">
+          <input type="file" class="form-input" id="categoryHeroImageFile" accept="image/*">
+          <input type="text" class="form-input" id="categoryHeroImage" placeholder="images/category-hero.webp" style="display: none;">
+          
+          <!-- Hero Image Preview -->
+          <div id="categoryHeroPreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; text-align: center;">
+            <img id="categoryHeroPreviewImg" src="" alt="Hero preview" style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+            <p id="categoryHeroPath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;"></p>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Slide-in Image</label>
+          <input type="hidden" id="categorySlideImageCurrent">
+          <input type="file" class="form-input" id="categorySlideImageFile" accept="image/*">
+          <input type="text" class="form-input" id="categorySlideImage" placeholder="images/character.webp" style="display: none;">
+          
+          <!-- Slide Image Preview -->
+          <div id="categorySlidePreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; text-align: center;">
+            <img id="categorySlidePreviewImg" src="" alt="Slide preview" style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+            <p id="categorySlidePath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;"></p>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Slide Direction</label>
+          <select class="form-input" id="categorySlideDirection">
+            <option value="">None</option>
+            <option value="left">Slide from Left</option>
+            <option value="right">Slide from Right</option>
+            <option value="top">Slide from Top</option>
+            <option value="bottom">Slide from Bottom</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Body Content (Markdown)</label>
+          <textarea class="form-textarea" id="categoryBody" placeholder="Enter category description in Markdown format..." style="min-height: 150px;"></textarea>
+          <small class="form-helper">Supports Markdown formatting</small>
+        </div>
+        
+        <div class="modal-form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   
   <script src="{{ site.BaseURL }}js/auth-client.js" defer></script>
   <script src="{{ site.BaseURL }}js/auth-middleware.js" defer></script>
