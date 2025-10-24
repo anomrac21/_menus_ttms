@@ -301,7 +301,8 @@ window.hugoSiteConfig = {
               <p>Manage hero image and photo galleries on your home page</p>
             </div>
             <div class="section-header-actions">
-              <button class="btn btn-primary" onclick="saveHomePageSettings()">💾 Save Changes</button>
+              <button class="btn btn-secondary" id="discardHomePage" onclick="discardHomePageDraft()" style="display: none;">🔄 Discard Draft</button>
+              <button class="btn btn-primary" onclick="saveHomePageSettings()">💾 Save as Draft</button>
             </div>
           </div>
 

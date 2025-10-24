@@ -31,6 +31,7 @@ const UpdateUI = {
     draftColors: 'ttmenus_draft_colors',
     draftConfig: 'ttmenus_draft_config',
     draftManifest: 'ttmenus_draft_manifest',
+    draftHomePage: 'ttmenus_draft_homepage',
     pendingChanges: 'ttmenus_pending_changes',
   },
 
@@ -621,7 +622,8 @@ const UpdateUI = {
       localStorage.getItem(this.storageKeys.draftBranding) !== null ||
       localStorage.getItem(this.storageKeys.draftColors) !== null ||
       localStorage.getItem(this.storageKeys.draftConfig) !== null ||
-      localStorage.getItem(this.storageKeys.draftManifest) !== null;
+      localStorage.getItem(this.storageKeys.draftManifest) !== null ||
+      localStorage.getItem(this.storageKeys.draftHomePage) !== null;
     
     this.state.hasPendingChanges = hasDrafts;
     // Pending indicator removed - changes tracked via pending tab count only
@@ -695,6 +697,13 @@ const UpdateUI = {
     if (discardManifest) {
       const hasDraftManifest = localStorage.getItem(this.storageKeys.draftManifest) !== null;
       discardManifest.style.display = hasDraftManifest ? 'inline-block' : 'none';
+    }
+    
+    // Home Page
+    const discardHomePage = document.getElementById('discardHomePage');
+    if (discardHomePage) {
+      const hasDraftHomePage = localStorage.getItem(this.storageKeys.draftHomePage) !== null;
+      discardHomePage.style.display = hasDraftHomePage ? 'inline-block' : 'none';
     }
     
     // Pending tab actions
@@ -3922,7 +3931,7 @@ const UpdateUI = {
       return;
     }
     
-    const confirmed = confirm(`Discard ALL ${totalCount} pending changes?\n\nThis will:\n- Remove all draft menu items and categories\n- Remove all draft advertisements\n- Remove all draft locations\n- Reset all colors, config, and manifest changes\n- Reset all branding changes\n- Clear all collapsed states\n\nThis action cannot be undone!`);
+    const confirmed = confirm(`Discard ALL ${totalCount} pending changes?\n\nThis will:\n- Remove all draft menu items and categories\n- Remove all draft advertisements\n- Remove all draft locations\n- Reset home page and site settings\n- Reset all colors, config, and manifest changes\n- Reset all branding changes\n- Clear all collapsed states\n\nThis action cannot be undone!`);
     
     if (!confirmed) return;
     
@@ -3941,6 +3950,7 @@ const UpdateUI = {
       localStorage.removeItem(this.storageKeys.draftColors);
       localStorage.removeItem(this.storageKeys.draftConfig);
       localStorage.removeItem(this.storageKeys.draftManifest);
+      localStorage.removeItem(this.storageKeys.draftHomePage);
       
       // Clear category landing page drafts
       const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
@@ -3965,10 +3975,18 @@ const UpdateUI = {
       await this.loadBrandingImages();
       await this.loadColors();
       
-      // Reload manifest and config if needed
-      if (typeof HomePageManager !== 'undefined' && HomePageManager.loadManifestSettings) {
-        await HomePageManager.loadManifestSettings();
-        HomePageManager.populateManifestForm();
+      // Reload manifest, config, and homepage if needed
+      if (typeof HomePageManager !== 'undefined') {
+        if (HomePageManager.loadManifestSettings) {
+          await HomePageManager.loadManifestSettings();
+          HomePageManager.populateManifestForm();
+        }
+        if (HomePageManager.loadCurrentSettings) {
+          await HomePageManager.loadCurrentSettings();
+          await HomePageManager.loadSiteSettings();
+          HomePageManager.populateForm();
+          HomePageManager.populateSiteSettingsForm();
+        }
       }
       
       // Recheck pending changes
@@ -4224,6 +4242,33 @@ const UpdateUI = {
       `;
     }
     
+    // Home Page
+    const draftHomePage = localStorage.getItem(this.storageKeys.draftHomePage);
+    if (draftHomePage) {
+      try {
+        const homeData = JSON.parse(draftHomePage);
+        html += `
+          <div class="detail-section">
+            <h3 class="detail-section-title">🏠 Home Page & Site Settings</h3>
+            <div class="pending-change-card">
+              <div class="pending-change-info">
+                <strong>Home Page Updates</strong>
+                <div class="pending-change-status">
+                  Hero image, galleries, and site settings modified
+                </div>
+                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">
+                  Last updated: ${new Date(homeData.timestamp).toLocaleString()}
+                </div>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="discardHomePageDraft()">Discard</button>
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        console.error('Error parsing home page draft:', e);
+      }
+    }
+    
     container.innerHTML = html;
     
     // Update action buttons after rendering
@@ -4291,6 +4336,12 @@ const UpdateUI = {
     // Count manifest (count as 1 if any manifest changes)
     const draftManifest = localStorage.getItem(this.storageKeys.draftManifest);
     if (draftManifest) {
+      count += 1;
+    }
+    
+    // Count homepage (count as 1 if any homepage changes)
+    const draftHomePage = localStorage.getItem(this.storageKeys.draftHomePage);
+    if (draftHomePage) {
       count += 1;
     }
     
@@ -4382,14 +4433,26 @@ const UpdateUI = {
         }
       }
       
-      // ⚠️ CATEGORY LANDING PAGES - NOT YET SUPPORTED BY API
-      // The content-service API currently doesn't have an endpoint for updating category _index.md files
-      // Category drafts (icon, images, weight, body) are stored locally only for now
-      // 
-      // To enable this feature, you need to add a new API endpoint to content-service:
-      // PUT /api/clients/:clientId/categories/:categoryName
-      //
-      // For now, category changes are applied locally and used by Hugo on next build
+      // Publish home page and site settings
+      const draftHomePageJson = localStorage.getItem(this.storageKeys.draftHomePage);
+      if (draftHomePageJson) {
+        try {
+          const success = await HomePageManager.publishDraft();
+          if (success) {
+            successCount++;
+            successItems.push('🏠 Home Page & Site Settings');
+          } else {
+            failCount++;
+            failedItems.push('❌ Home Page: Failed to publish');
+          }
+        } catch (error) {
+          failCount++;
+          failedItems.push(`❌ Home Page: ${error.message}`);
+          console.error('Failed to publish home page:', error);
+        }
+      }
+      
+      // Publish category landing pages
       const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
       for (const draftKey of categoryLandingDrafts) {
         const categoryName = draftKey.replace('ttmenus_draft_category_', '');
@@ -9774,38 +9837,18 @@ const HomePageManager = {
     event.target.value = '';
   },
 
-  async save() {
+  saveDraft() {
     try {
-      // Build the frontmatter content
-      const frontmatter = {
+      // Get page content
+      const pageContent = document.getElementById('homePageContent').value || '';
+
+      // Prepare homepage data (matching HomePage model)
+      const homepageData = {
         image: this.currentSettings.image,
         images: this.currentSettings.images.filter(img => img.image),
-        clienttourimages: this.currentSettings.clienttourimages.filter(img => img.image)
+        clienttourimages: this.currentSettings.clienttourimages.filter(img => img.image),
+        content: pageContent
       };
-
-      // Convert to YAML format
-      let yamlContent = '---\n';
-      yamlContent += `image: ${frontmatter.image}\n`;
-      
-      if (frontmatter.images.length > 0) {
-        yamlContent += 'images:\n';
-        frontmatter.images.forEach(img => {
-          yamlContent += `  - image: ${img.image}\n`;
-        });
-      }
-      
-      if (frontmatter.clienttourimages.length > 0) {
-        yamlContent += 'clienttourimages:\n';
-        frontmatter.clienttourimages.forEach(img => {
-          yamlContent += `  - image: ${img.image}\n`;
-        });
-      }
-      
-      yamlContent += '---\n';
-      
-      // Add page content after frontmatter
-      const pageContent = document.getElementById('homePageContent').value || '';
-      yamlContent += pageContent;
 
       // Collect site settings
       const siteConfigData = {
@@ -9825,6 +9868,41 @@ const HomePageManager = {
         }
       };
 
+      // Save to localStorage as draft
+      const draftData = {
+        homepage: homepageData,
+        config: siteConfigData,
+        timestamp: new Date().toISOString()
+      };
+
+      localStorage.setItem(UpdateUI.storageKeys.draftHomePage, JSON.stringify(draftData));
+      
+      console.log('Homepage draft saved:', draftData);
+      
+      UpdateUI.showSuccess('Home page settings saved as draft!');
+      UpdateUI.checkPendingChanges();
+      UpdateUI.renderPendingSummary();
+      
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      UpdateUI.showError('Failed to save draft: ' + error.message);
+    }
+  },
+
+  getDraft() {
+    const draft = localStorage.getItem(UpdateUI.storageKeys.draftHomePage);
+    return draft ? JSON.parse(draft) : null;
+  },
+
+  async publishDraft() {
+    try {
+      const draft = this.getDraft();
+      if (!draft) {
+        throw new Error('No draft to publish');
+      }
+
+      console.log('Publishing homepage draft:', draft);
+
       // Save homepage
       const homepageResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/homepage`, {
         method: 'PUT',
@@ -9832,11 +9910,13 @@ const HomePageManager = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
-        body: JSON.stringify({
-          content: yamlContent,
-          frontmatter: frontmatter
-        })
+        body: JSON.stringify(draft.homepage)
       });
+
+      if (!homepageResponse.ok) {
+        const errorData = await homepageResponse.json().catch(() => ({}));
+        throw new Error(`Homepage save failed: ${errorData.error || homepageResponse.statusText}`);
+      }
 
       // Save config
       const configResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/config`, {
@@ -9845,20 +9925,41 @@ const HomePageManager = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
-        body: JSON.stringify(siteConfigData)
+        body: JSON.stringify(draft.config)
       });
 
-      if (homepageResponse.ok && configResponse.ok) {
-        UpdateUI.showSuccess('Home page and site settings saved successfully!');
-        await this.loadCurrentSettings();
-        await this.loadSiteSettings();
-      } else {
-        throw new Error('Failed to save settings');
+      if (!configResponse.ok) {
+        const errorData = await configResponse.json().catch(() => ({}));
+        throw new Error(`Config save failed: ${errorData.error || configResponse.statusText}`);
       }
+
+      // Clear draft after successful publish
+      localStorage.removeItem(UpdateUI.storageKeys.draftHomePage);
+      
+      UpdateUI.showSuccess('Home page settings published successfully!');
+      await this.loadCurrentSettings();
+      await this.loadSiteSettings();
+      UpdateUI.checkPendingChanges();
+      UpdateUI.renderPendingSummary();
+      
+      return true;
+      
     } catch (error) {
-      console.error('Error saving settings:', error);
-      UpdateUI.showError('Failed to save settings: ' + error.message);
+      console.error('Error publishing homepage:', error);
+      UpdateUI.showError('Failed to publish homepage: ' + error.message);
+      return false;
     }
+  },
+
+  discardDraft() {
+    localStorage.removeItem(UpdateUI.storageKeys.draftHomePage);
+    this.loadCurrentSettings();
+    this.loadSiteSettings();
+    this.populateForm();
+    this.populateSiteSettingsForm();
+    UpdateUI.showSuccess('Home page draft discarded');
+    UpdateUI.checkPendingChanges();
+    UpdateUI.renderPendingSummary();
   }
 };
 
@@ -9872,7 +9973,7 @@ function addTourImage() {
 }
 
 function saveHomePageSettings() {
-  HomePageManager.save();
+  HomePageManager.saveDraft();
 }
 
 async function saveManifestSettings() {
@@ -9941,6 +10042,12 @@ function uploadGalleryImage(target, index) {
 
 function closeImageLibraryModal() {
   HomePageManager.closeImageLibraryModal();
+}
+
+function discardHomePageDraft() {
+  if (confirm('Discard all home page changes?\n\nThis will reset to the published version.')) {
+    HomePageManager.discardDraft();
+  }
 }
 
 window.HomePageManager = HomePageManager;
