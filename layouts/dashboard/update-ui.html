@@ -66,7 +66,7 @@
 
 <script>
     if (typeof navigator.serviceWorker !== 'undefined') {
-        navigator.serviceWorker.register('http:\/\/localhost:1313\/OneSignalSDKWorker.js?v=2')
+        navigator.serviceWorker.register('{{ site.BaseURL }}OneSignalSDKWorker.js?v=2')
         .then(function(registration) {
         console.log('Service Worker registered with scope:', registration.scope);
         })
@@ -79,9 +79,22 @@
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.init({
-      appId: "b4b1ddce-85b7-43bd-8e11-d91c8cd1540d",
-    });
+    const appId = "{{ site.Params.services.onesignalid }}";
+    
+    // Only initialize if appId is provided and valid (check if it's not empty and doesn't contain template syntax)
+    if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
+      OneSignal.init({
+        appId: appId,
+      }).catch(function(error) {
+        console.warn('OneSignal initialization error:', error.message);
+        // If there's an appId mismatch, we could clear the service worker
+        if (error.message.includes("AppID doesn't match")) {
+          console.log('OneSignal: AppID mismatch detected. Service worker may need to be cleared.');
+        }
+      });
+    } else {
+      console.warn('OneSignal: Invalid or missing appId, skipping initialization');
+    }
   });
 </script>
 
@@ -1215,8 +1228,6 @@ window.hugoSiteConfig = {
   <input type="file" id="tourImageUploadInput" accept="image/*" style="display: none;">
 
   
-  <script src="{{ site.BaseURL }}js/auth-client.js" defer></script>
-  <script src="{{ site.BaseURL }}js/auth-middleware.js" defer></script>
   <script src="{{ site.BaseURL }}js/update-ui.js" defer></script>
 </body>
 </html>
