@@ -824,8 +824,17 @@ const UpdateUI = {
           imagePath = img.startsWith('/') ? img : `/${img}`;
         }
         
+        // Extract ID from Hugo URL (e.g., "/advertisments/more-ish-monday/" -> "more-ish-monday")
+        let adId = ad.title.toLowerCase().replace(/\s+/g, '-');
+        if (ad.url) {
+          const urlMatch = ad.url.match(/\/advertisments\/([^/]+)\/?$/);
+          if (urlMatch) {
+            adId = urlMatch[1];
+          }
+        }
+        
         return {
-          id: ad.title.toLowerCase().replace(/\s+/g, '-') + '-' + ad.weight, // Generate ID from title+weight
+          id: adId, // Use Hugo-derived ID to match filenames
           title: ad.title,
           description: ad.body || '',
           link: ad.link || '',
