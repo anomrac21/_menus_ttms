@@ -4498,7 +4498,7 @@ const UpdateUI = {
       const draftHomePageJson = localStorage.getItem(this.storageKeys.draftHomePage);
       if (draftHomePageJson) {
         try {
-          const success = await HomePageManager.publishDraft();
+          const success = await HomePageManager.publishDraft(sessionId);
           if (success) {
             successCount++;
             successItems.push('🏠 Home Page & Site Settings');
@@ -4625,6 +4625,13 @@ const UpdateUI = {
           const username = user?.email || user?.username || 'Unknown User';
           
           await this.triggerBatchCommit(username, successCount, sessionId);
+          
+          // Clear homepage draft after successful batch commit
+          if (draftHomePageJson) {
+            localStorage.removeItem(this.storageKeys.draftHomePage);
+            await HomePageManager.loadCurrentSettings();
+            await HomePageManager.loadSiteSettings();
+          }
         } catch (error) {
           console.error('Git push failed:', error);
           // Don't fail the whole operation, changes are saved
@@ -10110,7 +10117,7 @@ const HomePageManager = {
     return draft ? JSON.parse(draft) : null;
   },
 
-  async publishDraft() {
+  async publishDraft(sessionID = null) {
     try {
       const draft = this.getDraft();
       if (!draft) {
@@ -10119,8 +10126,17 @@ const HomePageManager = {
 
       console.log('Publishing homepage draft:', draft);
 
+      // Build URLs with batch session parameters
+      const homepageUrl = sessionID
+        ? `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=false&session_id=${sessionID}`
+        : `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=true`;
+      
+      const configUrl = sessionID
+        ? `${UpdateUI.apiConfig.getClientUrl()}/config?push=false&session_id=${sessionID}`
+        : `${UpdateUI.apiConfig.getClientUrl()}/config?push=true`;
+
       // Save homepage
-      const homepageResponse = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/homepage`, {
+      const homepageResponse = await UpdateUI.authenticatedFetch(homepageUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -10134,7 +10150,7 @@ const HomePageManager = {
       }
 
       // Save config
-      const configResponse = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/config`, {
+      const configResponse = await UpdateUI.authenticatedFetch(configUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -10147,21 +10163,26 @@ const HomePageManager = {
         throw new Error(`Config save failed: ${errorData.error || configResponse.statusText}`);
       }
 
-      // Clear draft after successful publish
-      localStorage.removeItem(UpdateUI.storageKeys.draftHomePage);
-      
-      UpdateUI.showSuccess('Home page settings published successfully!');
-      await this.loadCurrentSettings();
-      await this.loadSiteSettings();
-      UpdateUI.checkPendingChanges();
-      UpdateUI.renderPendingSummary();
+      // In batch mode, don't clear draft or reload yet
+      if (!sessionID) {
+        // Clear draft after successful publish
+        localStorage.removeItem(UpdateUI.storageKeys.draftHomePage);
+        
+        UpdateUI.showSuccess('Home page settings published successfully!');
+        await this.loadCurrentSettings();
+        await this.loadSiteSettings();
+        UpdateUI.checkPendingChanges();
+        UpdateUI.renderPendingSummary();
+      }
       
       return true;
       
     } catch (error) {
       console.error('Error publishing homepage:', error);
-      UpdateUI.showError('Failed to publish homepage: ' + error.message);
-      return false;
+      if (!sessionID) {
+        UpdateUI.showError('Failed to publish homepage: ' + error.message);
+      }
+      throw error; // Re-throw for batch handler to catch
     }
   },
 
