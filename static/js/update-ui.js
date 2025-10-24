@@ -4780,7 +4780,7 @@ const UpdateUI = {
       cleanItem.id = `${item.category}/${filename}`;
     }
     
-    console.log(`📤 Publishing menu item "${cleanItem.title}":`, cleanItem);
+    console.log(`📤 Publishing menu item "${cleanItem.title}":`, JSON.stringify(cleanItem, null, 2));
     
     // Build URL with sessionId if provided
     const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
