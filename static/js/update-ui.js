@@ -4480,6 +4480,65 @@ const UpdateUI = {
         }
       }
       
+      // Publish colors
+      const draftColorsJson = localStorage.getItem(this.storageKeys.draftColors);
+      if (draftColorsJson) {
+        try {
+          const draftColors = JSON.parse(draftColorsJson);
+          const response = await this.authenticatedFetch(
+            `${this.apiConfig.getClientUrl()}/colors?push=false&session_id=${sessionId}`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ colors: { ...this.state.colors, ...draftColors } }),
+            }
+          );
+          
+          if (response.ok) {
+            localStorage.removeItem(this.storageKeys.draftColors);
+            successCount++;
+            const colorCount = Object.keys(draftColors).length;
+            successItems.push(`🎨 Colors (${colorCount} variables)`);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || response.statusText);
+          }
+        } catch (error) {
+          failCount++;
+          failedItems.push(`❌ Colors: ${error.message}`);
+          console.error('Failed to publish colors:', error);
+        }
+      }
+      
+      // Publish manifest
+      const draftManifestJson = localStorage.getItem(this.storageKeys.draftManifest);
+      if (draftManifestJson) {
+        try {
+          const draftManifest = JSON.parse(draftManifestJson);
+          const response = await this.authenticatedFetch(
+            `${this.apiConfig.getClientUrl()}/manifest?push=false&session_id=${sessionId}`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(draftManifest),
+            }
+          );
+          
+          if (response.ok) {
+            localStorage.removeItem(this.storageKeys.draftManifest);
+            successCount++;
+            successItems.push(`📱 PWA Manifest`);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || response.statusText);
+          }
+        } catch (error) {
+          failCount++;
+          failedItems.push(`❌ Manifest: ${error.message}`);
+          console.error('Failed to publish manifest:', error);
+        }
+      }
+      
       // Publish category landing pages
       const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
       for (const draftKey of categoryLandingDrafts) {
