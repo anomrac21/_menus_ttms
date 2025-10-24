@@ -3264,14 +3264,37 @@ const UpdateUI = {
     Object.entries(colors).forEach(([key, value]) => {
       const label = this.formatColorLabel(key);
       
+      // Normalize color value (handle shorthand and 'none')
+      let normalizedValue = value;
+      
+      // Handle "none" values
+      if (value === 'none' || value === 'transparent') {
+        normalizedValue = '#00000000'; // Fully transparent black
+      }
+      // Convert 3-digit hex to 6-digit (#000 → #000000, #fff → #ffffff)
+      else if (/^#[0-9a-fA-F]{3}$/.test(value)) {
+        const r = value[1];
+        const g = value[2];
+        const b = value[3];
+        normalizedValue = `#${r}${r}${g}${g}${b}${b}`;
+      }
+      // Convert 4-digit hex to 8-digit (#000f → #000000ff)
+      else if (/^#[0-9a-fA-F]{4}$/.test(value)) {
+        const r = value[1];
+        const g = value[2];
+        const b = value[3];
+        const a = value[4];
+        normalizedValue = `#${r}${r}${g}${g}${b}${b}${a}${a}`;
+      }
+      
       // Extract RGB and alpha from hex value
-      let rgbHex = value;
+      let rgbHex = normalizedValue;
       let alphaHex = 'ff';
       
       // Handle 8-digit hex (#rrggbbaa)
-      if (value.length === 9 && value.startsWith('#')) {
-        rgbHex = value.substring(0, 7); // #rrggbb
-        alphaHex = value.substring(7, 9); // aa
+      if (normalizedValue.length === 9 && normalizedValue.startsWith('#')) {
+        rgbHex = normalizedValue.substring(0, 7); // #rrggbb
+        alphaHex = normalizedValue.substring(7, 9); // aa
       }
       
       // Convert alpha hex to decimal (0-255)
@@ -4403,7 +4426,7 @@ const UpdateUI = {
         const draftAds = JSON.parse(draftAdsJson);
         for (const ad of Object.values(draftAds)) {
           try {
-            await this.publishAdSilent(ad.id, false);
+            await this.publishAdSilent(ad.id, false, sessionId);
             successCount++;
             const action = ad._isDeleted ? '🗑️' : (ad._isNew ? '➕' : '📝');
             successItems.push(`${action} Ad: ${ad.title}`);
@@ -4759,7 +4782,7 @@ const UpdateUI = {
   /**
    * Publish ad without showing alert (for batch operations)
    */
-  async publishAdSilent(adId, pushGit = true) {
+  async publishAdSilent(adId, pushGit = true, sessionID = null) {
     const draftsJson = localStorage.getItem(this.storageKeys.draftAds) || '{}';
     const drafts = JSON.parse(draftsJson);
     const ad = drafts[adId];
@@ -4768,9 +4791,16 @@ const UpdateUI = {
       throw new Error('Draft not found');
     }
     
+    // Clean up ad data (remove internal fields)
+    const { _isDraft, _isNew, _isDeleted, _draftSavedAt, ...cleanAd } = ad;
+    
+    console.log('Publishing ad:', cleanAd);
+    
     // Handle deletions separately
     if (ad._isDeleted) {
-      const url = `${this.apiConfig.getClientUrl()}/advertisements/${adId}?batch=true&pushGit=${pushGit}`;
+      const url = sessionID
+        ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&session_id=${sessionID}`
+        : `${this.apiConfig.getClientUrl()}/ads/${adId}?push=${pushGit}`;
       
       const response = await this.authenticatedFetch(url, {
         method: 'DELETE',
@@ -4782,20 +4812,30 @@ const UpdateUI = {
         await this.loadAdvertisements();
         return await response.json();
       } else {
-        throw new Error('Failed to delete ad');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Ad delete failed:', errorData);
+        throw new Error(errorData.error || 'Failed to delete ad');
       }
     }
     
     // Handle create/update
     const method = ad._isNew ? 'POST' : 'PUT';
-    const url = ad._isNew
-      ? `${this.apiConfig.getClientUrl()}/advertisements?batch=true&pushGit=${pushGit}`
-      : `${this.apiConfig.getClientUrl()}/advertisements/${adId}?batch=true&pushGit=${pushGit}`;
+    let url;
+    
+    if (sessionID) {
+      url = ad._isNew
+        ? `${this.apiConfig.getClientUrl()}/ads?push=false&session_id=${sessionID}`
+        : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=false&session_id=${sessionID}`;
+    } else {
+      url = ad._isNew
+        ? `${this.apiConfig.getClientUrl()}/ads?push=${pushGit}`
+        : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=${pushGit}`;
+    }
     
     const response = await this.authenticatedFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ad),
+      body: JSON.stringify(cleanAd),
     });
     
     if (response.ok) {
@@ -4803,7 +4843,9 @@ const UpdateUI = {
       await this.loadAdvertisements();
       return await response.json();
     } else {
-      throw new Error('Failed to publish ad');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Ad publish failed:', errorData);
+      throw new Error(errorData.error || 'Failed to publish ad');
     }
   },
 
@@ -4817,11 +4859,19 @@ const UpdateUI = {
       locations: this.state.locations
         .filter(loc => !loc._isDeleted) // Exclude deleted
         .map(loc => {
-          // Remove internal fields
+          // Remove internal fields and ensure proper structure
           const { _isDraft, _isNew, _isDeleted, _index, _draftSavedAt, id, ...cleanLoc } = loc;
+          
+          // Ensure opening_hours is properly structured
+          if (cleanLoc.opening_hours) {
+            cleanLoc.opening_hours = JSON.parse(JSON.stringify(cleanLoc.opening_hours));
+          }
+          
           return cleanLoc;
         })
     };
+    
+    console.log('Publishing locations data:', locationsData);
     
     const url = sessionID 
       ? `${this.apiConfig.getClientUrl()}/locations?push=false&session_id=${sessionID}`
@@ -4839,6 +4889,7 @@ const UpdateUI = {
       return await response.json();
     } else {
       const errorData = await response.json().catch(() => ({}));
+      console.error('Location publish failed:', errorData);
       throw new Error(errorData.error || 'Failed to publish location');
     }
   },
