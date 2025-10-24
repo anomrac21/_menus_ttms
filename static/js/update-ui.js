@@ -4429,7 +4429,7 @@ const UpdateUI = {
         }
       }
       
-      // Publish ads
+      // Publish ads (now supports batch mode!)
       const draftAdsJson = localStorage.getItem(this.storageKeys.draftAds);
       if (draftAdsJson) {
         const draftAds = JSON.parse(draftAdsJson);
