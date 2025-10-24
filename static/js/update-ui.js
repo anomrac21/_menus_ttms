@@ -9129,11 +9129,10 @@ const HousekeepingManager = {
       const imagesToDelete = Array.from(this.selectedForDeletion);
       
       // Send delete request to API
-      const response = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/images/delete`, {
+      const response = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/images/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
         body: JSON.stringify({
           images: imagesToDelete
@@ -9787,11 +9786,8 @@ const HomePageManager = {
       // Upload to server
       UpdateUI.showSuccess('Uploading image...');
       
-      const response = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/upload`, {
+      const response = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/images/upload`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-        },
         body: formData
       });
 
@@ -9916,11 +9912,10 @@ const HomePageManager = {
       console.log('Publishing homepage draft:', draft);
 
       // Save homepage
-      const homepageResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/homepage`, {
+      const homepageResponse = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/homepage`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
         body: JSON.stringify(draft.homepage)
       });
@@ -9931,11 +9926,10 @@ const HomePageManager = {
       }
 
       // Save config
-      const configResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/config`, {
+      const configResponse = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/config`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
         },
         body: JSON.stringify(draft.config)
       });
@@ -10005,11 +9999,10 @@ async function saveManifestSettings() {
     };
 
     // Save manifest
-    const manifestResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/manifest`, {
+    const manifestResponse = await UpdateUI.authenticatedFetch(`${UpdateUI.apiConfig.getClientUrl()}/manifest`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
       },
       body: JSON.stringify(manifestData)
     });
