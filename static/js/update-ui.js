@@ -1895,7 +1895,8 @@ const UpdateUI = {
 
     // Sort categories by weight
     categoryOrder.sort((a, b) => a.weight - b.weight);
-
+    
+    console.log('📊 Category order after sorting:', categoryOrder.map(c => `${c.name} (weight: ${c.weight})`).join(', '));
     console.log('Rendering', categoryOrder.length, 'categories with items');
 
     // Build HTML for each category with its items
