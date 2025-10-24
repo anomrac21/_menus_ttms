@@ -4919,8 +4919,8 @@ const UpdateUI = {
       }
     }
     
-    // Handle create/update
-    const method = ad._isNew ? 'POST' : 'PUT';
+    // Handle create/update - try PUT first, fallback to POST if not found
+    let method = ad._isNew ? 'POST' : 'PUT';
     let url;
     
     if (sessionID) {
@@ -4933,11 +4933,26 @@ const UpdateUI = {
         : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=${pushGit}`;
     }
     
-    const response = await this.authenticatedFetch(url, {
+    let response = await this.authenticatedFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanAd),
     });
+    
+    // If PUT failed with 404, try POST (create) instead
+    if (!response.ok && response.status === 404 && method === 'PUT') {
+      console.log(`Ad not found in backend, creating instead: ${adId}`);
+      method = 'POST';
+      url = sessionID
+        ? `${this.apiConfig.getClientUrl()}/ads?push=false&session_id=${sessionID}`
+        : `${this.apiConfig.getClientUrl()}/ads?push=${pushGit}`;
+      
+      response = await this.authenticatedFetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleanAd),
+      });
+    }
     
     if (response.ok) {
       this.clearDraftAd(adId);
