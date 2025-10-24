@@ -8677,11 +8677,14 @@ function selectIcon(iconUrl) {
   const iconUrlInput = document.getElementById('categoryIconUrl');
   iconUrlInput.value = iconUrl;
   
+  console.log('🎨 Icon selected and input updated:', iconUrl);
+  console.log('🔍 Input field value now:', iconUrlInput.value);
+  
   // Update preview to show selected icon
   updateIconPreview(iconUrl);
   
   // Visual feedback - briefly highlight the selected icon
-  console.log('✅ Icon selected:', iconUrl);
+  console.log('✅ Icon selection complete');
 }
 
 async function saveCategory(event) {
@@ -8691,6 +8694,8 @@ async function saveCategory(event) {
   const newName = document.getElementById('categoryName').value.trim();
   const iconUrl = document.getElementById('categoryIconUrl').value.trim();
   const weight = parseInt(document.getElementById('categoryWeight').value) || 0;
+  
+  console.log(`💾 Saving category "${newName}" with icon:`, iconUrl);
   
   // Landing page fields
   let heroImage = document.getElementById('categoryHeroImage').value.trim();
