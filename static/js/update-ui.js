@@ -310,6 +310,29 @@ const UpdateUI = {
     });
     
     this.state.categories = await Promise.all(categoryPromises);
+    
+    // Apply draft weights if any exist
+    this.state.categories.forEach(category => {
+      const draftKey = `ttmenus_draft_category_${category.name}`;
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        try {
+          const draftData = JSON.parse(draft);
+          if (draftData.frontmatter?.weight !== undefined) {
+            const oldWeight = category.weight;
+            category.weight = draftData.frontmatter.weight;
+            console.log(`  📝 Applied draft weight for ${category.name}: ${oldWeight} → ${category.weight}`);
+          }
+          if (draftData.frontmatter?.icon) {
+            category.icon = draftData.frontmatter.icon;
+            console.log(`  📝 Applied draft icon for ${category.name}: ${category.icon}`);
+          }
+        } catch (e) {
+          console.warn(`Failed to parse draft for ${category.name}:`, e);
+        }
+      }
+    });
+    
     console.log('✅ Loaded', this.state.categories.length, 'categories with icons:', this.state.categories);
     
     // Clean up legacy menudata drafts if any exist
