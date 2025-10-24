@@ -4780,6 +4780,24 @@ const UpdateUI = {
       cleanItem.id = `${item.category}/${filename}`;
     }
     
+    // Fix prices field - backend expects array of Price objects, not array of primitives
+    if (cleanItem.prices && Array.isArray(cleanItem.prices)) {
+      // Check if it's the old format (array of primitives)
+      if (cleanItem.prices.length === 3 && typeof cleanItem.prices[0] === 'string') {
+        const [size, flavour, price] = cleanItem.prices;
+        if (size !== '-' || flavour !== '-' || (typeof price === 'number' && price > 0)) {
+          cleanItem.prices = [{
+            size: size === '-' ? '' : size,
+            flavour: flavour === '-' ? '' : flavour,
+            price: typeof price === 'number' ? price : parseFloat(price) || 0
+          }];
+        } else {
+          // No real price data, remove the field
+          delete cleanItem.prices;
+        }
+      }
+    }
+    
     console.log(`📤 Publishing menu item "${cleanItem.title}":`, JSON.stringify(cleanItem, null, 2));
     
     // Build URL with sessionId if provided
