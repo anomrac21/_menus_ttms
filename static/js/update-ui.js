@@ -4769,8 +4769,16 @@ const UpdateUI = {
       apiItemId = this.convertUrlToItemId(item.url, item.category);
     }
     
-    // Clean item data - remove internal fields
-    const { _isNew, _isDraft, _isDeleted, _draftSavedAt, url, ...cleanItem } = item;
+    // Clean item data - remove internal fields and fix id
+    const { _isNew, _isDraft, _isDeleted, _draftSavedAt, url, id, ...cleanItem } = item;
+    
+    // Build proper ID from category and title (backend expects "Category/filename")
+    if (item.category && item.title) {
+      const filename = item.title.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+      cleanItem.id = `${item.category}/${filename}`;
+    }
     
     console.log(`📤 Publishing menu item "${cleanItem.title}":`, cleanItem);
     
