@@ -6105,6 +6105,11 @@ function openAdModal(adId = null) {
       adWeightInput.value = ad.weight || 1;
       adRecurringInput.checked = ad.recurring || false;
       
+      // Validate the link if present
+      if (ad.link) {
+        validateAdLink(adLinkInput);
+      }
+      
       // Check appropriate days of week checkboxes
       const daysCheckboxes = document.querySelectorAll('input[name="adDaysOfWeek"]');
       daysCheckboxes.forEach(checkbox => {
@@ -6167,6 +6172,13 @@ function openAdModal(adId = null) {
     title.textContent = 'Add Advertisement';
     adFormElement.reset();
     adIdInput.value = 'new_ad_' + Date.now();
+    
+    // Clear link validation
+    const validationEl = document.getElementById('adLinkValidation');
+    if (validationEl) {
+      validationEl.innerHTML = '';
+    }
+    adLinkInput.style.borderColor = '';
     
     // Uncheck all checkboxes for new ad
     document.querySelectorAll('input[name="adDaysOfWeek"]').forEach(cb => cb.checked = false);
@@ -10047,6 +10059,94 @@ function closeImageLibraryModal() {
 function discardHomePageDraft() {
   if (confirm('Discard all home page changes?\n\nThis will reset to the published version.')) {
     HomePageManager.discardDraft();
+  }
+}
+
+// Validate advertisement link (supports both internal paths and external URLs)
+function validateAdLink(input) {
+  const value = input.value.trim();
+  const validationEl = document.getElementById('adLinkValidation');
+  
+  if (!validationEl) return;
+  
+  if (!value) {
+    validationEl.innerHTML = '';
+    input.style.borderColor = '';
+    return;
+  }
+  
+  // Check if it's an external URL
+  const isExternalURL = /^https?:\/\//i.test(value);
+  
+  // Check if it's an internal path
+  const isInternalPath = value.startsWith('/');
+  
+  if (isExternalURL) {
+    // Valid external URL
+    validationEl.innerHTML = '<span style="color: #10b981;">✓ External URL</span>';
+    input.style.borderColor = '#10b981';
+    return;
+  }
+  
+  if (isInternalPath) {
+    // Valid internal path - optionally check if it exists
+    validateInternalPath(value, validationEl, input);
+    return;
+  }
+  
+  // Invalid format
+  validationEl.innerHTML = '<span style="color: #ef4444;">⚠️ Must start with / (internal) or https:// (external)</span>';
+  input.style.borderColor = '#ef4444';
+}
+
+async function validateInternalPath(path, validationEl, input) {
+  try {
+    // Extract category/item from path (e.g., /specials/your-special/)
+    const pathParts = path.split('/').filter(p => p);
+    
+    if (pathParts.length === 0) {
+      validationEl.innerHTML = '<span style="color: #f59e0b;">⚠️ Internal path (root)</span>';
+      input.style.borderColor = '#f59e0b';
+      return;
+    }
+    
+    const category = pathParts[0];
+    const item = pathParts[1];
+    
+    // Check if category exists in our state
+    const categoryExists = UpdateUI.state.categories.some(cat => 
+      cat.name.toLowerCase() === category.toLowerCase()
+    );
+    
+    if (!categoryExists) {
+      validationEl.innerHTML = `<span style="color: #f59e0b;">⚠️ Internal path (category "${category}" not found)</span>`;
+      input.style.borderColor = '#f59e0b';
+      return;
+    }
+    
+    // If item is specified, check if it exists
+    if (item) {
+      const itemExists = UpdateUI.state.menuItems.some(menuItem => 
+        menuItem.category.toLowerCase() === category.toLowerCase() &&
+        menuItem.url && menuItem.url.toLowerCase().includes(item.toLowerCase())
+      );
+      
+      if (itemExists) {
+        validationEl.innerHTML = '<span style="color: #10b981;">✓ Valid internal link (item found)</span>';
+        input.style.borderColor = '#10b981';
+      } else {
+        validationEl.innerHTML = `<span style="color: #f59e0b;">⚠️ Internal path (item not found, link may be added later)</span>`;
+        input.style.borderColor = '#f59e0b';
+      }
+    } else {
+      validationEl.innerHTML = `<span style="color: #10b981;">✓ Valid internal link (category page)</span>`;
+      input.style.borderColor = '#10b981';
+    }
+    
+  } catch (error) {
+    console.error('Error validating path:', error);
+    validationEl.innerHTML = '<span style="color: #6b7280;">ℹ️ Internal path</span>';
+    input.style.borderColor = '#6b7280';
   }
 }
 

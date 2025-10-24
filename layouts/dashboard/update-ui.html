@@ -1002,7 +1002,10 @@ window.hugoSiteConfig = {
         
         <div class="form-group">
           <label class="form-label">Link URL (optional)</label>
-          <input type="url" class="form-input" id="adLink" placeholder="/specials/your-special/">
+          <input type="text" class="form-input" id="adLink" placeholder="/specials/your-special/" oninput="validateAdLink(this)">
+          <small class="form-helper" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+            <span id="adLinkValidation" style="font-size: 0.75rem;"></span>
+          </small>
         </div>
         
         <div class="form-group" style="display: none;">
