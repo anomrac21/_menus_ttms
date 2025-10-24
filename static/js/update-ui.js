@@ -4769,6 +4769,11 @@ const UpdateUI = {
       apiItemId = this.convertUrlToItemId(item.url, item.category);
     }
     
+    // Clean item data - remove internal fields
+    const { _isNew, _isDraft, _isDeleted, _draftSavedAt, url, ...cleanItem } = item;
+    
+    console.log(`📤 Publishing menu item "${cleanItem.title}":`, cleanItem);
+    
     // Build URL with sessionId if provided
     const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
     const url = item._isNew
@@ -4778,7 +4783,7 @@ const UpdateUI = {
     const response = await this.authenticatedFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(item),
+      body: JSON.stringify(cleanItem),
     });
 
     if (response.ok) {
@@ -4791,8 +4796,10 @@ const UpdateUI = {
       try {
         const errorData = JSON.parse(text);
         errorMessage = errorData.error || errorMessage;
+        console.error(`❌ Menu item publish failed for "${cleanItem.title}":`, errorData);
       } catch (parseErr) {
         errorMessage = `Server error (${response.status})`;
+        console.error(`❌ Menu item publish error (${response.status}):`, text);
       }
       throw new Error(errorMessage);
     }
