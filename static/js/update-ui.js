@@ -4415,21 +4415,26 @@ const UpdateUI = {
         }
       }
       
-      // Publish locations
+      // Publish locations (send all at once)
       const draftLocationsJson = localStorage.getItem(this.storageKeys.draftLocations);
       if (draftLocationsJson) {
-        const draftLocations = JSON.parse(draftLocationsJson);
-        for (const loc of Object.values(draftLocations)) {
-          try {
-            await this.publishLocationSilent(loc._index, false);
-            successCount++;
+        try {
+          // Locations API expects all locations at once, so we only call it once
+          await this.publishLocationSilent(0, false, sessionId);
+          
+          // Count all location changes
+          const draftLocations = JSON.parse(draftLocationsJson);
+          const locationCount = Object.keys(draftLocations).length;
+          successCount += locationCount;
+          
+          Object.values(draftLocations).forEach(loc => {
             const action = loc._isDeleted ? '🗑️' : (loc._isNew ? '➕' : '📝');
             successItems.push(`${action} Location: ${loc.city}`);
-          } catch (error) {
-            failCount++;
-            failedItems.push(`❌ Location: ${loc.city}: ${error.message}`);
-            console.error('Failed to publish location:', loc._index, error);
-          }
+          });
+        } catch (error) {
+          failCount++;
+          failedItems.push(`❌ Locations: ${error.message}`);
+          console.error('Failed to publish locations:', error);
         }
       }
       
@@ -4458,32 +4463,43 @@ const UpdateUI = {
         const categoryName = draftKey.replace('ttmenus_draft_category_', '');
         const categoryData = JSON.parse(localStorage.getItem(draftKey));
         
-        console.log(`⚠️ Category "${categoryName}" landing page draft found - API endpoint not yet implemented`);
-        console.log(`ℹ️ Category data (for manual update to content/${categoryName}/_index.md):`, categoryData);
+        console.log(`Publishing category "${categoryName}" landing page...`);
         
-        // Generate the actual file content for manual copy
-        const frontmatter = categoryData.frontmatter || {};
-        const body = categoryData.body || '';
-        
-        const fileContent = `---
-title: "${categoryName}"
-weight: ${frontmatter.weight || 0}
-icon: "${frontmatter.icon || ''}"
-image: "${frontmatter.image || ''}"${frontmatter.slidein ? `
-slidein:
-  slideinimage: "${frontmatter.slidein.slideinimage || ''}"
-  direction: "${frontmatter.slidein.direction || ''}"` : ''}
----
-
-${body}`;
-        
-        console.log(`📄 File content for content/${categoryName}/_index.md:\n`, fileContent);
-        
-        // Mark as "published" locally (remove from drafts)
-        localStorage.removeItem(draftKey);
-        successCount++;
-        successItems.push(`📄 Category "${categoryName}" (stored locally - run 'hugo' to apply)`);
+        try {
+          // Prepare data for API
+          const landingData = {
+            title: categoryName,
+            weight: categoryData.frontmatter?.weight || 0,
+            icon: categoryData.frontmatter?.icon || '',
+            image: categoryData.frontmatter?.image || '',
+            slidein: categoryData.frontmatter?.slidein || null,
+            body: categoryData.body || ''
+          };
+          
+          const response = await UpdateUI.authenticatedFetch(
+            `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&session_id=${sessionId}`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(landingData)
+            }
+          );
+          
+          if (response.ok) {
+            localStorage.removeItem(draftKey);
+            successCount++;
+            successItems.push(`📂 Category: ${categoryName}`);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || response.statusText);
+          }
+        } catch (error) {
+          failCount++;
+          failedItems.push(`❌ Category ${categoryName}: ${error.message}`);
+          console.error(`Failed to publish category ${categoryName}:`, error);
+        }
       }
+      
       
       // Now trigger single git push for all changes with sessionId
       if (successCount > 0) {
@@ -4794,47 +4810,36 @@ ${body}`;
   /**
    * Publish location without showing alert (for batch operations)
    */
-  async publishLocationSilent(index, pushGit = true) {
-    const loc = this.state.locations[index];
-    if (!loc) {
-      throw new Error('Location not found');
-    }
+  async publishLocationSilent(index, pushGit = true, sessionID = null) {
+    // The locations API expects ALL locations, not a single one
+    // Build the complete locations array
+    const locationsData = {
+      locations: this.state.locations
+        .filter(loc => !loc._isDeleted) // Exclude deleted
+        .map(loc => {
+          // Remove internal fields
+          const { _isDraft, _isNew, _isDeleted, _index, _draftSavedAt, id, ...cleanLoc } = loc;
+          return cleanLoc;
+        })
+    };
     
-    // Handle deletions separately
-    if (loc._isDeleted) {
-      const response = await this.authenticatedFetch(
-        `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.locations}/${index}?batch=true&pushGit=${pushGit}`,
-        {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-      
-      if (response.ok) {
-        this.clearDraftLocation(index);
-        await this.loadLocations();
-        return await response.json();
-      } else {
-        throw new Error('Failed to delete location');
-      }
-    }
+    const url = sessionID 
+      ? `${this.apiConfig.getClientUrl()}/locations?push=false&session_id=${sessionID}`
+      : `${this.apiConfig.getClientUrl()}/locations?push=${pushGit}`;
     
-    // Handle create/update
-    const response = await this.authenticatedFetch(
-      `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.locations}?batch=true&pushGit=${pushGit}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loc),
-      }
-    );
+    const response = await this.authenticatedFetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(locationsData),
+    });
     
     if (response.ok) {
       this.clearDraftLocation(index);
       await this.loadLocations();
       return await response.json();
     } else {
-      throw new Error('Failed to publish location');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to publish location');
     }
   },
 
