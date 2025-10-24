@@ -4776,11 +4776,11 @@ const UpdateUI = {
     
     // Build URL with sessionId if provided
     const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
-    const url = item._isNew
+    const apiUrl = item._isNew
       ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?batch=true&pushGit=${pushGit}${sessionParam}`
       : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.content}?itemId=${encodeURIComponent(apiItemId)}&batch=true&pushGit=${pushGit}${sessionParam}`;
 
-    const response = await this.authenticatedFetch(url, {
+    const response = await this.authenticatedFetch(apiUrl, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cleanItem),
