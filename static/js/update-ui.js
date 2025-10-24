@@ -4567,6 +4567,8 @@ const UpdateUI = {
             body: categoryData.body || ''
           };
           
+          console.log(`📂 Publishing category "${categoryName}" with data:`, JSON.stringify(landingData, null, 2));
+          
           const response = await UpdateUI.authenticatedFetch(
             `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&session_id=${sessionId}`,
             {
