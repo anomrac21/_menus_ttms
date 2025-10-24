@@ -4895,6 +4895,11 @@ const UpdateUI = {
     // Clean up ad data (remove internal fields)
     const { _isDraft, _isNew, _isDeleted, _draftSavedAt, ...cleanAd } = ad;
     
+    // Normalize image path - remove leading slashes to avoid double slashes
+    if (cleanAd.image) {
+      cleanAd.image = cleanAd.image.replace(/^\/+/, '');
+    }
+    
     console.log('Publishing ad:', cleanAd);
     
     // Handle deletions separately
