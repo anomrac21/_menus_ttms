@@ -4,7 +4,10 @@
 * {
   box-sizing: border-box;
 }
-
+body{
+  margin: 0;
+  padding: 0;
+}
 /* Dashboard Container */
 .dashboard-container {
   max-width: 100%;
@@ -15,12 +18,14 @@
 
 .dashboard-header {
   color: white;
-  padding: 1rem;
+  padding: .4rem;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
+  background: linear-gradient(135deg, #242938 0%, #2b3140 100%);
   align-items: center;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  flex-direction: column-reverse;
+  flex-direction: row;
 }
 
 .dashboard-title {
@@ -63,7 +68,7 @@
   align-items: center;
   gap: .4rem;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
 }
 
@@ -73,6 +78,7 @@
 
 .user-name {
   display: block;
+  color: #fff;
   font-weight: 600;
   font-size: x-small;
 }
@@ -81,6 +87,7 @@
   display: block;
   font-size: x-small;
   opacity: 0.8;
+  color: #dedede;
 }
 
 .btn-logout {
@@ -90,8 +97,8 @@
   padding: 0.4rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: x-small;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
   transition: all 0.3s;
 }
 
@@ -103,16 +110,18 @@
 .tab-navigation {
   background: white;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0;
+  padding: 0px 0rem 1px;
   display: flex;
-  gap: 0;
   overflow-x: auto;
+  position: sticky;
+  z-index: 11;
+  top: 0;
 }
 
 .tab-btn {
   background: none;
   border: none;
-  padding: .4rem;
+  padding: .6rem;
   cursor: pointer;
   font-size: small;
   font-weight: 500;
@@ -129,10 +138,12 @@
 .tab-btn.active {
   color: #1e293b;
   border-bottom-color: #1e293b;
+  background: #1e293b11;
 }
 
 .dashboard-content {
   padding: .4rem;
+  margin: 0;
 }
 
 .tab-content {
@@ -150,6 +161,42 @@
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Collapsible Sections */
+.collapsible-section {
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+}
+
+.collapsible-header {
+  padding: 1rem 1.5rem;
+  background: #f9fafb;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.collapsible-header:hover {
+  background: #f3f4f6;
+}
+
+.collapsible-content {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.collapse-icon {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.collapsible-section.collapsed .collapse-icon {
+  transform: rotate(-90deg);
 }
 
 .section-title {
@@ -439,7 +486,7 @@
 
 .category-header-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   width: -webkit-fill-available;
 }
@@ -499,6 +546,7 @@
   transition: all 0.3s;
   width: -webkit-fill-available;
   max-width: 100%;
+  min-width: -webkit-fill-available;
 }
 
 .menu-item-card:hover {
@@ -1287,7 +1335,6 @@
   color: white;
   padding: 0.125rem 0.5rem;
   border-radius: 12px;
-  margin-left: 0.5rem;
   font-size: 0.75rem;
 }
 
@@ -1400,3 +1447,9 @@
   }
 }
 
+.dashboard-brand {
+    font-size: x-small;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+}

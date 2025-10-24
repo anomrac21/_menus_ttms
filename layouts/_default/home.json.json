@@ -54,6 +54,7 @@
       "categories"  (.Params.categories | default "")
       "tags" (.Params.tags | default slice)
       "type" (.Params.type | default slice)
+      "content" (.Content | default "")
   -}}
 
   {{ $json | jsonify }}

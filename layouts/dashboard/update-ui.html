@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
@@ -32,9 +32,9 @@
 <link rel="stylesheet" href="{{ site.BaseURL }}css/colors.css"/>
 <link rel="stylesheet" href="{{ site.BaseURL }}css/custom.css"/>
 
-<link rel="stylesheet" href="{{ site.BaseURL }}src/css/adsbase.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL }}src/css/apple.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL }}src/css/ordering-system.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL }}css/adsbase.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL }}css/apple.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL }}css/ordering-system.css"/>
 
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
 
@@ -131,12 +131,50 @@ window.AUTH_CONFIG = {
 // Content Service API URL for Update UI
 window.UPDATE_API_URL = "{{ site.Params.content.apiUrl }}";
 window.CLIENT_ID = "{{ site.Params.content.clientId }}";
+
+// Available images from static/images/
+window.hugoStaticImages = [
+  {{- $imageDir := "static/images" -}}
+  {{- if (fileExists $imageDir) -}}
+    {{- range (readDir $imageDir) -}}
+      {{- if not .IsDir -}}
+        {{- $ext := path.Ext .Name -}}
+        {{- if or (eq $ext ".jpg") (eq $ext ".jpeg") (eq $ext ".png") (eq $ext ".webp") (eq $ext ".gif") (eq $ext ".PNG") (eq $ext ".JPG") (eq $ext ".JPEG") -}}
+          "images/{{ .Name }}",
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+];
+
+// Hugo site configuration
+window.hugoSiteConfig = {
+  title: {{ site.Title | jsonify }},
+  baseURL: {{ site.BaseURL | jsonify }},
+  languageCode: {{ site.LanguageCode | jsonify }},
+  params: {
+    social: {
+      facebook: {{ site.Params.social.facebook | default "" | jsonify }},
+      instagram: {{ site.Params.social.instagram | default "" | jsonify }},
+      tiktok: {{ site.Params.social.tiktok | default "" | jsonify }},
+      youtube: {{ site.Params.social.youtube | default "" | jsonify }},
+      email: {{ site.Params.social.email | default "" | jsonify }},
+      phone: {{ site.Params.social.phone | default "" | jsonify }}
+    },
+    orderingsystem: {
+      whatsapp: {{ site.Params.orderingsystem.whatsapp | default "" | jsonify }},
+      vat: {{ site.Params.orderingsystem.vat | default 0 }},
+      servicecharge: {{ site.Params.orderingsystem.servicecharge | default 0 }},
+      hastables: {{ site.Params.orderingsystem.hastables | default false }}
+    }
+  }
+};
 </script>
 <script src="{{ site.BaseURL }}js/auth-client.js"></script>
 <script src="{{ site.BaseURL }}js/auth-middleware.js"></script>
 <script src="{{ site.BaseURL }}js/admin-users.js"></script>
-  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/auth.css">
-  <link rel="stylesheet" href="{{ site.BaseURL }}src/css/update-ui.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/auth.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/update-ui.css">
 </head>
 <body>
   
@@ -150,13 +188,14 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
         <span>📋 Pending Changes</span>
         <span id="pendingTabCount" class="pending-count-badge">0</span>
       </button>
+      <button class="tab-btn" data-tab="homepage">🏠 Home Page</button>
       <button class="tab-btn" data-tab="menu-items">Menu Items</button>
       <button class="tab-btn" data-tab="advertisements">Advertisements</button>
       <button class="tab-btn" data-tab="locations">Locations</button>
       <button class="tab-btn" data-tab="branding">Branding</button>
       <button class="tab-btn" data-tab="colors">Colors & Theme</button>
       <button class="tab-btn" data-tab="config">Configuration</button>
-      <button class="tab-btn" data-tab="manifest">PWA Manifest</button>
+      <button class="tab-btn" data-tab="housekeeping">🧹 Housekeeping</button>
     </div>
 
     
@@ -253,6 +292,179 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
           </div>
 
       
+      <!-- Home Page Tab -->
+      <div class="tab-content" data-tab-content="homepage">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">🏠 Home Page Settings</h2>
+              <p>Manage hero image and photo galleries on your home page</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-primary" onclick="saveHomePageSettings()">💾 Save Changes</button>
+            </div>
+          </div>
+
+          <div class="homepage-settings">
+            <!-- Site Title & Hero Image Section -->
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">🏷️</span>
+                  Site Title & Hero Image
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <div class="form-group">
+                  <label class="form-label">Site Title</label>
+                  <input type="text" class="form-input" id="siteTitle" placeholder="Menu Demo">
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                  <label class="form-label">Hero/Main Image</label>
+                  <div id="heroImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+                    <div id="heroImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                      <span style="color: #9ca3af;">No image selected</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                      <button type="button" class="btn btn-secondary" onclick="selectHeroImage()" style="flex: 1;">📁 Choose from Library</button>
+                      <button type="button" class="btn btn-primary" onclick="uploadHeroImage()" style="flex: 1;">📤 Upload New Image</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social Media Section -->
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">📱</span>
+                  Social Media & Contact
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <div style="margin-top: 1rem;">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #1877F2;">📘</span> Facebook
+                  </label>
+                  <input type="text" class="form-input" id="socialFacebook" placeholder="https://facebook.com/yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #E4405F;">📷</span> Instagram
+                  </label>
+                  <input type="text" class="form-input" id="socialInstagram" placeholder="https://instagram.com/yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #000000;">🎵</span> TikTok
+                  </label>
+                  <input type="text" class="form-input" id="socialTiktok" placeholder="https://tiktok.com/@yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #FF0000;">📺</span> YouTube
+                  </label>
+                  <input type="text" class="form-input" id="socialYoutube" placeholder="https://youtube.com/@yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>📧</span> Email
+                  </label>
+                  <input type="email" class="form-input" id="socialEmail" placeholder="contact@example.com">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>📞</span> Phone
+                  </label>
+                  <input type="tel" class="form-input" id="socialPhone" placeholder="18687060349">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #25D366;">💬</span> WhatsApp
+                  </label>
+                  <input type="tel" class="form-input" id="orderingWhatsapp" placeholder="18687060349">
+                </div>
+              </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Page Content/Body Section -->
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">📝</span>
+                  Page Content
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Write content for your home page (supports Markdown)</p>
+                <div class="form-group">
+                  <textarea class="form-textarea" id="homePageContent" placeholder="Write your home page content here... Supports Markdown formatting." style="min-height: 200px; font-family: 'Consolas', 'Monaco', monospace;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Featured Images Section -->
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">🖼️</span>
+                  Featured Images Gallery
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Select images to display in the featured section</p>
+              <div id="featuredImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <!-- Featured images will be displayed here as cards -->
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="addFeaturedImage()" style="flex: 1;">📁 Choose from Library</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFeaturedImage()" style="flex: 1;">📤 Upload New Image</button>
+              </div>
+              </div>
+            </div>
+
+            <!-- Tour Images Section -->
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">📸</span>
+                  Client Tour Images
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Images for the virtual tour/gallery</p>
+                <div id="tourImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                  <!-- Tour images will be displayed here as cards -->
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button type="button" class="btn btn-secondary" onclick="addTourImage()" style="flex: 1;">📁 Choose from Library</button>
+                  <button type="button" class="btn btn-primary" onclick="uploadTourImage()" style="flex: 1;">📤 Upload New Image</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+            </div>
+          </div>
+
+      
       <div class="tab-content" data-tab-content="branding">
         <div class="section-card">
           <div class="section-header">
@@ -302,31 +514,193 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
         <div class="section-card">
           <div class="section-header">
             <div class="section-header-info">
-              <h2 class="section-title">Hugo Configuration</h2>
-              <p>Manage your site configuration settings.</p>
-        </div>
-            <button class="btn btn-secondary" id="discardConfig" onclick="UpdateUI.discardAllDrafts('config')" style="display: none;">🔄 Discard All</button>
-      </div>
-
-          <div id="configForm">
-            <div class="loading">Loading configuration...</div>
-          </div>
+              <h2 class="section-title">⚙️ Configuration</h2>
+              <p>Manage your app configuration and integrations</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-primary" onclick="saveManifestSettings()">💾 Save Manifest</button>
             </div>
           </div>
 
-      
-      <div class="tab-content" data-tab-content="manifest">
+          <div class="section-body">
+        <!-- PWA Manifest Settings -->
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection(this)">
+            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="collapse-icon">▼</span>
+              <span style="font-size: 1.25rem;">📱</span>
+              PWA Manifest Settings
+            </h3>
+          </div>
+          <div class="collapsible-content">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">App Name</label>
+                <input type="text" class="form-input" id="manifestName" placeholder="My Restaurant">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Short Name</label>
+                <input type="text" class="form-input" id="manifestShortName" placeholder="Restaurant">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="manifestDescription" placeholder="A delicious dining experience..." style="min-height: 80px;"></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Theme Color</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="color" id="manifestThemeColor" style="width: 60px; height: 40px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">
+                  <input type="text" class="form-input" id="manifestThemeColorText" placeholder="#667eea" style="flex: 1;">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Background Color</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="color" id="manifestBgColor" style="width: 60px; height: 40px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">
+                  <input type="text" class="form-input" id="manifestBgColorText" placeholder="#ffffff" style="flex: 1;">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label class="form-label">Start URL</label>
+              <input type="text" class="form-input" id="manifestStartUrl" placeholder="/">
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label class="form-label">Display Mode</label>
+              <select class="form-select" id="manifestDisplay">
+                <option value="standalone">Standalone (App-like)</option>
+                <option value="fullscreen">Fullscreen</option>
+                <option value="minimal-ui">Minimal UI</option>
+                <option value="browser">Browser</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label class="form-label">Orientation</label>
+              <select class="form-select" id="manifestOrientation">
+                <option value="any">Any</option>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Point of Sale Integration -->
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection(this)">
+            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="collapse-icon">▼</span>
+              <span style="font-size: 1.25rem;">💳</span>
+              Point of Sale Integration
+            </h3>
+          </div>
+          <div class="collapsible-content">
+            <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Connect your POS system for seamless order management</p>
+            <div class="alert alert-info" style="text-align: center; padding: 3rem 2rem;">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">🚧</div>
+              <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: 600;">Under Development</h3>
+              <p style="margin: 0; color: #6b7280;">Point of Sale integration features are currently being developed and will be available soon.</p>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Housekeeping Tab -->
+      <div class="tab-content" data-tab-content="housekeeping">
         <div class="section-card">
           <div class="section-header">
             <div class="section-header-info">
-              <h2 class="section-title">PWA Manifest</h2>
-              <p>Configure your Progressive Web App settings.</p>
+              <h2 class="section-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.75rem;">🧹</span>
+                Image Housekeeping
+              </h2>
+              <p>Manage your image library - identify and remove unused images</p>
             </div>
-            <button class="btn btn-secondary" id="discardManifest" onclick="UpdateUI.discardAllDrafts('manifest')" style="display: none;">🔄 Discard All</button>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" onclick="scanImageUsage()">🔍 Scan Images</button>
+              <button class="btn btn-danger" id="deleteSelectedBtn" onclick="deleteSelectedImages()" style="display: none;">🗑️ Delete Selected</button>
+            </div>
           </div>
 
-          <div id="manifestForm">
-            <div class="loading">Loading manifest...</div>
+          <div class="section-body">
+            <div id="housekeepingContent">
+              <div class="alert alert-info" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+                <p style="margin: 0; font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Ready to Scan</p>
+                <p style="margin: 0; color: #6b7280;">Click "🔍 Scan Images" to analyze your image library and find unused images.</p>
+              </div>
+            </div>
+
+            <!-- Image Usage Results (populated by JavaScript) -->
+            <div id="imageUsageResults" style="display: none;">
+              <!-- Statistics Summary -->
+              <div class="grid-2" style="margin-bottom: 2rem;">
+                <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                  <div style="font-size: 2rem; font-weight: 700;" id="totalImagesCount">0</div>
+                  <div style="opacity: 0.9;">Total Images</div>
+                </div>
+                <div style="padding: 1.5rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; color: white;">
+                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+                  <div style="font-size: 2rem; font-weight: 700;" id="unusedImagesCount">0</div>
+                  <div style="opacity: 0.9;">Unused Images</div>
+                </div>
+              </div>
+
+              <!-- Unused Images Section -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" onclick="toggleSection(this)">
+                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="collapse-icon">▼</span>
+                    <span style="font-size: 1.25rem;">⚠️</span>
+                    Unused Images (<span id="unusedCount">0</span>)
+                  </h3>
+                </div>
+                <div class="collapsible-content">
+                  <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">These images are not currently used in menu items, advertisements, or home page. Select images to flag for deletion.</p>
+                  
+                  <div style="margin-bottom: 1rem;">
+                    <label class="checkbox-label">
+                      <input type="checkbox" id="selectAllUnused" onchange="toggleSelectAllUnused()">
+                      <span style="font-weight: 600;">Select All Unused Images</span>
+                    </label>
+                  </div>
+
+                  <div id="unusedImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                    <!-- Unused images will be displayed here -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Used Images Section -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" onclick="toggleSection(this)">
+                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="collapse-icon">▼</span>
+                    <span style="font-size: 1.25rem;">✅</span>
+                    Used Images (<span id="usedCount">0</span>)
+                  </h3>
+                </div>
+                <div class="collapsible-content">
+                  <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">These images are currently in use and should not be deleted.</p>
+                  <div id="usedImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                    <!-- Used images will be displayed here -->
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -354,9 +728,10 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
             <select class="form-select" id="itemCategorySelect" required></select>
           </div>
           
-          <div class="form-group">
+          <div class="form-group" style="display: none;">
             <label class="form-label">Weight (display order)</label>
             <input type="number" class="form-input" id="itemWeight" min="0" value="0">
+            <small class="form-helper">Use â†‘â†“ buttons to reorder items</small>
           </div>
         </div>
         
@@ -385,7 +760,7 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
         <button type="button" class="btn btn-sm btn-secondary" onclick="addImageEntry()">+ Add Another Image</button>
         
         <!-- Taxonomies -->
-        <h4 class="form-section-title">🏷️ Classifications</h4>
+        <h4 class="form-section-title">Classifications</h4>
         
         <div class="form-group">
           <label class="form-label">Tags</label>
@@ -424,7 +799,7 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
         </div>
         
         <!-- Side Categories Section -->
-        <h4 class="form-section-title">🍱 Side Categories (Optional)</h4>
+        <h4 class="form-section-title">Side Categories (Optional)</h4>
         <p class="form-helper">For combo items that allow customers to choose sides</p>
         
         <div id="sideCategoriesContainer"></div>
@@ -490,6 +865,12 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
         </div>
         
         <div class="form-group">
+          <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()" style="width: 100%;">
+            📍 Use My Current Location
+          </button>
+        </div>
+        
+        <div class="form-group">
           <label class="form-label">Subcategories (comma separated)</label>
           <input type="text" class="form-input" id="locationSubcategories" placeholder="Restaurant, Bar">
         </div>
@@ -515,85 +896,70 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
           </select>
         </div>
         
-        <div id="openingHoursDaysContainer">
-          <div class="hours-day-section" data-day="mon">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Monday</h5>
-              <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('mon')">+ Add Entry</button>
-            </div>
-            <div class="hours-entries-container" id="hoursEntries_mon"></div>
+        <div id="openingHoursTimeline" style="background: white; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #e5e7eb; max-height: 80vh; overflow-y: auto;">
+          <!-- Continuous Weekly Timeline -->
+          <div class="weekly-timeline">
+            <!-- Quick actions -->
+            <div class="timeline-actions" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm btn-danger" onclick="clearAllTimeBlocks()">Clear All</button>
           </div>
           
-          <div class="hours-day-section" data-day="tue">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Tuesday</h5>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('tue', 'mon')">↑ Copy Monday</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('tue')">+ Add Entry</button>
-              </div>
-            </div>
-            <div class="hours-entries-container" id="hoursEntries_tue"></div>
+            <!-- Continuous timeline - 7 days vertically stacked (repeats 3x) -->
+            <div class="continuous-week-grid" style="display: grid; grid-template-columns: 80px 1fr; background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+              <!-- Left: Day labels repeated 3 times (infinite loop effect) -->
+              <div class="day-labels-column" style="background: #f9fafb; border-right: 2px solid #e5e7eb;">
+                <!-- Loop 1 -->
+                <div class="day-header" style="background: #ef4444; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">📝´ MON</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f97316; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">TUE</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f59e0b; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">WED</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #10b981; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">THU</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #3b82f6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">FRI</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SAT</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #ec4899; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SUN</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                
+                <!-- Loop 2 (continues seamlessly) -->
+                <div class="day-header" style="background: #ef4444; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white; border-top: 3px dashed rgba(59, 130, 246, 0.3);">📝´ MON</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f97316; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">TUE</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f59e0b; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">WED</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #10b981; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">THU</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #3b82f6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">FRI</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SAT</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #ec4899; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SUN</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                
+                <!-- Loop 3 (continues seamlessly) -->
+                <div class="day-header" style="background: #ef4444; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white; border-top: 3px dashed rgba(59, 130, 246, 0.3);">📝´ MON</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f97316; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">TUE</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f59e0b; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">WED</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #10b981; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">THU</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #3b82f6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">FRI</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SAT</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #ec4899; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SUN</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
           </div>
           
-          <div class="hours-day-section" data-day="wed">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Wednesday</h5>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('wed', 'tue')">↑ Copy Tuesday</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('wed')">+ Add Entry</button>
+              <!-- Right: Time blocks for entire week (repeats 3 times for infinite feel) -->
+              <div class="week-track" onclick="addTimeBlockAtClick(event)" style="position: relative; background: white; cursor: crosshair; min-height: 15876px;">
+                <!-- 7 days Ã— 24 hours Ã— 30px Ã— 3 loops = 15,876px total height -->
+                <div class="time-blocks-container" id="timeBlocks_all" style="position: relative; height: 15876px;">
+                  <!-- Main loop (Loop 2 - middle, interactive) -->
+                  <div id="timeBlocks_mon" class="day-blocks" data-day="mon" data-offset="5292"></div>
+                  <div id="timeBlocks_tue" class="day-blocks" data-day="tue" data-offset="6048"></div>
+                  <div id="timeBlocks_wed" class="day-blocks" data-day="wed" data-offset="6804"></div>
+                  <div id="timeBlocks_thu" class="day-blocks" data-day="thu" data-offset="7560"></div>
+                  <div id="timeBlocks_fri" class="day-blocks" data-day="fri" data-offset="8316"></div>
+                  <div id="timeBlocks_sat" class="day-blocks" data-day="sat" data-offset="9072"></div>
+                  <div id="timeBlocks_sun" class="day-blocks" data-day="sun" data-offset="9828"></div>
+                  <!-- Loop dividers (visual markers) -->
+                  <div class="week-loop-divider" style="position: absolute; left: 0; right: 0; top: 5292px; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); opacity: 0.3;"></div>
+                  <div class="week-loop-divider" style="position: absolute; left: 0; right: 0; top: 10584px; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); opacity: 0.3;"></div>
               </div>
             </div>
-            <div class="hours-entries-container" id="hoursEntries_wed"></div>
-          </div>
-          
-          <div class="hours-day-section" data-day="thu">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Thursday</h5>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('thu', 'wed')">↑ Copy Wednesday</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('thu')">+ Add Entry</button>
               </div>
-            </div>
-            <div class="hours-entries-container" id="hoursEntries_thu"></div>
-          </div>
-          
-          <div class="hours-day-section" data-day="fri">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Friday</h5>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('fri', 'thu')">↑ Copy Thursday</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('fri')">+ Add Entry</button>
-              </div>
-            </div>
-            <div class="hours-entries-container" id="hoursEntries_fri"></div>
-          </div>
-          
-          <div class="hours-day-section" data-day="sat">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Saturday</h5>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('sat', 'fri')">↑ Copy Friday</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('sat')">+ Add Entry</button>
-              </div>
-            </div>
-            <div class="hours-entries-container" id="hoursEntries_sat"></div>
-          </div>
-          
-          <div class="hours-day-section" data-day="sun">
-            <div class="hours-day-header">
-              <h5 class="form-subsection-title">Sunday</h5>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" onclick="copyFromPreviousDay('sun', 'sat')">↑ Copy Saturday</button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="addHoursEntry('sun')">+ Add Entry</button>
-              </div>
-            </div>
-            <div class="hours-entries-container" id="hoursEntries_sun"></div>
           </div>
         </div>
         
         <div class="modal-form-actions">
           <button type="submit" class="btn btn-success">💾 Save Location</button>
-          <button type="button" class="btn btn-danger" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">🗑️ Delete Location</button>
+          <button type="button" class="btn btn-danger" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">🗑️ Delete Location</button>
           <button type="button" class="btn btn-secondary" onclick="closeLocationModal()">Cancel</button>
         </div>
       </form>
@@ -625,9 +991,10 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
           <input type="url" class="form-input" id="adLink" placeholder="/specials/your-special/">
         </div>
         
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
           <label class="form-label">Weight (display order)</label>
           <input type="number" class="form-input" id="adWeight" min="0" value="1">
+          <small class="form-helper">Use â†‘â†“ buttons to reorder advertisements</small>
         </div>
         
         <div class="form-group">
@@ -638,20 +1005,65 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
         </div>
         
         <div class="form-group">
-          <label class="form-label">Days of Week (comma separated)</label>
-          <input type="text" class="form-input" id="adDaysOfWeek" placeholder="Monday, Wednesday, Friday">
-          <small class="form-helper">Leave empty for all days</small>
+          <label class="form-label">Days of Week</label>
+          <div id="adDaysOfWeekContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Monday">
+              <span>Monday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Tuesday">
+              <span>Tuesday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Wednesday">
+              <span>Wednesday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Thursday">
+              <span>Thursday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Friday">
+              <span>Friday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Saturday">
+              <span>Saturday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Sunday">
+              <span>Sunday</span>
+            </label>
+          </div>
+          <small class="form-helper">Leave unchecked for all days</small>
         </div>
         
         <div class="form-group">
-          <label class="form-label">Locations (comma separated)</label>
-          <input type="text" class="form-input" id="adLocations" placeholder="Rodney Rd, Southern Main Road">
-          <small class="form-helper">Leave empty for all locations</small>
+          <label class="form-label">Locations</label>
+          <div id="adLocationsContainer" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+            <!-- Populated dynamically from published locations -->
+          </div>
+          <small class="form-helper">Leave unchecked for all locations</small>
         </div>
         
         <div class="form-group">
           <label class="form-label">Image</label>
-          <input type="file" class="form-input" id="adImage" accept="image/*">
+          <input type="hidden" id="adImageCurrent">
+          <input type="file" class="form-input" id="adImage" accept="image/*" style="display: none;">
+          
+          <!-- Current Image Preview -->
+          <div id="adImagePreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
+            <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0; font-weight: 600;">Current Image:</p>
+            <img id="adImagePreviewImg" src="" alt="Advertisement image" style="max-width: 100%; max-height: 200px; border-radius: 4px; display: block; margin: 0 auto;">
+            <p id="adImagePath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; word-break: break-all;"></p>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="selectAdImageFromLibrary()" style="flex: 1;">📁 Choose from Library</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('adImage').click()" style="flex: 1;">📤 Upload New Image</button>
+          </div>
+          <small class="form-helper">Accepts: JPEG, PNG, WEBP, GIF</small>
         </div>
         
         <div class="modal-form-actions">
@@ -696,9 +1108,10 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
           </details>
         </div>
         
-        <div class="form-group">
+        <div class="form-group" style="display: none;">
           <label class="form-label">Weight (display order)</label>
           <input type="number" class="form-input" id="categoryWeight" min="0" value="0">
+          <small class="form-helper">Use â†‘â†“ buttons to reorder categories</small>
         </div>
         
         <h3 class="form-section-title">🎨 Landing Page</h3>
@@ -753,6 +1166,52 @@ window.CLIENT_ID = "{{ site.Params.content.clientId }}";
       </form>
     </div>
   </div>
+
+  <!-- Image Library Modal -->
+  <div class="modal" id="imageLibraryModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.75rem;">📁</span>
+            Select Images from Library
+          </h3>
+                <p style="margin: 0.5rem 0 0 0; font-size: x-small; color: #6b7280;">Click images to select, click the checkbox or image again to deselect</p>
+        </div>
+        <button class="btn-close" onclick="closeImageLibraryModal()">&times;</button>
+      </div>
+      
+      <div style="padding: 1.25rem; border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+        <input type="text" class="form-input" id="imageSearchInput" placeholder="🔍 Search images by filename..." style="margin: 0;">
+      </div>
+      
+      <div id="imageLibraryGrid" style="overflow-y: auto; padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.25rem; background: #f9fafb; min-height: 400px; max-height: 60vh;">
+        <!-- Images will be loaded here -->
+      </div>
+      
+      <div class="modal-form-actions">
+        <div style="text-align: left;">
+          <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+            <span id="imageCount"></span> images available
+          </p>
+          <p style="margin: 0; color: #3b82f6; font-size: 0.875rem; font-weight: 600; margin-top: 0.25rem;">
+            <span id="selectedImageCount">0 selected</span>
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeImageLibraryModal()">Cancel</button>
+          <button type="button" id="selectImagesBtn" class="btn btn-primary" onclick="HomePageManager.selectImageFromLibrary()" disabled style="opacity: 0.5; cursor: not-allowed;">
+            Select Images
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Inputs for Upload -->
+  <input type="file" id="heroImageUploadInput" accept="image/*" style="display: none;">
+  <input type="file" id="galleryImageUploadInput" accept="image/*" style="display: none;">
+  <input type="file" id="tourImageUploadInput" accept="image/*" style="display: none;">
 
   
   <script src="{{ site.BaseURL }}js/auth-client.js" defer></script>

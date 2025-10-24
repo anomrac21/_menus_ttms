@@ -929,6 +929,9 @@ const UpdateUI = {
    * Save location draft to localStorage
    */
   saveDraftLocation(locationData) {
+    console.log('💾 Saving draft location:', locationData);
+    console.log('   Opening hours:', locationData.opening_hours);
+    
     const draftsJson = localStorage.getItem(this.storageKeys.draftLocations) || '{}';
     const drafts = JSON.parse(draftsJson);
     
@@ -939,7 +942,15 @@ const UpdateUI = {
       _draftSavedAt: new Date().toISOString(),
     };
     
+    console.log('   Storage key:', this.storageKeys.draftLocations);
+    console.log('   Saving to localStorage:', drafts);
+    
     localStorage.setItem(this.storageKeys.draftLocations, JSON.stringify(drafts));
+    
+    // Verify it was saved
+    const verification = localStorage.getItem(this.storageKeys.draftLocations);
+    console.log('   ✅ Verified localStorage content:', verification);
+    
     this.markPendingChanges();
     this.updateTabActionButtons();
   },
@@ -2878,15 +2889,25 @@ const UpdateUI = {
       const isCollapsed = this.isLocationCollapsed(index);
       const position = index + 1;
       
-      // Build opening hours badges
-      const hoursBadges = [];
+      // Build opening hours timeline
+      let hoursTimeline = '';
       if (loc.opening_hours && loc.opening_hours.mode) {
         if (loc.opening_hours.mode === 'AlwaysOpen') {
-          hoursBadges.push('<span class="badge badge-secondary">🕐 24/7 Open</span>');
+          hoursTimeline = `
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #22c55e;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">🕐 Opening Hours</div>
+              <div style="font-size: 0.8rem; color: #16a34a; font-weight: 500;">24/7 Open</div>
+            </div>
+          `;
         } else if (loc.opening_hours.mode === 'AlwaysClosed') {
-          hoursBadges.push('<span class="badge badge-secondary">🕐 Closed</span>');
+          hoursTimeline = `
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: #fef2f2; border-radius: 6px; border-left: 3px solid #ef4444;">
+              <div style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">🕐 Opening Hours</div>
+              <div style="font-size: 0.8rem; color: #dc2626; font-weight: 500;">Closed</div>
+            </div>
+          `;
         } else {
-          // Show hours for each day
+          // Show hours for each day in visual timeline format
           const dayNames = {
             mon: 'Mon',
             tue: 'Tue',
@@ -2898,15 +2919,182 @@ const UpdateUI = {
           };
           
           const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-          days.forEach(day => {
+          const timelineRows = [];
+          
+          // First pass: detect cross-day blocks and store them
+          const crossDayBlocks = {}; // day -> { openTime, closeTime }
+          const nextDayContinuations = {}; // nextDay -> { closeTime } (for the overflow portion)
+          
+          console.log(`🔍 Checking for cross-day blocks in location "${loc.name}":`);
+          days.forEach((day, dayIndex) => {
             const hours = loc.opening_hours[day];
+            console.log(`  ${day}:`, hours);
+            
+            if (hours && hours.length > 0) {
+              const sortedHours = [...hours].sort((a, b) => a.time.localeCompare(b.time));
+              const lastEntry = sortedHours[sortedHours.length - 1];
+              
+              console.log(`    Last entry: ${lastEntry.type} ${lastEntry.time}`);
+              
+              // Check if this day ends with unpaired Open
+              if (lastEntry.type === 'Open') {
+                const nextDayIndex = (dayIndex + 1) % 7;
+                const nextDay = days[nextDayIndex];
+                const nextDayHours = loc.opening_hours[nextDay];
+                
+                console.log(`    Checking next day (${nextDay}):`, nextDayHours);
+                
+                if (nextDayHours && nextDayHours.length > 0) {
+                  const nextSorted = [...nextDayHours].sort((a, b) => a.time.localeCompare(b.time));
+                  console.log(`    Next day first entry: ${nextSorted[0].type} ${nextSorted[0].time}`);
+                  
+                  if (nextSorted[0].type === 'Close') {
+                    // This is a cross-day block!
+                    crossDayBlocks[day] = {
+                      openTime: lastEntry.time,
+                      closeTime: nextSorted[0].time
+                    };
+                    nextDayContinuations[nextDay] = {
+                      closeTime: nextSorted[0].time
+                    };
+                    console.log(`    ✅ Cross-day block detected: ${day} ${lastEntry.time} → ${nextDay} ${nextSorted[0].time}`);
+                  }
+                }
+              }
+            }
+          });
+          
+          // Second pass: render the timeline
+          days.forEach((day, dayIndex) => {
+            const hours = loc.opening_hours[day];
+            console.log(`📋 Rendering ${day}:`, hours);
+            
+            // Pair up Open/Close times and create visual bars
+            const bars = [];
+            
+            // Check if this day is a continuation from previous day (starts at midnight)
+            if (nextDayContinuations[day]) {
+              console.log(`  Has continuation from previous day:`, nextDayContinuations[day]);
+              const continuation = nextDayContinuations[day];
+              const [closeHour, closeMin] = continuation.closeTime.split(':').map(Number);
+              
+              const endDecimal = closeHour + (closeMin / 60);
+              const width = (endDecimal / 24) * 100;
+              
+              const closeTime = this.formatTimeShort(continuation.closeTime);
+              
+              bars.push({
+                left: 0,
+                width: width,
+                label: `12am-${closeTime}`,
+                isContinuation: true
+              });
+            }
+            
             if (hours && hours.length > 0) {
               // Sort hours by time chronologically
               const sortedHours = [...hours].sort((a, b) => a.time.localeCompare(b.time));
-              const times = sortedHours.map(h => `${h.type === 'Open' ? '🟢' : '🔴'}${h.time}`).join(' ');
-              hoursBadges.push(`<span class="badge badge-secondary">${dayNames[day]}: ${times}</span>`);
+              
+              // Check if this day has a cross-day block (ends with unpaired Open)
+              if (crossDayBlocks[day]) {
+                console.log(`  Has cross-day block:`, crossDayBlocks[day]);
+                const cross = crossDayBlocks[day];
+                const [openHour, openMin] = cross.openTime.split(':').map(Number);
+                const [closeHour, closeMin] = cross.closeTime.split(':').map(Number);
+                
+                const startDecimal = openHour + (openMin / 60);
+                const endDecimal = 24; // Cap at midnight on this day's row
+                
+                const left = (startDecimal / 24) * 100;
+                const width = ((endDecimal - startDecimal) / 24) * 100;
+                
+                const openTime = this.formatTimeShort(cross.openTime);
+                const closeTime = this.formatTimeShort(cross.closeTime);
+                
+                bars.push({
+                  left: left,
+                  width: width,
+                  label: `${openTime}-${closeTime}`
+                });
+              }
+              
+              // Check if first entry is a Close (continuation from previous day) - skip it
+              const skipFirstEntry = sortedHours[0].type === 'Close';
+              console.log(`  Skip first entry: ${skipFirstEntry}, startIndex: ${skipFirstEntry ? 1 : 0}`);
+              const startIndex = skipFirstEntry ? 1 : 0; // Skip first Close if it's a continuation
+              
+              for (let i = startIndex; i < sortedHours.length; i += 2) {
+                if (i + 1 < sortedHours.length) {
+                  const open = sortedHours[i];
+                  const close = sortedHours[i + 1];
+                  
+                  if (open.type === 'Open' && close.type === 'Close') {
+                    // Parse times to get decimal hours
+                    const [openHour, openMin] = open.time.split(':').map(Number);
+                    const [closeHour, closeMin] = close.time.split(':').map(Number);
+                    
+                    let startDecimal = openHour + (openMin / 60);
+                    let endDecimal = closeHour + (closeMin / 60);
+                    
+                    // Handle next-day times (early morning hours after midnight)
+                    if (endDecimal < startDecimal && closeHour < 12) {
+                      endDecimal += 24;
+                    }
+                    
+                    // Calculate position and width as percentage of 24 hours
+                    const left = (startDecimal / 24) * 100;
+                    const width = Math.min(((endDecimal - startDecimal) / 24) * 100, 100 - left); // Cap at 100%
+                    
+                    // Convert to readable format
+                    const openTime = this.formatTimeShort(open.time);
+                    const closeTime = this.formatTimeShort(close.time);
+                    
+                    bars.push({
+                      left: left,
+                      width: width,
+                      label: `${openTime}-${closeTime}`
+                    });
+                  }
+                }
+              }
+              
+              console.log(`  Total bars for ${day}: ${bars.length}`, bars);
+              
+              if (bars.length > 0) {
+                const barHtml = bars.map(bar => {
+                  const gradient = bar.isContinuation 
+                    ? 'linear-gradient(90deg, #60a5fa, #93c5fd)' // Lighter for continuation
+                    : 'linear-gradient(90deg, #3b82f6, #60a5fa)'; // Normal
+                  return `<div style="position: absolute; left: ${bar.left}%; width: ${bar.width}%; height: 100%; background: ${gradient}; border-radius: 3px;" title="${bar.label}"></div>`;
+                }).join('');
+                
+                // Only show labels for non-continuation bars
+                const labelHtml = bars.filter(bar => !bar.isContinuation).map(bar => bar.label).join(', ');
+                
+                timelineRows.push(`
+                  <div style="display: grid; grid-template-columns: 45px 1fr 120px; gap: 8px; align-items: center; margin-bottom: 6px;">
+                    <span style="font-weight: 600; color: #374151; font-size: 0.75rem;">${dayNames[day]}</span>
+                    <div style="position: relative; height: 20px; background: #e5e7eb; border-radius: 3px;">
+                      ${barHtml}
+                    </div>
+                    <span style="font-size: 0.7rem; color: #6b7280; text-align: right;">${labelHtml}</span>
+                  </div>
+                `);
+                console.log(`  ✅ Added timeline row for ${day}`);
+              } else {
+                console.log(`  ⚠️ Skipping ${day} - no bars to display`);
+              }
             }
           });
+          
+          if (timelineRows.length > 0) {
+            hoursTimeline = `
+              <div style="margin-top: 0.75rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                <div style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">🕐 Opening Hours</div>
+                ${timelineRows.join('')}
+              </div>
+            `;
+          }
         }
       }
       
@@ -2942,8 +3130,9 @@ const UpdateUI = {
             ${loc.subcategories?.map(cat => `<span class="badge badge-primary">${this.escapeHtml(cat)}</span>`).join('') || ''}
             ${loc.orderingtables?.map(table => `<span class="badge badge-info">${this.escapeHtml(table)}</span>`).join('') || ''}
             ${deliveryLinks.length > 0 ? `<span class="badge badge-warning">${deliveryLinks.join(' ')}</span>` : ''}
-            ${hoursBadges.join('')}
           </div>
+          
+          ${hoursTimeline}
           
           <div class="menu-item-actions">
             ${loc._isDeleted ? `
@@ -3733,7 +3922,7 @@ const UpdateUI = {
       return;
     }
     
-    const confirmed = confirm(`Discard ALL ${totalCount} pending changes?\n\nThis will:\n- Remove all draft menu items\n- Remove all draft advertisements\n- Reset all colors, config, and manifest changes\n\nThis action cannot be undone!`);
+    const confirmed = confirm(`Discard ALL ${totalCount} pending changes?\n\nThis will:\n- Remove all draft menu items and categories\n- Remove all draft advertisements\n- Remove all draft locations\n- Reset all colors, config, and manifest changes\n- Reset all branding changes\n- Clear all collapsed states\n\nThis action cannot be undone!`);
     
     if (!confirmed) return;
     
@@ -3753,6 +3942,20 @@ const UpdateUI = {
       localStorage.removeItem(this.storageKeys.draftConfig);
       localStorage.removeItem(this.storageKeys.draftManifest);
       
+      // Clear category landing page drafts
+      const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
+      categoryLandingDrafts.forEach(key => localStorage.removeItem(key));
+      
+      // Clear any legacy menudata drafts
+      localStorage.removeItem('ttmenus_draft_menudata');
+      
+      // Clear collapsed states
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('ttmenus_collapsed_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
       this.showSuccess('All pending changes discarded');
       
       // Reload all data
@@ -3760,12 +3963,22 @@ const UpdateUI = {
       await this.loadAdvertisements();
       await this.loadLocations();
       await this.loadBrandingImages();
+      await this.loadColors();
+      
+      // Reload manifest and config if needed
+      if (typeof HomePageManager !== 'undefined' && HomePageManager.loadManifestSettings) {
+        await HomePageManager.loadManifestSettings();
+        HomePageManager.populateManifestForm();
+      }
       
       // Recheck pending changes
       this.checkPendingChanges();
       
       // Re-render pending summary
       this.renderPendingSummary();
+      
+      // Update all tab action buttons
+      this.updateTabActionButtons();
       
     } catch (error) {
       console.error('Error discarding all drafts:', error);
@@ -4782,6 +4995,35 @@ ${body}`;
     div.textContent = text;
     return div.innerHTML;
   },
+  
+  // Format HH:MM time to readable 12-hour format
+  formatTimeShort(time) {
+    if (!time) return '';
+    
+    const [hourStr, minStr] = time.split(':');
+    const hour = parseInt(hourStr);
+    const min = parseInt(minStr) || 0;
+    
+    let displayHour = hour;
+    let period = 'am';
+    
+    if (hour === 0) {
+      displayHour = 12;
+    } else if (hour === 12) {
+      displayHour = 12;
+      period = 'pm';
+    } else if (hour > 12) {
+      displayHour = hour - 12;
+      period = 'pm';
+    }
+    
+    // Only show minutes if not :00
+    if (min === 0) {
+      return `${displayHour}${period}`;
+    } else {
+      return `${displayHour}:${String(min).padStart(2, '0')}${period}`;
+    }
+  },
 
   /**
    * Helper: Normalize image path for display (add leading / if needed)
@@ -4852,7 +5094,7 @@ ${body}`;
       notificationContainer.id = 'notification-container';
       notificationContainer.style.cssText = `
         position: fixed;
-        top: 8rem;
+        top: 4rem;
         right: 10px;
         left: 10px;
         z-index: 9999;
@@ -5292,8 +5534,36 @@ function openLocationModal(index = null) {
   const title = document.getElementById('locationModalTitle');
   const deleteBtn = document.getElementById('deleteLocationBtn');
   
-  // Clear all hours entries first
-  clearAllHoursEntries();
+  // Clear time blocks WITHOUT confirmation and ensure all containers exist with correct Loop 2 offsets
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const weekHeight = 5292; // One full week (7 days × 756px)
+  
+  days.forEach((day, dayIndex) => {
+    let container = document.getElementById(`timeBlocks_${day}`);
+    if (container) {
+      // Clear existing blocks
+      container.innerHTML = '';
+      // Ensure offset is correct for Loop 2 (middle loop)
+      container.dataset.offset = weekHeight + (dayIndex * 756);
+      console.log(`✅ Ensured ${day} container has Loop 2 offset: ${container.dataset.offset}`);
+    } else {
+      // Create container if it doesn't exist
+      container = document.createElement('div');
+      container.id = `timeBlocks_${day}`;
+      container.className = 'day-blocks';
+      container.dataset.day = day;
+      container.dataset.offset = weekHeight + (dayIndex * 756); // Loop 2 offset
+      
+      const allContainer = document.getElementById('timeBlocks_all');
+      if (allContainer) {
+        allContainer.appendChild(container);
+        console.log(`✅ Created ${day} container with Loop 2 offset: ${container.dataset.offset}`);
+      }
+    }
+  });
+  
+  // Initialize timeline styles
+  initTimelineStyles();
   
   if (index !== null) {
     title.textContent = 'Edit Location';
@@ -5311,31 +5581,84 @@ function openLocationModal(index = null) {
       document.getElementById('locationOrderingTables').value = loc.orderingtables ? loc.orderingtables.join(', ') : '';
       document.getElementById('locationFoodDrop').value = loc.delivery?.fooddrop || '';
       
-      // Load opening hours
+      // Load opening hours into timeline UI
       if (loc.opening_hours) {
         document.getElementById('locationHoursMode').value = loc.opening_hours.mode || 'Auto';
         
+        console.log('📅 Loading opening hours:', loc.opening_hours);
+        
         const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-        days.forEach(day => {
+        days.forEach((day, dayIdx) => {
           const hours = loc.opening_hours[day];
           if (hours && hours.length > 0) {
-            hours.forEach(entry => {
-              addHoursEntry(day, entry.type, entry.time);
-            });
-          } else {
-            // Add default Open and Close entries for days with no data
-            addHoursEntry(day, 'Open', '11:00');
-            addHoursEntry(day, 'Close', '22:00');
+            console.log(`  Loading ${day}:`, hours);
+            
+            // Check if first entry is an unpaired Close (continuation from previous day)
+            let startIdx = 0;
+            if (hours[0].type === 'Close') {
+              // This is a continuation from previous day - find the matching Open on prev day
+              const prevDayIdx = (dayIdx - 1 + 7) % 7;
+              const prevDay = days[prevDayIdx];
+              const prevDayHours = loc.opening_hours[prevDay];
+              
+              if (prevDayHours && prevDayHours.length > 0) {
+                // Find last unpaired Open on previous day
+                const lastEntry = prevDayHours[prevDayHours.length - 1];
+                if (lastEntry.type === 'Open') {
+                  // Merge: previous day's open extends to this day's close
+                  const [openHourStr, openMinStr] = lastEntry.time.split(':');
+                  const openHour = parseInt(openHourStr);
+                  const openMin = parseInt(openMinStr) || 0;
+                  const startTime = openHour + (openMin / 60);
+                  
+                  const [closeHourStr, closeMinStr] = hours[0].time.split(':');
+                  const closeHour = parseInt(closeHourStr);
+                  const closeMin = parseInt(closeMinStr) || 0;
+                  const endTime = 24 + closeHour + (closeMin / 60); // Add 24 for next day
+                  
+                  console.log(`    Detected cross-day block from ${prevDay}: ${lastEntry.time} - ${hours[0].time} (+1d) → ${startTime} - ${endTime}`);
+                  
+                  // Add merged block to PREVIOUS day
+                  addTimeBlock(prevDay, startTime, endTime);
+                }
+              }
+              
+              startIdx = 1; // Skip the Close entry we just processed
+            }
+            
+            // Convert remaining Open/Close pairs to time blocks
+            const remainingHours = hours.slice(startIdx);
+            const openTimes = remainingHours.filter(h => h.type === 'Open').map(h => h.time);
+            const closeTimes = remainingHours.filter(h => h.type === 'Close').map(h => h.time);
+            
+            // Pair up opens and closes
+            for (let i = 0; i < Math.min(openTimes.length, closeTimes.length); i++) {
+              const [openHourStr, openMinStr] = openTimes[i].split(':');
+              const [closeHourStr, closeMinStr] = closeTimes[i].split(':');
+              
+              const openHour = parseInt(openHourStr);
+              const openMin = parseInt(openMinStr) || 0;
+              const closeHour = parseInt(closeHourStr);
+              const closeMin = parseInt(closeMinStr) || 0;
+              
+              // Convert to decimal hours (e.g., 11:30 = 11.5)
+              let startTime = openHour + (openMin / 60);
+              let endTime = closeHour + (closeMin / 60);
+              
+              console.log(`    Adding block: ${openTimes[i]} - ${closeTimes[i]} (${startTime} - ${endTime})`);
+              addTimeBlock(day, startTime, endTime);
+            }
+            
+            // Check if last entry is an unpaired Open (continues to next day)
+            if (remainingHours.length > 0 && remainingHours[remainingHours.length - 1].type === 'Open') {
+              // This will be handled when we process the next day (which should start with Close)
+              console.log(`    Note: ${day} ends with unpaired Open - continues to next day`);
+            }
           }
-        });
-      } else {
-        // No hours data, add defaults
-        const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-        days.forEach(day => {
-          addHoursEntry(day, 'Open', '11:00');
-          addHoursEntry(day, 'Close', '22:00');
+          // Don't add default blocks - leave days empty if no hours
         });
       }
+      // Don't add defaults for new locations either - let user add their own schedule
       
       // Show delete button for existing locations
       deleteBtn.style.display = 'inline-block';
@@ -5345,19 +5668,166 @@ function openLocationModal(index = null) {
     document.getElementById('locationForm').reset();
     document.getElementById('locationIndex').value = '';
     deleteBtn.style.display = 'none';
-    
-    // Add default hours for all days
-    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    days.forEach(day => {
-      addHoursEntry(day, 'Open', '11:00');
-      addHoursEntry(day, 'Close', '22:00');
-    });
+    // No default blocks - user adds their own schedule
   }
   
   modal.classList.add('active');
   
-  // Scroll modal to top
-  modal.scrollTop = 0;
+  // Initialize infinite scroll for timeline
+  setTimeout(() => {
+    setupInfiniteScroll();
+    
+    // Add visual debug markers
+    const weekTrack = document.querySelector('.week-track');
+    if (weekTrack) {
+      // Add marker at Loop 2 Mon start (5292px)
+      const marker = document.createElement('div');
+      marker.style.cssText = `
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 5292px;
+        height: 3px;
+        background: linear-gradient(90deg, lime, yellow, lime);
+        z-index: 5;
+        pointer-events: none;
+      `;
+      marker.title = 'Loop 2 Mon start (5292px)';
+      weekTrack.appendChild(marker);
+      
+      // Add marker at Mon 11am (where first block should be)
+      const marker2 = document.createElement('div');
+      marker2.style.cssText = `
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 5658px;
+        height: 2px;
+        background: cyan;
+        z-index: 5;
+        pointer-events: none;
+      `;
+      marker2.title = 'Mon 11am (5658px)';
+      weekTrack.appendChild(marker2);
+    }
+    
+    // Run diagnostics to verify positions
+    setTimeout(() => {
+      verifyBlockPositions();
+    }, 200);
+  }, 100);
+}
+
+// Setup infinite scroll for the weekly timeline
+function setupInfiniteScroll() {
+  const timeline = document.getElementById('openingHoursTimeline');
+  if (!timeline) return;
+  
+  const weekHeight = 5292; // One week (7 days × 756px)
+  let isScrolling = false;
+  
+  // Start at the middle loop to allow scrolling both directions
+  timeline.scrollTop = weekHeight;
+  
+  timeline.addEventListener('scroll', function() {
+    if (isScrolling) return;
+    
+    const scrollTop = timeline.scrollTop;
+    const buffer = 200; // Trigger very early - just 200px before leaving Loop 2
+    
+    // Scrolled up into Loop 1 (before 5292px)
+    if (scrollTop < weekHeight - buffer) {
+      isScrolling = true;
+      // Jump to same position in loop 2
+      timeline.scrollTop = scrollTop + weekHeight;
+      setTimeout(() => { isScrolling = false; }, 50);
+      console.log(`🔄 Infinite scroll UP: Jumped from ${scrollTop}px to ${scrollTop + weekHeight}px`);
+    }
+    
+    // Scrolled down into Loop 3 (after 10584px)
+    else if (scrollTop > weekHeight * 2 + buffer) {
+      isScrolling = true;
+      // Jump back to same position in loop 2
+      timeline.scrollTop = scrollTop - weekHeight;
+      setTimeout(() => { isScrolling = false; }, 50);
+      console.log(`🔄 Infinite scroll DOWN: Jumped from ${scrollTop}px to ${scrollTop - weekHeight}px`);
+    }
+  });
+  
+  console.log('✅ Infinite scroll initialized - starting at middle loop (5292px)');
+}
+
+// Diagnostic function to verify all block positions
+function verifyBlockPositions() {
+  console.log('🔍 DIAGNOSTIC: Verifying all block positions...\n');
+  
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const expectedOffsets = {
+    'mon': 5292,  // Loop 2
+    'tue': 6048,
+    'wed': 6804,
+    'thu': 7560,
+    'fri': 8316,
+    'sat': 9072,
+    'sun': 9828
+  };
+  
+  days.forEach((day, idx) => {
+    const container = document.getElementById(`timeBlocks_${day}`);
+    if (!container) {
+      console.error(`❌ ${day.toUpperCase()}: Container not found!`);
+      return;
+    }
+    
+    const actualOffset = parseInt(container.dataset.offset);
+    const expectedOffset = expectedOffsets[day];
+    const offsetOK = actualOffset === expectedOffset ? '✅' : '❌';
+    
+    console.log(`${offsetOK} ${day.toUpperCase()}: Container offset = ${actualOffset}px (expected ${expectedOffset}px)`);
+    
+    // Check blocks
+    const blocks = container.querySelectorAll('.time-block:not(.loop-duplicate)');
+    blocks.forEach(block => {
+      const start = parseFloat(block.dataset.start);
+      const end = parseFloat(block.dataset.end);
+      const actualTop = parseInt(block.style.top);
+      const headerHeight = 36;
+      const expectedTop = start < 0 
+        ? (actualOffset - 756 + headerHeight + (start + 24) * 30)
+        : (actualOffset + headerHeight + start * 30);
+      const topOK = Math.abs(actualTop - expectedTop) < 1 ? '✅' : '❌';
+      
+      console.log(`  ${topOK} Block ${block.id}: ${start}h-${end}h, top=${actualTop}px (expected ${expectedTop}px)`);
+    });
+  });
+  
+  console.log('\n📊 Summary:');
+  console.log(`Total containers: ${days.length}`);
+  console.log(`Each day = 36px header + 720px hours (24×30px) = 756px total`);
+  console.log(`Loop 1 range: 0-5292px (duplicates only)`);
+  console.log(`Loop 2 range: 5292-10584px (interactive blocks) ← YOU ARE HERE`);
+  console.log(`Loop 3 range: 10584-15876px (duplicates only)`);
+  
+  // Check actual DOM rendered positions
+  console.log('\n🔬 DOM POSITION CHECK:');
+  const dayLabelsColumn = document.querySelector('.day-labels-column');
+  const weekTrack = document.querySelector('.week-track');
+  
+  if (dayLabelsColumn && weekTrack) {
+    const labelsRect = dayLabelsColumn.getBoundingClientRect();
+    const trackRect = weekTrack.getBoundingClientRect();
+    console.log(`Left column top: ${labelsRect.top}px, Right column top: ${trackRect.top}px`);
+    console.log(`Vertical offset between columns: ${Math.abs(labelsRect.top - trackRect.top)}px ${labelsRect.top === trackRect.top ? '✅' : '❌'}`);
+    
+    // Check first Mon header position in Loop 2
+    const dayHeaders = dayLabelsColumn.querySelectorAll('.day-header');
+    if (dayHeaders.length > 7) {
+      const loop2MonHeader = dayHeaders[7]; // 8th header (Loop 2 Mon)
+      const headerRect = loop2MonHeader.getBoundingClientRect();
+      const relativeTop = headerRect.top - labelsRect.top + dayLabelsColumn.scrollTop;
+      console.log(`Loop 2 Mon header actual position: ${relativeTop}px (expected ~5292px) ${Math.abs(relativeTop - 5292) < 50 ? '✅' : '❌'}`);
+    }
+  }
 }
 
 function closeLocationModal() {
@@ -5506,8 +5976,8 @@ function openAdModal(adId = null) {
   const adLinkInput = document.getElementById('adLink');
   const adWeightInput = document.getElementById('adWeight');
   const adRecurringInput = document.getElementById('adRecurring');
-  const adLocationsInput = document.getElementById('adLocations'); // Text input, not container
-  const adDaysInput = document.getElementById('adDaysOfWeek'); // Text input
+  const adLocationsContainer = document.getElementById('adLocationsContainer'); // Container for location checkboxes
+  const adDaysContainer = document.getElementById('adDaysOfWeekContainer'); // Container for day checkboxes
   const adImageInput = document.getElementById('adImage'); // File input
   const adFormElement = document.getElementById('adForm');
   
@@ -5520,8 +5990,8 @@ function openAdModal(adId = null) {
     'adLink': adLinkInput,
     'adWeight': adWeightInput,
     'adRecurring': adRecurringInput,
-    'adLocations': adLocationsInput,
-    'adDaysOfWeek': adDaysInput,
+    'adLocationsContainer': adLocationsContainer,
+    'adDaysOfWeekContainer': adDaysContainer,
     'adImage': adImageInput,
     'adForm': adFormElement,
   };
@@ -5539,6 +6009,28 @@ function openAdModal(adId = null) {
     return;
   }
   
+  // Populate location checkboxes from published locations
+  adLocationsContainer.innerHTML = '';
+  
+  // Get published locations (not drafts or deleted)
+  const publishedLocations = UpdateUI.state.locations.filter(loc => !loc._isDraft && !loc._isDeleted);
+  
+  if (publishedLocations.length > 0) {
+    publishedLocations.forEach(loc => {
+      const locationName = loc.city || loc.address;
+      const label = document.createElement('label');
+      label.className = 'checkbox-label';
+      label.style.margin = '0';
+      label.innerHTML = `
+        <input type="checkbox" name="adLocations" value="${UpdateUI.escapeHtml(locationName)}">
+        <span>${UpdateUI.escapeHtml(locationName)}</span>
+      `;
+      adLocationsContainer.appendChild(label);
+    });
+  } else {
+    adLocationsContainer.innerHTML = '<p style="color: #6b7280; font-size: 0.875rem; margin: 0;">No locations available. Add locations first.</p>';
+  }
+  
   if (adId) {
     title.textContent = 'Edit Advertisement';
     const ad = UpdateUI.state.advertisements.find(a => a.id === adId);
@@ -5550,23 +6042,27 @@ function openAdModal(adId = null) {
       adWeightInput.value = ad.weight || 1;
       adRecurringInput.checked = ad.recurring || false;
       
-      // Populate days of week as comma-separated text
-      if (ad.daysOfWeek && Array.isArray(ad.daysOfWeek)) {
-        adDaysInput.value = ad.daysOfWeek.join(', ');
-      } else {
-        adDaysInput.value = '';
-      }
+      // Check appropriate days of week checkboxes
+      const daysCheckboxes = document.querySelectorAll('input[name="adDaysOfWeek"]');
+      daysCheckboxes.forEach(checkbox => {
+        checkbox.checked = ad.daysOfWeek && ad.daysOfWeek.includes(checkbox.value);
+      });
       
-      // Populate locations as comma-separated text
-      if (ad.locations && Array.isArray(ad.locations)) {
-        adLocationsInput.value = ad.locations.join(', ');
-      } else {
-        adLocationsInput.value = '';
-      }
+      // Check appropriate location checkboxes
+      const locationsCheckboxes = document.querySelectorAll('input[name="adLocations"]');
+      locationsCheckboxes.forEach(checkbox => {
+        checkbox.checked = ad.locations && ad.locations.includes(checkbox.value);
+      });
       
-      // Store current image in a hidden field for preservation
+      // Store and preview current image
       if (ad.image) {
-        // Create a hidden input to store current image if it doesn't exist
+        // Store in hidden field
+        const adImageCurrent = document.getElementById('adImageCurrent');
+        if (adImageCurrent) {
+          adImageCurrent.value = ad.image;
+        }
+        
+        // Create hidden field for backward compatibility if it doesn't exist
         let currentImageInput = document.getElementById('adCurrentImage');
         if (!currentImageInput) {
           currentImageInput = document.createElement('input');
@@ -5575,6 +6071,24 @@ function openAdModal(adId = null) {
           adFormElement.appendChild(currentImageInput);
         }
         currentImageInput.value = ad.image;
+        
+        // Show preview
+        const preview = document.getElementById('adImagePreview');
+        const previewImg = document.getElementById('adImagePreviewImg');
+        const imagePath = document.getElementById('adImagePath');
+        
+        if (preview && previewImg && imagePath) {
+          const imgSrc = ad.image.startsWith('http') ? ad.image : (ad.image.startsWith('/') ? ad.image : `/${ad.image}`);
+          previewImg.src = imgSrc;
+          imagePath.textContent = ad.image;
+          preview.style.display = 'block';
+        }
+      } else {
+        // Hide preview if no image
+        const preview = document.getElementById('adImagePreview');
+        if (preview) {
+          preview.style.display = 'none';
+        }
       }
       
       console.log('✅ Advertisement data populated:', {
@@ -5590,14 +6104,50 @@ function openAdModal(adId = null) {
     title.textContent = 'Add Advertisement';
     adFormElement.reset();
     adIdInput.value = 'new_ad_' + Date.now();
-    adDaysInput.value = '';
-    adLocationsInput.value = '';
     
-    // Remove or clear current image input for new ads
+    // Uncheck all checkboxes for new ad
+    document.querySelectorAll('input[name="adDaysOfWeek"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[name="adLocations"]').forEach(cb => cb.checked = false);
+    
+    // Hide image preview for new ads
+    const preview = document.getElementById('adImagePreview');
+    if (preview) {
+      preview.style.display = 'none';
+    }
+    
+    // Clear hidden fields
     const currentImageInput = document.getElementById('adCurrentImage');
     if (currentImageInput) {
       currentImageInput.value = '';
     }
+    const adImageCurrent = document.getElementById('adImageCurrent');
+    if (adImageCurrent) {
+      adImageCurrent.value = '';
+    }
+  }
+  
+  // Setup file input change handler for preview
+  const fileInput = document.getElementById('adImage');
+  if (fileInput) {
+    fileInput.onchange = function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const preview = document.getElementById('adImagePreview');
+        const previewImg = document.getElementById('adImagePreviewImg');
+        const imagePath = document.getElementById('adImagePath');
+        
+        if (preview && previewImg && imagePath) {
+          // Show preview of new upload
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            imagePath.textContent = `New upload: ${file.name}`;
+            preview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    };
   }
   
   modal.classList.add('active');
@@ -5607,7 +6157,102 @@ function openAdModal(adId = null) {
 }
 
 function closeAdModal() {
-  document.getElementById('adModal').classList.remove('active');
+  const modal = document.getElementById('adModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  
+  // Clear file input to prevent issues on next open
+  const fileInput = document.getElementById('adImage');
+  if (fileInput) {
+    fileInput.value = '';
+  }
+  
+  // Hide preview
+  const preview = document.getElementById('adImagePreview');
+  if (preview) {
+    preview.style.display = 'none';
+  }
+}
+
+function selectAdImageFromLibrary() {
+  // Open the image library modal (reuse HomePageManager's modal)
+  const modal = document.getElementById('imageLibraryModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    
+    // Load images if not already loaded
+    if (HomePageManager && HomePageManager.availableImages.length > 0) {
+      renderAdImageLibrary();
+    } else if (window.hugoStaticImages) {
+      HomePageManager.availableImages = window.hugoStaticImages;
+      renderAdImageLibrary();
+    }
+  }
+}
+
+function renderAdImageLibrary() {
+  const grid = document.getElementById('imageLibraryGrid');
+  const searchInput = document.getElementById('imageSearchInput');
+  
+  // Clear and setup
+  grid.innerHTML = '';
+  const images = HomePageManager.availableImages;
+  
+  // Render images as clickable cards
+  images.forEach(imagePath => {
+    const filename = imagePath.split('/').pop();
+    const card = document.createElement('div');
+    card.className = 'image-select-card';
+    card.style.cssText = 'border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; background: white; display: flex; flex-direction: column; height: fit-content;';
+    card.innerHTML = `
+      <img src="/${imagePath}" alt="${filename}" style="width: 100%; height: 140px; object-fit: cover;">
+      <div style="padding: 0.5rem; background: white;">
+        <p style="font-size: 0.8rem; color: #111827; font-weight: 600; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</p>
+      </div>
+    `;
+    
+    card.onclick = () => {
+      selectAdImageFromCard(imagePath);
+    };
+    
+    grid.appendChild(card);
+  });
+  
+  // Setup search
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      const search = e.target.value.toLowerCase();
+      const cards = grid.querySelectorAll('.image-select-card');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(search) ? '' : 'none';
+      });
+    };
+  }
+  
+  // Update count
+  const countEl = document.getElementById('imageCount');
+  if (countEl) countEl.textContent = images.length;
+}
+
+function selectAdImageFromCard(imagePath) {
+  // Update the hidden input
+  document.getElementById('adImageCurrent').value = imagePath;
+  
+  // Update preview
+  const preview = document.getElementById('adImagePreview');
+  const previewImg = document.getElementById('adImagePreviewImg');
+  const pathText = document.getElementById('adImagePath');
+  
+  if (preview && previewImg && pathText) {
+    previewImg.src = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+    pathText.textContent = imagePath;
+    preview.style.display = 'block';
+  }
+  
+  // Close modal
+  document.getElementById('imageLibraryModal').style.display = 'none';
 }
 
 async function saveAd(event) {
@@ -5616,13 +6261,13 @@ async function saveAd(event) {
   const adId = document.getElementById('adId').value;
   const isNew = adId.startsWith('new_ad_');
   
-  // Parse comma-separated days of week from text input
-  const daysInput = document.getElementById('adDaysOfWeek').value.trim();
-  const daysOfWeek = daysInput ? daysInput.split(',').map(d => d.trim()).filter(d => d) : [];
+  // Collect checked days of week from checkboxes
+  const daysOfWeek = Array.from(document.querySelectorAll('input[name="adDaysOfWeek"]:checked'))
+    .map(checkbox => checkbox.value);
   
-  // Parse comma-separated locations from text input
-  const locationsInput = document.getElementById('adLocations').value.trim();
-  const locations = locationsInput ? locationsInput.split(',').map(l => l.trim()).filter(l => l) : [];
+  // Collect checked locations from checkboxes
+  const locations = Array.from(document.querySelectorAll('input[name="adLocations"]:checked'))
+    .map(checkbox => checkbox.value);
   
   const adData = {
     id: adId,
@@ -5638,7 +6283,7 @@ async function saveAd(event) {
   
   // Handle image upload
   const imageInput = document.getElementById('adImage');
-  const currentImageInput = document.getElementById('adCurrentImage');
+  const adImageCurrent = document.getElementById('adImageCurrent');
   
   if (imageInput && imageInput.files && imageInput.files[0]) {
     // New image uploaded - will be handled on publish
@@ -5652,9 +6297,9 @@ async function saveAd(event) {
       sessionStorage.setItem(`ad_image_${adId}`, e.target.result);
     };
     reader.readAsDataURL(file);
-  } else if (currentImageInput && currentImageInput.value) {
-    // Preserve existing image
-    adData.image = currentImageInput.value;
+  } else if (adImageCurrent && adImageCurrent.value) {
+    // Preserve existing image from hidden field
+    adData.image = adImageCurrent.value;
   } else if (adData._isNew) {
     // New ad without image
     adData.image = '';
@@ -5724,8 +6369,12 @@ function addImageEntry(imagePath = '') {
       ${hasImage ? `<img src="${imagePath.startsWith('/') ? imagePath : '/' + imagePath}" alt="Preview"><div class="card-filename">${imagePath}</div>` : ''}
     </div>
     <div class="form-group" id="filegroup_${entryId}" style="${hasImage ? 'display: none;' : ''}">
-      <div class="empty-preview">📸 Click "Choose File" to select an image</div>
-      <input type="file" class="form-input image-file" id="file_${entryId}" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif">
+      <div class="empty-preview">📸 Choose an image from library or upload a new one</div>
+      <input type="file" class="form-input image-file" id="file_${entryId}" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" style="display: none;">
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="selectMenuItemImageFromLibrary('${entryId}')" style="flex: 1;">📁 Choose from Library</button>
+        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('file_${entryId}').click()" style="flex: 1;">📤 Upload New Image</button>
+      </div>
       <small class="form-helper">Accepts: JPEG, PNG, WEBP, GIF</small>
     </div>
     <input type="hidden" class="image-path" value="${imagePath}">
@@ -5800,10 +6449,1212 @@ function removeImageEntry(button) {
   entry.remove();
 }
 
+function selectMenuItemImageFromLibrary(entryId) {
+  // Store the entry ID in a global variable for later use
+  window.currentMenuItemImageEntryId = entryId;
+  
+  // Open the image library modal (reuse HomePageManager's modal)
+  const modal = document.getElementById('imageLibraryModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    
+    // Load images if not already loaded
+    if (HomePageManager && HomePageManager.availableImages.length > 0) {
+      renderMenuItemImageLibrary();
+    } else if (window.hugoStaticImages) {
+      HomePageManager.availableImages = window.hugoStaticImages;
+      renderMenuItemImageLibrary();
+    }
+  }
+}
+
+function renderMenuItemImageLibrary() {
+  const grid = document.getElementById('imageLibraryGrid');
+  const searchInput = document.getElementById('imageSearchInput');
+  
+  // Clear and setup
+  grid.innerHTML = '';
+  const images = HomePageManager.availableImages;
+  
+  // Render images as clickable cards
+  images.forEach(imagePath => {
+    const filename = imagePath.split('/').pop();
+    const card = document.createElement('div');
+    card.className = 'image-select-card';
+    card.style.cssText = 'border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; background: white; display: flex; flex-direction: column; height: fit-content;';
+    card.innerHTML = `
+      <img src="/${imagePath}" alt="${filename}" style="width: 100%; height: 140px; object-fit: cover;">
+      <div style="padding: 0.5rem; background: white;">
+        <p style="font-size: 0.8rem; color: #111827; font-weight: 600; line-height: 1.4; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</p>
+      </div>
+    `;
+    
+    card.onclick = () => {
+      selectMenuItemImageFromCard(imagePath);
+    };
+    
+    grid.appendChild(card);
+  });
+  
+  // Setup search
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      const search = e.target.value.toLowerCase();
+      const cards = grid.querySelectorAll('.image-select-card');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(search) ? '' : 'none';
+      });
+    };
+  }
+  
+  // Update count
+  const countEl = document.getElementById('imageCount');
+  if (countEl) countEl.textContent = images.length;
+}
+
+function selectMenuItemImageFromCard(imagePath) {
+  const entryId = window.currentMenuItemImageEntryId;
+  if (!entryId) return;
+  
+  const preview = document.getElementById(`preview_${entryId}`);
+  const fileGroup = document.getElementById(`filegroup_${entryId}`);
+  const hiddenInput = preview.closest('.image-entry').querySelector('.image-path');
+  
+  // Update preview
+  preview.innerHTML = `
+    <img src="${imagePath.startsWith('/') ? imagePath : '/' + imagePath}" alt="Preview">
+    <div class="card-filename">${imagePath}</div>
+  `;
+  preview.style.display = 'block';
+  preview.classList.add('has-image');
+  fileGroup.style.display = 'none';
+  
+  // Update hidden input
+  hiddenInput.value = imagePath;
+  
+  // Close modal
+  document.getElementById('imageLibraryModal').style.display = 'none';
+  window.currentMenuItemImageEntryId = null;
+}
+
 // Opening Hours Management Functions
+// ========================================
+// TIMELINE-BASED OPENING HOURS UI
+// ========================================
+
+// Initialize timeline styles
+function initTimelineStyles() {
+  if (document.getElementById('timelineStyles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'timelineStyles';
+  style.textContent = `
+    .weekly-timeline {
+      background: white;
+    }
+    
+    .timeline-actions .btn {
+      font-size: 0.75rem;
+    }
+    
+    .day-header {
+      height: 36px;
+      min-height: 36px;
+      max-height: 36px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      flex-shrink: 0;
+    }
+    
+    .day-hours {
+      height: 720px;
+      min-height: 720px;
+      max-height: 720px;
+      flex-shrink: 0;
+    }
+    
+    .hour-label {
+      height: 30px;
+      min-height: 30px;
+      max-height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 0.5rem;
+      font-size: 0.625rem;
+      color: #6b7280;
+      font-weight: 500;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    
+    .hour-label:nth-child(even) {
+      background: rgba(0,0,0,0.02);
+    }
+    
+    .week-track {
+      position: relative;
+      background: white;
+      cursor: crosshair;
+    }
+    
+    .week-track:hover {
+      background: #fafafa;
+    }
+    
+    /* Visual debug grid - shows day boundaries */
+    .week-track::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 36px,          /* Header */
+        rgba(255, 0, 0, 0.05) 36px,  /* Hour section start (light red) */
+        rgba(255, 0, 0, 0.05) 756px, /* Day end */
+        rgba(0, 0, 255, 0.1) 756px,  /* Next header (blue) */
+        rgba(0, 0, 255, 0.1) 792px   /* Next day */
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .time-blocks-container {
+      position: relative;
+    }
+    
+    .day-blocks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+    }
+    
+    .time-block {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      border-radius: 6px;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      min-height: 30px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      padding: 0.25rem 0.5rem;
+      border: 2px solid rgba(255,255,255,0.3);
+      pointer-events: all;
+      touch-action: none;
+      user-select: none;
+      z-index: 10; /* Above debug grid */
+    }
+    
+    .time-block:active {
+      cursor: grabbing;
+    }
+    
+    .time-block:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      z-index: 100;
+      transform: translateX(-2px);
+      border-color: rgba(255,255,255,0.8);
+    }
+    
+    .time-block-label {
+      pointer-events: none;
+      text-align: center;
+      line-height: 1.3;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      font-weight: 600;
+    }
+    
+    .time-block-day-badge {
+      display: none;
+    }
+    
+    .time-block-remove {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 22px;
+      height: 22px;
+      background: #dc2626;
+      border: 2px solid white;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      z-index: 200;
+      font-weight: bold;
+    }
+    
+    .time-block:hover .time-block-remove {
+      display: flex;
+    }
+    
+    /* Resize handles */
+    .time-block-resize-handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 16px;
+      cursor: ns-resize;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      pointer-events: all;
+    }
+    
+    .time-block-resize-handle::before {
+      content: '';
+      width: 40px;
+      height: 4px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 2px;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    .time-block-resize-handle:hover::before,
+    .time-block-resize-handle:active::before {
+      background: rgba(255,255,255,1);
+      width: 50px;
+      height: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    
+    .time-block-resize-top {
+      top: -2px;
+    }
+    
+    .time-block-resize-bottom {
+      bottom: -2px;
+    }
+    
+    .time-block.resizing {
+      opacity: 0.8;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+      z-index: 150;
+    }
+    
+    /* Day-specific colors for continuous timeline */
+    [data-day="mon"] .time-block { background: #ef4444; }
+    [data-day="tue"] .time-block { background: #f97316; }
+    [data-day="wed"] .time-block { background: #f59e0b; }
+    [data-day="thu"] .time-block { background: #10b981; }
+    [data-day="fri"] .time-block { background: #3b82f6; }
+    [data-day="sat"] .time-block { background: #8b5cf6; }
+    [data-day="sun"] .time-block { background: #ec4899; }
+    
+    @media (max-width: 768px) {
+      .continuous-week-grid {
+        grid-template-columns: 60px 1fr;
+      }
+      
+      .hour-label {
+        font-size: 0.55rem;
+        padding-right: 0.3rem;
+        height: 25px;
+      }
+      
+      .time-block {
+        font-size: 0.65rem;
+      }
+      
+      .time-block-resize-handle {
+        height: 20px;
+      }
+      
+      .timeline-actions {
+        flex-direction: column;
+      }
+      
+      .timeline-actions .btn {
+        width: 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Add a new time block to a day (continuous weekly timeline)
+function addTimeBlock(day, startHour = 11, endHour = 22) {
+  initTimelineStyles();
+  
+  let container = document.getElementById(`timeBlocks_${day}`);
+  
+  // Ensure container exists with correct Loop 2 offset
+  if (!container) {
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const dayIndex = days.indexOf(day);
+    const weekHeight = 5292; // One full week
+    
+    container = document.createElement('div');
+    container.id = `timeBlocks_${day}`;
+    container.className = 'day-blocks';
+    container.dataset.day = day;
+    container.dataset.offset = weekHeight + (dayIndex * 756); // Loop 2 offset
+    
+    const allContainer = document.getElementById('timeBlocks_all');
+    if (allContainer) {
+      allContainer.appendChild(container);
+      console.log(`✅ Created ${day} container on-demand with Loop 2 offset: ${container.dataset.offset}`);
+    } else {
+      console.error(`❌ Cannot create container: timeBlocks_all not found`);
+      return;
+    }
+  }
+  
+  // Get day offset from container
+  const dayOffset = parseInt(container.dataset.offset) || 0;
+  
+  const pixelsPerHour = 30; // Each hour is 30px tall (supports 15-min intervals: 7.5px per 15min)
+  const headerHeight = 36; // Each day has a 36px header
+  
+  // Round to nearest 15-minute interval (0.25 hour)
+  const startRounded = Math.round(startHour * 4) / 4;
+  const endRounded = Math.round(endHour * 4) / 4;
+  
+  // Position relative to the entire week timeline (handle negative start times)
+  // IMPORTANT: Add headerHeight to account for day header above the hours
+  const topPosition = startRounded < 0 
+    ? (dayOffset - 756 + headerHeight + (startRounded + 24) * pixelsPerHour)
+    : (dayOffset + headerHeight + (startRounded * pixelsPerHour));
+  
+  // Calculate height - account for day header if block extends past midnight
+  let heightPixels = (endRounded - startRounded) * pixelsPerHour;
+  if (endRounded > 24) {
+    // Block extends to next day - add day header height
+    heightPixels += headerHeight;
+  }
+  
+  const dayNames = {
+    'mon': 'MON',
+    'tue': 'TUE',
+    'wed': 'WED',
+    'thu': 'THU',
+    'fri': 'FRI',
+    'sat': 'SAT',
+    'sun': 'SUN'
+  };
+  
+  // Check for overlaps BEFORE creating the element
+  const hasOverlap = checkOverlap(day, startRounded, endRounded);
+  if (hasOverlap) {
+    console.warn(`⚠️ Overlap detected for ${day} ${startRounded}-${endRounded}`);
+    alert(`⚠️ Overlap detected! This time conflicts with an existing block on ${day.toUpperCase()}.`);
+    return;
+  }
+  console.log(`✅ No overlap detected for ${day} ${startRounded}-${endRounded}`);
+  
+  // Generate unique ID after passing overlap check
+  const blockId = `block_${day}_${Date.now()}`;
+  console.log(`🔨 Creating block ${blockId}: ${startRounded}h-${endRounded}h`);
+  
+  const block = document.createElement('div');
+  block.className = 'time-block';
+  block.id = blockId;
+  block.dataset.start = startRounded;
+  block.dataset.end = endRounded;
+  block.dataset.day = day;
+  block.style.top = `${topPosition}px`;
+  block.style.height = `${heightPixels}px`;
+  
+  // Format labels with cross-day indicators
+  const startLabel = startRounded < 0 ? `${formatHour(startRounded + 24)} (-1d)` : formatHour(startRounded);
+  const endLabel = endRounded > 24 ? formatHour(endRounded) : formatHour(endRounded); // formatHour handles (+1d)
+  
+  block.innerHTML = `
+    <div class="time-block-resize-handle time-block-resize-top" data-handle="top"></div>
+    <span class="time-block-label">${startLabel} - ${endLabel}</span>
+    <span class="time-block-day-badge">${dayNames[day]}</span>
+    <button class="time-block-remove" onclick="event.stopPropagation(); removeTimeBlock('${blockId}')" title="Remove">✕</button>
+    <div class="time-block-resize-handle time-block-resize-bottom" data-handle="bottom"></div>
+  `;
+  
+  // Add double-click to edit
+  block.ondblclick = function(e) {
+    if (e.target.classList.contains('time-block-resize-handle')) return;
+    e.stopPropagation();
+    editTimeBlock(blockId, day);
+  };
+  
+  // Append to DOM first
+  container.appendChild(block);
+  console.log(`✅ Block appended to DOM: ${blockId}`);
+  
+  // Then add resize functionality (needs to be in DOM for event listeners)
+  setupBlockResize(block, blockId, day);
+  
+  // Add right-click to change day
+  setupBlockDrag(block, blockId, day);
+  
+  // Create duplicate blocks for loops before and after (infinite feel)
+  createLoopDuplicates(block, day, startRounded, endRounded, dayOffset);
+  
+  console.log(`🎉 Block creation complete: ${blockId}`);
+  
+  console.log(`✅ Added time block for ${day}: ${formatHour(startRounded)} - ${formatHour(endRounded)}`);
+  console.log(`   Day offset: ${dayOffset}px, Block top: ${topPosition}px, Height: ${heightPixels}px`);
+}
+
+// Create duplicate blocks for the looping timeline
+function createLoopDuplicates(originalBlock, day, startTime, endTime, dayOffset) {
+  const pixelsPerHour = 30;
+  const headerHeight = 36; // Day header height
+  const weekHeight = 5292; // 7 days × 756px
+  
+  // Create duplicates for loops before (-1) and after (+1)
+  for (let loop = -1; loop <= 1; loop += 2) {
+    if (loop === 0) continue; // Skip the original
+    
+    const duplicateBlock = originalBlock.cloneNode(true);
+    duplicateBlock.id = `${originalBlock.id}_loop${loop}`;
+    duplicateBlock.classList.add('loop-duplicate');
+    
+    // Position in the previous or next loop (handle negative start times)
+    const loopOffset = loop * weekHeight;
+    const actualTop = startTime < 0 
+      ? (dayOffset - 756 + headerHeight + (startTime + 24) * pixelsPerHour + loopOffset)
+      : (dayOffset + headerHeight + (startTime * pixelsPerHour) + loopOffset);
+    
+    duplicateBlock.style.top = `${actualTop}px`;
+    
+    // Make duplicates non-interactive (visual only)
+    duplicateBlock.style.pointerEvents = 'none';
+    duplicateBlock.style.opacity = '0.4';
+    
+    // Add to same container
+    originalBlock.parentElement.appendChild(duplicateBlock);
+  }
+}
+
+// Setup sync between duplicate blocks and original
+function setupBlockSync(duplicateBlock, originalBlock, day, startTime, endTime, dayOffset) {
+  const pixelsPerHour = 30;
+  const headerHeight = 36;
+  const weekHeight = 5292;
+  
+  // Get the loop number from duplicate ID
+  const loopMatch = duplicateBlock.id.match(/_loop(-?\d+)$/);
+  const loop = loopMatch ? parseInt(loopMatch[1]) : 0;
+  
+  // Add resize functionality to duplicate
+  setupBlockResize(duplicateBlock, duplicateBlock.id, day);
+  
+  // Add drag functionality to duplicate  
+  setupBlockDrag(duplicateBlock, duplicateBlock.id, day);
+  
+  // Override duplicate's event handlers to sync with original
+  duplicateBlock.addEventListener('mousedown', function(e) {
+    if (e.target.classList.contains('time-block-resize-handle')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Sync this interaction to the original block
+    syncInteractionToOriginal(duplicateBlock, originalBlock, 'mousedown', e);
+  });
+  
+  duplicateBlock.addEventListener('touchstart', function(e) {
+    if (e.target.classList.contains('time-block-resize-handle')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Sync this interaction to the original block
+    syncInteractionToOriginal(duplicateBlock, originalBlock, 'touchstart', e);
+  });
+  
+  // Override remove button
+  const removeBtn = duplicateBlock.querySelector('.time-block-remove');
+  if (removeBtn) {
+    removeBtn.onclick = function(e) {
+      e.stopPropagation();
+      removeTimeBlock(originalBlock.id); // Remove original, which will remove all duplicates
+    };
+  }
+}
+
+// Sync interaction from duplicate to original block
+function syncInteractionToOriginal(duplicateBlock, originalBlock, eventType, event) {
+  // Calculate the offset between duplicate and original
+  const duplicateRect = duplicateBlock.getBoundingClientRect();
+  const originalRect = originalBlock.getBoundingClientRect();
+  const offsetY = duplicateRect.top - originalRect.top;
+  
+  // Create a new event at the original's position
+  const newEvent = new MouseEvent(eventType, {
+    clientX: event.clientX,
+    clientY: event.clientY - offsetY,
+    bubbles: true,
+    cancelable: true
+  });
+  
+  // Dispatch to original block
+  originalBlock.dispatchEvent(newEvent);
+}
+
+// Check if a new time block would overlap with existing ones (including cross-day blocks)
+function checkOverlap(day, startHour, endHour, excludeBlockId = null) {
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const dayIndex = days.indexOf(day);
+  
+  // If block starts in previous day, check previous day
+  if (startHour < 0) {
+    const prevDayIndex = (dayIndex - 1 + 7) % 7;
+    const prevDay = days[prevDayIndex];
+    const prevDayContainer = document.getElementById(`timeBlocks_${prevDay}`);
+    
+    if (prevDayContainer) {
+      const prevDayBlocks = prevDayContainer.querySelectorAll('.time-block:not(.loop-duplicate)');
+      const prevStart = startHour + 24; // Convert to previous day's time
+      const prevEnd = 24; // Goes until midnight
+      
+      for (let block of prevDayBlocks) {
+        if (excludeBlockId && block.id === excludeBlockId) continue;
+        
+        const blockStart = parseFloat(block.dataset.start);
+        const blockEnd = parseFloat(block.dataset.end);
+        
+        // Check if portion in previous day overlaps
+        if (prevStart < blockEnd && prevEnd > blockStart) {
+          console.log(`⚠️ Previous-day overlap: ${day} start ${formatHour(startHour + 24)} conflicts with ${prevDay} block`);
+          return true;
+        }
+      }
+    }
+  }
+  
+  // Check current day portion
+  const container = document.getElementById(`timeBlocks_${day}`);
+  if (container) {
+    const existingBlocks = container.querySelectorAll('.time-block:not(.loop-duplicate)');
+    
+    // Normalize start/end to current day range
+    const checkStart = Math.max(0, startHour);
+    const checkEnd = Math.min(24, endHour);
+    
+    for (let block of existingBlocks) {
+      if (excludeBlockId && block.id === excludeBlockId) continue;
+      
+      const blockStart = parseFloat(block.dataset.start);
+      const blockEnd = parseFloat(block.dataset.end);
+      
+      // Normalize block to current day range
+      const blockCheckStart = Math.max(0, blockStart);
+      const blockCheckEnd = Math.min(24, blockEnd);
+      
+      // Check if ranges overlap
+      if (checkStart < blockCheckEnd && checkEnd > blockCheckStart) {
+        return true; // Overlap detected
+      }
+    }
+  }
+  
+  // If block extends past midnight, check next day too
+  if (endHour > 24) {
+    const nextDayIndex = (dayIndex + 1) % 7;
+    const nextDay = days[nextDayIndex];
+    const nextDayContainer = document.getElementById(`timeBlocks_${nextDay}`);
+    
+    if (nextDayContainer) {
+      const nextDayBlocks = nextDayContainer.querySelectorAll('.time-block:not(.loop-duplicate)');
+      const overflowStart = 0;
+      const overflowEnd = endHour - 24;
+      
+      for (let block of nextDayBlocks) {
+        if (excludeBlockId && block.id === excludeBlockId) continue;
+        
+        const blockStart = parseFloat(block.dataset.start);
+        const blockEnd = parseFloat(block.dataset.end);
+        
+        // Check if overflow portion overlaps with next day's blocks
+        if (overflowStart < blockEnd && overflowEnd > blockStart) {
+          // Cross-day blocks are allowed - the save logic will split them properly
+          // Don't block this, just log it
+          console.log(`ℹ️ Cross-day block: ${day} extends to ${nextDay} ${formatHour(endHour - 24)}`);
+          // Allow it - return false instead of true
+        }
+      }
+    }
+  }
+  
+  return false; // No overlap
+}
+
+// Setup drag functionality to move blocks between days
+function setupBlockDrag(block, blockId, currentDay) {
+  // Add right-click context menu to change day
+  block.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    
+    const newDay = prompt(
+      `Change day for this block?\n\nCurrent: ${currentDay.toUpperCase()}\n\nEnter new day (mon, tue, wed, thu, fri, sat, sun):`,
+      currentDay
+    );
+    
+    if (!newDay || newDay.toLowerCase() === currentDay) return;
+    
+    const day = newDay.toLowerCase().trim();
+    const validDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    
+    if (!validDays.includes(day)) {
+      alert('Invalid day. Use: mon, tue, wed, thu, fri, sat, sun');
+      return;
+    }
+    
+    // Check for overlaps on target day
+    const start = parseInt(block.dataset.start);
+    const end = parseInt(block.dataset.end);
+    
+    if (checkOverlap(day, start, end)) {
+      alert(`⚠️ Cannot move: This time conflicts with an existing block on ${day.toUpperCase()}.`);
+      return;
+    }
+    
+    // Move block to new day
+    const newContainer = document.getElementById(`timeBlocks_${day}`);
+    if (newContainer) {
+      // Remove old duplicates first (before and after)
+      for (let loop = -1; loop <= 1; loop += 2) {
+        const oldDuplicate = document.getElementById(`${block.id}_loop${loop}`);
+        if (oldDuplicate) {
+          oldDuplicate.remove();
+        }
+      }
+      
+      // Update block's day
+      block.dataset.day = day;
+      currentDay = day;
+      
+      // Recalculate position based on new day offset
+      const newDayOffset = parseInt(newContainer.dataset.offset) || 0;
+      const pixelsPerHour = 30;
+      const headerHeight = 36; // Day header height
+      const newTop = start < 0 
+        ? (newDayOffset - 756 + headerHeight + (start + 24) * pixelsPerHour)
+        : (newDayOffset + headerHeight + (start * pixelsPerHour));
+      block.style.top = `${newTop}px`;
+      
+      // Move to new container
+      newContainer.appendChild(block);
+      
+      // Create new duplicates for the new day
+      createLoopDuplicates(block, day, start, end, newDayOffset);
+      
+      console.log(`✅ Moved block to ${day}: ${formatHour(start)} - ${formatHour(end)} at ${newTop}px`);
+      UpdateUI.showSuccess(`Moved to ${day.toUpperCase()}`);
+    }
+  });
+}
+
+// Setup resize functionality for a time block (mouse + touch support)
+function setupBlockResize(block, blockId, day) {
+  const handles = block.querySelectorAll('.time-block-resize-handle');
+  const pixelsPerHour = 30;
+  const headerHeight = 36; // Day header height
+  
+  console.log(`🔧 Setting up resize for ${blockId}, found ${handles.length} handles`);
+  
+  handles.forEach(handle => {
+    const handleType = handle.dataset.handle;
+    console.log(`  📌 Attaching listeners to ${handleType} handle`);
+    // Mouse events
+    handle.addEventListener('mousedown', function(e) {
+      startResize(e, e.clientY);
+    });
+    
+    // Touch events for mobile
+    handle.addEventListener('touchstart', function(e) {
+      const touch = e.touches[0];
+      startResize(e, touch.clientY);
+    }, { passive: false });
+    
+    function startResize(e, startY) {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const isTop = handle.dataset.handle === 'top';
+      const originalStart = parseInt(block.dataset.start);
+      const originalEnd = parseInt(block.dataset.end);
+      const originalTop = parseInt(block.style.top);
+      const originalHeight = parseInt(block.style.height);
+      
+      // Get day offset for continuous timeline positioning
+      const container = document.getElementById(`timeBlocks_${day}`);
+      const dayOffset = parseInt(container?.dataset.offset) || 0;
+      
+      console.log(`🎯 Starting resize: ${isTop ? 'TOP' : 'BOTTOM'} handle, current time: ${formatHour(originalStart)} - ${formatHour(originalEnd)}`);
+      
+      block.classList.add('resizing');
+      
+      function onMove(moveE) {
+        // Get Y position from mouse or touch
+        const currentY = moveE.type.startsWith('touch') 
+          ? moveE.touches[0].clientY 
+          : moveE.clientY;
+        
+        const deltaY = currentY - startY;
+        // Snap to 15-minute intervals (0.25 hour)
+        const deltaHours = Math.round((deltaY / pixelsPerHour) * 4) / 4;
+        
+        if (isTop) {
+          // Resizing from top (changing start time - can extend into previous day!)
+          let newStart = originalStart + deltaHours;
+          // Snap to 15-minute intervals and ensure minimum 15-min duration
+          newStart = Math.round(newStart * 4) / 4;
+          newStart = Math.max(-24, Math.min(newStart, originalEnd - 0.25)); // Allow previous day!
+          
+          block.dataset.start = newStart;
+          
+          // Calculate position (can be negative for previous day) - INCLUDE headerHeight!
+          const actualTop = newStart < 0 
+            ? (dayOffset - 756 + headerHeight + (newStart + 24) * pixelsPerHour) 
+            : (dayOffset + headerHeight + (newStart * pixelsPerHour));
+          block.style.top = `${actualTop}px`;
+          
+          // Calculate height - add header if block extends past midnight
+          let blockHeight = (originalEnd - newStart) * pixelsPerHour;
+          if (originalEnd > 24) blockHeight += headerHeight;
+          block.style.height = `${blockHeight}px`;
+          
+          // Update label (formatHour handles negative hours)
+          const startLabel = newStart < 0 ? `${formatHour(newStart + 24)} (-1d)` : formatHour(newStart);
+          block.querySelector('.time-block-label').textContent = `${startLabel} - ${formatHour(originalEnd)}`;
+          
+          // Update loop duplicates
+          updateLoopDuplicates(block, newStart, originalEnd, dayOffset);
+        } else {
+          // Resizing from bottom (changing end time - can extend past midnight!)
+          let newEnd = originalEnd + deltaHours;
+          // Snap to 15-minute intervals and ensure minimum 15-min duration
+          newEnd = Math.round(newEnd * 4) / 4;
+          newEnd = Math.max(originalStart + 0.25, newEnd); // Remove 24-hour limit!
+          
+          // Limit to next day's midnight (48 hours max)
+          newEnd = Math.min(newEnd, 48);
+          
+          block.dataset.end = newEnd;
+          
+          // Calculate height - add header if block extends past midnight
+          let blockHeight = (newEnd - originalStart) * pixelsPerHour;
+          if (newEnd > 24) blockHeight += headerHeight;
+          block.style.height = `${blockHeight}px`;
+          
+          // Update label (formatHour handles (+1d) automatically)
+          block.querySelector('.time-block-label').textContent = `${formatHour(originalStart)} - ${formatHour(newEnd)}`;
+          
+          // Update loop duplicates
+          updateLoopDuplicates(block, originalStart, newEnd, dayOffset);
+        }
+      }
+
+      
+      function onEnd() {
+        block.classList.remove('resizing');
+        
+        // Remove mouse listeners
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onEnd);
+        
+        // Remove touch listeners
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+        
+        const newStart = parseFloat(block.dataset.start);
+        const newEnd = parseFloat(block.dataset.end);
+        
+        // Check for overlaps after resize
+        if (checkOverlap(day, newStart, newEnd, blockId)) {
+          alert(`⚠️ Overlap detected! Reverting to original size.`);
+          // Revert to original size
+          block.dataset.start = originalStart;
+          block.dataset.end = originalEnd;
+          block.style.top = `${originalTop}px`;
+          block.style.height = `${originalHeight}px`;
+          block.querySelector('.time-block-label').textContent = `${formatHour(originalStart)} - ${formatHour(originalEnd)}`;
+          
+          // Revert duplicates too
+          updateLoopDuplicates(block, originalStart, originalEnd, dayOffset);
+        } else {
+          console.log(`✅ Resized block for ${day}: ${formatHour(newStart)} - ${formatHour(newEnd)}`);
+        }
+      }
+      
+      // Add both mouse and touch listeners
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd);
+      document.addEventListener('touchcancel', onEnd);
+    }
+  });
+}
+
+// Update loop duplicate blocks when original changes
+function updateLoopDuplicates(originalBlock, startTime, endTime, dayOffset) {
+  const pixelsPerHour = 30;
+  const headerHeight = 36; // Day header height
+  const weekHeight = 5292;
+  
+  // Update duplicates before (-1) and after (+1)
+  for (let loop = -1; loop <= 1; loop += 2) {
+    const duplicate = document.getElementById(`${originalBlock.id}_loop${loop}`);
+    if (duplicate) {
+      duplicate.dataset.start = startTime;
+      duplicate.dataset.end = endTime;
+      
+      const loopOffset = loop * weekHeight;
+      
+      // Calculate top position (handle negative start times)
+      const actualTop = startTime < 0 
+        ? (dayOffset - 756 + headerHeight + (startTime + 24) * pixelsPerHour + loopOffset)
+        : (dayOffset + headerHeight + (startTime * pixelsPerHour) + loopOffset);
+      
+      duplicate.style.top = `${actualTop}px`;
+      
+      // Calculate height - add header if block extends past midnight
+      let blockHeight = (endTime - startTime) * pixelsPerHour;
+      if (endTime > 24) blockHeight += headerHeight;
+      duplicate.style.height = `${blockHeight}px`;
+      
+      const label = duplicate.querySelector('.time-block-label');
+      if (label) {
+        const startLabel = startTime < 0 ? `${formatHour(startTime + 24)} (-1d)` : formatHour(startTime);
+        label.textContent = `${startLabel} - ${formatHour(endTime)}`;
+      }
+      
+      // Update day badge if it exists
+      const badge = duplicate.querySelector('.time-block-day-badge');
+      if (badge) {
+        const dayNames = {
+          'mon': 'MON', 'tue': 'TUE', 'wed': 'WED', 'thu': 'THU',
+          'fri': 'FRI', 'sat': 'SAT', 'sun': 'SUN'
+        };
+        const day = duplicate.dataset.day;
+        badge.textContent = dayNames[day] || day.toUpperCase();
+      }
+    }
+  }
+}
+
+// Format hour as 12-hour time with minutes (handles cross-day times)
+function formatHour(decimalHour) {
+  // Handle hours > 24 (next day)
+  let hour = Math.floor(decimalHour);
+  const minutes = Math.round((decimalHour - hour) * 60);
+  
+  // Normalize to 0-23 range
+  const normalizedHour = hour % 24;
+  
+  let displayHour = normalizedHour;
+  let period = 'am';
+  
+  if (normalizedHour === 0) {
+    displayHour = 12;
+  } else if (normalizedHour === 12) {
+    displayHour = 12;
+    period = 'pm';
+  } else if (normalizedHour > 12) {
+    displayHour = normalizedHour - 12;
+    period = 'pm';
+  }
+  
+  const timeStr = minutes === 0 
+    ? `${displayHour}${period}` 
+    : `${displayHour}:${minutes.toString().padStart(2, '0')}${period}`;
+  
+  // Add +1d indicator for next day times
+  return hour >= 24 ? `${timeStr} (+1d)` : timeStr;
+}
+
+// Edit a time block (prompt for new times) - vertical timeline
+function editTimeBlock(blockId, day) {
+  const block = document.getElementById(blockId);
+  if (!block) return;
+  
+  const currentStart = parseInt(block.dataset.start);
+  const currentEnd = parseInt(block.dataset.end);
+  
+  const dayNames = {
+    'mon': 'Monday',
+    'tue': 'Tuesday',
+    'wed': 'Wednesday',
+    'thu': 'Thursday',
+    'fri': 'Friday',
+    'sat': 'Saturday',
+    'sun': 'Sunday'
+  };
+  
+  const newStart = prompt(`${dayNames[day]} - Start hour (0-23):\nCurrent: ${formatHour(currentStart)}`, currentStart);
+  if (newStart === null) return;
+  
+  const newEnd = prompt(`${dayNames[day]} - End hour (1-24):\nCurrent: ${formatHour(currentEnd)}`, currentEnd);
+  if (newEnd === null) return;
+  
+  const start = parseInt(newStart);
+  const end = parseInt(newEnd);
+  
+  if (isNaN(start) || isNaN(end) || start < 0 || start > 23 || end < 1 || end > 24) {
+    alert('Invalid hours. Please enter 0-23 for start and 1-24 for end.');
+    return;
+  }
+  
+  if (start >= end) {
+    alert('End time must be after start time.');
+    return;
+  }
+  
+  // Update block (vertical positioning)
+  const pixelsPerHour = 30;
+  const dayBadge = day.toUpperCase().substring(0, 3);
+  block.dataset.start = start;
+  block.dataset.end = end;
+  block.style.top = `${start * pixelsPerHour}px`;
+  block.style.height = `${(end - start) * pixelsPerHour}px`;
+  block.querySelector('.time-block-label').textContent = `${formatHour(start)} - ${formatHour(end)}`;
+  
+  // Update or add day badge if it doesn't exist
+  let badge = block.querySelector('.time-block-day-badge');
+  if (badge) {
+    badge.textContent = dayBadge;
+  }
+}
+
+// Remove a time block and its loop duplicates
+function removeTimeBlock(blockId) {
+  console.log('🗑️ removeTimeBlock called for:', blockId);
+  const block = document.getElementById(blockId);
+  if (block) {
+    console.log('✅ Found block, removing:', block);
+    block.remove();
+    
+    // Also remove loop duplicates (before and after)
+    for (let loop = -1; loop <= 1; loop += 2) {
+      const duplicate = document.getElementById(`${blockId}_loop${loop}`);
+      if (duplicate) {
+        console.log('✅ Found duplicate, removing:', duplicate.id);
+        duplicate.remove();
+      }
+    }
+  } else {
+    console.log('❌ Block not found:', blockId);
+  }
+}
+
+// Copy time blocks from one day to another
+function copyTimeBlocks(fromDay, toDay) {
+  const fromContainer = document.getElementById(`timeBlocks_${fromDay}`);
+  const toContainer = document.getElementById(`timeBlocks_${toDay}`);
+  
+  if (!fromContainer || !toContainer) return;
+  
+  const fromBlocks = fromContainer.querySelectorAll('.time-block');
+  
+  if (fromBlocks.length === 0) {
+    UpdateUI.showError(`${fromDay.toUpperCase()} has no time blocks to copy.`);
+    return;
+  }
+  
+  // Clear target day
+  toContainer.innerHTML = '';
+  
+  // Copy blocks
+  fromBlocks.forEach(block => {
+    const start = parseInt(block.dataset.start);
+    const end = parseInt(block.dataset.end);
+    addTimeBlock(toDay, start, end);
+  });
+  
+  UpdateUI.showSuccess(`Copied ${fromBlocks.length} time block(s) to ${toDay.toUpperCase()}`);
+}
+
+// Clear all time blocks for all days
+function clearAllTimeBlocks() {
+  if (!confirm('Clear all opening hours for all days?')) return;
+  
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  days.forEach(day => {
+    const container = document.getElementById(`timeBlocks_${day}`);
+    if (container) {
+      container.innerHTML = '';
+    }
+  });
+  
+  UpdateUI.showSuccess('All opening hours cleared');
+}
+
+// Add time block by clicking on continuous weekly timeline
+function addTimeBlockAtClick(event) {
+  console.log('🎯 addTimeBlockAtClick called', event.target);
+  
+  // Don't add if clicking on an existing block
+  if (event.target.classList.contains('time-block') || event.target.closest('.time-block')) {
+    console.log('❌ Clicked on existing block, ignoring');
+    return;
+  }
+  
+  // Calculate which day and hour was clicked
+  const track = event.currentTarget;
+  const rect = track.getBoundingClientRect();
+  const clickY = event.clientY - rect.top + track.parentElement.scrollTop;
+  
+  const pixelsPerHour = 30;
+  const pixelsPerDay = 720; // 24 hours × 30px
+  const headerHeight = 36; // Day header height
+  const weekHeight = 5292; // One week (7 days × 756px)
+  
+  // Map clickY to Loop 2 (middle loop where interactive blocks are)
+  // Loop 2 starts at 5292px and ends at 10584px
+  let normalizedY = clickY;
+  
+  // If clicked in Loop 1 (0-5292px) or Loop 3 (10584-15876px), map to Loop 2
+  if (clickY < weekHeight) {
+    // Loop 1 - map to Loop 2
+    normalizedY = clickY + weekHeight;
+  } else if (clickY >= weekHeight * 2) {
+    // Loop 3 - map to Loop 2
+    normalizedY = clickY - weekHeight;
+  }
+  
+  // Now calculate day within Loop 2 range (5292-10584px)
+  const relativeY = normalizedY - weekHeight; // Subtract Loop 2 start offset
+  
+  // Calculate day and hour
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const dayIndex = Math.floor(relativeY / (pixelsPerDay + headerHeight));
+  const day = days[Math.max(0, Math.min(dayIndex, 6))]; // Clamp to 0-6
+  
+  // Calculate hour within the day (accounting for header)
+  const dayStartPixel = dayIndex * (pixelsPerDay + headerHeight);
+  const pixelWithinDay = relativeY - dayStartPixel - headerHeight;
+  const clickedHourDecimal = pixelWithinDay / pixelsPerHour;
+  
+  // Snap to 15-minute intervals (0.25 hour)
+  const clickedHour = Math.round(clickedHourDecimal * 4) / 4;
+  
+  // Add a 2-hour block starting at clicked hour
+  const startHour = Math.max(0, Math.min(clickedHour, 22));
+  const endHour = Math.min(startHour + 2, 24);
+  
+  console.log(`📍 Clicked: day=${day}, hour=${clickedHour}, adding block ${formatHour(startHour)}-${formatHour(endHour)}`);
+  console.log(`📍 Click details: clickY=${clickY}, normalizedY=${normalizedY}, relativeY=${relativeY}, dayIndex=${dayIndex}, pixelWithinDay=${pixelWithinDay}`);
+  
+  addTimeBlock(day, startHour, endHour);
+}
+
+// Apply Monday's schedule to all days
+function applyToAllDays() {
+  const fromBlocks = document.getElementById('timeBlocks_mon').querySelectorAll('.time-block');
+  
+  if (fromBlocks.length === 0) {
+    UpdateUI.showError('Monday has no time blocks to copy.');
+    return;
+  }
+  
+  if (!confirm(`Copy Monday's schedule to all other days?`)) return;
+  
+  const days = ['tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  days.forEach(day => {
+    const container = document.getElementById(`timeBlocks_${day}`);
+    if (container) {
+      container.innerHTML = '';
+      fromBlocks.forEach(block => {
+        const start = parseInt(block.dataset.start);
+        const end = parseInt(block.dataset.end);
+        addTimeBlock(day, start, end);
+      });
+    }
+  });
+  
+  UpdateUI.showSuccess(`Applied Monday's schedule to all days`);
+}
+
+// Apply to weekdays (Mon-Fri)
+function applyToWeekdays() {
+  const fromBlocks = document.getElementById('timeBlocks_mon').querySelectorAll('.time-block');
+  
+  if (fromBlocks.length === 0) {
+    UpdateUI.showError('Monday has no time blocks to copy.');
+    return;
+  }
+  
+  if (!confirm(`Copy Monday's schedule to Tuesday-Friday?`)) return;
+  
+  const days = ['tue', 'wed', 'thu', 'fri'];
+  days.forEach(day => {
+    const container = document.getElementById(`timeBlocks_${day}`);
+    if (container) {
+      container.innerHTML = '';
+      fromBlocks.forEach(block => {
+        const start = parseInt(block.dataset.start);
+        const end = parseInt(block.dataset.end);
+        addTimeBlock(day, start, end);
+      });
+    }
+  });
+  
+  UpdateUI.showSuccess(`Applied Monday's schedule to weekdays`);
+}
+
+// Apply to weekends (Sat-Sun)
+function applyToWeekends() {
+  const fromBlocks = document.getElementById('timeBlocks_sat').querySelectorAll('.time-block');
+  
+  if (fromBlocks.length === 0) {
+    UpdateUI.showError('Saturday has no time blocks to copy.');
+    return;
+  }
+  
+  if (!confirm(`Copy Saturday's schedule to Sunday?`)) return;
+  
+  const container = document.getElementById('timeBlocks_sun');
+  if (container) {
+    container.innerHTML = '';
+    fromBlocks.forEach(block => {
+      const start = parseInt(block.dataset.start);
+      const end = parseInt(block.dataset.end);
+      addTimeBlock('sun', start, end);
+    });
+  }
+  
+  UpdateUI.showSuccess(`Applied Saturday's schedule to Sunday`);
+}
+
+// ========================================
+// LEGACY OPENING HOURS FUNCTIONS
+// ========================================
+
 function addHoursEntry(day, type = 'Open', time = '11:00') {
   const container = document.getElementById(`hoursEntries_${day}`);
-  if (!container) return;
+  if (!container) {
+    // Try new timeline UI instead
+    const [hourStr] = time.split(':');
+    const hour = parseInt(hourStr);
+    if (type === 'Open') {
+      addTimeBlock(day, hour, Math.min(hour + 11, 23));
+    }
+    return;
+  }
   
   const entry = document.createElement('div');
   entry.className = 'hours-entry';
@@ -5892,20 +7743,110 @@ function getHoursData() {
   const opening_hours = { mode };
   
   days.forEach(day => {
-    const container = document.getElementById(`hoursEntries_${day}`);
-    if (container) {
+    // Try new timeline UI first
+    const timelineContainer = document.getElementById(`timeBlocks_${day}`);
+    if (timelineContainer) {
+      const blocks = timelineContainer.querySelectorAll('.time-block');
       const entries = [];
-      container.querySelectorAll('.hours-entry').forEach(entry => {
-        const type = entry.querySelector('.hours-type').value;
-        const time = entry.querySelector('.hours-time').value;
-        entries.push({ type, time });
+      
+      blocks.forEach(block => {
+        // Skip loop duplicates
+        if (block.classList.contains('loop-duplicate')) return;
+        
+        const start = parseFloat(block.dataset.start);
+        const end = parseFloat(block.dataset.end);
+        
+        // Handle blocks that start in previous day
+        if (start < 0) {
+          // Block starts in previous day
+          const prevDayIndex = (days.indexOf(day) - 1 + 7) % 7;
+          const prevDay = days[prevDayIndex];
+          
+          const prevStartTime = start + 24; // Convert to previous day time
+          const prevStartHour = Math.floor(prevStartTime);
+          const prevStartMin = Math.round((prevStartTime - prevStartHour) * 60);
+          const prevTimeStr = `${String(prevStartHour).padStart(2, '0')}:${String(prevStartMin).padStart(2, '0')}`;
+          
+          // Add to previous day
+          if (!opening_hours[prevDay]) {
+            opening_hours[prevDay] = [];
+          }
+          opening_hours[prevDay].push({ type: 'Open', time: prevTimeStr });
+          opening_hours[prevDay].push({ type: 'Close', time: '23:59' });
+          
+          // Current day starts at midnight
+          const endHour = Math.floor(end);
+          const endMin = Math.round((end - endHour) * 60);
+          const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
+          
+          entries.push({ type: 'Open', time: '00:00' });
+          entries.push({ type: 'Close', time: endTime });
+        } else if (start >= 0 && end <= 24) {
+          // Normal block within same day
+          const startHour = Math.floor(start);
+          const startMin = Math.round((start - startHour) * 60);
+          const endHour = Math.floor(end);
+          const endMin = Math.round((end - endHour) * 60);
+          
+          const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+          const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
+          
+          entries.push({ type: 'Open', time: startTime });
+          entries.push({ type: 'Close', time: endTime });
+        } else if (end > 24) {
+          // Cross-day block (extends past midnight)
+          const startHour = Math.floor(start);
+          const startMin = Math.round((start - startHour) * 60);
+          const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+          
+          // Open on current day (no close - continues to next day)
+          entries.push({ type: 'Open', time: startTime });
+          
+          // Add continuation close to next day (without open)
+          const nextDayIndex = (days.indexOf(day) + 1) % 7;
+          const nextDay = days[nextDayIndex];
+          
+          const overflowEnd = end - 24;
+          const endHour = Math.floor(overflowEnd);
+          const endMin = Math.round((overflowEnd - endHour) * 60);
+          const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
+          
+          // Store close for next day (without open)
+          if (!opening_hours[nextDay]) {
+            opening_hours[nextDay] = [];
+          }
+          opening_hours[nextDay].unshift({ type: 'Close', time: endTime }); // Add at beginning
+        }
       });
       
-      // Sort entries by time chronologically
+      // Sort by time
       entries.sort((a, b) => a.time.localeCompare(b.time));
       
       if (entries.length > 0) {
-        opening_hours[day] = entries;
+        // Merge with any existing entries (e.g., Close from previous day's cross-day block)
+        if (opening_hours[day] && opening_hours[day].length > 0) {
+          // Prepend existing entries (which should be Close from prev day) before new entries
+          opening_hours[day] = [...opening_hours[day], ...entries];
+        } else {
+          opening_hours[day] = entries;
+        }
+      }
+    } else {
+      // Fallback to old format (legacy)
+      const container = document.getElementById(`hoursEntries_${day}`);
+      if (container) {
+        const entries = [];
+        container.querySelectorAll('.hours-entry').forEach(entry => {
+          const type = entry.querySelector('.hours-type').value;
+          const time = entry.querySelector('.hours-time').value;
+          entries.push({ type, time });
+        });
+        
+        entries.sort((a, b) => a.time.localeCompare(b.time));
+        
+        if (entries.length > 0) {
+          opening_hours[day] = entries;
+        }
       }
     }
   });
@@ -6623,6 +8564,7 @@ window.addTag = addTag;
 window.removeTag = removeTag;
 window.loadTags = loadTags;
 window.getTagValues = getTagValues;
+// Legacy hours functions
 window.addHoursEntry = addHoursEntry;
 window.removeHoursEntry = removeHoursEntry;
 window.sortHoursEntries = sortHoursEntries;
@@ -6630,10 +8572,1397 @@ window.clearAllHoursEntries = clearAllHoursEntries;
 window.getHoursData = getHoursData;
 window.copyFromPreviousDay = copyFromPreviousDay;
 
+// Timeline UI functions
+window.addTimeBlock = addTimeBlock;
+window.removeTimeBlock = removeTimeBlock;
+window.copyTimeBlocks = copyTimeBlocks;
+window.editTimeBlock = editTimeBlock;
+window.formatHour = formatHour;
+window.initTimelineStyles = initTimelineStyles;
+window.addTimeBlockAtClick = addTimeBlockAtClick;
+window.setupBlockResize = setupBlockResize;
+window.setupBlockDrag = setupBlockDrag;
+window.checkOverlap = checkOverlap;
+window.createLoopDuplicates = createLoopDuplicates;
+window.updateLoopDuplicates = updateLoopDuplicates;
+window.setupInfiniteScroll = setupInfiniteScroll;
+window.clearAllTimeBlocks = clearAllTimeBlocks;
+window.verifyBlockPositions = verifyBlockPositions;
+window.setupBlockSync = setupBlockSync;
+window.syncInteractionToOriginal = syncInteractionToOriginal;
+
 // Branding upload modal function (placeholder)
 window.openBrandingUploadModal = function() {
   alert('Image Upload Feature\n\nTo add new branding images:\n1. Upload files to themes/_menus_ttms/static/branding/\n2. Rebuild Hugo\n3. Refresh this page\n\nSupported formats: ICO, PNG, WEBP, GIF, JPG');
 };
+
+// Get current location using browser Geolocation API
+function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser');
+    return;
+  }
+
+  // Show loading state
+  const latInput = document.getElementById('locationLat');
+  const lonInput = document.getElementById('locationLon');
+  
+  if (!latInput || !lonInput) {
+    alert('Location input fields not found');
+    return;
+  }
+
+  // Disable inputs while fetching
+  latInput.disabled = true;
+  lonInput.disabled = true;
+  latInput.placeholder = 'Getting location...';
+  lonInput.placeholder = 'Getting location...';
+
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      // Success callback
+      latInput.value = position.coords.latitude;
+      lonInput.value = position.coords.longitude;
+      
+      // Re-enable inputs
+      latInput.disabled = false;
+      lonInput.disabled = false;
+      latInput.placeholder = '';
+      lonInput.placeholder = '';
+      
+      UpdateUI.showSuccess('Location retrieved successfully!');
+    },
+    function(error) {
+      // Error callback
+      let errorMessage = 'Unable to retrieve your location';
+      
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'Location access denied. Please allow location access in your browser settings.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'Location information unavailable.';
+          break;
+        case error.TIMEOUT:
+          errorMessage = 'Location request timed out.';
+          break;
+      }
+      
+      // Re-enable inputs
+      latInput.disabled = false;
+      lonInput.disabled = false;
+      latInput.placeholder = '';
+      lonInput.placeholder = '';
+      
+      UpdateUI.showError(errorMessage);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+
+window.getCurrentLocation = getCurrentLocation;
+
+// =============================================================================
+// COLLAPSIBLE SECTIONS
+// =============================================================================
+
+function toggleSection(headerElement) {
+  const section = headerElement.closest('.collapsible-section');
+  const content = section.querySelector('.collapsible-content');
+  const icon = section.querySelector('.collapse-icon');
+  
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    icon.textContent = '▼';
+    section.classList.remove('collapsed');
+  } else {
+    content.style.display = 'none';
+    icon.textContent = '▶';
+    section.classList.add('collapsed');
+  }
+}
+
+window.toggleSection = toggleSection;
+
+// =============================================================================
+// HOUSEKEEPING / IMAGE MANAGEMENT
+// =============================================================================
+
+// Helper functions for image scanning
+const normalizeImagePath = (path) => {
+  if (!path) return '';
+  let normalized = String(path).trim();
+  normalized = normalized.replace(/^\/+/, '');
+  normalized = normalized.replace(/\\/g, '/');
+  return normalized;
+};
+
+const addUsedImageToManager = (manager, imagePath, location) => {
+  const normalized = normalizeImagePath(imagePath);
+  if (!normalized) return;
+  
+  manager.usedImages.add(normalized);
+  if (!manager.imageUsageMap.has(normalized)) {
+    manager.imageUsageMap.set(normalized, []);
+  }
+  manager.imageUsageMap.get(normalized).push(location);
+  console.log(`Adding ${location}:`, normalized);
+};
+
+const HousekeepingManager = {
+  allImages: [],
+  usedImages: new Set(),
+  unusedImages: [],
+  selectedForDeletion: new Set(),
+  imageUsageMap: new Map(), // Track WHERE each image is used
+
+  async scanImages() {
+    try {
+      UpdateUI.showSuccess('Scanning image library...');
+      
+      // Get all available images and normalize
+      this.allImages = (window.hugoStaticImages || []).map(normalizeImagePath);
+      
+      // Reset tracking
+      this.usedImages = new Set();
+      this.unusedImages = [];
+      this.selectedForDeletion = new Set();
+      this.imageUsageMap = new Map();
+      
+      // Ensure HomePageManager is initialized with fresh data
+      await HomePageManager.loadCurrentSettings();
+      
+      console.log('HomePageManager data:', HomePageManager.currentSettings);
+      
+      // Scan homepage images
+      if (HomePageManager.currentSettings) {
+        // Hero image
+        if (HomePageManager.currentSettings.image) {
+          addUsedImageToManager(this, HomePageManager.currentSettings.image, 'Homepage Hero');
+        }
+        
+        // Featured images
+        if (HomePageManager.currentSettings.images && Array.isArray(HomePageManager.currentSettings.images)) {
+          HomePageManager.currentSettings.images.forEach((img, idx) => {
+            if (img && img.image) {
+              addUsedImageToManager(this, img.image, `Featured Gallery #${idx + 1}`);
+            }
+          });
+        }
+        
+        // Tour images
+        if (HomePageManager.currentSettings.clienttourimages && Array.isArray(HomePageManager.currentSettings.clienttourimages)) {
+          HomePageManager.currentSettings.clienttourimages.forEach((img, idx) => {
+            if (img && img.image) {
+              addUsedImageToManager(this, img.image, `Tour Gallery #${idx + 1}`);
+            }
+          });
+        }
+      }
+      
+      // Scan Hugo content files directly
+      await this.scanHugoContentFiles();
+      
+      // Scan advertisements from Hugo content
+      try {
+        const adsResponse = await fetch('/advertisments/index.json');
+        if (adsResponse.ok) {
+          const adsData = await adsResponse.json();
+          console.log('Advertisments data:', adsData);
+          
+          if (adsData.items && Array.isArray(adsData.items)) {
+            adsData.items.forEach(ad => {
+              const adTitle = ad.title || 'Untitled Ad';
+              
+              // Ad images can be an array of objects with .image property or simple strings
+              if (ad.images && Array.isArray(ad.images)) {
+                ad.images.forEach(img => {
+                  if (img) {
+                    const imagePath = typeof img === 'string' ? img : (img.image || null);
+                    if (imagePath) {
+                      addUsedImageToManager(this, imagePath, `Advertisement: ${adTitle}`);
+                    }
+                  }
+                });
+              }
+            });
+          }
+        } else {
+          console.log('Could not fetch advertisments/index.json');
+        }
+      } catch (adsError) {
+        console.log('Error fetching advertisements:', adsError);
+      }
+      
+      // Also check API endpoint for ads
+      try {
+        const apiAdsResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/ads`);
+        if (apiAdsResponse.ok) {
+          const apiAdsData = await apiAdsResponse.json();
+          if (apiAdsData.ads && Array.isArray(apiAdsData.ads)) {
+            apiAdsData.ads.forEach(ad => {
+              if (ad.image) {
+                const adTitle = ad.title || 'Untitled Ad';
+                addUsedImageToManager(this, ad.image, `Advertisement: ${adTitle}`);
+              }
+            });
+          }
+        }
+      } catch (apiError) {
+        console.log('Could not fetch ads from API:', apiError);
+      }
+      
+      // Determine unused images
+      this.unusedImages = this.allImages.filter(img => !this.usedImages.has(img));
+      
+      console.log('Scan Results:', {
+        total: this.allImages.length,
+        used: this.usedImages.size,
+        unused: this.unusedImages.length,
+        usedImagesList: Array.from(this.usedImages),
+        unusedImagesList: this.unusedImages
+      });
+      
+      // Display results
+      this.displayResults();
+      
+      UpdateUI.showSuccess(`Scan complete! Found ${this.unusedImages.length} unused images.`);
+    } catch (error) {
+      console.error('Error scanning images:', error);
+      UpdateUI.showError('Error scanning images: ' + error.message);
+    }
+  },
+
+  async scanHugoContentFiles() {
+    try {
+      console.log('Scanning Hugo content files from individual category JSON files...');
+      
+      // List of content directories to scan
+      const contentDirs = ['rolls', 'bento', 'specials', 'savoury', 'sashimi', 'bowls', 'salad'];
+      
+      // Use Promise.allSettled for parallel fetching with error handling
+      const fetchPromises = contentDirs.map(async (dir) => {
+        try {
+          const response = await fetch(`/${dir}/index.json`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return { dir, data: await response.json() };
+        } catch (error) {
+          console.log(`Could not fetch /${dir}/index.json:`, error.message);
+          return { dir, error: error.message };
+        }
+      });
+      
+      const results = await Promise.allSettled(fetchPromises);
+      
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value.data) {
+          const { dir, data: categoryData } = result.value;
+          console.log(`Scanned ${dir}:`, categoryData);
+          
+          const catName = categoryData.title || dir;
+          
+          // Category-level image
+          if (categoryData.image) {
+            addUsedImageToManager(this, categoryData.image, `Category: ${catName}`);
+          }
+          
+          // Category slide-in image
+          if (categoryData.slidein && categoryData.slidein.slideinimage) {
+            addUsedImageToManager(this, categoryData.slidein.slideinimage, `Category Slide: ${catName}`);
+          }
+          
+          // Scan items in this category
+          if (categoryData.items && Array.isArray(categoryData.items)) {
+            categoryData.items.forEach(item => {
+              const itemName = item.title || 'Unknown Item';
+              
+              // Item images (can be array of objects with .image property or strings)
+              if (item.images && Array.isArray(item.images)) {
+                item.images.forEach(img => {
+                  if (img) {
+                    const imagePath = typeof img === 'string' ? img : (img.image || null);
+                    if (imagePath) {
+                      addUsedImageToManager(this, imagePath, `Menu Item: ${itemName} (${catName})`);
+                    }
+                  }
+                });
+              }
+            });
+          }
+        }
+      });
+      
+      console.log('Hugo content files scan complete');
+    } catch (error) {
+      console.error('Error scanning Hugo content files:', error);
+    }
+  },
+
+  displayResults() {
+    // Hide initial message, show results
+    document.getElementById('housekeepingContent').style.display = 'none';
+    document.getElementById('imageUsageResults').style.display = 'block';
+    
+    // Update statistics
+    document.getElementById('totalImagesCount').textContent = this.allImages.length;
+    document.getElementById('unusedImagesCount').textContent = this.unusedImages.length;
+    document.getElementById('unusedCount').textContent = this.unusedImages.length;
+    document.getElementById('usedCount').textContent = this.usedImages.size;
+    
+    // Render unused images
+    this.renderUnusedImages();
+    
+    // Render used images
+    this.renderUsedImages();
+  },
+
+  renderUnusedImages() {
+    const grid = document.getElementById('unusedImagesGrid');
+    
+    if (this.unusedImages.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #6b7280;"><p style="font-size: 1.125rem; margin: 0;">✨ No unused images found!</p><p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">All images are being used.</p></div>';
+      // Reset select all checkbox
+      const selectAll = document.getElementById('selectAllUnused');
+      if (selectAll) selectAll.checked = false;
+      return;
+    }
+    
+    // Sort alphabetically
+    const sortedUnused = [...this.unusedImages].sort();
+    
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
+    
+    sortedUnused.forEach(imagePath => {
+      const filename = imagePath.split('/').pop();
+      const card = document.createElement('div');
+      card.className = 'housekeeping-image-card';
+      card.style.cssText = 'border: 2px solid #fee; border-radius: 8px; overflow: hidden; background: white; position: relative;';
+      
+      const isSelected = this.selectedForDeletion.has(imagePath);
+      
+      card.innerHTML = `
+        <div style="position: relative;">
+          <img src="/${imagePath}" alt="${filename}" style="width: 100%; height: 140px; object-fit: cover;">
+          <div style="position: absolute; top: 0.5rem; right: 0.5rem;">
+            <input type="checkbox" 
+              class="unused-image-checkbox" 
+              data-image-path="${imagePath}" 
+              ${isSelected ? 'checked' : ''}
+              style="width: 20px; height: 20px; cursor: pointer;">
+          </div>
+        </div>
+        <div style="padding: 0.5rem; background: #fff5f5;">
+          <p style="font-size: 0.75rem; color: #dc2626; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</p>
+          <p style="font-size: 0.7rem; color: #6b7280; margin: 0.25rem 0 0 0;">Not in use</p>
+        </div>
+      `;
+      
+      // Add checkbox change handler
+      const checkbox = card.querySelector('.unused-image-checkbox');
+      checkbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          this.selectedForDeletion.add(imagePath);
+        } else {
+          this.selectedForDeletion.delete(imagePath);
+        }
+        this.updateDeleteButton();
+      });
+      
+      fragment.appendChild(card);
+    });
+    
+    // Single DOM update
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
+  },
+
+  renderUsedImages() {
+    const grid = document.getElementById('usedImagesGrid');
+    
+    const usedImagesArray = Array.from(this.usedImages).sort();
+    
+    if (usedImagesArray.length === 0) {
+      grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #6b7280;">No images are currently in use.</div>';
+      return;
+    }
+    
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
+    
+    usedImagesArray.forEach(imagePath => {
+      const filename = imagePath.split('/').pop();
+      const usageLocations = this.imageUsageMap.get(imagePath) || [];
+      const usageCount = usageLocations.length;
+      
+      const card = document.createElement('div');
+      card.style.cssText = 'border: 2px solid #d1fae5; border-radius: 8px; overflow: hidden; background: white;';
+      
+      // Generate usage summary
+      let usageSummary = '✓ In use';
+      if (usageCount > 0) {
+        usageSummary = `Used in ${usageCount} ${usageCount === 1 ? 'location' : 'locations'}`;
+      }
+      
+      // Generate detailed usage tooltip
+      const usageDetails = usageLocations.length > 0 ? usageLocations.join('\n• ') : 'Unknown location';
+      
+      card.innerHTML = `
+        <img src="/${imagePath}" alt="${filename}" style="width: 100%; height: 140px; object-fit: cover;">
+        <div style="padding: 0.5rem; background: #f0fdf4;">
+          <p style="font-size: 0.75rem; color: #16a34a; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${filename}">${filename}</p>
+          <p style="font-size: 0.7rem; color: #6b7280; margin: 0.25rem 0 0 0;" title="• ${usageDetails}">${usageSummary}</p>
+        </div>
+      `;
+      
+      fragment.appendChild(card);
+    });
+    
+    // Single DOM update
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
+  },
+
+  updateDeleteButton() {
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    if (this.selectedForDeletion.size > 0) {
+      deleteBtn.style.display = 'block';
+      deleteBtn.textContent = `🗑️ Delete Selected (${this.selectedForDeletion.size})`;
+    } else {
+      deleteBtn.style.display = 'none';
+    }
+  },
+
+  async deleteSelected() {
+    if (this.selectedForDeletion.size === 0) {
+      UpdateUI.showError('No images selected for deletion');
+      return;
+    }
+    
+    const confirmMsg = `Are you sure you want to delete ${this.selectedForDeletion.size} image(s)? This action cannot be undone.`;
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    
+    try {
+      const imagesToDelete = Array.from(this.selectedForDeletion);
+      
+      // Send delete request to API
+      const response = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/images/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: JSON.stringify({
+          images: imagesToDelete
+        })
+      });
+      
+      if (response.ok) {
+        UpdateUI.showSuccess(`Successfully deleted ${imagesToDelete.length} image(s)!`);
+        
+        // Refresh the scan
+        await this.scanImages();
+        
+        // Reload available images for other sections
+        if (HomePageManager) {
+          await HomePageManager.loadAvailableImages();
+        }
+      } else {
+        throw new Error('Failed to delete images');
+      }
+    } catch (error) {
+      console.error('Error deleting images:', error);
+      UpdateUI.showError('Failed to delete images: ' + error.message);
+    }
+  }
+};
+
+// Global functions
+function scanImageUsage() {
+  HousekeepingManager.scanImages();
+}
+
+function toggleSelectAllUnused() {
+  const checkbox = document.getElementById('selectAllUnused');
+  const allCheckboxes = document.querySelectorAll('.unused-image-checkbox');
+  
+  if (checkbox.checked) {
+    allCheckboxes.forEach(cb => {
+      cb.checked = true;
+      const imagePath = cb.getAttribute('data-image-path');
+      HousekeepingManager.selectedForDeletion.add(imagePath);
+    });
+  } else {
+    allCheckboxes.forEach(cb => {
+      cb.checked = false;
+    });
+    HousekeepingManager.selectedForDeletion.clear();
+  }
+  
+  HousekeepingManager.updateDeleteButton();
+}
+
+function deleteSelectedImages() {
+  HousekeepingManager.deleteSelected();
+}
+
+// =============================================================================
+// HOME PAGE SETTINGS
+// =============================================================================
+
+const HomePageManager = {
+  availableImages: [],
+  currentSettings: {
+    image: '',
+    images: [],
+    clienttourimages: [],
+    content: ''
+  },
+  manifestSettings: {
+    name: '',
+    short_name: '',
+    description: '',
+    theme_color: '#667eea',
+    background_color: '#ffffff',
+    start_url: '.',
+    display: 'standalone',
+    orientation: 'any',
+    icons: [],
+    screenshots: []
+  },
+  siteSettings: {
+    title: '',
+    social: {
+      facebook: '',
+      instagram: '',
+      tiktok: '',
+      youtube: '',
+      email: '',
+      phone: ''
+    },
+    orderingsystem: {
+      whatsapp: ''
+    }
+  },
+  currentSelectionTarget: null, // Track what we're selecting for
+  currentSelectionIndex: null,  // Track which gallery item
+  selectedImages: new Set(),     // Track multiple selected images
+
+  async init() {
+    await this.loadAvailableImages();
+    await this.loadCurrentSettings();
+    await this.loadManifestSettings();
+    await this.loadSiteSettings();
+    this.populateForm();
+    this.setupUploadHandlers();
+    this.setupManifestColorSync();
+  },
+
+  async loadAvailableImages() {
+    try {
+      // Fetch the list of images from the static/images directory
+      const response = await fetch('/images/');
+      const html = await response.text();
+      
+      // Parse image files from directory listing
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const links = doc.querySelectorAll('a');
+      
+      this.availableImages = [];
+      links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && (href.endsWith('.jpg') || href.endsWith('.jpeg') || href.endsWith('.png') || 
+                     href.endsWith('.webp') || href.endsWith('.gif') || href.endsWith('.PNG'))) {
+          this.availableImages.push('images/' + href);
+        }
+      });
+
+      // Fallback: use Hugo's data if directory listing is disabled
+      if (this.availableImages.length === 0 && window.hugoStaticImages) {
+        this.availableImages = window.hugoStaticImages;
+      }
+
+      console.log('Available images:', this.availableImages);
+    } catch (error) {
+      console.error('Error loading images:', error);
+      UpdateUI.showError('Failed to load available images');
+    }
+  },
+
+  async loadCurrentSettings() {
+    try {
+      // Load from Hugo's home.json (generated by home.json.json template)
+      const response = await fetch('/index.json');
+      if (response.ok) {
+        const data = await response.json();
+        this.currentSettings = {
+          image: data.hero_background_image || data.image || '',
+          images: data.featured_images || data.images || [],
+          clienttourimages: data.client_tour_images || data.clienttourimages || [],
+          content: data.content || ''
+        };
+        console.log('Loaded home page settings:', this.currentSettings);
+      }
+    } catch (error) {
+      console.log('Using default settings:', error);
+    }
+  },
+
+  async loadManifestSettings() {
+    try {
+      const response = await fetch('/manifest.json');
+      if (response.ok) {
+        const data = await response.json();
+        this.manifestSettings = {
+          name: data.name || '',
+          short_name: data.short_name || '',
+          description: data.description || '',
+          theme_color: data.theme_color || '#667eea',
+          background_color: data.background_color || '#ffffff',
+          start_url: data.start_url || '.',
+          display: data.display || 'standalone',
+          orientation: data.orientation || 'any',
+          icons: data.icons || [],
+          screenshots: data.screenshots || []
+        };
+        console.log('Loaded manifest settings:', this.manifestSettings);
+      }
+    } catch (error) {
+      console.log('Using default manifest settings:', error);
+    }
+  },
+
+  async loadSiteSettings() {
+    try {
+      // Load Hugo site config from window object (injected by Hugo template)
+      if (window.hugoSiteConfig) {
+        const data = window.hugoSiteConfig;
+        
+        // Helper function to clean empty or quoted strings
+        const cleanValue = (val) => {
+          if (!val || val === '""' || val === "''") return '';
+          let cleaned = String(val);
+          // Remove surrounding quotes if present
+          if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || 
+              (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+            cleaned = cleaned.slice(1, -1);
+          }
+          return cleaned;
+        };
+        
+        this.siteSettings = {
+          title: cleanValue(data.title),
+          social: {
+            facebook: cleanValue(data.params?.social?.facebook),
+            instagram: cleanValue(data.params?.social?.instagram),
+            tiktok: cleanValue(data.params?.social?.tiktok),
+            youtube: cleanValue(data.params?.social?.youtube),
+            email: cleanValue(data.params?.social?.email),
+            phone: cleanValue(data.params?.social?.phone)
+          },
+          orderingsystem: {
+            whatsapp: cleanValue(data.params?.orderingsystem?.whatsapp)
+          }
+        };
+        console.log('Loaded site settings:', this.siteSettings);
+      } else {
+        console.log('No Hugo site config found, using defaults');
+      }
+    } catch (error) {
+      console.log('Error loading site settings:', error);
+    }
+  },
+
+  populateForm() {
+    // Render hero image
+    this.renderHeroImage();
+
+    // Populate featured images
+    this.renderFeaturedImages();
+
+    // Populate tour images
+    this.renderTourImages();
+
+    // Populate manifest fields
+    this.populateManifestForm();
+
+    // Populate site settings fields
+    this.populateSiteSettingsForm();
+
+    // Populate page content
+    const contentTextarea = document.getElementById('homePageContent');
+    if (contentTextarea) {
+      contentTextarea.value = this.currentSettings.content || '';
+    }
+  },
+
+  populateManifestForm() {
+    const fields = {
+      manifestName: this.manifestSettings.name,
+      manifestShortName: this.manifestSettings.short_name,
+      manifestDescription: this.manifestSettings.description,
+      manifestThemeColor: this.manifestSettings.theme_color,
+      manifestThemeColorText: this.manifestSettings.theme_color,
+      manifestBgColor: this.manifestSettings.background_color,
+      manifestBgColorText: this.manifestSettings.background_color,
+      manifestStartUrl: this.manifestSettings.start_url,
+      manifestDisplay: this.manifestSettings.display,
+      manifestOrientation: this.manifestSettings.orientation
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+      const element = document.getElementById(id);
+      if (element && value) {
+        element.value = value;
+      }
+    });
+  },
+
+  populateSiteSettingsForm() {
+    const fields = {
+      siteTitle: this.siteSettings.title,
+      socialFacebook: this.siteSettings.social.facebook,
+      socialInstagram: this.siteSettings.social.instagram,
+      socialTiktok: this.siteSettings.social.tiktok,
+      socialYoutube: this.siteSettings.social.youtube,
+      socialEmail: this.siteSettings.social.email,
+      socialPhone: this.siteSettings.social.phone,
+      orderingWhatsapp: this.siteSettings.orderingsystem.whatsapp
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        // Filter out empty strings, null, undefined, and literal '""' strings
+        let cleanValue = '';
+        if (value && value !== '""' && value !== "''") {
+          cleanValue = String(value);
+          // Remove surrounding quotes if present
+          if ((cleanValue.startsWith('"') && cleanValue.endsWith('"')) || 
+              (cleanValue.startsWith("'") && cleanValue.endsWith("'"))) {
+            cleanValue = cleanValue.slice(1, -1);
+          }
+        }
+        element.value = cleanValue;
+      }
+    });
+  },
+
+  setupManifestColorSync() {
+    // Sync color picker with text input for theme color
+    const themeColorPicker = document.getElementById('manifestThemeColor');
+    const themeColorText = document.getElementById('manifestThemeColorText');
+    
+    if (themeColorPicker && themeColorText) {
+      themeColorPicker.addEventListener('input', (e) => {
+        themeColorText.value = e.target.value;
+      });
+      
+      themeColorText.addEventListener('input', (e) => {
+        if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+          themeColorPicker.value = e.target.value;
+        }
+      });
+    }
+
+    // Sync color picker with text input for background color
+    const bgColorPicker = document.getElementById('manifestBgColor');
+    const bgColorText = document.getElementById('manifestBgColorText');
+    
+    if (bgColorPicker && bgColorText) {
+      bgColorPicker.addEventListener('input', (e) => {
+        bgColorText.value = e.target.value;
+      });
+      
+      bgColorText.addEventListener('input', (e) => {
+        if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+          bgColorPicker.value = e.target.value;
+        }
+      });
+    }
+  },
+
+  renderHeroImage() {
+    const preview = document.getElementById('heroImagePreview');
+    if (!preview) return;
+
+    if (this.currentSettings.image) {
+      preview.innerHTML = `
+        <div style="position: relative;">
+          <img src="/${this.currentSettings.image}" alt="Hero Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <button onclick="HomePageManager.removeHeroImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
+        </div>
+        <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${this.currentSettings.image.replace('images/', '')}</p>
+      `;
+    } else {
+      preview.innerHTML = '<span style="color: #9ca3af;">No image selected</span>';
+    }
+  },
+
+  removeHeroImage() {
+    this.currentSettings.image = '';
+    this.renderHeroImage();
+  },
+
+  renderFeaturedImages() {
+    const container = document.getElementById('featuredImagesGrid');
+    if (!container) return;
+
+    container.innerHTML = '';
+    this.currentSettings.images.forEach((imgObj, index) => {
+      const card = document.createElement('div');
+      card.style.cssText = 'border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: white; position: relative;';
+      
+      if (imgObj.image) {
+        card.innerHTML = `
+          <img src="/${imgObj.image}" alt="Featured Image" style="width: 100%; height: 150px; object-fit: cover;">
+          <div style="padding: 0.5rem;">
+            <p style="font-size: 0.75rem; color: #6b7280; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${imgObj.image.replace('images/', '')}</p>
+            <div style="display: flex; gap: 0.25rem; margin-top: 0.5rem;">
+              <button onclick="HomePageManager.selectFeaturedImage(${index})" class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.75rem;">Change</button>
+              <button onclick="HomePageManager.removeFeaturedImage(${index})" class="btn btn-sm btn-danger" style="font-size: 0.75rem;">🗑️</button>
+            </div>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div style="height: 150px; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af;">
+            No Image
+          </div>
+          <div style="padding: 0.5rem;">
+            <button onclick="HomePageManager.selectFeaturedImage(${index})" class="btn btn-sm btn-primary" style="width: 100%; font-size: 0.75rem;">📁 Select</button>
+          </div>
+        `;
+      }
+      
+      container.appendChild(card);
+    });
+  },
+
+  renderTourImages() {
+    const container = document.getElementById('tourImagesGrid');
+    if (!container) return;
+
+    container.innerHTML = '';
+    this.currentSettings.clienttourimages.forEach((imgObj, index) => {
+      const card = document.createElement('div');
+      card.style.cssText = 'border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: white; position: relative;';
+      
+      if (imgObj.image) {
+        card.innerHTML = `
+          <img src="/${imgObj.image}" alt="Tour Image" style="width: 100%; height: 150px; object-fit: cover;">
+          <div style="padding: 0.5rem;">
+            <p style="font-size: 0.75rem; color: #6b7280; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${imgObj.image.replace('images/', '')}</p>
+            <div style="display: flex; gap: 0.25rem; margin-top: 0.5rem;">
+              <button onclick="HomePageManager.selectTourImage(${index})" class="btn btn-sm btn-secondary" style="flex: 1; font-size: 0.75rem;">Change</button>
+              <button onclick="HomePageManager.removeTourImage(${index})" class="btn btn-sm btn-danger" style="font-size: 0.75rem;">🗑️</button>
+            </div>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div style="height: 150px; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af;">
+            No Image
+          </div>
+          <div style="padding: 0.5rem;">
+            <button onclick="HomePageManager.selectTourImage(${index})" class="btn btn-sm btn-primary" style="width: 100%; font-size: 0.75rem;">📁 Select</button>
+          </div>
+        `;
+      }
+      
+      container.appendChild(card);
+    });
+  },
+
+  selectFeaturedImage(index) {
+    this.currentSelectionTarget = 'featured';
+    this.currentSelectionIndex = index;
+    this.openImageLibraryModal();
+  },
+
+  selectTourImage(index) {
+    this.currentSelectionTarget = 'tour';
+    this.currentSelectionIndex = index;
+    this.openImageLibraryModal();
+  },
+
+  addFeaturedImage() {
+    this.currentSelectionTarget = 'featured';
+    this.currentSelectionIndex = null; // null means add multiple
+    this.openImageLibraryModal();
+  },
+
+  removeFeaturedImage(index) {
+    this.currentSettings.images.splice(index, 1);
+    this.renderFeaturedImages();
+  },
+
+  addTourImage() {
+    this.currentSelectionTarget = 'tour';
+    this.currentSelectionIndex = null; // null means add multiple
+    this.openImageLibraryModal();
+  },
+
+  removeTourImage(index) {
+    this.currentSettings.clienttourimages.splice(index, 1);
+    this.renderTourImages();
+  },
+
+  // Image Library Modal
+  openImageLibraryModal() {
+    const modal = document.getElementById('imageLibraryModal');
+    const grid = document.getElementById('imageLibraryGrid');
+    
+    if (!modal || !grid) return;
+
+    // Clear previous selections
+    this.selectedImages.clear();
+
+    // Populate grid with images
+    grid.innerHTML = '';
+    this.availableImages.forEach(imagePath => {
+      const card = document.createElement('div');
+      card.className = 'image-select-card';
+      card.dataset.imagePath = imagePath;
+      card.style.cssText = 'position: relative; border: 3px solid #e5e7eb; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); height: fit-content; display: flex; flex-direction: column;';
+      
+      const filename = imagePath.replace('images/', '');
+      card.innerHTML = `
+        <div style="position: absolute; top: 8px; right: 8px; z-index: 10; background: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+          <input type="checkbox" style="width: 20px; height: 20px; cursor: pointer; margin: 0;" onclick="event.stopPropagation();">
+        </div>
+        <img src="/${imagePath}" alt="${filename}" style="width: 100%; height: 140px; object-fit: cover; background: #f3f4f6; pointer-events: none;">
+        <div style="padding: 0.75rem; background: white; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+          <p style="font-size: 0.875rem; color: #111827; margin: 0; text-align: center; line-height: 1.4; word-break: break-word; font-weight: 600; pointer-events: none;">${filename}</p>
+        </div>
+      `;
+      
+      const checkbox = card.querySelector('input[type="checkbox"]');
+      
+      // Toggle selection on card click
+      card.addEventListener('click', () => {
+        checkbox.checked = !checkbox.checked;
+        this.toggleImageSelection(imagePath, card, checkbox.checked);
+      });
+      
+      // Also handle checkbox click directly
+      checkbox.addEventListener('change', (e) => {
+        this.toggleImageSelection(imagePath, card, e.target.checked);
+      });
+      
+      card.title = filename; // Tooltip on hover
+      
+      grid.appendChild(card);
+    });
+
+    // Update image count
+    const imageCountEl = document.getElementById('imageCount');
+    if (imageCountEl) {
+      imageCountEl.textContent = this.availableImages.length;
+    }
+    
+    // Update selected count
+    this.updateSelectedCount();
+
+    // Setup search
+    const searchInput = document.getElementById('imageSearchInput');
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.oninput = (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const cards = grid.children;
+        for (let card of cards) {
+          const text = card.textContent.toLowerCase();
+          card.style.display = text.includes(searchTerm) ? 'block' : 'none';
+        }
+      };
+    }
+
+    modal.style.display = 'flex';
+  },
+
+  toggleImageSelection(imagePath, card, isSelected) {
+    if (isSelected) {
+      this.selectedImages.add(imagePath);
+      card.style.borderColor = '#3b82f6';
+      card.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+      card.style.transform = 'scale(0.98)';
+    } else {
+      this.selectedImages.delete(imagePath);
+      card.style.borderColor = '#e5e7eb';
+      card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      card.style.transform = 'scale(1)';
+    }
+    
+    this.updateSelectedCount();
+  },
+
+  updateSelectedCount() {
+    const countEl = document.getElementById('selectedImageCount');
+    if (countEl) {
+      const count = this.selectedImages.size;
+      countEl.textContent = count > 0 ? `${count} selected` : '0 selected';
+      
+      // Enable/disable select button
+      const selectBtn = document.getElementById('selectImagesBtn');
+      if (selectBtn) {
+        selectBtn.disabled = count === 0;
+        selectBtn.style.opacity = count === 0 ? '0.5' : '1';
+        selectBtn.style.cursor = count === 0 ? 'not-allowed' : 'pointer';
+      }
+    }
+  },
+
+  closeImageLibraryModal() {
+    const modal = document.getElementById('imageLibraryModal');
+    if (modal) {
+      modal.style.display = 'none';
+      this.selectedImages.clear();
+    }
+  },
+
+  selectImageFromLibrary() {
+    const selectedArray = Array.from(this.selectedImages);
+    
+    if (selectedArray.length === 0) {
+      return;
+    }
+
+    if (this.currentSelectionTarget === 'hero') {
+      // For hero, use first selected image
+      this.currentSettings.image = selectedArray[0];
+      this.renderHeroImage();
+    } else if (this.currentSelectionTarget === 'featured') {
+      if (this.currentSelectionIndex !== null) {
+        // Replace specific item
+        this.currentSettings.images[this.currentSelectionIndex].image = selectedArray[0];
+      } else {
+        // Add all selected images
+        selectedArray.forEach(imagePath => {
+          this.currentSettings.images.push({ image: imagePath });
+        });
+      }
+      this.renderFeaturedImages();
+    } else if (this.currentSelectionTarget === 'tour') {
+      if (this.currentSelectionIndex !== null) {
+        // Replace specific item
+        this.currentSettings.clienttourimages[this.currentSelectionIndex].image = selectedArray[0];
+      } else {
+        // Add all selected images
+        selectedArray.forEach(imagePath => {
+          this.currentSettings.clienttourimages.push({ image: imagePath });
+        });
+      }
+      this.renderTourImages();
+    }
+    
+    this.closeImageLibraryModal();
+  },
+
+  // Upload Handlers
+  setupUploadHandlers() {
+    const heroInput = document.getElementById('heroImageUploadInput');
+    const galleryInput = document.getElementById('galleryImageUploadInput');
+    const tourInput = document.getElementById('tourImageUploadInput');
+
+    if (heroInput) {
+      heroInput.onchange = (e) => this.handleImageUpload(e, 'hero');
+    }
+
+    if (galleryInput) {
+      galleryInput.onchange = (e) => this.handleImageUpload(e, 'gallery');
+    }
+
+    if (tourInput) {
+      tourInput.onchange = (e) => this.handleImageUpload(e, 'tour');
+    }
+  },
+
+  async handleImageUpload(event, target) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      UpdateUI.showError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      UpdateUI.showError('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('folder', 'images');
+
+      // Upload to server
+      UpdateUI.showSuccess('Uploading image...');
+      
+      const response = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const imagePath = data.path || `images/${file.name}`;
+        
+        // Add to available images
+        this.availableImages.push(imagePath);
+        
+        // Set the image
+        if (target === 'hero') {
+          this.currentSettings.image = imagePath;
+          this.renderHeroImage();
+        } else if (target === 'gallery') {
+          // Check if we're changing an existing image or adding new
+          if (this.currentSelectionIndex !== null) {
+            // Changing existing image
+            if (this.currentSelectionTarget === 'featured') {
+              this.currentSettings.images[this.currentSelectionIndex].image = imagePath;
+            } else if (this.currentSelectionTarget === 'tour') {
+              this.currentSettings.clienttourimages[this.currentSelectionIndex].image = imagePath;
+            }
+          } else {
+            // Adding new image
+            this.currentSettings.images.push({ image: imagePath });
+          }
+          this.renderFeaturedImages();
+        } else if (target === 'tour') {
+          // Check if we're changing an existing image or adding new
+          if (this.currentSelectionIndex !== null) {
+            // Changing existing image
+            this.currentSettings.clienttourimages[this.currentSelectionIndex].image = imagePath;
+          } else {
+            // Adding new image
+            this.currentSettings.clienttourimages.push({ image: imagePath });
+          }
+          this.renderTourImages();
+        }
+        
+        // Reset selection tracking
+        this.currentSelectionTarget = null;
+        this.currentSelectionIndex = null;
+        
+        UpdateUI.showSuccess('Image uploaded successfully!');
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      UpdateUI.showError('Failed to upload image: ' + error.message);
+    }
+
+    // Reset input
+    event.target.value = '';
+  },
+
+  async save() {
+    try {
+      // Build the frontmatter content
+      const frontmatter = {
+        image: this.currentSettings.image,
+        images: this.currentSettings.images.filter(img => img.image),
+        clienttourimages: this.currentSettings.clienttourimages.filter(img => img.image)
+      };
+
+      // Convert to YAML format
+      let yamlContent = '---\n';
+      yamlContent += `image: ${frontmatter.image}\n`;
+      
+      if (frontmatter.images.length > 0) {
+        yamlContent += 'images:\n';
+        frontmatter.images.forEach(img => {
+          yamlContent += `  - image: ${img.image}\n`;
+        });
+      }
+      
+      if (frontmatter.clienttourimages.length > 0) {
+        yamlContent += 'clienttourimages:\n';
+        frontmatter.clienttourimages.forEach(img => {
+          yamlContent += `  - image: ${img.image}\n`;
+        });
+      }
+      
+      yamlContent += '---\n';
+      
+      // Add page content after frontmatter
+      const pageContent = document.getElementById('homePageContent').value || '';
+      yamlContent += pageContent;
+
+      // Collect site settings
+      const siteConfigData = {
+        title: document.getElementById('siteTitle').value,
+        params: {
+          social: {
+            facebook: document.getElementById('socialFacebook').value,
+            instagram: document.getElementById('socialInstagram').value,
+            tiktok: document.getElementById('socialTiktok').value,
+            youtube: document.getElementById('socialYoutube').value,
+            email: document.getElementById('socialEmail').value,
+            phone: document.getElementById('socialPhone').value
+          },
+          orderingsystem: {
+            whatsapp: document.getElementById('orderingWhatsapp').value
+          }
+        }
+      };
+
+      // Save homepage
+      const homepageResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/homepage`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: JSON.stringify({
+          content: yamlContent,
+          frontmatter: frontmatter
+        })
+      });
+
+      // Save config
+      const configResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: JSON.stringify(siteConfigData)
+      });
+
+      if (homepageResponse.ok && configResponse.ok) {
+        UpdateUI.showSuccess('Home page and site settings saved successfully!');
+        await this.loadCurrentSettings();
+        await this.loadSiteSettings();
+      } else {
+        throw new Error('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      UpdateUI.showError('Failed to save settings: ' + error.message);
+    }
+  }
+};
+
+// Global functions for onclick handlers
+function addFeaturedImage() {
+  HomePageManager.addFeaturedImage();
+}
+
+function addTourImage() {
+  HomePageManager.addTourImage();
+}
+
+function saveHomePageSettings() {
+  HomePageManager.save();
+}
+
+async function saveManifestSettings() {
+  try {
+    // Collect manifest settings (preserve icons and screenshots)
+    const manifestData = {
+      name: document.getElementById('manifestName').value,
+      short_name: document.getElementById('manifestShortName').value,
+      description: document.getElementById('manifestDescription').value,
+      theme_color: document.getElementById('manifestThemeColorText').value,
+      background_color: document.getElementById('manifestBgColorText').value,
+      start_url: document.getElementById('manifestStartUrl').value,
+      display: document.getElementById('manifestDisplay').value,
+      orientation: document.getElementById('manifestOrientation').value,
+      icons: HomePageManager.manifestSettings.icons || [],
+      screenshots: HomePageManager.manifestSettings.screenshots || []
+    };
+
+    // Save manifest
+    const manifestResponse = await fetch(`${UpdateUI.apiConfig.getClientUrl()}/manifest`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      },
+      body: JSON.stringify(manifestData)
+    });
+
+    if (manifestResponse.ok) {
+      UpdateUI.showSuccess('PWA manifest saved successfully!');
+      await HomePageManager.loadManifestSettings();
+    } else {
+      throw new Error('Failed to save manifest');
+    }
+  } catch (error) {
+    console.error('Error saving manifest:', error);
+    UpdateUI.showError('Failed to save manifest: ' + error.message);
+  }
+}
+
+function selectHeroImage() {
+  HomePageManager.currentSelectionTarget = 'hero';
+  HomePageManager.openImageLibraryModal();
+}
+
+function uploadHeroImage() {
+  HomePageManager.currentSelectionTarget = 'hero';
+  document.getElementById('heroImageUploadInput').click();
+}
+
+function uploadFeaturedImage() {
+  HomePageManager.currentSelectionTarget = 'gallery';
+  document.getElementById('galleryImageUploadInput').click();
+}
+
+function uploadTourImage() {
+  HomePageManager.currentSelectionTarget = 'tour';
+  document.getElementById('tourImageUploadInput').click();
+}
+
+function uploadGalleryImage(target, index) {
+  HomePageManager.currentSelectionTarget = target;
+  HomePageManager.currentSelectionIndex = index;
+  document.getElementById('galleryImageUploadInput').click();
+}
+
+function closeImageLibraryModal() {
+  HomePageManager.closeImageLibraryModal();
+}
+
+window.HomePageManager = HomePageManager;
+window.addFeaturedImage = addFeaturedImage;
+window.addTourImage = addTourImage;
+window.saveHomePageSettings = saveHomePageSettings;
+window.selectHeroImage = selectHeroImage;
+window.uploadHeroImage = uploadHeroImage;
+window.uploadGalleryImage = uploadGalleryImage;
+window.closeImageLibraryModal = closeImageLibraryModal;
+
+// Initialize when homepage tab is opened
+document.addEventListener('DOMContentLoaded', () => {
+  const homeTab = document.querySelector('[data-tab="homepage"]');
+  if (homeTab) {
+    homeTab.addEventListener('click', () => {
+      if (HomePageManager.availableImages.length === 0) {
+        HomePageManager.init();
+      }
+    });
+  }
+});
 
 // Export drag and drop handlers
 window.handleDragStart = (e, id) => UpdateUI.handleDragStart(e, id);
