@@ -9376,7 +9376,9 @@ const HousekeepingManager = {
       });
       
       if (response.ok) {
+        const result = await response.json();
         UpdateUI.showSuccess(`Successfully deleted ${imagesToDelete.length} image(s)!`);
+        console.log('Delete result:', result);
         
         // Refresh the scan
         await this.scanImages();
@@ -9386,7 +9388,9 @@ const HousekeepingManager = {
           await HomePageManager.loadAvailableImages();
         }
       } else {
-        throw new Error('Failed to delete images');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Delete failed:', errorData);
+        throw new Error(errorData.error || `Failed to delete images (${response.status})`);
       }
     } catch (error) {
       console.error('Error deleting images:', error);
