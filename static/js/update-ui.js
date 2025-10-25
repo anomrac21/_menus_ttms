@@ -9390,6 +9390,9 @@ const HousekeepingManager = {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Delete failed:', errorData);
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          console.error('Individual errors:', errorData.errors);
+        }
         throw new Error(errorData.error || `Failed to delete images (${response.status})`);
       }
     } catch (error) {
