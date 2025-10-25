@@ -1136,26 +1136,32 @@ window.hugoSiteConfig = {
         <div class="form-group">
           <label class="form-label">Hero Image</label>
           <input type="hidden" id="categoryHeroImageCurrent">
-          <input type="file" class="form-input" id="categoryHeroImageFile" accept="image/*">
-          <input type="text" class="form-input" id="categoryHeroImage" placeholder="images/category-hero.webp" style="display: none;">
+          <input type="hidden" id="categoryHeroImage">
           
-          <!-- Hero Image Preview -->
-          <div id="categoryHeroPreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; text-align: center;">
-            <img id="categoryHeroPreviewImg" src="" alt="Hero preview" style="max-width: 100%; max-height: 200px; border-radius: 4px;">
-            <p id="categoryHeroPath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;"></p>
+          <div id="categoryHeroImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+            <div id="categoryHeroImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <p style="color: #9ca3af; font-size: 0.875rem;">No hero image selected</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary" onclick="selectCategoryHeroImage()" style="flex: 1;">📁 Choose from Library</button>
+              <button type="button" class="btn btn-primary" onclick="uploadCategoryHeroImage()" style="flex: 1;">📤 Upload New Image</button>
+            </div>
           </div>
         </div>
         
         <div class="form-group">
           <label class="form-label">Slide-in Image</label>
           <input type="hidden" id="categorySlideImageCurrent">
-          <input type="file" class="form-input" id="categorySlideImageFile" accept="image/*">
-          <input type="text" class="form-input" id="categorySlideImage" placeholder="images/character.webp" style="display: none;">
+          <input type="hidden" id="categorySlideImage">
           
-          <!-- Slide Image Preview -->
-          <div id="categorySlidePreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; text-align: center;">
-            <img id="categorySlidePreviewImg" src="" alt="Slide preview" style="max-width: 100%; max-height: 200px; border-radius: 4px;">
-            <p id="categorySlidePath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;"></p>
+          <div id="categorySlideImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+            <div id="categorySlideImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <p style="color: #9ca3af; font-size: 0.875rem;">No slide-in image selected</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary" onclick="selectCategorySlideImage()" style="flex: 1;">📁 Choose from Library</button>
+              <button type="button" class="btn btn-primary" onclick="uploadCategorySlideImage()" style="flex: 1;">📤 Upload New Image</button>
+            </div>
           </div>
         </div>
         

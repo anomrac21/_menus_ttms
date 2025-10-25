@@ -8535,29 +8535,12 @@ async function openCategoryModal(categoryName) {
       document.getElementById('categorySlideDirection').value = data.slidein?.direction || '';
       document.getElementById('categoryBody').value = data.body || '';
         
-        // Show hero image preview
-        if (heroImage) {
-          document.getElementById('categoryHeroImageCurrent').value = heroImage;
-          const heroPath = heroImage.startsWith('/') ? heroImage : `/${heroImage}`;
-          document.getElementById('categoryHeroPreviewImg').src = heroPath;
-          document.getElementById('categoryHeroPath').textContent = heroImage;
-          document.getElementById('categoryHeroPreview').style.display = 'block';
-        } else {
-          document.getElementById('categoryHeroImageCurrent').value = '';
-          document.getElementById('categoryHeroPreview').style.display = 'none';
-        }
+        // Update image previews using new functions
+        document.getElementById('categoryHeroImageCurrent').value = heroImage;
+        updateCategoryHeroImagePreview(heroImage);
         
-        // Show slide image preview
-        if (slideImage) {
-          document.getElementById('categorySlideImageCurrent').value = slideImage;
-          const slidePath = slideImage.startsWith('/') ? slideImage : `/${slideImage}`;
-          document.getElementById('categorySlidePreviewImg').src = slidePath;
-          document.getElementById('categorySlidePath').textContent = slideImage;
-          document.getElementById('categorySlidePreview').style.display = 'block';
-        } else {
-          document.getElementById('categorySlideImageCurrent').value = '';
-          document.getElementById('categorySlidePreview').style.display = 'none';
-        }
+        document.getElementById('categorySlideImageCurrent').value = slideImage;
+        updateCategorySlideImagePreview(slideImage);
         
         landingPageLoaded = true;
         console.log('✅ Loaded landing page data for', categoryName);
@@ -8580,45 +8563,9 @@ async function openCategoryModal(categoryName) {
       document.getElementById('categoryBody').value = '';
       document.getElementById('categoryHeroImageCurrent').value = '';
       document.getElementById('categorySlideImageCurrent').value = '';
-      document.getElementById('categoryHeroPreview').style.display = 'none';
-      document.getElementById('categorySlidePreview').style.display = 'none';
+      updateCategoryHeroImagePreview('');
+      updateCategorySlideImagePreview('');
   }
-  
-  // Setup file input change handlers
-  const heroFileInput = document.getElementById('categoryHeroImageFile');
-  const slideFileInput = document.getElementById('categorySlideImageFile');
-  
-  heroFileInput.onchange = function() {
-    if (this.files && this.files[0]) {
-      const file = this.files[0];
-      document.getElementById('categoryHeroImage').value = `images/${file.name}`;
-      
-      // Show preview
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('categoryHeroPreviewImg').src = e.target.result;
-        document.getElementById('categoryHeroPath').textContent = `📎 New file: ${file.name}`;
-        document.getElementById('categoryHeroPreview').style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  slideFileInput.onchange = function() {
-    if (this.files && this.files[0]) {
-      const file = this.files[0];
-      document.getElementById('categorySlideImage').value = `images/${file.name}`;
-      
-      // Show preview
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('categorySlidePreviewImg').src = e.target.result;
-        document.getElementById('categorySlidePath').textContent = `📎 New file: ${file.name}`;
-        document.getElementById('categorySlidePreview').style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    }
-  };
   
   // Setup icon URL input listener for live preview (remove old listeners first)
   const iconUrlInput = document.getElementById('categoryIconUrl');
@@ -8729,43 +8676,10 @@ async function saveCategory(event) {
   console.log(`💾 Saving category "${newName}" with icon:`, iconUrl);
   
   // Landing page fields
-  let heroImage = document.getElementById('categoryHeroImage').value.trim();
-  let slideImage = document.getElementById('categorySlideImage').value.trim();
+  const heroImage = document.getElementById('categoryHeroImage').value.trim();
+  const slideImage = document.getElementById('categorySlideImage').value.trim();
   const slideDirection = document.getElementById('categorySlideDirection').value;
   const body = document.getElementById('categoryBody').value.trim();
-  
-  // Check for file uploads
-  const heroFileInput = document.getElementById('categoryHeroImageFile');
-  const slideFileInput = document.getElementById('categorySlideImageFile');
-  
-  let hasPendingUploads = false;
-  const pendingUploads = [];
-  
-  if (heroFileInput.files && heroFileInput.files[0]) {
-    pendingUploads.push({
-      file: heroFileInput.files[0],
-      type: 'hero',
-      name: heroFileInput.files[0].name
-    });
-    heroImage = `images/${heroFileInput.files[0].name}`;
-    hasPendingUploads = true;
-  } else if (!heroImage) {
-    // Keep current image if no new upload and no path entered
-    heroImage = document.getElementById('categoryHeroImageCurrent').value;
-  }
-  
-  if (slideFileInput.files && slideFileInput.files[0]) {
-    pendingUploads.push({
-      file: slideFileInput.files[0],
-      type: 'slide',
-      name: slideFileInput.files[0].name
-    });
-    slideImage = `images/${slideFileInput.files[0].name}`;
-    hasPendingUploads = true;
-  } else if (!slideImage) {
-    // Keep current image if no new upload and no path entered
-    slideImage = document.getElementById('categorySlideImageCurrent').value;
-  }
   
   if (!newName || !iconUrl) {
     alert('Please fill in all required fields (Name and Icon)');
@@ -8781,16 +8695,6 @@ async function saveCategory(event) {
     }
   }
   
-  // Store pending uploads in sessionStorage (images will be uploaded on publish)
-  if (hasPendingUploads) {
-    const storageKey = `pending_category_uploads_${newName}`;
-    sessionStorage.setItem(storageKey, JSON.stringify({
-      uploads: pendingUploads.map(u => ({ type: u.type, name: u.name })),
-      timestamp: Date.now()
-    }));
-    console.log(`📸 Stored ${pendingUploads.length} pending image(s) for category "${newName}"`);
-  }
-  
   // Update category in state
   UpdateUI.saveCategoryDraft(originalName, newName, iconUrl, weight);
   
@@ -8804,11 +8708,6 @@ async function saveCategory(event) {
       weight: weight,
       body: body
     });
-      
-    // Show success message with upload info
-    if (hasPendingUploads) {
-      UpdateUI.showSuccess(`Category "${newName}" saved! ${pendingUploads.length} image(s) will upload when published.`);
-    }
   } catch (error) {
     console.error('Error saving category landing page:', error);
     UpdateUI.showError(`Category save failed: ${error.message}`);
@@ -8819,6 +8718,117 @@ async function saveCategory(event) {
   
   // Update pending summary
   UpdateUI.renderPendingSummary();
+}
+
+// Category Image Management Functions
+function selectCategoryHeroImage() {
+  UpdateUI.currentImageCallback = (imagePath) => {
+    document.getElementById('categoryHeroImage').value = imagePath;
+    updateCategoryHeroImagePreview(imagePath);
+  };
+  UpdateUI.showImageLibraryModal();
+}
+
+function uploadCategoryHeroImage() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const imagePath = `images/${file.name}`;
+      
+      // Store file for later upload
+      sessionStorage.setItem(`pending_upload_category_hero_${file.name}`, 'true');
+      
+      // Update UI immediately
+      document.getElementById('categoryHeroImage').value = imagePath;
+      updateCategoryHeroImagePreview(imagePath);
+      
+      UpdateUI.showSuccess(`Image "${file.name}" will be uploaded when you publish.`);
+    }
+  };
+  input.click();
+}
+
+function selectCategorySlideImage() {
+  UpdateUI.currentImageCallback = (imagePath) => {
+    document.getElementById('categorySlideImage').value = imagePath;
+    updateCategorySlideImagePreview(imagePath);
+  };
+  UpdateUI.showImageLibraryModal();
+}
+
+function uploadCategorySlideImage() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const imagePath = `images/${file.name}`;
+      
+      // Store file for later upload
+      sessionStorage.setItem(`pending_upload_category_slide_${file.name}`, 'true');
+      
+      // Update UI immediately
+      document.getElementById('categorySlideImage').value = imagePath;
+      updateCategorySlideImagePreview(imagePath);
+      
+      UpdateUI.showSuccess(`Image "${file.name}" will be uploaded when you publish.`);
+    }
+  };
+  input.click();
+}
+
+function removeCategoryHeroImage() {
+  document.getElementById('categoryHeroImage').value = '';
+  document.getElementById('categoryHeroImageCurrent').value = '';
+  updateCategoryHeroImagePreview('');
+}
+
+function removeCategorySlideImage() {
+  document.getElementById('categorySlideImage').value = '';
+  document.getElementById('categorySlideImageCurrent').value = '';
+  updateCategorySlideImagePreview('');
+}
+
+function updateCategoryHeroImagePreview(imagePath) {
+  const preview = document.getElementById('categoryHeroImagePreview');
+  if (!imagePath) {
+    preview.innerHTML = '<p style="color: #9ca3af; font-size: 0.875rem;">No hero image selected</p>';
+    return;
+  }
+  
+  const displayPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  const filename = imagePath.split('/').pop();
+  
+  preview.innerHTML = `
+    <div style="position: relative;">
+      <img src="${displayPath}" alt="Hero Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <button type="button" onclick="removeCategoryHeroImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
+    </div>
+    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${filename}</p>
+  `;
+}
+
+function updateCategorySlideImagePreview(imagePath) {
+  const preview = document.getElementById('categorySlideImagePreview');
+  if (!imagePath) {
+    preview.innerHTML = '<p style="color: #9ca3af; font-size: 0.875rem;">No slide-in image selected</p>';
+    return;
+  }
+  
+  const displayPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  const filename = imagePath.split('/').pop();
+  
+  preview.innerHTML = `
+    <div style="position: relative;">
+      <img src="${displayPath}" alt="Slide Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <button type="button" onclick="removeCategorySlideImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
+    </div>
+    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${filename}</p>
+  `;
 }
 
 // Export to window
@@ -8838,6 +8848,12 @@ window.closeCategoryModal = closeCategoryModal;
 window.saveCategory = saveCategory;
 window.filterIconsByCategory = filterIconsByCategory;
 window.selectIcon = selectIcon;
+window.selectCategoryHeroImage = selectCategoryHeroImage;
+window.uploadCategoryHeroImage = uploadCategoryHeroImage;
+window.selectCategorySlideImage = selectCategorySlideImage;
+window.uploadCategorySlideImage = uploadCategorySlideImage;
+window.removeCategoryHeroImage = removeCategoryHeroImage;
+window.removeCategorySlideImage = removeCategorySlideImage;
 window.saveColors = saveColors;
 window.resetColors = resetColors;
 window.addPriceEntry = addPriceEntry;
