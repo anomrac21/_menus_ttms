@@ -47,11 +47,10 @@
     }
   };
   
-  // Set UPDATE_API_URL to point to CDN for icon loading
-  // The icon loading system in update-ui.js will use this
-  window.UPDATE_API_URL = CDN_CONFIG.baseUrl;
-  
   // Make CDN config available globally
+  // Note: UPDATE_API_URL is set separately in the HTML template and should NOT be overwritten
+  // CDN is for READ operations (icons, static resources) via window.CDN_CONFIG
+  // UPDATE_API_URL is for WRITE operations (publishing changes) and points to content service API
   window.CDN_CONFIG = CDN_CONFIG;
   
   console.log('✅ TT Menus CDN configured:', CDN_CONFIG.baseUrl);
