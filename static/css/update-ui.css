@@ -8,6 +8,53 @@ body{
   margin: 0;
   padding: 0;
 }
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.badge-draft {
+  background: #fbbf24;
+  color: #78350f;
+}
+
+.badge-new {
+  background: #34d399;
+  color: #064e3b;
+}
+
+.badge-deleted {
+  background: #ef4444;
+  color: white;
+}
+
+.menu-item-card.draft {
+  border-left: 4px solid #fbbf24;
+  background: #fffbeb;
+}
+
+.menu-item-card.deleted {
+  opacity: 0.6;
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+}
+
+.menu-item-title.deleted {
+  text-decoration: line-through;
+  color: #991b1b;
+}
+
+.menu-item-image.deleted {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
 /* Dashboard Container */
 .dashboard-container {
   max-width: 100%;
