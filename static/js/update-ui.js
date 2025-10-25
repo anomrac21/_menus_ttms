@@ -5211,17 +5211,30 @@ const UpdateUI = {
    * Authenticated fetch wrapper
    */
   async authenticatedFetch(url, options = {}) {
+    console.log('🌐 authenticatedFetch called:', { url, method: options.method || 'GET' });
+    
     const token = AuthClient.getAccessToken();
+    
+    if (!token) {
+      console.warn('⚠️ No auth token available');
+    }
     
     const headers = {
       ...options.headers,
       'Authorization': `Bearer ${token}`,
     };
 
-    return fetch(url, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+      console.log('✅ Fetch response:', { url, status: response.status, ok: response.ok });
+      return response;
+    } catch (error) {
+      console.error('❌ Fetch error:', { url, error: error.message, type: error.constructor.name });
+      throw error;
+    }
   },
 
   /**
@@ -10762,6 +10775,10 @@ const HomePageManager = {
         ? `${UpdateUI.apiConfig.getClientUrl()}/config?push=false&session_id=${sessionID}`
         : `${UpdateUI.apiConfig.getClientUrl()}/config?push=true`;
 
+      console.log('🔗 Publishing to URL:', homepageUrl);
+      console.log('📍 API Base URL:', UpdateUI.apiConfig.baseUrl);
+      console.log('🔑 Client ID:', UpdateUI.apiConfig.clientId);
+
       // Save homepage
       const homepageResponse = await UpdateUI.authenticatedFetch(homepageUrl, {
         method: 'PUT',
@@ -10805,9 +10822,15 @@ const HomePageManager = {
       return true;
       
     } catch (error) {
-      console.error('Error publishing homepage:', error);
+      console.error('❌ Error publishing homepage:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        type: error.constructor.name
+      });
       if (!sessionID) {
-        UpdateUI.showError('Failed to publish homepage: ' + error.message);
+        const errorMsg = error.message || error.toString() || 'Unknown error';
+        UpdateUI.showError('Failed to publish homepage: ' + errorMsg);
       }
       throw error; // Re-throw for batch handler to catch
     }
