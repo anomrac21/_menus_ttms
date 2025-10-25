@@ -8407,33 +8407,311 @@ function populateCategoryDropdown() {
 }
 
 // Category modal functions
-const ICON_LIBRARY = [
-  // Food icons
-  { url: 'https://ct.ttmenus.com/icons/food/icon-sashimi.webp', category: 'food', name: 'Sashimi' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-salads.webp', category: 'food', name: 'Salads' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-molca.webp', category: 'food', name: 'Savoury' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-Bento.webp', category: 'food', name: 'Bento' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-burger.webp', category: 'food', name: 'Burger' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-chicken.webp', category: 'food', name: 'Chicken' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-dessert.webp', category: 'food', name: 'Dessert' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-drinks.webp', category: 'food', name: 'Drinks' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-fish.webp', category: 'food', name: 'Fish' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-pizza.webp', category: 'food', name: 'Pizza' },
-  { url: 'https://ct.ttmenus.com/icons/food/icon-steak.webp', category: 'food', name: 'Steak' },
+// Dynamic Icon Gallery Manager with Lazy Loading
+class IconGalleryManager {
+  constructor() {
+    this.allIcons = [];
+    this.filteredIcons = [];
+    this.displayedIcons = [];
+    this.currentCategory = 'all';
+    this.searchQuery = '';
+    this.batchSize = 30; // Load 30 icons at a time
+    this.currentBatch = 0;
+    this.isLoading = false;
+    this.observer = null;
+    this.categories = ['all', 'food', 'drink', 'white', 'black', 'activities', 'utilities', 'socialmedia'];
+  }
+
+  async loadAllIcons() {
+    console.log('📦 Loading icons from CDN API...');
+    
+    try {
+      // Fetch icons from TT Menus CDN API
+      const apiUrl = `${window.UPDATE_API_URL}/api/list-icons`;
+      console.log(`🔗 Fetching from: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'X-Client-ID': window.CLIENT_ID || 'default'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Validate CDN API response format
+        if (data.success && data.icons && Array.isArray(data.icons)) {
+          this.allIcons = data.icons;
+          
+          console.log(`✅ Loaded ${data.count || this.allIcons.length} icons from CDN`);
+          console.log(`📍 Base URL: ${data.baseUrl || 'N/A'}`);
+          console.log(`📂 Categories: ${data.categories ? data.categories.join(', ') : 'N/A'}`);
+          console.log(`🔖 Version: ${data.version || 'N/A'}`);
+        } else {
+          // Legacy format (just icons array)
+          this.allIcons = data.icons || data || [];
+          console.log(`✅ Loaded ${this.allIcons.length} icons (legacy format)`);
+        }
+      } else {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not fetch icons from CDN, using static fallback:', error.message);
+      console.log('ℹ️ This is normal if CDN is not deployed yet or unreachable');
+      
+      // Fallback to static icon list
+      this.allIcons = this.getStaticIconList();
+      console.log(`📦 Using static fallback: ${this.allIcons.length} icons`);
+    }
+
+    this.filteredIcons = [...this.allIcons];
+    return this.allIcons;
+  }
+
+  getStaticIconList() {
+    // Comprehensive static fallback icon list
+    const baseUrl = 'https://cdn.ttmenus.com/icons';
+    const icons = [];
+    
+    // Food icons (mixed formats)
+    const foodIcons = [
+      { name: 'sashimi', ext: 'webp' },
+      { name: 'salads', ext: 'webp' },
+      { name: 'molca', ext: 'webp' },
+      { name: 'Bento', ext: 'webp' },
+      { name: 'burger', ext: 'webp' },
+      { name: 'chicken', ext: 'webp' },
+      { name: 'dessert', ext: 'webp' },
+      { name: 'drinks', ext: 'webp' },
+      { name: 'fish', ext: 'webp' },
+      { name: 'pizza', ext: 'webp' },
+      { name: 'steak', ext: 'webp' },
+      { name: 'noodles', ext: 'webp' },
+      { name: 'pasta', ext: 'webp' },
+      { name: 'sandwich', ext: 'webp' },
+      { name: 'taco', ext: 'webp' },
+      { name: 'curry', ext: 'webp' },
+      { name: 'hotdog', ext: 'webp' }
+    ];
+    foodIcons.forEach(icon => {
+      const prefix = icon.name === 'hamburger' ? '' : 'icon-';
+      icons.push({ 
+        url: `${baseUrl}/food/${prefix}${icon.name}.${icon.ext}`, 
+        category: 'food', 
+        name: icon.name.charAt(0).toUpperCase() + icon.name.slice(1) 
+      });
+    });
+    
+    // Add hamburger SVG
+    icons.push({ 
+      url: `${baseUrl}/food/hamburger.svg`, 
+      category: 'food', 
+      name: 'Hamburger' 
+    });
   
   // White icons
-  { url: 'https://ct.ttmenus.com/icons/white/icon-lunchspecial.webp', category: 'white', name: 'Lunch Special' },
-  { url: 'https://ct.ttmenus.com/icons/white/icon-sushi.webp', category: 'white', name: 'Sushi' },
-  { url: 'https://ct.ttmenus.com/icons/white/icon-rice.webp', category: 'white', name: 'Rice' },
-  { url: 'https://ct.ttmenus.com/icons/white/icon-appetizer.webp', category: 'white', name: 'Appetizer' },
-  { url: 'https://ct.ttmenus.com/icons/white/icon-cocktail.webp', category: 'white', name: 'Cocktail' },
-  { url: 'https://ct.ttmenus.com/icons/white/icon-soup.webp', category: 'white', name: 'Soup' },
-  
-  // Utilities
-  { url: 'https://ct.ttmenus.com/icons/utilities/advertising.svg', category: 'utilities', name: 'Advertising' },
-  { url: 'https://ct.ttmenus.com/icons/utilities/star.svg', category: 'utilities', name: 'Star' },
-];
+    const whiteIcons = ['lunchspecial', 'sushi', 'rice', 'appetizer', 'cocktail', 'soup', 'ramen', 'bowl'];
+    whiteIcons.forEach(name => {
+      icons.push({ 
+        url: `${baseUrl}/white/icon-${name}.webp`, 
+        category: 'white', 
+        name: name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1').trim()
+      });
+    });
 
+    // Black icons
+    const blackIcons = ['coffee', 'tea', 'breakfast', 'lunch', 'dinner'];
+    blackIcons.forEach(name => {
+      icons.push({ 
+        url: `${baseUrl}/black/icon-${name}.webp`, 
+        category: 'black', 
+        name: name.charAt(0).toUpperCase() + name.slice(1) 
+      });
+    });
+
+    // Drink icons
+    const drinkIcons = ['beer', 'wine', 'juice', 'soda', 'water', 'smoothie'];
+    drinkIcons.forEach(name => {
+      icons.push({ 
+        url: `${baseUrl}/drink/icon-${name}.webp`, 
+        category: 'drink', 
+        name: name.charAt(0).toUpperCase() + name.slice(1) 
+      });
+    });
+  
+    // Utilities (using actual SVG files)
+    const utilityIcons = [
+      'advertising', 'bell', 'home', 'location', 'phone', 'search', 
+      'settings', 'cart0', 'cart1', 'cart2', 'cart3', 'cart4',
+      'close', 'install', 'apple', 'client', 'mission', 'policy',
+      'personal', 'resources', 'description', 'restaurant-waiter',
+      'dine-svgrepo-com', 'dinner-svgrepo-com', 'takeaway-fill-svgrepo-com',
+      'soup-svgrepo-com', 'chicken-leg-svgrepo-com'
+    ];
+    utilityIcons.forEach(name => {
+      const displayName = name
+        .replace(/-svgrepo-com$/, '')
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      icons.push({ 
+        url: `${baseUrl}/utilities/${name}.svg`, 
+        category: 'utilities', 
+        name: displayName
+      });
+    });
+
+    // Social Media (using actual filenames)
+    const socialIcons = [
+      { file: 'fb.svg', name: 'Facebook' },
+      { file: 'ig.svg', name: 'Instagram' },
+      { file: 'tk.svg', name: 'TikTok' },
+      { file: 'yt.svg', name: 'YouTube' },
+      { file: 'whatsapp.svg', name: 'WhatsApp' }
+    ];
+    socialIcons.forEach(icon => {
+      icons.push({ 
+        url: `${baseUrl}/socialmedia/${icon.file}`, 
+        category: 'socialmedia', 
+        name: icon.name
+      });
+    });
+
+    // Activities (using actual files)
+    const activityIcons = [
+      { file: 'icon-joystick.svg', name: 'Games', ext: 'svg' }
+    ];
+    activityIcons.forEach(icon => {
+      icons.push({ 
+        url: `${baseUrl}/activities/${icon.file}`, 
+        category: 'activities', 
+        name: icon.name
+      });
+    });
+
+    return icons;
+  }
+
+  filterIcons() {
+    let filtered = [...this.allIcons];
+
+    // Apply category filter
+    if (this.currentCategory && this.currentCategory !== 'all') {
+      filtered = filtered.filter(icon => icon.category === this.currentCategory);
+    }
+
+    // Apply search filter
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(icon => 
+        icon.name.toLowerCase().includes(query) ||
+        icon.category.toLowerCase().includes(query)
+      );
+    }
+
+    this.filteredIcons = filtered;
+    this.currentBatch = 0;
+    this.displayedIcons = [];
+  }
+
+  loadNextBatch() {
+    if (this.isLoading) return;
+    
+    this.isLoading = true;
+    const start = this.currentBatch * this.batchSize;
+    const end = start + this.batchSize;
+    const batch = this.filteredIcons.slice(start, end);
+    
+    this.displayedIcons.push(...batch);
+    this.currentBatch++;
+    this.isLoading = false;
+
+    return batch;
+  }
+
+  hasMoreIcons() {
+    return this.displayedIcons.length < this.filteredIcons.length;
+  }
+
+  setCategory(category) {
+    this.currentCategory = category;
+    this.filterIcons();
+  }
+
+  setSearch(query) {
+    this.searchQuery = query;
+    this.filterIcons();
+  }
+
+  setupIntersectionObserver(sentinelElement, callback) {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && this.hasMoreIcons()) {
+          callback();
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1
+    });
+
+    if (sentinelElement) {
+      this.observer.observe(sentinelElement);
+    }
+  }
+
+  disconnect() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+  }
+}
+
+/**
+ * Backend API Endpoint Documentation
+ * 
+ * The icon loading system expects an API endpoint at:
+ * ${window.UPDATE_API_URL}/api/list-icons
+ * 
+ * Expected Response Format:
+ * {
+ *   "success": true,
+ *   "count": 239,
+ *   "baseUrl": "https://cdn.ttmenus.com/icons",
+ *   "categories": ["food", "drink", "white", "black", "activities", "utilities", "socialmedia"],
+ *   "icons": [
+ *     {
+ *       "url": "https://cdn.ttmenus.com/icons/food/icon-burger.webp",
+ *       "category": "food",
+ *       "name": "Burger",
+ *       "filename": "icon-burger.webp",
+ *       "format": "webp"
+ *     },
+ *     ...
+ *   ],
+ *   "version": "1.0.0"
+ * }
+ * 
+ * Categories: food, drink, white, black, activities, utilities, socialmedia
+ * 
+ * CDN API URL: https://cdn.ttmenus.com/api/list-icons/
+ * Icon Base URL: https://cdn.ttmenus.com/icons/
+ * 
+ * If API is unavailable, the system will fall back to the static icon list.
+ * 
+ * Setup: Include cdn-config.js before update-ui.js to automatically
+ * configure window.UPDATE_API_URL to point to the CDN.
+ */
+
+// Global instance
+const iconGalleryManager = new IconGalleryManager();
 let currentIconFilter = '';
 
 // Category Image Preview Helper Functions
@@ -8768,21 +9046,205 @@ function updateIconPreview(iconUrl) {
   }
 }
 
-function populateIconGallery(filter = '') {
+async function populateIconGallery(filter = '') {
   const gallery = document.getElementById('iconGallery');
-  const icons = filter ? ICON_LIBRARY.filter(icon => icon.category === filter) : ICON_LIBRARY;
+  if (!gallery) return;
   
-  gallery.innerHTML = icons.map(icon => `
-    <div onclick="selectIcon('${icon.url}')" style="cursor: pointer; padding: 10px; background: #1f2937; border-radius: 6px; border: 2px solid #374151; transition: all 0.2s; text-align: center;" onmouseover="this.style.borderColor='#3b82f6'; this.style.background='#374151';" onmouseout="this.style.borderColor='#374151'; this.style.background='#1f2937';">
-      <img src="${icon.url}" alt="${icon.name}" style="width: 100%; height: 60px; object-fit: contain;" title="${icon.name}">
+  // Show loading state
+  gallery.innerHTML = `
+    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #9ca3af;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+      <div>Loading icons...</div>
     </div>
-  `).join('');
+  `;
+
+  // Load icons if not already loaded
+  if (iconGalleryManager.allIcons.length === 0) {
+    await iconGalleryManager.loadAllIcons();
+  }
+
+  // Update icon count in summary
+  const iconCountEl = document.getElementById('iconCount');
+  if (iconCountEl) {
+    iconCountEl.textContent = iconGalleryManager.allIcons.length;
+  }
+
+  // Apply filter
+  if (filter) {
+    iconGalleryManager.setCategory(filter);
+  } else {
+    iconGalleryManager.setCategory('all');
+  }
+
+  // Clear search input
+  const searchInput = document.getElementById('iconSearchInput');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+
+  // Render initial batch
+  renderIconBatch();
+  
+  // Setup lazy loading
+  setupIconLazyLoading();
+  
+  // Setup keyboard navigation
+  setupIconGalleryKeyboardNav();
 }
 
-function filterIconsByCategory() {
-  const filter = document.getElementById('iconCategoryFilter').value;
-  currentIconFilter = filter;
-  populateIconGallery(filter);
+function renderIconBatch(append = false) {
+  const gallery = document.getElementById('iconGallery');
+  if (!gallery) return;
+
+  const batch = iconGalleryManager.loadNextBatch();
+  
+  if (!append) {
+    gallery.innerHTML = '';
+  }
+
+  // Remove old sentinel if exists
+  const oldSentinel = document.getElementById('iconLoadingSentinel');
+  if (oldSentinel) {
+    oldSentinel.remove();
+  }
+
+  // Render icons
+  batch.forEach(icon => {
+    const iconCard = createIconCard(icon);
+    gallery.appendChild(iconCard);
+  });
+
+  // Add loading sentinel if more icons available
+  if (iconGalleryManager.hasMoreIcons()) {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'iconLoadingSentinel';
+    sentinel.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 1rem; color: #6b7280; font-size: 0.875rem;';
+    sentinel.innerHTML = '<div style="font-size: 1.5rem;">⏳</div><div>Loading more...</div>';
+    gallery.appendChild(sentinel);
+  } else if (iconGalleryManager.displayedIcons.length === 0) {
+    // No icons found
+    gallery.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #9ca3af;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+        <div>No icons found</div>
+      </div>
+    `;
+  } else {
+    // All icons loaded
+    const endMessage = document.createElement('div');
+    endMessage.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 1rem; color: #6b7280; font-size: 0.875rem;';
+    endMessage.innerHTML = `<div>✓ All ${iconGalleryManager.displayedIcons.length} icons loaded</div>`;
+    gallery.appendChild(endMessage);
+  }
+}
+
+function createIconCard(icon) {
+  const card = document.createElement('div');
+  card.className = 'icon-card';
+  card.style.cssText = 'cursor: pointer; padding: 10px; background: #1f2937; border-radius: 6px; border: 2px solid #374151; transition: all 0.2s; text-align: center;';
+  
+  card.innerHTML = `
+    <img src="${icon.url}" 
+         alt="${icon.name}" 
+         loading="lazy"
+         style="width: 100%; height: 60px; object-fit: contain;" 
+         title="${icon.name}"
+         onerror="this.parentElement.style.display='none';">
+    <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${icon.name}">${icon.name}</div>
+  `;
+  
+  card.onclick = () => selectIcon(icon.url);
+  
+  card.onmouseenter = () => {
+    card.style.borderColor = '#3b82f6';
+    card.style.background = '#374151';
+  };
+  
+  card.onmouseleave = () => {
+    card.style.borderColor = '#374151';
+    card.style.background = '#1f2937';
+  };
+  
+  return card;
+}
+
+function setupIconLazyLoading() {
+  const sentinel = document.getElementById('iconLoadingSentinel');
+  if (!sentinel) return;
+
+  iconGalleryManager.setupIntersectionObserver(sentinel, () => {
+    renderIconBatch(true);
+    
+    // Re-setup observer with new sentinel
+    setTimeout(() => setupIconLazyLoading(), 100);
+  });
+}
+
+function filterIconsByCategory(category) {
+  currentIconFilter = category;
+  iconGalleryManager.setCategory(category);
+  renderIconBatch();
+  setupIconLazyLoading();
+  
+  // Update active tab styling
+  document.querySelectorAll('.icon-category-tab').forEach(tab => {
+    const tabCategory = tab.getAttribute('data-category');
+    if (tabCategory === category) {
+      tab.style.background = '#3b82f6';
+      tab.style.color = 'white';
+      tab.classList.add('active');
+    } else {
+      tab.style.background = '#374151';
+      tab.style.color = '#9ca3af';
+      tab.classList.remove('active');
+    }
+  });
+}
+
+// Debounce helper for search
+let iconSearchTimeout = null;
+
+function searchIcons(query) {
+  // Clear previous timeout
+  if (iconSearchTimeout) {
+    clearTimeout(iconSearchTimeout);
+  }
+  
+  // Debounce search by 300ms
+  iconSearchTimeout = setTimeout(() => {
+    iconGalleryManager.setSearch(query);
+    renderIconBatch();
+    setupIconLazyLoading();
+  }, 300);
+}
+
+// Keyboard navigation for icon gallery
+function setupIconGalleryKeyboardNav() {
+  const searchInput = document.getElementById('iconSearchInput');
+  if (!searchInput) return;
+  
+  searchInput.addEventListener('keydown', (e) => {
+    // ESC to close gallery
+    if (e.key === 'Escape') {
+      const details = document.getElementById('iconGalleryDetails');
+      if (details) {
+        details.open = false;
+      }
+      e.preventDefault();
+    }
+  });
+  
+  // Global keyboard listener for icon gallery
+  document.addEventListener('keydown', (e) => {
+    const details = document.getElementById('iconGalleryDetails');
+    if (!details || !details.open) return;
+    
+    // ESC to close when gallery is open
+    if (e.key === 'Escape') {
+      details.open = false;
+      e.preventDefault();
+    }
+  });
 }
 
 function selectIcon(iconUrl) {

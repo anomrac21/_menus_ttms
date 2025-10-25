@@ -188,6 +188,61 @@ window.hugoSiteConfig = {
 <script src="{{ site.BaseURL }}js/admin-users.js"></script>
   <link rel="stylesheet" href="{{ site.BaseURL }}css/auth.css">
   <link rel="stylesheet" href="{{ site.BaseURL }}css/update-ui.css">
+  
+  <style>
+    /* Icon Category Tab Styles */
+    .icon-category-tab {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .icon-category-tab:hover {
+      background: #4b5563 !important;
+      color: #f3f4f6 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .icon-category-tab.active:hover {
+      background: #2563eb !important;
+      color: white !important;
+    }
+    
+    /* Icon Card Hover Animation */
+    .icon-card {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .icon-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Icon Gallery Scrollbar */
+    #iconGallery::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #iconGallery::-webkit-scrollbar-track {
+      background: #111827;
+      border-radius: 4px;
+    }
+    
+    #iconGallery::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 4px;
+    }
+    
+    #iconGallery::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+    
+    /* Icon Search Input */
+    #iconSearchInput:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  </style>
 </head>
 <body>
   
@@ -1119,9 +1174,35 @@ window.hugoSiteConfig = {
           </div>
           
           <!-- Icon Gallery -->
-          <details style="margin-top: 1rem;">
-            <summary style="cursor: pointer; font-weight: 500; padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">Choose from icon gallery</summary>
-            <div id="iconGallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; margin-top: 1rem; padding: 1rem; background: #1e293b; border-radius: 8px; max-height: 300px; overflow-y: auto;"></div>
+          <details style="margin-top: 1rem;" ontoggle="if(this.open) { populateIconGallery(); } else { iconGalleryManager.disconnect(); }" id="iconGalleryDetails">
+            <summary style="cursor: pointer; font-weight: 500; padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">📚 Choose from icon gallery (<span id="iconCount">0</span> icons)</summary>
+            
+            <div style="margin-top: 1rem; background: #1e293b; border-radius: 8px; padding: 1rem;">
+              <!-- Search Bar -->
+              <div style="margin-bottom: 1rem;">
+                <input 
+                  type="text" 
+                  id="iconSearchInput" 
+                  placeholder="🔍 Search icons..." 
+                  style="width: 100%; padding: 0.5rem; border: 1px solid #374151; border-radius: 6px; background: #111827; color: #f9fafb; font-size: 0.875rem;"
+                  oninput="searchIcons(this.value)">
+              </div>
+              
+              <!-- Category Tabs -->
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid #374151;">
+                <button type="button" class="icon-category-tab active" data-category="all" onclick="filterIconsByCategory('all')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #3b82f6; color: white; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">All</button>
+                <button type="button" class="icon-category-tab" data-category="food" onclick="filterIconsByCategory('food')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🍕 Food</button>
+                <button type="button" class="icon-category-tab" data-category="drink" onclick="filterIconsByCategory('drink')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🍹 Drink</button>
+                <button type="button" class="icon-category-tab" data-category="white" onclick="filterIconsByCategory('white')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">⚪ White</button>
+                <button type="button" class="icon-category-tab" data-category="black" onclick="filterIconsByCategory('black')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">⚫ Black</button>
+                <button type="button" class="icon-category-tab" data-category="activities" onclick="filterIconsByCategory('activities')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🎮 Activities</button>
+                <button type="button" class="icon-category-tab" data-category="utilities" onclick="filterIconsByCategory('utilities')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔧 Utilities</button>
+                <button type="button" class="icon-category-tab" data-category="socialmedia" onclick="filterIconsByCategory('socialmedia')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">📱 Social</button>
+              </div>
+              
+              <!-- Icon Grid -->
+              <div id="iconGallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; max-height: 300px; overflow-y: auto;"></div>
+            </div>
           </details>
         </div>
         
@@ -1236,7 +1317,10 @@ window.hugoSiteConfig = {
   <input type="file" id="galleryImageUploadInput" accept="image/*" style="display: none;">
   <input type="file" id="tourImageUploadInput" accept="image/*" style="display: none;">
 
+  <!-- TT Menus CDN Configuration - Must load BEFORE update-ui.js -->
+  <script src="{{ site.BaseURL }}js/cdn-config.js"></script>
   
+  <!-- Update UI - Loads after CDN config -->
   <script src="{{ site.BaseURL }}js/update-ui.js" defer></script>
 </body>
 </html>
