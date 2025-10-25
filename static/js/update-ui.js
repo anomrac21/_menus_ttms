@@ -5508,7 +5508,14 @@ function openMenuItemModal(itemId = null, categoryName = null) {
       document.getElementById('itemTitle').value = item.title;
       document.getElementById('itemDescription').value = item.description || '';
       document.getElementById('itemCategorySelect').value = item.category;
-      document.getElementById('itemWeight').value = item.weight || 0;
+      
+      // Ensure weight is valid (never 0 or 1, always >= 2)
+      let weight = item.weight !== undefined ? parseInt(item.weight) : null;
+      if (weight === null || weight < 2) {
+        weight = getNextAvailableItemWeight(item.category, item.id);
+        console.log(`⚠️ Invalid weight for item "${item.title}", assigning next available: ${weight}`);
+      }
+      document.getElementById('itemWeight').value = weight;
       
       // Load tags
       loadTags('tags', item.tags || []);
@@ -5632,6 +5639,10 @@ function openMenuItemModal(itemId = null, categoryName = null) {
     // Set category if provided
     if (categoryName) {
       document.getElementById('itemCategorySelect').value = categoryName;
+      // Set next available weight for this category
+      const nextWeight = getNextAvailableItemWeight(categoryName);
+      document.getElementById('itemWeight').value = nextWeight;
+      console.log(`📊 New item in ${categoryName}, assigned weight: ${nextWeight}`);
     }
     
     // Add default entries
@@ -8468,6 +8479,78 @@ function updateCategorySlideImagePreview(imagePath) {
   `;
 }
 
+// Get next available category weight (starting from 2, never 0 or 1)
+function getNextAvailableCategoryWeight(excludeCategoryName = null) {
+  // Get all current weights from categories, excluding the one we're editing
+  const usedWeights = new Set(
+    UpdateUI.state.categories
+      .filter(c => c.name !== excludeCategoryName)
+      .map(c => parseInt(c.weight))
+      .filter(w => !isNaN(w) && w >= 2) // Only consider valid weights >= 2
+  );
+  
+  // Check drafts for unsaved weights
+  const draftWeights = new Set();
+  UpdateUI.state.categories.forEach(category => {
+    if (category.name === excludeCategoryName) return;
+    const draftKey = `ttmenus_draft_category_${category.name}`;
+    const draft = localStorage.getItem(draftKey);
+    if (draft) {
+      try {
+        const draftData = JSON.parse(draft);
+        if (draftData.frontmatter?.weight >= 2) {
+          draftWeights.add(draftData.frontmatter.weight);
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  });
+  
+  // Combine used and draft weights
+  const allWeights = new Set([...usedWeights, ...draftWeights]);
+  
+  // Find next available weight starting from 2
+  let nextWeight = 2;
+  while (allWeights.has(nextWeight)) {
+    nextWeight++;
+  }
+  
+  console.log(`📊 Category weight calculation: used=${Array.from(usedWeights).sort((a,b)=>a-b)}, next available=${nextWeight}`);
+  return nextWeight;
+}
+
+// Get next available menu item weight within a category (starting from 2, never 0 or 1)
+function getNextAvailableItemWeight(categoryName, excludeItemId = null) {
+  // Get all current weights from items in this category, excluding the one we're editing
+  const itemsInCategory = UpdateUI.state.menuItems.filter(item => 
+    item.category === categoryName && item.id !== excludeItemId
+  );
+  
+  const usedWeights = new Set(
+    itemsInCategory
+      .map(item => parseInt(item.weight))
+      .filter(w => !isNaN(w) && w >= 2) // Only consider valid weights >= 2
+  );
+  
+  // Check drafts for unsaved weights
+  const drafts = UpdateUI.getDrafts();
+  Object.values(drafts).forEach(draft => {
+    if (draft.category === categoryName && draft.id !== excludeItemId && draft.weight >= 2) {
+      usedWeights.add(parseInt(draft.weight));
+    }
+  });
+  
+  // Find next available weight starting from 2
+  let nextWeight = 2;
+  while (usedWeights.has(nextWeight)) {
+    nextWeight++;
+  }
+  
+  console.log(`📊 Item weight calculation for ${categoryName}: used=${Array.from(usedWeights).sort((a,b)=>a-b)}, next available=${nextWeight}`);
+  return nextWeight;
+}
+
 async function openCategoryModal(categoryName) {
   console.log('🔍 Attempting to open category modal for:', categoryName);
   console.log('📄 Document ready state:', document.readyState);
@@ -8523,12 +8606,20 @@ async function openCategoryModal(categoryName) {
   document.getElementById('categoryOriginalName').value = categoryName;
   document.getElementById('categoryName').value = categoryName;
   document.getElementById('categoryIconUrl').value = category.icon || '';
-  document.getElementById('categoryWeight').value = category.weight !== undefined ? category.weight : 0;
+  
+  // Ensure weight is valid (never 0 or 1, always >= 2)
+  let weight = category.weight !== undefined ? parseInt(category.weight) : null;
+  if (weight === null || weight < 2) {
+    // Get next available weight starting from 2
+    weight = getNextAvailableCategoryWeight(categoryName);
+    console.log(`⚠️ Invalid weight for ${categoryName}, assigning next available: ${weight}`);
+  }
+  document.getElementById('categoryWeight').value = weight;
   
   console.log('✅ Set form values:', {
     name: categoryName,
     icon: category.icon || '(empty)',
-    weight: category.weight !== undefined ? category.weight : 0
+    weight: weight
   });
   
   // Show icon preview if icon exists, otherwise show placeholder
@@ -8714,7 +8805,20 @@ async function saveCategory(event) {
   const originalName = document.getElementById('categoryOriginalName').value;
   const newName = document.getElementById('categoryName').value.trim();
   const iconUrl = document.getElementById('categoryIconUrl').value.trim();
-  const weight = parseInt(document.getElementById('categoryWeight').value) || 0;
+  let weight = parseInt(document.getElementById('categoryWeight').value) || 0;
+  
+  // Validate weight (must be >= 2 and unique)
+  if (weight < 2) {
+    weight = getNextAvailableCategoryWeight(newName);
+    console.log(`⚠️ Weight was ${weight < 2 ? 'too low' : 'invalid'}, setting to next available: ${weight}`);
+  } else {
+    // Check if weight is already in use by another category
+    const existingCategory = UpdateUI.state.categories.find(c => c.weight === weight && c.name !== originalName);
+    if (existingCategory) {
+      alert(`Weight ${weight} is already used by category "${existingCategory.name}".\n\nPlease choose a different weight or leave it empty to auto-assign.`);
+      return;
+    }
+  }
   
   console.log(`💾 Saving category "${newName}" with icon:`, iconUrl);
   
