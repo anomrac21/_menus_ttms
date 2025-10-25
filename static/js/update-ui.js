@@ -8425,6 +8425,49 @@ const ICON_LIBRARY = [
 
 let currentIconFilter = '';
 
+// Category Image Preview Helper Functions
+function updateCategoryHeroImagePreview(imagePath) {
+  const preview = document.getElementById('categoryHeroImagePreview');
+  if (!preview) return;
+  
+  if (!imagePath) {
+    preview.innerHTML = '<p style="color: #9ca3af; font-size: 0.875rem;">No hero image selected</p>';
+    return;
+  }
+  
+  const displayPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  const filename = imagePath.split('/').pop();
+  
+  preview.innerHTML = `
+    <div style="position: relative;">
+      <img src="${displayPath}" alt="Hero Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <button type="button" onclick="removeCategoryHeroImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
+    </div>
+    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${filename}</p>
+  `;
+}
+
+function updateCategorySlideImagePreview(imagePath) {
+  const preview = document.getElementById('categorySlideImagePreview');
+  if (!preview) return;
+  
+  if (!imagePath) {
+    preview.innerHTML = '<p style="color: #9ca3af; font-size: 0.875rem;">No slide-in image selected</p>';
+    return;
+  }
+  
+  const displayPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  const filename = imagePath.split('/').pop();
+  
+  preview.innerHTML = `
+    <div style="position: relative;">
+      <img src="${displayPath}" alt="Slide Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <button type="button" onclick="removeCategorySlideImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
+    </div>
+    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${filename}</p>
+  `;
+}
+
 async function openCategoryModal(categoryName) {
   console.log('🔍 Attempting to open category modal for:', categoryName);
   console.log('📄 Document ready state:', document.readyState);
@@ -8722,11 +8765,11 @@ async function saveCategory(event) {
 
 // Category Image Management Functions
 function selectCategoryHeroImage() {
-  UpdateUI.currentImageCallback = (imagePath) => {
+  HomePageManager.currentImageCallback = (imagePath) => {
     document.getElementById('categoryHeroImage').value = imagePath;
     updateCategoryHeroImagePreview(imagePath);
   };
-  UpdateUI.showImageLibraryModal();
+  HomePageManager.openImageLibraryModal();
 }
 
 function uploadCategoryHeroImage() {
@@ -8752,11 +8795,11 @@ function uploadCategoryHeroImage() {
 }
 
 function selectCategorySlideImage() {
-  UpdateUI.currentImageCallback = (imagePath) => {
+  HomePageManager.currentImageCallback = (imagePath) => {
     document.getElementById('categorySlideImage').value = imagePath;
     updateCategorySlideImagePreview(imagePath);
   };
-  UpdateUI.showImageLibraryModal();
+  HomePageManager.openImageLibraryModal();
 }
 
 function uploadCategorySlideImage() {
@@ -8791,44 +8834,6 @@ function removeCategorySlideImage() {
   document.getElementById('categorySlideImage').value = '';
   document.getElementById('categorySlideImageCurrent').value = '';
   updateCategorySlideImagePreview('');
-}
-
-function updateCategoryHeroImagePreview(imagePath) {
-  const preview = document.getElementById('categoryHeroImagePreview');
-  if (!imagePath) {
-    preview.innerHTML = '<p style="color: #9ca3af; font-size: 0.875rem;">No hero image selected</p>';
-    return;
-  }
-  
-  const displayPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  const filename = imagePath.split('/').pop();
-  
-  preview.innerHTML = `
-    <div style="position: relative;">
-      <img src="${displayPath}" alt="Hero Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <button type="button" onclick="removeCategoryHeroImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
-    </div>
-    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${filename}</p>
-  `;
-}
-
-function updateCategorySlideImagePreview(imagePath) {
-  const preview = document.getElementById('categorySlideImagePreview');
-  if (!imagePath) {
-    preview.innerHTML = '<p style="color: #9ca3af; font-size: 0.875rem;">No slide-in image selected</p>';
-    return;
-  }
-  
-  const displayPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  const filename = imagePath.split('/').pop();
-  
-  preview.innerHTML = `
-    <div style="position: relative;">
-      <img src="${displayPath}" alt="Slide Image" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <button type="button" onclick="removeCategorySlideImage()" style="position: absolute; top: 8px; right: 8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; line-height: 1;">×</button>
-    </div>
-    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center;">${filename}</p>
-  `;
 }
 
 // Export to window
