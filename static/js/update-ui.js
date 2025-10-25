@@ -8427,7 +8427,10 @@ class IconGalleryManager {
     
     try {
       // Fetch icons from TT Menus CDN API
-      const apiUrl = `${window.UPDATE_API_URL}/api/list-icons`;
+      // Use CDN_CONFIG helper if available, otherwise construct URL manually
+      const apiUrl = window.CDN_CONFIG 
+        ? window.CDN_CONFIG.getIconsApiUrl()
+        : `${window.UPDATE_API_URL}/api/list-icons/index.json`;
       console.log(`🔗 Fetching from: ${apiUrl}`);
       
       const response = await fetch(apiUrl, {
