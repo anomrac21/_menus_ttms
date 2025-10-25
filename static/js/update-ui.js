@@ -9947,6 +9947,15 @@ const HomePageManager = {
       return;
     }
 
+    // Check if there's a callback (for category images, etc.)
+    if (this.currentImageCallback) {
+      this.currentImageCallback(selectedArray[0]); // Use first selected image
+      this.currentImageCallback = null; // Clear callback
+      this.closeImageLibraryModal();
+      return;
+    }
+
+    // Default behavior for homepage
     if (this.currentSelectionTarget === 'hero') {
       // For hero, use first selected image
       this.currentSettings.image = selectedArray[0];
