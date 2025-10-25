@@ -9832,10 +9832,31 @@ const HomePageManager = {
     const modal = document.getElementById('imageLibraryModal');
     const grid = document.getElementById('imageLibraryGrid');
     
-    if (!modal || !grid) return;
+    if (!modal || !grid) {
+      console.error('❌ Image library modal or grid not found');
+      return;
+    }
+
+    console.log('📁 Opening image library modal');
+    console.log('📊 Available images:', this.availableImages.length);
 
     // Clear previous selections
     this.selectedImages.clear();
+
+    // Ensure images are loaded
+    if (!this.availableImages || this.availableImages.length === 0) {
+      console.warn('⚠️ No images available, attempting to load...');
+      
+      // Try to get from window.hugoStaticImages
+      if (window.hugoStaticImages && window.hugoStaticImages.length > 0) {
+        this.availableImages = window.hugoStaticImages;
+        console.log('✅ Loaded images from window.hugoStaticImages:', this.availableImages.length);
+      } else {
+        grid.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 3rem;">No images found. Please upload images to the /images/ directory.</p>';
+        modal.style.display = 'flex';
+        return;
+      }
+    }
 
     // Populate grid with images
     grid.innerHTML = '';
