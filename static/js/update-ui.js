@@ -1904,7 +1904,7 @@ const UpdateUI = {
     // Build HTML for each category with its items
     const categoryHTML = [];
     
-    categoryOrder.forEach(category => {
+    categoryOrder.forEach((category, categoryIndex) => {
       const items = itemsByCategory[category.name] || [];
       
       console.log(`Category "${category.name}": ${items.length} items`);
@@ -1919,6 +1919,7 @@ const UpdateUI = {
 
       const itemCount = items.length;
       const draftCount = items.filter(i => i._isDraft).length;
+      const categoryPosition = categoryIndex + 1;
 
       // Check if category is collapsed (from localStorage)
       const isCollapsed = this.isCategoryCollapsed(category.name);
@@ -1929,10 +1930,11 @@ const UpdateUI = {
             <div class="category-header-left">
               ${category.icon ? `<img src="${this.getDisplayImagePath(category.icon)}" alt="" class="category-icon">` : ''}
               <div>
-                <h3 class="category-title">${this.escapeHtml(category.name)}</h3>
+                <h3 class="category-title">${this.escapeHtml(category.name)}<span style="color: rgba(255, 255, 255, 0.5); font-size: 0.875rem; font-weight: 400; margin-left: 0.5rem;">#${categoryPosition}</span></h3>
                 <p class="category-info">
                   ${itemCount} item${itemCount !== 1 ? 's' : ''}
                   ${draftCount > 0 ? `<span class="draft-count">${draftCount} draft${draftCount !== 1 ? 's' : ''}</span>` : ''}
+                  <span style="color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; margin-left: 0.5rem;">• Weight: ${category.weight}</span>
                 </p>
               </div>
             </div>
