@@ -335,6 +335,9 @@ const UpdateUI = {
     
     console.log('✅ Loaded', this.state.categories.length, 'categories with icons:', this.state.categories);
     
+    // Fix any duplicate weights
+    this.fixDuplicateCategoryWeights();
+    
     // Clean up legacy menudata drafts if any exist
     this.cleanupLegacyDrafts();
     
@@ -2643,9 +2646,171 @@ const UpdateUI = {
   },
 
   /**
+   * Validate and fix category weight to prevent duplicates and invalid values
+   * Returns corrected weight
+   */
+  validateAndFixCategoryWeight(categoryName, proposedWeight) {
+    // Rule 1: Weight cannot be 0 or 1
+    if (proposedWeight < 2) {
+      console.warn(`⚠️ Category "${categoryName}" has invalid weight ${proposedWeight}, will reassign`);
+      return this.getNextAvailableWeight(categoryName);
+    }
+    
+    // Rule 2: Weight must be unique
+    const conflict = this.state.categories.find(c => 
+      c.name !== categoryName && c.weight === proposedWeight
+    );
+    
+    // Also check draft weights
+    const draftConflict = this.state.categories.some(cat => {
+      if (cat.name === categoryName) return false;
+      const draftKey = `ttmenus_draft_category_${cat.name}`;
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        try {
+          const draftData = JSON.parse(draft);
+          return draftData.frontmatter?.weight === proposedWeight;
+        } catch (e) {
+          return false;
+        }
+      }
+      return false;
+    });
+    
+    if (conflict || draftConflict) {
+      const conflictName = conflict ? conflict.name : 'another category (draft)';
+      console.warn(`⚠️ Weight ${proposedWeight} already used by ${conflictName}, reassigning "${categoryName}"`);
+      return this.getNextAvailableWeight(categoryName);
+    }
+    
+    return proposedWeight;
+  },
+  
+  /**
+   * Get next available weight for a category (starting from 2, avoiding duplicates)
+   */
+  getNextAvailableWeight(excludeCategoryName) {
+    // Get all weights currently in use (from state)
+    const usedWeights = new Set();
+    
+    this.state.categories.forEach(cat => {
+      if (cat.name === excludeCategoryName) return;
+      if (cat.weight >= 2) {
+        usedWeights.add(cat.weight);
+      }
+    });
+    
+    // Also check draft weights
+    this.state.categories.forEach(cat => {
+      if (cat.name === excludeCategoryName) return;
+      const draftKey = `ttmenus_draft_category_${cat.name}`;
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        try {
+          const draftData = JSON.parse(draft);
+          if (draftData.frontmatter?.weight >= 2) {
+            usedWeights.add(draftData.frontmatter.weight);
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+    });
+    
+    // Find next available weight starting from 2
+    let nextWeight = 2;
+    while (usedWeights.has(nextWeight)) {
+      nextWeight++;
+    }
+    
+    console.log(`📊 Next available weight for "${excludeCategoryName}": ${nextWeight} (used: ${Array.from(usedWeights).sort((a,b)=>a-b).join(', ')})`);
+    return nextWeight;
+  },
+  
+  /**
+   * Fix duplicate category weights by reassigning duplicates to the next available weight
+   */
+  fixDuplicateCategoryWeights() {
+    const weightMap = new Map(); // weight -> [categories with this weight]
+    
+    // Build map of weights to categories
+    this.state.categories.forEach(category => {
+      const weight = category.weight;
+      if (!weightMap.has(weight)) {
+        weightMap.set(weight, []);
+      }
+      weightMap.get(weight).push(category);
+    });
+    
+    // Find and fix duplicates
+    let fixedAny = false;
+    weightMap.forEach((categories, weight) => {
+      if (categories.length > 1 && weight >= 2) {
+        console.warn(`⚠️ Found ${categories.length} categories with weight ${weight}:`, categories.map(c => c.name));
+        
+        // Keep the first category at this weight, reassign others
+        for (let i = 1; i < categories.length; i++) {
+          const category = categories[i];
+          const newWeight = this.getNextAvailableWeight(category.name);
+          category.weight = newWeight;
+          
+          // Also update draft if exists
+          const draftKey = `ttmenus_draft_category_${category.name}`;
+          const draft = localStorage.getItem(draftKey);
+          if (draft) {
+            try {
+              const draftData = JSON.parse(draft);
+              if (draftData.frontmatter) {
+                draftData.frontmatter.weight = newWeight;
+                localStorage.setItem(draftKey, JSON.stringify(draftData));
+              }
+            } catch (e) {
+              console.warn(`Failed to update draft for ${category.name}:`, e);
+            }
+          }
+          
+          console.log(`  ✅ Reassigned "${category.name}" from weight ${weight} to ${newWeight}`);
+          fixedAny = true;
+        }
+      }
+    });
+    
+    if (fixedAny) {
+      console.log('🎯 Fixed duplicate category weights. Categories will be reordered.');
+    }
+    
+    // Validate no weights < 2
+    this.state.categories.forEach(category => {
+      if (category.weight < 2 && category.weight !== 0) {
+        const newWeight = this.getNextAvailableWeight(category.name);
+        console.log(`  🔧 Fixed invalid weight for "${category.name}": ${category.weight} → ${newWeight}`);
+        category.weight = newWeight;
+        
+        // Update draft if exists
+        const draftKey = `ttmenus_draft_category_${category.name}`;
+        const draft = localStorage.getItem(draftKey);
+        if (draft) {
+          try {
+            const draftData = JSON.parse(draft);
+            if (draftData.frontmatter) {
+              draftData.frontmatter.weight = newWeight;
+              localStorage.setItem(draftKey, JSON.stringify(draftData));
+            }
+          } catch (e) {
+            // Ignore
+          }
+        }
+      }
+    });
+  },
+
+  /**
    * Save category weight to draft
    */
   async saveCategoryWeight(categoryName, newWeight) {
+    // Validate and fix weight conflicts
+    newWeight = this.validateAndFixCategoryWeight(categoryName, newWeight);
+    
     // Load existing category data
     const categoryPath = categoryName.toLowerCase();
     const possiblePaths = [
@@ -9285,18 +9450,11 @@ async function saveCategory(event) {
   const iconUrl = document.getElementById('categoryIconUrl').value.trim();
   let weight = parseInt(document.getElementById('categoryWeight').value) || 0;
   
-  // Validate weight (must be >= 2 and unique)
-  if (weight < 2) {
-    weight = getNextAvailableCategoryWeight(newName);
-    console.log(`⚠️ Weight was ${weight < 2 ? 'too low' : 'invalid'}, setting to next available: ${weight}`);
-  } else {
-    // Check if weight is already in use by another category
-    const existingCategory = UpdateUI.state.categories.find(c => c.weight === weight && c.name !== originalName);
-    if (existingCategory) {
-      alert(`Weight ${weight} is already used by category "${existingCategory.name}".\n\nPlease choose a different weight or leave it empty to auto-assign.`);
-      return;
-    }
-  }
+  // Validate and fix weight (must be >= 2 and unique)
+  weight = UpdateUI.validateAndFixCategoryWeight(newName === originalName ? originalName : newName, weight);
+  
+  // Update the input field with the corrected weight
+  document.getElementById('categoryWeight').value = weight;
   
   console.log(`💾 Saving category "${newName}" with icon:`, iconUrl);
   
