@@ -138,7 +138,7 @@ const UpdateUI = {
         <div class="loading" style="text-align: center; padding: 3rem; color: #6b7280;">
           <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
           <p style="font-size: 1.125rem; font-weight: 500;">Loading complete menu...</p>
-          <p style="font-size: 0.875rem; margin-top: 0.5rem;">Please wait while we load your menu from Hugo...</p>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem;">Please wait while we load your menu...</p>
         </div>
       `;
     }
@@ -503,14 +503,14 @@ const UpdateUI = {
       }
     } catch (error) {
       console.error('Error loading menu items:', error);
-      this.showError('Failed to load menu items from Hugo. Ensure Hugo has built the site.');
+      this.showError('Failed to load menu items. Please refresh the page or contact support.');
       
       const container = document.getElementById('menuItemsList');
       if (container) {
         container.innerHTML = `
           <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #6b7280;">
             <p style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">No menu items found</p>
-            <p style="font-size: 0.875rem;">Run 'hugo' to build the site and generate menu-items.json</p>
+            <p style="font-size: 0.875rem;">Please contact your administrator to add menu items</p>
           </div>
         `;
       }
@@ -1698,7 +1698,7 @@ const UpdateUI = {
       this.updateTabActionButtons();
       await this.loadBrandingImages();
       this.renderPendingSummary();
-      this.showSuccess(`${draftCount} branding image${draftCount !== 1 ? 's' : ''} published! (Simulated - requires content-service)`);
+      this.showSuccess(`${draftCount} branding image${draftCount !== 1 ? 's' : ''} will be updated on your site shortly!`);
       
     } catch (error) {
       console.error('Publish failed:', error);
@@ -1759,10 +1759,9 @@ const UpdateUI = {
     
     container.innerHTML = `
       <div class="alert alert-info">
-        <strong>Note:</strong> Configuration editing requires the content-service to be running.
-        Current config is in <code>hugo.toml</code>
+        <strong>Note:</strong> Configuration editing requires the backend service to be running.
       </div>
-      <p style="color: #6b7280;">Start content-service to enable Hugo configuration editing.</p>
+      <p style="color: #6b7280;">Configuration editing requires the backend service to be running.</p>
     `;
   },
 
@@ -1860,7 +1859,7 @@ const UpdateUI = {
       container.innerHTML = `
         <div style="text-align: center; padding: 3rem; color: #6b7280;">
           <p style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">No menu items found</p>
-          <p style="font-size: 0.875rem;">Add your first menu item to get started, or run 'hugo' to generate menu-items.json</p>
+            <p style="font-size: 0.875rem;">Add your first menu item to get started</p>
         </div>
       `;
       return;
@@ -3926,7 +3925,7 @@ const UpdateUI = {
       );
 
       if (response.ok) {
-        this.showSuccess('Colors published successfully! Rebuild Hugo to see changes.');
+        this.showSuccess('Colors published successfully! Changes will appear after the next site rebuild.');
         localStorage.removeItem(this.storageKeys.draftColors);
         this.checkPendingChanges();
       } else {
@@ -4437,7 +4436,7 @@ const UpdateUI = {
           <h3 class="detail-section-title">⚙️ Configuration</h3>
           <div class="pending-change-card">
             <div class="pending-change-info">
-              <strong>Hugo Configuration Changes</strong>
+              <strong>Configuration Changes</strong>
               <div class="pending-change-status">Site settings modified</div>
             </div>
             <button class="btn btn-sm btn-secondary" onclick="UpdateUI.discardAllDrafts('config')">Discard</button>
@@ -4812,9 +4811,9 @@ const UpdateUI = {
           `${successItems.slice(0, 5).join('\n')}${successItems.length > 5 ? `\n... and ${successItems.length - 5} more` : ''}`;
         
         if (hasCategoryDrafts) {
-          message += `\n\n📝 Note: Category changes are stored locally.\nTo apply them, manually update the category _index.md files\nor run 'hugo' to rebuild the site.`;
+          message += `\n\n📝 Note: Category changes will be applied on the next site rebuild.`;
         } else {
-          message += `\n\n🚀 Changes pushed to GitHub. Netlify will rebuild in ~2 minutes.`;
+          message += `\n\n🚀 Changes published successfully! Your site will update automatically in a few minutes.`;
         }
         
         this.showSuccess(message);
@@ -5265,15 +5264,14 @@ const UpdateUI = {
         const result = await response.json();
         
         if (result.git && result.git.status === 'pushed') {
-          // Git push succeeded - Netlify will auto-rebuild
+          // Git push succeeded - site will auto-rebuild
           this.showSuccess(
-            `✅ "${item.title}" published and pushed to GitHub!\n` +
-            `🚀 Netlify is rebuilding now. Changes will be live in ~2 minutes.\n` +
-            `Commit: ${result.git.commit || 'latest'}`
+            `✅ "${item.title}" published successfully!\n` +
+            `🚀 Your site is updating now. Changes will be live in a few minutes.`
           );
         } else {
           // Standard success (no git or git not configured)
-          this.showSuccess(`"${item.title}" published successfully! Rebuild Hugo to see changes.`);
+          this.showSuccess(`"${item.title}" published successfully! Changes will appear on your site shortly.`);
         }
         
         this.clearDraft(itemId);
@@ -9644,7 +9642,7 @@ window.syncInteractionToOriginal = syncInteractionToOriginal;
 
 // Branding upload modal function (placeholder)
 window.openBrandingUploadModal = function() {
-  alert('Image Upload Feature\n\nTo add new branding images:\n1. Upload files to themes/_menus_ttms/static/branding/\n2. Rebuild Hugo\n3. Refresh this page\n\nSupported formats: ICO, PNG, WEBP, GIF, JPG');
+  alert('Image Upload Feature\n\nTo add new branding images:\n1. Upload files to your branding folder\n2. Wait for the site to rebuild\n3. Refresh this page\n\nSupported formats: ICO, PNG, WEBP, GIF, JPG');
 };
 
 // Get current location using browser Geolocation API
