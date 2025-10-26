@@ -166,8 +166,9 @@ body{
 }
 
 .tab-btn {
-  background: none;
+  background: #efefef;
   border: none;
+  margin: 1px;
   padding: 1rem;
   cursor: pointer;
   font-size: small;
@@ -183,9 +184,9 @@ body{
 }
 
 .tab-btn.active {
-  color: #1e293b;
-  border-bottom-color: #1e293b;
-  background: #1e293b11;
+  color: #fff;
+  border-bottom-color: #00ff52;
+  background: #1e293b;
 }
 
 .dashboard-content {
