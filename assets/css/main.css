@@ -2753,6 +2753,7 @@ details[open] ul.all-hours {
     height: 4em;
     background: linear-gradient(#d73301ee,#800000ee);
     display: flex;
+    padding-inline: .4em;
     justify-content: space-between
 }
 
@@ -3514,7 +3515,6 @@ footer {
 
 @media(min-width: 400px) {
     #dashboard {
-        width:calc(-96px + 100dvh)
     }
 }
 
