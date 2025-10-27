@@ -1091,7 +1091,6 @@ details[open] ul.all-hours {
 .contactinfo {
     display: block;
     padding: .4em .4em 2.4em;
-    background: linear-gradient(var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),transparent);
     z-index: 1;
     position: relative;
     max-width: 500px;
@@ -2913,7 +2912,7 @@ details[open] ul.all-hours {
 }
 
 .contactinfobg {
-    background: var(--contact-info-bg);
+    background: linear-gradient(var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),var(--hero-bg-color),transparent);
     z-index: 1;
     position: relative
 }
