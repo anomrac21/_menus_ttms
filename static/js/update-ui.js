@@ -53,8 +53,9 @@ const UpdateUI = {
    * Initialize the Update UI
    */
   async init() {
-    console.log('🚀 Update UI v2025-11-20-v2 initializing (Hugo + localStorage mode)...');
+    console.log('🚀 Update UI v2025-11-20-v3 initializing (Hugo + localStorage mode)...');
     console.log('📦 Branding upload fixes: sessionId support, improved error handling, operation tracking');
+    console.log('🔍 DEBUG: If you see this, the new JavaScript has loaded!');
     
     // Inject preview button styles
     this.injectPreviewButtonStyles();
