@@ -265,74 +265,68 @@ const UpdateUI = {
   },
 
   /**
-   * Load categories from content-service API (category landing pages)
+   * Load categories from Hugo's generated JSON API files
+   * Hugo generates JSON files for each category section at /{category-name}/index.json
    */
   async loadCategories() {
-    console.log('🔍 Loading categories from content-service API...');
+    console.log('🔍 Loading categories from Hugo JSON API...');
     
     // Discover categories from menu items first
     const categoryNames = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
     
     console.log(`Found ${categoryNames.length} categories from menu items:`, categoryNames);
     
-    // Fetch each category's landing page data from API to get icon, weight, etc.
+    // Fetch each category's JSON file from Hugo's generated API
     const categoryPromises = categoryNames.map(async (name) => {
-      try {
-        // Use content-service API to get category landing page data
-        const apiUrl = `${this.apiConfig.getClientUrl()}/categories/${encodeURIComponent(name)}/landing`;
-        console.log(`  📡 Fetching category data for "${name}" from: ${apiUrl}`);
-        
-        const response = await this.authenticatedFetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`  ✅ Loaded ${name}:`, { 
-            title: data.title, 
-            icon: data.icon, 
-            weight: data.weight 
-          });
+      // Normalize category name for URL (lowercase, spaces to hyphens)
+      const normalizedName = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      // Try multiple possible paths for the JSON file
+      const possiblePaths = [
+        `/${normalizedName}/index.json`,  // Direct path
+        `/api/${normalizedName}/index.json`,  // API path
+        `/${name.toLowerCase()}/index.json`,  // Try with original casing
+      ];
+      
+      for (const path of possiblePaths) {
+        try {
+          console.log(`  📡 Fetching category data for "${name}" from: ${path}`);
+          const response = await fetch(path);
           
-          return {
-            name: data.title || name, // Display name from API
-            normalizedName: name, // Keep original normalized name for matching with items
-            icon: data.icon || null,
-            weight: parseInt(data.weight) || 999,
-          };
-        } else if (response.status === 404) {
-          // Category doesn't exist yet - use defaults
-          console.log(`  ⚠️ Category "${name}" not found in API, using defaults`);
-          return {
-            name: name, // Use as-is if no API data
-            normalizedName: name,
-            icon: null,
-            weight: 999,
-          };
-        } else {
-          // Other error
-          const errorText = await response.text().catch(() => 'Unknown error');
-          console.warn(`  ⚠️ Failed to load category "${name}": ${response.status} ${errorText}`);
-          return {
-            name: name,
-            normalizedName: name,
-            icon: null,
-            weight: 999,
-          };
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`  ✅ Loaded ${name} from ${path}:`, { 
+              title: data.title, 
+              icon: data.icon, 
+              weight: data.weight
+            });
+            
+            // Ensure icon is properly extracted
+            const iconValue = data.icon || null;
+            if (iconValue && iconValue.trim() === '') {
+              console.warn(`  ⚠️ Empty icon string for ${name}`);
+            }
+            
+            return {
+              name: data.title || name, // Display name from JSON
+              normalizedName: name, // Keep original name for matching with items
+              icon: iconValue, // Use icon from JSON (could be URL or null)
+              weight: parseInt(data.weight) || 999,
+            };
+          }
+        } catch (error) {
+          console.log(`  Failed to load ${path}:`, error.message);
         }
-      } catch (error) {
-        console.error(`  ❌ Error loading category "${name}":`, error.message);
-        // Fallback on error
-        return {
-          name: name,
-          normalizedName: name,
-          icon: null,
-          weight: 999,
-        };
       }
+      
+      // Fallback if no JSON found
+      console.warn(`  ⚠️ No JSON found for ${name}, using defaults`);
+      return {
+        name: name,
+        normalizedName: name,
+        icon: null,
+        weight: 999,
+      };
     });
     
     this.state.categories = await Promise.all(categoryPromises);
@@ -1956,7 +1950,7 @@ const UpdateUI = {
       // Use normalized name to find items
       const items = itemsByCategory[category.normalizedName] || [];
       
-      console.log(`Category "${category.name}": ${items.length} items`);
+      console.log(`Category "${category.name}" (normalized: "${category.normalizedName}"): ${items.length} items, icon: ${category.icon || 'NONE'}`);
       
       // Sort items within category by weight (or title if no weight)
       items.sort((a, b) => {
