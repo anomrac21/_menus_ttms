@@ -20,6 +20,7 @@ const UpdateUI = {
       manifest: '/manifest',
       colors: '/colors',
       branding: '/branding/upload',
+      images: '/images/upload',
     }
   },
 
@@ -6052,7 +6053,7 @@ const UpdateUI = {
    * @param {boolean} pushGit - Whether to push to git immediately (false for batch)
    * @param {string} sessionId - Batch session ID (for combining commits)
    */
-  async uploadImageFromDataUrl(dataUrl, targetPath, pushGit = true, sessionId = null) {
+  async uploadImageFromDataUrl(dataUrl, targetPath, pushGit = true, sessionId = null, useBrandingEndpoint = false) {
     // Convert data URL to blob
     const response = await fetch(dataUrl);
     const blob = await response.blob();
@@ -6060,29 +6061,58 @@ const UpdateUI = {
     // Create FormData for upload
     const formData = new FormData();
     const filename = targetPath.split('/').pop();
-    formData.append('file', blob, filename);
-    formData.append('path', targetPath);
     
-    // Upload to branding/upload endpoint with batch mode and sessionId support
-    const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
-    const url = pushGit 
-      ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}`
-      : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false${sessionParam}`;
-    
-    console.log(`📤 Uploading to: ${url}, pushGit=${pushGit}, sessionId=${sessionId}`);
-    
-    const uploadResponse = await this.authenticatedFetch(url, {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      console.error(`Upload failed for ${filename}:`, errorText);
-      throw new Error(`Failed to upload ${filename}`);
+    // Choose endpoint and field name based on useBrandingEndpoint flag
+    // Branding images go to /branding/upload with field name "file" and use sessionId (camelCase)
+    // General images (including ad images) go to /images/upload with field name "image" and use session_id (underscore)
+    if (useBrandingEndpoint) {
+      formData.append('file', blob, filename);
+      formData.append('path', targetPath);
+      formData.append('type', 'branding');
+      const endpoint = this.apiConfig.endpoints.branding;
+      const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
+      const url = pushGit 
+        ? `${this.apiConfig.getClientUrl()}${endpoint}`
+        : `${this.apiConfig.getClientUrl()}${endpoint}?batch=true&pushGit=false${sessionParam}`;
+      
+      console.log(`📤 Uploading branding image to: ${url}, pushGit=${pushGit}, sessionId=${sessionId}`);
+      
+      const uploadResponse = await this.authenticatedFetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error(`Upload failed for ${filename}:`, errorText);
+        throw new Error(`Failed to upload ${filename}`);
+      }
+      
+      return await uploadResponse.json();
+    } else {
+      // General images endpoint (for ad images, menu item images, etc.)
+      // Note: images endpoint expects field name "image" and parameter "session_id" (underscore)
+      formData.append('image', blob, filename);
+      const endpoint = this.apiConfig.endpoints.images;
+      const sessionParam = sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : '';
+      const pushParam = pushGit ? 'push=true' : 'push=false';
+      const url = `${this.apiConfig.getClientUrl()}${endpoint}?${pushParam}${sessionParam}`;
+      
+      console.log(`📤 Uploading image to: ${url}, pushGit=${pushGit}, session_id=${sessionId}`);
+      
+      const uploadResponse = await this.authenticatedFetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error(`Upload failed for ${filename}:`, errorText);
+        throw new Error(`Failed to upload ${filename}`);
+      }
+      
+      return await uploadResponse.json();
     }
-    
-    return await uploadResponse.json();
   },
 
   /**
@@ -6127,7 +6157,7 @@ const UpdateUI = {
         
         if (imageDataUrl) {
           console.log(`📤 Uploading ad image (batch mode, session: ${sessionID}): ${ad.image}`);
-          const uploadResult = await this.uploadImageFromDataUrl(imageDataUrl, ad.image, false, sessionID);
+          const uploadResult = await this.uploadImageFromDataUrl(imageDataUrl, ad.image, false, sessionID, false); // false = use images endpoint, not branding
           console.log(`✅ Ad image uploaded successfully:`, uploadResult);
           
           // Clean up after successful upload
