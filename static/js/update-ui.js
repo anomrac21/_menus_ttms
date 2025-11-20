@@ -271,26 +271,54 @@ const UpdateUI = {
   async loadCategories() {
     console.log('🔍 Loading categories from Hugo JSON API...');
     
-    // Discover categories from menu items first
-    const categoryNames = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
+    // Discover categories from menu items, extracting folder paths from categoryUrl
+    const categoryMap = new Map();
+    this.state.menuItems.forEach(item => {
+      if (item.category && !categoryMap.has(item.category)) {
+        // Try to extract folder path from categoryUrl if available
+        let folderPath = null;
+        if (item.categoryUrl) {
+          // Extract path from URL like "/fuze-bowls/" -> "fuze-bowls"
+          const match = item.categoryUrl.match(/\/([^\/]+)\/?$/);
+          if (match) {
+            folderPath = match[1];
+            console.log(`  📂 Found folder path for "${item.category}": ${folderPath} from URL: ${item.categoryUrl}`);
+          }
+        }
+        categoryMap.set(item.category, folderPath);
+      }
+    });
     
+    const categoryNames = Array.from(categoryMap.keys());
     console.log(`Found ${categoryNames.length} categories from menu items:`, categoryNames);
     
     // Fetch each category's JSON file from Hugo's generated API
     const categoryPromises = categoryNames.map(async (name) => {
-      // Normalize category name for URL (lowercase, spaces to hyphens)
-      const normalizedName = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      // Get folder path from categoryUrl if available, otherwise normalize the name
+      let folderPath = categoryMap.get(name);
+      
+      if (!folderPath) {
+        // Normalize category name for URL (lowercase, spaces to hyphens, remove special chars)
+        // This matches how Hugo creates folder names (normalized)
+        folderPath = name.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        console.log(`  🔄 Normalized "${name}" to folder path: "${folderPath}"`);
+      }
       
       // Try multiple possible paths for the JSON file
       const possiblePaths = [
-        `/${normalizedName}/index.json`,  // Direct path
-        `/api/${normalizedName}/index.json`,  // API path
-        `/${name.toLowerCase()}/index.json`,  // Try with original casing
+        `/${folderPath}/index.json`,  // Direct path (most common)
+        `/api/${folderPath}/index.json`,  // API path variant
       ];
+      
+      console.log(`  🔍 Looking for category "${name}" (folder: "${folderPath}")`);
       
       for (const path of possiblePaths) {
         try {
-          console.log(`  📡 Fetching category data for "${name}" from: ${path}`);
+          console.log(`  📡 Trying: ${path}`);
           const response = await fetch(path);
           
           if (response.ok) {
@@ -298,13 +326,17 @@ const UpdateUI = {
             console.log(`  ✅ Loaded ${name} from ${path}:`, { 
               title: data.title, 
               icon: data.icon, 
-              weight: data.weight
+              weight: data.weight,
+              hasIcon: !!data.icon,
+              iconType: typeof data.icon,
+              iconValue: data.icon
             });
             
-            // Ensure icon is properly extracted
-            const iconValue = data.icon || null;
-            if (iconValue && iconValue.trim() === '') {
-              console.warn(`  ⚠️ Empty icon string for ${name}`);
+            // Ensure icon is properly extracted (handle empty strings)
+            let iconValue = data.icon || null;
+            if (iconValue && typeof iconValue === 'string' && iconValue.trim() === '') {
+              console.warn(`  ⚠️ Empty icon string for ${name}, setting to null`);
+              iconValue = null;
             }
             
             return {
@@ -313,14 +345,16 @@ const UpdateUI = {
               icon: iconValue, // Use icon from JSON (could be URL or null)
               weight: parseInt(data.weight) || 999,
             };
+          } else {
+            console.log(`  ❌ ${path} returned status ${response.status}`);
           }
         } catch (error) {
-          console.log(`  Failed to load ${path}:`, error.message);
+          console.log(`  ❌ Error loading ${path}:`, error.message);
         }
       }
       
       // Fallback if no JSON found
-      console.warn(`  ⚠️ No JSON found for ${name}, using defaults`);
+      console.warn(`  ⚠️ No JSON found for "${name}" (tried: ${possiblePaths.join(', ')}), using defaults`);
       return {
         name: name,
         normalizedName: name,
@@ -473,6 +507,7 @@ const UpdateUI = {
             title: item.name,
             description: description,
             category: item.category,
+            categoryUrl: item.categoryUrl || null, // Preserve category URL for folder path extraction
             price: price,
             size: item.sizes && item.sizes.length > 0 ? item.sizes[0] : '-',
             flavour: item.flavours && item.flavours.length > 0 ? item.flavours[0] : '-',
