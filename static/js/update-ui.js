@@ -5350,6 +5350,94 @@ const UpdateUI = {
         }
       }
       
+      // Publish branding images
+      const brandingDrafts = this.getBrandingDrafts();
+      const brandingDraftCount = Object.keys(brandingDrafts).length;
+      if (brandingDraftCount > 0) {
+        console.log(`🖼️ Publishing ${brandingDraftCount} branding image(s)...`);
+        let brandingSuccessCount = 0;
+        let brandingErrorCount = 0;
+        
+        for (const [filename, draft] of Object.entries(brandingDrafts)) {
+          const fileData = sessionStorage.getItem(`branding_file_${filename}`);
+          if (!fileData) {
+            console.warn(`No file data found for ${filename}`);
+            brandingErrorCount++;
+            failedItems.push(`❌ Branding: ${filename} (no file data)`);
+            continue;
+          }
+          
+          try {
+            // Convert data URL to blob with correct MIME type
+            const response = await fetch(fileData);
+            let blob = await response.blob();
+            
+            // Ensure blob has correct MIME type based on filename extension
+            const requirements = this.getBrandingImageRequirements(filename);
+            if (requirements) {
+              let mimeType = 'image/webp'; // Default
+              if (requirements.format === 'png') {
+                mimeType = 'image/png';
+              } else if (requirements.format === 'ico') {
+                mimeType = 'image/x-icon';
+              } else if (requirements.format === 'webp') {
+                mimeType = 'image/webp';
+              }
+              
+              // If blob type doesn't match, create a new blob with correct type
+              if (blob.type !== mimeType) {
+                blob = new Blob([blob], { type: mimeType });
+              }
+            }
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('file', blob, filename);
+            formData.append('path', `branding/${filename}`);
+            formData.append('type', 'branding');
+            
+            // Upload to content-service with sessionId for batch mode
+            const uploadUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false&sessionId=${sessionId}`;
+            console.log(`📤 Uploading branding image ${filename}...`);
+            
+            const uploadResponse = await this.authenticatedFetch(uploadUrl, {
+              method: 'POST',
+              body: formData,
+            });
+            
+            if (!uploadResponse.ok) {
+              const errorText = await uploadResponse.text();
+              console.error(`❌ Upload failed for ${filename}:`, errorText);
+              throw new Error(`Upload failed (${uploadResponse.status}): ${errorText}`);
+            }
+            
+            const result = await uploadResponse.json();
+            console.log(`✅ Uploaded ${filename}:`, result);
+            if (!result.success) {
+              throw new Error(result.error || 'Upload returned unsuccessful');
+            }
+            brandingSuccessCount++;
+            successItems.push(`🖼️ Branding: ${filename}`);
+          } catch (error) {
+            console.error(`❌ Failed to upload ${filename}:`, error);
+            brandingErrorCount++;
+            failedItems.push(`❌ Branding: ${filename}: ${error.message}`);
+          }
+        }
+        
+        // Update counts
+        successCount += brandingSuccessCount;
+        failCount += brandingErrorCount;
+        
+        // Clear branding drafts if all successful
+        if (brandingErrorCount === 0 && brandingSuccessCount > 0) {
+          localStorage.removeItem(this.storageKeys.draftBranding);
+          Object.keys(brandingDrafts).forEach(filename => {
+            sessionStorage.removeItem(`branding_file_${filename}`);
+          });
+        }
+      }
+      
       
       // Now trigger single git push for all changes with sessionId
       if (successCount > 0) {
