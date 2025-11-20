@@ -1772,15 +1772,15 @@ const UpdateUI = {
             <input 
               type="range" 
               id="scaleSlider" 
-              min="50" 
+              min="1" 
               max="200" 
               value="100" 
-              step="5"
+              step="1"
               style="width: 100%;"
               oninput="UpdateUI.updateScale(this.value)"
             >
             <div style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.75rem; color: #6b7280;">
-              <span>50%</span>
+              <span>1%</span>
               <span>100%</span>
               <span>200%</span>
             </div>
