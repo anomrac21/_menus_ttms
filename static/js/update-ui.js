@@ -1636,15 +1636,42 @@ const UpdateUI = {
   },
 
   /**
-   * Replace branding image
+   * Get required image dimensions for branding files
+   */
+  getBrandingImageRequirements(filename) {
+    const requirements = {
+      'favicon.ico': { width: 16, height: 16, format: 'ico', allowCrop: false },
+      'favicon.png': { width: 32, height: 32, format: 'png', allowCrop: false },
+      'favicon16.webp': { width: 16, height: 16, format: 'webp', allowCrop: true },
+      'favicon144.webp': { width: 144, height: 144, format: 'webp', allowCrop: true },
+      'favicon152.webp': { width: 152, height: 152, format: 'webp', allowCrop: true },
+      'favicon192.webp': { width: 192, height: 192, format: 'webp', allowCrop: true },
+      'favicon196.webp': { width: 196, height: 196, format: 'webp', allowCrop: true },
+      'favicon512.webp': { width: 512, height: 512, format: 'webp', allowCrop: true },
+      'favicon-400x200.webp': { width: 400, height: 200, format: 'webp', allowCrop: true },
+      'mappin.webp': { width: 64, height: 64, format: 'webp', allowCrop: true }, // Default map icon size
+      'richscreenshot1.webp': { width: 1280, height: 720, format: 'webp', allowCrop: true }, // Standard screenshot size
+      'richscreenshot2.webp': { width: 1280, height: 720, format: 'webp', allowCrop: true },
+    };
+    return requirements[filename] || null;
+  },
+
+  /**
+   * Replace branding image with validation and cropping
    */
   replaceBrandingImage(filename) {
+    const requirements = this.getBrandingImageRequirements(filename);
+    if (!requirements) {
+      this.showError(`Unknown branding file: ${filename}`);
+      return;
+    }
+
     // Create a hidden file input
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*,.ico';
     
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       
@@ -1655,23 +1682,323 @@ const UpdateUI = {
         return;
       }
       
-      // Create preview URL
+      // Load image to check dimensions
+      const img = new Image();
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const previewUrl = event.target.result;
+      
+      reader.onload = async (event) => {
+        img.src = event.target.result;
         
-        // Save to drafts
-        this.saveBrandingDraft(filename, file, previewUrl);
+        img.onload = async () => {
+          const actualWidth = img.width;
+          const actualHeight = img.height;
+          const requiredWidth = requirements.width;
+          const requiredHeight = requirements.height;
+          
+          // Check if image matches exact dimensions
+          if (actualWidth === requiredWidth && actualHeight === requiredHeight) {
+            // Perfect match - save directly
+            this.saveBrandingDraft(filename, file, event.target.result);
+            this.renderBrandingImages();
+            this.showSuccess(`Draft replacement saved for "${filename}". Click "Publish" to upload.`);
+            return;
+          }
+          
+          // Check if image is smaller than required
+          if (actualWidth < requiredWidth || actualHeight < requiredHeight) {
+            this.showError(
+              `Image is too small. Required: ${requiredWidth}x${requiredHeight}px, ` +
+              `but got: ${actualWidth}x${actualHeight}px. Please use a larger image.`
+            );
+            return;
+          }
+          
+          // Image is larger - show cropping interface
+          if (requirements.allowCrop) {
+            this.showImageCropper(filename, img, requirements, file);
+          } else {
+            this.showError(
+              `Image dimensions must be exactly ${requiredWidth}x${requiredHeight}px. ` +
+              `Got: ${actualWidth}x${actualHeight}px. Please resize the image first.`
+            );
+          }
+        };
         
-        // Re-render branding images
-        this.renderBrandingImages();
-        
-        this.showSuccess(`Draft replacement saved for "${filename}". Click "Publish" to upload.`);
+        img.onerror = () => {
+          this.showError('Failed to load image. Please try a different file.');
+        };
       };
+      
       reader.readAsDataURL(file);
     };
     
     input.click();
+  },
+
+  /**
+   * Show image cropper modal
+   */
+  showImageCropper(filename, img, requirements, originalFile) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+        <div class="modal-header">
+          <h3>Crop Image: ${filename}</h3>
+          <p style="color: #6b7280; margin: 0.5rem 0;">
+            Required size: ${requirements.width}x${requirements.height}px
+            <br>Current size: ${img.width}x${img.height}px
+          </p>
+          <button class="btn-close" onclick="this.closest('.modal').remove()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 1rem;">
+          <div style="position: relative; max-width: 100%; margin-bottom: 1rem;">
+            <canvas id="cropCanvas" style="max-width: 100%; border: 2px solid #e5e7eb; border-radius: 8px;"></canvas>
+          </div>
+          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+            <button class="btn btn-secondary" onclick="UpdateUI.cancelCrop()">Cancel</button>
+            <button class="btn btn-primary" onclick="UpdateUI.confirmCrop('${filename}', ${requirements.width}, ${requirements.height}, '${requirements.format}')">Crop & Save</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Store crop data
+    this._cropData = {
+      filename,
+      img,
+      requirements,
+      originalFile,
+      canvas: null,
+      ctx: null,
+      cropX: 0,
+      cropY: 0,
+      cropWidth: requirements.width,
+      cropHeight: requirements.height,
+      scale: Math.min(requirements.width / img.width, requirements.height / img.height),
+    };
+    
+    // Initialize canvas
+    setTimeout(() => {
+      this.initCropCanvas();
+    }, 100);
+  },
+
+  /**
+   * Initialize crop canvas
+   */
+  initCropCanvas() {
+    const canvas = document.getElementById('cropCanvas');
+    if (!canvas || !this._cropData) return;
+    
+    const { img, requirements, scale } = this._cropData;
+    
+    // Calculate display size (fit to container, max 800px)
+    const maxDisplaySize = 800;
+    const displayScale = Math.min(maxDisplaySize / Math.max(img.width, img.height), 1);
+    const displayWidth = img.width * displayScale;
+    const displayHeight = img.height * displayScale;
+    
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+    
+    const ctx = canvas.getContext('2d');
+    this._cropData.canvas = canvas;
+    this._cropData.ctx = ctx;
+    this._cropData.displayScale = displayScale;
+    
+    // Calculate crop area in display coordinates
+    const cropDisplayWidth = requirements.width * displayScale;
+    const cropDisplayHeight = requirements.height * displayScale;
+    
+    // Center crop area
+    this._cropData.cropX = (displayWidth - cropDisplayWidth) / 2;
+    this._cropData.cropY = (displayHeight - cropDisplayHeight) / 2;
+    this._cropData.cropDisplayWidth = cropDisplayWidth;
+    this._cropData.cropDisplayHeight = cropDisplayHeight;
+    
+    // Draw image
+    ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+    
+    // Draw crop overlay
+    this.drawCropOverlay();
+    
+    // Add mouse/touch handlers for dragging crop area
+    this.setupCropHandlers();
+  },
+
+  /**
+   * Draw crop overlay
+   */
+  drawCropOverlay() {
+    const { ctx, canvas, cropX, cropY, cropDisplayWidth, cropDisplayHeight } = this._cropData;
+    
+    // Redraw image
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(this._cropData.img, 0, 0, canvas.width, canvas.height);
+    
+    // Draw dark overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Clear crop area
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillRect(cropX, cropY, cropDisplayWidth, cropDisplayHeight);
+    ctx.restore();
+    
+    // Draw crop border
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cropX, cropY, cropDisplayWidth, cropDisplayHeight);
+    
+    // Draw corner handles
+    const handleSize = 10;
+    ctx.fillStyle = '#3b82f6';
+    const corners = [
+      [cropX, cropY],
+      [cropX + cropDisplayWidth, cropY],
+      [cropX, cropY + cropDisplayHeight],
+      [cropX + cropDisplayWidth, cropY + cropDisplayHeight],
+    ];
+    corners.forEach(([x, y]) => {
+      ctx.fillRect(x - handleSize/2, y - handleSize/2, handleSize, handleSize);
+    });
+  },
+
+  /**
+   * Setup crop handlers for dragging
+   */
+  setupCropHandlers() {
+    const canvas = this._cropData.canvas;
+    if (!canvas) return;
+    
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startCropX = 0;
+    let startCropY = 0;
+    
+    const onMouseDown = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Check if click is in crop area
+      if (x >= this._cropData.cropX && x <= this._cropData.cropX + this._cropData.cropDisplayWidth &&
+          y >= this._cropData.cropY && y <= this._cropData.cropY + this._cropData.cropDisplayHeight) {
+        isDragging = true;
+        startX = x;
+        startY = y;
+        startCropX = this._cropData.cropX;
+        startCropY = this._cropData.cropY;
+      }
+    };
+    
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const deltaX = x - startX;
+      const deltaY = y - startY;
+      
+      // Update crop position (clamp to canvas bounds)
+      this._cropData.cropX = Math.max(0, Math.min(canvas.width - this._cropData.cropDisplayWidth, startCropX + deltaX));
+      this._cropData.cropY = Math.max(0, Math.min(canvas.height - this._cropData.cropDisplayHeight, startCropY + deltaY));
+      
+      this.drawCropOverlay();
+    };
+    
+    const onMouseUp = () => {
+      isDragging = false;
+    };
+    
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mouseleave', onMouseUp);
+    
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      onMouseDown(e.touches[0]);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      onMouseMove(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      onMouseUp();
+    });
+  },
+
+  /**
+   * Cancel crop
+   */
+  cancelCrop() {
+    const modal = document.querySelector('.modal');
+    if (modal) modal.remove();
+    this._cropData = null;
+  },
+
+  /**
+   * Confirm crop and save
+   */
+  confirmCrop(filename, requiredWidth, requiredHeight, requiredFormat) {
+    if (!this._cropData) return;
+    
+    const { img, cropX, cropY, cropDisplayWidth, cropDisplayHeight, displayScale } = this._cropData;
+    
+    // Convert display coordinates back to image coordinates
+    const sourceX = cropX / displayScale;
+    const sourceY = cropY / displayScale;
+    const sourceWidth = cropDisplayWidth / displayScale;
+    const sourceHeight = cropDisplayHeight / displayScale;
+    
+    // Create output canvas with exact dimensions
+    const outputCanvas = document.createElement('canvas');
+    outputCanvas.width = requiredWidth;
+    outputCanvas.height = requiredHeight;
+    const outputCtx = outputCanvas.getContext('2d');
+    
+    // Draw cropped and resized image
+    outputCtx.drawImage(
+      img,
+      sourceX, sourceY, sourceWidth, sourceHeight,  // Source rectangle
+      0, 0, requiredWidth, requiredHeight            // Destination rectangle
+    );
+    
+    // Convert to blob
+    outputCanvas.toBlob((blob) => {
+      if (!blob) {
+        this.showError('Failed to process image');
+        return;
+      }
+      
+      // Create file from blob
+      const croppedFile = new File([blob], filename, { type: blob.type });
+      
+      // Convert to data URL for preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        this.saveBrandingDraft(filename, croppedFile, event.target.result);
+        this.renderBrandingImages();
+        this.showSuccess(`Draft replacement saved for "${filename}". Click "Publish" to upload.`);
+        
+        // Close modal
+        const modal = document.querySelector('.modal');
+        if (modal) modal.remove();
+        this._cropData = null;
+      };
+      reader.readAsDataURL(blob);
+    }, `image/${requiredFormat === 'ico' ? 'x-icon' : requiredFormat}`, 0.95);
   },
 
   /**
@@ -1749,32 +2076,99 @@ const UpdateUI = {
     const confirmed = confirm(`Publish ${draftCount} branding image replacement${draftCount !== 1 ? 's' : ''}?\n\nThis will upload the new images to the server.`);
     if (!confirmed) return;
     
+    this.showInfo('Uploading branding images...');
+    
     try {
-      // TODO: Upload files to server via content-service API
+      let successCount = 0;
+      let errorCount = 0;
+      
+      // Upload each branding image
       for (const [filename, draft] of Object.entries(drafts)) {
         const fileData = sessionStorage.getItem(`branding_file_${filename}`);
-        if (!fileData) continue;
+        if (!fileData) {
+          console.warn(`No file data found for ${filename}`);
+          errorCount++;
+          continue;
+        }
         
-        // In a real implementation, this would upload to the server
-        console.log(`Would upload ${filename}:`, draft);
-        
-        // For now, just simulate success
-        // await this.authenticatedFetch(...upload API...)
+        try {
+          // Convert data URL to blob
+          const response = await fetch(fileData);
+          const blob = await response.blob();
+          
+          // Create FormData
+          const formData = new FormData();
+          formData.append('file', blob, filename);
+          formData.append('path', `branding/${filename}`);
+          formData.append('type', 'branding');
+          
+          // Upload to content-service
+          const uploadUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false`;
+          const uploadResponse = await this.authenticatedFetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            throw new Error(`Upload failed: ${errorText}`);
+          }
+          
+          const result = await uploadResponse.json();
+          console.log(`✅ Uploaded ${filename}:`, result);
+          successCount++;
+        } catch (error) {
+          console.error(`❌ Failed to upload ${filename}:`, error);
+          errorCount++;
+          this.showError(`Failed to upload ${filename}: ${error.message}`);
+        }
       }
       
-      // Clear drafts
-      localStorage.removeItem(this.storageKeys.draftBranding);
+      // If all successful, commit batch
+      if (successCount > 0 && errorCount === 0) {
+        // Commit batch changes
+        try {
+          const commitUrl = `${this.apiConfig.getClientUrl()}/batch/commit`;
+          const commitResponse = await this.authenticatedFetch(commitUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: `Update ${successCount} branding image${successCount !== 1 ? 's' : ''}`,
+            }),
+          });
+          
+          if (commitResponse.ok) {
+            const commitResult = await commitResponse.json();
+            console.log('✅ Batch committed:', commitResult);
+          }
+        } catch (error) {
+          console.error('Failed to commit batch:', error);
+          this.showError('Images uploaded but batch commit failed. Please check the server.');
+        }
+      }
       
-      // Clear session storage
-      Object.keys(drafts).forEach(filename => {
-        sessionStorage.removeItem(`branding_file_${filename}`);
-      });
-      
-      this.clearPendingChanges();
-      this.updateTabActionButtons();
-      await this.loadBrandingImages();
-      this.renderPendingSummary();
-      this.showSuccess(`${draftCount} branding image${draftCount !== 1 ? 's' : ''} will be updated on your site shortly!`);
+      // Clear drafts only if all successful
+      if (errorCount === 0) {
+        localStorage.removeItem(this.storageKeys.draftBranding);
+        
+        // Clear session storage
+        Object.keys(drafts).forEach(filename => {
+          sessionStorage.removeItem(`branding_file_${filename}`);
+        });
+        
+        this.clearPendingChanges();
+        this.updateTabActionButtons();
+        await this.loadBrandingImages();
+        this.renderPendingSummary();
+        
+        if (successCount > 0) {
+          this.showSuccess(`${successCount} branding image${successCount !== 1 ? 's' : ''} published successfully! Changes will appear on your site shortly.`);
+        }
+      } else {
+        this.showError(`Published ${successCount} image${successCount !== 1 ? 's' : ''}, but ${errorCount} failed. Please try again.`);
+      }
       
     } catch (error) {
       console.error('Publish failed:', error);
