@@ -1204,7 +1204,7 @@ const UpdateUI = {
         </div>
         
         <div class="ad-details" style="display: ${isCollapsed ? 'none' : 'block'};">
-          ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image)}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}">` : ''}
+          ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image, ad.id, 'ad')}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}" onerror="console.error('Ad image load failed:', '${this.escapeHtml(ad.image)}', 'adId:', '${this.escapeHtml(ad.id)}'); this.style.display='none';">` : ''}
         
         ${ad.description ? `<p class="menu-item-description">${this.escapeHtml(ad.description).substring(0, 100)}</p>` : ''}
         
@@ -6072,18 +6072,49 @@ const UpdateUI = {
     // Check for pending image upload
     if (ad._imagePending && ad.image) {
       try {
-        const imageDataUrl = sessionStorage.getItem(`ad_image_${adId}`);
+        console.log(`🔍 Checking for image upload for ad ${adId}, image path: ${ad.image}`);
+        // Try current adId first
+        let imageDataUrl = sessionStorage.getItem(`ad_image_${adId}`);
+        console.log(`🔍 Image data for key 'ad_image_${adId}':`, imageDataUrl ? 'FOUND' : 'NOT FOUND');
+        
+        // If not found, try old new_ad_ format (in case ID was changed from new_ad_ to slug)
+        if (!imageDataUrl && adId.startsWith('new_ad_') === false) {
+          console.log(`🔍 Checking for old new_ad_ keys...`);
+          // Check if there's an image stored under any new_ad_ key
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith('ad_image_new_ad_')) {
+              const oldImageData = sessionStorage.getItem(key);
+              if (oldImageData) {
+                console.log(`📦 Found image under old key ${key}, migrating to new key`);
+                imageDataUrl = oldImageData;
+                // Migrate to new key
+                sessionStorage.setItem(`ad_image_${adId}`, imageDataUrl);
+                sessionStorage.removeItem(key);
+                break;
+              }
+            }
+          }
+        }
+        
         if (imageDataUrl) {
           console.log(`📤 Uploading ad image (batch mode, session: ${sessionID}): ${ad.image}`);
-          await this.uploadImageFromDataUrl(imageDataUrl, ad.image, false, sessionID);
+          const uploadResult = await this.uploadImageFromDataUrl(imageDataUrl, ad.image, false, sessionID);
+          console.log(`✅ Ad image uploaded successfully:`, uploadResult);
           
           // Clean up after successful upload
           sessionStorage.removeItem(`ad_image_${adId}`);
+        } else {
+          console.warn(`⚠️ No image data found in sessionStorage for ad ${adId}. Image path: ${ad.image}`);
+          console.warn(`⚠️ Available sessionStorage keys:`, Array.from({length: sessionStorage.length}, (_, i) => sessionStorage.key(i)).filter(k => k && k.includes('ad_image')));
         }
       } catch (uploadError) {
-        console.error('Ad image upload failed:', uploadError);
-        // Continue with ad creation even if image upload fails
+        console.error('❌ Ad image upload failed:', uploadError);
+        // Don't fail the entire publish, but log the error
+        this.showError(`Ad published but image upload failed: ${uploadError.message}`);
       }
+    } else if (ad.image && !ad._imagePending) {
+      console.log(`ℹ️ Ad ${adId} has image ${ad.image} but no pending upload (image already exists)`);
     }
     
     // Clean up ad data (remove internal fields)
@@ -6098,6 +6129,14 @@ const UpdateUI = {
     
     // Handle deletions separately
     if (ad._isDeleted) {
+      // If it's a new ad that was never published, just clear the draft
+      if (ad._isNew) {
+        console.log(`🗑️ Ad ${adId} is new and deleted - clearing draft only`);
+        this.clearDraftAd(adId);
+        await this.loadAdvertisements();
+        return { success: true, message: 'Draft deleted' };
+      }
+      
       const url = sessionID
         ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&session_id=${sessionID}`
         : `${this.apiConfig.getClientUrl()}/ads/${adId}?push=${pushGit}`;
@@ -6111,6 +6150,12 @@ const UpdateUI = {
         this.clearDraftAd(adId);
         await this.loadAdvertisements();
         return await response.json();
+      } else if (response.status === 404) {
+        // Ad doesn't exist in backend - just clear the draft
+        console.log(`⚠️ Ad ${adId} not found in backend (404) - clearing draft only`);
+        this.clearDraftAd(adId);
+        await this.loadAdvertisements();
+        return { success: true, message: 'Draft deleted (ad was not in backend)' };
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Ad delete failed:', errorData);
@@ -6475,27 +6520,36 @@ const UpdateUI = {
    * Helper: Normalize image path for display (add leading / if needed)
    * Also checks for pending image uploads stored in sessionStorage
    */
-  getDisplayImagePath(path, itemId = null) {
+  getDisplayImagePath(path, itemId = null, type = 'item') {
     if (!path) return '';
     
     // Check if this is a pending upload (has data URL in sessionStorage)
     if (itemId) {
-      // Try to get the preview data URL
-      const previewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
-      console.log(`Checking image previews for ${itemId}, path: ${path}`);
-      console.log(`Session key: image_previews_${itemId}`, previewsJson ? 'FOUND' : 'NOT FOUND');
-      
-      if (previewsJson) {
-        try {
-          const previews = JSON.parse(previewsJson);
-          console.log('Image previews object:', previews);
-          
-          if (previews[path]) {
-            console.log(`✅ Using data URL preview for: ${path}`);
-            return previews[path]; // Return data URL for preview
+      if (type === 'ad') {
+        // For ads, check ad_image_${adId} in sessionStorage
+        const adImageData = sessionStorage.getItem(`ad_image_${itemId}`);
+        if (adImageData) {
+          console.log(`✅ Using data URL preview for ad ${itemId}: ${path}`);
+          return adImageData; // Return data URL for preview
+        }
+      } else {
+        // For menu items, check image_previews_${itemId}
+        const previewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
+        console.log(`Checking image previews for ${itemId}, path: ${path}`);
+        console.log(`Session key: image_previews_${itemId}`, previewsJson ? 'FOUND' : 'NOT FOUND');
+        
+        if (previewsJson) {
+          try {
+            const previews = JSON.parse(previewsJson);
+            console.log('Image previews object:', previews);
+            
+            if (previews[path]) {
+              console.log(`✅ Using data URL preview for: ${path}`);
+              return previews[path]; // Return data URL for preview
+            }
+          } catch (e) {
+            console.error('Error parsing image previews:', e);
           }
-        } catch (e) {
-          console.error('Error parsing image previews:', e);
         }
       }
     }
@@ -7740,6 +7794,9 @@ async function saveAd(event) {
   
   const title = document.getElementById('adTitle').value.trim();
   
+  // Store old ID for potential migration
+  const oldAdId = adId;
+  
   // Generate slug-based ID from title for new ads
   if (isNew && title) {
     adId = title.toLowerCase()
@@ -7750,6 +7807,18 @@ async function saveAd(event) {
     
     // Update the hidden input with the new ID
     document.getElementById('adId').value = adId;
+    
+    // Migrate sessionStorage entries if ID changed
+    if (oldAdId !== adId) {
+      const oldImageKey = `ad_image_${oldAdId}`;
+      const newImageKey = `ad_image_${adId}`;
+      const oldImageData = sessionStorage.getItem(oldImageKey);
+      if (oldImageData) {
+        console.log(`📦 Migrating image from ${oldImageKey} to ${newImageKey}`);
+        sessionStorage.setItem(newImageKey, oldImageData);
+        sessionStorage.removeItem(oldImageKey);
+      }
+    }
   }
   
   const adData = {
