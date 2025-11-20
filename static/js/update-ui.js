@@ -1,6 +1,7 @@
 /**
  * TTMenus Update UI Manager
  * Loads data from Hugo files, saves drafts in localStorage, only uses API for commits
+ * Version: 2025-11-20-v2 (Branding upload fixes)
  */
 
 const UpdateUI = {
@@ -52,7 +53,8 @@ const UpdateUI = {
    * Initialize the Update UI
    */
   async init() {
-    console.log('Initializing Update UI (Hugo + localStorage mode)...');
+    console.log('🚀 Update UI v2025-11-20-v2 initializing (Hugo + localStorage mode)...');
+    console.log('📦 Branding upload fixes: sessionId support, improved error handling, operation tracking');
     
     // Inject preview button styles
     this.injectPreviewButtonStyles();
