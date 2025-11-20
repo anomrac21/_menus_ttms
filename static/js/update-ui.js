@@ -265,48 +265,74 @@ const UpdateUI = {
   },
 
   /**
-   * Load categories from category _index.md files
+   * Load categories from content-service API (category landing pages)
    */
   async loadCategories() {
-    console.log('🔍 Loading categories from category pages...');
+    console.log('🔍 Loading categories from content-service API...');
     
     // Discover categories from menu items first
     const categoryNames = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
     
     console.log(`Found ${categoryNames.length} categories from menu items:`, categoryNames);
     
-    // Fetch each category's JSON to get icon, weight, etc.
+    // Fetch each category's landing page data from API to get icon, weight, etc.
     const categoryPromises = categoryNames.map(async (name) => {
-      const categoryPath = name.toLowerCase();
-      const possiblePaths = [
-        `/${categoryPath}/index.json`,
-        `/api/${categoryPath}/index.json`
-      ];
-      
-      for (const path of possiblePaths) {
-        try {
-          const response = await fetch(path);
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`  ✅ Loaded ${name}:`, { icon: data.icon, weight: data.weight });
-            return {
-              name: data.title || name,
-              icon: data.icon || null,
-              weight: parseInt(data.weight) || 0,
-            };
+      try {
+        // Use content-service API to get category landing page data
+        const apiUrl = `${this.apiConfig.getClientUrl()}/categories/${encodeURIComponent(name)}/landing`;
+        console.log(`  📡 Fetching category data for "${name}" from: ${apiUrl}`);
+        
+        const response = await this.authenticatedFetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
           }
-        } catch (error) {
-          console.log(`  Failed to load ${path}:`, error.message);
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`  ✅ Loaded ${name}:`, { 
+            title: data.title, 
+            icon: data.icon, 
+            weight: data.weight 
+          });
+          
+          return {
+            name: data.title || name, // Display name from API
+            normalizedName: name, // Keep original normalized name for matching with items
+            icon: data.icon || null,
+            weight: parseInt(data.weight) || 999,
+          };
+        } else if (response.status === 404) {
+          // Category doesn't exist yet - use defaults
+          console.log(`  ⚠️ Category "${name}" not found in API, using defaults`);
+          return {
+            name: name, // Use as-is if no API data
+            normalizedName: name,
+            icon: null,
+            weight: 999,
+          };
+        } else {
+          // Other error
+          const errorText = await response.text().catch(() => 'Unknown error');
+          console.warn(`  ⚠️ Failed to load category "${name}": ${response.status} ${errorText}`);
+          return {
+            name: name,
+            normalizedName: name,
+            icon: null,
+            weight: 999,
+          };
         }
+      } catch (error) {
+        console.error(`  ❌ Error loading category "${name}":`, error.message);
+        // Fallback on error
+        return {
+          name: name,
+          normalizedName: name,
+          icon: null,
+          weight: 999,
+        };
       }
-      
-      // Fallback if no JSON found
-      console.warn(`  ⚠️ No JSON found for ${name}, using defaults`);
-      return {
-        name: name,
-        icon: null,
-        weight: 999,
-      };
     });
     
     this.state.categories = await Promise.all(categoryPromises);
@@ -1867,7 +1893,7 @@ const UpdateUI = {
 
     console.log('Grouping items by category...');
 
-    // Group items by category
+    // Group items by category (items use normalized category names)
     const itemsByCategory = {};
     this.state.menuItems.forEach(item => {
       if (!itemsByCategory[item.category]) {
@@ -1876,12 +1902,34 @@ const UpdateUI = {
       itemsByCategory[item.category].push(item);
     });
 
+    // Helper function to normalize category names for comparison
+    const normalizeCategoryName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    };
+
     // Get category order (from category _index.md files, loaded via loadCategories)
-    let categoryOrder = this.state.categories.map((cat, index) => ({
-      name: cat.name,
-      icon: cat.icon,
-      weight: cat.weight || index,
-    }));
+    // Match categories from API with item categories using normalized names
+    let categoryOrder = Object.keys(itemsByCategory).map((itemCategoryName, index) => {
+      // Find matching category from API by comparing normalized names
+      const apiCategory = this.state.categories.find(cat => {
+        // Try exact match first
+        if (cat.normalizedName === itemCategoryName || cat.name === itemCategoryName) {
+          return true;
+        }
+        // Try normalized comparison
+        const normalizedApi = normalizeCategoryName(cat.normalizedName || cat.name);
+        const normalizedItem = normalizeCategoryName(itemCategoryName);
+        return normalizedApi === normalizedItem;
+      });
+      
+      return {
+        name: apiCategory?.name || itemCategoryName, // Use display name if available
+        normalizedName: itemCategoryName, // Keep original item category name for matching
+        icon: apiCategory?.icon || null,
+        weight: apiCategory?.weight ?? 999,
+      };
+    });
 
     // If no categories defined, auto-discover from items
     if (categoryOrder.length === 0) {
@@ -1905,7 +1953,8 @@ const UpdateUI = {
     const categoryHTML = [];
     
     categoryOrder.forEach((category, categoryIndex) => {
-      const items = itemsByCategory[category.name] || [];
+      // Use normalized name to find items
+      const items = itemsByCategory[category.normalizedName] || [];
       
       console.log(`Category "${category.name}": ${items.length} items`);
       
