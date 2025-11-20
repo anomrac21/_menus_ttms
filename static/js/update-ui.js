@@ -2135,12 +2135,20 @@ const UpdateUI = {
           
           if (!uploadResponse.ok) {
             const errorText = await uploadResponse.text();
-            console.error(`❌ Upload failed for ${filename}:`, errorText);
-            throw new Error(`Upload failed: ${errorText}`);
+            console.error(`❌ Upload failed for ${filename}:`, {
+              status: uploadResponse.status,
+              statusText: uploadResponse.statusText,
+              error: errorText,
+              url: uploadUrl
+            });
+            throw new Error(`Upload failed (${uploadResponse.status}): ${errorText}`);
           }
           
           const result = await uploadResponse.json();
           console.log(`✅ Uploaded ${filename}:`, result);
+          if (!result.success) {
+            throw new Error(result.error || 'Upload returned unsuccessful');
+          }
           successCount++;
         } catch (error) {
           console.error(`❌ Failed to upload ${filename}:`, error);
@@ -2170,10 +2178,18 @@ const UpdateUI = {
           if (commitResponse.ok) {
             const commitResult = await commitResponse.json();
             console.log('✅ Batch committed:', commitResult);
+            if (commitResult.git && commitResult.git.status === 'pushed') {
+              console.log('✅ Git push successful - changes are live!');
+            }
           } else {
             const errorText = await commitResponse.text();
-            console.error('❌ Batch commit failed:', errorText);
-            throw new Error(`Batch commit failed: ${errorText}`);
+            console.error('❌ Batch commit failed:', {
+              status: commitResponse.status,
+              statusText: commitResponse.statusText,
+              error: errorText,
+              sessionId: sessionId
+            });
+            throw new Error(`Batch commit failed (${commitResponse.status}): ${errorText}`);
           }
         } catch (error) {
           console.error('Failed to commit batch:', error);
