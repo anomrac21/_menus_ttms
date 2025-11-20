@@ -6165,6 +6165,7 @@ const UpdateUI = {
         return { success: true, message: 'Draft deleted', backendOperation: false };
       }
       
+      // Use sessionId (camelCase) for consistency with other endpoints
       const url = sessionID
         ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&sessionId=${sessionID}`
         : `${this.apiConfig.getClientUrl()}/ads/${adId}?push=${pushGit}`;
@@ -6180,11 +6181,27 @@ const UpdateUI = {
         const result = await response.json();
         return { ...result, backendOperation: true };
       } else if (response.status === 404) {
-        // Ad doesn't exist in backend - just clear the draft (no backend operation)
-        console.log(`⚠️ Ad ${adId} not found in backend (404) - clearing draft only`);
-        this.clearDraftAd(adId);
-        await this.loadAdvertisements();
-        return { success: true, message: 'Draft deleted (ad was not in backend)', backendOperation: false };
+        // Ad doesn't exist in backend working directory
+        // Check if ad exists in Hugo's JSON (which means it exists in Git)
+        const adExistsInGit = this.state.advertisements.some(a => a.id === adId && !a._isDraft);
+        
+        if (adExistsInGit) {
+          // Ad exists in Git but not in working directory - still need to delete from Git
+          // In batch mode with sessionId, we need to track this so batch commit can delete it
+          // The backend's batch commit should handle deleting files that exist in Git but not locally
+          console.log(`⚠️ Ad ${adId} not in backend working dir but exists in Git - marking for Git deletion`);
+          console.log(`📝 SessionId: ${sessionID}, will be deleted during batch commit`);
+          
+          // Don't clear draft yet - keep it so batch commit can process it
+          // Return backendOperation: true so batch commit happens
+          return { success: true, message: 'Ad will be deleted from Git during batch commit', backendOperation: true };
+        } else {
+          // Ad doesn't exist anywhere - just clear the draft
+          console.log(`⚠️ Ad ${adId} not found in backend (404) and not in Git - clearing draft only`);
+          this.clearDraftAd(adId);
+          await this.loadAdvertisements();
+          return { success: true, message: 'Draft deleted (ad was not in backend)', backendOperation: false };
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Ad delete failed:', errorData);
