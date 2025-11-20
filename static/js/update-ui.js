@@ -6096,9 +6096,11 @@ const UpdateUI = {
       const endpoint = this.apiConfig.endpoints.images;
       const sessionParam = sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : '';
       const pushParam = pushGit ? 'push=true' : 'push=false';
-      const url = `${this.apiConfig.getClientUrl()}${endpoint}?${pushParam}${sessionParam}`;
+      // Add batch=true when in batch mode (sessionId provided and not pushing immediately)
+      const batchParam = (sessionId && !pushGit) ? '&batch=true' : '';
+      const url = `${this.apiConfig.getClientUrl()}${endpoint}?${pushParam}${sessionParam}${batchParam}`;
       
-      console.log(`📤 Uploading image to: ${url}, pushGit=${pushGit}, session_id=${sessionId}`);
+      console.log(`📤 Uploading image to: ${url}, pushGit=${pushGit}, session_id=${sessionId}, batch=${!!batchParam}`);
       
       const uploadResponse = await this.authenticatedFetch(url, {
         method: 'POST',
