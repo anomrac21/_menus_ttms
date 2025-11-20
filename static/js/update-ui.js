@@ -1829,7 +1829,7 @@ const UpdateUI = {
     const maxDisplaySize = 800;
     const baseDisplayScale = Math.min(maxDisplaySize / Math.max(img.width, img.height), 1);
     
-    // Apply user scale (50-200%)
+    // Apply user scale (1-200%)
     const userScaleFactor = userScale / 100;
     const displayScale = baseDisplayScale * userScaleFactor;
     
@@ -1837,19 +1837,24 @@ const UpdateUI = {
     const scaledWidth = img.width * displayScale;
     const scaledHeight = img.height * displayScale;
     
-    // Canvas size should accommodate the scaled image
-    canvas.width = Math.max(scaledWidth, requirements.width * baseDisplayScale);
-    canvas.height = Math.max(scaledHeight, requirements.height * baseDisplayScale);
+    // Calculate crop area in display coordinates (crop area size is fixed based on requirements)
+    const cropDisplayWidth = requirements.width * baseDisplayScale;
+    const cropDisplayHeight = requirements.height * baseDisplayScale;
+    
+    // Canvas size should be at least the crop area size + padding, or the scaled image size (whichever is larger)
+    const padding = 40; // Padding around crop area
+    const minCanvasWidth = cropDisplayWidth + padding * 2;
+    const minCanvasHeight = cropDisplayHeight + padding * 2;
+    canvas.width = Math.max(scaledWidth, minCanvasWidth);
+    canvas.height = Math.max(scaledHeight, minCanvasHeight);
     
     const ctx = canvas.getContext('2d');
     this._cropData.canvas = canvas;
     this._cropData.ctx = ctx;
     this._cropData.displayScale = displayScale;
     this._cropData.baseDisplayScale = baseDisplayScale;
-    
-    // Calculate crop area in display coordinates (crop area size is fixed based on requirements)
-    const cropDisplayWidth = requirements.width * baseDisplayScale;
-    const cropDisplayHeight = requirements.height * baseDisplayScale;
+    this._cropData.scaledWidth = scaledWidth;
+    this._cropData.scaledHeight = scaledHeight;
     
     // Center crop area on canvas
     this._cropData.cropX = (canvas.width - cropDisplayWidth) / 2;
@@ -1857,7 +1862,7 @@ const UpdateUI = {
     this._cropData.cropDisplayWidth = cropDisplayWidth;
     this._cropData.cropDisplayHeight = cropDisplayHeight;
     
-    // Draw image
+    // Draw image centered on canvas
     ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
     
     // Draw crop overlay
@@ -1871,13 +1876,16 @@ const UpdateUI = {
    * Draw crop overlay
    */
   drawCropOverlay() {
-    const { ctx, canvas, cropX, cropY, cropDisplayWidth, cropDisplayHeight, img, displayScale } = this._cropData;
+    const { ctx, canvas, cropX, cropY, cropDisplayWidth, cropDisplayHeight, img, displayScale, scaledWidth, scaledHeight } = this._cropData;
     
-    // Redraw image with scale
+    // Redraw image centered on canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const scaledWidth = img.width * displayScale;
-    const scaledHeight = img.height * displayScale;
-    ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+    
+    // Calculate image position to center it on canvas
+    const imageX = (canvas.width - scaledWidth) / 2;
+    const imageY = (canvas.height - scaledHeight) / 2;
+    
+    ctx.drawImage(img, imageX, imageY, scaledWidth, scaledHeight);
     
     // Draw dark overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -1947,9 +1955,18 @@ const UpdateUI = {
       const deltaX = x - startX;
       const deltaY = y - startY;
       
-      // Update crop position (clamp to canvas bounds)
-      this._cropData.cropX = Math.max(0, Math.min(canvas.width - this._cropData.cropDisplayWidth, startCropX + deltaX));
-      this._cropData.cropY = Math.max(0, Math.min(canvas.height - this._cropData.cropDisplayHeight, startCropY + deltaY));
+      // Calculate image bounds (centered on canvas)
+      const imageX = (canvas.width - this._cropData.scaledWidth) / 2;
+      const imageY = (canvas.height - this._cropData.scaledHeight) / 2;
+      const imageRight = imageX + this._cropData.scaledWidth;
+      const imageBottom = imageY + this._cropData.scaledHeight;
+      
+      // Update crop position (clamp to image bounds, not canvas bounds)
+      const newCropX = startCropX + deltaX;
+      const newCropY = startCropY + deltaY;
+      
+      this._cropData.cropX = Math.max(imageX, Math.min(imageRight - this._cropData.cropDisplayWidth, newCropX));
+      this._cropData.cropY = Math.max(imageY, Math.min(imageBottom - this._cropData.cropDisplayHeight, newCropY));
       
       this.drawCropOverlay();
     };
@@ -1999,18 +2016,25 @@ const UpdateUI = {
     const userScaleFactor = this._cropData.userScale / 100;
     this._cropData.displayScale = baseDisplayScale * userScaleFactor;
     
-    // Recalculate canvas size
+    // Recalculate scaled image dimensions
+    const scaledWidth = img.width * this._cropData.displayScale;
+    const scaledHeight = img.height * this._cropData.displayScale;
+    this._cropData.scaledWidth = scaledWidth;
+    this._cropData.scaledHeight = scaledHeight;
+    
+    // Recalculate canvas size (maintain minimum size based on crop area)
     const canvas = this._cropData.canvas;
     if (canvas) {
-      const scaledWidth = img.width * this._cropData.displayScale;
-      const scaledHeight = img.height * this._cropData.displayScale;
-      
-      canvas.width = Math.max(scaledWidth, requirements.width * baseDisplayScale);
-      canvas.height = Math.max(scaledHeight, requirements.height * baseDisplayScale);
-      
-      // Re-center crop area
       const cropDisplayWidth = requirements.width * baseDisplayScale;
       const cropDisplayHeight = requirements.height * baseDisplayScale;
+      const padding = 40; // Padding around crop area
+      const minCanvasWidth = cropDisplayWidth + padding * 2;
+      const minCanvasHeight = cropDisplayHeight + padding * 2;
+      
+      canvas.width = Math.max(scaledWidth, minCanvasWidth);
+      canvas.height = Math.max(scaledHeight, minCanvasHeight);
+      
+      // Re-center crop area
       this._cropData.cropX = (canvas.width - cropDisplayWidth) / 2;
       this._cropData.cropY = (canvas.height - cropDisplayHeight) / 2;
       this._cropData.cropDisplayWidth = cropDisplayWidth;
@@ -2036,13 +2060,28 @@ const UpdateUI = {
   confirmCrop(filename, requiredWidth, requiredHeight, requiredFormat) {
     if (!this._cropData) return;
     
-    const { img, cropX, cropY, cropDisplayWidth, cropDisplayHeight, displayScale } = this._cropData;
+    const { img, cropX, cropY, cropDisplayWidth, cropDisplayHeight, displayScale, canvas, scaledWidth, scaledHeight } = this._cropData;
     
-    // Convert display coordinates back to image coordinates
-    const sourceX = cropX / displayScale;
-    const sourceY = cropY / displayScale;
+    // Calculate image position on canvas (centered)
+    const imageX = (canvas.width - scaledWidth) / 2;
+    const imageY = (canvas.height - scaledHeight) / 2;
+    
+    // Convert crop coordinates from canvas coordinates to image coordinates
+    // Crop area position relative to image (not canvas)
+    const cropRelativeX = cropX - imageX;
+    const cropRelativeY = cropY - imageY;
+    
+    // Convert display coordinates back to source image coordinates
+    const sourceX = Math.max(0, cropRelativeX / displayScale);
+    const sourceY = Math.max(0, cropRelativeY / displayScale);
     const sourceWidth = cropDisplayWidth / displayScale;
     const sourceHeight = cropDisplayHeight / displayScale;
+    
+    // Clamp to image bounds
+    const finalSourceX = Math.min(sourceX, img.width - sourceWidth);
+    const finalSourceY = Math.min(sourceY, img.height - sourceHeight);
+    const finalSourceWidth = Math.min(sourceWidth, img.width - finalSourceX);
+    const finalSourceHeight = Math.min(sourceHeight, img.height - finalSourceY);
     
     // Create output canvas with exact dimensions
     const outputCanvas = document.createElement('canvas');
@@ -2053,7 +2092,7 @@ const UpdateUI = {
     // Draw cropped and resized image
     outputCtx.drawImage(
       img,
-      sourceX, sourceY, sourceWidth, sourceHeight,  // Source rectangle
+      finalSourceX, finalSourceY, finalSourceWidth, finalSourceHeight,  // Source rectangle
       0, 0, requiredWidth, requiredHeight            // Destination rectangle
     );
     
