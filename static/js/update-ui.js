@@ -789,9 +789,14 @@ const UpdateUI = {
     const discardBranding = document.getElementById('discardBranding');
     const publishBranding = document.getElementById('publishBranding');
     if (discardBranding || publishBranding) {
-      const hasDraftBranding = localStorage.getItem(this.storageKeys.draftBranding) !== null;
+      const drafts = this.getBrandingDrafts();
+      const hasDraftBranding = Object.keys(drafts).length > 0;
+      console.log('🔍 Branding button visibility check:', { hasDraftBranding, draftCount: Object.keys(drafts).length, drafts: Object.keys(drafts) });
       if (discardBranding) discardBranding.style.display = hasDraftBranding ? 'inline-block' : 'none';
-      if (publishBranding) publishBranding.style.display = hasDraftBranding ? 'inline-block' : 'none';
+      if (publishBranding) {
+        publishBranding.style.display = hasDraftBranding ? 'inline-block' : 'none';
+        console.log('🔘 Publish branding button display:', publishBranding.style.display, 'hasDraft:', hasDraftBranding);
+      }
     }
     
     // Manifest
@@ -2044,6 +2049,7 @@ const UpdateUI = {
     localStorage.setItem(this.storageKeys.draftBranding, JSON.stringify(drafts));
     this.markPendingChanges();
     this.updateTabActionButtons();
+    console.log('🔘 Updated tab action buttons - branding button should now be visible');
   },
 
   /**
