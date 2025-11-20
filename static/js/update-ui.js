@@ -2017,6 +2017,14 @@ const UpdateUI = {
    * Save branding draft
    */
   saveBrandingDraft(filename, file, previewUrl) {
+    console.log(`💾 Saving branding draft for ${filename}:`, {
+      filename,
+      originalName: file.name,
+      type: file.type,
+      size: file.size,
+      hasPreview: !!previewUrl
+    });
+    
     const drafts = this.getBrandingDrafts();
     
     // Store file info (actual file object can't be stored in localStorage)
@@ -2031,6 +2039,7 @@ const UpdateUI = {
     
     // Store file in sessionStorage for upload on publish (limited storage, but works for images)
     sessionStorage.setItem(`branding_file_${filename}`, previewUrl);
+    console.log(`✅ Draft saved. Total drafts: ${Object.keys(drafts).length}`);
     
     localStorage.setItem(this.storageKeys.draftBranding, JSON.stringify(drafts));
     this.markPendingChanges();
@@ -2065,17 +2074,24 @@ const UpdateUI = {
    * Publish branding changes
    */
   async publishBrandingImages() {
+    console.log('🚀 publishBrandingImages() called');
     const drafts = this.getBrandingDrafts();
     const draftCount = Object.keys(drafts).length;
+    console.log(`📋 Found ${draftCount} branding draft(s):`, Object.keys(drafts));
     
     if (draftCount === 0) {
+      console.warn('⚠️ No branding drafts to publish');
       this.showError('No branding image changes to publish');
       return;
     }
     
     const confirmed = confirm(`Publish ${draftCount} branding image replacement${draftCount !== 1 ? 's' : ''}?\n\nThis will upload the new images to the server.`);
-    if (!confirmed) return;
+    if (!confirmed) {
+      console.log('❌ User cancelled publish');
+      return;
+    }
     
+    console.log('✅ User confirmed, starting upload...');
     this.showInfo('Uploading branding images...');
     
     try {
