@@ -5471,6 +5471,7 @@ const UpdateUI = {
       let failCount = 0;
       let successItems = [];
       let failedItems = [];
+      let hasBackendOperations = false; // Track if any actual backend operations were performed
       
       // Publish menu items (batch mode - no individual alerts)
       console.log('🔍 Checking for draft menu items...');
@@ -5508,10 +5509,17 @@ const UpdateUI = {
         const draftAds = JSON.parse(draftAdsJson);
         for (const ad of Object.values(draftAds)) {
           try {
-            await this.publishAdSilent(ad.id, false, sessionId);
-            successCount++;
-            const action = ad._isDeleted ? '🗑️' : (ad._isNew ? '➕' : '📝');
-            successItems.push(`${action} Ad: ${ad.title}`);
+            const result = await this.publishAdSilent(ad.id, false, sessionId);
+            // Only count as success if a backend operation was performed
+            if (result && result.backendOperation !== false) {
+              successCount++;
+              hasBackendOperations = true;
+              const action = ad._isDeleted ? '🗑️' : (ad._isNew ? '➕' : '📝');
+              successItems.push(`${action} Ad: ${ad.title}`);
+            } else {
+              // Draft-only operation (e.g., clearing a draft that doesn't exist in backend)
+              console.log(`ℹ️ Ad ${ad.id} was draft-only operation, no backend call needed`);
+            }
           } catch (error) {
             failCount++;
             failedItems.push(`❌ Ad: ${ad.title}: ${error.message}`);
@@ -5761,7 +5769,8 @@ const UpdateUI = {
       console.log(`📦 Preparing batch commit with sessionId: ${sessionId}`);
       
       // Now trigger single git push for all changes with sessionId
-      if (successCount > 0) {
+      // Only commit if there were actual backend operations (not just draft-only clears)
+      if (successCount > 0 && hasBackendOperations) {
         try {
           const user = AuthClient.getCurrentUser();
           const username = user?.email || user?.username || 'Unknown User';
@@ -6134,7 +6143,7 @@ const UpdateUI = {
         console.log(`🗑️ Ad ${adId} is new and deleted - clearing draft only`);
         this.clearDraftAd(adId);
         await this.loadAdvertisements();
-        return { success: true, message: 'Draft deleted' };
+        return { success: true, message: 'Draft deleted', backendOperation: false };
       }
       
       const url = sessionID
@@ -6149,13 +6158,14 @@ const UpdateUI = {
       if (response.ok) {
         this.clearDraftAd(adId);
         await this.loadAdvertisements();
-        return await response.json();
+        const result = await response.json();
+        return { ...result, backendOperation: true };
       } else if (response.status === 404) {
-        // Ad doesn't exist in backend - just clear the draft
+        // Ad doesn't exist in backend - just clear the draft (no backend operation)
         console.log(`⚠️ Ad ${adId} not found in backend (404) - clearing draft only`);
         this.clearDraftAd(adId);
         await this.loadAdvertisements();
-        return { success: true, message: 'Draft deleted (ad was not in backend)' };
+        return { success: true, message: 'Draft deleted (ad was not in backend)', backendOperation: false };
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Ad delete failed:', errorData);
@@ -6201,7 +6211,8 @@ const UpdateUI = {
     if (response.ok) {
       this.clearDraftAd(adId);
       await this.loadAdvertisements();
-      return await response.json();
+      const result = await response.json();
+      return { ...result, backendOperation: true };
     } else {
       const errorData = await response.json().catch(() => ({}));
       console.error('Ad publish failed:', errorData);
