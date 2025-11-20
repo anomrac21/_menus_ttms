@@ -309,9 +309,13 @@ const UpdateUI = {
       }
       
       // Try multiple possible paths for the JSON file
+      // Hugo generates JSON files at various paths depending on configuration
       const possiblePaths = [
         `/${folderPath}/index.json`,  // Direct path (most common)
+        `/${folderPath}.json`,  // Alternative: folder name as JSON file
         `/api/${folderPath}/index.json`,  // API path variant
+        `/api/${folderPath}.json`,  // API path with JSON extension
+        `/${folderPath}/`,  // Try directory listing (might redirect)
       ];
       
       console.log(`  🔍 Looking for category "${name}" (folder: "${folderPath}")`);
@@ -322,6 +326,13 @@ const UpdateUI = {
           const response = await fetch(path);
           
           if (response.ok) {
+            const contentType = response.headers.get('content-type') || '';
+            // Only process if it's JSON
+            if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
+              console.log(`  ⚠️ ${path} is not JSON (content-type: ${contentType}), skipping`);
+              continue;
+            }
+            
             const data = await response.json();
             console.log(`  ✅ Loaded ${name} from ${path}:`, { 
               title: data.title, 
@@ -329,14 +340,23 @@ const UpdateUI = {
               weight: data.weight,
               hasIcon: !!data.icon,
               iconType: typeof data.icon,
-              iconValue: data.icon
+              iconValue: data.icon,
+              iconLength: data.icon ? data.icon.length : 0
             });
             
-            // Ensure icon is properly extracted (handle empty strings)
+            // Ensure icon is properly extracted (handle empty strings, null, undefined)
             let iconValue = data.icon || null;
-            if (iconValue && typeof iconValue === 'string' && iconValue.trim() === '') {
-              console.warn(`  ⚠️ Empty icon string for ${name}, setting to null`);
-              iconValue = null;
+            if (iconValue !== null) {
+              if (typeof iconValue === 'string') {
+                iconValue = iconValue.trim();
+                if (iconValue === '') {
+                  console.warn(`  ⚠️ Empty icon string for ${name}, setting to null`);
+                  iconValue = null;
+                }
+              } else {
+                console.warn(`  ⚠️ Icon for ${name} is not a string (type: ${typeof iconValue}), setting to null`);
+                iconValue = null;
+              }
             }
             
             return {
@@ -549,10 +569,11 @@ const UpdateUI = {
         // Merge with draft changes from localStorage
         this.mergeDraftItems();
         
-        console.log('✅ Menu items loaded. Categories will load next with icons.');
+        console.log('✅ Menu items loaded. Loading categories with icons...');
         
-        // Don't render yet - wait for categories to load with icons
-        // renderMenuByCategory() will be called by loadCategories()
+        // Always reload categories after menu items to ensure icons are up-to-date
+        // loadCategories() will call renderMenuByCategory() when done
+        await this.loadCategories();
       } else {
         throw new Error('Failed to load menu-items.json');
       }
