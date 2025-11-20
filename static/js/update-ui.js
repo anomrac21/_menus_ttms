@@ -5160,6 +5160,7 @@ const UpdateUI = {
       // Generate session ID for batch operations
       const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       console.log(`📦 Starting batch publish with session: ${sessionId}`);
+      console.log(`📊 Total pending changes: ${totalCount}`);
       
       let successCount = 0;
       let failCount = 0;
@@ -5167,7 +5168,10 @@ const UpdateUI = {
       let failedItems = [];
       
       // Publish menu items (batch mode - no individual alerts)
+      console.log('🔍 Checking for draft menu items...');
       const draftItems = this.getDrafts();
+      const itemCount = Object.keys(draftItems).length;
+      console.log(`📋 Found ${itemCount} draft menu item(s)`);
       for (const item of Object.values(draftItems)) {
         try {
           await this.publishItemSilent(item.id, false, sessionId); // Pass sessionId
@@ -5187,7 +5191,14 @@ const UpdateUI = {
       }
       
       // Publish ads (now supports batch mode!)
+      console.log('🔍 Checking for draft ads...');
       const draftAdsJson = localStorage.getItem(this.storageKeys.draftAds);
+      if (draftAdsJson) {
+        const draftAds = JSON.parse(draftAdsJson);
+        console.log(`📋 Found ${Object.keys(draftAds).length} draft ad(s)`);
+      } else {
+        console.log('📋 No draft ads found');
+      }
       if (draftAdsJson) {
         const draftAds = JSON.parse(draftAdsJson);
         for (const ad of Object.values(draftAds)) {
@@ -5351,8 +5362,10 @@ const UpdateUI = {
       }
       
       // Publish branding images
+      console.log('🔍 Checking for draft branding images...');
       const brandingDrafts = this.getBrandingDrafts();
       const brandingDraftCount = Object.keys(brandingDrafts).length;
+      console.log(`📋 Found ${brandingDraftCount} draft branding image(s):`, Object.keys(brandingDrafts));
       if (brandingDraftCount > 0) {
         console.log(`🖼️ Publishing ${brandingDraftCount} branding image(s)...`);
         let brandingSuccessCount = 0;
@@ -5439,13 +5452,18 @@ const UpdateUI = {
       }
       
       
+      console.log(`📊 Publish summary: ${successCount} succeeded, ${failCount} failed`);
+      console.log(`📦 Preparing batch commit with sessionId: ${sessionId}`);
+      
       // Now trigger single git push for all changes with sessionId
       if (successCount > 0) {
         try {
           const user = AuthClient.getCurrentUser();
           const username = user?.email || user?.username || 'Unknown User';
+          console.log(`👤 Committing as user: ${username}`);
           
           await this.triggerBatchCommit(username, successCount, sessionId);
+          console.log('✅ Batch commit completed successfully');
           
           // Clear homepage draft after successful batch commit
           if (draftHomePageJson) {
