@@ -5568,7 +5568,7 @@ const UpdateUI = {
         try {
           const draftColors = JSON.parse(draftColorsJson);
           const response = await this.authenticatedFetch(
-            `${this.apiConfig.getClientUrl()}/colors?push=false&session_id=${sessionId}`,
+            `${this.apiConfig.getClientUrl()}/colors?push=false&sessionId=${sessionId}`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -5598,7 +5598,7 @@ const UpdateUI = {
         try {
           const draftManifest = JSON.parse(draftManifestJson);
           const response = await this.authenticatedFetch(
-            `${this.apiConfig.getClientUrl()}/manifest?push=false&session_id=${sessionId}`,
+            `${this.apiConfig.getClientUrl()}/manifest?push=false&sessionId=${sessionId}`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -5643,7 +5643,7 @@ const UpdateUI = {
           console.log(`📂 Publishing category "${categoryName}" with data:`, JSON.stringify(landingData, null, 2));
           
           const response = await UpdateUI.authenticatedFetch(
-            `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&session_id=${sessionId}`,
+            `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&sessionId=${sessionId}`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -6138,7 +6138,7 @@ const UpdateUI = {
       }
       
       const url = sessionID
-        ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&session_id=${sessionID}`
+        ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&sessionId=${sessionID}`
         : `${this.apiConfig.getClientUrl()}/ads/${adId}?push=${pushGit}`;
       
       const response = await this.authenticatedFetch(url, {
@@ -6169,8 +6169,8 @@ const UpdateUI = {
     
     if (sessionID) {
       url = ad._isNew
-        ? `${this.apiConfig.getClientUrl()}/ads?push=false&session_id=${sessionID}`
-        : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=false&session_id=${sessionID}`;
+        ? `${this.apiConfig.getClientUrl()}/ads?push=false&sessionId=${sessionID}`
+        : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=false&sessionId=${sessionID}`;
     } else {
       url = ad._isNew
         ? `${this.apiConfig.getClientUrl()}/ads?push=${pushGit}`
@@ -6188,7 +6188,7 @@ const UpdateUI = {
       console.log(`Ad not found in backend, creating instead: ${adId}`);
       method = 'POST';
       url = sessionID
-        ? `${this.apiConfig.getClientUrl()}/ads?push=false&session_id=${sessionID}`
+        ? `${this.apiConfig.getClientUrl()}/ads?push=false&sessionId=${sessionID}`
         : `${this.apiConfig.getClientUrl()}/ads?push=${pushGit}`;
       
       response = await this.authenticatedFetch(url, {
@@ -6234,7 +6234,7 @@ const UpdateUI = {
     console.log('Publishing locations data:', locationsData);
     
     const url = sessionID 
-      ? `${this.apiConfig.getClientUrl()}/locations?push=false&session_id=${sessionID}`
+      ? `${this.apiConfig.getClientUrl()}/locations?push=false&sessionId=${sessionID}`
       : `${this.apiConfig.getClientUrl()}/locations?push=${pushGit}`;
     
     const response = await this.authenticatedFetch(url, {
@@ -12010,11 +12010,11 @@ const HomePageManager = {
 
       // Build URLs with batch session parameters
       const homepageUrl = sessionID
-        ? `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=false&session_id=${sessionID}`
+        ? `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=false&sessionId=${sessionID}`
         : `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=true`;
       
       const configUrl = sessionID
-        ? `${UpdateUI.apiConfig.getClientUrl()}/config?push=false&session_id=${sessionID}`
+        ? `${UpdateUI.apiConfig.getClientUrl()}/config?push=false&sessionId=${sessionID}`
         : `${UpdateUI.apiConfig.getClientUrl()}/config?push=true`;
 
       console.log('🔗 Publishing to URL:', homepageUrl);
