@@ -6069,8 +6069,25 @@ const UpdateUI = {
       throw new Error('Draft not found');
     }
     
+    // Check for pending image upload
+    if (ad._imagePending && ad.image) {
+      try {
+        const imageDataUrl = sessionStorage.getItem(`ad_image_${adId}`);
+        if (imageDataUrl) {
+          console.log(`📤 Uploading ad image (batch mode, session: ${sessionID}): ${ad.image}`);
+          await this.uploadImageFromDataUrl(imageDataUrl, ad.image, false, sessionID);
+          
+          // Clean up after successful upload
+          sessionStorage.removeItem(`ad_image_${adId}`);
+        }
+      } catch (uploadError) {
+        console.error('Ad image upload failed:', uploadError);
+        // Continue with ad creation even if image upload fails
+      }
+    }
+    
     // Clean up ad data (remove internal fields)
-    const { _isDraft, _isNew, _isDeleted, _draftSavedAt, ...cleanAd } = ad;
+    const { _isDraft, _isNew, _isDeleted, _draftSavedAt, _imagePending, ...cleanAd } = ad;
     
     // Normalize image path - remove leading slashes to avoid double slashes
     if (cleanAd.image) {
@@ -7710,7 +7727,7 @@ function selectAdImageFromCard(imagePath) {
 async function saveAd(event) {
   event.preventDefault();
   
-  const adId = document.getElementById('adId').value;
+  let adId = document.getElementById('adId').value;
   const isNew = adId.startsWith('new_ad_');
   
   // Collect checked days of week from checkboxes
@@ -7721,9 +7738,23 @@ async function saveAd(event) {
   const locations = Array.from(document.querySelectorAll('input[name="adLocations"]:checked'))
     .map(checkbox => checkbox.value);
   
+  const title = document.getElementById('adTitle').value.trim();
+  
+  // Generate slug-based ID from title for new ads
+  if (isNew && title) {
+    adId = title.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    // Update the hidden input with the new ID
+    document.getElementById('adId').value = adId;
+  }
+  
   const adData = {
     id: adId,
-    title: document.getElementById('adTitle').value,
+    title: title,
     description: document.getElementById('adDescription').value,
     link: document.getElementById('adLink').value,
     weight: parseInt(document.getElementById('adWeight').value) || 1,
@@ -7740,7 +7771,13 @@ async function saveAd(event) {
   if (imageInput && imageInput.files && imageInput.files[0]) {
     // New image uploaded - will be handled on publish
     const file = imageInput.files[0];
-    adData.image = `images/ads/${file.name}`;
+    // Normalize filename: remove spaces, special chars, keep extension
+    const fileExtension = file.name.split('.').pop();
+    const baseName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+    const normalizedFileName = `${baseName}.${fileExtension}`;
+    adData.image = `images/ads/${normalizedFileName}`;
     adData._imagePending = true;
     
     // Store file in sessionStorage for upload on publish
