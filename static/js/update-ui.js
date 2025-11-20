@@ -2079,6 +2079,10 @@ const UpdateUI = {
     this.showInfo('Uploading branding images...');
     
     try {
+      // Generate session ID for batch operations
+      const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      console.log(`📦 Starting batch publish with session: ${sessionId}`);
+      
       let successCount = 0;
       let errorCount = 0;
       
@@ -2092,9 +2096,27 @@ const UpdateUI = {
         }
         
         try {
-          // Convert data URL to blob
+          // Convert data URL to blob with correct MIME type
           const response = await fetch(fileData);
-          const blob = await response.blob();
+          let blob = await response.blob();
+          
+          // Ensure blob has correct MIME type based on filename extension
+          const requirements = this.getBrandingImageRequirements(filename);
+          if (requirements) {
+            let mimeType = 'image/webp'; // Default
+            if (requirements.format === 'png') {
+              mimeType = 'image/png';
+            } else if (requirements.format === 'ico') {
+              mimeType = 'image/x-icon';
+            } else if (requirements.format === 'webp') {
+              mimeType = 'image/webp';
+            }
+            
+            // If blob type doesn't match, create a new blob with correct type
+            if (blob.type !== mimeType) {
+              blob = new Blob([blob], { type: mimeType });
+            }
+          }
           
           // Create FormData
           const formData = new FormData();
@@ -2102,8 +2124,10 @@ const UpdateUI = {
           formData.append('path', `branding/${filename}`);
           formData.append('type', 'branding');
           
-          // Upload to content-service
-          const uploadUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false`;
+          // Upload to content-service with sessionId for batch mode
+          const uploadUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false&sessionId=${sessionId}`;
+          console.log(`📤 Uploading ${filename} to: ${uploadUrl}`);
+          
           const uploadResponse = await this.authenticatedFetch(uploadUrl, {
             method: 'POST',
             body: formData,
@@ -2111,6 +2135,7 @@ const UpdateUI = {
           
           if (!uploadResponse.ok) {
             const errorText = await uploadResponse.text();
+            console.error(`❌ Upload failed for ${filename}:`, errorText);
             throw new Error(`Upload failed: ${errorText}`);
           }
           
@@ -2126,9 +2151,11 @@ const UpdateUI = {
       
       // If all successful, commit batch
       if (successCount > 0 && errorCount === 0) {
-        // Commit batch changes
+        // Commit batch changes using git/commit endpoint
         try {
-          const commitUrl = `${this.apiConfig.getClientUrl()}/batch/commit`;
+          const commitUrl = `${this.apiConfig.getClientUrl()}/git/commit`;
+          console.log(`📦 Committing batch with sessionId: ${sessionId}`);
+          
           const commitResponse = await this.authenticatedFetch(commitUrl, {
             method: 'POST',
             headers: {
@@ -2136,16 +2163,23 @@ const UpdateUI = {
             },
             body: JSON.stringify({
               message: `Update ${successCount} branding image${successCount !== 1 ? 's' : ''}`,
+              sessionId: sessionId,
             }),
           });
           
           if (commitResponse.ok) {
             const commitResult = await commitResponse.json();
             console.log('✅ Batch committed:', commitResult);
+          } else {
+            const errorText = await commitResponse.text();
+            console.error('❌ Batch commit failed:', errorText);
+            throw new Error(`Batch commit failed: ${errorText}`);
           }
         } catch (error) {
           console.error('Failed to commit batch:', error);
           this.showError('Images uploaded but batch commit failed. Please check the server.');
+          // Don't clear drafts if commit failed
+          return;
         }
       }
       
