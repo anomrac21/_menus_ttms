@@ -1009,11 +1009,18 @@ const UpdateUI = {
         const existingIndex = this.state.advertisements.findIndex(a => a.id === draft.id);
         
         if (existingIndex >= 0) {
-          // Update existing ad with draft changes
-          this.state.advertisements[existingIndex] = { ...draft, _isDraft: true };
+          // Update existing ad with draft changes, preserving all draft flags including _isDeleted
+          const existingAd = this.state.advertisements[existingIndex];
+          this.state.advertisements[existingIndex] = { 
+            ...existingAd,  // Keep fields from Hugo JSON (like image, locations, etc.)
+            ...draft,       // Override with draft changes (including _isDeleted, _isDraft, etc.)
+            _isDraft: true  // Ensure _isDraft is set
+          };
+          console.log(`🔄 Merged draft for ad "${draft.id}": _isDeleted=${draft._isDeleted || false}, _isDraft=true`);
         } else {
           // New draft ad
           this.state.advertisements.push({ ...draft, _isDraft: true, _isNew: true });
+          console.log(`➕ Added new draft ad "${draft.id}"`);
         }
       });
     } catch (error) {
@@ -1295,8 +1302,20 @@ const UpdateUI = {
       this.renderPendingSummary();
       this.showSuccess('Draft changes discarded');
     } else {
+      // Mark ad for deletion and save as draft
       ad._isDeleted = true;
+      console.log(`🗑️ Marking ad "${ad.id}" for deletion, saving draft...`);
       this.saveDraftAd(ad);
+      
+      // Verify it was saved
+      const draftsJson = localStorage.getItem(this.storageKeys.draftAds) || '{}';
+      const drafts = JSON.parse(draftsJson);
+      if (drafts[ad.id] && drafts[ad.id]._isDeleted) {
+        console.log(`✅ Draft saved with _isDeleted=true for ad "${ad.id}"`);
+      } else {
+        console.error(`❌ Failed to save _isDeleted flag for ad "${ad.id}"`);
+      }
+      
       await this.loadAdvertisements();
       this.renderPendingSummary();
       this.showSuccess(`"${ad.title}" marked for deletion`);
