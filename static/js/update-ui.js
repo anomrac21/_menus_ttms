@@ -1902,39 +1902,208 @@ const UpdateUI = {
     ctx.lineWidth = 2;
     ctx.strokeRect(cropX, cropY, cropDisplayWidth, cropDisplayHeight);
     
-    // Draw corner handles
-    const handleSize = 10;
+    // Draw resize handles (corners and edges)
+    const handleSize = 12;
     ctx.fillStyle = '#3b82f6';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    
+    // Corner handles
     const corners = [
-      [cropX, cropY],
-      [cropX + cropDisplayWidth, cropY],
-      [cropX, cropY + cropDisplayHeight],
-      [cropX + cropDisplayWidth, cropY + cropDisplayHeight],
+      [cropX, cropY, 'nw'], // top-left
+      [cropX + cropDisplayWidth, cropY, 'ne'], // top-right
+      [cropX, cropY + cropDisplayHeight, 'sw'], // bottom-left
+      [cropX + cropDisplayWidth, cropY + cropDisplayHeight, 'se'], // bottom-right
     ];
-    corners.forEach(([x, y]) => {
-      ctx.fillRect(x - handleSize/2, y - handleSize/2, handleSize, handleSize);
+    
+    // Edge handles
+    const edges = [
+      [cropX + cropDisplayWidth / 2, cropY, 'n'], // top
+      [cropX + cropDisplayWidth / 2, cropY + cropDisplayHeight, 's'], // bottom
+      [cropX, cropY + cropDisplayHeight / 2, 'w'], // left
+      [cropX + cropDisplayWidth, cropY + cropDisplayHeight / 2, 'e'], // right
+    ];
+    
+    // Draw all handles
+    [...corners, ...edges].forEach(([x, y]) => {
+      ctx.beginPath();
+      ctx.arc(x, y, handleSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
     });
   },
 
   /**
-   * Setup crop handlers for dragging
+   * Get handle at position (returns handle type or null)
+   */
+  getHandleAt(x, y) {
+    const { cropX, cropY, cropDisplayWidth, cropDisplayHeight } = this._cropData;
+    const handleSize = 12;
+    const threshold = handleSize / 2 + 2; // Slightly larger hit area
+    
+    // Check corner handles
+    const corners = [
+      { x: cropX, y: cropY, type: 'nw' },
+      { x: cropX + cropDisplayWidth, y: cropY, type: 'ne' },
+      { x: cropX, y: cropY + cropDisplayHeight, type: 'sw' },
+      { x: cropX + cropDisplayWidth, y: cropY + cropDisplayHeight, type: 'se' },
+    ];
+    
+    for (const corner of corners) {
+      const dist = Math.sqrt(Math.pow(x - corner.x, 2) + Math.pow(y - corner.y, 2));
+      if (dist <= threshold) return corner.type;
+    }
+    
+    // Check edge handles
+    const edges = [
+      { x: cropX + cropDisplayWidth / 2, y: cropY, type: 'n' },
+      { x: cropX + cropDisplayWidth / 2, y: cropY + cropDisplayHeight, type: 's' },
+      { x: cropX, y: cropY + cropDisplayHeight / 2, type: 'w' },
+      { x: cropX + cropDisplayWidth, y: cropY + cropDisplayHeight / 2, type: 'e' },
+    ];
+    
+    for (const edge of edges) {
+      const dist = Math.sqrt(Math.pow(x - edge.x, 2) + Math.pow(y - edge.y, 2));
+      if (dist <= threshold) return edge.type;
+    }
+    
+    return null;
+  },
+
+  /**
+   * Get cursor style for resize handle
+   */
+  getResizeCursor(handle) {
+    const cursors = {
+      'nw': 'nw-resize',
+      'ne': 'ne-resize',
+      'sw': 'sw-resize',
+      'se': 'se-resize',
+      'n': 'n-resize',
+      's': 's-resize',
+      'w': 'w-resize',
+      'e': 'e-resize',
+    };
+    return cursors[handle] || 'default';
+  },
+
+  /**
+   * Handle resize operation
+   */
+  handleResize(handle, deltaX, deltaY, imageX, imageY, imageRight, imageBottom, startCropX, startCropY, startCropWidth, startCropHeight) {
+    let newX = startCropX;
+    let newY = startCropY;
+    let newWidth = startCropWidth;
+    let newHeight = startCropHeight;
+    
+    // Minimum crop size (10px)
+    const minSize = 10;
+    
+    // Handle different resize directions
+    if (handle.includes('n')) {
+      // Resize from top
+      const newTop = startCropY + deltaY;
+      const maxTop = imageY;
+      const minTop = startCropY + startCropHeight - minSize;
+      newY = Math.max(maxTop, Math.min(minTop, newTop));
+      newHeight = startCropHeight - (newY - startCropY);
+    }
+    
+    if (handle.includes('s')) {
+      // Resize from bottom
+      const newBottom = startCropY + startCropHeight + deltaY;
+      const minBottom = startCropY + minSize;
+      const maxBottom = imageBottom;
+      newHeight = Math.max(minSize, Math.min(maxBottom - startCropY, newBottom - startCropY));
+    }
+    
+    if (handle.includes('w')) {
+      // Resize from left
+      const newLeft = startCropX + deltaX;
+      const maxLeft = imageX;
+      const minLeft = startCropX + startCropWidth - minSize;
+      newX = Math.max(maxLeft, Math.min(minLeft, newLeft));
+      newWidth = startCropWidth - (newX - startCropX);
+    }
+    
+    if (handle.includes('e')) {
+      // Resize from right
+      const newRight = startCropX + startCropWidth + deltaX;
+      const minRight = startCropX + minSize;
+      const maxRight = imageRight;
+      newWidth = Math.max(minSize, Math.min(maxRight - startCropX, newRight - startCropX));
+    }
+    
+    // Ensure crop stays within image bounds
+    if (newX < imageX) {
+      newWidth -= (imageX - newX);
+      newX = imageX;
+    }
+    if (newY < imageY) {
+      newHeight -= (imageY - newY);
+      newY = imageY;
+    }
+    if (newX + newWidth > imageRight) {
+      newWidth = imageRight - newX;
+    }
+    if (newY + newHeight > imageBottom) {
+      newHeight = imageBottom - newY;
+    }
+    
+    // Ensure minimum size
+    if (newWidth < minSize) {
+      if (handle.includes('w')) newX = newX + newWidth - minSize;
+      newWidth = minSize;
+    }
+    if (newHeight < minSize) {
+      if (handle.includes('n')) newY = newY + newHeight - minSize;
+      newHeight = minSize;
+    }
+    
+    this._cropData.cropX = newX;
+    this._cropData.cropY = newY;
+    this._cropData.cropDisplayWidth = newWidth;
+    this._cropData.cropDisplayHeight = newHeight;
+  },
+
+  /**
+   * Setup crop handlers for dragging and resizing
    */
   setupCropHandlers() {
     const canvas = this._cropData.canvas;
     if (!canvas) return;
     
     let isDragging = false;
+    let isResizing = false;
+    let resizeHandle = null;
     let startX = 0;
     let startY = 0;
     let startCropX = 0;
     let startCropY = 0;
+    let startCropWidth = 0;
+    let startCropHeight = 0;
     
     const onMouseDown = (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       
-      // Check if click is in crop area
+      // Check if click is on a handle
+      const handle = this.getHandleAt(x, y);
+      if (handle) {
+        isResizing = true;
+        resizeHandle = handle;
+        startX = x;
+        startY = y;
+        startCropX = this._cropData.cropX;
+        startCropY = this._cropData.cropY;
+        startCropWidth = this._cropData.cropDisplayWidth;
+        startCropHeight = this._cropData.cropDisplayHeight;
+        canvas.style.cursor = this.getResizeCursor(handle);
+        return;
+      }
+      
+      // Check if click is in crop area (for moving)
       if (x >= this._cropData.cropX && x <= this._cropData.cropX + this._cropData.cropDisplayWidth &&
           y >= this._cropData.cropY && y <= this._cropData.cropY + this._cropData.cropDisplayHeight) {
         isDragging = true;
@@ -1942,15 +2111,29 @@ const UpdateUI = {
         startY = y;
         startCropX = this._cropData.cropX;
         startCropY = this._cropData.cropY;
+        canvas.style.cursor = 'move';
       }
     };
     
     const onMouseMove = (e) => {
-      if (!isDragging) return;
-      
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
+      
+      // Update cursor on hover
+      if (!isDragging && !isResizing) {
+        const handle = this.getHandleAt(x, y);
+        if (handle) {
+          canvas.style.cursor = this.getResizeCursor(handle);
+        } else if (x >= this._cropData.cropX && x <= this._cropData.cropX + this._cropData.cropDisplayWidth &&
+                   y >= this._cropData.cropY && y <= this._cropData.cropY + this._cropData.cropDisplayHeight) {
+          canvas.style.cursor = 'move';
+        } else {
+          canvas.style.cursor = 'default';
+        }
+      }
+      
+      if (!isDragging && !isResizing) return;
       
       const deltaX = x - startX;
       const deltaY = y - startY;
@@ -1961,18 +2144,26 @@ const UpdateUI = {
       const imageRight = imageX + this._cropData.scaledWidth;
       const imageBottom = imageY + this._cropData.scaledHeight;
       
-      // Update crop position (clamp to image bounds, not canvas bounds)
-      const newCropX = startCropX + deltaX;
-      const newCropY = startCropY + deltaY;
-      
-      this._cropData.cropX = Math.max(imageX, Math.min(imageRight - this._cropData.cropDisplayWidth, newCropX));
-      this._cropData.cropY = Math.max(imageY, Math.min(imageBottom - this._cropData.cropDisplayHeight, newCropY));
+      if (isResizing) {
+        // Handle resizing
+        this.handleResize(resizeHandle, deltaX, deltaY, imageX, imageY, imageRight, imageBottom, startCropX, startCropY, startCropWidth, startCropHeight);
+      } else {
+        // Handle moving
+        const newCropX = startCropX + deltaX;
+        const newCropY = startCropY + deltaY;
+        
+        this._cropData.cropX = Math.max(imageX, Math.min(imageRight - this._cropData.cropDisplayWidth, newCropX));
+        this._cropData.cropY = Math.max(imageY, Math.min(imageBottom - this._cropData.cropDisplayHeight, newCropY));
+      }
       
       this.drawCropOverlay();
     };
     
     const onMouseUp = () => {
       isDragging = false;
+      isResizing = false;
+      resizeHandle = null;
+      canvas.style.cursor = 'default';
     };
     
     canvas.addEventListener('mousedown', onMouseDown);
