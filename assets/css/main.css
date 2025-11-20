@@ -1348,7 +1348,9 @@ details[open] ul.all-hours {
     width: 90%!important;
     max-width: -webkit-fill-available;
     margin-inline:auto!important}
-
+.menu tr h3{
+    color:var(--button-text-color1) !important;
+}
 .headerstyle {
     background-image: none;
     background-size: 96% 86%;
