@@ -72,9 +72,12 @@
                         {{end}} 
                         {{$number := sort $number}}
                         {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
-                          ${{ (printf "%.2f" (index $number (sub $counter 1))) | replaceRE "\\.00$" "" }}
+                          {{ $price := float (index $number (sub $counter 1)) }}
+                          ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
                         {{else }}
-                          ${{ (printf "%.2f" (index $number 0)) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" (index $number (sub $counter 1))) | replaceRE "\\.00$" "" }}      
+                          {{ $price1 := float (index $number 0) }}
+                          {{ $price2 := float (index $number (sub $counter 1)) }}
+                          ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
                         {{ end }}                       
                       </th>
                   </tr>

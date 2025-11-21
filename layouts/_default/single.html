@@ -46,7 +46,8 @@
                   {{ range $allprices }}
                     {{ if eq $currentItem .size }}
                       <li>
-                        {{ .flavour }} <b>${{ (printf "%.2f" .price) | replaceRE "\\.00$" "" }}</b>
+                        {{ $price := float .price }}
+                        {{ .flavour }} <b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
                       </li>
                     {{ end }}
                   {{ end }}
