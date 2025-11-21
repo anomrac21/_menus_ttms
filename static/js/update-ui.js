@@ -7925,7 +7925,7 @@ async function saveAd(event) {
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '');
     const normalizedFileName = `${baseName}.${fileExtension}`;
-    adData.image = `images/ads/${normalizedFileName}`;
+    adData.image = `images/${normalizedFileName}`;
     adData._imagePending = true;
     
     // Store file in sessionStorage for upload on publish

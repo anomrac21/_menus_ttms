@@ -27,8 +27,8 @@
           {{ range .Params.images }}
             <li class="ad-panel" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
               <a href="{{ $finalurl }}" class="content-panel">
-                <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait-bg">
-                <img src="{{ site.BaseURL}}/{{ .image }}" class="ad-portrait">
+                <img src="{{ site.BaseURL }}{{ .image }}" class="ad-portrait-bg">
+                <img src="{{ site.BaseURL }}{{ .image }}" class="ad-portrait">
                 <div class="adbottomspacer"></div>
               </a>
             </li>
