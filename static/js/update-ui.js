@@ -2900,8 +2900,18 @@ const UpdateUI = {
     const cleanDesc = this.escapeHtml(item.description || '').substring(0, 100);
     const descriptionText = cleanDesc + (item.description && item.description.length > 100 ? '...' : '');
     
-    // Format price
-    const priceDisplay = item.price ? item.price.toFixed(0) : '0';
+    // Format price - show 2 decimals only if price has decimals
+    let priceDisplay = '0';
+    if (item.price) {
+      const price = parseFloat(item.price);
+      if (price % 1 !== 0) {
+        // Has decimals, show 2 decimal places
+        priceDisplay = price.toFixed(2);
+      } else {
+        // No decimals, show as integer
+        priceDisplay = price.toString();
+      }
+    }
     
     // Check for pending image upload
     const hasPendingUpload = sessionStorage.getItem(`pending_uploads_${item.id}`) !== null;

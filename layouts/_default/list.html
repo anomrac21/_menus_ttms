@@ -72,9 +72,9 @@
                         {{end}} 
                         {{$number := sort $number}}
                         {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
-                          ${{index $number (sub $counter 1)}}
+                          ${{ (printf "%.2f" (index $number (sub $counter 1))) | replaceRE "\\.00$" "" }}
                         {{else }}
-                          ${{index $number 0}} | ${{index $number (sub $counter 1)}}      
+                          ${{ (printf "%.2f" (index $number 0)) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" (index $number (sub $counter 1))) | replaceRE "\\.00$" "" }}      
                         {{ end }}                       
                       </th>
                   </tr>
