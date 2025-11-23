@@ -198,31 +198,14 @@ const UpdateUI = {
     const style = document.createElement('style');
     style.id = 'mobile-friendly-styles';
     style.textContent = `
-      /* Mobile-friendly global styles */
+      /* Mobile-friendly global styles - minimal, non-intrusive */
       @media (max-width: 768px) {
-        /* Ensure all buttons are touch-friendly - but allow smaller buttons when needed */
-        button:not(.btn-sm):not(.btn-xs), 
-        .btn:not(.btn-sm):not(.btn-xs), 
-        input[type="button"]:not(.btn-sm), 
-        input[type="submit"]:not(.btn-sm) {
-          min-width: 44px !important;
-          min-height: 44px !important;
-          touch-action: manipulation !important;
-        }
-        
-        /* Small buttons should still be touch-friendly but can be smaller */
-        .btn-sm, button.btn-sm {
-          min-width: 36px !important;
-          min-height: 36px !important;
-          touch-action: manipulation !important;
-        }
-        
-        /* All buttons should have tap highlight */
+        /* Only add touch-action to buttons, don't force sizes */
         button, .btn {
-          -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+          touch-action: manipulation;
         }
         
-        /* Form inputs should be larger on mobile */
+        /* Form inputs should be larger on mobile to prevent zoom */
         input[type="text"],
         input[type="email"],
         input[type="number"],
@@ -230,26 +213,7 @@ const UpdateUI = {
         input[type="tel"],
         textarea,
         select {
-          font-size: 16px !important; /* Prevents zoom on iOS */
-          min-height: 44px !important;
-          padding: 10px 12px !important;
-        }
-        
-        /* Cards and containers */
-        .pending-change-card,
-        .card,
-        .menu-item-card,
-        .ad-card {
-          padding: 12px !important;
-          margin-bottom: 12px !important;
-        }
-        
-        /* Grid layouts should stack on mobile */
-        .pending-changes-grid,
-        .grid,
-        .menu-grid {
-          grid-template-columns: 1fr !important;
-          gap: 12px !important;
+          font-size: 16px; /* Prevents zoom on iOS */
         }
         
         /* Tables should scroll horizontally */
@@ -257,13 +221,6 @@ const UpdateUI = {
           display: block;
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
-        }
-        
-        /* Badges and labels */
-        .badge {
-          font-size: 11px !important;
-          padding: 4px 8px !important;
-          min-height: 24px !important;
         }
         
         /* Tabs should be scrollable */
@@ -278,203 +235,14 @@ const UpdateUI = {
         .tab-nav::-webkit-scrollbar {
           display: none;
         }
-        
-        /* Tab buttons */
-        .tab-button,
-        .nav-tab {
-          min-width: 80px !important;
-          padding: 10px 16px !important;
-          font-size: 14px !important;
-        }
-        
-        /* Action buttons in cards */
-        .card-actions,
-        .item-actions {
-          flex-wrap: wrap !important;
-          gap: 8px !important;
-        }
-        
-        .card-actions button,
-        .item-actions button {
-          flex: 1 1 auto !important;
-          min-width: 100px !important;
-        }
-        
-        /* Search inputs */
-        input[type="search"],
-        .search-input {
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
-        
-        /* Detail sections */
-        .detail-section {
-          margin-bottom: 20px !important;
-        }
-        
-        .detail-section-title {
-          font-size: clamp(16px, 4vw, 18px) !important;
-          margin-bottom: 12px !important;
-        }
-        
-        /* Warning boxes */
-        .warning-box {
-          padding: 12px !important;
-          margin-bottom: 16px !important;
-        }
-        
-        .warning-title {
-          font-size: clamp(14px, 3.5vw, 16px) !important;
-        }
-        
-        .warning-text {
-          font-size: clamp(12px, 3vw, 14px) !important;
-        }
-        
-        /* Empty states */
-        .empty-state {
-          padding: 20px !important;
-        }
-        
-        .empty-state-icon {
-          font-size: 48px !important;
-        }
-        
-        .empty-state-title {
-          font-size: clamp(16px, 4vw, 18px) !important;
-        }
-        
-        /* Image cards */
-        .image-card,
-        .branding-image-card {
-          padding: 10px !important;
-        }
-        
-        /* Color inputs */
-        input[type="color"] {
-          width: 60px !important;
-          height: 44px !important;
-        }
-        
-        /* Range sliders */
-        input[type="range"] {
-          width: 100% !important;
-          height: 44px !important;
-        }
-        
-        /* Prevent text from being too small - only apply to base elements, not all divs */
-        body {
-          font-size: clamp(14px, 3.5vw, 16px) !important;
-        }
-        
-        /* Headings */
-        h1 { font-size: clamp(24px, 6vw, 32px) !important; }
-        h2 { font-size: clamp(20px, 5vw, 28px) !important; }
-        h3 { font-size: clamp(18px, 4.5vw, 24px) !important; }
-        h4 { font-size: clamp(16px, 4vw, 20px) !important; }
-        
-        /* Spacing adjustments - only reduce if too large */
-        .section {
-          padding: 12px !important;
-        }
-        
-        /* Flex containers - only wrap when it makes sense */
-        .flex.flex-wrap,
-        [style*="display: flex"][style*="flex-wrap"] {
-          flex-wrap: wrap !important;
-        }
-      }
-      
-      /* Extra small devices */
-      @media (max-width: 480px) {
-        button, .btn {
-          padding: 8px 12px !important;
-          font-size: 13px !important;
-        }
-        
-        .pending-change-card,
-        .card {
-          padding: 10px !important;
-        }
-        
-        .detail-section-title {
-          font-size: 16px !important;
-        }
-        
-        /* Stack action buttons vertically on very small screens */
-        .card-actions,
-        .item-actions {
-          flex-direction: column !important;
-        }
-        
-        .card-actions button,
-        .item-actions button {
-          width: 100% !important;
-        }
-      }
-      
-      /* Landscape orientation on mobile */
-      @media (max-width: 768px) and (orientation: landscape) {
-        .modal-content {
-          max-height: 85vh !important;
-        }
-      }
-      
-      /* Prevent horizontal scroll - but only if there's actual overflow */
-      @media (max-width: 768px) {
-        body {
-          overflow-x: auto !important;
-        }
-        
-        /* Only hide overflow on specific containers that should not scroll */
-        .no-scroll {
-          overflow-x: hidden !important;
-        }
-      }
-      
-      /* Ensure all clickable elements are accessible */
-      a, button, [role="button"], [onclick] {
-        cursor: pointer !important;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
-      }
-      
-      /* Modals should be responsive on mobile - less aggressive */
-      @media (max-width: 768px) {
-        .modal-content {
-          width: 95% !important;
-          max-width: 95% !important;
-          max-height: 90vh !important;
-          margin: 2.5vh auto !important;
-        }
-        
-        .modal-body {
-          max-height: calc(90vh - 120px) !important;
-          overflow-y: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-        }
       }
       
       /* Drag and drop visual feedback */
       .menu-item-card.drag-over {
-        border: 2px dashed #3b82f6 !important;
-        background-color: rgba(59, 130, 246, 0.1) !important;
-        transform: scale(1.02) !important;
-        transition: all 0.2s ease !important;
-      }
-      
-      /* Time block change day button visibility */
-      .time-block button[title*="Change day"] {
-        display: block !important;
-      }
-      
-      /* Improve touch targets for timeline blocks */
-      .time-block {
-        min-height: 44px !important;
-      }
-      
-      .time-block-resize-handle {
-        min-height: 44px !important;
-        min-width: 44px !important;
+        border: 2px dashed #3b82f6;
+        background-color: rgba(59, 130, 246, 0.1);
+        transform: scale(1.02);
+        transition: all 0.2s ease;
       }
     `;
     document.head.appendChild(style);
@@ -1549,11 +1317,11 @@ const UpdateUI = {
           <h3 class="menu-item-title ${ad._isDeleted ? 'deleted' : ''}">${this.escapeHtml(ad.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
           <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
             ${!ad._isDeleted ? `
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdUp('${this.escapeHtml(ad.id)}')" title="Move up" style="padding: 0.375rem 0.5rem; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">↑</button>
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdDown('${this.escapeHtml(ad.id)}')" title="Move down" style="padding: 0.375rem 0.5rem; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">↓</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdUp('${this.escapeHtml(ad.id)}')" title="Move up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↑</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdDown('${this.escapeHtml(ad.id)}')" title="Move down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↓</button>
             ` : ''}
             <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
-            <button class="btn-collapse-ad" onclick="event.stopPropagation(); UpdateUI.toggleAd('${this.escapeHtml(ad.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.5rem; color: #6b7280; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+            <button class="btn-collapse-ad" onclick="event.stopPropagation(); UpdateUI.toggleAd('${this.escapeHtml(ad.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
               ${isCollapsed ? '►' : '▼'}
             </button>
           </span>
@@ -1925,7 +1693,7 @@ const UpdateUI = {
               </div>
             </div>
             <div class="category-actions" onclick="event.stopPropagation();">
-              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleBrandingType('${this.escapeHtml(typeName)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleBrandingType('${this.escapeHtml(typeName)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
                 ${isCollapsed ? '►' : '▼'}
               </button>
             </div>
@@ -2127,7 +1895,7 @@ const UpdateUI = {
             Required size: ${requirements.width}x${requirements.height}px
             <br>Current size: ${img.width}x${img.height}px
           </p>
-          <button class="btn-close" onclick="this.closest('.modal').remove()" style="min-width: 36px; min-height: 36px; padding: 0.375rem; touch-action: manipulation; font-size: 1.25rem;">×</button>
+          <button class="btn-close" onclick="this.closest('.modal').remove()" style="min-width: 32px; min-height: 32px; touch-action: manipulation;">×</button>
         </div>
         <div class="modal-body" style="padding: clamp(0.5rem, 2vw, 1rem);">
           <div style="position: relative; max-width: 100%; margin-bottom: 1rem;">
@@ -3179,16 +2947,16 @@ const UpdateUI = {
               </div>
             </div>
             <div class="category-actions" onclick="event.stopPropagation();">
-              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.375rem 0.5rem; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
                 ↑
               </button>
-              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.375rem 0.5rem; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
                 ↓
               </button>
               <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.editCategory('${this.escapeHtml(category.name)}')">
                 Edit
               </button>
-              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
                 ${isCollapsed ? '►' : '▼'}
               </button>
             </div>
@@ -3400,11 +3168,11 @@ const UpdateUI = {
           <h3 class="menu-item-title ${item._isDeleted ? 'deleted' : ''}">${this.escapeHtml(item.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
           <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
             ${!item._isDeleted ? `
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemUp('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move up" style="padding: 0.375rem 0.5rem; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">↑</button>
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemDown('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move down" style="padding: 0.375rem 0.5rem; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">↓</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemUp('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↑</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemDown('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↓</button>
             ` : ''}
             <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
-            <button class="btn-collapse-item" onclick="event.stopPropagation(); UpdateUI.toggleMenuItem('${this.escapeHtml(item.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.5rem; color: #6b7280; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+            <button class="btn-collapse-item" onclick="event.stopPropagation(); UpdateUI.toggleMenuItem('${this.escapeHtml(item.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
               ${isCollapsed ? '►' : '▼'}
             </button>
           </span>
@@ -4692,7 +4460,7 @@ const UpdateUI = {
             <h3 class="menu-item-title ${loc._isDeleted ? 'deleted' : ''}">${this.escapeHtml(loc.city)}${draftBadge}${newBadge}${deletedBadge}</h3>
             <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
               <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
-              <button class="btn-collapse-location" onclick="event.stopPropagation(); UpdateUI.toggleLocation(${index})" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.5rem; color: #6b7280; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+              <button class="btn-collapse-location" onclick="event.stopPropagation(); UpdateUI.toggleLocation(${index})" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
                 ${isCollapsed ? '►' : '▼'}
               </button>
             </span>
@@ -4923,7 +4691,7 @@ const UpdateUI = {
                 </div>
               </div>
               <div class="category-actions" onclick="event.stopPropagation();">
-                <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleColorSection('${this.escapeHtml(category)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px; min-height: 36px; touch-action: manipulation;">
+                <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleColorSection('${this.escapeHtml(category)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
                   ${isCollapsed ? '►' : '▼'}
                 </button>
               </div>
@@ -5060,9 +4828,9 @@ const UpdateUI = {
       <div style="padding: .4rem; background: linear-gradient(135deg, #5a6996 0%, #2b3140 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 1rem; font-weight: 600;">🎨 Live Preview</h3>
         <div style="display: flex; gap: 0.5rem;">
-          <button onclick="UpdateUI.refreshPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.375rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">🔄</button>
-          <button onclick="UpdateUI.openPreviewFullscreen()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.375rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">⛶</button>
-          <button onclick="UpdateUI.togglePreviewOverlay()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.375rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; min-width: 36px; min-height: 36px; touch-action: manipulation;">✖️</button>
+          <button onclick="UpdateUI.refreshPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">🔄</button>
+          <button onclick="UpdateUI.openPreviewFullscreen()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">⛶</button>
+          <button onclick="UpdateUI.togglePreviewOverlay()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">✖️</button>
         </div>
       </div>
       <div style="flex: 1; overflow: hidden; background: #f3f4f6;">
