@@ -178,12 +178,6 @@ const UpdateUI = {
         .modal-body {
           padding: clamp(0.5rem, 2vw, 1rem) !important;
         }
-        .btn {
-          min-width: 100px !important;
-          min-height: 44px !important;
-          font-size: clamp(14px, 3.5vw, 16px) !important;
-          touch-action: manipulation !important;
-        }
       }
     `;
     document.head.appendChild(style);
