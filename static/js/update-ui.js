@@ -5939,53 +5939,85 @@ const UpdateUI = {
         }
       }
       
-      // Publish category landing pages
+      // Publish category landing pages (weight and icon together)
       const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
-      for (const draftKey of categoryLandingDrafts) {
-        const categoryName = draftKey.replace('ttmenus_draft_category_', '');
-        const categoryData = JSON.parse(localStorage.getItem(draftKey));
+      const categoryPublishResults = [];
+      
+      if (categoryLandingDrafts.length > 0) {
+        console.log(`📂 Publishing ${categoryLandingDrafts.length} category landing page(s)...`);
         
-        console.log(`Publishing category "${categoryName}" landing page...`);
-        
-        try {
-          // Prepare data for API
-          // Ensure weight is an integer when publishing
-          const weight = parseInt(categoryData.frontmatter?.weight, 10) || 0;
+        for (const draftKey of categoryLandingDrafts) {
+          const categoryName = draftKey.replace('ttmenus_draft_category_', '');
+          const categoryData = JSON.parse(localStorage.getItem(draftKey));
           
-          const landingData = {
-            title: categoryName,
-            weight: weight, // Explicitly use parsed integer
-            icon: categoryData.frontmatter?.icon || '',
-            image: categoryData.frontmatter?.image || '',
-            slidein: categoryData.frontmatter?.slidein || null,
-            body: categoryData.body || ''
-          };
+          console.log(`📂 Publishing category "${categoryName}"...`);
           
-          console.log(`📂 Publishing category "${categoryName}" with weight: ${weight} (type: ${typeof weight})`);
-          console.log(`📂 Full data:`, JSON.stringify(landingData, null, 2));
-          
-          const response = await UpdateUI.authenticatedFetch(
-            `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&sessionId=${sessionId}`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(landingData)
+          try {
+            // Prepare data for API - ensure weight and icon are always sent together
+            const weight = parseInt(categoryData.frontmatter?.weight, 10);
+            if (isNaN(weight)) {
+              throw new Error(`Invalid weight value: ${categoryData.frontmatter?.weight}`);
             }
-          );
-          
-          if (response.ok) {
+            
+            const landingData = {
+              title: categoryName,
+              weight: weight, // Explicitly use parsed integer
+              icon: categoryData.frontmatter?.icon || '',
+              image: categoryData.frontmatter?.image || '',
+              slidein: categoryData.frontmatter?.slidein || null,
+              body: categoryData.body || ''
+            };
+            
+            console.log(`📂 Category "${categoryName}": weight=${weight}, icon="${landingData.icon}"`);
+            console.log(`📂 Full data:`, JSON.stringify(landingData, null, 2));
+            
+            const response = await UpdateUI.authenticatedFetch(
+              `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&sessionId=${sessionId}`,
+              {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(landingData)
+              }
+            );
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              const errorMsg = errorData.error || response.statusText || `HTTP ${response.status}`;
+              throw new Error(errorMsg);
+            }
+            
+            // Verify response
+            const responseData = await response.json().catch(() => ({}));
+            const publishedWeight = parseInt(responseData.weight, 10);
+            
+            if (publishedWeight !== weight) {
+              console.warn(`⚠️ Weight mismatch for "${categoryName}": sent ${weight}, got ${publishedWeight}`);
+              // Don't fail, but log warning
+            }
+            
             localStorage.removeItem(draftKey);
             successCount++;
-            hasBackendOperations = true; // Category landing pages are backend operations
-            successItems.push(`📂 Category: ${categoryName}`);
-          } else {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || response.statusText);
+            hasBackendOperations = true;
+            categoryPublishResults.push({ name: categoryName, success: true, weight: weight });
+            successItems.push(`📂 Category: ${categoryName} (weight: ${weight})`);
+            
+            console.log(`✅ Successfully published category "${categoryName}" with weight ${weight}`);
+          } catch (error) {
+            failCount++;
+            const errorMsg = error.message || 'Unknown error';
+            failedItems.push(`❌ Category ${categoryName}: ${errorMsg}`);
+            categoryPublishResults.push({ name: categoryName, success: false, error: errorMsg });
+            console.error(`❌ Failed to publish category "${categoryName}":`, error);
+            
+            // Keep draft in localStorage if publish failed so user can retry
+            console.log(`⚠️ Keeping draft for "${categoryName}" - publish failed`);
           }
-        } catch (error) {
-          failCount++;
-          failedItems.push(`❌ Category ${categoryName}: ${error.message}`);
-          console.error(`Failed to publish category ${categoryName}:`, error);
+        }
+        
+        // If any categories failed, notify user
+        const failedCategories = categoryPublishResults.filter(r => !r.success);
+        if (failedCategories.length > 0) {
+          console.error(`❌ ${failedCategories.length} category(ies) failed to publish:`, failedCategories);
         }
       }
       
@@ -6108,6 +6140,18 @@ const UpdateUI = {
             await HomePageManager.loadCurrentSettings();
             await HomePageManager.loadSiteSettings();
           }
+          
+          // Reload categories after successful publish to ensure UI matches backend
+          if (categoryLandingDrafts.length > 0) {
+            console.log('🔄 Reloading categories to verify order matches backend...');
+            try {
+              await this.loadCategories();
+              console.log('✅ Categories reloaded - UI should now match backend order');
+            } catch (error) {
+              console.error('⚠️ Failed to reload categories after publish:', error);
+              // Don't fail the whole operation, but log warning
+            }
+          }
         } catch (error) {
           console.error('❌ Git push failed:', error);
           // Don't fail the whole operation, changes are saved
@@ -6121,30 +6165,47 @@ const UpdateUI = {
       
       // Check if we published any category landing pages
       const hasCategoryDrafts = categoryLandingDrafts.length > 0;
+      const categoryFailures = categoryPublishResults.filter(r => !r.success);
       
-      // Show single summary alert
+      // Show single summary alert with category-specific notifications
       if (successCount > 0 && failCount === 0) {
         let message = `🎉 Successfully published ${successCount} change${successCount !== 1 ? 's' : ''}!\n\n` +
           `${successItems.slice(0, 5).join('\n')}${successItems.length > 5 ? `\n... and ${successItems.length - 5} more` : ''}`;
         
         if (hasCategoryDrafts) {
-          message += `\n\n📝 Note: Category changes will be applied on the next site rebuild.`;
+          const successfulCategories = categoryPublishResults.filter(r => r.success);
+          if (successfulCategories.length > 0) {
+            message += `\n\n📂 Categories updated: ${successfulCategories.map(c => `${c.name} (weight: ${c.weight})`).join(', ')}`;
+          }
+          message += `\n\n🔄 Reloading categories to verify order...`;
         } else {
           message += `\n\n🚀 Changes published successfully! Your site will update automatically in a few minutes.`;
         }
         
         this.showSuccess(message);
       } else if (successCount > 0 && failCount > 0) {
-        this.showSuccess(
-          `⚠️ Published ${successCount} of ${totalCount} changes\n\n` +
+        let message = `⚠️ Published ${successCount} of ${totalCount} changes\n\n` +
           `Success:\n${successItems.slice(0, 3).join('\n')}\n\n` +
-          `Failed:\n${failedItems.slice(0, 3).join('\n')}`
-        );
+          `Failed:\n${failedItems.slice(0, 3).join('\n')}`;
+        
+        // Highlight category failures specifically
+        if (categoryFailures.length > 0) {
+          message += `\n\n❌ Category failures:\n${categoryFailures.map(c => `  • ${c.name}: ${c.error}`).join('\n')}`;
+          message += `\n\n⚠️ Failed categories were NOT updated. Please check the errors above and try again.`;
+        }
+        
+        this.showSuccess(message);
       } else if (failCount > 0) {
-        this.showError(
-          `❌ Failed to publish all ${failCount} change${failCount !== 1 ? 's' : ''}\n\n` +
-          `${failedItems.slice(0, 5).join('\n')}`
-        );
+        let message = `❌ Failed to publish all ${failCount} change${failCount !== 1 ? 's' : ''}\n\n` +
+          `${failedItems.slice(0, 5).join('\n')}`;
+        
+        // Highlight category failures specifically
+        if (categoryFailures.length > 0) {
+          message += `\n\n❌ Category failures:\n${categoryFailures.map(c => `  • ${c.name}: ${c.error}`).join('\n')}`;
+          message += `\n\n⚠️ No categories were updated. Please check the errors above and try again.`;
+        }
+        
+        this.showError(message);
       }
       
       // Refresh pending summary
