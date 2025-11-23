@@ -5512,6 +5512,7 @@ const UpdateUI = {
         try {
           await this.publishItemSilent(item.id, false, sessionId); // Pass sessionId
           successCount++;
+          hasBackendOperations = true; // Menu items are backend operations
           const action = item._isDeleted ? '🗑️' : (item._isNew ? '➕' : '📝');
           
           // Check if item has pending image uploads
@@ -5569,6 +5570,7 @@ const UpdateUI = {
           const draftLocations = JSON.parse(draftLocationsJson);
           const locationCount = Object.keys(draftLocations).length;
           successCount += locationCount;
+          hasBackendOperations = true; // Locations are backend operations
           
           Object.values(draftLocations).forEach(loc => {
             const action = loc._isDeleted ? '🗑️' : (loc._isNew ? '➕' : '📝');
@@ -5588,6 +5590,7 @@ const UpdateUI = {
           const success = await HomePageManager.publishDraft(sessionId);
           if (success) {
             successCount++;
+            hasBackendOperations = true; // Home page updates are backend operations
             successItems.push('🏠 Home Page & Site Settings');
           } else {
             failCount++;
@@ -5617,6 +5620,7 @@ const UpdateUI = {
           if (response.ok) {
             localStorage.removeItem(this.storageKeys.draftColors);
             successCount++;
+            hasBackendOperations = true; // Color updates are backend operations
             const colorCount = Object.keys(draftColors).length;
             successItems.push(`🎨 Colors (${colorCount} variables)`);
           } else {
@@ -5647,6 +5651,7 @@ const UpdateUI = {
           if (response.ok) {
             localStorage.removeItem(this.storageKeys.draftManifest);
             successCount++;
+            hasBackendOperations = true; // Manifest updates are backend operations
             successItems.push(`📱 PWA Manifest`);
           } else {
             const errorData = await response.json().catch(() => ({}));
@@ -5692,6 +5697,7 @@ const UpdateUI = {
           if (response.ok) {
             localStorage.removeItem(draftKey);
             successCount++;
+            hasBackendOperations = true; // Category landing pages are backend operations
             successItems.push(`📂 Category: ${categoryName}`);
           } else {
             const errorData = await response.json().catch(() => ({}));
@@ -5773,6 +5779,7 @@ const UpdateUI = {
               throw new Error(result.error || 'Upload returned unsuccessful');
             }
             brandingSuccessCount++;
+            hasBackendOperations = true; // Branding uploads are backend operations
             successItems.push(`🖼️ Branding: ${filename}`);
           } catch (error) {
             console.error(`❌ Failed to upload ${filename}:`, error);
@@ -5799,12 +5806,14 @@ const UpdateUI = {
       console.log(`📦 Preparing batch commit with sessionId: ${sessionId}`);
       
       // Now trigger single git push for all changes with sessionId
-      // Only commit if there were actual backend operations (not just draft-only clears)
+      // Commit if there were any successful backend operations
+      // hasBackendOperations is set to true for all operations that modify backend (menu items, categories, locations, etc.)
       if (successCount > 0 && hasBackendOperations) {
         try {
           const user = AuthClient.getCurrentUser();
           const username = user?.email || user?.username || 'Unknown User';
           console.log(`👤 Committing as user: ${username}`);
+          console.log(`📦 Triggering batch commit for ${successCount} change(s)...`);
           
           await this.triggerBatchCommit(username, successCount, sessionId);
           console.log('✅ Batch commit completed successfully');
@@ -5816,9 +5825,14 @@ const UpdateUI = {
             await HomePageManager.loadSiteSettings();
           }
         } catch (error) {
-          console.error('Git push failed:', error);
+          console.error('❌ Git push failed:', error);
           // Don't fail the whole operation, changes are saved
+          this.showError(`Changes saved but git commit failed: ${error.message}`);
         }
+      } else if (successCount > 0) {
+        // This shouldn't happen since all operations now set hasBackendOperations
+        console.warn('⚠️ Had successful operations but hasBackendOperations is false - commit skipped');
+        console.warn('⚠️ This may indicate a bug - all operations should set hasBackendOperations=true');
       }
       
       // Check if we published any category landing pages
