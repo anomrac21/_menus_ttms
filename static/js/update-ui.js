@@ -6208,6 +6208,19 @@ const UpdateUI = {
         this.showError(message);
       }
       
+      // Reload categories after successful publish to ensure UI matches backend order
+      if (categoryLandingDrafts.length > 0 && categoryFailures.length === 0) {
+        console.log('🔄 Reloading categories to verify order matches backend...');
+        try {
+          await this.loadCategories();
+          this.renderMenuByCategory();
+          console.log('✅ Categories reloaded - UI order should now match backend');
+        } catch (error) {
+          console.error('⚠️ Failed to reload categories after publish:', error);
+          // Don't fail the whole operation, but log warning
+        }
+      }
+      
       // Refresh pending summary
       this.renderPendingSummary();
       this.checkPendingChanges();
