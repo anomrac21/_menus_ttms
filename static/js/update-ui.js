@@ -473,11 +473,18 @@ const UpdateUI = {
               }
             }
             
+            // Ensure weight is an integer
+            let weight = parseInt(data.weight, 10);
+            if (isNaN(weight)) {
+              console.warn(`⚠️ Invalid weight for "${name}": ${data.weight}, defaulting to 999`);
+              weight = 999;
+            }
+            
             return {
               name: data.title || name, // Display name from JSON
               normalizedName: name, // Keep original name for matching with items
               icon: iconValue, // Use icon from JSON (could be URL or null)
-              weight: parseInt(data.weight) || 999,
+              weight: weight, // Explicitly parsed integer
             };
           } else {
             console.log(`  ❌ ${path} returned status ${response.status}`);
