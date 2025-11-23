@@ -60,7 +60,7 @@ body{
   color: white;
   padding: .4rem;
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   background: linear-gradient(135deg, #242938 0%, #2b3140 100%);
   align-items: center;
@@ -106,10 +106,11 @@ body{
 .dashboard-user {
   display: flex;
   align-items: center;
+  width: -webkit-fill-available;
   gap: .4rem;
   flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .user-info {
