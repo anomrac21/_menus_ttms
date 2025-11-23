@@ -5815,7 +5815,7 @@ const UpdateUI = {
           console.log(`👤 Committing as user: ${username}`);
           console.log(`📦 Triggering batch commit for ${successCount} change(s)...`);
           
-          await this.triggerBatchCommit(username, successCount, sessionId);
+          await this.triggerBatchCommit(username, successCount, sessionId, successItems);
           console.log('✅ Batch commit completed successfully');
           
           // Clear homepage draft after successful batch commit
@@ -5874,11 +5874,277 @@ const UpdateUI = {
   },
 
   /**
+   * Generate detailed commit message from change list
+   */
+  generateDetailedCommitMessage(username, changeCount, successItems) {
+    // Group changes by type for better organization
+    const changesByType = {
+      menuItems: [],
+      ads: [],
+      locations: [],
+      categories: [],
+      homepage: [],
+      colors: [],
+      config: [],
+      manifest: [],
+      branding: [],
+      images: [],
+      other: []
+    };
+
+    // Categorize each change
+    successItems.forEach(item => {
+      const itemStr = item.toString();
+      
+      // Check for specific patterns first (more specific matches)
+      if (itemStr.includes('Category:') || itemStr.startsWith('📂')) {
+        changesByType.categories.push(itemStr);
+      } else if (itemStr.includes('Branding:') || (itemStr.includes('🖼️') && itemStr.includes('Branding'))) {
+        changesByType.branding.push(itemStr);
+      } else if (itemStr.includes('Ad:') || itemStr.includes('📢')) {
+        changesByType.ads.push(itemStr);
+      } else if (itemStr.includes('Location:') || itemStr.includes('📍')) {
+        changesByType.locations.push(itemStr);
+      } else if (itemStr.includes('Home Page') || itemStr.includes('🏠')) {
+        changesByType.homepage.push(itemStr);
+      } else if (itemStr.includes('Colors') || itemStr.includes('🎨')) {
+        changesByType.colors.push(itemStr);
+      } else if (itemStr.includes('Config') || itemStr.includes('⚙️')) {
+        changesByType.config.push(itemStr);
+      } else if (itemStr.includes('Manifest') || itemStr.includes('📱')) {
+        changesByType.manifest.push(itemStr);
+      } else if (itemStr.includes('📸') && !itemStr.includes('Branding')) {
+        // Images (but not branding)
+        changesByType.images.push(itemStr);
+      } else if (itemStr.match(/^[➕📝🗑️]\s/)) {
+        // Menu items (start with action emoji followed by space)
+        changesByType.menuItems.push(itemStr);
+      } else {
+        changesByType.other.push(itemStr);
+      }
+    });
+
+    // Build detailed commit message
+    let message = `Published ${changeCount} change${changeCount !== 1 ? 's' : ''} by ${username}\n\n`;
+    message += `## Summary\n`;
+    message += `Total changes: ${changeCount}\n`;
+    message += `User: ${username}\n`;
+    message += `Timestamp: ${new Date().toISOString()}\n\n`;
+
+    // Add detailed breakdown by type
+    message += `## Changes Breakdown\n\n`;
+
+    if (changesByType.menuItems.length > 0) {
+      message += `### Menu Items (${changesByType.menuItems.length})\n`;
+      changesByType.menuItems.forEach(item => {
+        // Extract action and item name
+        let action = '';
+        let cleanItem = item;
+        if (item.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanItem = item.replace(/^➕\s*/, '').trim();
+        } else if (item.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanItem = item.replace(/^📝\s*/, '').trim();
+        } else if (item.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanItem = item.replace(/^🗑️\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanItem}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.ads.length > 0) {
+      message += `### Advertisements (${changesByType.ads.length})\n`;
+      changesByType.ads.forEach(ad => {
+        // Extract action and ad name
+        let action = '';
+        let cleanAd = ad;
+        if (ad.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanAd = ad.replace(/^➕\s*Ad:\s*/, '').trim();
+        } else if (ad.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanAd = ad.replace(/^📝\s*Ad:\s*/, '').trim();
+        } else if (ad.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanAd = ad.replace(/^🗑️\s*Ad:\s*/, '').trim();
+        } else {
+          // Fallback for ads without action prefix
+          cleanAd = ad.replace(/^Ad:\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanAd}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.locations.length > 0) {
+      message += `### Locations (${changesByType.locations.length})\n`;
+      changesByType.locations.forEach(loc => {
+        // Extract action and location name
+        let action = '';
+        let cleanLoc = loc;
+        if (loc.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanLoc = loc.replace(/^➕\s*Location:\s*/, '').trim();
+        } else if (loc.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanLoc = loc.replace(/^📝\s*Location:\s*/, '').trim();
+        } else if (loc.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanLoc = loc.replace(/^🗑️\s*Location:\s*/, '').trim();
+        } else {
+          // Fallback for locations without action prefix
+          cleanLoc = loc.replace(/^Location:\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanLoc}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.categories.length > 0) {
+      message += `### Categories (${changesByType.categories.length})\n`;
+      changesByType.categories.forEach(cat => {
+        // Categories are typically updates (landing pages, icons, etc.)
+        let action = '[UPDATED]';
+        let cleanCat = cat;
+        if (cat.startsWith('📂')) {
+          cleanCat = cat.replace(/^📂\s*Category:\s*/, '').trim();
+        } else if (cat.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanCat = cat.replace(/^➕\s*Category:\s*/, '').trim();
+        } else if (cat.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanCat = cat.replace(/^🗑️\s*Category:\s*/, '').trim();
+        } else {
+          cleanCat = cat.replace(/^Category:\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanCat}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.homepage.length > 0) {
+      message += `### Home Page & Site Settings\n`;
+      changesByType.homepage.forEach(hp => {
+        // Home page changes are typically updates
+        const cleanHp = hp.replace(/^🏠\s*/, '').trim();
+        message += `- [UPDATED] ${cleanHp}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.colors.length > 0) {
+      message += `### Color Theme Updates\n`;
+      changesByType.colors.forEach(color => {
+        // Color changes are typically updates
+        const cleanColor = color.replace(/^🎨\s*/, '').trim();
+        message += `- [UPDATED] ${cleanColor}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.config.length > 0) {
+      message += `### Configuration Changes\n`;
+      changesByType.config.forEach(cfg => {
+        // Config changes are typically updates
+        const cleanCfg = cfg.replace(/^⚙️\s*/, '').trim();
+        message += `- [UPDATED] ${cleanCfg}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.manifest.length > 0) {
+      message += `### PWA Manifest Updates\n`;
+      changesByType.manifest.forEach(manifest => {
+        // Manifest changes are typically updates
+        const cleanManifest = manifest.replace(/^📱\s*/, '').trim();
+        message += `- [UPDATED] ${cleanManifest}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.branding.length > 0) {
+      message += `### Branding Images (${changesByType.branding.length})\n`;
+      changesByType.branding.forEach(branding => {
+        // Branding images are typically replacements/updates
+        let action = '[UPDATED]';
+        let cleanBranding = branding;
+        if (branding.includes('Branding:')) {
+          cleanBranding = branding.replace(/^🖼️\s*Branding:\s*/, '').trim();
+        } else {
+          cleanBranding = branding.replace(/^🖼️\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanBranding}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.images.length > 0) {
+      message += `### Images (${changesByType.images.length})\n`;
+      changesByType.images.forEach(img => {
+        // Images are typically uploads (created)
+        let action = '[CREATED]';
+        let cleanImg = img;
+        if (img.startsWith('📸')) {
+          cleanImg = img.replace(/^📸\s*/, '').trim();
+        }
+        // Check if it's a deletion (would have 🗑️)
+        if (img.includes('🗑️') || img.toLowerCase().includes('delete')) {
+          action = '[DELETED]';
+        }
+        message += `- ${action} ${cleanImg}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.other.length > 0) {
+      message += `### Other Changes (${changesByType.other.length})\n`;
+      changesByType.other.forEach(other => {
+        // Try to detect action from other items
+        let action = '[UPDATED]';
+        let cleanOther = other;
+        if (other.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanOther = other.replace(/^➕\s*/, '').trim();
+        } else if (other.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanOther = other.replace(/^📝\s*/, '').trim();
+        } else if (other.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanOther = other.replace(/^🗑️\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanOther}\n`;
+      });
+      message += `\n`;
+    }
+
+    // Add operation statistics
+    const createCount = successItems.filter(i => i.includes('➕')).length;
+    const updateCount = successItems.filter(i => i.includes('📝')).length;
+    const deleteCount = successItems.filter(i => i.includes('🗑️')).length;
+
+    if (createCount > 0 || updateCount > 0 || deleteCount > 0) {
+      message += `## Operation Statistics\n`;
+      if (createCount > 0) message += `- Created: ${createCount}\n`;
+      if (updateCount > 0) message += `- Updated: ${updateCount}\n`;
+      if (deleteCount > 0) message += `- Deleted: ${deleteCount}\n`;
+      message += `\n`;
+    }
+
+    return message;
+  },
+
+  /**
    * Trigger batch git commit after all changes
    */
-  async triggerBatchCommit(username, changeCount, sessionId) {
+  async triggerBatchCommit(username, changeCount, sessionId, successItems = []) {
     try {
       console.log(`📦 Triggering batch commit for session: ${sessionId}`);
+      
+      // Generate detailed commit message
+      const detailedMessage = this.generateDetailedCommitMessage(username, changeCount, successItems);
       
       const response = await this.authenticatedFetch(
         `${this.apiConfig.getClientUrl()}/git/commit`,
@@ -5886,7 +6152,7 @@ const UpdateUI = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: `Published ${changeCount} change${changeCount !== 1 ? 's' : ''} by ${username}`,
+            message: detailedMessage,
             author: username,
             sessionId: sessionId  // Pass sessionId to backend
           }),
