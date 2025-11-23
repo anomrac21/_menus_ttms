@@ -24,6 +24,15 @@ const UpdateUI = {
     }
   },
 
+  // Netlify Configuration
+  netlifyConfig: {
+    siteId: window.NETLIFY_SITE_ID || null,
+    apiToken: window.NETLIFY_API_TOKEN || null,
+    enabled: function() {
+      return !!(this.siteId && this.apiToken);
+    }
+  },
+
   // LocalStorage keys
   storageKeys: {
     draftItems: 'ttmenus_draft_items',
@@ -88,6 +97,9 @@ const UpdateUI = {
     // Setup auto-save
     this.setupAutoSave();
     
+    // Inject mobile-friendly styles
+    this.injectMobileStyles();
+    
     console.log('✅ Update UI initialized and ready!');
   },
   
@@ -127,6 +139,284 @@ const UpdateUI = {
       
       .preview-toggle-btn:active {
         transform: translateY(0);
+      }
+      
+      /* Mobile-friendly styles */
+      @media (max-width: 768px) {
+        .preview-toggle-btn {
+          bottom: 80px !important;
+          right: 16px !important;
+          padding: 10px 18px !important;
+          font-size: 0.875rem !important;
+          min-width: 44px !important;
+          min-height: 44px !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .preview-toggle-btn {
+          bottom: 70px !important;
+          right: 12px !important;
+          padding: 8px 14px !important;
+          font-size: 0.75rem !important;
+        }
+      }
+      
+      /* Ensure modals are mobile-friendly */
+      @media (max-width: 768px) {
+        .modal {
+          padding: 10px !important;
+        }
+        .modal-content {
+          max-width: 95vw !important;
+          max-height: 95vh !important;
+          margin: 0 !important;
+        }
+        .modal-header h3 {
+          font-size: clamp(16px, 4vw, 20px) !important;
+        }
+        .modal-body {
+          padding: clamp(0.5rem, 2vw, 1rem) !important;
+        }
+        .btn {
+          min-width: 100px !important;
+          min-height: 44px !important;
+          font-size: clamp(14px, 3.5vw, 16px) !important;
+          touch-action: manipulation !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  },
+
+  /**
+   * Inject comprehensive mobile-friendly styles
+   */
+  injectMobileStyles() {
+    if (document.getElementById('mobile-friendly-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'mobile-friendly-styles';
+    style.textContent = `
+      /* Mobile-friendly global styles */
+      @media (max-width: 768px) {
+        /* Ensure all buttons are touch-friendly */
+        button, .btn, input[type="button"], input[type="submit"] {
+          min-width: 44px !important;
+          min-height: 44px !important;
+          touch-action: manipulation !important;
+          -webkit-tap-highlight-color: transparent !important;
+          font-size: clamp(14px, 3.5vw, 16px) !important;
+        }
+        
+        /* Form inputs should be larger on mobile */
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="url"],
+        input[type="tel"],
+        textarea,
+        select {
+          font-size: 16px !important; /* Prevents zoom on iOS */
+          min-height: 44px !important;
+          padding: 10px 12px !important;
+        }
+        
+        /* Cards and containers */
+        .pending-change-card,
+        .card,
+        .menu-item-card,
+        .ad-card {
+          padding: 12px !important;
+          margin-bottom: 12px !important;
+        }
+        
+        /* Grid layouts should stack on mobile */
+        .pending-changes-grid,
+        .grid,
+        .menu-grid {
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+        }
+        
+        /* Tables should scroll horizontally */
+        table {
+          display: block;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Badges and labels */
+        .badge {
+          font-size: 11px !important;
+          padding: 4px 8px !important;
+          min-height: 24px !important;
+        }
+        
+        /* Tabs should be scrollable */
+        .tabs,
+        .tab-nav {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .tabs::-webkit-scrollbar,
+        .tab-nav::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Tab buttons */
+        .tab-button,
+        .nav-tab {
+          min-width: 80px !important;
+          padding: 10px 16px !important;
+          font-size: 14px !important;
+        }
+        
+        /* Action buttons in cards */
+        .card-actions,
+        .item-actions {
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+        }
+        
+        .card-actions button,
+        .item-actions button {
+          flex: 1 1 auto !important;
+          min-width: 100px !important;
+        }
+        
+        /* Search inputs */
+        input[type="search"],
+        .search-input {
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        
+        /* Detail sections */
+        .detail-section {
+          margin-bottom: 20px !important;
+        }
+        
+        .detail-section-title {
+          font-size: clamp(16px, 4vw, 18px) !important;
+          margin-bottom: 12px !important;
+        }
+        
+        /* Warning boxes */
+        .warning-box {
+          padding: 12px !important;
+          margin-bottom: 16px !important;
+        }
+        
+        .warning-title {
+          font-size: clamp(14px, 3.5vw, 16px) !important;
+        }
+        
+        .warning-text {
+          font-size: clamp(12px, 3vw, 14px) !important;
+        }
+        
+        /* Empty states */
+        .empty-state {
+          padding: 20px !important;
+        }
+        
+        .empty-state-icon {
+          font-size: 48px !important;
+        }
+        
+        .empty-state-title {
+          font-size: clamp(16px, 4vw, 18px) !important;
+        }
+        
+        /* Image cards */
+        .image-card,
+        .branding-image-card {
+          padding: 10px !important;
+        }
+        
+        /* Color inputs */
+        input[type="color"] {
+          width: 60px !important;
+          height: 44px !important;
+        }
+        
+        /* Range sliders */
+        input[type="range"] {
+          width: 100% !important;
+          height: 44px !important;
+        }
+        
+        /* Prevent text from being too small */
+        body, p, span, div {
+          font-size: clamp(14px, 3.5vw, 16px) !important;
+        }
+        
+        /* Headings */
+        h1 { font-size: clamp(24px, 6vw, 32px) !important; }
+        h2 { font-size: clamp(20px, 5vw, 28px) !important; }
+        h3 { font-size: clamp(18px, 4.5vw, 24px) !important; }
+        h4 { font-size: clamp(16px, 4vw, 20px) !important; }
+        
+        /* Spacing adjustments */
+        .section,
+        section {
+          padding: 12px !important;
+        }
+        
+        /* Flex containers */
+        .flex,
+        [style*="display: flex"] {
+          flex-wrap: wrap !important;
+        }
+      }
+      
+      /* Extra small devices */
+      @media (max-width: 480px) {
+        button, .btn {
+          padding: 8px 12px !important;
+          font-size: 13px !important;
+        }
+        
+        .pending-change-card,
+        .card {
+          padding: 10px !important;
+        }
+        
+        .detail-section-title {
+          font-size: 16px !important;
+        }
+        
+        /* Stack action buttons vertically on very small screens */
+        .card-actions,
+        .item-actions {
+          flex-direction: column !important;
+        }
+        
+        .card-actions button,
+        .item-actions button {
+          width: 100% !important;
+        }
+      }
+      
+      /* Landscape orientation on mobile */
+      @media (max-width: 768px) and (orientation: landscape) {
+        .modal-content {
+          max-height: 85vh !important;
+        }
+      }
+      
+      /* Prevent horizontal scroll */
+      body {
+        overflow-x: hidden !important;
+      }
+      
+      /* Ensure all clickable elements are accessible */
+      a, button, [role="button"], [onclick] {
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
       }
     `;
     document.head.appendChild(style);
@@ -5818,6 +6108,11 @@ const UpdateUI = {
           await this.triggerBatchCommit(username, successCount, sessionId, successItems);
           console.log('✅ Batch commit completed successfully');
           
+          // Start monitoring Netlify build status
+          if (this.netlifyConfig.enabled()) {
+            this.monitorNetlifyBuild();
+          }
+          
           // Clear homepage draft after successful batch commit
           if (draftHomePageJson) {
             localStorage.removeItem(this.storageKeys.draftHomePage);
@@ -6171,6 +6466,295 @@ const UpdateUI = {
     } catch (error) {
       console.error('Batch commit error:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Monitor Netlify build status after a commit
+   */
+  async monitorNetlifyBuild() {
+    if (!this.netlifyConfig.enabled()) {
+      console.log('ℹ️ Netlify monitoring disabled (missing site ID or API token)');
+      return;
+    }
+
+    // Show initial building indicator
+    this.showNetlifyStatus('building', 'Checking build status...');
+
+    // Poll for the latest build
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes (5 second intervals)
+    const pollInterval = 5000; // 5 seconds
+
+    const pollBuildStatus = async () => {
+      attempts++;
+      
+      try {
+        const build = await this.getLatestNetlifyBuild();
+        
+        if (!build) {
+          // No build found yet, keep polling
+          if (attempts < maxAttempts) {
+            setTimeout(pollBuildStatus, pollInterval);
+          } else {
+            this.showNetlifyStatus('unknown', 'Build status unavailable');
+          }
+          return;
+        }
+
+        const state = build.state;
+        console.log(`🔍 Netlify build status: ${state} (attempt ${attempts})`);
+
+        if (state === 'building' || state === 'enqueued' || state === 'preparing') {
+          // Still building, continue polling
+          this.showNetlifyStatus('building', `Building... (${build.name || 'Deploy'})`);
+          if (attempts < maxAttempts) {
+            setTimeout(pollBuildStatus, pollInterval);
+          } else {
+            this.showNetlifyStatus('timeout', 'Build is taking longer than expected');
+          }
+        } else if (state === 'ready') {
+          // Build succeeded
+          const deployUrl = build.deploy_url || build.deploy_ssl_url || '';
+          this.showNetlifyStatus('success', 'Site deployed successfully!', deployUrl);
+        } else if (state === 'error' || state === 'failed') {
+          // Build failed
+          const errorMessage = build.error_message || 'Build failed';
+          this.showNetlifyStatus('failed', `Build failed: ${errorMessage}`);
+        } else {
+          // Unknown state
+          this.showNetlifyStatus('unknown', `Build status: ${state}`);
+        }
+      } catch (error) {
+        console.error('Error checking Netlify build status:', error);
+        if (attempts < maxAttempts) {
+          setTimeout(pollBuildStatus, pollInterval);
+        } else {
+          this.showNetlifyStatus('error', 'Unable to check build status');
+        }
+      }
+    };
+
+    // Start polling after a short delay (give Netlify time to detect the commit)
+    setTimeout(pollBuildStatus, 10000); // Wait 10 seconds before first check
+  },
+
+  /**
+   * Get the latest Netlify build for the site
+   */
+  async getLatestNetlifyBuild() {
+    try {
+      const siteId = this.netlifyConfig.siteId;
+      const apiToken = this.netlifyConfig.apiToken;
+      
+      const response = await fetch(
+        `https://api.netlify.com/api/v1/sites/${siteId}/deploys?per_page=1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Netlify API error: ${response.status}`);
+      }
+
+      const deploys = await response.json();
+      return deploys && deploys.length > 0 ? deploys[0] : null;
+    } catch (error) {
+      console.error('Failed to fetch Netlify build status:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Show Netlify build status indicator
+   */
+  showNetlifyStatus(status, message, deployUrl = null) {
+    // Remove existing indicator
+    const existing = document.getElementById('netlify-status-indicator');
+    if (existing) {
+      existing.remove();
+    }
+
+    // Status colors and icons
+    const statusConfig = {
+      building: {
+        bg: '#fff3cd',
+        border: '#ffecb5',
+        text: '#664d03',
+        icon: '⏳',
+        label: 'Building'
+      },
+      success: {
+        bg: '#d1e7dd',
+        border: '#badbcc',
+        text: '#0f5132',
+        icon: '✅',
+        label: 'Deployed'
+      },
+      failed: {
+        bg: '#f8d7da',
+        border: '#f5c2c7',
+        text: '#842029',
+        icon: '❌',
+        label: 'Failed'
+      },
+      timeout: {
+        bg: '#fff3cd',
+        border: '#ffecb5',
+        text: '#664d03',
+        icon: '⏱️',
+        label: 'Timeout'
+      },
+      unknown: {
+        bg: '#cff4fc',
+        border: '#b6effb',
+        text: '#055160',
+        icon: '❓',
+        label: 'Unknown'
+      },
+      error: {
+        bg: '#f8d7da',
+        border: '#f5c2c7',
+        text: '#842029',
+        icon: '⚠️',
+        label: 'Error'
+      }
+    };
+
+    const config = statusConfig[status] || statusConfig.unknown;
+
+    // Create indicator element
+    const indicator = document.createElement('div');
+    indicator.id = 'netlify-status-indicator';
+    indicator.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      left: 20px;
+      padding: 12px 16px;
+      border: 2px solid ${config.border};
+      border-radius: 8px;
+      background-color: ${config.bg};
+      color: ${config.text};
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 10000;
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 400px;
+      margin-left: auto;
+      animation: slideInUp 0.3s ease-out;
+      box-sizing: border-box;
+    `;
+    
+    // Mobile-specific styles
+    const mobileStyle = document.createElement('style');
+    mobileStyle.id = 'netlify-mobile-style';
+    mobileStyle.textContent = `
+      @media (max-width: 768px) {
+        #netlify-status-indicator {
+          left: 10px !important;
+          right: 10px !important;
+          bottom: 10px !important;
+          max-width: 100% !important;
+          font-size: 13px !important;
+          padding: 10px 14px !important;
+        }
+        #netlify-status-indicator button {
+          min-width: 32px !important;
+          min-height: 32px !important;
+          font-size: 22px !important;
+        }
+      }
+      @media (max-width: 480px) {
+        #netlify-status-indicator {
+          font-size: 12px !important;
+          padding: 8px 12px !important;
+        }
+      }
+    `;
+    if (!document.getElementById('netlify-mobile-style')) {
+      document.head.appendChild(mobileStyle);
+    }
+
+    // Add spinner for building state
+    let statusContent = '';
+    if (status === 'building') {
+      statusContent = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="spinner" style="
+            width: 16px;
+            height: 16px;
+            border: 2px solid ${config.border};
+            border-top-color: ${config.text};
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          "></div>
+          <span>${config.icon} ${config.label}</span>
+        </div>
+      `;
+    } else {
+      statusContent = `<div>${config.icon} <strong>${config.label}</strong></div>`;
+    }
+
+    indicator.innerHTML = `
+      ${statusContent}
+      <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">${message}</div>
+      ${deployUrl ? `<div style="margin-top: 8px;"><a href="${deployUrl}" target="_blank" style="color: ${config.text}; text-decoration: underline; display: inline-block; min-height: 44px; line-height: 44px; padding: 0 8px; touch-action: manipulation;">View Site →</a></div>` : ''}
+      <button onclick="this.parentElement.remove()" style="
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        line-height: 1;
+        color: ${config.text};
+        cursor: pointer;
+        opacity: 0.6;
+        padding: 4px;
+        min-width: 28px;
+        min-height: 28px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" ontouchstart="this.style.opacity='1'" ontouchend="this.style.opacity='0.6'">&times;</button>
+    `;
+
+    // Add spinner animation if not already present
+    if (!document.getElementById('netlify-spinner-style')) {
+      const style = document.createElement('style');
+      style.id = 'netlify-spinner-style';
+      style.textContent = `
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes slideInUp {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(indicator);
+
+    // Auto-remove success/unknown states after 10 seconds
+    if (status === 'success' || status === 'unknown') {
+      setTimeout(() => {
+        if (indicator.parentNode) {
+          indicator.style.animation = 'slideInUp 0.3s ease-out reverse';
+          setTimeout(() => indicator.remove(), 300);
+        }
+      }, 10000);
     }
   },
 
@@ -6973,6 +7557,47 @@ const UpdateUI = {
         flex-direction: column;
         gap: 10px;
       `;
+      
+      // Add mobile-responsive styles for notification container
+      const notificationMobileStyle = document.createElement('style');
+      notificationMobileStyle.id = 'notification-mobile-style';
+      notificationMobileStyle.textContent = `
+        @media (max-width: 768px) {
+          #notification-container {
+            left: 10px !important;
+            right: 10px !important;
+            top: 1rem !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            gap: 8px !important;
+          }
+          #notification-container > div {
+            min-width: auto !important;
+            font-size: 13px !important;
+            padding: 10px 40px 10px 12px !important;
+          }
+          #notification-container button {
+            min-width: 32px !important;
+            min-height: 32px !important;
+            font-size: 22px !important;
+            top: 6px !important;
+            right: 6px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          #notification-container {
+            top: 0.5rem !important;
+          }
+          #notification-container > div {
+            font-size: 12px !important;
+            padding: 8px 36px 8px 10px !important;
+          }
+        }
+      `;
+      if (!document.getElementById('notification-mobile-style')) {
+        document.head.appendChild(notificationMobileStyle);
+      }
+      
       document.body.appendChild(notificationContainer);
     }
 
@@ -7017,13 +7642,17 @@ const UpdateUI = {
       line-height: 1;
       color: ${colors.text};
       cursor: pointer;
-      padding: 0;
-      width: 24px;
-      height: 24px;
+      padding: 4px;
+      min-width: 28px;
+      min-height: 28px;
       opacity: 0.5;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     `;
     closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
     closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+    closeBtn.ontouchstart = () => closeBtn.style.opacity = '1';
+    closeBtn.ontouchend = () => closeBtn.style.opacity = '0.5';
     
     const messageDiv = document.createElement('div');
     messageDiv.style.cssText = 'white-space: pre-wrap; padding-right: 10px; font-weight: 500;';
