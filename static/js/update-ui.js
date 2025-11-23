@@ -418,6 +418,62 @@ const UpdateUI = {
         cursor: pointer !important;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
       }
+      
+      /* Modals should be full-screen or nearly full-screen on mobile */
+      .modal {
+        padding: 0 !important;
+      }
+      
+      .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      
+      .modal-header {
+        flex-shrink: 0 !important;
+        padding: 1rem !important;
+      }
+      
+      .modal-body {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 1rem !important;
+      }
+      
+      .modal-footer {
+        flex-shrink: 0 !important;
+        padding: 1rem !important;
+      }
+      
+      /* Drag and drop visual feedback */
+      .menu-item-card.drag-over {
+        border: 2px dashed #3b82f6 !important;
+        background-color: rgba(59, 130, 246, 0.1) !important;
+        transform: scale(1.02) !important;
+        transition: all 0.2s ease !important;
+      }
+      
+      /* Time block change day button visibility */
+      .time-block button[title*="Change day"] {
+        display: block !important;
+      }
+      
+      /* Improve touch targets for timeline blocks */
+      .time-block {
+        min-height: 44px !important;
+      }
+      
+      .time-block-resize-handle {
+        min-height: 44px !important;
+        min-width: 44px !important;
+      }
     `;
     document.head.appendChild(style);
   },
@@ -1491,11 +1547,11 @@ const UpdateUI = {
           <h3 class="menu-item-title ${ad._isDeleted ? 'deleted' : ''}">${this.escapeHtml(ad.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
           <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
             ${!ad._isDeleted ? `
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdUp('${this.escapeHtml(ad.id)}')" title="Move up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↑</button>
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdDown('${this.escapeHtml(ad.id)}')" title="Move down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↓</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdUp('${this.escapeHtml(ad.id)}')" title="Move up" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">↑</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveAdDown('${this.escapeHtml(ad.id)}')" title="Move down" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">↓</button>
             ` : ''}
             <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
-            <button class="btn-collapse-ad" onclick="event.stopPropagation(); UpdateUI.toggleAd('${this.escapeHtml(ad.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
+            <button class="btn-collapse-ad" onclick="event.stopPropagation(); UpdateUI.toggleAd('${this.escapeHtml(ad.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; color: #6b7280; min-width: 44px; min-height: 44px; touch-action: manipulation;">
               ${isCollapsed ? '►' : '▼'}
             </button>
           </span>
@@ -1867,7 +1923,7 @@ const UpdateUI = {
               </div>
             </div>
             <div class="category-actions" onclick="event.stopPropagation();">
-              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleBrandingType('${this.escapeHtml(typeName)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
+              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleBrandingType('${this.escapeHtml(typeName)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 4px; color: white; min-width: 44px; min-height: 44px; touch-action: manipulation;">
                 ${isCollapsed ? '►' : '▼'}
               </button>
             </div>
@@ -2062,16 +2118,16 @@ const UpdateUI = {
     modal.className = 'modal';
     modal.style.display = 'block';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+      <div class="modal-content" style="max-width: 90vw; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
-          <h3>Crop Image: ${filename}</h3>
-          <p style="color: #6b7280; margin: 0.5rem 0;">
+          <h3 style="font-size: clamp(16px, 4vw, 20px);">Crop Image: ${filename}</h3>
+          <p style="color: #6b7280; margin: 0.5rem 0; font-size: clamp(12px, 3vw, 14px);">
             Required size: ${requirements.width}x${requirements.height}px
             <br>Current size: ${img.width}x${img.height}px
           </p>
-          <button class="btn-close" onclick="this.closest('.modal').remove()">×</button>
+          <button class="btn-close" onclick="this.closest('.modal').remove()" style="min-width: 44px; min-height: 44px; padding: 0.5rem; touch-action: manipulation; font-size: 1.25rem;">×</button>
         </div>
-        <div class="modal-body" style="padding: 1rem;">
+        <div class="modal-body" style="padding: clamp(0.5rem, 2vw, 1rem);">
           <div style="position: relative; max-width: 100%; margin-bottom: 1rem;">
             <canvas id="cropCanvas" style="max-width: 100%; border: 2px solid #e5e7eb; border-radius: 8px;"></canvas>
           </div>
@@ -2096,8 +2152,8 @@ const UpdateUI = {
             </div>
           </div>
           <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
-            <button class="btn btn-secondary" onclick="UpdateUI.cancelCrop()">Cancel</button>
-            <button class="btn btn-primary" onclick="UpdateUI.confirmCrop('${filename}', ${requirements.width}, ${requirements.height}, '${requirements.format}')">Crop & Save</button>
+            <button class="btn btn-secondary" onclick="UpdateUI.cancelCrop()" style="min-width: 100px; min-height: 44px; touch-action: manipulation; font-size: clamp(14px, 3.5vw, 16px);">Cancel</button>
+            <button class="btn btn-primary" onclick="UpdateUI.confirmCrop('${filename}', ${requirements.width}, ${requirements.height}, '${requirements.format}')" style="min-width: 120px; min-height: 44px; touch-action: manipulation; font-size: clamp(14px, 3.5vw, 16px);">Crop & Save</button>
           </div>
         </div>
       </div>
@@ -3121,16 +3177,16 @@ const UpdateUI = {
               </div>
             </div>
             <div class="category-actions" onclick="event.stopPropagation();">
-              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryUp('${this.escapeHtml(category.name)}')" title="Move category up" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">
                 ↑
               </button>
-              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">
+              <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.moveCategoryDown('${this.escapeHtml(category.name)}')" title="Move category down" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">
                 ↓
               </button>
               <button class="btn btn-sm category-btn" onclick="event.stopPropagation(); UpdateUI.editCategory('${this.escapeHtml(category.name)}')">
                 Edit
               </button>
-              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
+              <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleCategory('${this.escapeHtml(category.name)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 4px; color: white; min-width: 44px; min-height: 44px; touch-action: manipulation;">
                 ${isCollapsed ? '►' : '▼'}
               </button>
             </div>
@@ -3167,7 +3223,131 @@ const UpdateUI = {
     // Set the HTML
     container.innerHTML = controlsHTML + categoryHTML.join('');
     
+    // Setup touch-based drag and drop for mobile devices
+    this.setupTouchDragAndDrop();
+    
     console.log('Menu rendering complete!');
+  },
+  
+  /**
+   * Setup touch-based drag and drop for menu items (mobile support)
+   */
+  setupTouchDragAndDrop() {
+    const cards = document.querySelectorAll('.menu-item-card[data-item-id]');
+    let draggedElement = null;
+    let draggedItemId = null;
+    let touchStartY = 0;
+    let touchStartX = 0;
+    
+    cards.forEach(card => {
+      const itemId = card.getAttribute('data-item-id');
+      if (!itemId) return;
+      
+      // Skip if item is deleted (not draggable)
+      const item = this.state.menuItems.find(i => i.id === itemId);
+      if (item && item._isDeleted) return;
+      
+      // Add touch handlers
+      card.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button')) return; // Don't drag if touching a button
+        
+        const touch = e.touches[0];
+        touchStartY = touch.clientY;
+        touchStartX = touch.clientX;
+        draggedElement = card;
+        draggedItemId = itemId;
+        
+        card.style.opacity = '0.5';
+        card.style.transition = 'none';
+        card.style.zIndex = '1000';
+        card.style.position = 'relative';
+      }, { passive: true });
+      
+      card.addEventListener('touchmove', (e) => {
+        if (!draggedElement || draggedElement !== card) return;
+        
+        const touch = e.touches[0];
+        const deltaY = touch.clientY - touchStartY;
+        const deltaX = touch.clientX - touchStartX;
+        
+        // Only start dragging if moved more than 10px (to distinguish from scroll)
+        if (Math.abs(deltaY) > 10 || Math.abs(deltaX) > 10) {
+          e.preventDefault();
+          
+          // Move the card visually
+          const rect = card.getBoundingClientRect();
+          card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+          
+          // Find the element under the touch point
+          const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+          const targetCard = elementBelow?.closest('.menu-item-card[data-item-id]');
+          
+          if (targetCard && targetCard !== card) {
+            const targetItemId = targetCard.getAttribute('data-item-id');
+            
+            // Highlight drop target
+            document.querySelectorAll('.menu-item-card').forEach(c => {
+              c.classList.remove('drag-over');
+            });
+            targetCard.classList.add('drag-over');
+          } else {
+            document.querySelectorAll('.menu-item-card').forEach(c => {
+              c.classList.remove('drag-over');
+            });
+          }
+        }
+      }, { passive: false });
+      
+      card.addEventListener('touchend', (e) => {
+        if (!draggedElement || draggedElement !== card) return;
+        
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetCard = elementBelow?.closest('.menu-item-card[data-item-id]');
+        
+        // Reset visual state
+        card.style.opacity = '';
+        card.style.transform = '';
+        card.style.transition = '';
+        card.style.zIndex = '';
+        document.querySelectorAll('.menu-item-card').forEach(c => {
+          c.classList.remove('drag-over');
+        });
+        
+        // Perform drop if valid target
+        if (targetCard && targetCard !== card) {
+          const targetItemId = targetCard.getAttribute('data-item-id');
+          
+          // Simulate drop event
+          const dropEvent = {
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            dataTransfer: {
+              getData: () => draggedItemId
+            }
+          };
+          
+          this.handleDrop(dropEvent, targetItemId);
+        }
+        
+        draggedElement = null;
+        draggedItemId = null;
+      });
+      
+      card.addEventListener('touchcancel', () => {
+        if (draggedElement === card) {
+          card.style.opacity = '';
+          card.style.transform = '';
+          card.style.transition = '';
+          card.style.zIndex = '';
+          document.querySelectorAll('.menu-item-card').forEach(c => {
+            c.classList.remove('drag-over');
+          });
+          draggedElement = null;
+          draggedItemId = null;
+        }
+      });
+    });
   },
 
   /**
@@ -3218,11 +3398,11 @@ const UpdateUI = {
           <h3 class="menu-item-title ${item._isDeleted ? 'deleted' : ''}">${this.escapeHtml(item.title)}${draftBadge}${newBadge}${deletedBadge}</h3>
           <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
             ${!item._isDeleted ? `
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemUp('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move up" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↑</button>
-              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemDown('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move down" style="padding: 0.25rem 0.5rem; font-size: 0.875rem; min-width: 32px;">↓</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemUp('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move up" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">↑</button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); UpdateUI.moveMenuItemDown('${this.escapeHtml(item.id)}', '${this.escapeHtml(item.category)}')" title="Move down" style="padding: 0.5rem 0.75rem; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">↓</button>
             ` : ''}
             <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
-            <button class="btn-collapse-item" onclick="event.stopPropagation(); UpdateUI.toggleMenuItem('${this.escapeHtml(item.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
+            <button class="btn-collapse-item" onclick="event.stopPropagation(); UpdateUI.toggleMenuItem('${this.escapeHtml(item.id)}')" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; color: #6b7280; min-width: 44px; min-height: 44px; touch-action: manipulation;">
               ${isCollapsed ? '►' : '▼'}
             </button>
           </span>
@@ -4510,7 +4690,7 @@ const UpdateUI = {
             <h3 class="menu-item-title ${loc._isDeleted ? 'deleted' : ''}">${this.escapeHtml(loc.city)}${draftBadge}${newBadge}${deletedBadge}</h3>
             <span class="menu-item-position" style="display: flex; align-items: center; gap: 6px;">
               <span style="color: #6b7280; font-size: 0.875rem;">#${position}</span>
-              <button class="btn-collapse-location" onclick="event.stopPropagation(); UpdateUI.toggleLocation(${index})" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0 4px; color: #6b7280; min-width: 20px;">
+              <button class="btn-collapse-location" onclick="event.stopPropagation(); UpdateUI.toggleLocation(${index})" style="background: none; border: none; font-size: 0.875rem; cursor: pointer; padding: 0.5rem; color: #6b7280; min-width: 44px; min-height: 44px; touch-action: manipulation;">
                 ${isCollapsed ? '►' : '▼'}
               </button>
             </span>
@@ -4741,7 +4921,7 @@ const UpdateUI = {
                 </div>
               </div>
               <div class="category-actions" onclick="event.stopPropagation();">
-                <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleColorSection('${this.escapeHtml(category)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.375rem 0.75rem; border-radius: 4px; color: white; min-width: 36px;">
+                <button class="btn-collapse" onclick="event.stopPropagation(); UpdateUI.toggleColorSection('${this.escapeHtml(category)}')" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); font-size: 0.875rem; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 4px; color: white; min-width: 44px; min-height: 44px; touch-action: manipulation;">
                   ${isCollapsed ? '►' : '▼'}
                 </button>
               </div>
@@ -4878,9 +5058,9 @@ const UpdateUI = {
       <div style="padding: .4rem; background: linear-gradient(135deg, #5a6996 0%, #2b3140 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 1rem; font-weight: 600;">🎨 Live Preview</h3>
         <div style="display: flex; gap: 0.5rem;">
-          <button onclick="UpdateUI.refreshPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">🔄</button>
-          <button onclick="UpdateUI.openPreviewFullscreen()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">⛶</button>
-          <button onclick="UpdateUI.togglePreviewOverlay()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">✖️</button>
+          <button onclick="UpdateUI.refreshPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">🔄</button>
+          <button onclick="UpdateUI.openPreviewFullscreen()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">⛶</button>
+          <button onclick="UpdateUI.togglePreviewOverlay()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; min-width: 44px; min-height: 44px; touch-action: manipulation;">✖️</button>
         </div>
       </div>
       <div style="flex: 1; overflow: hidden; background: #f3f4f6;">
@@ -4909,30 +5089,57 @@ const UpdateUI = {
     let initialY;
     
     header.style.cursor = 'move';
+    header.style.touchAction = 'none';
     
-    header.addEventListener('mousedown', (e) => {
+    const getEventPos = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    };
+    
+    const startDrag = (e) => {
       if (e.target.tagName === 'BUTTON') return;
       
+      const pos = getEventPos(e);
       isDragging = true;
-      initialX = e.clientX - overlay.offsetLeft;
-      initialY = e.clientY - overlay.offsetTop;
-    });
+      initialX = pos.x - overlay.offsetLeft;
+      initialY = pos.y - overlay.offsetTop;
+    };
     
-    document.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        e.preventDefault();
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
-        
-        overlay.style.left = currentX + 'px';
-        overlay.style.top = currentY + 'px';
-        overlay.style.right = 'auto';
-      }
-    });
+    const drag = (e) => {
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      const pos = getEventPos(e);
+      currentX = pos.x - initialX;
+      currentY = pos.y - initialY;
+      
+      // Keep overlay within viewport bounds
+      const maxX = window.innerWidth - overlay.offsetWidth;
+      const maxY = window.innerHeight - overlay.offsetHeight;
+      currentX = Math.max(0, Math.min(currentX, maxX));
+      currentY = Math.max(0, Math.min(currentY, maxY));
+      
+      overlay.style.left = currentX + 'px';
+      overlay.style.top = currentY + 'px';
+      overlay.style.right = 'auto';
+    };
     
-    document.addEventListener('mouseup', () => {
+    const endDrag = () => {
       isDragging = false;
-    });
+    };
+    
+    // Mouse events
+    header.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+    
+    // Touch events for mobile
+    header.addEventListener('touchstart', startDrag, { passive: false });
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchcancel', endDrag);
   },
   
   /**
@@ -7629,7 +7836,7 @@ const UpdateUI = {
     // Support multi-line messages
     const formattedMessage = message.replace(/\n/g, '<br>');
     
-    // Close button (custom, no Bootstrap)
+    // Close button (custom, no Bootstrap) - mobile-friendly
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
     closeBtn.style.cssText = `
@@ -9658,10 +9865,8 @@ function checkOverlap(day, startHour, endHour, excludeBlockId = null) {
 
 // Setup drag functionality to move blocks between days
 function setupBlockDrag(block, blockId, currentDay) {
-  // Add right-click context menu to change day
-  block.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    
+  // Function to change day (used by both context menu and long-press)
+  const changeDay = () => {
     const newDay = prompt(
       `Change day for this block?\n\nCurrent: ${currentDay.toUpperCase()}\n\nEnter new day (mon, tue, wed, thu, fri, sat, sun):`,
       currentDay
@@ -9719,7 +9924,81 @@ function setupBlockDrag(block, blockId, currentDay) {
       console.log(`✅ Moved block to ${day}: ${formatHour(start)} - ${formatHour(end)} at ${newTop}px`);
       UpdateUI.showSuccess(`Moved to ${day.toUpperCase()}`);
     }
+  };
+  
+  // Add right-click context menu (desktop)
+  block.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    changeDay();
   });
+  
+  // Add long-press support for mobile (touch devices)
+  let longPressTimer = null;
+  let hasLongPressed = false;
+  
+  block.addEventListener('touchstart', function(e) {
+    hasLongPressed = false;
+    longPressTimer = setTimeout(() => {
+      hasLongPressed = true;
+      e.preventDefault();
+      // Visual feedback
+      block.style.opacity = '0.7';
+      setTimeout(() => {
+        block.style.opacity = '';
+      }, 200);
+      changeDay();
+    }, 500); // 500ms long press
+  }, { passive: true });
+  
+  block.addEventListener('touchend', function(e) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  });
+  
+  block.addEventListener('touchmove', function(e) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  });
+  
+  // Add a button to change day (visible on mobile)
+  const label = block.querySelector('.time-block-label');
+  if (label) {
+    const changeDayBtn = document.createElement('button');
+    changeDayBtn.innerHTML = '↔';
+    changeDayBtn.title = 'Change day (or long-press block)';
+    changeDayBtn.style.cssText = `
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 44px;
+      height: 44px;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      min-width: 44px;
+      min-height: 44px;
+      touch-action: manipulation;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    `;
+    changeDayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      changeDay();
+    });
+    block.style.position = 'relative';
+    block.appendChild(changeDayBtn);
+  }
 }
 
 // Setup resize functionality for a time block (mouse + touch support)
