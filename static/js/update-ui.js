@@ -381,14 +381,45 @@ const UpdateUI = {
   /**
    * Load categories from Hugo's generated JSON API files
    * Hugo generates JSON files for each category section at /{category-name}/index.json
+   * Now also includes all categories even if they have no items
    */
   async loadCategories() {
     console.log('🔍 Loading categories from Hugo JSON API...');
     
-    // Discover categories from menu items, extracting folder paths from categoryUrl
+    // First, try to fetch all categories from the API endpoint (includes categories with no items)
+    let allCategoryNames = new Set();
+    const apiCategoryData = new Map(); // Store API category data as fallback
+    try {
+      const apiUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.categories}`;
+      console.log(`  📡 Attempting to fetch all categories from API: ${apiUrl}`);
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.categories && Array.isArray(data.categories)) {
+          data.categories.forEach(cat => {
+            allCategoryNames.add(cat.name);
+            // Store API data as fallback (will be used if Hugo JSON not found)
+            apiCategoryData.set(cat.name, {
+              icon: cat.icon || null,
+              weight: cat.weight || 999,
+              item_count: cat.item_count || 0
+            });
+            console.log(`  ✅ Found category from API: ${cat.name} (${cat.item_count || 0} items)`);
+          });
+          console.log(`  📊 API returned ${allCategoryNames.size} categories (including empty ones)`);
+        }
+      }
+    } catch (error) {
+      console.log(`  ⚠️ API fetch failed, will discover from menu items and Hugo files:`, error.message);
+    }
+    
+    // Also discover categories from menu items (for backward compatibility and folder path extraction)
     const categoryMap = new Map();
     this.state.menuItems.forEach(item => {
       if (item.category && !categoryMap.has(item.category)) {
+        // Add to our set of all categories
+        allCategoryNames.add(item.category);
+        
         // Try to extract folder path from categoryUrl if available
         let folderPath = null;
         if (item.categoryUrl) {
@@ -403,8 +434,8 @@ const UpdateUI = {
       }
     });
     
-    const categoryNames = Array.from(categoryMap.keys());
-    console.log(`Found ${categoryNames.length} categories from menu items:`, categoryNames);
+    const categoryNames = Array.from(allCategoryNames);
+    console.log(`Found ${categoryNames.length} total categories (including empty ones):`, categoryNames);
     
     // Fetch each category's JSON file from Hugo's generated API
     const categoryPromises = categoryNames.map(async (name) => {
@@ -494,7 +525,19 @@ const UpdateUI = {
         }
       }
       
-      // Fallback if no JSON found
+      // Fallback if no JSON found - try to use API data if available
+      const apiData = apiCategoryData.get(name);
+      if (apiData) {
+        console.warn(`  ⚠️ No Hugo JSON found for "${name}", using API data as fallback`);
+        return {
+          name: name,
+          normalizedName: name,
+          icon: apiData.icon,
+          weight: apiData.weight,
+        };
+      }
+      
+      // Final fallback - use defaults
       console.warn(`  ⚠️ No JSON found for "${name}" (tried: ${possiblePaths.join(', ')}), using defaults`);
       return {
         name: name,
@@ -2840,15 +2883,9 @@ const UpdateUI = {
       return;
     }
 
+    // Don't return early if no menu items - still show all categories (even empty ones)
     if (this.state.menuItems.length === 0) {
-      console.log('No menu items to display');
-      container.innerHTML = `
-        <div style="text-align: center; padding: 3rem; color: #6b7280;">
-          <p style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">No menu items found</p>
-            <p style="font-size: 0.875rem;">Add your first menu item to get started</p>
-        </div>
-      `;
-      return;
+      console.log('No menu items to display, but will still show all categories');
     }
 
     console.log('Grouping items by category...');
@@ -2868,52 +2905,52 @@ const UpdateUI = {
       return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     };
 
-    // Get category order (from category _index.md files, loaded via loadCategories)
-    // Match categories from API with item categories using normalized names
-    let categoryOrder = Object.keys(itemsByCategory).map((itemCategoryName, index) => {
-      // Find matching category from API by comparing normalized names
-      const apiCategory = this.state.categories.find(cat => {
-        // Try exact match first
-        if (cat.normalizedName === itemCategoryName || cat.name === itemCategoryName) {
-          return true;
-        }
-        // Try normalized comparison
-        const normalizedApi = normalizeCategoryName(cat.normalizedName || cat.name);
-        const normalizedItem = normalizeCategoryName(itemCategoryName);
-        return normalizedApi === normalizedItem;
+    // Build category order from ALL categories in this.state.categories (not just those with items)
+    // This ensures categories with no items are still shown
+    let categoryOrder = [];
+    
+    if (this.state.categories && this.state.categories.length > 0) {
+      // Use all categories from this.state.categories
+      categoryOrder = this.state.categories.map(cat => {
+        // Find items for this category by matching normalized names
+        const normalizedCategory = normalizeCategoryName(cat.normalizedName || cat.name);
+        const matchingItemCategory = Object.keys(itemsByCategory).find(itemCat => {
+          const normalizedItemCat = normalizeCategoryName(itemCat);
+          return normalizedItemCat === normalizedCategory || itemCat === (cat.normalizedName || cat.name);
+        });
+        
+        return {
+          name: cat.name, // Use display name from category
+          normalizedName: matchingItemCategory || cat.normalizedName || cat.name, // Use item category name if found for matching items
+          icon: cat.icon || null,
+          weight: cat.weight ?? 999,
+        };
       });
-      
-      return {
-        name: apiCategory?.name || itemCategoryName, // Use display name if available
-        normalizedName: itemCategoryName, // Keep original item category name for matching
-        icon: apiCategory?.icon || null,
-        weight: apiCategory?.weight ?? 999,
-      };
-    });
-
-    // If no categories defined, auto-discover from items
-    if (categoryOrder.length === 0) {
-      console.log('No categories loaded, discovering from items...');
-      const uniqueCategories = [...new Set(this.state.menuItems.map(item => item.category))];
+      console.log(`📋 Building category order from ${categoryOrder.length} loaded categories (including empty ones)`);
+    } else {
+      // Fallback: discover from items (old behavior)
+      console.log('⚠️ No categories loaded from API, discovering from items only...');
+      const uniqueCategories = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
       categoryOrder = uniqueCategories.map((name, index) => ({
         name: name,
+        normalizedName: name,
         icon: null,
         weight: index,
       }));
-      console.log('Auto-discovered', categoryOrder.length, 'categories');
+      console.log('Auto-discovered', categoryOrder.length, 'categories from items');
     }
 
     // Sort categories by weight
     categoryOrder.sort((a, b) => a.weight - b.weight);
     
     console.log('📊 Category order after sorting:', categoryOrder.map(c => `${c.name} (weight: ${c.weight})`).join(', '));
-    console.log('Rendering', categoryOrder.length, 'categories with items');
+    console.log(`Rendering ${categoryOrder.length} categories (including empty ones)`);
 
     // Build HTML for each category with its items
     const categoryHTML = [];
     
     categoryOrder.forEach((category, categoryIndex) => {
-      // Use normalized name to find items
+      // Use normalized name to find items (will be empty array if no items)
       const items = itemsByCategory[category.normalizedName] || [];
       
       console.log(`Category "${category.name}" (normalized: "${category.normalizedName}"): ${items.length} items, icon: ${category.icon || 'NONE'}`);
@@ -2932,6 +2969,8 @@ const UpdateUI = {
 
       // Check if category is collapsed (from localStorage)
       const isCollapsed = this.isCategoryCollapsed(category.name);
+      
+      // Show category even if it has no items (this is the key change)
 
       const html = `
         <div class="category-section" data-category="${this.escapeHtml(category.name)}">
