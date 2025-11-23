@@ -3948,6 +3948,13 @@ const UpdateUI = {
     // Validate and fix weight conflicts
     newWeight = this.validateAndFixCategoryWeight(categoryName, newWeight);
     
+    // Ensure weight is an integer
+    newWeight = parseInt(newWeight, 10);
+    if (isNaN(newWeight)) {
+      console.error(`Invalid weight value for "${categoryName}": ${newWeight}`);
+      newWeight = 0;
+    }
+    
     // Load existing category data
     const categoryPath = categoryName.toLowerCase();
     const possiblePaths = [
@@ -3974,7 +3981,7 @@ const UpdateUI = {
             title: data.title || categoryName,
             icon: data.icon || '',
             image: data.image || '',
-            weight: newWeight, // Update weight
+            weight: newWeight, // Update weight (ensure it's the new value)
             slidein: data.slidein || {},
             body: data.body || ''
           };
@@ -3985,11 +3992,11 @@ const UpdateUI = {
       }
     }
     
-    // Save to draft
+    // Save to draft - ensure weight is explicitly set as integer
     const categoryData = {
       frontmatter: {
         title: existingData.title,
-        weight: newWeight,
+        weight: newWeight, // Explicitly use the validated integer weight
         icon: existingData.icon,
         image: existingData.image,
       },
@@ -4004,7 +4011,14 @@ const UpdateUI = {
     localStorage.setItem(draftKey, JSON.stringify(categoryData));
     this.markPendingChanges();
     
-    console.log(`✅ Saved weight ${newWeight} for "${categoryName}"`);
+    // Also update the in-memory category weight to keep UI in sync
+    const category = this.state.categories.find(c => c.name === categoryName);
+    if (category) {
+      category.weight = newWeight;
+    }
+    
+    console.log(`✅ Saved weight ${newWeight} (type: ${typeof newWeight}) for "${categoryName}"`);
+    console.log(`📦 Draft data:`, JSON.stringify(categoryData, null, 2));
   },
 
   /**
@@ -5935,16 +5949,20 @@ const UpdateUI = {
         
         try {
           // Prepare data for API
+          // Ensure weight is an integer when publishing
+          const weight = parseInt(categoryData.frontmatter?.weight, 10) || 0;
+          
           const landingData = {
             title: categoryName,
-            weight: categoryData.frontmatter?.weight || 0,
+            weight: weight, // Explicitly use parsed integer
             icon: categoryData.frontmatter?.icon || '',
             image: categoryData.frontmatter?.image || '',
             slidein: categoryData.frontmatter?.slidein || null,
             body: categoryData.body || ''
           };
           
-          console.log(`📂 Publishing category "${categoryName}" with data:`, JSON.stringify(landingData, null, 2));
+          console.log(`📂 Publishing category "${categoryName}" with weight: ${weight} (type: ${typeof weight})`);
+          console.log(`📂 Full data:`, JSON.stringify(landingData, null, 2));
           
           const response = await UpdateUI.authenticatedFetch(
             `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&sessionId=${sessionId}`,
