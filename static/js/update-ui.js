@@ -13178,6 +13178,41 @@ const HomePageManager = {
     return draft ? JSON.parse(draft) : null;
   },
 
+  // Helper function to remove empty values from nested objects
+  removeEmptyValues(obj) {
+    if (obj === null || obj === undefined) {
+      return undefined;
+    }
+    
+    if (typeof obj !== 'object') {
+      return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeEmptyValues(item)).filter(item => item !== undefined);
+    }
+    
+    const cleaned = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === null || value === undefined || value === '') {
+        continue; // Skip empty values
+      }
+      
+      if (typeof value === 'object') {
+        const cleanedValue = this.removeEmptyValues(value);
+        // Only include if the cleaned object is not empty
+        if (cleanedValue !== undefined && 
+            (typeof cleanedValue !== 'object' || Object.keys(cleanedValue).length > 0)) {
+          cleaned[key] = cleanedValue;
+        }
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  },
+
   async publishDraft(sessionID = null) {
     try {
       const draft = this.getDraft();
@@ -13214,18 +13249,24 @@ const HomePageManager = {
         throw new Error(`Homepage save failed: ${errorData.error || homepageResponse.statusText}`);
       }
 
-      // Save config
-      const configResponse = await UpdateUI.authenticatedFetch(configUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(draft.config)
-      });
+      // Clean config to remove empty values before sending
+      // This prevents empty strings from overwriting existing config values
+      const cleanedConfig = this.removeEmptyValues(draft.config) || {};
+      
+      // Save config (only if there's actual data to save)
+      if (Object.keys(cleanedConfig).length > 0) {
+        const configResponse = await UpdateUI.authenticatedFetch(configUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cleanedConfig)
+        });
 
-      if (!configResponse.ok) {
-        const errorData = await configResponse.json().catch(() => ({}));
-        throw new Error(`Config save failed: ${errorData.error || configResponse.statusText}`);
+        if (!configResponse.ok) {
+          const errorData = await configResponse.json().catch(() => ({}));
+          throw new Error(`Config save failed: ${errorData.error || configResponse.statusText}`);
+        }
       }
 
       // In batch mode, don't clear draft or reload yet
@@ -13284,18 +13325,35 @@ function saveHomePageSettings() {
 
 async function saveManifestSettings() {
   try {
+    // Helper function to safely get element value with fallback
+    const getValue = (id, fallbackId = null) => {
+      const element = document.getElementById(id);
+      if (element && element.value) {
+        return element.value;
+      }
+      if (fallbackId) {
+        const fallbackElement = document.getElementById(fallbackId);
+        if (fallbackElement && fallbackElement.value) {
+          return fallbackElement.value;
+        }
+      }
+      return '';
+    };
+
     // Collect manifest settings (preserve icons and screenshots)
+    // Handle both old form (manifestThemeColor, manifestBackgroundColor) 
+    // and new form (manifestThemeColorText, manifestBgColorText)
     const manifestData = {
-      name: document.getElementById('manifestName').value,
-      short_name: document.getElementById('manifestShortName').value,
-      description: document.getElementById('manifestDescription').value,
-      theme_color: document.getElementById('manifestThemeColorText').value,
-      background_color: document.getElementById('manifestBgColorText').value,
-      start_url: document.getElementById('manifestStartUrl').value,
-      display: document.getElementById('manifestDisplay').value,
-      orientation: document.getElementById('manifestOrientation').value,
-      icons: HomePageManager.manifestSettings.icons || [],
-      screenshots: HomePageManager.manifestSettings.screenshots || []
+      name: getValue('manifestName'),
+      short_name: getValue('manifestShortName'),
+      description: getValue('manifestDescription'),
+      theme_color: getValue('manifestThemeColorText', 'manifestThemeColor'),
+      background_color: getValue('manifestBgColorText', 'manifestBackgroundColor'),
+      start_url: getValue('manifestStartUrl'),
+      display: getValue('manifestDisplay'),
+      orientation: getValue('manifestOrientation'),
+      icons: (HomePageManager && HomePageManager.manifestSettings && HomePageManager.manifestSettings.icons) || [],
+      screenshots: (HomePageManager && HomePageManager.manifestSettings && HomePageManager.manifestSettings.screenshots) || []
     };
 
     // Save manifest
@@ -13307,15 +13365,20 @@ async function saveManifestSettings() {
       body: JSON.stringify(manifestData)
     });
 
-    if (manifestResponse.ok) {
-      UpdateUI.showSuccess('PWA manifest saved successfully!');
+    if (!manifestResponse.ok) {
+      const errorData = await manifestResponse.json().catch(() => ({}));
+      const errorMessage = errorData.error || manifestResponse.statusText || 'Unknown error';
+      throw new Error(`Failed to save manifest: ${errorMessage}`);
+    }
+
+    UpdateUI.showSuccess('PWA manifest saved successfully!');
+    if (HomePageManager && HomePageManager.loadManifestSettings) {
       await HomePageManager.loadManifestSettings();
-    } else {
-      throw new Error('Failed to save manifest');
     }
   } catch (error) {
     console.error('Error saving manifest:', error);
     UpdateUI.showError('Failed to save manifest: ' + error.message);
+    throw error; // Re-throw for debugging
   }
 }
 
