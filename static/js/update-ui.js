@@ -6587,8 +6587,13 @@ const UpdateUI = {
       return;
     }
 
+    // Track build start time for progress calculation
+    const buildStartTime = Date.now();
+    const estimatedBuildTime = 120000; // 2 minutes average build time (in milliseconds)
+    let buildCreatedAt = null;
+
     // Show initial building indicator
-    this.showNetlifyStatus('building', 'Checking build status...');
+    this.showNetlifyStatus('building', 'Checking build status...', null, 0);
 
     // Poll for the latest build
     let attempts = 0;
@@ -6604,42 +6609,76 @@ const UpdateUI = {
         if (!build) {
           // No build found yet, keep polling
           if (attempts < maxAttempts) {
+            // Calculate progress based on elapsed time since monitoring started
+            const elapsed = Date.now() - buildStartTime;
+            const progress = Math.min(95, Math.floor((elapsed / estimatedBuildTime) * 100));
+            this.showNetlifyStatus('building', 'Waiting for build to start...', null, progress);
             setTimeout(pollBuildStatus, pollInterval);
           } else {
-            this.showNetlifyStatus('unknown', 'Build status unavailable');
+            this.showNetlifyStatus('unknown', 'Build status unavailable', null, 0);
           }
           return;
+        }
+
+        // Track when build actually started
+        if (!buildCreatedAt && build.created_at) {
+          buildCreatedAt = new Date(build.created_at).getTime();
         }
 
         const state = build.state;
         console.log(`🔍 Netlify build status: ${state} (attempt ${attempts})`);
 
         if (state === 'building' || state === 'enqueued' || state === 'preparing') {
+          // Calculate progress based on elapsed time
+          let progress = 0;
+          if (buildCreatedAt) {
+            const elapsed = Date.now() - buildCreatedAt;
+            // Estimate: enqueued/preparing = 0-20%, building = 20-95%
+            if (state === 'enqueued' || state === 'preparing') {
+              progress = Math.min(20, Math.floor((elapsed / 30000) * 20)); // First 30 seconds
+            } else {
+              // Building phase: 20% to 95%
+              const buildElapsed = Math.max(0, elapsed - 30000); // After first 30 seconds
+              const buildDuration = estimatedBuildTime - 30000;
+              progress = Math.min(95, 20 + Math.floor((buildElapsed / buildDuration) * 75));
+            }
+          } else {
+            // Fallback: estimate based on monitoring time
+            const elapsed = Date.now() - buildStartTime;
+            progress = Math.min(95, Math.floor((elapsed / estimatedBuildTime) * 100));
+          }
+
           // Still building, continue polling
-          this.showNetlifyStatus('building', `Building... (${build.name || 'Deploy'})`);
+          const buildName = build.name || 'Deploy';
+          const elapsedSeconds = Math.floor((Date.now() - (buildCreatedAt || buildStartTime)) / 1000);
+          this.showNetlifyStatus('building', `${buildName}... (${elapsedSeconds}s)`, null, progress);
+          
           if (attempts < maxAttempts) {
             setTimeout(pollBuildStatus, pollInterval);
           } else {
-            this.showNetlifyStatus('timeout', 'Build is taking longer than expected');
+            this.showNetlifyStatus('timeout', 'Build is taking longer than expected', null, 95);
           }
         } else if (state === 'ready') {
           // Build succeeded
           const deployUrl = build.deploy_url || build.deploy_ssl_url || '';
-          this.showNetlifyStatus('success', 'Site deployed successfully!', deployUrl);
+          this.showNetlifyStatus('success', 'Site deployed successfully!', deployUrl, 100);
         } else if (state === 'error' || state === 'failed') {
           // Build failed
           const errorMessage = build.error_message || 'Build failed';
-          this.showNetlifyStatus('failed', `Build failed: ${errorMessage}`);
+          this.showNetlifyStatus('failed', `Build failed: ${errorMessage}`, null, 0);
         } else {
           // Unknown state
-          this.showNetlifyStatus('unknown', `Build status: ${state}`);
+          this.showNetlifyStatus('unknown', `Build status: ${state}`, null, 0);
         }
       } catch (error) {
         console.error('Error checking Netlify build status:', error);
         if (attempts < maxAttempts) {
+          const elapsed = Date.now() - buildStartTime;
+          const progress = Math.min(95, Math.floor((elapsed / estimatedBuildTime) * 100));
+          this.showNetlifyStatus('building', 'Checking build status...', null, progress);
           setTimeout(pollBuildStatus, pollInterval);
         } else {
-          this.showNetlifyStatus('error', 'Unable to check build status');
+          this.showNetlifyStatus('error', 'Unable to check build status', null, 0);
         }
       }
     };
@@ -6679,9 +6718,9 @@ const UpdateUI = {
   },
 
   /**
-   * Show Netlify build status indicator
+   * Show Netlify build status indicator with progress bar
    */
-  showNetlifyStatus(status, message, deployUrl = null) {
+  showNetlifyStatus(status, message, deployUrl = null, progress = 0) {
     // Remove existing indicator
     const existing = document.getElementById('netlify-status-indicator');
     if (existing) {
@@ -6695,42 +6734,48 @@ const UpdateUI = {
         border: '#ffecb5',
         text: '#664d03',
         icon: '⏳',
-        label: 'Building'
+        label: 'Building',
+        progressColor: '#ffc107'
       },
       success: {
         bg: '#d1e7dd',
         border: '#badbcc',
         text: '#0f5132',
         icon: '✅',
-        label: 'Deployed'
+        label: 'Deployed',
+        progressColor: '#198754'
       },
       failed: {
         bg: '#f8d7da',
         border: '#f5c2c7',
         text: '#842029',
         icon: '❌',
-        label: 'Failed'
+        label: 'Failed',
+        progressColor: '#dc3545'
       },
       timeout: {
         bg: '#fff3cd',
         border: '#ffecb5',
         text: '#664d03',
         icon: '⏱️',
-        label: 'Timeout'
+        label: 'Timeout',
+        progressColor: '#ffc107'
       },
       unknown: {
         bg: '#cff4fc',
         border: '#b6effb',
         text: '#055160',
         icon: '❓',
-        label: 'Unknown'
+        label: 'Unknown',
+        progressColor: '#0dcaf0'
       },
       error: {
         bg: '#f8d7da',
         border: '#f5c2c7',
         text: '#842029',
         icon: '⚠️',
-        label: 'Error'
+        label: 'Error',
+        progressColor: '#dc3545'
       }
     };
 
@@ -6809,9 +6854,78 @@ const UpdateUI = {
       statusContent = `<div>${config.icon} <strong>${config.label}</strong></div>`;
     }
 
+    // Build progress bar HTML
+    let progressBarHtml = '';
+    if (status === 'building' || status === 'timeout') {
+      progressBarHtml = `
+        <div style="margin-top: 10px;">
+          <div style="
+            width: 100%;
+            height: 8px;
+            background-color: ${config.border};
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+          ">
+            <div id="netlify-progress-bar" style="
+              width: ${progress}%;
+              height: 100%;
+              background: linear-gradient(90deg, ${config.progressColor}, ${config.progressColor}dd);
+              border-radius: 4px;
+              transition: width 0.5s ease-out;
+              position: relative;
+              overflow: hidden;
+            ">
+              <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                  90deg,
+                  transparent,
+                  rgba(255,255,255,0.3),
+                  transparent
+                );
+                animation: shimmer 2s infinite;
+              "></div>
+            </div>
+          </div>
+          <div style="
+            margin-top: 4px;
+            font-size: 11px;
+            opacity: 0.8;
+            text-align: right;
+          ">${progress}%</div>
+        </div>
+      `;
+    } else if (status === 'success') {
+      progressBarHtml = `
+        <div style="margin-top: 10px;">
+          <div style="
+            width: 100%;
+            height: 8px;
+            background-color: ${config.border};
+            border-radius: 4px;
+            overflow: hidden;
+          ">
+            <div style="
+              width: 100%;
+              height: 100%;
+              background-color: ${config.progressColor};
+              border-radius: 4px;
+              transition: width 0.5s ease-out;
+            "></div>
+          </div>
+        </div>
+      `;
+    }
+
     indicator.innerHTML = `
       ${statusContent}
       <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">${message}</div>
+      ${progressBarHtml}
       ${deployUrl ? `<div style="margin-top: 8px;"><a href="${deployUrl}" target="_blank" style="color: ${config.text}; text-decoration: underline; display: inline-block; min-height: 44px; line-height: 44px; padding: 0 8px; touch-action: manipulation;">View Site →</a></div>` : ''}
       <button onclick="this.parentElement.remove()" style="
         position: absolute;
@@ -6832,7 +6946,7 @@ const UpdateUI = {
       " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" ontouchstart="this.style.opacity='1'" ontouchend="this.style.opacity='0.6'">&times;</button>
     `;
 
-    // Add spinner animation if not already present
+    // Add animations if not already present
     if (!document.getElementById('netlify-spinner-style')) {
       const style = document.createElement('style');
       style.id = 'netlify-spinner-style';
@@ -6848,6 +6962,14 @@ const UpdateUI = {
           to {
             transform: translateY(0);
             opacity: 1;
+          }
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
           }
         }
       `;
