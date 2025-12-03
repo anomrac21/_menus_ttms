@@ -54,6 +54,8 @@ body{
   margin: 0 auto;
   background: #f9fafb;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-header {
@@ -150,42 +152,73 @@ body{
 /* Tab Navigation */
 .tab-navigation {
   background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0px 0rem 1px;
+  border-right: 1px solid #e5e7eb;
+  padding: 1rem 0;
   display: flex;
-  overflow-x: auto;
+  flex-direction: column;
+  overflow-y: auto;
   position: sticky;
   z-index: 11;
   top: 0;
+  width: 250px;
+  min-width: 250px;
+  max-height: calc(100vh - 60px);
+  box-shadow: 2px 0 4px rgba(0,0,0,0.05);
 }
 
 .tab-btn {
-  background: #efefef;
+  background: transparent;
   border: none;
-  margin: 1px;
-  padding: 1rem;
+  margin: 0.25rem 0.5rem;
+  padding: 0.875rem 1rem;
   cursor: pointer;
-  font-size: small;
+  font-size: 0.875rem;
   font-weight: 500;
   color: #6b7280;
-  border-bottom: 2px solid transparent;
+  border-left: 3px solid transparent;
   white-space: nowrap;
   transition: all 0.3s;
+  text-align: left;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: calc(100% - 1rem);
+}
+
+.tab-btn > span:first-child {
+  flex: 1;
+  text-align: left;
 }
 
 .tab-btn:hover {
   color: #1e293b;
+  background: #f3f4f6;
 }
 
 .tab-btn.active {
   color: #fff;
-  border-bottom-color: #00ff52;
+  border-left-color: #00ff52;
   background: #1e293b;
+}
+
+.tab-btn.active:hover {
+  background: #334155;
 }
 
 .dashboard-content {
   padding: .4rem;
   margin: 0;
+  flex: 1;
+  overflow-x: hidden;
+}
+
+/* Dashboard wrapper for sidebar layout */
+.dashboard-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
 .tab-content {
@@ -1397,6 +1430,35 @@ body{
 
 /* Responsive */
 @media (max-width: 768px) {
+  .dashboard-wrapper {
+    flex-direction: column;
+  }
+  
+  .tab-navigation {
+    width: 100%;
+    min-width: 100%;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+  }
+  
+  .tab-btn {
+    margin: 0.25rem 0.5rem;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    min-width: fit-content;
+  }
+  
+  .tab-btn.active {
+    border-left: none;
+    border-bottom-color: #00ff52;
+  }
+  
   .section-header {
     flex-direction: column;
     align-items: stretch;

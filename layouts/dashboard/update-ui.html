@@ -250,24 +250,23 @@ window.hugoSiteConfig = {
     
     {{ partial "dashboard-header.html" . }}
 
-    
-    <div class="tab-navigation">
-      <button class="tab-btn active" data-tab="pending" id="pendingTabBtn">
-        <span>📋 Pending Changes</span>
-        <span id="pendingTabCount" class="pending-count-badge">0</span>
-      </button>
-      <button class="tab-btn" data-tab="homepage">🏠 Home Page</button>
-      <button class="tab-btn" data-tab="menu-items">Menu Items</button>
-      <button class="tab-btn" data-tab="advertisements">Advertisements</button>
-      <button class="tab-btn" data-tab="locations">Locations</button>
-      <button class="tab-btn" data-tab="branding">Branding</button>
-      <button class="tab-btn" data-tab="colors">Colors & Theme</button>
-      <button class="tab-btn" data-tab="config">Configuration</button>
-      <button class="tab-btn" data-tab="housekeeping">🧹 Housekeeping</button>
-    </div>
+    <div class="dashboard-wrapper">
+      <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="pending" id="pendingTabBtn">
+          <span>📋 Pending Changes</span>
+          <span id="pendingTabCount" class="pending-count-badge">0</span>
+        </button>
+        <button class="tab-btn" data-tab="homepage">🏠 Home Page</button>
+        <button class="tab-btn" data-tab="menu-items">Menu Items</button>
+        <button class="tab-btn" data-tab="advertisements">Advertisements</button>
+        <button class="tab-btn" data-tab="locations">Locations</button>
+        <button class="tab-btn" data-tab="branding">Branding</button>
+        <button class="tab-btn" data-tab="colors">Colors & Theme</button>
+        <button class="tab-btn" data-tab="config">Configuration</button>
+        <button class="tab-btn" data-tab="housekeeping">🧹 Housekeeping</button>
+      </div>
 
-    
-    <div class="dashboard-content">
+      <div class="dashboard-content">
       
       
       <!-- Pending Changes Tab -->
@@ -774,6 +773,7 @@ window.hugoSiteConfig = {
         </div>
       </div>
 
+      </div>
     </div>
   </div>
 
