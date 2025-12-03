@@ -248,6 +248,7 @@ body{
 
 .tab-content.active {
   display: block !important;
+  width: -webkit-fill-available;
 }
 
 /* Section Card */
