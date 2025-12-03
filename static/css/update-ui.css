@@ -1463,7 +1463,7 @@ body{
     flex-direction: column !important;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 0.5rem 0;
+    padding: 0;
   }
   
   .tab-btn {
