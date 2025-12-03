@@ -7320,7 +7320,18 @@ const UpdateUI = {
    * Edit menu item - opens modal with item data
    */
   editMenuItem(itemId) {
-    openMenuItemModal(itemId);
+    try {
+      if (!itemId) {
+        console.error('❌ editMenuItem called without itemId');
+        this.showError('Item ID is required');
+        return;
+      }
+      console.log(`📝 Editing menu item: ${itemId}`);
+      openMenuItemModal(itemId);
+    } catch (error) {
+      console.error('❌ Error in editMenuItem:', error);
+      this.showError(`Failed to open edit modal: ${error.message}`);
+    }
   },
 
   /**
@@ -7835,8 +7846,15 @@ function openMenuItemModal(itemId = null, categoryName = null) {
   
   if (itemId) {
     title.textContent = 'Edit Menu Item';
-    // Load item data (from state, which includes drafts)
-    const item = UpdateUI.state.menuItems.find(i => i.id === itemId);
+    // Load item data (from state first, then check drafts)
+    let item = UpdateUI.state.menuItems ? UpdateUI.state.menuItems.find(i => i.id === itemId) : null;
+    
+    // If not found in state, check drafts
+    if (!item) {
+      const drafts = UpdateUI.getDrafts();
+      item = drafts[itemId];
+    }
+    
     if (item) {
       document.getElementById('itemId').value = item.id;
       document.getElementById('itemTitle').value = item.title;
@@ -7965,6 +7983,15 @@ function openMenuItemModal(itemId = null, categoryName = null) {
           }
         });
       }
+    } else {
+      // Item not found - show error and still open modal for debugging
+      console.error(`❌ Menu item not found: ${itemId}`);
+      console.log('Available items in state:', UpdateUI.state.menuItems ? UpdateUI.state.menuItems.length : 0);
+      console.log('Available drafts:', Object.keys(UpdateUI.getDrafts()).length);
+      UpdateUI.showError(`Menu item "${itemId}" not found. Please refresh the page and try again.`);
+      // Still open modal but with empty form (user can manually enter data if needed)
+      title.textContent = 'Edit Menu Item (Not Found)';
+      document.getElementById('itemId').value = itemId;
     }
   } else {
     title.textContent = 'Add Menu Item';
