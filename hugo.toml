@@ -1,31 +1,86 @@
-baseURL = 'https://example.org/'
-languageCode = 'en-US'
-title = 'TTMenus'
+baseURL = 'https://tinytavern.ttmenus.com/'
+languageCode = 'en-tt'
+title = 'Tiny Tavern'
+theme = '_menus_ttms'
 
-[[menus.main]]
-name = 'Home'
-pageRef = '/'
-weight = 10
-
-[[menus.main]]
-name = 'Posts'
-pageRef = '/posts'
-weight = 20
-
-[[menus.main]]
-name = 'Tags'
-pageRef = '/tags'
-weight = 30
-
-[module]
-  [module.hugoVersion]
-    extended = false
-    min = "0.116.0"
+[params]
+  authServiceUrl = "https://auth.ttmenus.com"
+  contentServiceUrl = "https://content.ttmenus.com"
+  adsServiceUrl = "https://ads.ttmenus.com"
 
 # Auth Service Configuration
 [params.auth]
   enabled = true
   apiUrl = "https://auth.ttmenus.com/api/v1"
-  # For local development, use:
-  # apiUrl = "http://localhost:8080/api/v1"
 
+# Content Service Configuration (for Update UI)
+[params.content]
+  enabled = true
+  apiUrl = "https://content.ttmenus.com/api"
+  clientId = "ttms_tinytavern"
+
+# Ads Service Configuration
+[params.ads]
+  enabled = true
+  apiUrl = "https://ads.ttmenus.com/api/v1"
+  clientId = "ttms_tinytavern"
+
+[params.services]
+  onesignalid = ""
+  analyticsid = 0
+  notifications = true
+
+[params.features]
+  payments = false
+  delivery = false
+  notifications = true
+
+[params.orderingsystem]
+  vat = 0
+  servicecharge = 0
+  hastables = true
+  usephonecall = false
+  whatsapp = 1868
+  phone = 1868
+  
+# Social profiles
+[params.social]
+  facebook = ""
+  instagram = ""
+  tiktok = ""
+  youtube = ""
+  email = ""
+  phone = 1868
+  
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+    [markup.goldmark.parser]
+      attribute = true
+
+[outputs]
+  home = ["HTML", "JSON"]
+  section = ["HTML", "JSON"]
+  page = ["HTML", "JSON"]
+
+[outputFormats]
+  [outputFormats.menuitemsJSON]
+    mediaType = "application/json"
+    baseName = "menu-items"
+    isPlainText = true
+    notAlternative = true
+
+[taxonomies]
+  tag = "tags"
+  category = "categories"
+  subcategory = "subcategories"
+  type = "types"
+  event = "events"
+  ingredient ="ingredients"
+  cookingmethod ="cookingmethods"
+
+[privacy]
+  [privacy.instagram]
+    disable = false
+    simple = false

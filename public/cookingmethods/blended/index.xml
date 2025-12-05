@@ -2,45 +2,45 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Blended on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/cookingmethods/blended/</link>
+    <link>http://localhost:1313/cookingmethods/blended/</link>
     <description>Recent content in Blended on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/cookingmethods/blended/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/cookingmethods/blended/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Chocolate Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</link>
+      <link>http://localhost:1313/drinks/chocolate-milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</guid>
+      <guid>http://localhost:1313/drinks/chocolate-milkshake/</guid>
       <description>&lt;p&gt;Chocolate ice cream, milk, chocolate syrup, whipped cream, sprinkles&lt;/p&gt;</description>
     </item>
     <item>
       <title>Chocolate Oreo Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</link>
+      <link>http://localhost:1313/drinks/chocolate-oreo-milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</guid>
+      <guid>http://localhost:1313/drinks/chocolate-oreo-milkshake/</guid>
       <description>&lt;p&gt;Chocolate ice cream, milk, Oreo cookies, chocolate syrup, whipped cream, crushed Oreo bits&lt;/p&gt;</description>
     </item>
     <item>
       <title>Oreo Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</link>
+      <link>http://localhost:1313/drinks/oreo-milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</guid>
+      <guid>http://localhost:1313/drinks/oreo-milkshake/</guid>
       <description>&lt;p&gt;Vanilla ice cream, milk, Oreo cookies, whipped cream, crushed Oreo bits&lt;/p&gt;</description>
     </item>
     <item>
       <title>Piña Colada Mocktail</title>
-      <link>https://tinytavern.ttmenus.com/drinks/pina-colada-mocktail/</link>
+      <link>http://localhost:1313/drinks/pina-colada-mocktail/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/pina-colada-mocktail/</guid>
+      <guid>http://localhost:1313/drinks/pina-colada-mocktail/</guid>
       <description>&lt;p&gt;Coconut water, pineapple juice, simple syrup, blended with coconut jelly and pineapple chunks&lt;/p&gt;</description>
     </item>
     <item>
       <title>Strawberry Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/drinks/strawberry-milkshake/</link>
+      <link>http://localhost:1313/drinks/strawberry-milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/strawberry-milkshake/</guid>
+      <guid>http://localhost:1313/drinks/strawberry-milkshake/</guid>
       <description>&lt;p&gt;Strawberry ice cream, fresh strawberries, milk, whipped cream&lt;/p&gt;</description>
     </item>
   </channel>

@@ -2,122 +2,122 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Savory on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/types/savory/</link>
+    <link>http://localhost:1313/types/savory/</link>
     <description>Recent content in Savory on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/types/savory/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/types/savory/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Basic Omelette</title>
-      <link>https://tinytavern.ttmenus.com/omelettes/basic-omelette/</link>
+      <link>http://localhost:1313/omelettes/basic-omelette/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/omelettes/basic-omelette/</guid>
+      <guid>http://localhost:1313/omelettes/basic-omelette/</guid>
       <description>&lt;p&gt;Tomato, onion, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Build your Omelet (with cheese)</title>
-      <link>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</link>
+      <link>http://localhost:1313/omelettes/build-your-omelet-with-cheese/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</guid>
+      <guid>http://localhost:1313/omelettes/build-your-omelet-with-cheese/</guid>
       <description>&lt;p&gt;Mushroom, turkey bacon, sweet pepper, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Cajun Creamy Alfredo Pasta</title>
-      <link>https://tinytavern.ttmenus.com/pastas/cajun-creamy-alfredo-pasta/</link>
+      <link>http://localhost:1313/pastas/cajun-creamy-alfredo-pasta/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/pastas/cajun-creamy-alfredo-pasta/</guid>
+      <guid>http://localhost:1313/pastas/cajun-creamy-alfredo-pasta/</guid>
       <description>&lt;p&gt;Your choice of fettuccine, linguine, or penne tossed in a creamy Cajun Alfredo sauce and topped with Parmesan cheese.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Creamy Tomato Pasta</title>
-      <link>https://tinytavern.ttmenus.com/pastas/creamy-tomato-pasta/</link>
+      <link>http://localhost:1313/pastas/creamy-tomato-pasta/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/pastas/creamy-tomato-pasta/</guid>
+      <guid>http://localhost:1313/pastas/creamy-tomato-pasta/</guid>
       <description>&lt;p&gt;Your choice of fettuccine, linguine, or penne tossed in a creamy, tomato-infused sauce and topped with Parmesan cheese.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Grilled Chicken Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</link>
+      <link>http://localhost:1313/paninis/grilled-chicken-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</guid>
+      <guid>http://localhost:1313/paninis/grilled-chicken-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with tender chicken breast, sweet corn, green peppers, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Ham Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/ham-panini/</link>
+      <link>http://localhost:1313/paninis/ham-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/ham-panini/</guid>
+      <guid>http://localhost:1313/paninis/ham-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with ham, spinach, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Homemade Chicken Burger</title>
-      <link>https://tinytavern.ttmenus.com/burgers/homemade-chicken-burger/</link>
+      <link>http://localhost:1313/burgers/homemade-chicken-burger/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/burgers/homemade-chicken-burger/</guid>
+      <guid>http://localhost:1313/burgers/homemade-chicken-burger/</guid>
       <description>&lt;p&gt;This tender patty is made in-house and seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheese, pineapple, and a secret sauce&lt;/p&gt;</description>
     </item>
     <item>
       <title>Homemade Lamb Burger</title>
-      <link>https://tinytavern.ttmenus.com/burgers/homemade-lamb-burger/</link>
+      <link>http://localhost:1313/burgers/homemade-lamb-burger/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/burgers/homemade-lamb-burger/</guid>
+      <guid>http://localhost:1313/burgers/homemade-lamb-burger/</guid>
       <description>&lt;p&gt;This juicy patty is made in-house and is seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheese, pineapple, and a secret sauce.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Jalapeño Turkey Bacon Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/jalapeno-turkey-bacon-panini/</link>
+      <link>http://localhost:1313/paninis/jalapeno-turkey-bacon-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/jalapeno-turkey-bacon-panini/</guid>
+      <guid>http://localhost:1313/paninis/jalapeno-turkey-bacon-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with turkey bacon, jalapeño, spinach, mushroom, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Specialty Omelette</title>
-      <link>https://tinytavern.ttmenus.com/omelettes/specialty-omelette/</link>
+      <link>http://localhost:1313/omelettes/specialty-omelette/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/omelettes/specialty-omelette/</guid>
+      <guid>http://localhost:1313/omelettes/specialty-omelette/</guid>
       <description>&lt;p&gt;Mushroom, turkey bacon, sweet pepper, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
     </item>
     <item>
       <title>The Amazing Vegetarian Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/the-amazing-vegetarian-panini/</link>
+      <link>http://localhost:1313/paninis/the-amazing-vegetarian-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/the-amazing-vegetarian-panini/</guid>
+      <guid>http://localhost:1313/paninis/the-amazing-vegetarian-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with spinach, tomato, pineapple, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Signature Chicken Burger</title>
-      <link>https://tinytavern.ttmenus.com/burgers/tts-signature-chicken-burger/</link>
+      <link>http://localhost:1313/burgers/tts-signature-chicken-burger/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/burgers/tts-signature-chicken-burger/</guid>
+      <guid>http://localhost:1313/burgers/tts-signature-chicken-burger/</guid>
       <description>&lt;p&gt;This tender patty is made in-house and seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheddar cheese, pineapple, jalapeño, chili pepper, turkey bacon, caramelized onions, bacon jam and a secret sauce.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Signature Lamb Burger</title>
-      <link>https://tinytavern.ttmenus.com/burgers/tts-signature-lamb-burger/</link>
+      <link>http://localhost:1313/burgers/tts-signature-lamb-burger/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/burgers/tts-signature-lamb-burger/</guid>
+      <guid>http://localhost:1313/burgers/tts-signature-lamb-burger/</guid>
       <description>&lt;p&gt;This juicy patty is made in-house and is seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheese, pineapple, jalapeño, chili pepper, turkey bacon, caramelized onions, bacon jam and a secret sauce.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Simple Breakfast Platter</title>
-      <link>https://tinytavern.ttmenus.com/breakfast/tts-simple-breakfast-platter/</link>
+      <link>http://localhost:1313/breakfast/tts-simple-breakfast-platter/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/breakfast/tts-simple-breakfast-platter/</guid>
+      <guid>http://localhost:1313/breakfast/tts-simple-breakfast-platter/</guid>
       <description>&lt;p&gt;(Served with jam, compote, or whipped cream) 1 pancake of your choice, 1 waffle of your choice, 2 scrambled eggs, 2 crispy turkey bacon or sautéed sausages, and 2 slices of toast.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Supreme Breakfast Platter</title>
-      <link>https://tinytavern.ttmenus.com/breakfast/tts-supreme-breakfast-platter/</link>
+      <link>http://localhost:1313/breakfast/tts-supreme-breakfast-platter/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/breakfast/tts-supreme-breakfast-platter/</guid>
+      <guid>http://localhost:1313/breakfast/tts-supreme-breakfast-platter/</guid>
       <description>&lt;p&gt;(Served with 1-egg omelette) 1 pancake of your choice, 1 waffle of your choice, 2 omelettes of your choice (4 toppings maximum per omelette), 2 crispy turkey bacon, sautéed sausages, and 3 slices of toast.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Talked About Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/tts-talked-about-panini/</link>
+      <link>http://localhost:1313/paninis/tts-talked-about-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/tts-talked-about-panini/</guid>
+      <guid>http://localhost:1313/paninis/tts-talked-about-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with turkey bacon, jalapeño, bell pepper, pineapple, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
   </channel>

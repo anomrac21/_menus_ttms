@@ -1,6 +1,7 @@
 /**
  * TTMenus Update UI Manager
  * Loads data from Hugo files, saves drafts in localStorage, only uses API for commits
+ * Version: 2025-11-20-v2 (Branding upload fixes)
  */
 
 const UpdateUI = {
@@ -19,6 +20,16 @@ const UpdateUI = {
       manifest: '/manifest',
       colors: '/colors',
       branding: '/branding/upload',
+      images: '/images/upload',
+    }
+  },
+
+  // Netlify Configuration
+  netlifyConfig: {
+    siteId: window.NETLIFY_SITE_ID || null,
+    apiToken: window.NETLIFY_API_TOKEN || null,
+    enabled: function() {
+      return !!(this.siteId && this.apiToken);
     }
   },
 
@@ -52,7 +63,9 @@ const UpdateUI = {
    * Initialize the Update UI
    */
   async init() {
-    console.log('Initializing Update UI (Hugo + localStorage mode)...');
+    console.log('🚀 Update UI v2025-11-20-v3 initializing (Hugo + localStorage mode)...');
+    console.log('📦 Branding upload fixes: sessionId support, improved error handling, operation tracking');
+    console.log('🔍 DEBUG: If you see this, the new JavaScript has loaded!');
     
     // Inject preview button styles
     this.injectPreviewButtonStyles();
@@ -83,6 +96,9 @@ const UpdateUI = {
     
     // Setup auto-save
     this.setupAutoSave();
+    
+    // Inject mobile-friendly styles
+    this.injectMobileStyles();
     
     console.log('✅ Update UI initialized and ready!');
   },
@@ -123,6 +139,104 @@ const UpdateUI = {
       
       .preview-toggle-btn:active {
         transform: translateY(0);
+      }
+      
+      /* Mobile-friendly styles */
+      @media (max-width: 768px) {
+        .preview-toggle-btn {
+          bottom: 80px !important;
+          right: 16px !important;
+          padding: 10px 18px !important;
+          font-size: 0.875rem !important;
+          min-width: 44px !important;
+          min-height: 44px !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .preview-toggle-btn {
+          bottom: 70px !important;
+          right: 12px !important;
+          padding: 8px 14px !important;
+          font-size: 0.75rem !important;
+        }
+      }
+      
+      /* Ensure modals are mobile-friendly */
+      @media (max-width: 768px) {
+        .modal {
+          padding: 10px !important;
+        }
+        .modal-content {
+          max-width: 95vw !important;
+          max-height: 95vh !important;
+          margin: 0 !important;
+        }
+        .modal-header h3 {
+          font-size: clamp(16px, 4vw, 20px) !important;
+        }
+        .modal-body {
+          padding: clamp(0.5rem, 2vw, 1rem) !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  },
+
+  /**
+   * Inject comprehensive mobile-friendly styles
+   */
+  injectMobileStyles() {
+    if (document.getElementById('mobile-friendly-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'mobile-friendly-styles';
+    style.textContent = `
+      /* Mobile-friendly global styles - minimal, non-intrusive */
+      @media (max-width: 768px) {
+        /* Only add touch-action to buttons, don't force sizes */
+        button, .btn {
+          touch-action: manipulation;
+        }
+        
+        /* Form inputs should be larger on mobile to prevent zoom */
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="url"],
+        input[type="tel"],
+        textarea,
+        select {
+          font-size: 16px; /* Prevents zoom on iOS */
+        }
+        
+        /* Tables should scroll horizontally */
+        table {
+          display: block;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Tabs should be scrollable */
+        .tabs,
+        .tab-nav {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .tabs::-webkit-scrollbar,
+        .tab-nav::-webkit-scrollbar {
+          display: none;
+        }
+      }
+      
+      /* Drag and drop visual feedback */
+      .menu-item-card.drag-over {
+        border: 2px dashed #3b82f6;
+        background-color: rgba(59, 130, 246, 0.1);
+        transform: scale(1.02);
+        transition: all 0.2s ease;
       }
     `;
     document.head.appendChild(style);
@@ -265,45 +379,169 @@ const UpdateUI = {
   },
 
   /**
-   * Load categories from category _index.md files
+   * Load categories from Hugo's generated JSON API files
+   * Hugo generates JSON files for each category section at /{category-name}/index.json
+   * Now also includes all categories even if they have no items
    */
   async loadCategories() {
-    console.log('🔍 Loading categories from category pages...');
+    console.log('🔍 Loading categories from Hugo JSON API...');
     
-    // Discover categories from menu items first
-    const categoryNames = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
+    // First, try to fetch all categories from the API endpoint (includes categories with no items)
+    let allCategoryNames = new Set();
+    const apiCategoryData = new Map(); // Store API category data as fallback
+    try {
+      const apiUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.categories}`;
+      console.log(`  📡 Attempting to fetch all categories from API: ${apiUrl}`);
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.categories && Array.isArray(data.categories)) {
+          data.categories.forEach(cat => {
+            allCategoryNames.add(cat.name);
+            // Store API data as fallback (will be used if Hugo JSON not found)
+            apiCategoryData.set(cat.name, {
+              icon: cat.icon || null,
+              weight: cat.weight || 999,
+              item_count: cat.item_count || 0
+            });
+            console.log(`  ✅ Found category from API: ${cat.name} (${cat.item_count || 0} items)`);
+          });
+          console.log(`  📊 API returned ${allCategoryNames.size} categories (including empty ones)`);
+        }
+      }
+    } catch (error) {
+      console.log(`  ⚠️ API fetch failed, will discover from menu items and Hugo files:`, error.message);
+    }
     
-    console.log(`Found ${categoryNames.length} categories from menu items:`, categoryNames);
+    // Also discover categories from menu items (for backward compatibility and folder path extraction)
+    const categoryMap = new Map();
+    this.state.menuItems.forEach(item => {
+      if (item.category && !categoryMap.has(item.category)) {
+        // Add to our set of all categories
+        allCategoryNames.add(item.category);
+        
+        // Try to extract folder path from categoryUrl if available
+        let folderPath = null;
+        if (item.categoryUrl) {
+          // Extract path from URL like "/fuze-bowls/" -> "fuze-bowls"
+          const match = item.categoryUrl.match(/\/([^\/]+)\/?$/);
+          if (match) {
+            folderPath = match[1];
+            console.log(`  📂 Found folder path for "${item.category}": ${folderPath} from URL: ${item.categoryUrl}`);
+          }
+        }
+        categoryMap.set(item.category, folderPath);
+      }
+    });
     
-    // Fetch each category's JSON to get icon, weight, etc.
+    const categoryNames = Array.from(allCategoryNames);
+    console.log(`Found ${categoryNames.length} total categories (including empty ones):`, categoryNames);
+    
+    // Fetch each category's JSON file from Hugo's generated API
     const categoryPromises = categoryNames.map(async (name) => {
-      const categoryPath = name.toLowerCase();
+      // Get folder path from categoryUrl if available, otherwise normalize the name
+      let folderPath = categoryMap.get(name);
+      
+      if (!folderPath) {
+        // Normalize category name for URL (lowercase, spaces to hyphens, remove special chars)
+        // This matches how Hugo creates folder names (normalized)
+        folderPath = name.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        console.log(`  🔄 Normalized "${name}" to folder path: "${folderPath}"`);
+      }
+      
+      // Try multiple possible paths for the JSON file
+      // Hugo generates JSON files at various paths depending on configuration
       const possiblePaths = [
-        `/${categoryPath}/index.json`,
-        `/api/${categoryPath}/index.json`
+        `/${folderPath}/index.json`,  // Direct path (most common)
+        `/${folderPath}.json`,  // Alternative: folder name as JSON file
+        `/api/${folderPath}/index.json`,  // API path variant
+        `/api/${folderPath}.json`,  // API path with JSON extension
+        `/${folderPath}/`,  // Try directory listing (might redirect)
       ];
+      
+      console.log(`  🔍 Looking for category "${name}" (folder: "${folderPath}")`);
       
       for (const path of possiblePaths) {
         try {
+          console.log(`  📡 Trying: ${path}`);
           const response = await fetch(path);
+          
           if (response.ok) {
+            const contentType = response.headers.get('content-type') || '';
+            // Only process if it's JSON
+            if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
+              console.log(`  ⚠️ ${path} is not JSON (content-type: ${contentType}), skipping`);
+              continue;
+            }
+            
             const data = await response.json();
-            console.log(`  ✅ Loaded ${name}:`, { icon: data.icon, weight: data.weight });
+            console.log(`  ✅ Loaded ${name} from ${path}:`, { 
+              title: data.title, 
+              icon: data.icon, 
+              weight: data.weight,
+              hasIcon: !!data.icon,
+              iconType: typeof data.icon,
+              iconValue: data.icon,
+              iconLength: data.icon ? data.icon.length : 0
+            });
+            
+            // Ensure icon is properly extracted (handle empty strings, null, undefined)
+            let iconValue = data.icon || null;
+            if (iconValue !== null) {
+              if (typeof iconValue === 'string') {
+                iconValue = iconValue.trim();
+                if (iconValue === '') {
+                  console.warn(`  ⚠️ Empty icon string for ${name}, setting to null`);
+                  iconValue = null;
+                }
+              } else {
+                console.warn(`  ⚠️ Icon for ${name} is not a string (type: ${typeof iconValue}), setting to null`);
+                iconValue = null;
+              }
+            }
+            
+            // Ensure weight is an integer
+            let weight = parseInt(data.weight, 10);
+            if (isNaN(weight)) {
+              console.warn(`⚠️ Invalid weight for "${name}": ${data.weight}, defaulting to 999`);
+              weight = 999;
+            }
+            
             return {
-              name: data.title || name,
-              icon: data.icon || null,
-              weight: parseInt(data.weight) || 0,
+              name: data.title || name, // Display name from JSON
+              normalizedName: name, // Keep original name for matching with items
+              icon: iconValue, // Use icon from JSON (could be URL or null)
+              weight: weight, // Explicitly parsed integer
             };
+          } else {
+            console.log(`  ❌ ${path} returned status ${response.status}`);
           }
         } catch (error) {
-          console.log(`  Failed to load ${path}:`, error.message);
+          console.log(`  ❌ Error loading ${path}:`, error.message);
         }
       }
       
-      // Fallback if no JSON found
-      console.warn(`  ⚠️ No JSON found for ${name}, using defaults`);
+      // Fallback if no JSON found - try to use API data if available
+      const apiData = apiCategoryData.get(name);
+      if (apiData) {
+        console.warn(`  ⚠️ No Hugo JSON found for "${name}", using API data as fallback`);
+        return {
+          name: name,
+          normalizedName: name,
+          icon: apiData.icon,
+          weight: apiData.weight,
+        };
+      }
+      
+      // Final fallback - use defaults
+      console.warn(`  ⚠️ No JSON found for "${name}" (tried: ${possiblePaths.join(', ')}), using defaults`);
       return {
         name: name,
+        normalizedName: name,
         icon: null,
         weight: 999,
       };
@@ -453,6 +691,7 @@ const UpdateUI = {
             title: item.name,
             description: description,
             category: item.category,
+            categoryUrl: item.categoryUrl || null, // Preserve category URL for folder path extraction
             price: price,
             size: item.sizes && item.sizes.length > 0 ? item.sizes[0] : '-',
             flavour: item.flavours && item.flavours.length > 0 ? item.flavours[0] : '-',
@@ -494,10 +733,11 @@ const UpdateUI = {
         // Merge with draft changes from localStorage
         this.mergeDraftItems();
         
-        console.log('✅ Menu items loaded. Categories will load next with icons.');
+        console.log('✅ Menu items loaded. Loading categories with icons...');
         
-        // Don't render yet - wait for categories to load with icons
-        // renderMenuByCategory() will be called by loadCategories()
+        // Always reload categories after menu items to ensure icons are up-to-date
+        // loadCategories() will call renderMenuByCategory() when done
+        await this.loadCategories();
       } else {
         throw new Error('Failed to load menu-items.json');
       }
@@ -713,9 +953,14 @@ const UpdateUI = {
     const discardBranding = document.getElementById('discardBranding');
     const publishBranding = document.getElementById('publishBranding');
     if (discardBranding || publishBranding) {
-      const hasDraftBranding = localStorage.getItem(this.storageKeys.draftBranding) !== null;
+      const drafts = this.getBrandingDrafts();
+      const hasDraftBranding = Object.keys(drafts).length > 0;
+      console.log('🔍 Branding button visibility check:', { hasDraftBranding, draftCount: Object.keys(drafts).length, drafts: Object.keys(drafts) });
       if (discardBranding) discardBranding.style.display = hasDraftBranding ? 'inline-block' : 'none';
-      if (publishBranding) publishBranding.style.display = hasDraftBranding ? 'inline-block' : 'none';
+      if (publishBranding) {
+        publishBranding.style.display = hasDraftBranding ? 'inline-block' : 'none';
+        console.log('🔘 Publish branding button display:', publishBranding.style.display, 'hasDraft:', hasDraftBranding);
+      }
     }
     
     // Manifest
@@ -925,11 +1170,18 @@ const UpdateUI = {
         const existingIndex = this.state.advertisements.findIndex(a => a.id === draft.id);
         
         if (existingIndex >= 0) {
-          // Update existing ad with draft changes
-          this.state.advertisements[existingIndex] = { ...draft, _isDraft: true };
+          // Update existing ad with draft changes, preserving all draft flags including _isDeleted
+          const existingAd = this.state.advertisements[existingIndex];
+          this.state.advertisements[existingIndex] = { 
+            ...existingAd,  // Keep fields from Hugo JSON (like image, locations, etc.)
+            ...draft,       // Override with draft changes (including _isDeleted, _isDraft, etc.)
+            _isDraft: true  // Ensure _isDraft is set
+          };
+          console.log(`🔄 Merged draft for ad "${draft.id}": _isDeleted=${draft._isDeleted || false}, _isDraft=true`);
         } else {
           // New draft ad
           this.state.advertisements.push({ ...draft, _isDraft: true, _isNew: true });
+          console.log(`➕ Added new draft ad "${draft.id}"`);
         }
       });
     } catch (error) {
@@ -1120,7 +1372,7 @@ const UpdateUI = {
         </div>
         
         <div class="ad-details" style="display: ${isCollapsed ? 'none' : 'block'};">
-          ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image)}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}">` : ''}
+          ${ad.image ? `<img src="${this.getDisplayImagePath(ad.image, ad.id, 'ad')}" alt="${this.escapeHtml(ad.title)}" class="menu-item-image ${ad._isDeleted ? 'deleted' : ''}" onerror="console.error('Ad image load failed:', '${this.escapeHtml(ad.image)}', 'adId:', '${this.escapeHtml(ad.id)}'); this.style.display='none';">` : ''}
         
         ${ad.description ? `<p class="menu-item-description">${this.escapeHtml(ad.description).substring(0, 100)}</p>` : ''}
         
@@ -1211,8 +1463,20 @@ const UpdateUI = {
       this.renderPendingSummary();
       this.showSuccess('Draft changes discarded');
     } else {
+      // Mark ad for deletion and save as draft
       ad._isDeleted = true;
+      console.log(`🗑️ Marking ad "${ad.id}" for deletion, saving draft...`);
       this.saveDraftAd(ad);
+      
+      // Verify it was saved
+      const draftsJson = localStorage.getItem(this.storageKeys.draftAds) || '{}';
+      const drafts = JSON.parse(draftsJson);
+      if (drafts[ad.id] && drafts[ad.id]._isDeleted) {
+        console.log(`✅ Draft saved with _isDeleted=true for ad "${ad.id}"`);
+      } else {
+        console.error(`❌ Failed to save _isDeleted flag for ad "${ad.id}"`);
+      }
+      
       await this.loadAdvertisements();
       this.renderPendingSummary();
       this.showSuccess(`"${ad.title}" marked for deletion`);
@@ -1560,15 +1824,42 @@ const UpdateUI = {
   },
 
   /**
-   * Replace branding image
+   * Get required image dimensions for branding files
+   */
+  getBrandingImageRequirements(filename) {
+    const requirements = {
+      'favicon.ico': { width: 16, height: 16, format: 'ico', allowCrop: false },
+      'favicon.png': { width: 32, height: 32, format: 'png', allowCrop: false },
+      'favicon16.webp': { width: 16, height: 16, format: 'webp', allowCrop: true },
+      'favicon144.webp': { width: 144, height: 144, format: 'webp', allowCrop: true },
+      'favicon152.webp': { width: 152, height: 152, format: 'webp', allowCrop: true },
+      'favicon192.webp': { width: 192, height: 192, format: 'webp', allowCrop: true },
+      'favicon196.webp': { width: 196, height: 196, format: 'webp', allowCrop: true },
+      'favicon512.webp': { width: 512, height: 512, format: 'webp', allowCrop: true },
+      'favicon-400x200.webp': { width: 400, height: 200, format: 'webp', allowCrop: true },
+      'mappin.webp': { width: 64, height: 64, format: 'webp', allowCrop: true }, // Default map icon size
+      'richscreenshot1.webp': { width: 1280, height: 720, format: 'webp', allowCrop: true }, // Standard screenshot size
+      'richscreenshot2.webp': { width: 1280, height: 720, format: 'webp', allowCrop: true },
+    };
+    return requirements[filename] || null;
+  },
+
+  /**
+   * Replace branding image with validation and cropping
    */
   replaceBrandingImage(filename) {
+    const requirements = this.getBrandingImageRequirements(filename);
+    if (!requirements) {
+      this.showError(`Unknown branding file: ${filename}`);
+      return;
+    }
+
     // Create a hidden file input
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*,.ico';
     
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       
@@ -1579,23 +1870,627 @@ const UpdateUI = {
         return;
       }
       
-      // Create preview URL
+      // Load image to check dimensions
+      const img = new Image();
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const previewUrl = event.target.result;
+      
+      reader.onload = async (event) => {
+        img.src = event.target.result;
         
-        // Save to drafts
-        this.saveBrandingDraft(filename, file, previewUrl);
+        img.onload = async () => {
+          const actualWidth = img.width;
+          const actualHeight = img.height;
+          const requiredWidth = requirements.width;
+          const requiredHeight = requirements.height;
+          
+          // Check if image matches exact dimensions
+          if (actualWidth === requiredWidth && actualHeight === requiredHeight) {
+            // Perfect match - save directly
+            this.saveBrandingDraft(filename, file, event.target.result);
+            this.renderBrandingImages();
+            this.showSuccess(`Draft replacement saved for "${filename}". Click "Publish" to upload.`);
+            return;
+          }
+          
+          // Check if image is smaller than required
+          if (actualWidth < requiredWidth || actualHeight < requiredHeight) {
+            this.showError(
+              `Image is too small. Required: ${requiredWidth}x${requiredHeight}px, ` +
+              `but got: ${actualWidth}x${actualHeight}px. Please use a larger image.`
+            );
+            return;
+          }
+          
+          // Image is larger - show cropping interface
+          if (requirements.allowCrop) {
+            this.showImageCropper(filename, img, requirements, file);
+          } else {
+            this.showError(
+              `Image dimensions must be exactly ${requiredWidth}x${requiredHeight}px. ` +
+              `Got: ${actualWidth}x${actualHeight}px. Please resize the image first.`
+            );
+          }
+        };
         
-        // Re-render branding images
-        this.renderBrandingImages();
-        
-        this.showSuccess(`Draft replacement saved for "${filename}". Click "Publish" to upload.`);
+        img.onerror = () => {
+          this.showError('Failed to load image. Please try a different file.');
+        };
       };
+      
       reader.readAsDataURL(file);
     };
     
     input.click();
+  },
+
+  /**
+   * Show image cropper modal
+   */
+  showImageCropper(filename, img, requirements, originalFile) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h3 style="font-size: clamp(16px, 4vw, 20px);">Crop Image: ${filename}</h3>
+          <p style="color: #6b7280; margin: 0.5rem 0; font-size: clamp(12px, 3vw, 14px);">
+            Required size: ${requirements.width}x${requirements.height}px
+            <br>Current size: ${img.width}x${img.height}px
+          </p>
+          <button class="btn-close" onclick="this.closest('.modal').remove()" style="min-width: 32px; min-height: 32px; touch-action: manipulation;">×</button>
+        </div>
+        <div class="modal-body" style="padding: clamp(0.5rem, 2vw, 1rem);">
+          <div style="position: relative; max-width: 100%; margin-bottom: 1rem;">
+            <canvas id="cropCanvas" style="max-width: 100%; border: 2px solid #e5e7eb; border-radius: 8px;"></canvas>
+          </div>
+          <div style="margin-bottom: 1rem; padding: 1rem; background: #f9fafb; border-radius: 8px;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">
+              Scale: <span id="scaleValue">100</span>%
+            </label>
+            <input 
+              type="range" 
+              id="scaleSlider" 
+              min="1" 
+              max="200" 
+              value="100" 
+              step="1"
+              style="width: 100%;"
+              oninput="UpdateUI.updateScale(this.value)"
+            >
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.75rem; color: #6b7280;">
+              <span>1%</span>
+              <span>100%</span>
+              <span>200%</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+            <button class="btn btn-secondary" onclick="UpdateUI.cancelCrop()" style="min-width: 100px; min-height: 44px; touch-action: manipulation; font-size: clamp(14px, 3.5vw, 16px);">Cancel</button>
+            <button class="btn btn-primary" onclick="UpdateUI.confirmCrop('${filename}', ${requirements.width}, ${requirements.height}, '${requirements.format}')" style="min-width: 120px; min-height: 44px; touch-action: manipulation; font-size: clamp(14px, 3.5vw, 16px);">Crop & Save</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Store crop data
+    this._cropData = {
+      filename,
+      img,
+      requirements,
+      originalFile,
+      canvas: null,
+      ctx: null,
+      cropX: 0,
+      cropY: 0,
+      cropWidth: requirements.width,
+      cropHeight: requirements.height,
+      scale: Math.min(requirements.width / img.width, requirements.height / img.height),
+      userScale: 100, // User-controlled scale percentage (50-200%)
+    };
+    
+    // Initialize canvas
+    setTimeout(() => {
+      this.initCropCanvas();
+    }, 100);
+  },
+
+  /**
+   * Initialize crop canvas
+   */
+  initCropCanvas() {
+    const canvas = document.getElementById('cropCanvas');
+    if (!canvas || !this._cropData) return;
+    
+    const { img, requirements, userScale } = this._cropData;
+    
+    // Calculate base display size (fit to container, max 800px)
+    const maxDisplaySize = 800;
+    const baseDisplayScale = Math.min(maxDisplaySize / Math.max(img.width, img.height), 1);
+    
+    // Apply user scale (1-200%)
+    const userScaleFactor = userScale / 100;
+    const displayScale = baseDisplayScale * userScaleFactor;
+    
+    // Calculate scaled image dimensions
+    const scaledWidth = img.width * displayScale;
+    const scaledHeight = img.height * displayScale;
+    
+    // Calculate crop area in display coordinates (crop area size is fixed based on requirements)
+    const cropDisplayWidth = requirements.width * baseDisplayScale;
+    const cropDisplayHeight = requirements.height * baseDisplayScale;
+    
+    // Canvas size should be at least the crop area size + padding, or the scaled image size (whichever is larger)
+    const padding = 40; // Padding around crop area
+    const minCanvasWidth = cropDisplayWidth + padding * 2;
+    const minCanvasHeight = cropDisplayHeight + padding * 2;
+    canvas.width = Math.max(scaledWidth, minCanvasWidth);
+    canvas.height = Math.max(scaledHeight, minCanvasHeight);
+    
+    const ctx = canvas.getContext('2d');
+    this._cropData.canvas = canvas;
+    this._cropData.ctx = ctx;
+    this._cropData.displayScale = displayScale;
+    this._cropData.baseDisplayScale = baseDisplayScale;
+    this._cropData.scaledWidth = scaledWidth;
+    this._cropData.scaledHeight = scaledHeight;
+    
+    // Center crop area on canvas
+    this._cropData.cropX = (canvas.width - cropDisplayWidth) / 2;
+    this._cropData.cropY = (canvas.height - cropDisplayHeight) / 2;
+    this._cropData.cropDisplayWidth = cropDisplayWidth;
+    this._cropData.cropDisplayHeight = cropDisplayHeight;
+    
+    // Draw image centered on canvas
+    ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+    
+    // Draw crop overlay
+    this.drawCropOverlay();
+    
+    // Add mouse/touch handlers for dragging crop area
+    this.setupCropHandlers();
+  },
+
+  /**
+   * Draw crop overlay
+   */
+  drawCropOverlay() {
+    const { ctx, canvas, cropX, cropY, cropDisplayWidth, cropDisplayHeight, img, displayScale, scaledWidth, scaledHeight } = this._cropData;
+    
+    // Redraw image centered on canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate image position to center it on canvas
+    const imageX = (canvas.width - scaledWidth) / 2;
+    const imageY = (canvas.height - scaledHeight) / 2;
+    
+    ctx.drawImage(img, imageX, imageY, scaledWidth, scaledHeight);
+    
+    // Draw dark overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Clear crop area
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillRect(cropX, cropY, cropDisplayWidth, cropDisplayHeight);
+    ctx.restore();
+    
+    // Draw crop border
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cropX, cropY, cropDisplayWidth, cropDisplayHeight);
+    
+    // Draw resize handles (corners and edges)
+    const handleSize = 12;
+    ctx.fillStyle = '#3b82f6';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    
+    // Corner handles
+    const corners = [
+      [cropX, cropY, 'nw'], // top-left
+      [cropX + cropDisplayWidth, cropY, 'ne'], // top-right
+      [cropX, cropY + cropDisplayHeight, 'sw'], // bottom-left
+      [cropX + cropDisplayWidth, cropY + cropDisplayHeight, 'se'], // bottom-right
+    ];
+    
+    // Edge handles
+    const edges = [
+      [cropX + cropDisplayWidth / 2, cropY, 'n'], // top
+      [cropX + cropDisplayWidth / 2, cropY + cropDisplayHeight, 's'], // bottom
+      [cropX, cropY + cropDisplayHeight / 2, 'w'], // left
+      [cropX + cropDisplayWidth, cropY + cropDisplayHeight / 2, 'e'], // right
+    ];
+    
+    // Draw all handles
+    [...corners, ...edges].forEach(([x, y]) => {
+      ctx.beginPath();
+      ctx.arc(x, y, handleSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+  },
+
+  /**
+   * Get handle at position (returns handle type or null)
+   */
+  getHandleAt(x, y) {
+    const { cropX, cropY, cropDisplayWidth, cropDisplayHeight } = this._cropData;
+    const handleSize = 12;
+    const threshold = handleSize / 2 + 2; // Slightly larger hit area
+    
+    // Check corner handles
+    const corners = [
+      { x: cropX, y: cropY, type: 'nw' },
+      { x: cropX + cropDisplayWidth, y: cropY, type: 'ne' },
+      { x: cropX, y: cropY + cropDisplayHeight, type: 'sw' },
+      { x: cropX + cropDisplayWidth, y: cropY + cropDisplayHeight, type: 'se' },
+    ];
+    
+    for (const corner of corners) {
+      const dist = Math.sqrt(Math.pow(x - corner.x, 2) + Math.pow(y - corner.y, 2));
+      if (dist <= threshold) return corner.type;
+    }
+    
+    // Check edge handles
+    const edges = [
+      { x: cropX + cropDisplayWidth / 2, y: cropY, type: 'n' },
+      { x: cropX + cropDisplayWidth / 2, y: cropY + cropDisplayHeight, type: 's' },
+      { x: cropX, y: cropY + cropDisplayHeight / 2, type: 'w' },
+      { x: cropX + cropDisplayWidth, y: cropY + cropDisplayHeight / 2, type: 'e' },
+    ];
+    
+    for (const edge of edges) {
+      const dist = Math.sqrt(Math.pow(x - edge.x, 2) + Math.pow(y - edge.y, 2));
+      if (dist <= threshold) return edge.type;
+    }
+    
+    return null;
+  },
+
+  /**
+   * Get cursor style for resize handle
+   */
+  getResizeCursor(handle) {
+    const cursors = {
+      'nw': 'nw-resize',
+      'ne': 'ne-resize',
+      'sw': 'sw-resize',
+      'se': 'se-resize',
+      'n': 'n-resize',
+      's': 's-resize',
+      'w': 'w-resize',
+      'e': 'e-resize',
+    };
+    return cursors[handle] || 'default';
+  },
+
+  /**
+   * Handle resize operation
+   */
+  handleResize(handle, deltaX, deltaY, imageX, imageY, imageRight, imageBottom, startCropX, startCropY, startCropWidth, startCropHeight) {
+    let newX = startCropX;
+    let newY = startCropY;
+    let newWidth = startCropWidth;
+    let newHeight = startCropHeight;
+    
+    // Minimum crop size (10px)
+    const minSize = 10;
+    
+    // Handle different resize directions
+    if (handle.includes('n')) {
+      // Resize from top
+      const newTop = startCropY + deltaY;
+      const maxTop = imageY;
+      const minTop = startCropY + startCropHeight - minSize;
+      newY = Math.max(maxTop, Math.min(minTop, newTop));
+      newHeight = startCropHeight - (newY - startCropY);
+    }
+    
+    if (handle.includes('s')) {
+      // Resize from bottom
+      const newBottom = startCropY + startCropHeight + deltaY;
+      const minBottom = startCropY + minSize;
+      const maxBottom = imageBottom;
+      newHeight = Math.max(minSize, Math.min(maxBottom - startCropY, newBottom - startCropY));
+    }
+    
+    if (handle.includes('w')) {
+      // Resize from left
+      const newLeft = startCropX + deltaX;
+      const maxLeft = imageX;
+      const minLeft = startCropX + startCropWidth - minSize;
+      newX = Math.max(maxLeft, Math.min(minLeft, newLeft));
+      newWidth = startCropWidth - (newX - startCropX);
+    }
+    
+    if (handle.includes('e')) {
+      // Resize from right
+      const newRight = startCropX + startCropWidth + deltaX;
+      const minRight = startCropX + minSize;
+      const maxRight = imageRight;
+      newWidth = Math.max(minSize, Math.min(maxRight - startCropX, newRight - startCropX));
+    }
+    
+    // Ensure crop stays within image bounds
+    if (newX < imageX) {
+      newWidth -= (imageX - newX);
+      newX = imageX;
+    }
+    if (newY < imageY) {
+      newHeight -= (imageY - newY);
+      newY = imageY;
+    }
+    if (newX + newWidth > imageRight) {
+      newWidth = imageRight - newX;
+    }
+    if (newY + newHeight > imageBottom) {
+      newHeight = imageBottom - newY;
+    }
+    
+    // Ensure minimum size
+    if (newWidth < minSize) {
+      if (handle.includes('w')) newX = newX + newWidth - minSize;
+      newWidth = minSize;
+    }
+    if (newHeight < minSize) {
+      if (handle.includes('n')) newY = newY + newHeight - minSize;
+      newHeight = minSize;
+    }
+    
+    this._cropData.cropX = newX;
+    this._cropData.cropY = newY;
+    this._cropData.cropDisplayWidth = newWidth;
+    this._cropData.cropDisplayHeight = newHeight;
+  },
+
+  /**
+   * Setup crop handlers for dragging and resizing
+   */
+  setupCropHandlers() {
+    const canvas = this._cropData.canvas;
+    if (!canvas) return;
+    
+    let isDragging = false;
+    let isResizing = false;
+    let resizeHandle = null;
+    let startX = 0;
+    let startY = 0;
+    let startCropX = 0;
+    let startCropY = 0;
+    let startCropWidth = 0;
+    let startCropHeight = 0;
+    
+    const onMouseDown = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Check if click is on a handle
+      const handle = this.getHandleAt(x, y);
+      if (handle) {
+        isResizing = true;
+        resizeHandle = handle;
+        startX = x;
+        startY = y;
+        startCropX = this._cropData.cropX;
+        startCropY = this._cropData.cropY;
+        startCropWidth = this._cropData.cropDisplayWidth;
+        startCropHeight = this._cropData.cropDisplayHeight;
+        canvas.style.cursor = this.getResizeCursor(handle);
+        return;
+      }
+      
+      // Check if click is in crop area (for moving)
+      if (x >= this._cropData.cropX && x <= this._cropData.cropX + this._cropData.cropDisplayWidth &&
+          y >= this._cropData.cropY && y <= this._cropData.cropY + this._cropData.cropDisplayHeight) {
+        isDragging = true;
+        startX = x;
+        startY = y;
+        startCropX = this._cropData.cropX;
+        startCropY = this._cropData.cropY;
+        canvas.style.cursor = 'move';
+      }
+    };
+    
+    const onMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Update cursor on hover
+      if (!isDragging && !isResizing) {
+        const handle = this.getHandleAt(x, y);
+        if (handle) {
+          canvas.style.cursor = this.getResizeCursor(handle);
+        } else if (x >= this._cropData.cropX && x <= this._cropData.cropX + this._cropData.cropDisplayWidth &&
+                   y >= this._cropData.cropY && y <= this._cropData.cropY + this._cropData.cropDisplayHeight) {
+          canvas.style.cursor = 'move';
+        } else {
+          canvas.style.cursor = 'default';
+        }
+      }
+      
+      if (!isDragging && !isResizing) return;
+      
+      const deltaX = x - startX;
+      const deltaY = y - startY;
+      
+      // Calculate image bounds (centered on canvas)
+      const imageX = (canvas.width - this._cropData.scaledWidth) / 2;
+      const imageY = (canvas.height - this._cropData.scaledHeight) / 2;
+      const imageRight = imageX + this._cropData.scaledWidth;
+      const imageBottom = imageY + this._cropData.scaledHeight;
+      
+      if (isResizing) {
+        // Handle resizing
+        this.handleResize(resizeHandle, deltaX, deltaY, imageX, imageY, imageRight, imageBottom, startCropX, startCropY, startCropWidth, startCropHeight);
+      } else {
+        // Handle moving
+        const newCropX = startCropX + deltaX;
+        const newCropY = startCropY + deltaY;
+        
+        this._cropData.cropX = Math.max(imageX, Math.min(imageRight - this._cropData.cropDisplayWidth, newCropX));
+        this._cropData.cropY = Math.max(imageY, Math.min(imageBottom - this._cropData.cropDisplayHeight, newCropY));
+      }
+      
+      this.drawCropOverlay();
+    };
+    
+    const onMouseUp = () => {
+      isDragging = false;
+      isResizing = false;
+      resizeHandle = null;
+      canvas.style.cursor = 'default';
+    };
+    
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mouseleave', onMouseUp);
+    
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      onMouseDown(e.touches[0]);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      onMouseMove(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      onMouseUp();
+    });
+  },
+
+  /**
+   * Update scale and redraw canvas
+   */
+  updateScale(scalePercent) {
+    if (!this._cropData) return;
+    
+    // Update scale value display
+    const scaleValueEl = document.getElementById('scaleValue');
+    if (scaleValueEl) {
+      scaleValueEl.textContent = scalePercent;
+    }
+    
+    // Update crop data
+    this._cropData.userScale = parseFloat(scalePercent);
+    
+    // Recalculate display scale
+    const { img, requirements } = this._cropData;
+    const baseDisplayScale = this._cropData.baseDisplayScale || Math.min(800 / Math.max(img.width, img.height), 1);
+    const userScaleFactor = this._cropData.userScale / 100;
+    this._cropData.displayScale = baseDisplayScale * userScaleFactor;
+    
+    // Recalculate scaled image dimensions
+    const scaledWidth = img.width * this._cropData.displayScale;
+    const scaledHeight = img.height * this._cropData.displayScale;
+    this._cropData.scaledWidth = scaledWidth;
+    this._cropData.scaledHeight = scaledHeight;
+    
+    // Recalculate canvas size (maintain minimum size based on crop area)
+    const canvas = this._cropData.canvas;
+    if (canvas) {
+      const cropDisplayWidth = requirements.width * baseDisplayScale;
+      const cropDisplayHeight = requirements.height * baseDisplayScale;
+      const padding = 40; // Padding around crop area
+      const minCanvasWidth = cropDisplayWidth + padding * 2;
+      const minCanvasHeight = cropDisplayHeight + padding * 2;
+      
+      canvas.width = Math.max(scaledWidth, minCanvasWidth);
+      canvas.height = Math.max(scaledHeight, minCanvasHeight);
+      
+      // Re-center crop area
+      this._cropData.cropX = (canvas.width - cropDisplayWidth) / 2;
+      this._cropData.cropY = (canvas.height - cropDisplayHeight) / 2;
+      this._cropData.cropDisplayWidth = cropDisplayWidth;
+      this._cropData.cropDisplayHeight = cropDisplayHeight;
+    }
+    
+    // Redraw
+    this.drawCropOverlay();
+  },
+
+  /**
+   * Cancel crop
+   */
+  cancelCrop() {
+    const modal = document.querySelector('.modal');
+    if (modal) modal.remove();
+    this._cropData = null;
+  },
+
+  /**
+   * Confirm crop and save
+   */
+  confirmCrop(filename, requiredWidth, requiredHeight, requiredFormat) {
+    if (!this._cropData) return;
+    
+    const { img, cropX, cropY, cropDisplayWidth, cropDisplayHeight, displayScale, canvas, scaledWidth, scaledHeight } = this._cropData;
+    
+    // Calculate image position on canvas (centered)
+    const imageX = (canvas.width - scaledWidth) / 2;
+    const imageY = (canvas.height - scaledHeight) / 2;
+    
+    // Convert crop coordinates from canvas coordinates to image coordinates
+    // Crop area position relative to image (not canvas)
+    const cropRelativeX = cropX - imageX;
+    const cropRelativeY = cropY - imageY;
+    
+    // Convert display coordinates back to source image coordinates
+    const sourceX = Math.max(0, cropRelativeX / displayScale);
+    const sourceY = Math.max(0, cropRelativeY / displayScale);
+    const sourceWidth = cropDisplayWidth / displayScale;
+    const sourceHeight = cropDisplayHeight / displayScale;
+    
+    // Clamp to image bounds
+    const finalSourceX = Math.min(sourceX, img.width - sourceWidth);
+    const finalSourceY = Math.min(sourceY, img.height - sourceHeight);
+    const finalSourceWidth = Math.min(sourceWidth, img.width - finalSourceX);
+    const finalSourceHeight = Math.min(sourceHeight, img.height - finalSourceY);
+    
+    // Create output canvas with exact dimensions
+    const outputCanvas = document.createElement('canvas');
+    outputCanvas.width = requiredWidth;
+    outputCanvas.height = requiredHeight;
+    const outputCtx = outputCanvas.getContext('2d');
+    
+    // Draw cropped and resized image
+    outputCtx.drawImage(
+      img,
+      finalSourceX, finalSourceY, finalSourceWidth, finalSourceHeight,  // Source rectangle
+      0, 0, requiredWidth, requiredHeight            // Destination rectangle
+    );
+    
+    // Convert to blob
+    outputCanvas.toBlob((blob) => {
+      if (!blob) {
+        this.showError('Failed to process image');
+        return;
+      }
+      
+      // Create file from blob
+      const croppedFile = new File([blob], filename, { type: blob.type });
+      
+      // Convert to data URL for preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        this.saveBrandingDraft(filename, croppedFile, event.target.result);
+        this.renderBrandingImages();
+        this.showSuccess(`Draft replacement saved for "${filename}". Click "Publish" to upload.`);
+        
+        // Close modal
+        const modal = document.querySelector('.modal');
+        if (modal) modal.remove();
+        this._cropData = null;
+      };
+      reader.readAsDataURL(blob);
+    }, `image/${requiredFormat === 'ico' ? 'x-icon' : requiredFormat}`, 0.95);
   },
 
   /**
@@ -1614,6 +2509,14 @@ const UpdateUI = {
    * Save branding draft
    */
   saveBrandingDraft(filename, file, previewUrl) {
+    console.log(`💾 Saving branding draft for ${filename}:`, {
+      filename,
+      originalName: file.name,
+      type: file.type,
+      size: file.size,
+      hasPreview: !!previewUrl
+    });
+    
     const drafts = this.getBrandingDrafts();
     
     // Store file info (actual file object can't be stored in localStorage)
@@ -1628,10 +2531,12 @@ const UpdateUI = {
     
     // Store file in sessionStorage for upload on publish (limited storage, but works for images)
     sessionStorage.setItem(`branding_file_${filename}`, previewUrl);
+    console.log(`✅ Draft saved. Total drafts: ${Object.keys(drafts).length}`);
     
     localStorage.setItem(this.storageKeys.draftBranding, JSON.stringify(drafts));
     this.markPendingChanges();
     this.updateTabActionButtons();
+    console.log('🔘 Updated tab action buttons - branding button should now be visible');
   },
 
   /**
@@ -1662,43 +2567,167 @@ const UpdateUI = {
    * Publish branding changes
    */
   async publishBrandingImages() {
+    console.log('🚀 publishBrandingImages() called');
     const drafts = this.getBrandingDrafts();
     const draftCount = Object.keys(drafts).length;
+    console.log(`📋 Found ${draftCount} branding draft(s):`, Object.keys(drafts));
     
     if (draftCount === 0) {
+      console.warn('⚠️ No branding drafts to publish');
       this.showError('No branding image changes to publish');
       return;
     }
     
     const confirmed = confirm(`Publish ${draftCount} branding image replacement${draftCount !== 1 ? 's' : ''}?\n\nThis will upload the new images to the server.`);
-    if (!confirmed) return;
+    if (!confirmed) {
+      console.log('❌ User cancelled publish');
+      return;
+    }
+    
+    console.log('✅ User confirmed, starting upload...');
+    this.showInfo('Uploading branding images...');
     
     try {
-      // TODO: Upload files to server via content-service API
+      // Generate session ID for batch operations
+      const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      console.log(`📦 Starting batch publish with session: ${sessionId}`);
+      
+      let successCount = 0;
+      let errorCount = 0;
+      
+      // Upload each branding image
       for (const [filename, draft] of Object.entries(drafts)) {
         const fileData = sessionStorage.getItem(`branding_file_${filename}`);
-        if (!fileData) continue;
+        if (!fileData) {
+          console.warn(`No file data found for ${filename}`);
+          errorCount++;
+          continue;
+        }
         
-        // In a real implementation, this would upload to the server
-        console.log(`Would upload ${filename}:`, draft);
-        
-        // For now, just simulate success
-        // await this.authenticatedFetch(...upload API...)
+        try {
+          // Convert data URL to blob with correct MIME type
+          const response = await fetch(fileData);
+          let blob = await response.blob();
+          
+          // Ensure blob has correct MIME type based on filename extension
+          const requirements = this.getBrandingImageRequirements(filename);
+          if (requirements) {
+            let mimeType = 'image/webp'; // Default
+            if (requirements.format === 'png') {
+              mimeType = 'image/png';
+            } else if (requirements.format === 'ico') {
+              mimeType = 'image/x-icon';
+            } else if (requirements.format === 'webp') {
+              mimeType = 'image/webp';
+            }
+            
+            // If blob type doesn't match, create a new blob with correct type
+            if (blob.type !== mimeType) {
+              blob = new Blob([blob], { type: mimeType });
+            }
+          }
+          
+          // Create FormData
+          const formData = new FormData();
+          formData.append('file', blob, filename);
+          formData.append('path', `branding/${filename}`);
+          formData.append('type', 'branding');
+          
+          // Upload to content-service with sessionId for batch mode
+          const uploadUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false&sessionId=${sessionId}`;
+          console.log(`📤 Uploading ${filename} to: ${uploadUrl}`);
+          
+          const uploadResponse = await this.authenticatedFetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error(`❌ Upload failed for ${filename}:`, {
+              status: uploadResponse.status,
+              statusText: uploadResponse.statusText,
+              error: errorText,
+              url: uploadUrl
+            });
+            throw new Error(`Upload failed (${uploadResponse.status}): ${errorText}`);
+          }
+          
+          const result = await uploadResponse.json();
+          console.log(`✅ Uploaded ${filename}:`, result);
+          if (!result.success) {
+            throw new Error(result.error || 'Upload returned unsuccessful');
+          }
+          successCount++;
+        } catch (error) {
+          console.error(`❌ Failed to upload ${filename}:`, error);
+          errorCount++;
+          this.showError(`Failed to upload ${filename}: ${error.message}`);
+        }
       }
       
-      // Clear drafts
-      localStorage.removeItem(this.storageKeys.draftBranding);
+      // If all successful, commit batch
+      if (successCount > 0 && errorCount === 0) {
+        // Commit batch changes using git/commit endpoint
+        try {
+          const commitUrl = `${this.apiConfig.getClientUrl()}/git/commit`;
+          console.log(`📦 Committing batch with sessionId: ${sessionId}`);
+          
+          const commitResponse = await this.authenticatedFetch(commitUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: `Update ${successCount} branding image${successCount !== 1 ? 's' : ''}`,
+              sessionId: sessionId,
+            }),
+          });
+          
+          if (commitResponse.ok) {
+            const commitResult = await commitResponse.json();
+            console.log('✅ Batch committed:', commitResult);
+            if (commitResult.git && commitResult.git.status === 'pushed') {
+              console.log('✅ Git push successful - changes are live!');
+            }
+          } else {
+            const errorText = await commitResponse.text();
+            console.error('❌ Batch commit failed:', {
+              status: commitResponse.status,
+              statusText: commitResponse.statusText,
+              error: errorText,
+              sessionId: sessionId
+            });
+            throw new Error(`Batch commit failed (${commitResponse.status}): ${errorText}`);
+          }
+        } catch (error) {
+          console.error('Failed to commit batch:', error);
+          this.showError('Images uploaded but batch commit failed. Please check the server.');
+          // Don't clear drafts if commit failed
+          return;
+        }
+      }
       
-      // Clear session storage
-      Object.keys(drafts).forEach(filename => {
-        sessionStorage.removeItem(`branding_file_${filename}`);
-      });
-      
-      this.clearPendingChanges();
-      this.updateTabActionButtons();
-      await this.loadBrandingImages();
-      this.renderPendingSummary();
-      this.showSuccess(`${draftCount} branding image${draftCount !== 1 ? 's' : ''} will be updated on your site shortly!`);
+      // Clear drafts only if all successful
+      if (errorCount === 0) {
+        localStorage.removeItem(this.storageKeys.draftBranding);
+        
+        // Clear session storage
+        Object.keys(drafts).forEach(filename => {
+          sessionStorage.removeItem(`branding_file_${filename}`);
+        });
+        
+        this.clearPendingChanges();
+        this.updateTabActionButtons();
+        await this.loadBrandingImages();
+        this.renderPendingSummary();
+        
+        if (successCount > 0) {
+          this.showSuccess(`${successCount} branding image${successCount !== 1 ? 's' : ''} published successfully! Changes will appear on your site shortly.`);
+        }
+      } else {
+        this.showError(`Published ${successCount} image${successCount !== 1 ? 's' : ''}, but ${errorCount} failed. Please try again.`);
+      }
       
     } catch (error) {
       console.error('Publish failed:', error);
@@ -1854,20 +2883,14 @@ const UpdateUI = {
       return;
     }
 
+    // Don't return early if no menu items - still show all categories (even empty ones)
     if (this.state.menuItems.length === 0) {
-      console.log('No menu items to display');
-      container.innerHTML = `
-        <div style="text-align: center; padding: 3rem; color: #6b7280;">
-          <p style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">No menu items found</p>
-            <p style="font-size: 0.875rem;">Add your first menu item to get started</p>
-        </div>
-      `;
-      return;
+      console.log('No menu items to display, but will still show all categories');
     }
 
     console.log('Grouping items by category...');
 
-    // Group items by category
+    // Group items by category (items use normalized category names)
     const itemsByCategory = {};
     this.state.menuItems.forEach(item => {
       if (!itemsByCategory[item.category]) {
@@ -1876,38 +2899,61 @@ const UpdateUI = {
       itemsByCategory[item.category].push(item);
     });
 
-    // Get category order (from category _index.md files, loaded via loadCategories)
-    let categoryOrder = this.state.categories.map((cat, index) => ({
-      name: cat.name,
-      icon: cat.icon,
-      weight: cat.weight || index,
-    }));
+    // Helper function to normalize category names for comparison
+    const normalizeCategoryName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    };
 
-    // If no categories defined, auto-discover from items
-    if (categoryOrder.length === 0) {
-      console.log('No categories loaded, discovering from items...');
-      const uniqueCategories = [...new Set(this.state.menuItems.map(item => item.category))];
+    // Build category order from ALL categories in this.state.categories (not just those with items)
+    // This ensures categories with no items are still shown
+    let categoryOrder = [];
+    
+    if (this.state.categories && this.state.categories.length > 0) {
+      // Use all categories from this.state.categories
+      categoryOrder = this.state.categories.map(cat => {
+        // Find items for this category by matching normalized names
+        const normalizedCategory = normalizeCategoryName(cat.normalizedName || cat.name);
+        const matchingItemCategory = Object.keys(itemsByCategory).find(itemCat => {
+          const normalizedItemCat = normalizeCategoryName(itemCat);
+          return normalizedItemCat === normalizedCategory || itemCat === (cat.normalizedName || cat.name);
+        });
+        
+        return {
+          name: cat.name, // Use display name from category
+          normalizedName: matchingItemCategory || cat.normalizedName || cat.name, // Use item category name if found for matching items
+          icon: cat.icon || null,
+          weight: cat.weight ?? 999,
+        };
+      });
+      console.log(`📋 Building category order from ${categoryOrder.length} loaded categories (including empty ones)`);
+    } else {
+      // Fallback: discover from items (old behavior)
+      console.log('⚠️ No categories loaded from API, discovering from items only...');
+      const uniqueCategories = [...new Set(this.state.menuItems.map(item => item.category))].filter(Boolean);
       categoryOrder = uniqueCategories.map((name, index) => ({
         name: name,
+        normalizedName: name,
         icon: null,
         weight: index,
       }));
-      console.log('Auto-discovered', categoryOrder.length, 'categories');
+      console.log('Auto-discovered', categoryOrder.length, 'categories from items');
     }
 
     // Sort categories by weight
     categoryOrder.sort((a, b) => a.weight - b.weight);
     
     console.log('📊 Category order after sorting:', categoryOrder.map(c => `${c.name} (weight: ${c.weight})`).join(', '));
-    console.log('Rendering', categoryOrder.length, 'categories with items');
+    console.log(`Rendering ${categoryOrder.length} categories (including empty ones)`);
 
     // Build HTML for each category with its items
     const categoryHTML = [];
     
     categoryOrder.forEach((category, categoryIndex) => {
-      const items = itemsByCategory[category.name] || [];
+      // Use normalized name to find items (will be empty array if no items)
+      const items = itemsByCategory[category.normalizedName] || [];
       
-      console.log(`Category "${category.name}": ${items.length} items`);
+      console.log(`Category "${category.name}" (normalized: "${category.normalizedName}"): ${items.length} items, icon: ${category.icon || 'NONE'}`);
       
       // Sort items within category by weight (or title if no weight)
       items.sort((a, b) => {
@@ -1923,6 +2969,8 @@ const UpdateUI = {
 
       // Check if category is collapsed (from localStorage)
       const isCollapsed = this.isCategoryCollapsed(category.name);
+      
+      // Show category even if it has no items (this is the key change)
 
       const html = `
         <div class="category-section" data-category="${this.escapeHtml(category.name)}">
@@ -1985,7 +3033,131 @@ const UpdateUI = {
     // Set the HTML
     container.innerHTML = controlsHTML + categoryHTML.join('');
     
+    // Setup touch-based drag and drop for mobile devices
+    this.setupTouchDragAndDrop();
+    
     console.log('Menu rendering complete!');
+  },
+  
+  /**
+   * Setup touch-based drag and drop for menu items (mobile support)
+   */
+  setupTouchDragAndDrop() {
+    const cards = document.querySelectorAll('.menu-item-card[data-item-id]');
+    let draggedElement = null;
+    let draggedItemId = null;
+    let touchStartY = 0;
+    let touchStartX = 0;
+    
+    cards.forEach(card => {
+      const itemId = card.getAttribute('data-item-id');
+      if (!itemId) return;
+      
+      // Skip if item is deleted (not draggable)
+      const item = this.state.menuItems.find(i => i.id === itemId);
+      if (item && item._isDeleted) return;
+      
+      // Add touch handlers
+      card.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button')) return; // Don't drag if touching a button
+        
+        const touch = e.touches[0];
+        touchStartY = touch.clientY;
+        touchStartX = touch.clientX;
+        draggedElement = card;
+        draggedItemId = itemId;
+        
+        card.style.opacity = '0.5';
+        card.style.transition = 'none';
+        card.style.zIndex = '1000';
+        card.style.position = 'relative';
+      }, { passive: true });
+      
+      card.addEventListener('touchmove', (e) => {
+        if (!draggedElement || draggedElement !== card) return;
+        
+        const touch = e.touches[0];
+        const deltaY = touch.clientY - touchStartY;
+        const deltaX = touch.clientX - touchStartX;
+        
+        // Only start dragging if moved more than 10px (to distinguish from scroll)
+        if (Math.abs(deltaY) > 10 || Math.abs(deltaX) > 10) {
+          e.preventDefault();
+          
+          // Move the card visually
+          const rect = card.getBoundingClientRect();
+          card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+          
+          // Find the element under the touch point
+          const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+          const targetCard = elementBelow?.closest('.menu-item-card[data-item-id]');
+          
+          if (targetCard && targetCard !== card) {
+            const targetItemId = targetCard.getAttribute('data-item-id');
+            
+            // Highlight drop target
+            document.querySelectorAll('.menu-item-card').forEach(c => {
+              c.classList.remove('drag-over');
+            });
+            targetCard.classList.add('drag-over');
+          } else {
+            document.querySelectorAll('.menu-item-card').forEach(c => {
+              c.classList.remove('drag-over');
+            });
+          }
+        }
+      }, { passive: false });
+      
+      card.addEventListener('touchend', (e) => {
+        if (!draggedElement || draggedElement !== card) return;
+        
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetCard = elementBelow?.closest('.menu-item-card[data-item-id]');
+        
+        // Reset visual state
+        card.style.opacity = '';
+        card.style.transform = '';
+        card.style.transition = '';
+        card.style.zIndex = '';
+        document.querySelectorAll('.menu-item-card').forEach(c => {
+          c.classList.remove('drag-over');
+        });
+        
+        // Perform drop if valid target
+        if (targetCard && targetCard !== card) {
+          const targetItemId = targetCard.getAttribute('data-item-id');
+          
+          // Simulate drop event
+          const dropEvent = {
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            dataTransfer: {
+              getData: () => draggedItemId
+            }
+          };
+          
+          this.handleDrop(dropEvent, targetItemId);
+        }
+        
+        draggedElement = null;
+        draggedItemId = null;
+      });
+      
+      card.addEventListener('touchcancel', () => {
+        if (draggedElement === card) {
+          card.style.opacity = '';
+          card.style.transform = '';
+          card.style.transition = '';
+          card.style.zIndex = '';
+          document.querySelectorAll('.menu-item-card').forEach(c => {
+            c.classList.remove('drag-over');
+          });
+          draggedElement = null;
+          draggedItemId = null;
+        }
+      });
+    });
   },
 
   /**
@@ -2008,8 +3180,18 @@ const UpdateUI = {
     const cleanDesc = this.escapeHtml(item.description || '').substring(0, 100);
     const descriptionText = cleanDesc + (item.description && item.description.length > 100 ? '...' : '');
     
-    // Format price
-    const priceDisplay = item.price ? item.price.toFixed(0) : '0';
+    // Format price - show 2 decimals only if price has decimals
+    let priceDisplay = '0';
+    if (item.price) {
+      const price = parseFloat(item.price);
+      if (price % 1 !== 0) {
+        // Has decimals, show 2 decimal places
+        priceDisplay = price.toFixed(2);
+      } else {
+        // No decimals, show as integer
+        priceDisplay = price.toString();
+      }
+    }
     
     // Check for pending image upload
     const hasPendingUpload = sessionStorage.getItem(`pending_uploads_${item.id}`) !== null;
@@ -2812,6 +3994,13 @@ const UpdateUI = {
     // Validate and fix weight conflicts
     newWeight = this.validateAndFixCategoryWeight(categoryName, newWeight);
     
+    // Ensure weight is an integer
+    newWeight = parseInt(newWeight, 10);
+    if (isNaN(newWeight)) {
+      console.error(`Invalid weight value for "${categoryName}": ${newWeight}`);
+      newWeight = 0;
+    }
+    
     // Load existing category data
     const categoryPath = categoryName.toLowerCase();
     const possiblePaths = [
@@ -2838,7 +4027,7 @@ const UpdateUI = {
             title: data.title || categoryName,
             icon: data.icon || '',
             image: data.image || '',
-            weight: newWeight, // Update weight
+            weight: newWeight, // Update weight (ensure it's the new value)
             slidein: data.slidein || {},
             body: data.body || ''
           };
@@ -2849,11 +4038,11 @@ const UpdateUI = {
       }
     }
     
-    // Save to draft
+    // Save to draft - ensure weight is explicitly set as integer
     const categoryData = {
       frontmatter: {
         title: existingData.title,
-        weight: newWeight,
+        weight: newWeight, // Explicitly use the validated integer weight
         icon: existingData.icon,
         image: existingData.image,
       },
@@ -2868,7 +4057,14 @@ const UpdateUI = {
     localStorage.setItem(draftKey, JSON.stringify(categoryData));
     this.markPendingChanges();
     
-    console.log(`✅ Saved weight ${newWeight} for "${categoryName}"`);
+    // Also update the in-memory category weight to keep UI in sync
+    const category = this.state.categories.find(c => c.name === categoryName);
+    if (category) {
+      category.weight = newWeight;
+    }
+    
+    console.log(`✅ Saved weight ${newWeight} (type: ${typeof newWeight}) for "${categoryName}"`);
+    console.log(`📦 Draft data:`, JSON.stringify(categoryData, null, 2));
   },
 
   /**
@@ -3717,30 +4913,57 @@ const UpdateUI = {
     let initialY;
     
     header.style.cursor = 'move';
+    header.style.touchAction = 'none';
     
-    header.addEventListener('mousedown', (e) => {
+    const getEventPos = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    };
+    
+    const startDrag = (e) => {
       if (e.target.tagName === 'BUTTON') return;
       
+      const pos = getEventPos(e);
       isDragging = true;
-      initialX = e.clientX - overlay.offsetLeft;
-      initialY = e.clientY - overlay.offsetTop;
-    });
+      initialX = pos.x - overlay.offsetLeft;
+      initialY = pos.y - overlay.offsetTop;
+    };
     
-    document.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        e.preventDefault();
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
-        
-        overlay.style.left = currentX + 'px';
-        overlay.style.top = currentY + 'px';
-        overlay.style.right = 'auto';
-      }
-    });
+    const drag = (e) => {
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      const pos = getEventPos(e);
+      currentX = pos.x - initialX;
+      currentY = pos.y - initialY;
+      
+      // Keep overlay within viewport bounds
+      const maxX = window.innerWidth - overlay.offsetWidth;
+      const maxY = window.innerHeight - overlay.offsetHeight;
+      currentX = Math.max(0, Math.min(currentX, maxX));
+      currentY = Math.max(0, Math.min(currentY, maxY));
+      
+      overlay.style.left = currentX + 'px';
+      overlay.style.top = currentY + 'px';
+      overlay.style.right = 'auto';
+    };
     
-    document.addEventListener('mouseup', () => {
+    const endDrag = () => {
       isDragging = false;
-    });
+    };
+    
+    // Mouse events
+    header.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+    
+    // Touch events for mobile
+    header.addEventListener('touchstart', startDrag, { passive: false });
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchcancel', endDrag);
   },
   
   /**
@@ -4593,18 +5816,24 @@ const UpdateUI = {
       // Generate session ID for batch operations
       const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
       console.log(`📦 Starting batch publish with session: ${sessionId}`);
+      console.log(`📊 Total pending changes: ${totalCount}`);
       
       let successCount = 0;
       let failCount = 0;
       let successItems = [];
       let failedItems = [];
+      let hasBackendOperations = false; // Track if any actual backend operations were performed
       
       // Publish menu items (batch mode - no individual alerts)
+      console.log('🔍 Checking for draft menu items...');
       const draftItems = this.getDrafts();
+      const itemCount = Object.keys(draftItems).length;
+      console.log(`📋 Found ${itemCount} draft menu item(s)`);
       for (const item of Object.values(draftItems)) {
         try {
           await this.publishItemSilent(item.id, false, sessionId); // Pass sessionId
           successCount++;
+          hasBackendOperations = true; // Menu items are backend operations
           const action = item._isDeleted ? '🗑️' : (item._isNew ? '➕' : '📝');
           
           // Check if item has pending image uploads
@@ -4620,15 +5849,29 @@ const UpdateUI = {
       }
       
       // Publish ads (now supports batch mode!)
+      console.log('🔍 Checking for draft ads...');
       const draftAdsJson = localStorage.getItem(this.storageKeys.draftAds);
+      if (draftAdsJson) {
+        const draftAds = JSON.parse(draftAdsJson);
+        console.log(`📋 Found ${Object.keys(draftAds).length} draft ad(s)`);
+      } else {
+        console.log('📋 No draft ads found');
+      }
       if (draftAdsJson) {
         const draftAds = JSON.parse(draftAdsJson);
         for (const ad of Object.values(draftAds)) {
           try {
-            await this.publishAdSilent(ad.id, false, sessionId);
-            successCount++;
-            const action = ad._isDeleted ? '🗑️' : (ad._isNew ? '➕' : '📝');
-            successItems.push(`${action} Ad: ${ad.title}`);
+            const result = await this.publishAdSilent(ad.id, false, sessionId);
+            // Only count as success if a backend operation was performed
+            if (result && result.backendOperation !== false) {
+              successCount++;
+              hasBackendOperations = true;
+              const action = ad._isDeleted ? '🗑️' : (ad._isNew ? '➕' : '📝');
+              successItems.push(`${action} Ad: ${ad.title}`);
+            } else {
+              // Draft-only operation (e.g., clearing a draft that doesn't exist in backend)
+              console.log(`ℹ️ Ad ${ad.id} was draft-only operation, no backend call needed`);
+            }
           } catch (error) {
             failCount++;
             failedItems.push(`❌ Ad: ${ad.title}: ${error.message}`);
@@ -4648,6 +5891,7 @@ const UpdateUI = {
           const draftLocations = JSON.parse(draftLocationsJson);
           const locationCount = Object.keys(draftLocations).length;
           successCount += locationCount;
+          hasBackendOperations = true; // Locations are backend operations
           
           Object.values(draftLocations).forEach(loc => {
             const action = loc._isDeleted ? '🗑️' : (loc._isNew ? '➕' : '📝');
@@ -4667,6 +5911,7 @@ const UpdateUI = {
           const success = await HomePageManager.publishDraft(sessionId);
           if (success) {
             successCount++;
+            hasBackendOperations = true; // Home page updates are backend operations
             successItems.push('🏠 Home Page & Site Settings');
           } else {
             failCount++;
@@ -4685,7 +5930,7 @@ const UpdateUI = {
         try {
           const draftColors = JSON.parse(draftColorsJson);
           const response = await this.authenticatedFetch(
-            `${this.apiConfig.getClientUrl()}/colors?push=false&session_id=${sessionId}`,
+            `${this.apiConfig.getClientUrl()}/colors?push=false&sessionId=${sessionId}`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -4696,6 +5941,7 @@ const UpdateUI = {
           if (response.ok) {
             localStorage.removeItem(this.storageKeys.draftColors);
             successCount++;
+            hasBackendOperations = true; // Color updates are backend operations
             const colorCount = Object.keys(draftColors).length;
             successItems.push(`🎨 Colors (${colorCount} variables)`);
           } else {
@@ -4715,7 +5961,7 @@ const UpdateUI = {
         try {
           const draftManifest = JSON.parse(draftManifestJson);
           const response = await this.authenticatedFetch(
-            `${this.apiConfig.getClientUrl()}/manifest?push=false&session_id=${sessionId}`,
+            `${this.apiConfig.getClientUrl()}/manifest?push=false&sessionId=${sessionId}`,
             {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -4726,6 +5972,7 @@ const UpdateUI = {
           if (response.ok) {
             localStorage.removeItem(this.storageKeys.draftManifest);
             successCount++;
+            hasBackendOperations = true; // Manifest updates are backend operations
             successItems.push(`📱 PWA Manifest`);
           } else {
             const errorData = await response.json().catch(() => ({}));
@@ -4738,59 +5985,200 @@ const UpdateUI = {
         }
       }
       
-      // Publish category landing pages
+      // Publish category landing pages (weight and icon together)
       const categoryLandingDrafts = Object.keys(localStorage).filter(key => key.startsWith('ttmenus_draft_category_'));
-      for (const draftKey of categoryLandingDrafts) {
-        const categoryName = draftKey.replace('ttmenus_draft_category_', '');
-        const categoryData = JSON.parse(localStorage.getItem(draftKey));
+      const categoryPublishResults = [];
+      
+      if (categoryLandingDrafts.length > 0) {
+        console.log(`📂 Publishing ${categoryLandingDrafts.length} category landing page(s)...`);
         
-        console.log(`Publishing category "${categoryName}" landing page...`);
-        
-        try {
-          // Prepare data for API
-          const landingData = {
-            title: categoryName,
-            weight: categoryData.frontmatter?.weight || 0,
-            icon: categoryData.frontmatter?.icon || '',
-            image: categoryData.frontmatter?.image || '',
-            slidein: categoryData.frontmatter?.slidein || null,
-            body: categoryData.body || ''
-          };
+        for (const draftKey of categoryLandingDrafts) {
+          const categoryName = draftKey.replace('ttmenus_draft_category_', '');
+          const categoryData = JSON.parse(localStorage.getItem(draftKey));
           
-          console.log(`📂 Publishing category "${categoryName}" with data:`, JSON.stringify(landingData, null, 2));
+          console.log(`📂 Publishing category "${categoryName}"...`);
           
-          const response = await UpdateUI.authenticatedFetch(
-            `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&session_id=${sessionId}`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(landingData)
+          try {
+            // Prepare data for API - ensure weight and icon are always sent together
+            const weight = parseInt(categoryData.frontmatter?.weight, 10);
+            if (isNaN(weight)) {
+              throw new Error(`Invalid weight value: ${categoryData.frontmatter?.weight}`);
             }
-          );
-          
-          if (response.ok) {
+            
+            const landingData = {
+              title: categoryName,
+              weight: weight, // Explicitly use parsed integer
+              icon: categoryData.frontmatter?.icon || '',
+              image: categoryData.frontmatter?.image || '',
+              slidein: categoryData.frontmatter?.slidein || null,
+              body: categoryData.body || ''
+            };
+            
+            console.log(`📂 Category "${categoryName}": weight=${weight}, icon="${landingData.icon}"`);
+            console.log(`📂 Full data:`, JSON.stringify(landingData, null, 2));
+            
+            const response = await UpdateUI.authenticatedFetch(
+              `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&sessionId=${sessionId}`,
+              {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(landingData)
+              }
+            );
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              const errorMsg = errorData.error || response.statusText || `HTTP ${response.status}`;
+              throw new Error(errorMsg);
+            }
+            
+            // Verify response
+            const responseData = await response.json().catch(() => ({}));
+            const publishedWeight = parseInt(responseData.weight, 10);
+            
+            if (publishedWeight !== weight) {
+              console.warn(`⚠️ Weight mismatch for "${categoryName}": sent ${weight}, got ${publishedWeight}`);
+              // Don't fail, but log warning
+            }
+            
             localStorage.removeItem(draftKey);
             successCount++;
-            successItems.push(`📂 Category: ${categoryName}`);
-          } else {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || response.statusText);
+            hasBackendOperations = true;
+            categoryPublishResults.push({ name: categoryName, success: true, weight: weight });
+            successItems.push(`📂 Category: ${categoryName} (weight: ${weight})`);
+            
+            console.log(`✅ Successfully published category "${categoryName}" with weight ${weight}`);
+          } catch (error) {
+            failCount++;
+            const errorMsg = error.message || 'Unknown error';
+            failedItems.push(`❌ Category ${categoryName}: ${errorMsg}`);
+            categoryPublishResults.push({ name: categoryName, success: false, error: errorMsg });
+            console.error(`❌ Failed to publish category "${categoryName}":`, error);
+            
+            // Keep draft in localStorage if publish failed so user can retry
+            console.log(`⚠️ Keeping draft for "${categoryName}" - publish failed`);
           }
-        } catch (error) {
-          failCount++;
-          failedItems.push(`❌ Category ${categoryName}: ${error.message}`);
-          console.error(`Failed to publish category ${categoryName}:`, error);
+        }
+        
+        // If any categories failed, notify user
+        const failedCategories = categoryPublishResults.filter(r => !r.success);
+        if (failedCategories.length > 0) {
+          console.error(`❌ ${failedCategories.length} category(ies) failed to publish:`, failedCategories);
+        }
+      }
+      
+      // Publish branding images
+      console.log('🔍 Checking for draft branding images...');
+      const brandingDrafts = this.getBrandingDrafts();
+      const brandingDraftCount = Object.keys(brandingDrafts).length;
+      console.log(`📋 Found ${brandingDraftCount} draft branding image(s):`, Object.keys(brandingDrafts));
+      if (brandingDraftCount > 0) {
+        console.log(`🖼️ Publishing ${brandingDraftCount} branding image(s)...`);
+        let brandingSuccessCount = 0;
+        let brandingErrorCount = 0;
+        
+        for (const [filename, draft] of Object.entries(brandingDrafts)) {
+          const fileData = sessionStorage.getItem(`branding_file_${filename}`);
+          if (!fileData) {
+            console.warn(`No file data found for ${filename}`);
+            brandingErrorCount++;
+            failedItems.push(`❌ Branding: ${filename} (no file data)`);
+            continue;
+          }
+          
+          try {
+            // Convert data URL to blob with correct MIME type
+            const response = await fetch(fileData);
+            let blob = await response.blob();
+            
+            // Ensure blob has correct MIME type based on filename extension
+            const requirements = this.getBrandingImageRequirements(filename);
+            if (requirements) {
+              let mimeType = 'image/webp'; // Default
+              if (requirements.format === 'png') {
+                mimeType = 'image/png';
+              } else if (requirements.format === 'ico') {
+                mimeType = 'image/x-icon';
+              } else if (requirements.format === 'webp') {
+                mimeType = 'image/webp';
+              }
+              
+              // If blob type doesn't match, create a new blob with correct type
+              if (blob.type !== mimeType) {
+                blob = new Blob([blob], { type: mimeType });
+              }
+            }
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('file', blob, filename);
+            formData.append('path', `branding/${filename}`);
+            formData.append('type', 'branding');
+            
+            // Upload to content-service with sessionId for batch mode
+            const uploadUrl = `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false&sessionId=${sessionId}`;
+            console.log(`📤 Uploading branding image ${filename}...`);
+            
+            const uploadResponse = await this.authenticatedFetch(uploadUrl, {
+              method: 'POST',
+              body: formData,
+            });
+            
+            if (!uploadResponse.ok) {
+              const errorText = await uploadResponse.text();
+              console.error(`❌ Upload failed for ${filename}:`, errorText);
+              throw new Error(`Upload failed (${uploadResponse.status}): ${errorText}`);
+            }
+            
+            const result = await uploadResponse.json();
+            console.log(`✅ Uploaded ${filename}:`, result);
+            if (!result.success) {
+              throw new Error(result.error || 'Upload returned unsuccessful');
+            }
+            brandingSuccessCount++;
+            hasBackendOperations = true; // Branding uploads are backend operations
+            successItems.push(`🖼️ Branding: ${filename}`);
+          } catch (error) {
+            console.error(`❌ Failed to upload ${filename}:`, error);
+            brandingErrorCount++;
+            failedItems.push(`❌ Branding: ${filename}: ${error.message}`);
+          }
+        }
+        
+        // Update counts
+        successCount += brandingSuccessCount;
+        failCount += brandingErrorCount;
+        
+        // Clear branding drafts if all successful
+        if (brandingErrorCount === 0 && brandingSuccessCount > 0) {
+          localStorage.removeItem(this.storageKeys.draftBranding);
+          Object.keys(brandingDrafts).forEach(filename => {
+            sessionStorage.removeItem(`branding_file_${filename}`);
+          });
         }
       }
       
       
+      console.log(`📊 Publish summary: ${successCount} succeeded, ${failCount} failed`);
+      console.log(`📦 Preparing batch commit with sessionId: ${sessionId}`);
+      
       // Now trigger single git push for all changes with sessionId
-      if (successCount > 0) {
+      // Commit if there were any successful backend operations
+      // hasBackendOperations is set to true for all operations that modify backend (menu items, categories, locations, etc.)
+      if (successCount > 0 && hasBackendOperations) {
         try {
           const user = AuthClient.getCurrentUser();
           const username = user?.email || user?.username || 'Unknown User';
+          console.log(`👤 Committing as user: ${username}`);
+          console.log(`📦 Triggering batch commit for ${successCount} change(s)...`);
           
-          await this.triggerBatchCommit(username, successCount, sessionId);
+          await this.triggerBatchCommit(username, successCount, sessionId, successItems);
+          console.log('✅ Batch commit completed successfully');
+          
+          // Start monitoring Netlify build status
+          if (this.netlifyConfig.enabled()) {
+            this.monitorNetlifyBuild();
+          }
           
           // Clear homepage draft after successful batch commit
           if (draftHomePageJson) {
@@ -4798,38 +6186,85 @@ const UpdateUI = {
             await HomePageManager.loadCurrentSettings();
             await HomePageManager.loadSiteSettings();
           }
+          
+          // Reload categories after successful publish to ensure UI matches backend
+          if (categoryLandingDrafts.length > 0) {
+            console.log('🔄 Reloading categories to verify order matches backend...');
+            try {
+              await this.loadCategories();
+              console.log('✅ Categories reloaded - UI should now match backend order');
+            } catch (error) {
+              console.error('⚠️ Failed to reload categories after publish:', error);
+              // Don't fail the whole operation, but log warning
+            }
+          }
         } catch (error) {
-          console.error('Git push failed:', error);
+          console.error('❌ Git push failed:', error);
           // Don't fail the whole operation, changes are saved
+          this.showError(`Changes saved but git commit failed: ${error.message}`);
         }
+      } else if (successCount > 0) {
+        // This shouldn't happen since all operations now set hasBackendOperations
+        console.warn('⚠️ Had successful operations but hasBackendOperations is false - commit skipped');
+        console.warn('⚠️ This may indicate a bug - all operations should set hasBackendOperations=true');
       }
       
       // Check if we published any category landing pages
       const hasCategoryDrafts = categoryLandingDrafts.length > 0;
+      const categoryFailures = categoryPublishResults.filter(r => !r.success);
       
-      // Show single summary alert
+      // Show single summary alert with category-specific notifications
       if (successCount > 0 && failCount === 0) {
         let message = `🎉 Successfully published ${successCount} change${successCount !== 1 ? 's' : ''}!\n\n` +
           `${successItems.slice(0, 5).join('\n')}${successItems.length > 5 ? `\n... and ${successItems.length - 5} more` : ''}`;
         
         if (hasCategoryDrafts) {
-          message += `\n\n📝 Note: Category changes will be applied on the next site rebuild.`;
+          const successfulCategories = categoryPublishResults.filter(r => r.success);
+          if (successfulCategories.length > 0) {
+            message += `\n\n📂 Categories updated: ${successfulCategories.map(c => `${c.name} (weight: ${c.weight})`).join(', ')}`;
+          }
+          message += `\n\n🔄 Reloading categories to verify order...`;
         } else {
           message += `\n\n🚀 Changes published successfully! Your site will update automatically in a few minutes.`;
         }
         
         this.showSuccess(message);
       } else if (successCount > 0 && failCount > 0) {
-        this.showSuccess(
-          `⚠️ Published ${successCount} of ${totalCount} changes\n\n` +
+        let message = `⚠️ Published ${successCount} of ${totalCount} changes\n\n` +
           `Success:\n${successItems.slice(0, 3).join('\n')}\n\n` +
-          `Failed:\n${failedItems.slice(0, 3).join('\n')}`
-        );
+          `Failed:\n${failedItems.slice(0, 3).join('\n')}`;
+        
+        // Highlight category failures specifically
+        if (categoryFailures.length > 0) {
+          message += `\n\n❌ Category failures:\n${categoryFailures.map(c => `  • ${c.name}: ${c.error}`).join('\n')}`;
+          message += `\n\n⚠️ Failed categories were NOT updated. Please check the errors above and try again.`;
+        }
+        
+        this.showSuccess(message);
       } else if (failCount > 0) {
-        this.showError(
-          `❌ Failed to publish all ${failCount} change${failCount !== 1 ? 's' : ''}\n\n` +
-          `${failedItems.slice(0, 5).join('\n')}`
-        );
+        let message = `❌ Failed to publish all ${failCount} change${failCount !== 1 ? 's' : ''}\n\n` +
+          `${failedItems.slice(0, 5).join('\n')}`;
+        
+        // Highlight category failures specifically
+        if (categoryFailures.length > 0) {
+          message += `\n\n❌ Category failures:\n${categoryFailures.map(c => `  • ${c.name}: ${c.error}`).join('\n')}`;
+          message += `\n\n⚠️ No categories were updated. Please check the errors above and try again.`;
+        }
+        
+        this.showError(message);
+      }
+      
+      // Reload categories after successful publish to ensure UI matches backend order
+      if (categoryLandingDrafts.length > 0 && categoryFailures.length === 0) {
+        console.log('🔄 Reloading categories to verify order matches backend...');
+        try {
+          await this.loadCategories();
+          this.renderMenuByCategory();
+          console.log('✅ Categories reloaded - UI order should now match backend');
+        } catch (error) {
+          console.error('⚠️ Failed to reload categories after publish:', error);
+          // Don't fail the whole operation, but log warning
+        }
       }
       
       // Refresh pending summary
@@ -4843,11 +6278,277 @@ const UpdateUI = {
   },
 
   /**
+   * Generate detailed commit message from change list
+   */
+  generateDetailedCommitMessage(username, changeCount, successItems) {
+    // Group changes by type for better organization
+    const changesByType = {
+      menuItems: [],
+      ads: [],
+      locations: [],
+      categories: [],
+      homepage: [],
+      colors: [],
+      config: [],
+      manifest: [],
+      branding: [],
+      images: [],
+      other: []
+    };
+
+    // Categorize each change
+    successItems.forEach(item => {
+      const itemStr = item.toString();
+      
+      // Check for specific patterns first (more specific matches)
+      if (itemStr.includes('Category:') || itemStr.startsWith('📂')) {
+        changesByType.categories.push(itemStr);
+      } else if (itemStr.includes('Branding:') || (itemStr.includes('🖼️') && itemStr.includes('Branding'))) {
+        changesByType.branding.push(itemStr);
+      } else if (itemStr.includes('Ad:') || itemStr.includes('📢')) {
+        changesByType.ads.push(itemStr);
+      } else if (itemStr.includes('Location:') || itemStr.includes('📍')) {
+        changesByType.locations.push(itemStr);
+      } else if (itemStr.includes('Home Page') || itemStr.includes('🏠')) {
+        changesByType.homepage.push(itemStr);
+      } else if (itemStr.includes('Colors') || itemStr.includes('🎨')) {
+        changesByType.colors.push(itemStr);
+      } else if (itemStr.includes('Config') || itemStr.includes('⚙️')) {
+        changesByType.config.push(itemStr);
+      } else if (itemStr.includes('Manifest') || itemStr.includes('📱')) {
+        changesByType.manifest.push(itemStr);
+      } else if (itemStr.includes('📸') && !itemStr.includes('Branding')) {
+        // Images (but not branding)
+        changesByType.images.push(itemStr);
+      } else if (itemStr.match(/^[➕📝🗑️]\s/)) {
+        // Menu items (start with action emoji followed by space)
+        changesByType.menuItems.push(itemStr);
+      } else {
+        changesByType.other.push(itemStr);
+      }
+    });
+
+    // Build detailed commit message
+    let message = `Published ${changeCount} change${changeCount !== 1 ? 's' : ''} by ${username}\n\n`;
+    message += `## Summary\n`;
+    message += `Total changes: ${changeCount}\n`;
+    message += `User: ${username}\n`;
+    message += `Timestamp: ${new Date().toISOString()}\n\n`;
+
+    // Add detailed breakdown by type
+    message += `## Changes Breakdown\n\n`;
+
+    if (changesByType.menuItems.length > 0) {
+      message += `### Menu Items (${changesByType.menuItems.length})\n`;
+      changesByType.menuItems.forEach(item => {
+        // Extract action and item name
+        let action = '';
+        let cleanItem = item;
+        if (item.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanItem = item.replace(/^➕\s*/, '').trim();
+        } else if (item.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanItem = item.replace(/^📝\s*/, '').trim();
+        } else if (item.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanItem = item.replace(/^🗑️\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanItem}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.ads.length > 0) {
+      message += `### Advertisements (${changesByType.ads.length})\n`;
+      changesByType.ads.forEach(ad => {
+        // Extract action and ad name
+        let action = '';
+        let cleanAd = ad;
+        if (ad.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanAd = ad.replace(/^➕\s*Ad:\s*/, '').trim();
+        } else if (ad.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanAd = ad.replace(/^📝\s*Ad:\s*/, '').trim();
+        } else if (ad.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanAd = ad.replace(/^🗑️\s*Ad:\s*/, '').trim();
+        } else {
+          // Fallback for ads without action prefix
+          cleanAd = ad.replace(/^Ad:\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanAd}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.locations.length > 0) {
+      message += `### Locations (${changesByType.locations.length})\n`;
+      changesByType.locations.forEach(loc => {
+        // Extract action and location name
+        let action = '';
+        let cleanLoc = loc;
+        if (loc.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanLoc = loc.replace(/^➕\s*Location:\s*/, '').trim();
+        } else if (loc.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanLoc = loc.replace(/^📝\s*Location:\s*/, '').trim();
+        } else if (loc.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanLoc = loc.replace(/^🗑️\s*Location:\s*/, '').trim();
+        } else {
+          // Fallback for locations without action prefix
+          cleanLoc = loc.replace(/^Location:\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanLoc}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.categories.length > 0) {
+      message += `### Categories (${changesByType.categories.length})\n`;
+      changesByType.categories.forEach(cat => {
+        // Categories are typically updates (landing pages, icons, etc.)
+        let action = '[UPDATED]';
+        let cleanCat = cat;
+        if (cat.startsWith('📂')) {
+          cleanCat = cat.replace(/^📂\s*Category:\s*/, '').trim();
+        } else if (cat.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanCat = cat.replace(/^➕\s*Category:\s*/, '').trim();
+        } else if (cat.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanCat = cat.replace(/^🗑️\s*Category:\s*/, '').trim();
+        } else {
+          cleanCat = cat.replace(/^Category:\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanCat}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.homepage.length > 0) {
+      message += `### Home Page & Site Settings\n`;
+      changesByType.homepage.forEach(hp => {
+        // Home page changes are typically updates
+        const cleanHp = hp.replace(/^🏠\s*/, '').trim();
+        message += `- [UPDATED] ${cleanHp}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.colors.length > 0) {
+      message += `### Color Theme Updates\n`;
+      changesByType.colors.forEach(color => {
+        // Color changes are typically updates
+        const cleanColor = color.replace(/^🎨\s*/, '').trim();
+        message += `- [UPDATED] ${cleanColor}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.config.length > 0) {
+      message += `### Configuration Changes\n`;
+      changesByType.config.forEach(cfg => {
+        // Config changes are typically updates
+        const cleanCfg = cfg.replace(/^⚙️\s*/, '').trim();
+        message += `- [UPDATED] ${cleanCfg}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.manifest.length > 0) {
+      message += `### PWA Manifest Updates\n`;
+      changesByType.manifest.forEach(manifest => {
+        // Manifest changes are typically updates
+        const cleanManifest = manifest.replace(/^📱\s*/, '').trim();
+        message += `- [UPDATED] ${cleanManifest}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.branding.length > 0) {
+      message += `### Branding Images (${changesByType.branding.length})\n`;
+      changesByType.branding.forEach(branding => {
+        // Branding images are typically replacements/updates
+        let action = '[UPDATED]';
+        let cleanBranding = branding;
+        if (branding.includes('Branding:')) {
+          cleanBranding = branding.replace(/^🖼️\s*Branding:\s*/, '').trim();
+        } else {
+          cleanBranding = branding.replace(/^🖼️\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanBranding}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.images.length > 0) {
+      message += `### Images (${changesByType.images.length})\n`;
+      changesByType.images.forEach(img => {
+        // Images are typically uploads (created)
+        let action = '[CREATED]';
+        let cleanImg = img;
+        if (img.startsWith('📸')) {
+          cleanImg = img.replace(/^📸\s*/, '').trim();
+        }
+        // Check if it's a deletion (would have 🗑️)
+        if (img.includes('🗑️') || img.toLowerCase().includes('delete')) {
+          action = '[DELETED]';
+        }
+        message += `- ${action} ${cleanImg}\n`;
+      });
+      message += `\n`;
+    }
+
+    if (changesByType.other.length > 0) {
+      message += `### Other Changes (${changesByType.other.length})\n`;
+      changesByType.other.forEach(other => {
+        // Try to detect action from other items
+        let action = '[UPDATED]';
+        let cleanOther = other;
+        if (other.startsWith('➕')) {
+          action = '[CREATED]';
+          cleanOther = other.replace(/^➕\s*/, '').trim();
+        } else if (other.startsWith('📝')) {
+          action = '[UPDATED]';
+          cleanOther = other.replace(/^📝\s*/, '').trim();
+        } else if (other.startsWith('🗑️')) {
+          action = '[DELETED]';
+          cleanOther = other.replace(/^🗑️\s*/, '').trim();
+        }
+        message += `- ${action} ${cleanOther}\n`;
+      });
+      message += `\n`;
+    }
+
+    // Add operation statistics
+    const createCount = successItems.filter(i => i.includes('➕')).length;
+    const updateCount = successItems.filter(i => i.includes('📝')).length;
+    const deleteCount = successItems.filter(i => i.includes('🗑️')).length;
+
+    if (createCount > 0 || updateCount > 0 || deleteCount > 0) {
+      message += `## Operation Statistics\n`;
+      if (createCount > 0) message += `- Created: ${createCount}\n`;
+      if (updateCount > 0) message += `- Updated: ${updateCount}\n`;
+      if (deleteCount > 0) message += `- Deleted: ${deleteCount}\n`;
+      message += `\n`;
+    }
+
+    return message;
+  },
+
+  /**
    * Trigger batch git commit after all changes
    */
-  async triggerBatchCommit(username, changeCount, sessionId) {
+  async triggerBatchCommit(username, changeCount, sessionId, successItems = []) {
     try {
       console.log(`📦 Triggering batch commit for session: ${sessionId}`);
+      
+      // Generate detailed commit message
+      const detailedMessage = this.generateDetailedCommitMessage(username, changeCount, successItems);
       
       const response = await this.authenticatedFetch(
         `${this.apiConfig.getClientUrl()}/git/commit`,
@@ -4855,7 +6556,7 @@ const UpdateUI = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: `Published ${changeCount} change${changeCount !== 1 ? 's' : ''} by ${username}`,
+            message: detailedMessage,
             author: username,
             sessionId: sessionId  // Pass sessionId to backend
           }),
@@ -4874,6 +6575,417 @@ const UpdateUI = {
     } catch (error) {
       console.error('Batch commit error:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Monitor Netlify build status after a commit
+   */
+  async monitorNetlifyBuild() {
+    if (!this.netlifyConfig.enabled()) {
+      console.log('ℹ️ Netlify monitoring disabled (missing site ID or API token)');
+      return;
+    }
+
+    // Track build start time for progress calculation
+    const buildStartTime = Date.now();
+    const estimatedBuildTime = 120000; // 2 minutes average build time (in milliseconds)
+    let buildCreatedAt = null;
+
+    // Show initial building indicator
+    this.showNetlifyStatus('building', 'Checking build status...', null, 0);
+
+    // Poll for the latest build
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes (5 second intervals)
+    const pollInterval = 5000; // 5 seconds
+
+    const pollBuildStatus = async () => {
+      attempts++;
+      
+      try {
+        const build = await this.getLatestNetlifyBuild();
+        
+        if (!build) {
+          // No build found yet, keep polling
+          if (attempts < maxAttempts) {
+            // Calculate progress based on elapsed time since monitoring started
+            const elapsed = Date.now() - buildStartTime;
+            const progress = Math.min(95, Math.floor((elapsed / estimatedBuildTime) * 100));
+            this.showNetlifyStatus('building', 'Waiting for build to start...', null, progress);
+            setTimeout(pollBuildStatus, pollInterval);
+          } else {
+            this.showNetlifyStatus('unknown', 'Build status unavailable', null, 0);
+          }
+          return;
+        }
+
+        // Track when build actually started
+        if (!buildCreatedAt && build.created_at) {
+          buildCreatedAt = new Date(build.created_at).getTime();
+        }
+
+        const state = build.state;
+        console.log(`🔍 Netlify build status: ${state} (attempt ${attempts})`);
+
+        if (state === 'building' || state === 'enqueued' || state === 'preparing') {
+          // Calculate progress based on elapsed time
+          let progress = 0;
+          if (buildCreatedAt) {
+            const elapsed = Date.now() - buildCreatedAt;
+            // Estimate: enqueued/preparing = 0-20%, building = 20-95%
+            if (state === 'enqueued' || state === 'preparing') {
+              progress = Math.min(20, Math.floor((elapsed / 30000) * 20)); // First 30 seconds
+            } else {
+              // Building phase: 20% to 95%
+              const buildElapsed = Math.max(0, elapsed - 30000); // After first 30 seconds
+              const buildDuration = estimatedBuildTime - 30000;
+              progress = Math.min(95, 20 + Math.floor((buildElapsed / buildDuration) * 75));
+            }
+          } else {
+            // Fallback: estimate based on monitoring time
+            const elapsed = Date.now() - buildStartTime;
+            progress = Math.min(95, Math.floor((elapsed / estimatedBuildTime) * 100));
+          }
+
+          // Still building, continue polling
+          const buildName = build.name || 'Deploy';
+          const elapsedSeconds = Math.floor((Date.now() - (buildCreatedAt || buildStartTime)) / 1000);
+          this.showNetlifyStatus('building', `${buildName}... (${elapsedSeconds}s)`, null, progress);
+          
+          if (attempts < maxAttempts) {
+            setTimeout(pollBuildStatus, pollInterval);
+          } else {
+            this.showNetlifyStatus('timeout', 'Build is taking longer than expected', null, 95);
+          }
+        } else if (state === 'ready') {
+          // Build succeeded
+          const deployUrl = build.deploy_url || build.deploy_ssl_url || '';
+          this.showNetlifyStatus('success', 'Site deployed successfully!', deployUrl, 100);
+        } else if (state === 'error' || state === 'failed') {
+          // Build failed
+          const errorMessage = build.error_message || 'Build failed';
+          this.showNetlifyStatus('failed', `Build failed: ${errorMessage}`, null, 0);
+        } else {
+          // Unknown state
+          this.showNetlifyStatus('unknown', `Build status: ${state}`, null, 0);
+        }
+      } catch (error) {
+        console.error('Error checking Netlify build status:', error);
+        if (attempts < maxAttempts) {
+          const elapsed = Date.now() - buildStartTime;
+          const progress = Math.min(95, Math.floor((elapsed / estimatedBuildTime) * 100));
+          this.showNetlifyStatus('building', 'Checking build status...', null, progress);
+          setTimeout(pollBuildStatus, pollInterval);
+        } else {
+          this.showNetlifyStatus('error', 'Unable to check build status', null, 0);
+        }
+      }
+    };
+
+    // Start polling after a short delay (give Netlify time to detect the commit)
+    setTimeout(pollBuildStatus, 10000); // Wait 10 seconds before first check
+  },
+
+  /**
+   * Get the latest Netlify build for the site
+   */
+  async getLatestNetlifyBuild() {
+    try {
+      const siteId = this.netlifyConfig.siteId;
+      const apiToken = this.netlifyConfig.apiToken;
+      
+      const response = await fetch(
+        `https://api.netlify.com/api/v1/sites/${siteId}/deploys?per_page=1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Netlify API error: ${response.status}`);
+      }
+
+      const deploys = await response.json();
+      return deploys && deploys.length > 0 ? deploys[0] : null;
+    } catch (error) {
+      console.error('Failed to fetch Netlify build status:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Show Netlify build status indicator with progress bar
+   */
+  showNetlifyStatus(status, message, deployUrl = null, progress = 0) {
+    // Remove existing indicator
+    const existing = document.getElementById('netlify-status-indicator');
+    if (existing) {
+      existing.remove();
+    }
+
+    // Status colors and icons
+    const statusConfig = {
+      building: {
+        bg: '#fff3cd',
+        border: '#ffecb5',
+        text: '#664d03',
+        icon: '⏳',
+        label: 'Building',
+        progressColor: '#ffc107'
+      },
+      success: {
+        bg: '#d1e7dd',
+        border: '#badbcc',
+        text: '#0f5132',
+        icon: '✅',
+        label: 'Deployed',
+        progressColor: '#198754'
+      },
+      failed: {
+        bg: '#f8d7da',
+        border: '#f5c2c7',
+        text: '#842029',
+        icon: '❌',
+        label: 'Failed',
+        progressColor: '#dc3545'
+      },
+      timeout: {
+        bg: '#fff3cd',
+        border: '#ffecb5',
+        text: '#664d03',
+        icon: '⏱️',
+        label: 'Timeout',
+        progressColor: '#ffc107'
+      },
+      unknown: {
+        bg: '#cff4fc',
+        border: '#b6effb',
+        text: '#055160',
+        icon: '❓',
+        label: 'Unknown',
+        progressColor: '#0dcaf0'
+      },
+      error: {
+        bg: '#f8d7da',
+        border: '#f5c2c7',
+        text: '#842029',
+        icon: '⚠️',
+        label: 'Error',
+        progressColor: '#dc3545'
+      }
+    };
+
+    const config = statusConfig[status] || statusConfig.unknown;
+
+    // Create indicator element
+    const indicator = document.createElement('div');
+    indicator.id = 'netlify-status-indicator';
+    indicator.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      left: 20px;
+      padding: 12px 16px;
+      border: 2px solid ${config.border};
+      border-radius: 8px;
+      background-color: ${config.bg};
+      color: ${config.text};
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 10000;
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 400px;
+      margin-left: auto;
+      animation: slideInUp 0.3s ease-out;
+      box-sizing: border-box;
+    `;
+    
+    // Mobile-specific styles
+    const mobileStyle = document.createElement('style');
+    mobileStyle.id = 'netlify-mobile-style';
+    mobileStyle.textContent = `
+      @media (max-width: 768px) {
+        #netlify-status-indicator {
+          left: 10px !important;
+          right: 10px !important;
+          bottom: 10px !important;
+          max-width: 100% !important;
+          font-size: 13px !important;
+          padding: 10px 14px !important;
+        }
+        #netlify-status-indicator button {
+          min-width: 32px !important;
+          min-height: 32px !important;
+          font-size: 22px !important;
+        }
+      }
+      @media (max-width: 480px) {
+        #netlify-status-indicator {
+          font-size: 12px !important;
+          padding: 8px 12px !important;
+        }
+      }
+    `;
+    if (!document.getElementById('netlify-mobile-style')) {
+      document.head.appendChild(mobileStyle);
+    }
+
+    // Add spinner for building state
+    let statusContent = '';
+    if (status === 'building') {
+      statusContent = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="spinner" style="
+            width: 16px;
+            height: 16px;
+            border: 2px solid ${config.border};
+            border-top-color: ${config.text};
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          "></div>
+          <span>${config.icon} ${config.label}</span>
+        </div>
+      `;
+    } else {
+      statusContent = `<div>${config.icon} <strong>${config.label}</strong></div>`;
+    }
+
+    // Build progress bar HTML
+    let progressBarHtml = '';
+    if (status === 'building' || status === 'timeout') {
+      progressBarHtml = `
+        <div style="margin-top: 10px;">
+          <div style="
+            width: 100%;
+            height: 8px;
+            background-color: ${config.border};
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+          ">
+            <div id="netlify-progress-bar" style="
+              width: ${progress}%;
+              height: 100%;
+              background: linear-gradient(90deg, ${config.progressColor}, ${config.progressColor}dd);
+              border-radius: 4px;
+              transition: width 0.5s ease-out;
+              position: relative;
+              overflow: hidden;
+            ">
+              <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                  90deg,
+                  transparent,
+                  rgba(255,255,255,0.3),
+                  transparent
+                );
+                animation: shimmer 2s infinite;
+              "></div>
+            </div>
+          </div>
+          <div style="
+            margin-top: 4px;
+            font-size: 11px;
+            opacity: 0.8;
+            text-align: right;
+          ">${progress}%</div>
+        </div>
+      `;
+    } else if (status === 'success') {
+      progressBarHtml = `
+        <div style="margin-top: 10px;">
+          <div style="
+            width: 100%;
+            height: 8px;
+            background-color: ${config.border};
+            border-radius: 4px;
+            overflow: hidden;
+          ">
+            <div style="
+              width: 100%;
+              height: 100%;
+              background-color: ${config.progressColor};
+              border-radius: 4px;
+              transition: width 0.5s ease-out;
+            "></div>
+          </div>
+        </div>
+      `;
+    }
+
+    indicator.innerHTML = `
+      ${statusContent}
+      <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">${message}</div>
+      ${progressBarHtml}
+      ${deployUrl ? `<div style="margin-top: 8px;"><a href="${deployUrl}" target="_blank" style="color: ${config.text}; text-decoration: underline; display: inline-block; min-height: 44px; line-height: 44px; padding: 0 8px; touch-action: manipulation;">View Site →</a></div>` : ''}
+      <button onclick="this.parentElement.remove()" style="
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        line-height: 1;
+        color: ${config.text};
+        cursor: pointer;
+        opacity: 0.6;
+        padding: 4px;
+        min-width: 28px;
+        min-height: 28px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" ontouchstart="this.style.opacity='1'" ontouchend="this.style.opacity='0.6'">&times;</button>
+    `;
+
+    // Add animations if not already present
+    if (!document.getElementById('netlify-spinner-style')) {
+      const style = document.createElement('style');
+      style.id = 'netlify-spinner-style';
+      style.textContent = `
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes slideInUp {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(indicator);
+
+    // Auto-remove success/unknown states after 10 seconds
+    if (status === 'success' || status === 'unknown') {
+      setTimeout(() => {
+        if (indicator.parentNode) {
+          indicator.style.animation = 'slideInUp 0.3s ease-out reverse';
+          setTimeout(() => indicator.remove(), 300);
+        }
+      }, 10000);
     }
   },
 
@@ -5046,7 +7158,7 @@ const UpdateUI = {
    * @param {boolean} pushGit - Whether to push to git immediately (false for batch)
    * @param {string} sessionId - Batch session ID (for combining commits)
    */
-  async uploadImageFromDataUrl(dataUrl, targetPath, pushGit = true, sessionId = null) {
+  async uploadImageFromDataUrl(dataUrl, targetPath, pushGit = true, sessionId = null, useBrandingEndpoint = false) {
     // Convert data URL to blob
     const response = await fetch(dataUrl);
     const blob = await response.blob();
@@ -5054,29 +7166,60 @@ const UpdateUI = {
     // Create FormData for upload
     const formData = new FormData();
     const filename = targetPath.split('/').pop();
-    formData.append('file', blob, filename);
-    formData.append('path', targetPath);
     
-    // Upload to branding/upload endpoint with batch mode and sessionId support
-    const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
-    const url = pushGit 
-      ? `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}`
-      : `${this.apiConfig.getClientUrl()}${this.apiConfig.endpoints.branding}?batch=true&pushGit=false${sessionParam}`;
-    
-    console.log(`📤 Uploading to: ${url}, pushGit=${pushGit}, sessionId=${sessionId}`);
-    
-    const uploadResponse = await this.authenticatedFetch(url, {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      console.error(`Upload failed for ${filename}:`, errorText);
-      throw new Error(`Failed to upload ${filename}`);
+    // Choose endpoint and field name based on useBrandingEndpoint flag
+    // Branding images go to /branding/upload with field name "file" and use sessionId (camelCase)
+    // General images (including ad images) go to /images/upload with field name "image" and use session_id (underscore)
+    if (useBrandingEndpoint) {
+      formData.append('file', blob, filename);
+      formData.append('path', targetPath);
+      formData.append('type', 'branding');
+      const endpoint = this.apiConfig.endpoints.branding;
+      const sessionParam = sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : '';
+      const url = pushGit 
+        ? `${this.apiConfig.getClientUrl()}${endpoint}`
+        : `${this.apiConfig.getClientUrl()}${endpoint}?batch=true&pushGit=false${sessionParam}`;
+      
+      console.log(`📤 Uploading branding image to: ${url}, pushGit=${pushGit}, sessionId=${sessionId}`);
+      
+      const uploadResponse = await this.authenticatedFetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error(`Upload failed for ${filename}:`, errorText);
+        throw new Error(`Failed to upload ${filename}`);
+      }
+      
+      return await uploadResponse.json();
+    } else {
+      // General images endpoint (for ad images, menu item images, etc.)
+      // Note: images endpoint expects field name "image" and parameter "session_id" (underscore)
+      formData.append('image', blob, filename);
+      const endpoint = this.apiConfig.endpoints.images;
+      const sessionParam = sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : '';
+      const pushParam = pushGit ? 'push=true' : 'push=false';
+      // Add batch=true when in batch mode (sessionId provided and not pushing immediately)
+      const batchParam = (sessionId && !pushGit) ? '&batch=true' : '';
+      const url = `${this.apiConfig.getClientUrl()}${endpoint}?${pushParam}${sessionParam}${batchParam}`;
+      
+      console.log(`📤 Uploading image to: ${url}, pushGit=${pushGit}, session_id=${sessionId}, batch=${!!batchParam}`);
+      
+      const uploadResponse = await this.authenticatedFetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error(`Upload failed for ${filename}:`, errorText);
+        throw new Error(`Failed to upload ${filename}`);
+      }
+      
+      return await uploadResponse.json();
     }
-    
-    return await uploadResponse.json();
   },
 
   /**
@@ -5091,8 +7234,56 @@ const UpdateUI = {
       throw new Error('Draft not found');
     }
     
+    // Check for pending image upload
+    if (ad._imagePending && ad.image) {
+      try {
+        console.log(`🔍 Checking for image upload for ad ${adId}, image path: ${ad.image}`);
+        // Try current adId first
+        let imageDataUrl = sessionStorage.getItem(`ad_image_${adId}`);
+        console.log(`🔍 Image data for key 'ad_image_${adId}':`, imageDataUrl ? 'FOUND' : 'NOT FOUND');
+        
+        // If not found, try old new_ad_ format (in case ID was changed from new_ad_ to slug)
+        if (!imageDataUrl && adId.startsWith('new_ad_') === false) {
+          console.log(`🔍 Checking for old new_ad_ keys...`);
+          // Check if there's an image stored under any new_ad_ key
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith('ad_image_new_ad_')) {
+              const oldImageData = sessionStorage.getItem(key);
+              if (oldImageData) {
+                console.log(`📦 Found image under old key ${key}, migrating to new key`);
+                imageDataUrl = oldImageData;
+                // Migrate to new key
+                sessionStorage.setItem(`ad_image_${adId}`, imageDataUrl);
+                sessionStorage.removeItem(key);
+                break;
+              }
+            }
+          }
+        }
+        
+        if (imageDataUrl) {
+          console.log(`📤 Uploading ad image (batch mode, session: ${sessionID}): ${ad.image}`);
+          const uploadResult = await this.uploadImageFromDataUrl(imageDataUrl, ad.image, false, sessionID, false); // false = use images endpoint, not branding
+          console.log(`✅ Ad image uploaded successfully:`, uploadResult);
+          
+          // Clean up after successful upload
+          sessionStorage.removeItem(`ad_image_${adId}`);
+        } else {
+          console.warn(`⚠️ No image data found in sessionStorage for ad ${adId}. Image path: ${ad.image}`);
+          console.warn(`⚠️ Available sessionStorage keys:`, Array.from({length: sessionStorage.length}, (_, i) => sessionStorage.key(i)).filter(k => k && k.includes('ad_image')));
+        }
+      } catch (uploadError) {
+        console.error('❌ Ad image upload failed:', uploadError);
+        // Don't fail the entire publish, but log the error
+        this.showError(`Ad published but image upload failed: ${uploadError.message}`);
+      }
+    } else if (ad.image && !ad._imagePending) {
+      console.log(`ℹ️ Ad ${adId} has image ${ad.image} but no pending upload (image already exists)`);
+    }
+    
     // Clean up ad data (remove internal fields)
-    const { _isDraft, _isNew, _isDeleted, _draftSavedAt, ...cleanAd } = ad;
+    const { _isDraft, _isNew, _isDeleted, _draftSavedAt, _imagePending, ...cleanAd } = ad;
     
     // Normalize image path - remove leading slashes to avoid double slashes
     if (cleanAd.image) {
@@ -5103,8 +7294,17 @@ const UpdateUI = {
     
     // Handle deletions separately
     if (ad._isDeleted) {
+      // If it's a new ad that was never published, just clear the draft
+      if (ad._isNew) {
+        console.log(`🗑️ Ad ${adId} is new and deleted - clearing draft only`);
+        this.clearDraftAd(adId);
+        await this.loadAdvertisements();
+        return { success: true, message: 'Draft deleted', backendOperation: false };
+      }
+      
+      // Use sessionId (camelCase) for consistency with other endpoints
       const url = sessionID
-        ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&session_id=${sessionID}`
+        ? `${this.apiConfig.getClientUrl()}/ads/${adId}?push=false&sessionId=${sessionID}`
         : `${this.apiConfig.getClientUrl()}/ads/${adId}?push=${pushGit}`;
       
       const response = await this.authenticatedFetch(url, {
@@ -5115,7 +7315,30 @@ const UpdateUI = {
       if (response.ok) {
         this.clearDraftAd(adId);
         await this.loadAdvertisements();
-        return await response.json();
+        const result = await response.json();
+        return { ...result, backendOperation: true };
+      } else if (response.status === 404) {
+        // Ad doesn't exist in backend working directory
+        // Check if ad exists in Hugo's JSON (which means it exists in Git)
+        const adExistsInGit = this.state.advertisements.some(a => a.id === adId && !a._isDraft);
+        
+        if (adExistsInGit) {
+          // Ad exists in Git but not in working directory - still need to delete from Git
+          // In batch mode with sessionId, we need to track this so batch commit can delete it
+          // The backend's batch commit should handle deleting files that exist in Git but not locally
+          console.log(`⚠️ Ad ${adId} not in backend working dir but exists in Git - marking for Git deletion`);
+          console.log(`📝 SessionId: ${sessionID}, will be deleted during batch commit`);
+          
+          // Don't clear draft yet - keep it so batch commit can process it
+          // Return backendOperation: true so batch commit happens
+          return { success: true, message: 'Ad will be deleted from Git during batch commit', backendOperation: true };
+        } else {
+          // Ad doesn't exist anywhere - just clear the draft
+          console.log(`⚠️ Ad ${adId} not found in backend (404) and not in Git - clearing draft only`);
+          this.clearDraftAd(adId);
+          await this.loadAdvertisements();
+          return { success: true, message: 'Draft deleted (ad was not in backend)', backendOperation: false };
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Ad delete failed:', errorData);
@@ -5129,8 +7352,8 @@ const UpdateUI = {
     
     if (sessionID) {
       url = ad._isNew
-        ? `${this.apiConfig.getClientUrl()}/ads?push=false&session_id=${sessionID}`
-        : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=false&session_id=${sessionID}`;
+        ? `${this.apiConfig.getClientUrl()}/ads?push=false&sessionId=${sessionID}`
+        : `${this.apiConfig.getClientUrl()}/ads?id=${encodeURIComponent(adId)}&push=false&sessionId=${sessionID}`;
     } else {
       url = ad._isNew
         ? `${this.apiConfig.getClientUrl()}/ads?push=${pushGit}`
@@ -5148,7 +7371,7 @@ const UpdateUI = {
       console.log(`Ad not found in backend, creating instead: ${adId}`);
       method = 'POST';
       url = sessionID
-        ? `${this.apiConfig.getClientUrl()}/ads?push=false&session_id=${sessionID}`
+        ? `${this.apiConfig.getClientUrl()}/ads?push=false&sessionId=${sessionID}`
         : `${this.apiConfig.getClientUrl()}/ads?push=${pushGit}`;
       
       response = await this.authenticatedFetch(url, {
@@ -5161,7 +7384,8 @@ const UpdateUI = {
     if (response.ok) {
       this.clearDraftAd(adId);
       await this.loadAdvertisements();
-      return await response.json();
+      const result = await response.json();
+      return { ...result, backendOperation: true };
     } else {
       const errorData = await response.json().catch(() => ({}));
       console.error('Ad publish failed:', errorData);
@@ -5194,7 +7418,7 @@ const UpdateUI = {
     console.log('Publishing locations data:', locationsData);
     
     const url = sessionID 
-      ? `${this.apiConfig.getClientUrl()}/locations?push=false&session_id=${sessionID}`
+      ? `${this.apiConfig.getClientUrl()}/locations?push=false&sessionId=${sessionID}`
       : `${this.apiConfig.getClientUrl()}/locations?push=${pushGit}`;
     
     const response = await this.authenticatedFetch(url, {
@@ -5218,7 +7442,18 @@ const UpdateUI = {
    * Edit menu item - opens modal with item data
    */
   editMenuItem(itemId) {
-    openMenuItemModal(itemId);
+    try {
+      if (!itemId) {
+        console.error('❌ editMenuItem called without itemId');
+        this.showError('Item ID is required');
+        return;
+      }
+      console.log(`📝 Editing menu item: ${itemId}`);
+      openMenuItemModal(itemId);
+    } catch (error) {
+      console.error('❌ Error in editMenuItem:', error);
+      this.showError(`Failed to open edit modal: ${error.message}`);
+    }
   },
 
   /**
@@ -5480,27 +7715,36 @@ const UpdateUI = {
    * Helper: Normalize image path for display (add leading / if needed)
    * Also checks for pending image uploads stored in sessionStorage
    */
-  getDisplayImagePath(path, itemId = null) {
+  getDisplayImagePath(path, itemId = null, type = 'item') {
     if (!path) return '';
     
     // Check if this is a pending upload (has data URL in sessionStorage)
     if (itemId) {
-      // Try to get the preview data URL
-      const previewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
-      console.log(`Checking image previews for ${itemId}, path: ${path}`);
-      console.log(`Session key: image_previews_${itemId}`, previewsJson ? 'FOUND' : 'NOT FOUND');
-      
-      if (previewsJson) {
-        try {
-          const previews = JSON.parse(previewsJson);
-          console.log('Image previews object:', previews);
-          
-          if (previews[path]) {
-            console.log(`✅ Using data URL preview for: ${path}`);
-            return previews[path]; // Return data URL for preview
+      if (type === 'ad') {
+        // For ads, check ad_image_${adId} in sessionStorage
+        const adImageData = sessionStorage.getItem(`ad_image_${itemId}`);
+        if (adImageData) {
+          console.log(`✅ Using data URL preview for ad ${itemId}: ${path}`);
+          return adImageData; // Return data URL for preview
+        }
+      } else {
+        // For menu items, check image_previews_${itemId}
+        const previewsJson = sessionStorage.getItem(`image_previews_${itemId}`);
+        console.log(`Checking image previews for ${itemId}, path: ${path}`);
+        console.log(`Session key: image_previews_${itemId}`, previewsJson ? 'FOUND' : 'NOT FOUND');
+        
+        if (previewsJson) {
+          try {
+            const previews = JSON.parse(previewsJson);
+            console.log('Image previews object:', previews);
+            
+            if (previews[path]) {
+              console.log(`✅ Using data URL preview for: ${path}`);
+              return previews[path]; // Return data URL for preview
+            }
+          } catch (e) {
+            console.error('Error parsing image previews:', e);
           }
-        } catch (e) {
-          console.error('Error parsing image previews:', e);
         }
       }
     }
@@ -5555,6 +7799,47 @@ const UpdateUI = {
         flex-direction: column;
         gap: 10px;
       `;
+      
+      // Add mobile-responsive styles for notification container
+      const notificationMobileStyle = document.createElement('style');
+      notificationMobileStyle.id = 'notification-mobile-style';
+      notificationMobileStyle.textContent = `
+        @media (max-width: 768px) {
+          #notification-container {
+            left: 10px !important;
+            right: 10px !important;
+            top: 1rem !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            gap: 8px !important;
+          }
+          #notification-container > div {
+            min-width: auto !important;
+            font-size: 13px !important;
+            padding: 10px 40px 10px 12px !important;
+          }
+          #notification-container button {
+            min-width: 32px !important;
+            min-height: 32px !important;
+            font-size: 22px !important;
+            top: 6px !important;
+            right: 6px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          #notification-container {
+            top: 0.5rem !important;
+          }
+          #notification-container > div {
+            font-size: 12px !important;
+            padding: 8px 36px 8px 10px !important;
+          }
+        }
+      `;
+      if (!document.getElementById('notification-mobile-style')) {
+        document.head.appendChild(notificationMobileStyle);
+      }
+      
       document.body.appendChild(notificationContainer);
     }
 
@@ -5586,7 +7871,7 @@ const UpdateUI = {
     // Support multi-line messages
     const formattedMessage = message.replace(/\n/g, '<br>');
     
-    // Close button (custom, no Bootstrap)
+    // Close button (custom, no Bootstrap) - mobile-friendly
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
     closeBtn.style.cssText = `
@@ -5599,13 +7884,17 @@ const UpdateUI = {
       line-height: 1;
       color: ${colors.text};
       cursor: pointer;
-      padding: 0;
-      width: 24px;
-      height: 24px;
+      padding: 4px;
+      min-width: 28px;
+      min-height: 28px;
       opacity: 0.5;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     `;
     closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
     closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+    closeBtn.ontouchstart = () => closeBtn.style.opacity = '1';
+    closeBtn.ontouchend = () => closeBtn.style.opacity = '0.5';
     
     const messageDiv = document.createElement('div');
     messageDiv.style.cssText = 'white-space: pre-wrap; padding-right: 10px; font-weight: 500;';
@@ -5679,8 +7968,15 @@ function openMenuItemModal(itemId = null, categoryName = null) {
   
   if (itemId) {
     title.textContent = 'Edit Menu Item';
-    // Load item data (from state, which includes drafts)
-    const item = UpdateUI.state.menuItems.find(i => i.id === itemId);
+    // Load item data (from state first, then check drafts)
+    let item = UpdateUI.state.menuItems ? UpdateUI.state.menuItems.find(i => i.id === itemId) : null;
+    
+    // If not found in state, check drafts
+    if (!item) {
+      const drafts = UpdateUI.getDrafts();
+      item = drafts[itemId];
+    }
+    
     if (item) {
       document.getElementById('itemId').value = item.id;
       document.getElementById('itemTitle').value = item.title;
@@ -5809,6 +8105,15 @@ function openMenuItemModal(itemId = null, categoryName = null) {
           }
         });
       }
+    } else {
+      // Item not found - show error and still open modal for debugging
+      console.error(`❌ Menu item not found: ${itemId}`);
+      console.log('Available items in state:', UpdateUI.state.menuItems ? UpdateUI.state.menuItems.length : 0);
+      console.log('Available drafts:', Object.keys(UpdateUI.getDrafts()).length);
+      UpdateUI.showError(`Menu item "${itemId}" not found. Please refresh the page and try again.`);
+      // Still open modal but with empty form (user can manually enter data if needed)
+      title.textContent = 'Edit Menu Item (Not Found)';
+      document.getElementById('itemId').value = itemId;
     }
   } else {
     title.textContent = 'Add Menu Item';
@@ -6732,7 +9037,7 @@ function selectAdImageFromCard(imagePath) {
 async function saveAd(event) {
   event.preventDefault();
   
-  const adId = document.getElementById('adId').value;
+  let adId = document.getElementById('adId').value;
   const isNew = adId.startsWith('new_ad_');
   
   // Collect checked days of week from checkboxes
@@ -6743,9 +9048,38 @@ async function saveAd(event) {
   const locations = Array.from(document.querySelectorAll('input[name="adLocations"]:checked'))
     .map(checkbox => checkbox.value);
   
+  const title = document.getElementById('adTitle').value.trim();
+  
+  // Store old ID for potential migration
+  const oldAdId = adId;
+  
+  // Generate slug-based ID from title for new ads
+  if (isNew && title) {
+    adId = title.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    // Update the hidden input with the new ID
+    document.getElementById('adId').value = adId;
+    
+    // Migrate sessionStorage entries if ID changed
+    if (oldAdId !== adId) {
+      const oldImageKey = `ad_image_${oldAdId}`;
+      const newImageKey = `ad_image_${adId}`;
+      const oldImageData = sessionStorage.getItem(oldImageKey);
+      if (oldImageData) {
+        console.log(`📦 Migrating image from ${oldImageKey} to ${newImageKey}`);
+        sessionStorage.setItem(newImageKey, oldImageData);
+        sessionStorage.removeItem(oldImageKey);
+      }
+    }
+  }
+  
   const adData = {
     id: adId,
-    title: document.getElementById('adTitle').value,
+    title: title,
     description: document.getElementById('adDescription').value,
     link: document.getElementById('adLink').value,
     weight: parseInt(document.getElementById('adWeight').value) || 1,
@@ -6762,7 +9096,13 @@ async function saveAd(event) {
   if (imageInput && imageInput.files && imageInput.files[0]) {
     // New image uploaded - will be handled on publish
     const file = imageInput.files[0];
-    adData.image = `images/ads/${file.name}`;
+    // Normalize filename: remove spaces, special chars, keep extension
+    const fileExtension = file.name.split('.').pop();
+    const baseName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+    const normalizedFileName = `${baseName}.${fileExtension}`;
+    adData.image = `images/${normalizedFileName}`;
     adData._imagePending = true;
     
     // Store file in sessionStorage for upload on publish
@@ -7576,10 +9916,8 @@ function checkOverlap(day, startHour, endHour, excludeBlockId = null) {
 
 // Setup drag functionality to move blocks between days
 function setupBlockDrag(block, blockId, currentDay) {
-  // Add right-click context menu to change day
-  block.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    
+  // Function to change day (used by both context menu and long-press)
+  const changeDay = () => {
     const newDay = prompt(
       `Change day for this block?\n\nCurrent: ${currentDay.toUpperCase()}\n\nEnter new day (mon, tue, wed, thu, fri, sat, sun):`,
       currentDay
@@ -7637,7 +9975,81 @@ function setupBlockDrag(block, blockId, currentDay) {
       console.log(`✅ Moved block to ${day}: ${formatHour(start)} - ${formatHour(end)} at ${newTop}px`);
       UpdateUI.showSuccess(`Moved to ${day.toUpperCase()}`);
     }
+  };
+  
+  // Add right-click context menu (desktop)
+  block.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    changeDay();
   });
+  
+  // Add long-press support for mobile (touch devices)
+  let longPressTimer = null;
+  let hasLongPressed = false;
+  
+  block.addEventListener('touchstart', function(e) {
+    hasLongPressed = false;
+    longPressTimer = setTimeout(() => {
+      hasLongPressed = true;
+      e.preventDefault();
+      // Visual feedback
+      block.style.opacity = '0.7';
+      setTimeout(() => {
+        block.style.opacity = '';
+      }, 200);
+      changeDay();
+    }, 500); // 500ms long press
+  }, { passive: true });
+  
+  block.addEventListener('touchend', function(e) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  });
+  
+  block.addEventListener('touchmove', function(e) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  });
+  
+  // Add a button to change day (visible on mobile)
+  const label = block.querySelector('.time-block-label');
+  if (label) {
+    const changeDayBtn = document.createElement('button');
+    changeDayBtn.innerHTML = '↔';
+    changeDayBtn.title = 'Change day (or long-press block)';
+    changeDayBtn.style.cssText = `
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 44px;
+      height: 44px;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      min-width: 44px;
+      min-height: 44px;
+      touch-action: manipulation;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    `;
+    changeDayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      changeDay();
+    });
+    block.style.position = 'relative';
+    block.appendChild(changeDayBtn);
+  }
 }
 
 // Setup resize functionality for a time block (mouse + touch support)
@@ -10915,6 +13327,41 @@ const HomePageManager = {
     return draft ? JSON.parse(draft) : null;
   },
 
+  // Helper function to remove empty values from nested objects
+  removeEmptyValues(obj) {
+    if (obj === null || obj === undefined) {
+      return undefined;
+    }
+    
+    if (typeof obj !== 'object') {
+      return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeEmptyValues(item)).filter(item => item !== undefined);
+    }
+    
+    const cleaned = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === null || value === undefined || value === '') {
+        continue; // Skip empty values
+      }
+      
+      if (typeof value === 'object') {
+        const cleanedValue = this.removeEmptyValues(value);
+        // Only include if the cleaned object is not empty
+        if (cleanedValue !== undefined && 
+            (typeof cleanedValue !== 'object' || Object.keys(cleanedValue).length > 0)) {
+          cleaned[key] = cleanedValue;
+        }
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  },
+
   async publishDraft(sessionID = null) {
     try {
       const draft = this.getDraft();
@@ -10926,11 +13373,11 @@ const HomePageManager = {
 
       // Build URLs with batch session parameters
       const homepageUrl = sessionID
-        ? `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=false&session_id=${sessionID}`
+        ? `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=false&sessionId=${sessionID}`
         : `${UpdateUI.apiConfig.getClientUrl()}/homepage?push=true`;
       
       const configUrl = sessionID
-        ? `${UpdateUI.apiConfig.getClientUrl()}/config?push=false&session_id=${sessionID}`
+        ? `${UpdateUI.apiConfig.getClientUrl()}/config?push=false&sessionId=${sessionID}`
         : `${UpdateUI.apiConfig.getClientUrl()}/config?push=true`;
 
       console.log('🔗 Publishing to URL:', homepageUrl);
@@ -10951,18 +13398,24 @@ const HomePageManager = {
         throw new Error(`Homepage save failed: ${errorData.error || homepageResponse.statusText}`);
       }
 
-      // Save config
-      const configResponse = await UpdateUI.authenticatedFetch(configUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(draft.config)
-      });
+      // Clean config to remove empty values before sending
+      // This prevents empty strings from overwriting existing config values
+      const cleanedConfig = this.removeEmptyValues(draft.config) || {};
+      
+      // Save config (only if there's actual data to save)
+      if (Object.keys(cleanedConfig).length > 0) {
+        const configResponse = await UpdateUI.authenticatedFetch(configUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cleanedConfig)
+        });
 
-      if (!configResponse.ok) {
-        const errorData = await configResponse.json().catch(() => ({}));
-        throw new Error(`Config save failed: ${errorData.error || configResponse.statusText}`);
+        if (!configResponse.ok) {
+          const errorData = await configResponse.json().catch(() => ({}));
+          throw new Error(`Config save failed: ${errorData.error || configResponse.statusText}`);
+        }
       }
 
       // In batch mode, don't clear draft or reload yet
@@ -11021,18 +13474,35 @@ function saveHomePageSettings() {
 
 async function saveManifestSettings() {
   try {
+    // Helper function to safely get element value with fallback
+    const getValue = (id, fallbackId = null) => {
+      const element = document.getElementById(id);
+      if (element && element.value) {
+        return element.value;
+      }
+      if (fallbackId) {
+        const fallbackElement = document.getElementById(fallbackId);
+        if (fallbackElement && fallbackElement.value) {
+          return fallbackElement.value;
+        }
+      }
+      return '';
+    };
+
     // Collect manifest settings (preserve icons and screenshots)
+    // Handle both old form (manifestThemeColor, manifestBackgroundColor) 
+    // and new form (manifestThemeColorText, manifestBgColorText)
     const manifestData = {
-      name: document.getElementById('manifestName').value,
-      short_name: document.getElementById('manifestShortName').value,
-      description: document.getElementById('manifestDescription').value,
-      theme_color: document.getElementById('manifestThemeColorText').value,
-      background_color: document.getElementById('manifestBgColorText').value,
-      start_url: document.getElementById('manifestStartUrl').value,
-      display: document.getElementById('manifestDisplay').value,
-      orientation: document.getElementById('manifestOrientation').value,
-      icons: HomePageManager.manifestSettings.icons || [],
-      screenshots: HomePageManager.manifestSettings.screenshots || []
+      name: getValue('manifestName'),
+      short_name: getValue('manifestShortName'),
+      description: getValue('manifestDescription'),
+      theme_color: getValue('manifestThemeColorText', 'manifestThemeColor'),
+      background_color: getValue('manifestBgColorText', 'manifestBackgroundColor'),
+      start_url: getValue('manifestStartUrl'),
+      display: getValue('manifestDisplay'),
+      orientation: getValue('manifestOrientation'),
+      icons: (HomePageManager && HomePageManager.manifestSettings && HomePageManager.manifestSettings.icons) || [],
+      screenshots: (HomePageManager && HomePageManager.manifestSettings && HomePageManager.manifestSettings.screenshots) || []
     };
 
     // Save manifest
@@ -11044,15 +13514,20 @@ async function saveManifestSettings() {
       body: JSON.stringify(manifestData)
     });
 
-    if (manifestResponse.ok) {
-      UpdateUI.showSuccess('PWA manifest saved successfully!');
+    if (!manifestResponse.ok) {
+      const errorData = await manifestResponse.json().catch(() => ({}));
+      const errorMessage = errorData.error || manifestResponse.statusText || 'Unknown error';
+      throw new Error(`Failed to save manifest: ${errorMessage}`);
+    }
+
+    UpdateUI.showSuccess('PWA manifest saved successfully!');
+    if (HomePageManager && HomePageManager.loadManifestSettings) {
       await HomePageManager.loadManifestSettings();
-    } else {
-      throw new Error('Failed to save manifest');
     }
   } catch (error) {
     console.error('Error saving manifest:', error);
     UpdateUI.showError('Failed to save manifest: ' + error.message);
+    throw error; // Re-throw for debugging
   }
 }
 

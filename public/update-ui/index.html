@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <title>Update Menu | Menu Demo</title>
@@ -29,12 +29,12 @@
 <meta name="theme-color" content="#000000"/>
 
 
-<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/colors.css"/>
-<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/custom.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/colors.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/custom.css"/>
 
-<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/adsbase.css"/>
-<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/apple.css"/>
-<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/ordering-system.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/adsbase.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/apple.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/ordering-system.css"/>
 
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
 
@@ -66,7 +66,7 @@
 
 <script>
     if (typeof navigator.serviceWorker !== 'undefined') {
-        navigator.serviceWorker.register('https:\/\/tinytavern.ttmenus.com\/OneSignalSDKWorker.js?v=2')
+        navigator.serviceWorker.register('http:\/\/localhost:1313\/OneSignalSDKWorker.js?v=2')
         .then(function(registration) {
         console.log('Service Worker registered with scope:', registration.scope);
         })
@@ -79,7 +79,7 @@
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(function(OneSignal) {
-    const appId = "9d041f45-1cc0-4e2e-9bc4-59778502838f";
+    const appId = "";
     
     
     if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
@@ -135,7 +135,7 @@
 
 
 
-<script src="https://tinytavern.ttmenus.com/js/analytics-tracking.js"></script><script>
+<script src="http://localhost:1313/js/analytics-tracking.js"></script><script>
 
 window.AUTH_CONFIG = {
     apiUrl: "https:\/\/auth.ttmenus.com\/api\/v1"
@@ -146,24 +146,24 @@ window.UPDATE_API_URL = "https:\/\/content.ttmenus.com\/api";
 window.CLIENT_ID = "ttms_tinytavern";
 
 
-window.hugoStaticImages = ["images/Amazing Vegetarian Panini.webp","images/Basic Omelet.webp","images/Build Your Omelet.webp","images/Cappuccino.webp","images/Citrusy Orange Twist.webp","images/Classic French Toast Platter.webp","images/Creamy Cajun Alfredo Pasta.webp","images/Creamy Cajun Tomato Pasta.webp","images/Dalgona.webp","images/Everything Pancakes-Blueberry.webp","images/Everything Pancakes-Chocolate Chip.webp","images/Everything Pancakes-Cinnamon Swirl.webp","images/Everything Pancakes-Traditional.webp","images/Everything Waffles-Blueberry.webp","images/Everything Waffles-Chocolate Chip.webp","images/Everything Waffles-Cinnamon.webp","images/Everything Waffles-Traditional.webp","images/French Toast Platter.webp","images/Grilled Chicken Panini.webp","images/Ham Panini.webp","images/Homemade Chicken Burger.webp","images/Homemade Lamb Burger.webp","images/Hot Caramel Latte.webp","images/Hot Chocolate.webp","images/Jalapeno Turkey Bacon Panini.webp","images/Milkshake.webp","images/Pina Colada Mocktail.webp","images/Salted Caramel Chocolate (Hot_Cold).webp","images/Signature Chicken Burger.webp","images/Signature Lamb Burger.webp","images/Simple Breakfast Platter.webp","images/Specialty Omelet.webp","images/Strawberry Limeade.webp","images/Supreme Breakfast Platter.webp","images/TTs Talked About Panini.webp","images/Waffle Platter.webp","images/Watermelon Cocktail.webp","images/food1.webp","images/food2.webp","images/food3.webp","images/food4.webp","images/food5.webp","images/food6.webp","images/food7.webp","images/food8.webp","images/waffles.webp",];
+window.hugoStaticImages = [];
 
 
 window.hugoSiteConfig = {
   title: "\"Tiny Tavern\"",
-  baseURL: "\"https://tinytavern.ttmenus.com/\"",
+  baseURL: "\"http://localhost:1313/\"",
   languageCode: "\"en-tt\"",
   params: {
     social: {
-      facebook: "\"https://www.facebook.com/people/Tiny-Tavern/100091966750853/\"",
-      instagram: "\"https://www.instagram.com/tiny_taverntt/\"",
+      facebook: "\"\"",
+      instagram: "\"\"",
       tiktok: "\"\"",
       youtube: "\"\"",
       email: "\"\"",
-      phone: "18683286952"
+      phone: "1868"
     },
     orderingsystem: {
-      whatsapp: "18683286952",
+      whatsapp: "1868",
       vat:  0 ,
       servicecharge:  0 ,
       hastables:  true 
@@ -171,11 +171,11 @@ window.hugoSiteConfig = {
   }
 };
 </script>
-<script src="https://tinytavern.ttmenus.com/js/auth-client.js"></script>
-<script src="https://tinytavern.ttmenus.com/js/auth-middleware.js"></script>
-<script src="https://tinytavern.ttmenus.com/js/admin-users.js"></script>
-  <link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/auth.css">
-  <link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/update-ui.css">
+<script src="http://localhost:1313/js/auth-client.js"></script>
+<script src="http://localhost:1313/js/auth-middleware.js"></script>
+<script src="http://localhost:1313/js/admin-users.js"></script>
+  <link rel="stylesheet" href="http://localhost:1313/css/auth.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/update-ui.css">
   
   <style>
      
@@ -488,24 +488,48 @@ window.addEventListener('resize', () => {
 
 
 
-    
-    <div class="tab-navigation">
-      <button class="tab-btn active" data-tab="pending" id="pendingTabBtn">
-        <span>📋 Pending Changes</span>
-        <span id="pendingTabCount" class="pending-count-badge">0</span>
-      </button>
-      <button class="tab-btn" data-tab="homepage">🏠 Home Page</button>
-      <button class="tab-btn" data-tab="menu-items">Menu Items</button>
-      <button class="tab-btn" data-tab="advertisements">Advertisements</button>
-      <button class="tab-btn" data-tab="locations">Locations</button>
-      <button class="tab-btn" data-tab="branding">Branding</button>
-      <button class="tab-btn" data-tab="colors">Colors & Theme</button>
-      <button class="tab-btn" data-tab="config">Configuration</button>
-      <button class="tab-btn" data-tab="housekeeping">🧹 Housekeeping</button>
-    </div>
+    <div class="dashboard-wrapper">
+      <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="pending" id="pendingTabBtn" title="Pending Changes">
+          <span class="tab-icon">📋</span>
+          <span class="tab-text">Pending Changes</span>
+          <span id="pendingTabCount" class="pending-count-badge">0</span>
+        </button>
+        <button class="tab-btn" data-tab="homepage" title="Home Page">
+          <span class="tab-icon">🏠</span>
+          <span class="tab-text">Home Page</span>
+        </button>
+        <button class="tab-btn" data-tab="menu-items" title="Menu Items">
+          <span class="tab-icon">🍽️</span>
+          <span class="tab-text">Menu Items</span>
+        </button>
+        <button class="tab-btn" data-tab="advertisements" title="Advertisements">
+          <span class="tab-icon">📢</span>
+          <span class="tab-text">Advertisements</span>
+        </button>
+        <button class="tab-btn" data-tab="locations" title="Locations">
+          <span class="tab-icon">📍</span>
+          <span class="tab-text">Locations</span>
+        </button>
+        <button class="tab-btn" data-tab="branding" title="Branding">
+          <span class="tab-icon">🎨</span>
+          <span class="tab-text">Branding</span>
+        </button>
+        <button class="tab-btn" data-tab="colors" title="Colors & Theme">
+          <span class="tab-icon">🌈</span>
+          <span class="tab-text">Colors & Theme</span>
+        </button>
+        <button class="tab-btn" data-tab="config" title="Configuration">
+          <span class="tab-icon">⚙️</span>
+          <span class="tab-text">Configuration</span>
+        </button>
+        <button class="tab-btn" data-tab="housekeeping" title="Housekeeping">
+          <span class="tab-icon">🧹</span>
+          <span class="tab-text">Housekeeping</span>
+        </button>
+      </div>
 
-    
-    <div class="dashboard-content">
+      <div class="dashboard-content">
       
       
       
@@ -616,9 +640,9 @@ window.addEventListener('resize', () => {
             
             <div class="collapsible-section">
               <div class="collapsible-header" onclick="toggleSection(this)">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                <h3 class="collapsible-header-title">
                   <span class="collapse-icon">▼</span>
-                  <span style="font-size: 1.25rem;">🏷️</span>
+                  <span class="collapsible-header-icon">🏷️</span>
                   Site Title & Hero Image
                 </h3>
               </div>
@@ -628,15 +652,15 @@ window.addEventListener('resize', () => {
                   <input type="text" class="form-input" id="siteTitle" placeholder="Menu Demo">
                 </div>
 
-                <div class="form-group" style="margin-top: 1.5rem;">
+                <div class="form-group form-group-spacing-top">
                   <label class="form-label">Hero/Main Image</label>
-                  <div id="heroImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
-                    <div id="heroImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                      <span style="color: #9ca3af;">No image selected</span>
+                  <div id="heroImageContainer" class="image-upload-container">
+                    <div id="heroImagePreview" class="image-preview-wrapper">
+                      <span class="image-preview-empty">No image selected</span>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                      <button type="button" class="btn btn-secondary" onclick="selectHeroImage()" style="flex: 1;">📁 Choose from Library</button>
-                      <button type="button" class="btn btn-primary" onclick="uploadHeroImage()" style="flex: 1;">📤 Upload New Image</button>
+                    <div class="image-upload-buttons">
+                      <button type="button" class="btn btn-secondary" onclick="selectHeroImage()">📁 Choose from Library</button>
+                      <button type="button" class="btn btn-primary" onclick="uploadHeroImage()">📤 Upload New Image</button>
                     </div>
                   </div>
                 </div>
@@ -646,14 +670,14 @@ window.addEventListener('resize', () => {
             
             <div class="collapsible-section">
               <div class="collapsible-header" onclick="toggleSection(this)">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                <h3 class="collapsible-header-title">
                   <span class="collapse-icon">▼</span>
-                  <span style="font-size: 1.25rem;">📱</span>
+                  <span class="collapsible-header-icon">📱</span>
                   Social Media & Contact
                 </h3>
               </div>
               <div class="collapsible-content">
-                <div style="margin-top: 1rem;">
+                <div class="spacing-top">
               <div class="grid-2">
                 <div class="form-group">
                   <label class="form-label">
@@ -711,16 +735,16 @@ window.addEventListener('resize', () => {
             
             <div class="collapsible-section">
               <div class="collapsible-header" onclick="toggleSection(this)">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                <h3 class="collapsible-header-title">
                   <span class="collapse-icon">▼</span>
-                  <span style="font-size: 1.25rem;">📝</span>
+                  <span class="collapsible-header-icon">📝</span>
                   Page Content
                 </h3>
               </div>
               <div class="collapsible-content">
-                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Write content for your home page (supports Markdown)</p>
+                <p class="text-helper">Write content for your home page (supports Markdown)</p>
                 <div class="form-group">
-                  <textarea class="form-textarea" id="homePageContent" placeholder="Write your home page content here... Supports Markdown formatting." style="min-height: 200px; font-family: 'Consolas', 'Monaco', monospace;"></textarea>
+                  <textarea class="form-textarea form-textarea-code" id="homePageContent" placeholder="Write your home page content here... Supports Markdown formatting."></textarea>
                 </div>
               </div>
             </div>
@@ -728,20 +752,20 @@ window.addEventListener('resize', () => {
             
             <div class="collapsible-section">
               <div class="collapsible-header" onclick="toggleSection(this)">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                <h3 class="collapsible-header-title">
                   <span class="collapse-icon">▼</span>
-                  <span style="font-size: 1.25rem;">🖼️</span>
+                  <span class="collapsible-header-icon">🖼️</span>
                   Featured Images Gallery
                 </h3>
               </div>
               <div class="collapsible-content">
-                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Select images to display in the featured section</p>
-              <div id="featuredImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <p class="text-helper">Select images to display in the featured section</p>
+              <div id="featuredImagesGrid" class="grid-auto-fit-sm spacing-bottom">
                 
               </div>
-              <div style="display: flex; gap: 0.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="addFeaturedImage()" style="flex: 1;">📁 Choose from Library</button>
-                <button type="button" class="btn btn-primary" onclick="uploadFeaturedImage()" style="flex: 1;">📤 Upload New Image</button>
+              <div class="image-upload-buttons">
+                <button type="button" class="btn btn-secondary" onclick="addFeaturedImage()">📁 Choose from Library</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFeaturedImage()">📤 Upload New Image</button>
               </div>
               </div>
             </div>
@@ -749,20 +773,20 @@ window.addEventListener('resize', () => {
             
             <div class="collapsible-section">
               <div class="collapsible-header" onclick="toggleSection(this)">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                <h3 class="collapsible-header-title">
                   <span class="collapse-icon">▼</span>
-                  <span style="font-size: 1.25rem;">📸</span>
+                  <span class="collapsible-header-icon">📸</span>
                   Client Tour Images
                 </h3>
               </div>
               <div class="collapsible-content">
-                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Images for the virtual tour/gallery</p>
-                <div id="tourImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <p class="text-helper">Images for the virtual tour/gallery</p>
+                <div id="tourImagesGrid" class="grid-auto-fit-sm spacing-bottom">
                   
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                  <button type="button" class="btn btn-secondary" onclick="addTourImage()" style="flex: 1;">📁 Choose from Library</button>
-                  <button type="button" class="btn btn-primary" onclick="uploadTourImage()" style="flex: 1;">📤 Upload New Image</button>
+                <div class="image-upload-buttons">
+                  <button type="button" class="btn btn-secondary" onclick="addTourImage()">📁 Choose from Library</button>
+                  <button type="button" class="btn btn-primary" onclick="uploadTourImage()">📤 Upload New Image</button>
                 </div>
               </div>
             </div>
@@ -833,9 +857,9 @@ window.addEventListener('resize', () => {
         
         <div class="collapsible-section">
           <div class="collapsible-header" onclick="toggleSection(this)">
-            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+            <h3 class="collapsible-header-title">
               <span class="collapse-icon">▼</span>
-              <span style="font-size: 1.25rem;">📱</span>
+              <span class="collapsible-header-icon">📱</span>
               PWA Manifest Settings
             </h3>
           </div>
@@ -860,16 +884,16 @@ window.addEventListener('resize', () => {
             <div class="grid-2">
               <div class="form-group">
                 <label class="form-label">Theme Color</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  <input type="color" id="manifestThemeColor" style="width: 60px; height: 40px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">
+                <div class="flex-gap flex-center">
+                  <input type="color" id="manifestThemeColor" class="color-picker-input">
                   <input type="text" class="form-input" id="manifestThemeColorText" placeholder="#667eea" style="flex: 1;">
                 </div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Background Color</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  <input type="color" id="manifestBgColor" style="width: 60px; height: 40px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">
+                <div class="flex-gap flex-center">
+                  <input type="color" id="manifestBgColor" class="color-picker-input">
                   <input type="text" class="form-input" id="manifestBgColorText" placeholder="#ffffff" style="flex: 1;">
                 </div>
               </div>
@@ -905,18 +929,18 @@ window.addEventListener('resize', () => {
         
         <div class="collapsible-section">
           <div class="collapsible-header" onclick="toggleSection(this)">
-            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+            <h3 class="collapsible-header-title">
               <span class="collapse-icon">▼</span>
-              <span style="font-size: 1.25rem;">💳</span>
+              <span class="collapsible-header-icon">💳</span>
               Point of Sale Integration
             </h3>
           </div>
           <div class="collapsible-content">
-            <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Connect your POS system for seamless order management</p>
-            <div class="alert alert-info" style="text-align: center; padding: 3rem 2rem;">
-              <div style="font-size: 3rem; margin-bottom: 1rem;">🚧</div>
-              <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: 600;">Under Development</h3>
-              <p style="margin: 0; color: #6b7280;">Point of Sale integration features are currently being developed and will be available soon.</p>
+            <p class="text-helper">Connect your POS system for seamless order management</p>
+            <div class="alert alert-info alert-centered">
+              <div class="alert-icon-large">🚧</div>
+              <h3 class="alert-title">Under Development</h3>
+              <p class="alert-text">Point of Sale integration features are currently being developed and will be available soon.</p>
             </div>
           </div>
         </div>
@@ -929,7 +953,7 @@ window.addEventListener('resize', () => {
         <div class="section-card">
           <div class="section-header">
             <div class="section-header-info">
-              <h2 class="section-title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <h2 class="section-title flex-center" style="gap: 0.5rem;">
                 <span style="font-size: 1.75rem;">🧹</span>
                 Image Housekeeping
               </h2>
@@ -943,40 +967,40 @@ window.addEventListener('resize', () => {
 
           <div class="section-body">
             <div id="housekeepingContent">
-              <div class="alert alert-info" style="text-align: center; padding: 2rem;">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
-                <p style="margin: 0; font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Ready to Scan</p>
-                <p style="margin: 0; color: #6b7280;">Click "🔍 Scan Images" to analyze your image library and find unused images.</p>
+              <div class="alert alert-info alert-info-centered">
+                <div class="alert-icon-medium">📊</div>
+                <p class="alert-subtitle">Ready to Scan</p>
+                <p class="alert-text">Click "🔍 Scan Images" to analyze your image library and find unused images.</p>
               </div>
             </div>
 
             
             <div id="imageUsageResults" style="display: none;">
               
-              <div class="grid-2" style="margin-bottom: 2rem;">
-                <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
-                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
-                  <div style="font-size: 2rem; font-weight: 700;" id="totalImagesCount">0</div>
-                  <div style="opacity: 0.9;">Total Images</div>
+              <div class="grid-2 spacing-bottom">
+                <div class="stat-card stat-card-purple">
+                  <div class="stat-icon">📊</div>
+                  <div class="stat-value" id="totalImagesCount">0</div>
+                  <div class="stat-label">Total Images</div>
                 </div>
-                <div style="padding: 1.5rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; color: white;">
-                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
-                  <div style="font-size: 2rem; font-weight: 700;" id="unusedImagesCount">0</div>
-                  <div style="opacity: 0.9;">Unused Images</div>
+                <div class="stat-card stat-card-pink">
+                  <div class="stat-icon">⚠️</div>
+                  <div class="stat-value" id="unusedImagesCount">0</div>
+                  <div class="stat-label">Unused Images</div>
                 </div>
               </div>
 
               
               <div class="collapsible-section">
                 <div class="collapsible-header" onclick="toggleSection(this)">
-                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <h3 class="collapsible-header-title">
                     <span class="collapse-icon">▼</span>
-                    <span style="font-size: 1.25rem;">⚠️</span>
+                    <span class="collapsible-header-icon">⚠️</span>
                     Unused Images (<span id="unusedCount">0</span>)
                   </h3>
                 </div>
                 <div class="collapsible-content">
-                  <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">These images are not currently used in menu items, advertisements, or home page. Select images to flag for deletion.</p>
+                  <p class="text-helper">These images are not currently used in menu items, advertisements, or home page. Select images to flag for deletion.</p>
                   
                   <div style="margin-bottom: 1rem;">
                     <label class="checkbox-label">
@@ -985,7 +1009,7 @@ window.addEventListener('resize', () => {
                     </label>
                   </div>
 
-                  <div id="unusedImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                  <div id="unusedImagesGrid" class="images-grid">
                     
                   </div>
                 </div>
@@ -994,15 +1018,15 @@ window.addEventListener('resize', () => {
               
               <div class="collapsible-section">
                 <div class="collapsible-header" onclick="toggleSection(this)">
-                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <h3 class="collapsible-header-title">
                     <span class="collapse-icon">▼</span>
-                    <span style="font-size: 1.25rem;">✅</span>
+                    <span class="collapsible-header-icon">✅</span>
                     Used Images (<span id="usedCount">0</span>)
                   </h3>
                 </div>
                 <div class="collapsible-content">
-                  <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">These images are currently in use and should not be deleted.</p>
-                  <div id="usedImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                  <p class="text-helper">These images are currently in use and should not be deleted.</p>
+                  <div id="usedImagesGrid" class="images-grid">
                     
                   </div>
                 </div>
@@ -1012,6 +1036,7 @@ window.addEventListener('resize', () => {
         </div>
       </div>
 
+      </div>
     </div>
   </div>
 
@@ -1203,11 +1228,11 @@ window.addEventListener('resize', () => {
           </select>
         </div>
         
-        <div id="openingHoursTimeline" style="background: white; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #e5e7eb; max-height: 80vh; overflow-y: auto;">
+        <div id="openingHoursTimeline" class="timeline-container">
           
           <div class="weekly-timeline">
             
-            <div class="timeline-actions" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <div class="timeline-actions">
               <button type="button" class="btn btn-sm btn-danger" onclick="clearAllTimeBlocks()">Clear All</button>
           </div>
           
@@ -1296,7 +1321,7 @@ window.addEventListener('resize', () => {
         <div class="form-group">
           <label class="form-label">Link URL (optional)</label>
           <input type="text" class="form-input" id="adLink" placeholder="/specials/your-special/" oninput="validateAdLink(this)">
-          <small class="form-helper" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+          <small class="form-helper form-helper-with-icon">
             <span id="adLinkValidation" style="font-size: 0.75rem;"></span>
           </small>
         </div>
@@ -1316,7 +1341,7 @@ window.addEventListener('resize', () => {
         
         <div class="form-group">
           <label class="form-label">Days of Week</label>
-          <div id="adDaysOfWeekContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
+          <div id="adDaysOfWeekContainer" class="grid-auto-fit spacing-top-sm">
             <label class="checkbox-label">
               <input type="checkbox" name="adDaysOfWeek" value="Monday">
               <span>Monday</span>
@@ -1363,13 +1388,13 @@ window.addEventListener('resize', () => {
           <input type="file" class="form-input" id="adImage" accept="image/*" style="display: none;">
           
           
-          <div id="adImagePreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
-            <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0; font-weight: 600;">Current Image:</p>
-            <img id="adImagePreviewImg" src="" alt="Advertisement image" style="max-width: 100%; max-height: 200px; border-radius: 4px; display: block; margin: 0 auto;">
-            <p id="adImagePath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; word-break: break-all;"></p>
+          <div id="adImagePreview" class="image-preview-box" style="display: none; margin-top: 0.5rem;">
+            <p class="image-preview-label">Current Image:</p>
+            <img id="adImagePreviewImg" src="" alt="Advertisement image" class="image-preview-img">
+            <p id="adImagePath" class="image-preview-path"></p>
           </div>
           
-          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+          <div class="image-upload-buttons spacing-top-sm">
             <button type="button" class="btn btn-secondary" onclick="selectAdImageFromLibrary()" style="flex: 1;">📁 Choose from Library</button>
             <button type="button" class="btn btn-primary" onclick="document.getElementById('adImage').click()" style="flex: 1;">📤 Upload New Image</button>
           </div>
@@ -1457,13 +1482,13 @@ window.addEventListener('resize', () => {
           <input type="hidden" id="categoryHeroImageCurrent">
           <input type="hidden" id="categoryHeroImage">
           
-          <div id="categoryHeroImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
-            <div id="categoryHeroImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <p style="color: #9ca3af; font-size: 0.875rem;">No hero image selected</p>
+          <div id="categoryHeroImageContainer" class="image-upload-container">
+            <div id="categoryHeroImagePreview" class="image-preview-wrapper">
+              <p class="image-preview-empty-text">No hero image selected</p>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button type="button" class="btn btn-secondary" onclick="selectCategoryHeroImage()" style="flex: 1;">📁 Choose from Library</button>
-              <button type="button" class="btn btn-primary" onclick="uploadCategoryHeroImage()" style="flex: 1;">📤 Upload New Image</button>
+            <div class="image-upload-buttons">
+              <button type="button" class="btn btn-secondary" onclick="selectCategoryHeroImage()">📁 Choose from Library</button>
+              <button type="button" class="btn btn-primary" onclick="uploadCategoryHeroImage()">📤 Upload New Image</button>
             </div>
           </div>
         </div>
@@ -1473,13 +1498,13 @@ window.addEventListener('resize', () => {
           <input type="hidden" id="categorySlideImageCurrent">
           <input type="hidden" id="categorySlideImage">
           
-          <div id="categorySlideImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
-            <div id="categorySlideImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <p style="color: #9ca3af; font-size: 0.875rem;">No slide-in image selected</p>
+          <div id="categorySlideImageContainer" class="image-upload-container">
+            <div id="categorySlideImagePreview" class="image-preview-wrapper">
+              <p class="image-preview-empty-text">No slide-in image selected</p>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button type="button" class="btn btn-secondary" onclick="selectCategorySlideImage()" style="flex: 1;">📁 Choose from Library</button>
-              <button type="button" class="btn btn-primary" onclick="uploadCategorySlideImage()" style="flex: 1;">📤 Upload New Image</button>
+            <div class="image-upload-buttons">
+              <button type="button" class="btn btn-secondary" onclick="selectCategorySlideImage()">📁 Choose from Library</button>
+              <button type="button" class="btn btn-primary" onclick="uploadCategorySlideImage()">📤 Upload New Image</button>
             </div>
           </div>
         </div>
@@ -1556,9 +1581,9 @@ window.addEventListener('resize', () => {
   <input type="file" id="tourImageUploadInput" accept="image/*" style="display: none;">
 
   
-  <script src="https://tinytavern.ttmenus.com/js/cdn-config.js"></script>
+  <script src="http://localhost:1313/js/cdn-config.js"></script>
   
   
-  <script src="https://tinytavern.ttmenus.com/js/update-ui.js" defer></script>
+  <script src="http://localhost:1313/js/update-ui.js?v=2025-01-20-v6" defer></script>
 </body>
 </html>

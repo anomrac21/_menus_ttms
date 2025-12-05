@@ -2,769 +2,769 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://tinytavern.ttmenus.com/pancakes/</loc>
+    <loc>http://localhost:1313/pancakes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/advertisments/</loc>
+    <loc>http://localhost:1313/advertisments/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/waffles/</loc>
+    <loc>http://localhost:1313/waffles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/omelettes/</loc>
+    <loc>http://localhost:1313/omelettes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/breakfast/</loc>
+    <loc>http://localhost:1313/breakfast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/burgers/</loc>
+    <loc>http://localhost:1313/burgers/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pastas/</loc>
+    <loc>http://localhost:1313/pastas/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/paninis/</loc>
+    <loc>http://localhost:1313/paninis/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/</loc>
+    <loc>http://localhost:1313/drinks/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/affogato/</loc>
+    <loc>http://localhost:1313/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/alfredo/</loc>
+    <loc>http://localhost:1313/drinks/affogato/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/alfredo-sauce/</loc>
+    <loc>http://localhost:1313/tags/alfredo/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/americano/</loc>
+    <loc>http://localhost:1313/ingredients/alfredo-sauce/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/bacon-jam/</loc>
+    <loc>http://localhost:1313/drinks/americano/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/omelettes/basic-omelette/</loc>
+    <loc>http://localhost:1313/ingredients/bacon-jam/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/bell-pepper/</loc>
+    <loc>http://localhost:1313/omelettes/basic-omelette/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/bell-peppers/</loc>
+    <loc>http://localhost:1313/ingredients/bell-pepper/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/bergamot/</loc>
+    <loc>http://localhost:1313/ingredients/bell-peppers/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/beverage/</loc>
+    <loc>http://localhost:1313/ingredients/bergamot/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/bitters/</loc>
+    <loc>http://localhost:1313/types/beverage/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/black-tea/</loc>
+    <loc>http://localhost:1313/ingredients/bitters/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/blended/</loc>
+    <loc>http://localhost:1313/ingredients/black-tea/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/blueberries/</loc>
+    <loc>http://localhost:1313/cookingmethods/blended/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/blueberry/</loc>
+    <loc>http://localhost:1313/ingredients/blueberries/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/blueberry-compote/</loc>
+    <loc>http://localhost:1313/tags/blueberry/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pancakes/blueberry-pancakes/</loc>
+    <loc>http://localhost:1313/ingredients/blueberry-compote/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/waffles/blueberry-waffles/</loc>
+    <loc>http://localhost:1313/pancakes/blueberry-pancakes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/boiled/</loc>
+    <loc>http://localhost:1313/waffles/blueberry-waffles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/bottled-water/</loc>
+    <loc>http://localhost:1313/cookingmethods/boiled/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/bread/</loc>
+    <loc>http://localhost:1313/drinks/bottled-water/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/breakfast/</loc>
+    <loc>http://localhost:1313/ingredients/bread/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/breakfast/</loc>
+    <loc>http://localhost:1313/types/breakfast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/brewed/</loc>
+    <loc>http://localhost:1313/tags/breakfast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/brioche-bun/</loc>
+    <loc>http://localhost:1313/cookingmethods/brewed/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</loc>
+    <loc>http://localhost:1313/ingredients/brioche-bun/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/burger/</loc>
+    <loc>http://localhost:1313/omelettes/build-your-omelet-with-cheese/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/burgers/</loc>
+    <loc>http://localhost:1313/types/burger/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/butter/</loc>
+    <loc>http://localhost:1313/tags/burgers/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/cajun/</loc>
+    <loc>http://localhost:1313/ingredients/butter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pastas/cajun-creamy-alfredo-pasta/</loc>
+    <loc>http://localhost:1313/tags/cajun/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cajun-seasoning/</loc>
+    <loc>http://localhost:1313/pastas/cajun-creamy-alfredo-pasta/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/cappuccino/</loc>
+    <loc>http://localhost:1313/ingredients/cajun-seasoning/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/caramel/</loc>
+    <loc>http://localhost:1313/drinks/cappuccino/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/caramel-dalgona/</loc>
+    <loc>http://localhost:1313/tags/caramel/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/caramel-latte/</loc>
+    <loc>http://localhost:1313/drinks/caramel-dalgona/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/caramel-macchiato/</loc>
+    <loc>http://localhost:1313/drinks/caramel-latte/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/caramel-syrup/</loc>
+    <loc>http://localhost:1313/drinks/caramel-macchiato/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/caramelized-onions/</loc>
+    <loc>http://localhost:1313/ingredients/caramel-syrup/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/chai/</loc>
+    <loc>http://localhost:1313/ingredients/caramelized-onions/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/chai/</loc>
+    <loc>http://localhost:1313/tags/chai/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cheddar-cheese/</loc>
+    <loc>http://localhost:1313/drinks/chai/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/cheese/</loc>
+    <loc>http://localhost:1313/ingredients/cheddar-cheese/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cheese/</loc>
+    <loc>http://localhost:1313/tags/cheese/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/chicken/</loc>
+    <loc>http://localhost:1313/ingredients/cheese/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chicken/</loc>
+    <loc>http://localhost:1313/tags/chicken/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chicken-breast/</loc>
+    <loc>http://localhost:1313/ingredients/chicken/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chili-pepper/</loc>
+    <loc>http://localhost:1313/ingredients/chicken-breast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/chocolate/</loc>
+    <loc>http://localhost:1313/ingredients/chili-pepper/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/chocolate/</loc>
+    <loc>http://localhost:1313/types/chocolate/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chocolate/</loc>
+    <loc>http://localhost:1313/tags/chocolate/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pancakes/chocolate-chip-pancakes/</loc>
+    <loc>http://localhost:1313/ingredients/chocolate/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/waffles/chocolate-chip-waffles/</loc>
+    <loc>http://localhost:1313/pancakes/chocolate-chip-pancakes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chocolate-chips/</loc>
+    <loc>http://localhost:1313/waffles/chocolate-chip-waffles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chocolate-ice-cream/</loc>
+    <loc>http://localhost:1313/ingredients/chocolate-chips/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</loc>
+    <loc>http://localhost:1313/ingredients/chocolate-ice-cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</loc>
+    <loc>http://localhost:1313/drinks/chocolate-milkshake/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</loc>
+    <loc>http://localhost:1313/drinks/chocolate-mocha/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/chocolate-syrup/</loc>
+    <loc>http://localhost:1313/drinks/chocolate-oreo-milkshake/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/cinnamon/</loc>
+    <loc>http://localhost:1313/ingredients/chocolate-syrup/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cinnamon/</loc>
+    <loc>http://localhost:1313/tags/cinnamon/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pancakes/cinnamon-swirl-pancakes/</loc>
+    <loc>http://localhost:1313/ingredients/cinnamon/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/waffles/cinnamon-toast-waffles/</loc>
+    <loc>http://localhost:1313/pancakes/cinnamon-swirl-pancakes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/citrus/</loc>
+    <loc>http://localhost:1313/waffles/cinnamon-toast-waffles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/citrusy-orange-twist/</loc>
+    <loc>http://localhost:1313/tags/citrus/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/breakfast/classic-french-toast-platter/</loc>
+    <loc>http://localhost:1313/drinks/citrusy-orange-twist/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/coca-cola/</loc>
+    <loc>http://localhost:1313/breakfast/classic-french-toast-platter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cocoa/</loc>
+    <loc>http://localhost:1313/drinks/coca-cola/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/coconut-jelly/</loc>
+    <loc>http://localhost:1313/ingredients/cocoa/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/coconut-water/</loc>
+    <loc>http://localhost:1313/ingredients/coconut-jelly/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/coffee/</loc>
+    <loc>http://localhost:1313/ingredients/coconut-water/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/coffee/</loc>
+    <loc>http://localhost:1313/types/coffee/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cola/</loc>
+    <loc>http://localhost:1313/tags/coffee/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/cold/</loc>
+    <loc>http://localhost:1313/ingredients/cola/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/coleslaw/</loc>
+    <loc>http://localhost:1313/tags/cold/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/compote/</loc>
+    <loc>http://localhost:1313/ingredients/coleslaw/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/condensed-milk/</loc>
+    <loc>http://localhost:1313/ingredients/compote/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/</loc>
+    <loc>http://localhost:1313/ingredients/condensed-milk/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/cream/</loc>
+    <loc>http://localhost:1313/cookingmethods/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pastas/creamy-tomato-pasta/</loc>
+    <loc>http://localhost:1313/ingredients/cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/crushed-oreo/</loc>
+    <loc>http://localhost:1313/pastas/creamy-tomato-pasta/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/dalgona-whipped-coffee/</loc>
+    <loc>http://localhost:1313/ingredients/crushed-oreo/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/dessert/</loc>
+    <loc>http://localhost:1313/drinks/dalgona-whipped-coffee/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/drinks/</loc>
+    <loc>http://localhost:1313/types/dessert/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/earl-grey/</loc>
+    <loc>http://localhost:1313/tags/drinks/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/earl-grey/</loc>
+    <loc>http://localhost:1313/tags/earl-grey/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/eggs/</loc>
+    <loc>http://localhost:1313/drinks/earl-grey/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/eggs/</loc>
+    <loc>http://localhost:1313/tags/eggs/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/english-breakfast/</loc>
+    <loc>http://localhost:1313/ingredients/eggs/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/espresso/</loc>
+    <loc>http://localhost:1313/drinks/english-breakfast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/flour/</loc>
+    <loc>http://localhost:1313/ingredients/espresso/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/foamed-milk/</loc>
+    <loc>http://localhost:1313/ingredients/flour/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/french-toast/</loc>
+    <loc>http://localhost:1313/ingredients/foamed-milk/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/fresh-strawberries/</loc>
+    <loc>http://localhost:1313/tags/french-toast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/fried/</loc>
+    <loc>http://localhost:1313/ingredients/fresh-strawberries/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/green-peppers/</loc>
+    <loc>http://localhost:1313/cookingmethods/fried/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/green-tea/</loc>
+    <loc>http://localhost:1313/ingredients/green-peppers/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/green-tea/</loc>
+    <loc>http://localhost:1313/tags/green-tea/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/green-tea/</loc>
+    <loc>http://localhost:1313/ingredients/green-tea/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/griddled/</loc>
+    <loc>http://localhost:1313/drinks/green-tea/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/grilled/</loc>
+    <loc>http://localhost:1313/cookingmethods/griddled/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</loc>
+    <loc>http://localhost:1313/cookingmethods/grilled/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/ham/</loc>
+    <loc>http://localhost:1313/paninis/grilled-chicken-panini/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/ham/</loc>
+    <loc>http://localhost:1313/tags/ham/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/paninis/ham-panini/</loc>
+    <loc>http://localhost:1313/ingredients/ham/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/heated/</loc>
+    <loc>http://localhost:1313/paninis/ham-panini/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/burgers/homemade-chicken-burger/</loc>
+    <loc>http://localhost:1313/cookingmethods/heated/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/burgers/homemade-lamb-burger/</loc>
+    <loc>http://localhost:1313/burgers/homemade-chicken-burger/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/hot/</loc>
+    <loc>http://localhost:1313/burgers/homemade-lamb-burger/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/hot-chocolate/</loc>
+    <loc>http://localhost:1313/tags/hot/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/ice-cream/</loc>
+    <loc>http://localhost:1313/drinks/hot-chocolate/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/ice-cream/</loc>
+    <loc>http://localhost:1313/tags/ice-cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/</loc>
+    <loc>http://localhost:1313/ingredients/ice-cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/instant-coffee/</loc>
+    <loc>http://localhost:1313/ingredients/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/jalapeno/</loc>
+    <loc>http://localhost:1313/ingredients/instant-coffee/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/jalape%C3%B1o/</loc>
+    <loc>http://localhost:1313/ingredients/jalapeno/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/jalape%C3%B1o/</loc>
+    <loc>http://localhost:1313/tags/jalape%C3%B1o/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/paninis/jalapeno-turkey-bacon-panini/</loc>
+    <loc>http://localhost:1313/ingredients/jalape%C3%B1o/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/jam/</loc>
+    <loc>http://localhost:1313/paninis/jalapeno-turkey-bacon-panini/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/lamb/</loc>
+    <loc>http://localhost:1313/ingredients/jam/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/lamb/</loc>
+    <loc>http://localhost:1313/tags/lamb/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/lemon/</loc>
+    <loc>http://localhost:1313/ingredients/lamb/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/lettuce/</loc>
+    <loc>http://localhost:1313/ingredients/lemon/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/lime/</loc>
+    <loc>http://localhost:1313/ingredients/lettuce/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/lime/</loc>
+    <loc>http://localhost:1313/tags/lime/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/lime-juice/</loc>
+    <loc>http://localhost:1313/ingredients/lime/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/lime-slices/</loc>
+    <loc>http://localhost:1313/ingredients/lime-juice/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/llb/</loc>
+    <loc>http://localhost:1313/ingredients/lime-slices/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/milk/</loc>
+    <loc>http://localhost:1313/drinks/llb/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/milkshake/</loc>
+    <loc>http://localhost:1313/ingredients/milk/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/milkshake/</loc>
+    <loc>http://localhost:1313/types/milkshake/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/mint/</loc>
+    <loc>http://localhost:1313/tags/milkshake/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/mixed/</loc>
+    <loc>http://localhost:1313/ingredients/mint/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/mocktail/</loc>
+    <loc>http://localhost:1313/cookingmethods/mixed/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/mocktail/</loc>
+    <loc>http://localhost:1313/types/mocktail/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/multigrain-bread/</loc>
+    <loc>http://localhost:1313/tags/mocktail/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/mushroom/</loc>
+    <loc>http://localhost:1313/ingredients/multigrain-bread/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/mushrooms/</loc>
+    <loc>http://localhost:1313/ingredients/mushroom/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/omelettes/</loc>
+    <loc>http://localhost:1313/ingredients/mushrooms/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/onions/</loc>
+    <loc>http://localhost:1313/tags/omelettes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/orange/</loc>
+    <loc>http://localhost:1313/ingredients/onions/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/orange-juice/</loc>
+    <loc>http://localhost:1313/tags/orange/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/oreo/</loc>
+    <loc>http://localhost:1313/ingredients/orange-juice/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/oreo-cookies/</loc>
+    <loc>http://localhost:1313/tags/oreo/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</loc>
+    <loc>http://localhost:1313/ingredients/oreo-cookies/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/pan-fried/</loc>
+    <loc>http://localhost:1313/drinks/oreo-milkshake/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/breakfast/pancake-waffle-platter/</loc>
+    <loc>http://localhost:1313/cookingmethods/pan-fried/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/pancakes/</loc>
+    <loc>http://localhost:1313/breakfast/pancake-waffle-platter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/panini/</loc>
+    <loc>http://localhost:1313/tags/pancakes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/parmesan-cheese/</loc>
+    <loc>http://localhost:1313/tags/panini/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/pasta/</loc>
+    <loc>http://localhost:1313/ingredients/parmesan-cheese/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/pasta/</loc>
+    <loc>http://localhost:1313/types/pasta/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/pasta/</loc>
+    <loc>http://localhost:1313/tags/pasta/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/pepper/</loc>
+    <loc>http://localhost:1313/ingredients/pasta/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/peppermint/</loc>
+    <loc>http://localhost:1313/ingredients/pepper/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/peppermint-chocolate/</loc>
+    <loc>http://localhost:1313/tags/peppermint/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/peppermint-syrup/</loc>
+    <loc>http://localhost:1313/drinks/peppermint-chocolate/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/pickles/</loc>
+    <loc>http://localhost:1313/ingredients/peppermint-syrup/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/pina-colada/</loc>
+    <loc>http://localhost:1313/ingredients/pickles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/pina-colada-mocktail/</loc>
+    <loc>http://localhost:1313/tags/pina-colada/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/pineapple/</loc>
+    <loc>http://localhost:1313/drinks/pina-colada-mocktail/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/pineapple-chunks/</loc>
+    <loc>http://localhost:1313/ingredients/pineapple/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/pineapple-juice/</loc>
+    <loc>http://localhost:1313/ingredients/pineapple-chunks/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/platter/</loc>
+    <loc>http://localhost:1313/ingredients/pineapple-juice/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/platter/</loc>
+    <loc>http://localhost:1313/types/platter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/pressed/</loc>
+    <loc>http://localhost:1313/tags/platter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/pancakes/regular-pancakes/</loc>
+    <loc>http://localhost:1313/cookingmethods/pressed/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/waffles/regular-waffles/</loc>
+    <loc>http://localhost:1313/pancakes/regular-pancakes/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/salt/</loc>
+    <loc>http://localhost:1313/waffles/regular-waffles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/salted-caramel/</loc>
+    <loc>http://localhost:1313/ingredients/salt/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/salted-caramel-chocolate/</loc>
+    <loc>http://localhost:1313/ingredients/salted-caramel/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/sandwich/</loc>
+    <loc>http://localhost:1313/drinks/salted-caramel-chocolate/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/sausage/</loc>
+    <loc>http://localhost:1313/types/sandwich/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/saut%C3%A9ed/</loc>
+    <loc>http://localhost:1313/ingredients/sausage/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/savory/</loc>
+    <loc>http://localhost:1313/cookingmethods/saut%C3%A9ed/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/savory/</loc>
+    <loc>http://localhost:1313/types/savory/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/scooped/</loc>
+    <loc>http://localhost:1313/tags/savory/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/scrambled/</loc>
+    <loc>http://localhost:1313/cookingmethods/scooped/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/secret-sauce/</loc>
+    <loc>http://localhost:1313/cookingmethods/scrambled/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/shaken/</loc>
+    <loc>http://localhost:1313/ingredients/secret-sauce/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/shrimp/</loc>
+    <loc>http://localhost:1313/cookingmethods/shaken/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/signature/</loc>
+    <loc>http://localhost:1313/ingredients/shrimp/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/simple-syrup/</loc>
+    <loc>http://localhost:1313/tags/signature/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/soda/</loc>
+    <loc>http://localhost:1313/ingredients/simple-syrup/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/soda/</loc>
+    <loc>http://localhost:1313/types/soda/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/spanish-latte/</loc>
+    <loc>http://localhost:1313/tags/soda/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/omelettes/specialty-omelette/</loc>
+    <loc>http://localhost:1313/drinks/spanish-latte/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/spices/</loc>
+    <loc>http://localhost:1313/omelettes/specialty-omelette/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/spinach/</loc>
+    <loc>http://localhost:1313/ingredients/spices/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/sprinkles/</loc>
+    <loc>http://localhost:1313/ingredients/spinach/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/sprite/</loc>
+    <loc>http://localhost:1313/ingredients/sprinkles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/sprite-8oz/</loc>
+    <loc>http://localhost:1313/ingredients/sprite/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/steamed/</loc>
+    <loc>http://localhost:1313/drinks/sprite-8oz/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/steeped/</loc>
+    <loc>http://localhost:1313/cookingmethods/steamed/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/strawberry/</loc>
+    <loc>http://localhost:1313/cookingmethods/steeped/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/strawberry-ice-cream/</loc>
+    <loc>http://localhost:1313/tags/strawberry/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/strawberry-limeade/</loc>
+    <loc>http://localhost:1313/ingredients/strawberry-ice-cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/strawberry-milkshake/</loc>
+    <loc>http://localhost:1313/drinks/strawberry-limeade/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/strawberry-puree/</loc>
+    <loc>http://localhost:1313/drinks/strawberry-milkshake/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/sugar/</loc>
+    <loc>http://localhost:1313/ingredients/strawberry-puree/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/sweet/</loc>
+    <loc>http://localhost:1313/ingredients/sugar/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/sweet/</loc>
+    <loc>http://localhost:1313/types/sweet/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/sweet-corn/</loc>
+    <loc>http://localhost:1313/tags/sweet/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/sweet-peppers/</loc>
+    <loc>http://localhost:1313/ingredients/sweet-corn/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/syrup/</loc>
+    <loc>http://localhost:1313/ingredients/sweet-peppers/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/</loc>
+    <loc>http://localhost:1313/ingredients/syrup/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/tea/</loc>
+    <loc>http://localhost:1313/tags/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/tea/</loc>
+    <loc>http://localhost:1313/types/tea/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/paninis/the-amazing-vegetarian-panini/</loc>
+    <loc>http://localhost:1313/tags/tea/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/</loc>
+    <loc>http://localhost:1313/paninis/the-amazing-vegetarian-panini/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/toast/</loc>
+    <loc>http://localhost:1313/ingredients/toast/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/toasted/</loc>
+    <loc>http://localhost:1313/cookingmethods/toasted/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/tomato/</loc>
+    <loc>http://localhost:1313/tags/tomato/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/tomato/</loc>
+    <loc>http://localhost:1313/ingredients/tomato/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/tomato-sauce/</loc>
+    <loc>http://localhost:1313/ingredients/tomato-sauce/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/burgers/tts-signature-chicken-burger/</loc>
+    <loc>http://localhost:1313/burgers/tts-signature-chicken-burger/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/burgers/tts-signature-lamb-burger/</loc>
+    <loc>http://localhost:1313/burgers/tts-signature-lamb-burger/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/breakfast/tts-simple-breakfast-platter/</loc>
+    <loc>http://localhost:1313/breakfast/tts-simple-breakfast-platter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/breakfast/tts-supreme-breakfast-platter/</loc>
+    <loc>http://localhost:1313/breakfast/tts-supreme-breakfast-platter/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/paninis/tts-talked-about-panini/</loc>
+    <loc>http://localhost:1313/paninis/tts-talked-about-panini/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/turkey-bacon/</loc>
+    <loc>http://localhost:1313/tags/turkey-bacon/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/turkey-bacon/</loc>
+    <loc>http://localhost:1313/ingredients/turkey-bacon/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/</loc>
+    <loc>http://localhost:1313/types/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/vanilla/</loc>
+    <loc>http://localhost:1313/ingredients/vanilla/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/vanilla-ice-cream/</loc>
+    <loc>http://localhost:1313/ingredients/vanilla-ice-cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/vanilla-syrup/</loc>
+    <loc>http://localhost:1313/ingredients/vanilla-syrup/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/vegetarian/</loc>
+    <loc>http://localhost:1313/types/vegetarian/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/vegetarian/</loc>
+    <loc>http://localhost:1313/tags/vegetarian/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/waffle-iron/</loc>
+    <loc>http://localhost:1313/cookingmethods/waffle-iron/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/waffles/</loc>
+    <loc>http://localhost:1313/tags/waffles/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/types/water/</loc>
+    <loc>http://localhost:1313/types/water/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/water/</loc>
+    <loc>http://localhost:1313/tags/water/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/water/</loc>
+    <loc>http://localhost:1313/ingredients/water/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/watermelon/</loc>
+    <loc>http://localhost:1313/tags/watermelon/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/watermelon-juice/</loc>
+    <loc>http://localhost:1313/ingredients/watermelon-juice/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/drinks/watermelon-mocktail/</loc>
+    <loc>http://localhost:1313/drinks/watermelon-mocktail/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/tags/whipped/</loc>
+    <loc>http://localhost:1313/tags/whipped/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/cookingmethods/whipped/</loc>
+    <loc>http://localhost:1313/cookingmethods/whipped/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/ingredients/whipped-cream/</loc>
+    <loc>http://localhost:1313/ingredients/whipped-cream/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/admin/</loc>
+    <loc>http://localhost:1313/admin/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/categories/</loc>
+    <loc>http://localhost:1313/categories/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/events/</loc>
+    <loc>http://localhost:1313/events/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/forgot-password/</loc>
+    <loc>http://localhost:1313/forgot-password/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/login/</loc>
+    <loc>http://localhost:1313/login/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/api/menu-items.json</loc>
+    <loc>http://localhost:1313/api/menu-items.json</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/signup/</loc>
+    <loc>http://localhost:1313/signup/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/subcategories/</loc>
+    <loc>http://localhost:1313/subcategories/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/update-ui/</loc>
+    <loc>http://localhost:1313/update-ui/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/admin/users/</loc>
+    <loc>http://localhost:1313/admin/users/</loc>
   </url><url>
-    <loc>https://tinytavern.ttmenus.com/404/</loc>
+    <loc>http://localhost:1313/404/</loc>
   </url>
 </urlset>

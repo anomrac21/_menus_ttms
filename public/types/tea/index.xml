@@ -2,38 +2,38 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tea on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/types/tea/</link>
+    <link>http://localhost:1313/types/tea/</link>
     <description>Recent content in Tea on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/types/tea/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/types/tea/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Chai</title>
-      <link>https://tinytavern.ttmenus.com/drinks/chai/</link>
+      <link>http://localhost:1313/drinks/chai/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/chai/</guid>
+      <guid>http://localhost:1313/drinks/chai/</guid>
       <description></description>
     </item>
     <item>
       <title>Earl Grey</title>
-      <link>https://tinytavern.ttmenus.com/drinks/earl-grey/</link>
+      <link>http://localhost:1313/drinks/earl-grey/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/earl-grey/</guid>
+      <guid>http://localhost:1313/drinks/earl-grey/</guid>
       <description></description>
     </item>
     <item>
       <title>English Breakfast</title>
-      <link>https://tinytavern.ttmenus.com/drinks/english-breakfast/</link>
+      <link>http://localhost:1313/drinks/english-breakfast/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/english-breakfast/</guid>
+      <guid>http://localhost:1313/drinks/english-breakfast/</guid>
       <description></description>
     </item>
     <item>
       <title>Green Tea</title>
-      <link>https://tinytavern.ttmenus.com/drinks/green-tea/</link>
+      <link>http://localhost:1313/drinks/green-tea/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/green-tea/</guid>
+      <guid>http://localhost:1313/drinks/green-tea/</guid>
       <description></description>
     </item>
   </channel>

@@ -2,31 +2,31 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Jam on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/jam/</link>
+    <link>http://localhost:1313/ingredients/jam/</link>
     <description>Recent content in Jam on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/jam/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/jam/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Regular Pancakes</title>
-      <link>https://tinytavern.ttmenus.com/pancakes/regular-pancakes/</link>
+      <link>http://localhost:1313/pancakes/regular-pancakes/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/pancakes/regular-pancakes/</guid>
+      <guid>http://localhost:1313/pancakes/regular-pancakes/</guid>
       <description>&lt;p&gt;A stack of fluffy, traditional pancakes dusted with powdered sugar and topped with strawberry/guava jam or strawberry/blueberry compote and whipped cream.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Simple Breakfast Platter</title>
-      <link>https://tinytavern.ttmenus.com/breakfast/tts-simple-breakfast-platter/</link>
+      <link>http://localhost:1313/breakfast/tts-simple-breakfast-platter/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/breakfast/tts-simple-breakfast-platter/</guid>
+      <guid>http://localhost:1313/breakfast/tts-simple-breakfast-platter/</guid>
       <description>&lt;p&gt;(Served with jam, compote, or whipped cream) 1 pancake of your choice, 1 waffle of your choice, 2 scrambled eggs, 2 crispy turkey bacon or sautéed sausages, and 2 slices of toast.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Supreme Breakfast Platter</title>
-      <link>https://tinytavern.ttmenus.com/breakfast/tts-supreme-breakfast-platter/</link>
+      <link>http://localhost:1313/breakfast/tts-supreme-breakfast-platter/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/breakfast/tts-supreme-breakfast-platter/</guid>
+      <guid>http://localhost:1313/breakfast/tts-supreme-breakfast-platter/</guid>
       <description>&lt;p&gt;(Served with 1-egg omelette) 1 pancake of your choice, 1 waffle of your choice, 2 omelettes of your choice (4 toppings maximum per omelette), 2 crispy turkey bacon, sautéed sausages, and 3 slices of toast.&lt;/p&gt;</description>
     </item>
   </channel>

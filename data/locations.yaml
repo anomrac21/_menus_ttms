@@ -1,0 +1,50 @@
+locations:
+  - address: My Address
+    city: Port of Spain
+    island: Trinidad
+    subcategories: 
+      - Restaurant
+      - Bar
+    latlon: [10.525849712311333,-61.40296428581248]
+    phone: 1868
+    whatsapp: 1868
+    orderingtables: ["Takeway Only"]
+    delivery:
+      fooddrop: https://fooddropcaribbean.com/en/store/
+    opening_hours:
+      mode: Auto
+      sun:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"
+      mon:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"
+      tue:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"
+      wed:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"
+      thu:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"
+      fri:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"
+      sat:
+        - type: Open
+          time: "11:00"
+        - type: Close
+          time: "22:00"

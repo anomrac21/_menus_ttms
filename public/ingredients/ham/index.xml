@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Ham on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/ham/</link>
+    <link>http://localhost:1313/ingredients/ham/</link>
     <description>Recent content in Ham on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/ham/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/ham/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Ham Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/ham-panini/</link>
+      <link>http://localhost:1313/paninis/ham-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/ham-panini/</guid>
+      <guid>http://localhost:1313/paninis/ham-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with ham, spinach, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
   </channel>

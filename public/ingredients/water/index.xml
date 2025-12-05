@@ -2,38 +2,38 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Water on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/water/</link>
+    <link>http://localhost:1313/ingredients/water/</link>
     <description>Recent content in Water on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/water/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/water/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Americano</title>
-      <link>https://tinytavern.ttmenus.com/drinks/americano/</link>
+      <link>http://localhost:1313/drinks/americano/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/americano/</guid>
+      <guid>http://localhost:1313/drinks/americano/</guid>
       <description>&lt;p&gt;This drink is a traditional coffee beverage, topped with a layer of crema&lt;/p&gt;</description>
     </item>
     <item>
       <title>Bottled Water</title>
-      <link>https://tinytavern.ttmenus.com/drinks/bottled-water/</link>
+      <link>http://localhost:1313/drinks/bottled-water/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/bottled-water/</guid>
+      <guid>http://localhost:1313/drinks/bottled-water/</guid>
       <description></description>
     </item>
     <item>
       <title>Caramel Dalgona</title>
-      <link>https://tinytavern.ttmenus.com/drinks/caramel-dalgona/</link>
+      <link>http://localhost:1313/drinks/caramel-dalgona/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/caramel-dalgona/</guid>
+      <guid>http://localhost:1313/drinks/caramel-dalgona/</guid>
       <description>&lt;p&gt;This version of the Dalgona blends caramel syrup into the foamy coffee creation&lt;/p&gt;</description>
     </item>
     <item>
       <title>Dalgona/Whipped Coffee</title>
-      <link>https://tinytavern.ttmenus.com/drinks/dalgona-whipped-coffee/</link>
+      <link>http://localhost:1313/drinks/dalgona-whipped-coffee/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/dalgona-whipped-coffee/</guid>
+      <guid>http://localhost:1313/drinks/dalgona-whipped-coffee/</guid>
       <description>&lt;p&gt;This deliciously whisked caffeine drink is topped with a floating infusion of coffee goodness&lt;/p&gt;</description>
     </item>
   </channel>

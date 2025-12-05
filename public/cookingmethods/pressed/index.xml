@@ -2,45 +2,45 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Pressed on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/cookingmethods/pressed/</link>
+    <link>http://localhost:1313/cookingmethods/pressed/</link>
     <description>Recent content in Pressed on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/cookingmethods/pressed/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/cookingmethods/pressed/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Grilled Chicken Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</link>
+      <link>http://localhost:1313/paninis/grilled-chicken-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</guid>
+      <guid>http://localhost:1313/paninis/grilled-chicken-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with tender chicken breast, sweet corn, green peppers, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Ham Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/ham-panini/</link>
+      <link>http://localhost:1313/paninis/ham-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/ham-panini/</guid>
+      <guid>http://localhost:1313/paninis/ham-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with ham, spinach, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Jalapeño Turkey Bacon Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/jalapeno-turkey-bacon-panini/</link>
+      <link>http://localhost:1313/paninis/jalapeno-turkey-bacon-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/jalapeno-turkey-bacon-panini/</guid>
+      <guid>http://localhost:1313/paninis/jalapeno-turkey-bacon-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with turkey bacon, jalapeño, spinach, mushroom, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>The Amazing Vegetarian Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/the-amazing-vegetarian-panini/</link>
+      <link>http://localhost:1313/paninis/the-amazing-vegetarian-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/the-amazing-vegetarian-panini/</guid>
+      <guid>http://localhost:1313/paninis/the-amazing-vegetarian-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with spinach, tomato, pineapple, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
     <item>
       <title>TT&#39;s Talked About Panini</title>
-      <link>https://tinytavern.ttmenus.com/paninis/tts-talked-about-panini/</link>
+      <link>http://localhost:1313/paninis/tts-talked-about-panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/paninis/tts-talked-about-panini/</guid>
+      <guid>http://localhost:1313/paninis/tts-talked-about-panini/</guid>
       <description>&lt;p&gt;This delicious panini is made with turkey bacon, jalapeño, bell pepper, pineapple, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
     </item>
   </channel>

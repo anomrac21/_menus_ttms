@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Scooped on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/cookingmethods/scooped/</link>
+    <link>http://localhost:1313/cookingmethods/scooped/</link>
     <description>Recent content in Scooped on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/cookingmethods/scooped/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/cookingmethods/scooped/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Affogato</title>
-      <link>https://tinytavern.ttmenus.com/drinks/affogato/</link>
+      <link>http://localhost:1313/drinks/affogato/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/affogato/</guid>
+      <guid>http://localhost:1313/drinks/affogato/</guid>
       <description>&lt;p&gt;A scoop of ice cream mixed with a hot shot of coffee. Served with your choice of vanilla or chocolate ice cream.&lt;/p&gt;</description>
     </item>
   </channel>

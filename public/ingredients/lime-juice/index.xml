@@ -2,24 +2,24 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Lime Juice on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/lime-juice/</link>
+    <link>http://localhost:1313/ingredients/lime-juice/</link>
     <description>Recent content in Lime Juice on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/lime-juice/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/lime-juice/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Citrusy Orange Twist</title>
-      <link>https://tinytavern.ttmenus.com/drinks/citrusy-orange-twist/</link>
+      <link>http://localhost:1313/drinks/citrusy-orange-twist/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/citrusy-orange-twist/</guid>
+      <guid>http://localhost:1313/drinks/citrusy-orange-twist/</guid>
       <description>&lt;p&gt;Orange and lime juices, simple syrup, fresh mint, Sprite, and slices of lime&lt;/p&gt;</description>
     </item>
     <item>
       <title>Strawberry Limeade</title>
-      <link>https://tinytavern.ttmenus.com/drinks/strawberry-limeade/</link>
+      <link>http://localhost:1313/drinks/strawberry-limeade/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/strawberry-limeade/</guid>
+      <guid>http://localhost:1313/drinks/strawberry-limeade/</guid>
       <description>&lt;p&gt;Strawberry puree, lime juice, simple syrup, fresh mint, Sprite, and slices of lime&lt;/p&gt;</description>
     </item>
   </channel>

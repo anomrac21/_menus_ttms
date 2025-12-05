@@ -2,129 +2,129 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Types on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/types/</link>
+    <link>http://localhost:1313/types/</link>
     <description>Recent content in Types on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/types/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/types/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Beverage</title>
-      <link>https://tinytavern.ttmenus.com/types/beverage/</link>
+      <link>http://localhost:1313/types/beverage/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/beverage/</guid>
+      <guid>http://localhost:1313/types/beverage/</guid>
       <description></description>
     </item>
     <item>
       <title>Breakfast</title>
-      <link>https://tinytavern.ttmenus.com/types/breakfast/</link>
+      <link>http://localhost:1313/types/breakfast/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/breakfast/</guid>
+      <guid>http://localhost:1313/types/breakfast/</guid>
       <description></description>
     </item>
     <item>
       <title>Burger</title>
-      <link>https://tinytavern.ttmenus.com/types/burger/</link>
+      <link>http://localhost:1313/types/burger/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/burger/</guid>
+      <guid>http://localhost:1313/types/burger/</guid>
       <description></description>
     </item>
     <item>
       <title>Chocolate</title>
-      <link>https://tinytavern.ttmenus.com/types/chocolate/</link>
+      <link>http://localhost:1313/types/chocolate/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/chocolate/</guid>
+      <guid>http://localhost:1313/types/chocolate/</guid>
       <description></description>
     </item>
     <item>
       <title>Coffee</title>
-      <link>https://tinytavern.ttmenus.com/types/coffee/</link>
+      <link>http://localhost:1313/types/coffee/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/coffee/</guid>
+      <guid>http://localhost:1313/types/coffee/</guid>
       <description></description>
     </item>
     <item>
       <title>Dessert</title>
-      <link>https://tinytavern.ttmenus.com/types/dessert/</link>
+      <link>http://localhost:1313/types/dessert/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/dessert/</guid>
+      <guid>http://localhost:1313/types/dessert/</guid>
       <description></description>
     </item>
     <item>
       <title>Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/types/milkshake/</link>
+      <link>http://localhost:1313/types/milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/milkshake/</guid>
+      <guid>http://localhost:1313/types/milkshake/</guid>
       <description></description>
     </item>
     <item>
       <title>Mocktail</title>
-      <link>https://tinytavern.ttmenus.com/types/mocktail/</link>
+      <link>http://localhost:1313/types/mocktail/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/mocktail/</guid>
+      <guid>http://localhost:1313/types/mocktail/</guid>
       <description></description>
     </item>
     <item>
       <title>Pasta</title>
-      <link>https://tinytavern.ttmenus.com/types/pasta/</link>
+      <link>http://localhost:1313/types/pasta/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/pasta/</guid>
+      <guid>http://localhost:1313/types/pasta/</guid>
       <description></description>
     </item>
     <item>
       <title>Platter</title>
-      <link>https://tinytavern.ttmenus.com/types/platter/</link>
+      <link>http://localhost:1313/types/platter/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/platter/</guid>
+      <guid>http://localhost:1313/types/platter/</guid>
       <description></description>
     </item>
     <item>
       <title>Sandwich</title>
-      <link>https://tinytavern.ttmenus.com/types/sandwich/</link>
+      <link>http://localhost:1313/types/sandwich/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/sandwich/</guid>
+      <guid>http://localhost:1313/types/sandwich/</guid>
       <description></description>
     </item>
     <item>
       <title>Savory</title>
-      <link>https://tinytavern.ttmenus.com/types/savory/</link>
+      <link>http://localhost:1313/types/savory/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/savory/</guid>
+      <guid>http://localhost:1313/types/savory/</guid>
       <description></description>
     </item>
     <item>
       <title>Soda</title>
-      <link>https://tinytavern.ttmenus.com/types/soda/</link>
+      <link>http://localhost:1313/types/soda/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/soda/</guid>
+      <guid>http://localhost:1313/types/soda/</guid>
       <description></description>
     </item>
     <item>
       <title>Sweet</title>
-      <link>https://tinytavern.ttmenus.com/types/sweet/</link>
+      <link>http://localhost:1313/types/sweet/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/sweet/</guid>
+      <guid>http://localhost:1313/types/sweet/</guid>
       <description></description>
     </item>
     <item>
       <title>Tea</title>
-      <link>https://tinytavern.ttmenus.com/types/tea/</link>
+      <link>http://localhost:1313/types/tea/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/tea/</guid>
+      <guid>http://localhost:1313/types/tea/</guid>
       <description></description>
     </item>
     <item>
       <title>Vegetarian</title>
-      <link>https://tinytavern.ttmenus.com/types/vegetarian/</link>
+      <link>http://localhost:1313/types/vegetarian/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/vegetarian/</guid>
+      <guid>http://localhost:1313/types/vegetarian/</guid>
       <description></description>
     </item>
     <item>
       <title>Water</title>
-      <link>https://tinytavern.ttmenus.com/types/water/</link>
+      <link>http://localhost:1313/types/water/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/types/water/</guid>
+      <guid>http://localhost:1313/types/water/</guid>
       <description></description>
     </item>
   </channel>

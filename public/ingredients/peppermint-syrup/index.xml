@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Peppermint Syrup on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/peppermint-syrup/</link>
+    <link>http://localhost:1313/ingredients/peppermint-syrup/</link>
     <description>Recent content in Peppermint Syrup on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/peppermint-syrup/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/peppermint-syrup/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Peppermint Chocolate</title>
-      <link>https://tinytavern.ttmenus.com/drinks/peppermint-chocolate/</link>
+      <link>http://localhost:1313/drinks/peppermint-chocolate/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/peppermint-chocolate/</guid>
+      <guid>http://localhost:1313/drinks/peppermint-chocolate/</guid>
       <description>&lt;p&gt;This delicious chocolatey drink is infused with peppermint syrup and topped with whipped cream&lt;/p&gt;</description>
     </item>
   </channel>

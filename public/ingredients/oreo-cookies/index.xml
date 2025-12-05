@@ -2,24 +2,24 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Oreo Cookies on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/oreo-cookies/</link>
+    <link>http://localhost:1313/ingredients/oreo-cookies/</link>
     <description>Recent content in Oreo Cookies on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/oreo-cookies/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/oreo-cookies/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Chocolate Oreo Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</link>
+      <link>http://localhost:1313/drinks/chocolate-oreo-milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</guid>
+      <guid>http://localhost:1313/drinks/chocolate-oreo-milkshake/</guid>
       <description>&lt;p&gt;Chocolate ice cream, milk, Oreo cookies, chocolate syrup, whipped cream, crushed Oreo bits&lt;/p&gt;</description>
     </item>
     <item>
       <title>Oreo Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</link>
+      <link>http://localhost:1313/drinks/oreo-milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</guid>
+      <guid>http://localhost:1313/drinks/oreo-milkshake/</guid>
       <description>&lt;p&gt;Vanilla ice cream, milk, Oreo cookies, whipped cream, crushed Oreo bits&lt;/p&gt;</description>
     </item>
   </channel>

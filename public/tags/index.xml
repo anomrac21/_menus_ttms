@@ -2,353 +2,353 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/tags/</link>
+    <link>http://localhost:1313/tags/</link>
     <description>Recent content in Tags on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/tags/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Alfredo</title>
-      <link>https://tinytavern.ttmenus.com/tags/alfredo/</link>
+      <link>http://localhost:1313/tags/alfredo/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/alfredo/</guid>
+      <guid>http://localhost:1313/tags/alfredo/</guid>
       <description></description>
     </item>
     <item>
       <title>Blueberry</title>
-      <link>https://tinytavern.ttmenus.com/tags/blueberry/</link>
+      <link>http://localhost:1313/tags/blueberry/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/blueberry/</guid>
+      <guid>http://localhost:1313/tags/blueberry/</guid>
       <description></description>
     </item>
     <item>
       <title>Breakfast</title>
-      <link>https://tinytavern.ttmenus.com/tags/breakfast/</link>
+      <link>http://localhost:1313/tags/breakfast/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/breakfast/</guid>
+      <guid>http://localhost:1313/tags/breakfast/</guid>
       <description></description>
     </item>
     <item>
       <title>Burgers</title>
-      <link>https://tinytavern.ttmenus.com/tags/burgers/</link>
+      <link>http://localhost:1313/tags/burgers/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/burgers/</guid>
+      <guid>http://localhost:1313/tags/burgers/</guid>
       <description></description>
     </item>
     <item>
       <title>Cajun</title>
-      <link>https://tinytavern.ttmenus.com/tags/cajun/</link>
+      <link>http://localhost:1313/tags/cajun/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/cajun/</guid>
+      <guid>http://localhost:1313/tags/cajun/</guid>
       <description></description>
     </item>
     <item>
       <title>Caramel</title>
-      <link>https://tinytavern.ttmenus.com/tags/caramel/</link>
+      <link>http://localhost:1313/tags/caramel/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/caramel/</guid>
+      <guid>http://localhost:1313/tags/caramel/</guid>
       <description></description>
     </item>
     <item>
       <title>Chai</title>
-      <link>https://tinytavern.ttmenus.com/tags/chai/</link>
+      <link>http://localhost:1313/tags/chai/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/chai/</guid>
+      <guid>http://localhost:1313/tags/chai/</guid>
       <description></description>
     </item>
     <item>
       <title>Cheese</title>
-      <link>https://tinytavern.ttmenus.com/tags/cheese/</link>
+      <link>http://localhost:1313/tags/cheese/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/cheese/</guid>
+      <guid>http://localhost:1313/tags/cheese/</guid>
       <description></description>
     </item>
     <item>
       <title>Chicken</title>
-      <link>https://tinytavern.ttmenus.com/tags/chicken/</link>
+      <link>http://localhost:1313/tags/chicken/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/chicken/</guid>
+      <guid>http://localhost:1313/tags/chicken/</guid>
       <description></description>
     </item>
     <item>
       <title>Chocolate</title>
-      <link>https://tinytavern.ttmenus.com/tags/chocolate/</link>
+      <link>http://localhost:1313/tags/chocolate/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/chocolate/</guid>
+      <guid>http://localhost:1313/tags/chocolate/</guid>
       <description></description>
     </item>
     <item>
       <title>Cinnamon</title>
-      <link>https://tinytavern.ttmenus.com/tags/cinnamon/</link>
+      <link>http://localhost:1313/tags/cinnamon/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/cinnamon/</guid>
+      <guid>http://localhost:1313/tags/cinnamon/</guid>
       <description></description>
     </item>
     <item>
       <title>Citrus</title>
-      <link>https://tinytavern.ttmenus.com/tags/citrus/</link>
+      <link>http://localhost:1313/tags/citrus/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/citrus/</guid>
+      <guid>http://localhost:1313/tags/citrus/</guid>
       <description></description>
     </item>
     <item>
       <title>Coffee</title>
-      <link>https://tinytavern.ttmenus.com/tags/coffee/</link>
+      <link>http://localhost:1313/tags/coffee/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/coffee/</guid>
+      <guid>http://localhost:1313/tags/coffee/</guid>
       <description></description>
     </item>
     <item>
       <title>Cold</title>
-      <link>https://tinytavern.ttmenus.com/tags/cold/</link>
+      <link>http://localhost:1313/tags/cold/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/cold/</guid>
+      <guid>http://localhost:1313/tags/cold/</guid>
       <description></description>
     </item>
     <item>
       <title>Drinks</title>
-      <link>https://tinytavern.ttmenus.com/tags/drinks/</link>
+      <link>http://localhost:1313/tags/drinks/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/drinks/</guid>
+      <guid>http://localhost:1313/tags/drinks/</guid>
       <description></description>
     </item>
     <item>
       <title>Earl Grey</title>
-      <link>https://tinytavern.ttmenus.com/tags/earl-grey/</link>
+      <link>http://localhost:1313/tags/earl-grey/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/earl-grey/</guid>
+      <guid>http://localhost:1313/tags/earl-grey/</guid>
       <description></description>
     </item>
     <item>
       <title>Eggs</title>
-      <link>https://tinytavern.ttmenus.com/tags/eggs/</link>
+      <link>http://localhost:1313/tags/eggs/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/eggs/</guid>
+      <guid>http://localhost:1313/tags/eggs/</guid>
       <description></description>
     </item>
     <item>
       <title>French Toast</title>
-      <link>https://tinytavern.ttmenus.com/tags/french-toast/</link>
+      <link>http://localhost:1313/tags/french-toast/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/french-toast/</guid>
+      <guid>http://localhost:1313/tags/french-toast/</guid>
       <description></description>
     </item>
     <item>
       <title>Green Tea</title>
-      <link>https://tinytavern.ttmenus.com/tags/green-tea/</link>
+      <link>http://localhost:1313/tags/green-tea/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/green-tea/</guid>
+      <guid>http://localhost:1313/tags/green-tea/</guid>
       <description></description>
     </item>
     <item>
       <title>Ham</title>
-      <link>https://tinytavern.ttmenus.com/tags/ham/</link>
+      <link>http://localhost:1313/tags/ham/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/ham/</guid>
+      <guid>http://localhost:1313/tags/ham/</guid>
       <description></description>
     </item>
     <item>
       <title>Hot</title>
-      <link>https://tinytavern.ttmenus.com/tags/hot/</link>
+      <link>http://localhost:1313/tags/hot/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/hot/</guid>
+      <guid>http://localhost:1313/tags/hot/</guid>
       <description></description>
     </item>
     <item>
       <title>Ice Cream</title>
-      <link>https://tinytavern.ttmenus.com/tags/ice-cream/</link>
+      <link>http://localhost:1313/tags/ice-cream/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/ice-cream/</guid>
+      <guid>http://localhost:1313/tags/ice-cream/</guid>
       <description></description>
     </item>
     <item>
       <title>Jalapeño</title>
-      <link>https://tinytavern.ttmenus.com/tags/jalape%C3%B1o/</link>
+      <link>http://localhost:1313/tags/jalape%C3%B1o/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/jalape%C3%B1o/</guid>
+      <guid>http://localhost:1313/tags/jalape%C3%B1o/</guid>
       <description></description>
     </item>
     <item>
       <title>Lamb</title>
-      <link>https://tinytavern.ttmenus.com/tags/lamb/</link>
+      <link>http://localhost:1313/tags/lamb/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/lamb/</guid>
+      <guid>http://localhost:1313/tags/lamb/</guid>
       <description></description>
     </item>
     <item>
       <title>Lime</title>
-      <link>https://tinytavern.ttmenus.com/tags/lime/</link>
+      <link>http://localhost:1313/tags/lime/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/lime/</guid>
+      <guid>http://localhost:1313/tags/lime/</guid>
       <description></description>
     </item>
     <item>
       <title>Milkshake</title>
-      <link>https://tinytavern.ttmenus.com/tags/milkshake/</link>
+      <link>http://localhost:1313/tags/milkshake/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/milkshake/</guid>
+      <guid>http://localhost:1313/tags/milkshake/</guid>
       <description></description>
     </item>
     <item>
       <title>Mocktail</title>
-      <link>https://tinytavern.ttmenus.com/tags/mocktail/</link>
+      <link>http://localhost:1313/tags/mocktail/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/mocktail/</guid>
+      <guid>http://localhost:1313/tags/mocktail/</guid>
       <description></description>
     </item>
     <item>
       <title>Omelettes</title>
-      <link>https://tinytavern.ttmenus.com/tags/omelettes/</link>
+      <link>http://localhost:1313/tags/omelettes/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/omelettes/</guid>
+      <guid>http://localhost:1313/tags/omelettes/</guid>
       <description></description>
     </item>
     <item>
       <title>Orange</title>
-      <link>https://tinytavern.ttmenus.com/tags/orange/</link>
+      <link>http://localhost:1313/tags/orange/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/orange/</guid>
+      <guid>http://localhost:1313/tags/orange/</guid>
       <description></description>
     </item>
     <item>
       <title>Oreo</title>
-      <link>https://tinytavern.ttmenus.com/tags/oreo/</link>
+      <link>http://localhost:1313/tags/oreo/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/oreo/</guid>
+      <guid>http://localhost:1313/tags/oreo/</guid>
       <description></description>
     </item>
     <item>
       <title>Pancakes</title>
-      <link>https://tinytavern.ttmenus.com/tags/pancakes/</link>
+      <link>http://localhost:1313/tags/pancakes/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/pancakes/</guid>
+      <guid>http://localhost:1313/tags/pancakes/</guid>
       <description></description>
     </item>
     <item>
       <title>Panini</title>
-      <link>https://tinytavern.ttmenus.com/tags/panini/</link>
+      <link>http://localhost:1313/tags/panini/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/panini/</guid>
+      <guid>http://localhost:1313/tags/panini/</guid>
       <description></description>
     </item>
     <item>
       <title>Pasta</title>
-      <link>https://tinytavern.ttmenus.com/tags/pasta/</link>
+      <link>http://localhost:1313/tags/pasta/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/pasta/</guid>
+      <guid>http://localhost:1313/tags/pasta/</guid>
       <description></description>
     </item>
     <item>
       <title>Peppermint</title>
-      <link>https://tinytavern.ttmenus.com/tags/peppermint/</link>
+      <link>http://localhost:1313/tags/peppermint/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/peppermint/</guid>
+      <guid>http://localhost:1313/tags/peppermint/</guid>
       <description></description>
     </item>
     <item>
       <title>Pina Colada</title>
-      <link>https://tinytavern.ttmenus.com/tags/pina-colada/</link>
+      <link>http://localhost:1313/tags/pina-colada/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/pina-colada/</guid>
+      <guid>http://localhost:1313/tags/pina-colada/</guid>
       <description></description>
     </item>
     <item>
       <title>Platter</title>
-      <link>https://tinytavern.ttmenus.com/tags/platter/</link>
+      <link>http://localhost:1313/tags/platter/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/platter/</guid>
+      <guid>http://localhost:1313/tags/platter/</guid>
       <description></description>
     </item>
     <item>
       <title>Savory</title>
-      <link>https://tinytavern.ttmenus.com/tags/savory/</link>
+      <link>http://localhost:1313/tags/savory/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/savory/</guid>
+      <guid>http://localhost:1313/tags/savory/</guid>
       <description></description>
     </item>
     <item>
       <title>Signature</title>
-      <link>https://tinytavern.ttmenus.com/tags/signature/</link>
+      <link>http://localhost:1313/tags/signature/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/signature/</guid>
+      <guid>http://localhost:1313/tags/signature/</guid>
       <description></description>
     </item>
     <item>
       <title>Soda</title>
-      <link>https://tinytavern.ttmenus.com/tags/soda/</link>
+      <link>http://localhost:1313/tags/soda/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/soda/</guid>
+      <guid>http://localhost:1313/tags/soda/</guid>
       <description></description>
     </item>
     <item>
       <title>Strawberry</title>
-      <link>https://tinytavern.ttmenus.com/tags/strawberry/</link>
+      <link>http://localhost:1313/tags/strawberry/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/strawberry/</guid>
+      <guid>http://localhost:1313/tags/strawberry/</guid>
       <description></description>
     </item>
     <item>
       <title>Sweet</title>
-      <link>https://tinytavern.ttmenus.com/tags/sweet/</link>
+      <link>http://localhost:1313/tags/sweet/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/sweet/</guid>
+      <guid>http://localhost:1313/tags/sweet/</guid>
       <description></description>
     </item>
     <item>
       <title>Tea</title>
-      <link>https://tinytavern.ttmenus.com/tags/tea/</link>
+      <link>http://localhost:1313/tags/tea/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/tea/</guid>
+      <guid>http://localhost:1313/tags/tea/</guid>
       <description></description>
     </item>
     <item>
       <title>Tomato</title>
-      <link>https://tinytavern.ttmenus.com/tags/tomato/</link>
+      <link>http://localhost:1313/tags/tomato/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/tomato/</guid>
+      <guid>http://localhost:1313/tags/tomato/</guid>
       <description></description>
     </item>
     <item>
       <title>Turkey Bacon</title>
-      <link>https://tinytavern.ttmenus.com/tags/turkey-bacon/</link>
+      <link>http://localhost:1313/tags/turkey-bacon/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/turkey-bacon/</guid>
+      <guid>http://localhost:1313/tags/turkey-bacon/</guid>
       <description></description>
     </item>
     <item>
       <title>Vegetarian</title>
-      <link>https://tinytavern.ttmenus.com/tags/vegetarian/</link>
+      <link>http://localhost:1313/tags/vegetarian/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/vegetarian/</guid>
+      <guid>http://localhost:1313/tags/vegetarian/</guid>
       <description></description>
     </item>
     <item>
       <title>Waffles</title>
-      <link>https://tinytavern.ttmenus.com/tags/waffles/</link>
+      <link>http://localhost:1313/tags/waffles/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/waffles/</guid>
+      <guid>http://localhost:1313/tags/waffles/</guid>
       <description></description>
     </item>
     <item>
       <title>Water</title>
-      <link>https://tinytavern.ttmenus.com/tags/water/</link>
+      <link>http://localhost:1313/tags/water/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/water/</guid>
+      <guid>http://localhost:1313/tags/water/</guid>
       <description></description>
     </item>
     <item>
       <title>Watermelon</title>
-      <link>https://tinytavern.ttmenus.com/tags/watermelon/</link>
+      <link>http://localhost:1313/tags/watermelon/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/watermelon/</guid>
+      <guid>http://localhost:1313/tags/watermelon/</guid>
       <description></description>
     </item>
     <item>
       <title>Whipped</title>
-      <link>https://tinytavern.ttmenus.com/tags/whipped/</link>
+      <link>http://localhost:1313/tags/whipped/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/tags/whipped/</guid>
+      <guid>http://localhost:1313/tags/whipped/</guid>
       <description></description>
     </item>
   </channel>

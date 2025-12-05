@@ -2,59 +2,59 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Espresso on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/ingredients/espresso/</link>
+    <link>http://localhost:1313/ingredients/espresso/</link>
     <description>Recent content in Espresso on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/ingredients/espresso/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ingredients/espresso/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Affogato</title>
-      <link>https://tinytavern.ttmenus.com/drinks/affogato/</link>
+      <link>http://localhost:1313/drinks/affogato/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/affogato/</guid>
+      <guid>http://localhost:1313/drinks/affogato/</guid>
       <description>&lt;p&gt;A scoop of ice cream mixed with a hot shot of coffee. Served with your choice of vanilla or chocolate ice cream.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Americano</title>
-      <link>https://tinytavern.ttmenus.com/drinks/americano/</link>
+      <link>http://localhost:1313/drinks/americano/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/americano/</guid>
+      <guid>http://localhost:1313/drinks/americano/</guid>
       <description>&lt;p&gt;This drink is a traditional coffee beverage, topped with a layer of crema&lt;/p&gt;</description>
     </item>
     <item>
       <title>Cappuccino</title>
-      <link>https://tinytavern.ttmenus.com/drinks/cappuccino/</link>
+      <link>http://localhost:1313/drinks/cappuccino/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/cappuccino/</guid>
+      <guid>http://localhost:1313/drinks/cappuccino/</guid>
       <description>&lt;p&gt;This smooth, creamy, and classic coffee beverage is whipped and topped with a layer of foamed milk&lt;/p&gt;</description>
     </item>
     <item>
       <title>Caramel Latte</title>
-      <link>https://tinytavern.ttmenus.com/drinks/caramel-latte/</link>
+      <link>http://localhost:1313/drinks/caramel-latte/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/caramel-latte/</guid>
+      <guid>http://localhost:1313/drinks/caramel-latte/</guid>
       <description>&lt;p&gt;This delicious coffee drink is infused with caramel syrup and topped with a layer of foamed milk or whipped cream&lt;/p&gt;</description>
     </item>
     <item>
       <title>Caramel Macchiato</title>
-      <link>https://tinytavern.ttmenus.com/drinks/caramel-macchiato/</link>
+      <link>http://localhost:1313/drinks/caramel-macchiato/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/caramel-macchiato/</guid>
+      <guid>http://localhost:1313/drinks/caramel-macchiato/</guid>
       <description>&lt;p&gt;This premium coffee beverage is whipped to perfection and topped with a layer of foamed milk or whipped cream&lt;/p&gt;</description>
     </item>
     <item>
       <title>Chocolate Mocha</title>
-      <link>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</link>
+      <link>http://localhost:1313/drinks/chocolate-mocha/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</guid>
+      <guid>http://localhost:1313/drinks/chocolate-mocha/</guid>
       <description>&lt;p&gt;The perfect balance of coffee and chocolate, topped with whipped cream and chocolate syrup&lt;/p&gt;</description>
     </item>
     <item>
       <title>Spanish Latte</title>
-      <link>https://tinytavern.ttmenus.com/drinks/spanish-latte/</link>
+      <link>http://localhost:1313/drinks/spanish-latte/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/drinks/spanish-latte/</guid>
+      <guid>http://localhost:1313/drinks/spanish-latte/</guid>
       <description>&lt;p&gt;This version of a latte is made with sweetened condensed milk, whipped to perfection, and topped with foamed milk or whipped cream&lt;/p&gt;</description>
     </item>
   </channel>

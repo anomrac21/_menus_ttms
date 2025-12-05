@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Cheese on Tiny Tavern</title>
-    <link>https://tinytavern.ttmenus.com/tags/cheese/</link>
+    <link>http://localhost:1313/tags/cheese/</link>
     <description>Recent content in Cheese on Tiny Tavern</description>
     <generator>Hugo</generator>
     <language>en-tt</language>
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://tinytavern.ttmenus.com/tags/cheese/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/cheese/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Build your Omelet (with cheese)</title>
-      <link>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</link>
+      <link>http://localhost:1313/omelettes/build-your-omelet-with-cheese/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</guid>
+      <guid>http://localhost:1313/omelettes/build-your-omelet-with-cheese/</guid>
       <description>&lt;p&gt;Mushroom, turkey bacon, sweet pepper, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
     </item>
   </channel>

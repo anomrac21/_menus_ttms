@@ -1,0 +1,19 @@
+[build]
+  publish = "public"
+  command = "bash build_menu.sh"
+
+[build.environment]
+  HUGO_VERSION = "0.121.1"
+  HUGO_ENV = "production"
+   GIT_SUBMODULE_STRATEGY = "recursive"
+  # Disable SSH prompts
+  GIT_TERMINAL_PROMPT = "0"
+
+[context.production.environment]
+  GIT_SUBMODULE_STRATEGY = "recursive"
+  GIT_TERMINAL_PROMPT = "0"
+
+[[redirects]]
+  from = "/*"
+  to = "/404/"
+  status = 404
