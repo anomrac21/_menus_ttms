@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blueberry Compote on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/ingredients/blueberry-compote/</link>
+    <description>Recent content in Blueberry Compote on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/ingredients/blueberry-compote/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Blueberry Pancakes</title>
+      <link>https://tinytavern.ttmenus.com/pancakes/blueberry-pancakes/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/pancakes/blueberry-pancakes/</guid>
+      <description>&lt;p&gt;A stack of fluffy, blueberry pancakes dusted with powdered sugar, topped with whipped cream and blueberry compote.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Blueberry Waffles</title>
+      <link>https://tinytavern.ttmenus.com/waffles/blueberry-waffles/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/waffles/blueberry-waffles/</guid>
+      <description>&lt;p&gt;A stack of fluffy, blueberry waffles dusted with powdered sugar and topped with whipped cream and blueberry compote.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

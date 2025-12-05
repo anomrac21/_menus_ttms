@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pickles on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/ingredients/pickles/</link>
+    <description>Recent content in Pickles on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/ingredients/pickles/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Homemade Chicken Burger</title>
+      <link>https://tinytavern.ttmenus.com/burgers/homemade-chicken-burger/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/burgers/homemade-chicken-burger/</guid>
+      <description>&lt;p&gt;This tender patty is made in-house and seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheese, pineapple, and a secret sauce&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Homemade Lamb Burger</title>
+      <link>https://tinytavern.ttmenus.com/burgers/homemade-lamb-burger/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/burgers/homemade-lamb-burger/</guid>
+      <description>&lt;p&gt;This juicy patty is made in-house and is seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheese, pineapple, and a secret sauce.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>TT&#39;s Signature Chicken Burger</title>
+      <link>https://tinytavern.ttmenus.com/burgers/tts-signature-chicken-burger/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/burgers/tts-signature-chicken-burger/</guid>
+      <description>&lt;p&gt;This tender patty is made in-house and seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheddar cheese, pineapple, jalapeño, chili pepper, turkey bacon, caramelized onions, bacon jam and a secret sauce.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>TT&#39;s Signature Lamb Burger</title>
+      <link>https://tinytavern.ttmenus.com/burgers/tts-signature-lamb-burger/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/burgers/tts-signature-lamb-burger/</guid>
+      <description>&lt;p&gt;This juicy patty is made in-house and is seasoned to perfection. It sits between two toasted brioche buns and is completed with lettuce, coleslaw, tomato, pickles, cheese, pineapple, jalapeño, chili pepper, turkey bacon, caramelized onions, bacon jam and a secret sauce.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Simple Syrup on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/ingredients/simple-syrup/</link>
+    <description>Recent content in Simple Syrup on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/ingredients/simple-syrup/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Citrusy Orange Twist</title>
+      <link>https://tinytavern.ttmenus.com/drinks/citrusy-orange-twist/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/citrusy-orange-twist/</guid>
+      <description>&lt;p&gt;Orange and lime juices, simple syrup, fresh mint, Sprite, and slices of lime&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Piña Colada Mocktail</title>
+      <link>https://tinytavern.ttmenus.com/drinks/pina-colada-mocktail/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/pina-colada-mocktail/</guid>
+      <description>&lt;p&gt;Coconut water, pineapple juice, simple syrup, blended with coconut jelly and pineapple chunks&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Strawberry Limeade</title>
+      <link>https://tinytavern.ttmenus.com/drinks/strawberry-limeade/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/strawberry-limeade/</guid>
+      <description>&lt;p&gt;Strawberry puree, lime juice, simple syrup, fresh mint, Sprite, and slices of lime&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Watermelon Mocktail</title>
+      <link>https://tinytavern.ttmenus.com/drinks/watermelon-mocktail/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/watermelon-mocktail/</guid>
+      <description>&lt;p&gt;Watermelon juice, simple syrup, Sprite, fresh mint, and slices of lime&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

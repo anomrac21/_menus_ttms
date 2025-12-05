@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Brewed on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/cookingmethods/brewed/</link>
+    <description>Recent content in Brewed on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/cookingmethods/brewed/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Affogato</title>
+      <link>https://tinytavern.ttmenus.com/drinks/affogato/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/affogato/</guid>
+      <description>&lt;p&gt;A scoop of ice cream mixed with a hot shot of coffee. Served with your choice of vanilla or chocolate ice cream.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Americano</title>
+      <link>https://tinytavern.ttmenus.com/drinks/americano/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/americano/</guid>
+      <description>&lt;p&gt;This drink is a traditional coffee beverage, topped with a layer of crema&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Cappuccino</title>
+      <link>https://tinytavern.ttmenus.com/drinks/cappuccino/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/cappuccino/</guid>
+      <description>&lt;p&gt;This smooth, creamy, and classic coffee beverage is whipped and topped with a layer of foamed milk&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Caramel Latte</title>
+      <link>https://tinytavern.ttmenus.com/drinks/caramel-latte/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/caramel-latte/</guid>
+      <description>&lt;p&gt;This delicious coffee drink is infused with caramel syrup and topped with a layer of foamed milk or whipped cream&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Caramel Macchiato</title>
+      <link>https://tinytavern.ttmenus.com/drinks/caramel-macchiato/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/caramel-macchiato/</guid>
+      <description>&lt;p&gt;This premium coffee beverage is whipped to perfection and topped with a layer of foamed milk or whipped cream&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chai</title>
+      <link>https://tinytavern.ttmenus.com/drinks/chai/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/chai/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Chocolate Mocha</title>
+      <link>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</guid>
+      <description>&lt;p&gt;The perfect balance of coffee and chocolate, topped with whipped cream and chocolate syrup&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Earl Grey</title>
+      <link>https://tinytavern.ttmenus.com/drinks/earl-grey/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/earl-grey/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>English Breakfast</title>
+      <link>https://tinytavern.ttmenus.com/drinks/english-breakfast/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/english-breakfast/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Green Tea</title>
+      <link>https://tinytavern.ttmenus.com/drinks/green-tea/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/green-tea/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Spanish Latte</title>
+      <link>https://tinytavern.ttmenus.com/drinks/spanish-latte/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/spanish-latte/</guid>
+      <description>&lt;p&gt;This version of a latte is made with sweetened condensed milk, whipped to perfection, and topped with foamed milk or whipped cream&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

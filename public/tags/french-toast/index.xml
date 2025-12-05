@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>French Toast on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/tags/french-toast/</link>
+    <description>Recent content in French Toast on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/tags/french-toast/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Classic French Toast Platter</title>
+      <link>https://tinytavern.ttmenus.com/breakfast/classic-french-toast-platter/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/breakfast/classic-french-toast-platter/</guid>
+      <description>&lt;p&gt;2 slices of toast dusted with powdered sugar, served with syrup and scrambled eggs.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

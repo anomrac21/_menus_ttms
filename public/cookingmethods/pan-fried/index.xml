@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pan-Fried on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/cookingmethods/pan-fried/</link>
+    <description>Recent content in Pan-Fried on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/cookingmethods/pan-fried/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Basic Omelette</title>
+      <link>https://tinytavern.ttmenus.com/omelettes/basic-omelette/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/omelettes/basic-omelette/</guid>
+      <description>&lt;p&gt;Tomato, onion, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Build your Omelet (with cheese)</title>
+      <link>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/omelettes/build-your-omelet-with-cheese/</guid>
+      <description>&lt;p&gt;Mushroom, turkey bacon, sweet pepper, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Specialty Omelette</title>
+      <link>https://tinytavern.ttmenus.com/omelettes/specialty-omelette/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/omelettes/specialty-omelette/</guid>
+      <description>&lt;p&gt;Mushroom, turkey bacon, sweet pepper, cheese, 1-Egg omelette served with 2 slices of toast: white or wheat.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

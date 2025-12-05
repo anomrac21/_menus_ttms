@@ -1,0 +1,6287 @@
+<!DOCTYPE html>
+<html lang="en-tt" dir="ltr">
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Whipped | Tiny Tavern</title>
+<meta name="description" content="Delicious food and drinks at great prices. View our digital menu and order online.">
+
+
+<link rel="preload" href="https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
+<link rel="preload" href="/branding/favicon144.webp" as="image" fetchpriority="high">
+<link rel="preload" href="https://ct.ttmenus.com/css/loader.css" as="style" fetchpriority="high">
+
+
+<style>
+   
+  #loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--background-color, #000);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+  
+  #loader img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  #loaderImage {
+    
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  
+  #menuImage {
+    width: 120px;
+    height: 120px;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+  
+   
+  #loader.loader-hide-up,
+  #loader.loader-hide-down,
+  #loader.loader-hide-left,
+  #loader.loader-hide-right {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  #loader.loader-hide-up { transform: translateY(-100%); }
+  #loader.loader-hide-down { transform: translateY(100%); }
+  #loader.loader-hide-left { transform: translateX(-100%); }
+  #loader.loader-hide-right { transform: translateX(100%); }
+</style>
+
+
+<link rel="preconnect" href="https://ct.ttmenus.com" crossorigin>
+<link rel="preconnect" href="https://cdn.onesignal.com" crossorigin>
+<link rel="preconnect" href="https://analytics.ttmenus.com" crossorigin>
+<link rel="preconnect" href="https://code.jquery.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+
+      <link rel="stylesheet" href="/css/main.min.31fab1366650e901ec4e8f1845406a0f6a87d88682d0c292f0eb035d1f06c29f.css" integrity="sha256-MfqxNmZQ6QHsTo8YRUBqD2qH2IaC0MKS8OsDXR8Gwp8=" crossorigin="anonymous">
+
+
+      <script src="/js/main.f2979a93a325fecf9605263bd141398a311c8e23388ed7dcff74f92f7e632866.js" integrity="sha256-8peak6Ml/s&#43;WBSY70UE5ijEcjiM4jtfc/3T5L35jKGY=" crossorigin="anonymous"></script>
+
+<meta property="og:title" content="Whipped | Tiny Tavern"/>
+
+
+ 
+   <meta property="og:image" content="/branding/favicon152.webp"/>
+
+
+
+<meta name="apple-mobile-web-app-title" content="Tiny Tavern">
+<meta name="description" content=" "/>
+<meta property="og:description" content=" Digital Menu"/>
+
+
+<meta property="og:url" content="https://tinytavern.ttmenus.com/" />
+
+
+<meta name="theme-color" content="#000000"/>
+
+
+<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/colors.css"/>
+<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/custom.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
+
+
+<link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/adsbase.css"/>
+
+<link rel="preload" href="https://tinytavern.ttmenus.com/css/apple.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/apple.css"/></noscript>
+
+<link rel="preload" href="https://tinytavern.ttmenus.com/css/ordering-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://tinytavern.ttmenus.com/css/ordering-system.css"/></noscript>
+
+<link rel="preload" href="https://ct.ttmenus.com/css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/></noscript>
+
+<link rel="preload" href="https://ct.ttmenus.com/css/dinein_select.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/></noscript>
+
+<link rel="preload" href="https://ct.ttmenus.com/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/></noscript>
+
+
+<link rel="manifest" href="/manifest.json" />
+
+
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shortcut icon" sizes="16x16" href="/branding/favicon16.webp">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon.ico">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon196.webp">
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shorcut icon" href="/branding/favicon512.webp"/>
+<link rel="apple-touch-icon-precomposed" href="/branding/favicon152.webp">
+
+
+<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"></noscript>
+
+
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
+<style>
+   
+  @font-face {
+    font-family: 'FontAwesome';
+    font-display: swap;
+  }
+</style>
+
+
+
+
+<script>
+    if (typeof navigator.serviceWorker !== 'undefined') {
+        navigator.serviceWorker.register('https:\/\/tinytavern.ttmenus.com\/OneSignalSDKWorker.js?v=2')
+        .then(function(registration) {
+        console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(function(error) {
+        console.error('Service Worker registration failed:', error);
+        });
+    }
+</script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function(OneSignal) {
+    const appId = "9d041f45-1cc0-4e2e-9bc4-59778502838f";
+    
+    
+    if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
+      OneSignal.init({
+        appId: appId,
+      }).catch(function(error) {
+        console.warn('OneSignal initialization error:', error.message);
+        
+        if (error.message.includes("AppID doesn't match")) {
+          console.log('OneSignal: AppID mismatch detected. Service worker may need to be cleared.');
+        }
+      });
+    } else {
+      console.warn('OneSignal: Invalid or missing appId, skipping initialization');
+    }
+  });
+</script>
+
+<script>
+  
+  window.addEventListener('load', function() {
+    var _mtm = window._mtm = window._mtm || [];
+    _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+    (function() {
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
+    })();
+  });
+</script>
+
+
+<script>
+  window.addEventListener('load', function() {
+    var _paq = window._paq = window._paq || [];
+
+     
+    _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+    _paq.push(["setCookieDomain", "*.ttmenus.com"]);
+    _paq.push(["setDomains", ["*.ttmenus.com"]]);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+
+     
+    _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '9']);
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+
+    (function() {
+      var u="//analytics.ttmenus.com/";
+      _paq.push(['setTrackerUrl', u+'matomo.php']);
+      _paq.push(['setSiteId', '1']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+    })();
+  });
+</script>
+<noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
+
+
+
+<script src="https://tinytavern.ttmenus.com/js/analytics-tracking.js" defer></script><script>
+
+window.AUTH_CONFIG = {
+    apiUrl: "https:\/\/auth.ttmenus.com\/api\/v1"
+};
+
+window.SITE_CLIENT_ID = "";
+</script>
+<script src="https://tinytavern.ttmenus.com/js/auth-client.js"></script>
+<script src="https://tinytavern.ttmenus.com/js/auth-middleware.js"></script>
+<script src="https://tinytavern.ttmenus.com/js/auth-client-access.js"></script>
+<script src="https://tinytavern.ttmenus.com/js/admin-users.js"></script>
+</head>
+<body>
+  <div id="loader" class="loader">
+	<img id="loaderImage" src="https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif" fetchpriority="high" loading="eager" decoding="sync">
+	<img id="menuImage" src="/branding/favicon144.webp" fetchpriority="high" loading="eager" decoding="sync">
+</div>
+  <a onclick="openTableModal('askforserver');" id="askforserver" class="">
+	<svg fill="#000000" width="30px" height="30px" viewBox="0 -2.89 122.88 122.88" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  style="enable-background:new 0 0 122.88 117.09" xml:space="preserve">
+	<style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style>
+	<g>
+	<path class="st0" d="M36.82,107.86L35.65,78.4l13.25-0.53c5.66,0.78,11.39,3.61,17.15,6.92l10.29-0.41c4.67,0.1,7.3,4.72,2.89,8 c-3.5,2.79-8.27,2.83-13.17,2.58c-3.37-0.03-3.34,4.5,0.17,4.37c1.22,0.05,2.54-0.29,3.69-0.34c6.09-0.25,11.06-1.61,13.94-6.55 l1.4-3.66l15.01-8.2c7.56-2.83,12.65,4.3,7.23,10.1c-10.77,8.51-21.2,16.27-32.62,22.09c-8.24,5.47-16.7,5.64-25.34,1.01 L36.82,107.86L36.82,107.86z M29.74,62.97h91.9c0.68,0,1.24,0.57,1.24,1.24v5.41c0,0.67-0.56,1.24-1.24,1.24h-91.9 c-0.68,0-1.24-0.56-1.24-1.24v-5.41C28.5,63.53,29.06,62.97,29.74,62.97L29.74,62.97z M79.26,11.23 c25.16,2.01,46.35,23.16,43.22,48.06l-93.57,0C25.82,34.23,47.09,13.05,72.43,11.2V7.14l-4,0c-0.7,0-1.28-0.58-1.28-1.28V1.28 c0-0.7,0.57-1.28,1.28-1.28h14.72c0.7,0,1.28,0.58,1.28,1.28v4.58c0,0.7-0.58,1.28-1.28,1.28h-3.89L79.26,11.23L79.26,11.23 L79.26,11.23z M0,77.39l31.55-1.66l1.4,35.25L1.4,112.63L0,77.39L0,77.39z"/>
+	</g>
+	</svg>
+</a>
+  <div data-barba="wrapper">
+    <div data-barba="container" data-barba-namespace="Whipped">
+      <header>
+        
+
+<div class="main-header">
+	<div class="container">
+		<a id="dashboardBtn" onclick="toggleDashboard();">
+	<img style="height: 3.2em;" src="https://ct.ttmenus.com/branding/ttmenus/ttmenus-loop-logo.gif">
+</a>
+
+		
+		
+			<a class="logo-container" href="/" onclick="closeCart();">
+				<img class="logo center" src="/branding/favicon192.webp" alt="Tiny Tavern logo" width="192" height="192" loading="lazy"></a>
+			
+		
+		
+			<ul id="menublock">
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/everything-pancakes" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-pancakes.webp" alt="Everything Pancakes icon" loading="lazy">
+									
+									<span>Everything Pancakes</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/everything-waffles" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-waffles.webp" alt="Everything Waffles icon" loading="lazy">
+									
+									<span>Everything Waffles</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/omelettes-all-the-way" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-eggs.webp" alt="Omelettes All The Way icon" loading="lazy">
+									
+									<span>Omelettes All The Way</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/breakfast-platters" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-breakfast.webp" alt="Breakfast Platters icon" loading="lazy">
+									
+									<span>Breakfast Platters</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/burgers" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-burger.webp" alt="Burgers icon" loading="lazy">
+									
+									<span>Burgers</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/pastas" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-pasta.webp" alt="Pastas icon" loading="lazy">
+									
+									<span>Pastas</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/paninis" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-sandwich.webp" alt="Paninis icon" loading="lazy">
+									
+									<span>Paninis</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+							<li class="item">
+								
+									<a href="/drinks" onclick="closeCart();"> 
+								
+									
+										<img class="icon center" src="https://ct.ttmenus.com/icons/food/icon-tea.webp" alt="Drinks icon" loading="lazy">
+									
+									<span>Drinks</span>
+								</a>
+							</li>
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+						
+							
+							  
+							
+						
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+					
+				
+		
+				<li>
+					<a onclick="toggleSearch();">
+						<img class="icon center" src="https://ct.ttmenus.com/icons/utilities/search.svg" alt="Search" loading="lazy">
+						<span>search</span>
+					</a>
+				</li>
+			</ul> 
+		
+		
+	</div>
+</div>
+		
+      </header>
+      <div id="dashboard" class="loader-hide-left">
+	<div class="header">
+		<a href="https://www.ttmenus.com">
+			<img style="height: 3.2em;" src="https://ct.ttmenus.com/branding/ttmenus/ttmenu.gif">
+			<img style="height: 4em;" src="https://ct.ttmenus.com/branding/ttmenus/ttmenus.webp">
+		</a>
+		<a onclick="closeDashboard();">
+			<img style="height: 2em;margin: auto .4em;" src="https://ct.ttmenus.com/icons/utilities/close.svg">
+		</a>
+	</div>
+	<ul class="body">
+		
+		
+		
+		
+	</ul>
+	<div class="dashboardfooter">
+		<div class="container">
+			<a href="https://ttmenus.com/about-us">About Us</a>
+			<a href="https://ttmenus.com/contact-us">Contact Us</a>
+			<a href="https://ttmenus.com/our-services">Our Services</a>
+			
+		</div>
+		<div class="container">
+			
+			<a href="https://ttmenus.com/privacy-policy">Privacy Policy</a>
+			<a href="https://ttmenus.com/terms-and-conditions">Terms & Conditions</a>
+			
+		</div>
+	</div>
+</div>
+
+      <div id="search" class="hide-search"><input type="search" oninput="liveSearch();" id="searchbox" aria-label="Search menu items"><a id="searchClose" class="close" onclick="toggleSearch();" aria-label="Close search"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg" alt="Close search"></a></div>
+
+<div id="searchresultheader" class="is-hidden"><h1>Results</h1></div>
+      <main id="main">
+        
+  
+    <div class="main-content">
+      
+      
+      <div class="headerstyle item">
+        <h1 data-aos="zoom-out-right">Whipped</h1>
+        
+      </div>
+      <h4 class="menu-summary item"></h4>
+      
+          
+                      
+          
+            
+              <table class="listpagemenu menu w-">
+                <tbody>
+                  
+                  
+                    
+                      
+                    
+                  
+
+                  
+                  
+                    
+                      
+                    
+                  
+                  
+                  <tr class="item" 
+                      data-item-url="/drinks/caramel-dalgona/"
+                      onclick="openItem(this, '\/drinks\/caramel-dalgona\/');">
+                      <td>
+                        <h3 class="title">Caramel Dalgona</h3>
+                        <p>This version of the Dalgona blends caramel syrup into the foamy coffee creation</p>
+                        <ul class="sizes">
+                          
+                            
+                              <li>
+                                Cold
+                              </li>
+                            
+                          
+                        </ul>
+                        <ul class="flavours">
+                          
+                            
+                          
+                        </ul> 
+                      </td>
+                      <th>
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                         
+                        
+                        
+                          $25
+                                               
+                      </th>
+                  </tr>
+                </tbody>
+              </table> 
+            
+          
+            
+              <table class="listpagemenu menu w-">
+                <tbody>
+                  
+                  
+                    
+                      
+                    
+                  
+
+                  
+                  
+                    
+                      
+                    
+                  
+                  
+                  <tr class="item" 
+                      data-item-url="/drinks/dalgona-whipped-coffee/"
+                      onclick="openItem(this, '\/drinks\/dalgona-whipped-coffee\/');">
+                      <td>
+                        <h3 class="title">Dalgona/Whipped Coffee</h3>
+                        <p>This deliciously whisked caffeine drink is topped with a floating infusion of coffee goodness</p>
+                        <ul class="sizes">
+                          
+                            
+                              <li>
+                                Cold
+                              </li>
+                            
+                          
+                        </ul>
+                        <ul class="flavours">
+                          
+                            
+                          
+                        </ul> 
+                      </td>
+                      <th>
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                         
+                        
+                        
+                          $20
+                                               
+                      </th>
+                  </tr>
+                </tbody>
+              </table> 
+            
+          
+
+    </div>
+  
+  
+
+
+
+
+
+<div class="social-share-btn-container">
+    <button onclick="shareContent('Whipped', 'https:\/\/tinytavern.ttmenus.com\/tags\/whipped\/')" 
+            class="universal-share-btn social-share-btn"
+            aria-label="Share this page"
+            title="Share this page">
+    <svg class="share-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 16.08C17.24 16.08 16.56 16.38 16.04 16.85L8.91 12.7C8.96 12.47 9 12.24 9 12C9 11.76 8.96 11.53 8.91 11.3L15.96 7.19C16.5 7.69 17.21 8 18 8C19.66 8 21 6.66 21 5C21 3.34 19.66 2 18 2C16.34 2 15 3.34 15 5C15 5.24 15.04 5.47 15.09 5.7L8.04 9.81C7.5 9.31 6.79 9 6 9C4.34 9 3 10.34 3 12C3 13.66 4.34 15 6 15C6.79 15 7.5 14.69 8.04 14.19L15.16 18.35C15.11 18.56 15.08 18.78 15.08 19C15.08 20.61 16.39 21.92 18 21.92C19.61 21.92 20.92 20.61 20.92 19C20.92 17.39 19.61 16.08 18 16.08Z" fill="currentColor"/>
+    </svg>
+    <span class="share-text">Share</span>
+    </button>
+</div>
+<script>
+function shareContent(title, url) {
+  
+  if (navigator.share) {
+    navigator.share({
+      title: title,
+      text: title,
+      url: url
+    }).then(() => {
+      console.log('Shared successfully');
+    }).catch((error) => {
+      console.log('Error sharing:', error);
+      
+      if (error.name !== 'AbortError') {
+        fallbackShare(title, url);
+      }
+    });
+  } else {
+    
+    fallbackShare(title, url);
+  }
+}
+
+function fallbackShare(title, url) {
+  
+  const shareText = title + '\n\n' + url;
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareText).then(() => {
+      showShareNotification('Link copied to clipboard!');
+    }).catch(() => {
+      showShareNotification('Unable to copy. URL: ' + url);
+    });
+  } else {
+    
+    const textArea = document.createElement('textarea');
+    textArea.value = shareText;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showShareNotification('Link copied to clipboard!');
+    } catch (err) {
+      showShareNotification('Unable to copy. URL: ' + url);
+    }
+    document.body.removeChild(textArea);
+  }
+}
+
+function showShareNotification(message) {
+  
+  const notification = document.createElement('div');
+  notification.className = 'share-notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+  
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 6000);
+}
+</script>
+
+<style>
+.universal-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.universal-share-btn:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.universal-share-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.universal-share-btn .share-icon {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.universal-share-btn .share-text {
+  font-size: 1rem;
+  color: white;
+}
+.social-share-btn-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-block-end: 1rem;
+}
+ 
+.share-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.share-notification.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 768px) {
+  .universal-share-btn {
+    padding: 0.5rem 1rem;
+  }
+  
+  .universal-share-btn .share-text {
+    font-size: 0.9rem;
+  }
+}
+</style>
+
+
+
+        
+      </main>
+      <div class="bottomads">
+          
+<div id="frontpage-ads-container" class="frontpageads item" 
+     data-ads-api="https://ads.ttmenus.com/api/v1" 
+     data-client-id="ttms_tinytavern">
+  <section id="frontpage-ad-sponsored" class="ads menu-ad sticky">
+    <div class="scroll-progress-bar">
+      <div class="scroll-progress-fill"></div>
+    </div>
+    <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
+      
+      <li class="ad-panel ad-loading">
+        <span class="loading-text">Loading ads...</span>
+      </li>
+    </ul>
+  </section>
+  <section class="ads menu-ad sticky" style="height: 100vh; min-height: 0; background: none; border: none;"></section>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  
+  
+  const AdsManager = {
+    container: null,
+    adsApiUrl: null,
+    clientId: null,
+    sessionId: null,
+    
+    init() {
+      this.container = document.getElementById('frontpage-ads-container');
+      if (!this.container) return;
+      
+      this.adsApiUrl = this.container.getAttribute('data-ads-api');
+      this.clientId = this.container.getAttribute('data-client-id');
+      this.sessionId = this.generateSessionId();
+      
+      this.fetchAds();
+    },
+    
+    generateSessionId() {
+      
+      let sessionId = sessionStorage.getItem('ttmenus_session_id');
+      if (!sessionId) {
+        sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('ttmenus_session_id', sessionId);
+      }
+      return sessionId;
+    },
+    
+    async fetchAds() {
+      try {
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const url = `${this.adsApiUrl}/active-ads?client_id=${this.clientId}&day=${today}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        if (result.success && result.data && result.data.length > 0) {
+          this.renderAds(result.data);
+        } else {
+          this.hideAdsContainer();
+        }
+      } catch (error) {
+        console.error('Failed to fetch ads:', error);
+        this.hideAdsContainer();
+      }
+    },
+    
+    renderAds(ads) {
+      const ulElement = this.container.querySelector('ul.inner');
+      if (!ulElement) return;
+      
+      
+      ulElement.innerHTML = '';
+      
+      
+      ads.forEach((ad, index) => {
+        const adElement = this.createAdElement(ad);
+        if (adElement) {
+          ulElement.appendChild(adElement);
+          
+          setTimeout(() => this.trackImpression(ad), 500);
+        }
+      });
+    },
+    
+    createAdElement(ad) {
+      const li = document.createElement('li');
+      li.className = 'ad-panel';
+      li.dataset.adId = ad.id;
+      
+      
+      if (ad.link_url) {
+        li.onclick = () => {
+          this.trackClick(ad);
+          window.open(ad.link_url, '_blank');
+        };
+        li.style.cursor = 'pointer';
+      }
+      
+      
+      const sponsoredLabel = document.createElement('span');
+      sponsoredLabel.setAttribute('data-aos', 'zoom-out-right');
+      sponsoredLabel.textContent = 'Sponsored';
+      li.appendChild(sponsoredLabel);
+      
+      
+      if (ad.images && ad.images.length > 0) {
+        ad.images.forEach((image, idx) => {
+          const imageUrl = image.image_url;
+          const altText = image.alt_text || ad.title || 'Sponsored advertisement';
+          
+          
+          if (imageUrl.match(/\.(mp4|webm|ogg)$/i)) {
+            const video = document.createElement('video');
+            video.className = 'ad-portrait ad-video';
+            video.autoplay = true;
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            
+            const source = document.createElement('source');
+            source.src = imageUrl;
+            source.type = 'video/mp4';
+            video.appendChild(source);
+            
+            li.appendChild(video);
+          } else {
+            
+            const bgImg = document.createElement('img');
+            bgImg.src = imageUrl;
+            bgImg.className = 'ad-portrait-bg';
+            bgImg.alt = altText;
+            bgImg.loading = 'lazy';
+            li.appendChild(bgImg);
+            
+            
+            const fgImg = document.createElement('img');
+            fgImg.src = imageUrl;
+            fgImg.className = 'ad-portrait';
+            fgImg.alt = altText;
+            fgImg.loading = 'lazy';
+            li.appendChild(fgImg);
+          }
+        });
+      } else {
+        
+        return null;
+      }
+      
+      return li;
+    },
+    
+    async trackImpression(ad) {
+      try {
+        const url = `${this.adsApiUrl}/tracking/impression`;
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ad_id: ad.id,
+            client_id: this.clientId,
+            session_id: this.sessionId,
+            device_type: this.getDeviceType(),
+            viewed_at: new Date().toISOString()
+          })
+        });
+      } catch (error) {
+        console.error('Failed to track impression:', error);
+      }
+    },
+    
+    async trackClick(ad) {
+      try {
+        const url = `${this.adsApiUrl}/tracking/click`;
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ad_id: ad.id,
+            clicked_at: new Date().toISOString(),
+            device_type: this.getDeviceType(),
+            referrer: window.location.href
+          })
+        });
+      } catch (error) {
+        console.error('Failed to track click:', error);
+      }
+    },
+    
+    getDeviceType() {
+      const ua = navigator.userAgent;
+      if (/mobile/i.test(ua)) return 'mobile';
+      if (/tablet/i.test(ua)) return 'tablet';
+      return 'desktop';
+    },
+    
+    hideAdsContainer() {
+      if (this.container) {
+        this.container.style.display = 'none';
+      }
+    }
+  };
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => AdsManager.init());
+  } else {
+    AdsManager.init();
+  }
+})();
+</script>
+
+
+
+      </div>
+        <div id="client-openinghours">
+  <div class="nav-btns">
+  <button class="l-btn">
+    <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"/></g></svg>
+  </button>
+  <button class="r-btn">
+    <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"/></g></svg>
+  </button>
+</div>
+  <ul class="inner">
+    
+    
+      
+      <li class="ad-panel">
+        <div class="openstatus center aos-init aos-animate hide" data-aos="zoom-in" data-aos-anchor="#home">
+          <a id="opensign-loc-0" class="locbtn btn open hide">Open</a>
+          <a id="closedsign-loc-0" class="locbtn btn close hide">Closed</a>
+          <a id="soonopen-loc-0" class="locbtn btn open soon hide">Opens Soon</a>
+          <a id="soonclose-loc-0" class="locbtn btn close soon hide">Closes Soon</a>
+        </div>
+
+
+        <div class="location-block">
+          <h3>
+            <a href="https://www.ttmenus.com/map/?lat=10.514075720192144&lng=-61.39523611534353&zoom=19&client=whipped" class="locbtn btn"  target="_blank">
+              LP 270 Main Road, Montrose
+            </a>
+          </h3>
+          
+          
+          <div class="hours" data-opening-hours>
+            <ul class="today-hours">
+              
+            </ul>
+
+            <details class="accordion">
+              <summary>Show All Hours</summary>
+              <ul class="all-hours">
+                
+                  
+                  
+                    
+                    
+                    
+                    
+                    
+                    <li data-day="sun">
+                      <strong>Sun:</strong>
+                      
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          9:00am – 2:00pm
+                        
+                        
+                      
+                    </li>
+                  
+                
+                  
+                  
+                    <li data-day="mon"><strong>Mon:</strong> Closed</li>
+                  
+                
+                  
+                  
+                    <li data-day="tue"><strong>Tue:</strong> Closed</li>
+                  
+                
+                  
+                  
+                    
+                    
+                    
+                    
+                    
+                    <li data-day="wed">
+                      <strong>Wed:</strong>
+                      
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          10:00am – 5:00pm
+                        
+                        
+                      
+                    </li>
+                  
+                
+                  
+                  
+                    
+                    
+                    
+                    
+                    
+                    <li data-day="thu">
+                      <strong>Thu:</strong>
+                      
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          10:00am – 5:00pm
+                        
+                        
+                      
+                    </li>
+                  
+                
+                  
+                  
+                    
+                    
+                    
+                    
+                    
+                    <li data-day="fri">
+                      <strong>Fri:</strong>
+                      
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          11:00am – 6:00pm
+                        
+                        
+                      
+                    </li>
+                  
+                
+                  
+                  
+                    
+                    
+                    
+                    
+                    
+                    <li data-day="sat">
+                      <strong>Sat:</strong>
+                      
+                        
+                        
+                        
+                        
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          
+                          9:00am – 2:00pm
+                        
+                        
+                      
+                    </li>
+                  
+                
+              </ul>
+            </details>
+          </div>
+        
+      </div>
+      <div style="height: 4em;"></div>
+      </li>
+    
+  </ul>      
+</div>
+<a class="menu-anchor" id="openhours"></a> 
+
+
+    </div>
+  </div>
+
+  <footer>
+    
+<div id="orderModal" class="order-hidden">
+	<div class="container">
+		<div id="wamodal">
+			<div class="header">
+				<img src="/branding/favicon192.webp" >
+				<h3 class="title"><a id="itemCategory"></a></h3>
+				<a id="itemClose" class="btn-close" onclick="closeShop();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a>
+			</div>
+			<a id="itemImages" class="image">
+				
+			</a>
+
+			<h2 class="title"><a id="itemName"></a></h2>
+			<div id="itemDesc" class="title"></div>
+			<div id="itemtaxonomytags" class="taxonomytags"></div>
+			<div id="itemSizeContainer" class="">
+				<a id="size" class="btn-section-header hide" onclick="">Sizes</a>
+				<div id="itemSizeControl"></div>
+			</div>
+
+			<div id="itemFlavourContainer" class="">
+				<a id="flav" class="btn-section-header hide" onclick="">Flavours</a>
+				<div id="itemFlavourControl"></div>
+			</div>
+
+			
+			<div id="sideCategoriesButtonsContainer"></div>
+			
+			
+			<div id="itemSideContainer" class="hide">
+				<a id="reg" class="btn-section-header" onclick="openSideMenu();"><i class="fa fa-plus"></i> <span id="sidesButtonText">Sides</span></a>
+				<div id="sideList" class=""></div>
+			</div>
+
+			<div id="itemModContainer" class="hide">
+				<a id="mod" class="btn-section-header" onclick="openModMenu();"><i id="modicon" class="fa fa-plus"></i> Modifications</a>
+				<div id="modList" class=""></div>
+			</div>
+			<div id="itemAddContainer" class="hide">
+				<a id="add" class="btn-section-header" onclick="openAddMenu();"><i id="addicon" class="fa fa-plus"></i> Additions</a>
+				<div id="addModList" class=""></div>
+			</div>
+
+			<div id="itemAmtContainer">	
+				<div id="itemAmtcontrol">
+					<a id="itemDown" class="btn-quantity" onclick="itemAmtCalc(-1);"><i class="fa fa-chevron-down"></i></a>
+					<div id="itemAmt">1</div>
+					<a id="itemUp" class="btn-quantity" onclick="itemAmtCalc(1);"><i class="fa fa-chevron-up"></i></a>
+					<div id="itemPrice">$25</div>
+				</div>
+			</div>
+			<button id="itemAddCart">
+				<i class="fa fa-cart-plus"></i>
+				<span>Add to Cart</span>
+			</button>
+			
+		</div>
+	</div>
+</div>
+
+<div id="itemSideControl" class="hide"></div>
+<div id="itemModControl" class="hide fadein">
+<div class="container">
+	<div id="itemMods" class=""></div>
+</div>
+</div>
+<div id="itemAdditionControl" class="hide fadein">
+<div class="container">
+	<div id="itemAddMods" class=""></div>
+</div>
+</div>
+    
+<div id="tableNumberModal" class="hide">
+	<div class="container">
+		<div class="modal">
+			<div class="input">
+				<div class="header">
+					<img data-aos="zoom-out" src="/branding/favicon192.webp" class="aos-init aos-animate">
+					<h3 class="title">Finalize Order</h3>
+					<a id="itemClose" class="btn-close close" onclick="closeTableModal();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"></a>
+				</div>
+				<div class="container">
+					
+					<div class="location-display-section">
+						<div id="selectedLocationDisplay" class="selected-location-display">
+							
+						</div>
+					</div>
+					
+					
+					<div id="tableSelectionSection" class="table-selection-section">
+						<div id="dynamicTableButtons">
+							
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="confirm" id="confirmmodal">
+				
+				<div class="order-summary-display hide" id="orderSummaryDisplay">
+					<div class="summary-location">
+						<strong>📍 Pickup Location</strong>
+						<div id="summaryLocationInfo" class="summary-location-info">
+							
+						</div>
+					</div>
+					
+					<div class="summary-order-type">
+						<strong>🛍️ Order Type</strong>
+						<div class="summary-order-type-info">
+							<span class="takeaway-badge">Takeaway</span>
+						</div>
+					</div>
+				</div>
+				
+				<h2 id="myTableNum"></h2>
+				<div class="options" id="here">
+					<a onclick="confirmTable('order');" class="btn-confirm"><i class="fa fa-whatsapp"></i> YES</a>
+					<a onclick="closeTableModal();" class="btn-cancel">CANCEL</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<div id="footer" >
+	
+<div id="ttmenusModal" class="cart-hidden">
+	<div class="container">
+		<div id="ttmsmodal">
+			<div class="header">
+				<a  href="https://www.ttmenus.com/" target="_blank">
+					<img class="logo" src="https://ct.ttmenus.com/branding/ttmenus/icon-144.png" >
+				</a>
+				<a  class="close" onclick="closeTTMS();">
+					<img class="icon center" src="https://ct.ttmenus.com/icons/utilities/close.svg"-->
+				</a>
+			</div>
+			<h3 class="title">Ads & Offers</h3>
+			<div id="adsContainer">
+				<div>Welcome to TTMenus</div>
+			</div>
+			
+		</div>
+	</div>
+</div>
+	<div id="cart" class="cart-hidden">
+	<div class="order">
+		
+		<div class="cart-header-modern">
+			
+			<div class="cart-title-bar">
+				<button class="cart-back-btn" onclick="toggleCart();" title="Close cart">
+					<i class="fa fa-arrow-left"></i>
+				</button>
+				<h2 class="cart-title">
+					<i class="fa fa-shopping-cart"></i>
+					<span>My Order</span>
+				</h2>
+				<button class="cart-close-btn" onclick="toggleCart();" title="Close cart">
+					<i class="fa fa-times"></i>
+				</button>
+			</div>
+
+			
+			<div class="cart-location-section">
+				<div class="location-selector-modern">
+					<i class="fa fa-map-marker location-icon"></i>
+					<select id="locationSelect" class="location-dropdown-modern" onchange="selectLocation(this.value)">
+						<option value="">Select a location...</option>
+						
+						<option value="18683286952" data-address="LP 270 Main Road, Montrose" data-lat="10.514075720192144" data-lng="-61.39523611534353" data-orderingtables="Takeway Only" selected>
+							LP 270 Main Road, Montrose
+						</option>
+						
+					</select>
+					<i class="fa fa-chevron-down dropdown-arrow"></i>
+				</div>
+			</div>
+
+			
+			<div class="cart-dining-mode-section hide" id="button-5">
+				<div class="dining-mode-toggle-modern">
+					<div class="toggle-label">
+						<i class="fa fa-cutlery"></i>
+						<span>Dine In</span>
+					</div>
+					<label class="toggle-switch-modern">
+						<input type="checkbox" class="checkbox" id="dining-mode-checkbox-2" onclick="toggleDiningMode(this);"/>
+						<span class="toggle-slider-modern">
+							<span class="toggle-slider-inner"></span>
+						</span>
+					</label>
+					<div class="toggle-label">
+						<i class="fa fa-shopping-bag"></i>
+						<span>Takeaway</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		
+		<div class="cart-items-wrapper">
+			<div class="cart-empty-state" id="cartEmptyState">
+				<i class="fa fa-shopping-cart" style="font-size: 3em; opacity: 0.3;"></i>
+				<p>Your cart is empty</p>
+			</div>
+			<div id="cartItemsContainer" class="cart-items-list">
+				
+			</div>
+			<div class="cart-actions-row">
+				<button class="btn-clear-cart" onclick="removeAllItems();" title="Clear all items">
+					<i class="fa fa-trash-o"></i> Clear Cart
+				</button>
+			</div>
+		</div>
+		
+		
+		<table id="whatsappOrder" style="display: none;">
+			<tr><th>#</th><th>Size</th><th>Item</th><th>Amt</th><th>Cost</th><th><i class="fa fa-trash-o"></i></th></tr>
+			<tr><td>-</td><td>-</td><th>-</th><th>-</th><td>-</td></tr>
+		</table>
+		
+	</div>
+	<div id="whatsappOrderBtn">
+		<div id="subTotalcontainer">
+			<div id="sub">Sub Total $</div>
+			<div id="subTotal">0</div>
+		</div>
+		<div id="vatCalccontainer">
+			<div id="vat"></div>
+			<div id="vatCalc"></div>
+		</div>
+		<div id="serviceCalccontainer">
+			<div id="service"></div>
+			<div id="serviceCalc"></div>
+		</div>
+		<div id="itemTotal">TOTAL $0</div>
+		
+			<button class="btn-place-order" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+		
+	</div>
+</div>
+
+	<div id="footerSettings" class="hide">
+	<div class="settings-panel">
+		
+		<a href="/login" class="btn settings-btn" data-aos="zoom-in">
+			<i class="fa fa-user"></i> Login
+		</a>
+		
+		
+	</div>
+</div>
+
+
+	
+
+	
+	
+		<div id="footerBtns" class="grad2">
+			<div>
+				<a onclick="toggleTTMS();" target="_blank" ><b id="adcount" class="hide">0</b><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/home.svg" alt="Home" loading="lazy"></a> | <a onclick="toggleCart();"><b id="cartcount" class="hide">0</b><img id="carticon" class="icon center" src="https://ct.ttmenus.com/icons/utilities/cart0.svg" alt="Shopping cart" loading="lazy"></a> | <a onclick="toggleSearch();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/search.svg" alt="Search" loading="lazy"></a> | <a onclick="toggleFooterAccessibility();"><img class="icon center" src="https://ct.ttmenus.com/icons/utilities/settings.svg" alt="Settings" loading="lazy"></a>
+			</div>
+		</div>
+</div>
+  </footer>
+  
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/@barba/core" defer></script>
+  
+  
+  <script src="https://tinytavern.ttmenus.com/js/loader.js" defer></script>
+  
+  
+  <script src="https://tinytavern.ttmenus.com/js/app.js" defer></script>
+  <script src="https://tinytavern.ttmenus.com/js/custom.js" defer></script>
+  
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+  <script src="https://ct.ttmenus.com/js/askforserver.js" defer></script>
+  <script src="https://ct.ttmenus.com/js/cart.js" defer></script>
+  <script src="https://ct.ttmenus.com/js/search.js" defer></script>
+  
+  
+  <script src="https://tinytavern.ttmenus.com/js/client-ad-manager.js" defer></script>
+  <script src="https://tinytavern.ttmenus.com/js/openinghours.js" defer></script>
+  <script src="https://tinytavern.ttmenus.com/js/ads-sticky.js" defer></script>
+  <script src="https://tinytavern.ttmenus.com/js/ad-scroll-progress.js" defer></script>
+  <script src="https://tinytavern.ttmenus.com/js/section-scroll.js" defer></script>
+  
+  
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" async></script>
+  <script src="https://tinytavern.ttmenus.com/js/aos.js" defer></script>
+  <script src="https://tinytavern.ttmenus.com/js/analytics-integrations.js" defer></script>
+  
+  <script>
+
+let number = '18683286952'; 
+const name = ''
+const hastables =  true ;
+
+
+const LOCATION_STORAGE_KEY = 'ttms_selected_location';
+
+
+let menuItemsCache = null;
+let menuItemsCachePromise = null;
+
+
+let categorySidesTracking = {};
+
+
+async function fetchMenuItems() {
+	if (menuItemsCache) {
+		console.log('📦 Using cached menu items');
+		return menuItemsCache;
+	}
+	
+	if (menuItemsCachePromise) {
+		console.log('⏳ Waiting for existing fetch to complete');
+		return menuItemsCachePromise;
+	}
+	
+	console.log('🔄 Fetching menu items from JSON API...');
+	menuItemsCachePromise = fetch('/api/menu-items.json')
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log('✅ Menu items loaded:', data.total_count, 'items');
+			menuItemsCache = data.menu_items;
+			menuItemsCachePromise = null;
+			return menuItemsCache;
+		})
+		.catch(error => {
+			console.error('❌ Error fetching menu items:', error);
+			menuItemsCachePromise = null;
+			return null;
+		});
+	
+	return menuItemsCachePromise;
+}
+
+
+function findMenuItemByUrl(url) {
+	if (!menuItemsCache) {
+		console.error('❌ Menu items not loaded yet');
+		return null;
+	}
+	
+	const item = menuItemsCache.find(item => item.url === url);
+	if (!item) {
+		console.error('❌ Menu item not found for URL:', url);
+	}
+	return item;
+}
+
+
+function findMenuItemById(id) {
+	if (!menuItemsCache) {
+		console.error('❌ Menu items not loaded yet');
+		return null;
+	}
+	
+	const item = menuItemsCache.find(item => item.id === id);
+	if (!item) {
+		console.error('❌ Menu item not found for ID:', id);
+	}
+	return item;
+}
+
+
+function selectLocation(whatsappNumber) {
+	if (whatsappNumber && whatsappNumber.trim() !== '') {
+		const oldNumber = number;
+		number = whatsappNumber;
+		console.log('📍 Location selected - WhatsApp number changed from', oldNumber, 'to:', number);
+		
+		
+		saveSelectedLocation(whatsappNumber);
+		
+		
+		updateCartLocationDisplay();
+	} else {
+		console.log('📍 No location selected');
+		number = '18683286952'; 
+		
+		
+		clearSelectedLocation();
+	}
+}
+
+
+function updateCartLocationDisplay() {
+	const locationSelect = document.getElementById('locationSelect');
+	if (locationSelect && locationSelect.value) {
+		const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+		const address = selectedOption.getAttribute('data-address');
+		if (address) {
+			console.log('🛒 Cart location updated to:', address);
+		}
+	}
+}
+
+
+function getCurrentLocationData() {
+	const locationSelect = document.getElementById('locationSelect');
+	if (locationSelect && locationSelect.value) {
+		const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+		const address = selectedOption.getAttribute('data-address');
+		const whatsapp = selectedOption.value;
+		const lat = selectedOption.getAttribute('data-lat');
+		const lng = selectedOption.getAttribute('data-lng');
+		const orderingtables = selectedOption.getAttribute('data-orderingtables');
+		
+		if (address && whatsapp) {
+			let parsedOrderingTables = [];
+			if (orderingtables && orderingtables.trim() !== '') {
+				parsedOrderingTables = orderingtables.split(',').map(table => table.trim());
+			}
+			
+			return {
+				address: address,
+				whatsapp: whatsapp,
+				lat: lat,
+				lng: lng,
+				orderingtables: parsedOrderingTables
+			};
+		}
+	}
+	return null;
+}
+
+
+function saveSelectedLocation(whatsappNumber) {
+	try {
+		localStorage.setItem(LOCATION_STORAGE_KEY, whatsappNumber);
+		console.log('💾 Location saved to localStorage:', whatsappNumber);
+	} catch (error) {
+		console.error('❌ Error saving location to localStorage:', error);
+	}
+}
+
+
+function loadSelectedLocation() {
+	try {
+		const savedLocation = localStorage.getItem(LOCATION_STORAGE_KEY);
+		if (savedLocation && savedLocation.trim() !== '') {
+			console.log('💾 Loading saved location from localStorage:', savedLocation);
+			return savedLocation;
+		}
+	} catch (error) {
+		console.error('❌ Error loading location from localStorage:', error);
+	}
+	return null;
+}
+
+
+function clearSelectedLocation() {
+	try {
+		localStorage.removeItem(LOCATION_STORAGE_KEY);
+		console.log('🗑️ Location cleared from localStorage');
+	} catch (error) {
+		console.error('❌ Error clearing location from localStorage:', error);
+	}
+}
+
+
+function setLocationDropdown(savedLocation) {
+	const locationSelect = document.getElementById('locationSelect');
+	if (locationSelect && savedLocation) {
+		
+		for (let i = 0; i < locationSelect.options.length; i++) {
+			if (locationSelect.options[i].value === savedLocation) {
+				locationSelect.selectedIndex = i;
+				console.log('📍 Location dropdown set to saved location:', savedLocation);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+const messageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
+let messageBody = '';
+const messageEnd = '\nThank You!\nLooking forward to confirming this order';
+
+let modes =  [ 	{'name':'takeaway'},{'name':'dinein'}];
+let currentMode = 'dinein'; 
+
+let orderSize = '';
+let orderFlav = '';
+
+let order = [];
+let basePrice = 0;
+
+let orderSides = [];
+let sidePrice = 0;
+let regAmt=0;
+let premAmt=0;
+
+let orderAdd = [];
+let addPrice = 0;
+
+let orderMod = [];
+let modPrice = 0;
+
+let vat =  0 ;
+let vatcost = 0;
+
+let service =  0 ;
+let servicecost = 0;
+
+let price = 0;
+
+let myTable='';
+
+let currentoptions;
+
+let sizePrice=0;
+
+function showShop(){
+	document.getElementById("orderModal").classList.remove('order-hidden');
+	document.body.classList.add('modal-open');
+}
+function closeShop(){
+	document.getElementById("orderModal").classList.add('order-hidden');
+	var cart = document.getElementById("cart");
+  var footerBtns = document.getElementById("footerBtns");
+  cart.classList.add('cart-hidden');
+  footerBtns.classList.add('grad2');
+  footerBtns.classList.remove('grad1');
+  footerBtns.classList.remove('bigfont');
+  footerBtns.classList.add('smallfont');
+	var addbtn = document.getElementById("sidesButtonText");
+	var modbtn = document.getElementById("modicon");
+	orderSides=[];
+  orderAdd=[];
+	orderMod=[];
+	regAmt=0;
+	premAmt=0;
+	
+}
+
+async function openItem(ele, options) {
+	addFocus(ele);
+	
+	
+	if (typeof options === 'string') {
+		console.log("🔄 Loading item dynamically:", options);
+		
+		
+		await fetchMenuItems();
+		
+		
+		let itemData = findMenuItemByUrl(options);
+		if (!itemData) {
+			itemData = findMenuItemById(options);
+		}
+		
+		if (!itemData) {
+			console.error('❌ Could not find item:', options);
+			alert('Sorry, this item could not be loaded. Please try again.');
+			return;
+		}
+		
+		
+		options = {
+			category: itemData.category,
+			categoryurl: itemData.categoryUrl,
+			name: itemData.linkTitle || itemData.name,
+			url: itemData.url,
+			images: itemData.images || [],
+			desc: itemData.summary || '',
+			sizes: itemData.sizes || [],
+			flavours: itemData.flavours || [],
+			items: itemData.prices || [],
+			side_categories: itemData.side_categories || [],
+			sides: itemData.sides || [],
+			sideoptions: itemData.sideconfig || [],
+			additions: itemData.additions || [],
+			modifications: itemData.modifications || [],
+			tags: itemData.tags || [],
+			ingredients: itemData.ingredients || [],
+			cookingmethods: itemData.cookingmethods || [],
+			types: itemData.types || [],
+			events: itemData.events || []
+		};
+		
+		console.log("✅ Item data loaded:", options.name);
+	}
+	
+	console.log("openShop");
+	showShop();
+	regAmt=0;
+	premAmt=0;
+	sidePrice=0;
+	addPrice=0;
+	modPrice=0;
+	currentoptions=options;
+	document.getElementById("itemAmt").innerText=(1);
+	document.getElementById("sideList").innerText='';
+	document.getElementById("modList").innerText='';
+	document.getElementById("addModList").innerText='';
+	
+	
+	document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
+	document.getElementById("itemSideControl").innerHTML = '';
+	categorySidesTracking = {}; 
+
+	document.getElementById("itemCategory").innerText=(options.category);
+	const currentPageName = document.title;
+	if (!currentPageName.startsWith(options.category)) { 
+		document.getElementById("itemCategory").setAttribute('href',options.categoryurl); 
+		document.getElementById("itemImages").setAttribute('href',options.url);
+	}else{
+		document.getElementById("itemCategory").setAttribute('href','#'); 
+		document.getElementById("itemImages").setAttribute('href','#');
+	}
+
+	document.getElementById("sidesButtonText").innerText = "Sides";
+	
+	document.getElementById("itemName").innerText=(options.name);
+	if (!currentPageName.startsWith(options.name)) { 
+		document.getElementById("itemName").setAttribute('href',options.url); 
+		document.getElementById("itemImages").setAttribute('href',options.url);
+	}else{
+		document.getElementById("itemName").setAttribute('href','#'); 
+		document.getElementById("itemImages").setAttribute('href','#');
+	}
+	document.getElementById("itemDesc").innerHTML=(options.desc);
+	
+	
+	displayTaxonomyTags(options);
+
+	if(options.images && options.images.length>0){
+		var imgHtml = '';
+		for (var i = 0; i<=options.images.length - 1;  i++) {
+			imgHtml = imgHtml+'<img src="/'+options.images[i]+'">';
+		}
+		document.getElementById("itemImages").innerHTML=imgHtml;
+
+	}else{
+		document.getElementById("itemImages").innerHTML='<img src="/branding/favicon-400x200.webp">';
+	}
+	
+	
+	var sizeHtml = '';
+	for (var i = 0; i<=options.sizes.length - 1;  i++) {
+				if(i==0){
+			if(options.sizes[i]=='-'){
+				sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option hide select">'+options.sizes[i]+'</a>';
+			}else{
+				sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option select">'+options.sizes[i]+'</a>';
+			}
+		}else{
+			sizeHtml = sizeHtml+'<a onclick="'+'setBaseSize(this);"'+' class="btn-size-option">'+options.sizes[i]+'</a>';
+		}
+	}
+	document.getElementById("itemSizeControl").innerHTML=sizeHtml;
+	setBaseSize(document.getElementById("itemSizeControl").childNodes[0]);
+
+
+	var flavoursHtml = '';
+	for (var i = 0; i<=options.flavours.length - 1;  i++) {
+				if(i==0){
+			if(options.flavours[i]=='-'){
+				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option hide select">'+options.flavours[i]+'</a>';
+			}else{
+				flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option select">'+options.flavours[i]+'</a>';
+			}
+		}else{
+			flavoursHtml = flavoursHtml+'<a onclick=" setBaseFlav(this);'+'" class="btn-flavour-option">'+options.flavours[i]+'</a>';
+		}
+	}
+	document.getElementById("itemFlavourControl").innerHTML=flavoursHtml;
+	setBaseFlav(document.getElementById("itemFlavourControl").childNodes[0]);
+
+	
+	var sideHtml = '';
+	
+	
+	if(options.side_categories && options.side_categories.length > 0){
+		
+		document.getElementById("itemSideContainer").classList.add("hide");
+		
+		
+		renderSideCategoryButtons(options.side_categories);
+		
+		console.log(`✅ ${options.side_categories.length} side categories configured`);
+	} 
+	
+	else if(options.sides && options.sides.length>0){
+		
+		document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
+		
+		
+		document.getElementById("itemSideContainer").classList.remove("hide");
+		
+		
+		const sideButton = document.getElementById("reg");
+		if (sideButton) sideButton.setAttribute("onclick", "openSideMenu();");
+		
+		
+		makeSidesHtml(sideHtml,0);
+	} else {
+		
+		document.getElementById("itemSideContainer").classList.add("hide");
+		document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
+		document.getElementById("itemSideControl").innerHTML = '';
+	}
+	
+	
+	var additionsHtml = '';
+	if(options.additions && options.additions.length>0){
+		makeAdditionsHtml(additionsHtml,0);
+	} else {
+		document.getElementById("itemAddContainer").classList.add("hide");
+	}
+	
+	
+	var modificationsHtml = '';
+	if(options.modifications && options.modifications.length>0){
+		makeModificationsHtml(modificationsHtml,0);
+	} else {
+		document.getElementById("itemModContainer").classList.add("hide");
+	}
+	
+	orderSides=[];
+	orderAdd=[];
+	orderMod=[];
+	updatePrices();
+}
+
+
+function renderSideCategoryButtons(sideCategories) {
+	console.log('🔧 Creating separate buttons for', sideCategories.length, 'categories');
+	
+	const buttonsContainer = document.getElementById("sideCategoriesButtonsContainer");
+	const overlaysContainer = document.getElementById("itemSideControl");
+	
+	if (!buttonsContainer || !overlaysContainer) {
+		console.error('❌ Category containers not found');
+		return;
+	}
+	
+	
+	buttonsContainer.innerHTML = '';
+	overlaysContainer.innerHTML = '';
+	
+	
+	sideCategories.forEach((category, categoryIndex) => {
+		const categoryName = category.category_name || `category_${categoryIndex}`;
+		const displayName = category.display_name || 'Choose Options';
+		const rawItems = category.items || [];
+		const configArray = category.config || [];
+		
+		
+		const config = {
+			all_max: configArray[0] || 0,
+			all_valuecount: configArray[1] || 0,
+			all_value: configArray[2] || 0,
+			regular_max: configArray[3] || 0,
+			regular_valuecount: configArray[4] || 0,
+			regular_value: configArray[5] || 0,
+			premium_max: configArray[6] || 0,
+			premium_valuecount: configArray[7] || 0,
+			premium_value: configArray[8] || 0
+		};
+		
+		
+		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
+		window.sideCategoryConfigs[categoryName] = config;
+		
+		
+		const buttonHtml = `
+			<div id="itemSideContainer_${categoryName}" class="">
+				<a id="reg_${categoryName}" class="btn-section-header" onclick="openSingleCategoryMenu('${categoryName}');">
+					<i class="fa fa-plus"></i> <span>${displayName}</span>
+				</a>
+				<div id="sideList_${categoryName}" class=""></div>
+			</div>
+		`;
+		buttonsContainer.innerHTML += buttonHtml;
+		
+		
+		let itemsHtml = '';
+		console.log(`📦 Category "${categoryName}" has ${rawItems.length / 3} items`);
+		
+		for (let i = 0; i < rawItems.length; i += 3) {
+			const name = rawItems[i];
+			const type = rawItems[i + 1];
+			const price = rawItems[i + 2];
+			
+			const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
+			const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+			
+			itemsHtml += `<div class="side-item-container"><b class="hide">1</b><a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${name}" data-item-type="${type}" data-item-price="${price}" onclick="selectSideItem(this, '${categoryName}');">${name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
+		}
+		
+		
+		const overlayId = `itemSideControl_${categoryName}`;
+		
+		
+		const overlayDiv = document.createElement('div');
+		overlayDiv.id = overlayId;
+		overlayDiv.className = 'hide fadein';
+		
+		const containerDiv = document.createElement('div');
+		containerDiv.className = 'container';
+		
+		const sidesDiv = document.createElement('div');
+		sidesDiv.id = `itemSides_${categoryName}`;
+		sidesDiv.innerHTML = `
+			<h3 class="title center main-text-color">${displayName}</h3>
+			<div class="side-items-scrollable">${itemsHtml}</div>
+			<button class="btn-close-menu" onclick="closeSingleCategoryMenu('${categoryName}');">Confirm</button>
+		`;
+		
+		containerDiv.appendChild(sidesDiv);
+		overlayDiv.appendChild(containerDiv);
+		overlaysContainer.appendChild(overlayDiv);
+		
+		console.log(`✅ Created button and overlay for category: ${categoryName}`);
+	});
+	
+	console.log('✅ All category buttons and overlays created');
+}
+
+
+function openSingleCategoryMenu(categoryName) {
+	const parentContainer = document.getElementById('itemSideControl');
+	const overlay = document.getElementById(`itemSideControl_${categoryName}`);
+	
+	if (overlay) {
+		
+		if (parentContainer) {
+			parentContainer.classList.remove('hide');
+		}
+		
+		
+		overlay.classList.remove('hide');
+		console.log(`🎨 Opened category menu: ${categoryName}`);
+	} else {
+		console.error(`❌ Overlay not found for category: ${categoryName}`);
+	}
+}
+
+
+function closeSingleCategoryMenu(categoryName) {
+	const parentContainer = document.getElementById('itemSideControl');
+	const overlay = document.getElementById(`itemSideControl_${categoryName}`);
+	const summaryList = document.getElementById(`sideList_${categoryName}`);
+	
+	if (overlay) {
+		
+		overlay.classList.add('hide');
+		
+		
+		if (summaryList) {
+			const categoryItems = categorySidesTracking[categoryName] || [];
+			summaryList.innerText = printArray(categoryItems);
+			console.log(`📝 Summary for ${categoryName}:`, categoryItems);
+		}
+		
+		
+		if (parentContainer) {
+			const allOverlays = parentContainer.querySelectorAll('[id^="itemSideControl_"]');
+			const allHidden = Array.from(allOverlays).every(o => o.classList.contains('hide'));
+			
+			if (allHidden) {
+				parentContainer.classList.add('hide');
+			}
+		}
+		
+		console.log(`✅ Closed category menu: ${categoryName}`);
+	} else {
+		console.error(`❌ Overlay not found for category: ${categoryName}`);
+	}
+}
+
+
+function renderSideCategories(sideCategories) {
+	console.log('🔧 Rendering side categories:', sideCategories);
+	console.log(`📊 Total categories to render: ${sideCategories.length}`);
+	
+	const container = document.getElementById("itemSideContainer");
+	const sidesDiv = document.getElementById("itemSides");
+	
+	
+	let categoriesHtml = '';
+	
+	sideCategories.forEach((category, categoryIndex) => {
+		console.log(`\n📦 Processing category ${categoryIndex + 1}/${sideCategories.length}:`, category.category_name);
+		const categoryName = category.category_name || `category_${categoryIndex}`;
+		const displayName = category.display_name || 'Choose Options';
+		const rawItems = category.items || [];
+		const configArray = category.config || [];
+		
+		
+		const config = {
+			all_max: configArray[0] || 0,
+			all_valuecount: configArray[1] || 0,
+			all_value: configArray[2] || 0,
+			regular_max: configArray[3] || 0,
+			regular_valuecount: configArray[4] || 0,
+			regular_value: configArray[5] || 0,
+			premium_max: configArray[6] || 0,
+			premium_valuecount: configArray[7] || 0,
+			premium_value: configArray[8] || 0
+		};
+		
+		
+		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
+		window.sideCategoryConfigs[categoryName] = config;
+		
+		console.log(`📋 Category: ${categoryName}, Items: ${rawItems.length / 3}, Max: ${config.all_max}`);
+		
+		
+		
+		let itemsHtml = '';
+		console.log(`📦 Raw items array for ${categoryName}:`, rawItems);
+		console.log(`📦 Total items to process: ${rawItems.length / 3}`);
+		
+		for (let i = 0; i < rawItems.length; i += 3) {
+			const name = rawItems[i];
+			const type = rawItems[i + 1];
+			const price = rawItems[i + 2];
+			
+			console.log(`  Item ${i/3 + 1}: ${name} (${type}) - $${price}`);
+			
+			const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
+			const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+			
+			
+			itemsHtml += `<div class="side-item-container"><b class="hide">1</b><a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${name}" data-item-type="${type}" data-item-price="${price}" onclick="selectSideItem(this, '${categoryName}');">${name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
+		}
+		
+		console.log(`📦 Generated HTML length: ${itemsHtml.length} characters`);
+		
+		
+		categoriesHtml += `
+			<div class="side-category" data-category="${categoryName}">
+				<h3 class="title center main-text-color">${displayName}</h3>
+				<div class="side-items-scrollable">${itemsHtml}</div>
+			</div>
+		`;
+	});
+	
+	
+	categoriesHtml += '<button class="btn-close-menu" onclick="closeSideCategoriesMenu();">Confirm</button>';
+	
+	console.log('📝 Final HTML to insert (first 500 chars):', categoriesHtml.substring(0, 500));
+	console.log('📝 Total HTML length:', categoriesHtml.length);
+	
+	
+	sidesDiv.innerHTML = categoriesHtml;
+	
+	
+	const insertedContainers = sidesDiv.querySelectorAll('.side-item-container');
+	const insertedCategories = sidesDiv.querySelectorAll('.side-category');
+	console.log('🔍 After insertion, found', insertedCategories.length, 'category sections in DOM');
+	console.log('🔍 After insertion, found', insertedContainers.length, 'item containers in DOM');
+	
+	
+	insertedCategories.forEach((cat, idx) => {
+		const catName = cat.getAttribute('data-category');
+		const items = cat.querySelectorAll('.btn-side-option');
+		console.log(`  Category ${idx + 1}: "${catName}" with ${items.length} items`);
+	});
+	
+	container.classList.remove("hide");
+	
+	console.log('✅ Side categories rendered');
+}
+
+
+function selectSideItem(element, categoryName) {
+	console.log(`🖱️ Click detected on item:`, element.dataset.itemName, `in category:`, categoryName);
+	
+	try {
+		const config = window.sideCategoryConfigs[categoryName];
+		if (!config) {
+			console.error(`❌ No config found for category: ${categoryName}`);
+			console.log('Available configs:', window.sideCategoryConfigs);
+			return;
+		}
+		
+		const type = element.dataset.itemType;
+		const isSelected = element.classList.contains('select');
+		
+		console.log(`   Is selected: ${isSelected}, Type: ${type}`);
+		
+		if (isSelected) {
+			
+			console.log('   → Deselecting...');
+			removeSideItem(element, categoryName);
+		} else {
+			
+			console.log('   → Selecting...');
+			
+			
+			const overlayId = `itemSideControl_${categoryName}`;
+			const overlay = document.getElementById(overlayId);
+			if (!overlay) {
+				console.error(`❌ Overlay not found: ${overlayId}`);
+				return;
+			}
+			
+			const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
+			const maxItems = config.all_max || 99;
+			
+			console.log(`   Current selected items: ${selectedItems.length}, Max: ${maxItems}`);
+		
+		
+		let totalQuantity = 0;
+		selectedItems.forEach(item => {
+			const itemParent = item.parentElement;
+			const qtyDisplay = itemParent.querySelector('b');
+			totalQuantity += qtyDisplay ? parseInt(qtyDisplay.innerText) || 1 : 1;
+		});
+		
+		console.log(`📊 Current total quantity: ${totalQuantity}, Max allowed: ${maxItems}`);
+		
+		
+		if (totalQuantity < maxItems) {
+			element.classList.add('select');
+			addSideItem(element, categoryName);
+			
+			
+			const parent = element.parentElement;
+			const quantityDisplay = parent.querySelector('b');
+			const extraButton = parent.querySelector('.btn-add-extra');
+			
+			if (quantityDisplay) quantityDisplay.classList.remove('hide');
+			if (extraButton) extraButton.classList.remove('hide');
+		} else {
+			console.log(`⚠️ Maximum ${maxItems} items allowed for ${categoryName}. Currently at ${totalQuantity}.`);
+			alert(`You can only select ${maxItems} item(s) total.`);
+		}
+	}
+	} catch (error) {
+		console.error('❌ Error in selectSideItem:', error);
+		console.error('Stack trace:', error.stack);
+	}
+}
+
+
+function addSideItem(element, categoryName) {
+	try {
+		console.log(`  📝 addSideItem called for:`, element.dataset.itemName);
+		
+		const name = element.dataset.itemName;
+		const type = element.dataset.itemType;
+		const price = parseFloat(element.dataset.itemPrice) || 0;
+	
+	
+	const parent = element.parentElement;
+	const quantityDisplay = parent.querySelector('b');
+	const quantity = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+	
+	
+	const orderItemName = `${quantity} ${name}`;
+	orderSides.push(orderItemName);
+	
+	
+	if (!categorySidesTracking[categoryName]) {
+		categorySidesTracking[categoryName] = [];
+	}
+	categorySidesTracking[categoryName].push(orderItemName);
+	
+	
+	const config = window.sideCategoryConfigs[categoryName];
+	
+	if (type === 'Regular') {
+		regAmt = regAmt + quantity;
+		
+		if (config && regAmt >= (config.regular_valuecount || 0)) {
+			sidePrice = sidePrice + (config.regular_value || price);
+		}
+	} else if (type === 'Premium') {
+		premAmt = premAmt + quantity;
+		
+		if (config && premAmt >= (config.premium_valuecount || 0)) {
+			sidePrice = sidePrice + (config.premium_value || price);
+		}
+	}
+	
+	console.log(`➕ Added: ${orderItemName} (${type}), regAmt: ${regAmt}, premAmt: ${premAmt}, sidePrice: $${sidePrice}`);
+	updatePrices();
+	} catch (error) {
+		console.error('❌ Error in addSideItem:', error);
+		console.error('Stack trace:', error.stack);
+	}
+}
+
+
+function removeSideItem(element, categoryName) {
+	try {
+		console.log(`  🗑️ removeSideItem called for:`, element.dataset.itemName);
+	const name = element.dataset.itemName;
+	const type = element.dataset.itemType;
+	const config = window.sideCategoryConfigs[categoryName];
+	
+	
+	const parent = element.parentElement;
+	const quantityDisplay = parent.querySelector('b');
+	const quantity = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+	
+	
+	const orderItemName = `${quantity} ${name}`;
+	const index = orderSides.indexOf(orderItemName);
+	if (index > -1) {
+		orderSides.splice(index, 1);
+	}
+	
+	
+	if (categorySidesTracking[categoryName]) {
+		const catIndex = categorySidesTracking[categoryName].indexOf(orderItemName);
+		if (catIndex > -1) {
+			categorySidesTracking[categoryName].splice(catIndex, 1);
+		}
+	}
+	
+	
+	if (type === 'Regular') {
+		
+		if (config && regAmt >= (config.regular_valuecount || 0)) {
+			sidePrice = sidePrice - (config.regular_value || 0);
+		}
+		regAmt = regAmt - quantity;
+	} else if (type === 'Premium') {
+		
+		if (config && premAmt >= (config.premium_valuecount || 0)) {
+			sidePrice = sidePrice - (config.premium_value || 0);
+		}
+		premAmt = premAmt - quantity;
+	}
+	
+	
+	element.classList.remove('select');
+	
+	
+	const extraButton = parent.querySelector('.btn-add-extra');
+	if (quantityDisplay) {
+		quantityDisplay.classList.add('hide');
+		quantityDisplay.innerText = 1;
+	}
+	if (extraButton) {
+		extraButton.classList.add('hide');
+	}
+	
+	console.log(`➖ Removed: ${orderItemName} from order, regAmt: ${regAmt}, premAmt: ${premAmt}, sidePrice: $${sidePrice}`);
+	updatePrices();
+	} catch (error) {
+		console.error('❌ Error in removeSideItem:', error);
+		console.error('Stack trace:', error.stack);
+	}
+}
+
+
+function addExtraSide(element, categoryName) {
+	console.log(`➕ addExtraSide called for category: ${categoryName}`);
+	
+	const parent = element.parentElement;
+	const sideButton = parent.querySelector('.btn-side-option');
+	const quantityDisplay = parent.querySelector('b');
+	
+	if (!sideButton || !sideButton.classList.contains('select')) {
+		console.log('❌ Item not selected or button not found');
+		return;
+	}
+	
+	const config = window.sideCategoryConfigs[categoryName];
+	if (!config) {
+		console.error(`❌ No config found for category: ${categoryName}`);
+		return;
+	}
+	
+	const maxItems = config.all_max || 99;
+	
+	
+	const overlayId = `itemSideControl_${categoryName}`;
+	const overlay = document.getElementById(overlayId);
+	
+	if (!overlay) {
+		console.error(`❌ Overlay not found: ${overlayId}`);
+		return;
+	}
+	
+	
+	const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
+	
+	
+	let totalQuantity = 0;
+	selectedItems.forEach(item => {
+		const itemParent = item.parentElement;
+		const itemQty = itemParent.querySelector('b');
+		totalQuantity += itemQty ? parseInt(itemQty.innerText) || 1 : 1;
+	});
+	
+	console.log(`📊 Current total: ${totalQuantity}, Max: ${maxItems}`);
+	
+	if (totalQuantity < maxItems) {
+		const currentQty = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+		const itemName = sideButton.dataset.itemName;
+		
+		
+		const oldName = `${currentQty} ${itemName}`;
+		const index = orderSides.indexOf(oldName);
+		if (index > -1) {
+			orderSides.splice(index, 1);
+		}
+		
+		
+		if (categorySidesTracking[categoryName]) {
+			const catIndex = categorySidesTracking[categoryName].indexOf(oldName);
+			if (catIndex > -1) {
+				categorySidesTracking[categoryName].splice(catIndex, 1);
+			}
+		}
+		
+		
+		if (quantityDisplay) {
+			quantityDisplay.innerText = currentQty + 1;
+		}
+		
+		
+		addSideItem(sideButton, categoryName);
+		
+		console.log(`⬆️ Increased quantity for ${itemName} to ${currentQty + 1}`);
+	} else {
+		console.log(`⚠️ Cannot add more - at maximum (${maxItems})`);
+		alert(`You can only select ${maxItems} item(s) total.`);
+	}
+}
+
+
+function openSideCategoriesMenu() {
+	const con = document.getElementById("itemSideControl");
+	
+	
+	if (con.classList.contains('hide')) {
+		con.classList.remove('hide');
+	}
+	
+	console.log('🎨 Side categories menu opened');
+}
+
+
+function closeSideCategoriesMenu() {
+	const list = document.getElementById("sideList");
+	const con = document.getElementById("itemSideControl");
+	
+	
+	list.innerText = printArray(orderSides);
+	
+	
+	if (!con.classList.contains('hide')) {
+		con.classList.add('hide');
+	}
+	
+	console.log('✅ Side categories menu closed, selections:', orderSides);
+}
+
+function makeModificationsHtml(modificationsHtml,index) {
+	console.log(index+' modificationsHtml:- '+modificationsHtml);
+	if(currentoptions.modifications.length>index){
+		console.log(currentoptions.modifications.length+'>'+index);
+		modificationsHtml = modificationsHtml+'<a class="btn-mod-option" onclick="selectToggle(this);ModPrice(this,'+currentoptions.modifications[index+1]+');">'+currentoptions.modifications[index]+'</a><b class="hide">$'+currentoptions.modifications[index+1]+'</b>'
+		makeModificationsHtml(modificationsHtml,index+2);
+	} else {
+		document.getElementById("itemMods").innerHTML='<h3 class="title center main-text-color">Modifications</h3><div>'+modificationsHtml+'</div><button class="btn-close-menu" onclick="openModMenu();">Confirm</button>';
+		document.getElementById("itemModContainer").classList.remove("hide");
+	}
+
+}
+
+function makeAdditionsHtml(additionsHtml,index) {
+	console.log(index+' additionsHtml:- '+additionsHtml);
+	if(currentoptions.additions.length>index){
+		console.log(currentoptions.sides.length+'>'+index);
+		additionsHtml = additionsHtml+'<a class="btn-add-option" onclick="selectToggle(this);AddPrice(this,'+currentoptions.additions[index+1]+');'+'">'+currentoptions.additions[index]+'</a><b class="hide">$'+currentoptions.additions[index+1]+'</b>'
+		makeAdditionsHtml(additionsHtml,index+2);
+	} else {
+		document.getElementById("itemAddMods").innerHTML ='<h3 class="title center main-text-color">Additional Modifications</h3><div>'+additionsHtml+'</div><button class="btn-close-menu" onclick="openAddMenu();">Confirm</button>';
+		document.getElementById("itemAddContainer").classList.remove("hide");
+	}
+
+}
+
+function makeSidesHtml(sideHtml,index) {
+	console.log(index+' Sides HTML:- '+sideHtml);
+	if(currentoptions.sides.length>index){
+		console.log(currentoptions.sides.length+'>'+index);
+		if(currentoptions.sides[index+1]=='Regular'){
+			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option regularside" onclick="selectAmt(this);">'+currentoptions.sides[index]+'</a><p class="btn-add-extra hide" onclick="addExtra(this);"><i class="fa fa-plus"></i></p>';
+		}else if(currentoptions.sides[index+1]=='Premium'){
+			sideHtml = sideHtml+'<b class="hide">1</b><a class="btn-side-option premiumside" onclick="selectAmt(this);">'+currentoptions.sides[index]+' <i class="fa fa-star"></i></a><p class="btn-add-extra" onclick="addExtra(this);" class="btn-add-extra hide"><i class="fa fa-plus"></i></p>';	
+		}
+		makeSidesHtml(sideHtml,index+3);
+	} else {
+		
+		const overlayHtml = `
+			<div id="itemSideControl_legacy" class="hide fadein">
+				<div class="container">
+					<div id="itemSides">
+						<h3 class="title center main-text-color">Sides</h3>
+						<div>${sideHtml}</div>
+						<button class="btn-close-menu" onclick="openSideMenu();">Confirm</button>
+					</div>
+				</div>
+			</div>
+		`;
+		document.getElementById("itemSideControl").innerHTML = overlayHtml;
+		document.getElementById("itemSideContainer").classList.remove("hide");
+	}
+
+}
+
+function addSides(ele){
+	if (ele.classList.contains('select')){
+		
+		orderSides.push(ele.previousSibling.innerText+" "+ele.innerText);
+		if(ele.classList.contains('regularside')){
+			regAmt=regAmt+1;
+			if(regAmt>=currentoptions.sideoptions[4]){
+				sidePrice=sidePrice+currentoptions.sideoptions[5];
+			}
+		}else if(ele.classList.contains('premiumside')){
+			premAmt=premAmt+1;
+			if(premAmt>=currentoptions.sideoptions[7]){
+				sidePrice=sidePrice+currentoptions.sideoptions[8];
+			}
+		}
+
+	}
+	
+	updatePrices();
+}
+
+function removeSides(ele){
+	if (ele.classList.contains('select')){
+		if(ele.classList.contains('regularside')){
+			if(regAmt>=currentoptions.sideoptions[4]){
+				sidePrice=sidePrice-currentoptions.sideoptions[5];
+			}
+			regAmt=regAmt-parseInt(ele.previousSibling.innerText);
+
+		}else if(ele.classList.contains('premiumside')){
+			if(regAmt>=currentoptions.sideoptions[7]){
+				sidePrice=sidePrice-currentoptions.sideoptions[8];
+			}
+			premAmt=premAmt-parseInt(ele.previousSibling.innerText);
+		}
+		
+		var index = orderSides.indexOf(ele.previousSibling.innerText+" "+ele.innerText);
+		orderSides.splice(index,1);
+		ele.classList.remove('select');
+		ele.previousSibling.classList.add('hide')
+		ele.previousSibling.innerText=1;
+	 	ele.nextSibling.classList.add('hide')
+	 	
+	}
+	
+	updatePrices();
+}
+
+function addExtra(ele){
+	var selEle = ele.parentElement.getElementsByClassName('select');
+	var num = 0;
+		for (var i = 0; i<=selEle.length - 1;  i++) {
+			num = num + parseInt(selEle[i].previousSibling.innerText);
+		}
+		if(num<currentoptions.sideoptions[0]){
+			if(selEle.length<(currentoptions.sideoptions[0]) && parseInt(ele.previousSibling.previousSibling.innerText)<(currentoptions.sideoptions[0])){
+				
+				
+				var index = orderSides.indexOf(ele.previousSibling.previousSibling.innerText+" "+ele.previousSibling.innerText);
+				orderSides.splice(index,1);
+				
+				ele.previousSibling.previousSibling.innerText=parseInt(ele.previousSibling.previousSibling.innerText)+1;
+				addSides(ele.previousSibling);
+			}
+		}
+
+}
+
+function AddPrice(ele,i){
+	if (ele.classList.contains('select')){
+		addPrice = addPrice+i;
+
+		orderAdd.push(ele.innerText);
+	}else{
+		addPrice = addPrice-i;
+		var index = orderAdd.indexOf(ele.innerText);
+		orderAdd.splice(index,1);
+	}
+	if(addPrice<0){
+		addPrice = 0;
+	}
+	
+	updatePrices();
+}
+
+function ModPrice(ele,i){
+	if (ele.classList.contains('select')){
+		modPrice = modPrice+i;
+		orderMod.push(ele.innerText);
+		ele.nextSibling.classList.remove('hide');
+	}else{
+		modPrice = modPrice-i;
+		var index = orderMod.indexOf(ele.innerText);
+		orderMod.splice(index,1);
+		ele.nextSibling.classList.add('hide');
+	}
+	
+	updatePrices();
+}
+
+function lineCostCalc(ele,i){
+	var linecost=0;
+	if(ele.classList.contains('select')){
+		linecost = +i;
+	}else{
+		linecost = -i;
+	}
+	document.getElementById("itemPrice").innerText=('$'+(basePrice+addPrice+modPrice));
+	
+	updatePrices();
+}
+
+function itemAmtCalc(value){
+	var myAmt = document.getElementById("itemAmt");
+	var newValue = parseInt(myAmt.innerText);
+	newValue=newValue + value;
+	if(newValue>0){
+		myAmt.innerText = newValue;	
+	}
+	
+	updatePrices();
+}
+
+
+function setBasePrice(index){
+	if(currentoptions.items.length>index){
+		if(currentoptions.items[index]==orderSize){
+			console.log("CurrentSize :"+ orderSize+"|"+ currentoptions.items[index])
+
+			if(currentoptions.items[index+1]==orderFlav){
+				console.log("Current Flav :"+ orderFlav +"|"+currentoptions.items[index+1])
+				basePrice=currentoptions.items[index+2];
+				return;
+			}else{
+				console.log("!No Match Flav:"+ orderFlav +"|"+currentoptions.items[index+1])
+				index=index+3;
+				setBasePrice(index);
+			}
+
+		}else{
+			console.log("!No Match Size:"+orderSize+"|"+currentoptions.items[index])
+			index=index+3;
+			setBasePrice(index);
+		}
+
+	}
+	updatePrices();
+}
+
+function setBaseSize(ele){
+	orderSize = ele.innerText;
+	
+	selectOnly(ele);
+	setBasePrice(0);
+	updatePrices();
+}
+
+function setBaseFlav(ele){
+	orderFlav = ele.innerText;
+	
+	selectOnly(ele);
+	setBasePrice(0);
+	updatePrices();
+}
+
+function updatePrices(){
+	document.getElementById("itemPrice").innerText=('$'+(basePrice+sidePrice+addPrice+modPrice));
+	document.getElementById("itemAddCart").innerHTML=('<i class="fa fa-cart-plus"></i> '+(basePrice+sidePrice+addPrice+modPrice));
+
+	var lineCost = parseInt(document.getElementById("itemAmt").innerText)*(basePrice+sidePrice+addPrice+modPrice);
+	document.getElementById("itemAddCart").innerHTML=('<i class="fa fa-cart-plus"></i> $'+lineCost);
+
+	
+	var sidesData = JSON.stringify({
+		items: orderSides,
+		categories: categorySidesTracking
+	});
+	var addsJson = JSON.stringify(orderAdd);
+	var modsJson = JSON.stringify(orderMod);
+	
+	var funcText = 'addItem("'+document.getElementById("itemName").innerText+'","'+orderSize+' '+orderFlav+'",'+sidesData+','+addsJson+','+modsJson+',"'+document.getElementById("itemAmt").innerText+'",'+lineCost+');';
+	document.getElementById("itemAddCart").setAttribute( "onclick", funcText);
+
+	
+	
+}
+
+function addFocus(ele){
+ 	var selEle = document.getElementsByClassName('selected');
+ 	for (var i = selEle.length - 1; i >= 0; i--) {
+ 		selEle[i].classList.remove('selected');
+ 	}
+ 	ele.classList.add('selected');
+}
+
+function selectOnly(ele){
+	if(!ele.classList.contains('select')){
+		var selEle = ele.parentElement.getElementsByClassName('select')
+	 	for (var i = selEle.length - 1; i >= 0; i--) {
+	 		selEle[i].classList.remove('select');
+	 	}
+		ele.classList.add('select');
+	}
+}
+
+function selectToggle(ele){
+	if(ele.classList.contains('select')){
+		ele.classList.remove('select');
+	}else{
+		ele.classList.add('select');
+		
+	}
+	return ele.classList.contains('select');
+}
+
+function selectAmt(ele){
+	if(ele.classList.contains('select')){
+		removeSides(ele);
+	}else{
+		var selEle = ele.parentElement.getElementsByClassName('select');
+		var num = 0;
+		for (var i = 0; i<=selEle.length - 1;  i++) {
+			num = num + parseInt(selEle[i].previousSibling.innerText);
+		}
+		if (num<currentoptions.sideoptions[0] && selEle.length<currentoptions.sideoptions[0]){
+					num = num+1;
+					ele.classList.add('select');
+					addSides(ele);
+		 			ele.previousSibling.classList.remove('hide');
+		 			ele.nextSibling.classList.remove('hide');
+		}
+	}	
+}
+
+function itemAmtCalc(value){
+	var myAmt = document.getElementById("itemAmt");
+	var newValue = parseInt(myAmt.innerText);
+	newValue=newValue + value;
+	if(newValue>0){
+		myAmt.innerText = newValue;	
+	}
+	
+	updatePrices();
+}
+
+
+
+
+function toggleCart(){
+    var cart = document.getElementById("cart");
+    var footerBtns = document.getElementById("footerBtns");
+    if(cart.classList.contains('cart-hidden')){
+      cart.classList.remove('cart-hidden');
+      footerBtns.classList.add('bigfont');
+      footerBtns.classList.add('cartopen');
+      footerBtns.classList.remove('smallfont');
+      footerBtns.classList.add('grad1');
+      footerBtns.classList.remove('grad2');
+    }else{
+      cart.classList.add('cart-hidden');
+      footerBtns.classList.remove('cartopen');
+      footerBtns.classList.add('grad2');
+      footerBtns.classList.remove('grad1');
+      footerBtns.classList.remove('bigfont');
+      footerBtns.classList.add('smallfont');
+      
+    }
+  }
+  function closeCart(){
+    var cart = document.getElementById("cart");
+    var footerBtns = document.getElementById("footerBtns");
+    cart.classList.add('cart-hidden');
+    footerBtns.classList.remove('cartopen');
+    footerBtns.classList.add('grad2');
+    footerBtns.classList.remove('grad1');
+    footerBtns.classList.remove('bigfont');
+    footerBtns.classList.add('smallfont');
+	}
+
+	function saveCart() {
+		const baseURL = window.location.origin;
+		localStorage.setItem('menu', JSON.stringify(baseURL));
+	  localStorage.setItem('cart', JSON.stringify(order));
+	  console.log(localStorage.getItem('cart'));
+	}
+
+	function loadCart() {
+		const savedMenu = localStorage.getItem('menu');
+		const baseURL = window.location.origin;
+		if (savedMenu == JSON.stringify(baseURL) ){
+		  const savedCart = localStorage.getItem('cart');
+		  if (savedCart) {
+		    order = JSON.parse(savedCart);
+		    console.log(order);
+		    buildOrderText(); 
+		  }
+	  }
+	}
+
+  function addItem(item,size,sides,adds,mods,amt,cost){
+  
+  let sidesData = sides;
+  
+  
+  if (typeof sides === 'object' && sides !== null && !Array.isArray(sides) && sides.categories) {
+    sidesData = sides; 
+  }
+  
+  else if (Array.isArray(sides)) {
+    sidesData = {
+      items: sides,
+      categories: { 'Sides': sides } 
+    };
+  }
+  
+  else if (typeof sides === 'string' && sides.trim() !== '') {
+    const sidesArray = sides.split(',').map(s => s.trim()).filter(s => s);
+    sidesData = {
+      items: sidesArray,
+      categories: { 'Sides': sidesArray }
+    };
+  }
+  
+  else {
+    sidesData = {
+      items: [],
+      categories: {}
+    };
+  }
+  
+  
+  let addsArray = Array.isArray(adds) ? adds : [];
+  let modsArray = Array.isArray(mods) ? mods : [];
+  
+  if (typeof adds === 'string' && adds.trim() !== '') {
+    addsArray = adds.split(',').map(s => s.trim()).filter(s => s);
+  }
+  if (typeof mods === 'string' && mods.trim() !== '') {
+    modsArray = mods.split(',').map(s => s.trim()).filter(s => s);
+  }
+  
+  console.log('📦 Adding to cart:', {item, sidesData, adds: addsArray, mods: modsArray});
+  
+  order.push({"item":item,"size":size,"sides":sidesData,"adds":addsArray, "mods":modsArray, "amt":amt,"cost":cost});
+  additemtocart();
+  cartadditem();
+  buildOrderText();
+  saveCart();
+  updateCart(1);
+  
+  
+  if (typeof window.trackAddToCart === 'function') {
+    window.trackAddToCart({
+      name: item,
+      title: item,
+      price: cost / amt, 
+      category: 'Menu Item'
+    }, amt, cost);
+  }
+  
+  
+  
+}
+function additemtocart(){
+  let modal = document.getElementById("orderModal");
+  modal.classList.add("additemtocart");
+  setTimeout(()=>{
+  			closeShop();
+        modal.classList.remove("additemtocart");
+  },             500);  
+   
+} 
+function cartadditem(){
+  let cart = document.getElementById("carticon");
+  cart.classList.add("cartadditem");
+  setTimeout(()=>{
+        cart.classList.remove("cartadditem");
+  },             500);  
+   
+} 
+function removeItem(i){
+	
+	if (typeof window.trackRemoveFromCart === 'function' && order[i]) {
+		const removedItem = order[i];
+		window.trackRemoveFromCart({
+			name: removedItem.item,
+			title: removedItem.item,
+			price: removedItem.cost
+		}, price); 
+	}
+	
+	order.splice(i,1);
+	buildOrderText();
+	saveCart();
+	updateCart(-1);
+	
+}
+function removeAllItems(){
+	order=[];
+	var c =order.index-1;
+	order=[];
+	localStorage.removeItem('cart');  
+	buildOrderText();
+	document.getElementById("cartcount").innerText= 0;
+  updateCart(0);
+	
+}
+
+function updateCart(i){
+    var cart = document.getElementById("cartcount");
+    cart.innerText= parseInt(cart.innerText)+i;
+    
+    if(parseInt(cart.innerText)<=0){
+    	cart.classList.add('hide');
+    }else{
+    	cart.classList.remove('hide');
+    }
+}
+
+function buildOrderText(){
+	messageBody='';
+	var itemSides='';
+	var itemAdds='';
+	var itemMods='';
+	var orderHtml='<tr><th id="itemNo">#</th><th>Size</th><th>Item</th><th>Amt</th><th>Cost</th><th style="text-align: center;"><a style="font-size: medium;" onclick="removeAllItems();"><i class="fa fa-trash-o"></i></a></th></tr>';
+
+	for (var i = 0; i <= order.length-1; i++) {
+		
+		itemSides='';
+		itemAdds='';
+		itemMods='';
+		
+		
+		if (order[i].sides && typeof order[i].sides === 'object' && order[i].sides.categories) {
+			const categories = order[i].sides.categories;
+			const categoryNames = Object.keys(categories);
+			
+			if (categoryNames.length > 0) {
+				const categoryStrings = [];
+				categoryNames.forEach(function(catName) {
+					const catItems = categories[catName];
+					if (catItems && catItems.length > 0) {
+						let catStr = catName + ': ';
+						for (var j = 0; j < catItems.length; j++) {
+							catStr += catItems[j];
+							if (j < catItems.length - 1) {
+								catStr += ', ';
+							}
+						}
+						categoryStrings.push(catStr);
+					}
+				});
+				itemSides = categoryStrings.join('\n');
+			}
+		}
+		
+		else if (order[i].sides && order[i].sides.length>0){
+			itemSides = 'Sides: ';
+			for (var j = 0; j <= order[i].sides.length-1; j++) {
+			 itemSides=itemSides+order[i].sides[j];
+			 if (j < order[i].sides.length-1) {
+			 	itemSides=itemSides+', ';
+			 }
+			}
+		}
+
+		if (order[i].adds.length>0){
+			itemAdds = 'Additional Mods: ';
+			for (var j = 0; j <= order[i].adds.length-1; j++) {
+			 itemAdds=itemAdds+order[i].adds[j];
+			 if (j < order[i].adds.length-1) {
+			 	itemAdds=itemAdds+', ';
+			 }
+			}
+		}
+
+		if (order[i].mods.length>0){
+			itemMods = 'Mods: ';
+			for (var j = 0; j <= order[i].mods.length-1; j++) {
+			 	itemMods=itemMods+order[i].mods[j];
+			 	if (j < order[i].mods.length-1) {
+			 		itemMods=itemMods+', ';
+			 	}
+			}
+		}
+
+		messageBody=messageBody+'#'+(i+1)+' | '+order[i].size+' '+order[i].item+' | Qty'+order[i].amt+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayMods(i,itemMods)+printArrayAdds(i,itemAdds)+'\n\n';
+
+		
+		
+		orderHtml = (orderHtml+'<tr><td id="itemNo">'+(i+1)+'</td><td id="itemSize">'+order[i].size+'</td><td id="itemDesc">'+order[i].item+printHtmlArraySides(i,itemSides)+printHtmlArrayMods(i,itemMods)+printHtmlArrayAdds(i,itemAdds)+'\n'+'</td><td>'+order[i].amt+' </td><th id="itemCost">$'+order[i].cost+'</th><td id="itemXBtn"><a onclick="removeItem('+i+');"><i class="fa fa-close"></i></a></td></tr>');
+		
+	}
+
+	priceCalc();
+	vatCalc();
+	serviceCalc();
+	document.getElementById("whatsappOrder").innerHTML=orderHtml;
+	
+	
+	buildCartCards();
+	
+	if(vat>0 || service>0){
+		document.getElementById("subTotal").innerText=(price.toFixed(2));
+		document.getElementById("subTotalcontainer").classList.remove('hide');
+		
+	}else {
+		document.getElementById("subTotalcontainer").classList.add('hide');
+	}
+	if(vat>0){
+			document.getElementById("vat").innerText=('V.A.T. '+vat*100+'% $');
+			document.getElementById("vatCalc").innerText=(vatcost.toFixed(2));
+			document.getElementById("vatCalccontainer").classList.remove('hide');
+	}else{
+		document.getElementById("vatCalccontainer").classList.add('hide');
+	}
+	if(service>0){
+		document.getElementById("service").innerText=('Service Charge '+service*100+'% $');
+		document.getElementById("serviceCalc").innerText=(servicecost.toFixed(2));
+		document.getElementById("serviceCalccontainer").classList.remove('hide');
+	}else{
+		document.getElementById("serviceCalccontainer").classList.add('hide');
+	}
+	var displayTotal=(price+vatcost+servicecost);
+	document.getElementById("itemTotal").innerText=('TOTAL $'+displayTotal.toFixed(2));
+	constructWAMessage();
+}
+
+function buildCartCards() {
+	const cartContainer = document.getElementById("cartItemsContainer");
+	const emptyState = document.getElementById("cartEmptyState");
+	
+	if (!cartContainer) return;
+	
+	
+	if (order.length === 0) {
+		if (emptyState) emptyState.style.display = 'flex';
+		cartContainer.innerHTML = '';
+		return;
+	}
+	
+	if (emptyState) emptyState.style.display = 'none';
+	
+	
+	let cardsHtml = '';
+	
+	for (let i = 0; i < order.length; i++) {
+		const item = order[i];
+		let itemSides = '';
+		let itemAdds = '';
+		let itemMods = '';
+		let hasDetails = false;
+		
+		
+		if (item.sides && typeof item.sides === 'object' && item.sides.categories) {
+			const categories = item.sides.categories;
+			const categoryNames = Object.keys(categories);
+			
+			if (categoryNames.length > 0) {
+				hasDetails = true;
+				const categoryStrings = [];
+				categoryNames.forEach(function(catName) {
+					const catItems = categories[catName];
+					if (catItems && catItems.length > 0) {
+						categoryStrings.push(`<div class="cart-item-category"><strong>${catName}:</strong> ${catItems.join(', ')}</div>`);
+					}
+				});
+				itemSides = categoryStrings.join('');
+			}
+		}
+		
+		else if (item.sides && item.sides.length > 0) {
+			hasDetails = true;
+			itemSides = `<div class="cart-item-category"><strong>Sides:</strong> ${item.sides.join(', ')}</div>`;
+		}
+		
+		if (item.adds && item.adds.length > 0) {
+			hasDetails = true;
+			itemAdds = `<div class="cart-item-category"><strong>Additional Mods:</strong> ${item.adds.join(', ')}</div>`;
+		}
+		
+		if (item.mods && item.mods.length > 0) {
+			hasDetails = true;
+			itemMods = `<div class="cart-item-category"><strong>Modifications:</strong> ${item.mods.join(', ')}</div>`;
+		}
+		
+		
+		cardsHtml += `
+			<div class="cart-item-card collapsed" data-item-index="${i}">
+				<div class="cart-item-header">
+					<div class="cart-item-number">#${i + 1}</div>
+					<button class="cart-item-remove" onclick="event.stopPropagation(); removeItem(${i});" title="Remove item">
+						<i class="fa fa-times"></i>
+					</button>
+				</div>
+				<div class="cart-item-body" onclick="toggleCartItem(${i})">
+					<div class="cart-item-main-info">
+						<div class="cart-item-name-row">
+							<div class="cart-item-name">${item.item}</div>
+							${hasDetails ? '<i class="fa fa-chevron-down cart-expand-icon"></i>' : ''}
+						</div>
+						${item.size ? `<div class="cart-item-size">${item.size}</div>` : ''}
+					</div>
+					${hasDetails ? `
+						<div class="cart-item-details">
+							${itemSides}
+							${itemMods}
+							${itemAdds}
+						</div>
+					` : ''}
+				</div>
+				<div class="cart-item-footer">
+					<div class="cart-item-quantity">
+						<i class="fa fa-times" style="font-size: 0.8em; opacity: 0.7;"></i> ${item.amt}
+					</div>
+					<div class="cart-item-price">$${item.cost.toFixed(2)}</div>
+				</div>
+			</div>
+		`;
+	}
+	
+	cartContainer.innerHTML = cardsHtml;
+}
+
+
+function toggleCartItem(index) {
+	const card = document.querySelector(`.cart-item-card[data-item-index="${index}"]`);
+	if (card) {
+		card.classList.toggle('collapsed');
+	}
+}
+
+function openSideMenu() {
+	var list = document.getElementById("sideList");
+	var con = document.getElementById("itemSideControl_legacy");
+	if (!con) return; 
+	if (list) list.innerText = printArray(orderSides);
+	
+	if(con.classList.contains('hide')){
+		con.classList.remove('hide');
+	}else{
+		con.classList.add('hide');
+	}
+}
+
+function openAddMenu() {
+	var list = document.getElementById("addModList");
+  var con = document.getElementById("itemAdditionControl");
+  list.innerText=printArray(orderAdd);
+     if(con.classList.contains('hide')){
+      con.classList.remove('hide');
+    }else{
+      con.classList.add('hide');
+    }
+}
+
+function openModMenu() {
+	var list = document.getElementById("modList");
+  var con = document.getElementById("itemModControl");
+  list.innerText=printArray(orderMod);
+     if(con.classList.contains('hide')){
+      con.classList.remove('hide');
+    }else{
+      con.classList.add('hide');
+    }
+}
+
+function printArray(arr){
+ 	var mod = '';
+ 	for (var j = 0; j <= arr.length-1; j++) {
+			 	mod=mod+'- '+arr[j]+'\n';
+			}
+	return mod;
+ }
+
+function printHtmlArraySides(i,itemSides){
+	
+	const hasSides = (order[i].sides && order[i].sides.categories && Object.keys(order[i].sides.categories).length > 0) ||
+	                 (order[i].sides && order[i].sides.length > 0);
+	
+	if (hasSides && itemSides){
+		
+		const htmlSides = itemSides.replace(/\n/g, '<br>');
+		return ('<br>'+htmlSides);
+	}else return '';
+}
+function printHtmlArrayAdds(i,itemAdds){
+	if (order[i].adds.length>0){
+		return ('<br>'+itemAdds);
+	}else return '';
+}
+function printHtmlArrayMods(i,itemMods){
+	if (order[i].mods.length>0){
+		return ('<br>'+itemMods);
+	}else return '';
+}
+
+function printArraySides(i,itemSides){
+	
+	const hasSides = (order[i].sides && order[i].sides.categories && Object.keys(order[i].sides.categories).length > 0) ||
+	                 (order[i].sides && order[i].sides.length > 0);
+	
+	if (hasSides && itemSides){
+		return ('\n'+itemSides);
+	}else return '';
+}
+
+function printArrayAdds(i,itemAdds){
+	if (order[i].adds.length>0){
+		return ('\n'+itemAdds);
+	}else return '';
+}
+
+function printArrayMods(i,itemMods){
+	if (order[i].mods.length>0){
+		return ('\n'+itemMods);
+	}else return '';
+}
+
+function priceCalc(){
+	price = 0;
+	for (var i = 0; i <= order.length-1; i++) {
+		price=price+order[i].cost;
+	}
+}
+
+function vatCalc(){
+	vatcost=parseFloat((price*vat).toFixed(2));
+}
+function serviceCalc(){
+	servicecost=parseFloat((price*service).toFixed(2));
+}
+
+
+function advanceOrder(){
+	if (hastables) {
+	
+		
+		const currentLocationData = getCurrentLocationData();
+		if (currentLocationData) {
+			
+			closeCart();
+			openTableModalWithLocation(currentLocationData);
+		} else {
+			
+			alert('Please select a location first before placing your order.');
+			return;
+		}
+	}else{
+		
+		closeCart();
+		confirm();
+	}
+}
+
+
+function getLocationDataFromElement(locationElement) {
+	
+	return getCurrentLocationData();
+}
+
+
+function openTableModalWithLocation(locationData) {
+    if (!locationData) {
+        console.error('❌ No location data provided');
+        return;
+    }
+    
+    
+    selectedLocationData = locationData;
+    
+    
+    updateSelectedLocationDisplay(locationData);
+    
+    
+    populateTableNumbers(locationData);
+    
+    
+    const tableSelectionSection = document.getElementById('tableSelectionSection');
+    if (tableSelectionSection) {
+        tableSelectionSection.classList.add('show');
+    }
+    
+    
+    document.getElementById('tableNumberModal').classList.remove('hide');
+}
+
+
+function setTableNumber(tableNumber) {
+	console.log('🎯 Setting table number to:', tableNumber);
+	myTable = tableNumber;
+	
+	
+	updateCartLocationDisplay();
+}
+
+
+function updateCartLocationDisplay() {
+	const cartLocationDiv = document.getElementById('cartLocation');
+	if (cartLocationDiv) {
+		const currentLocation = getVisibleLocation();
+		if (currentLocation) {
+			const locationText = currentLocation.textContent.trim();
+			let displayText = `📍 ${locationText}`;
+			
+			
+			if (myTable && myTable.trim() !== '') {
+				displayText += ` - Table ${myTable}`;
+			}
+			
+			cartLocationDiv.innerHTML = displayText;
+			cartLocationDiv.classList.add('active');
+		}
+	}
+}
+
+function confirm(){
+	constructWAMessage();
+	confirmSendOrder();
+}
+
+function constructWAMessage(){
+	var subTotalTxt='';
+	var vatTxt='';
+	var servicext='';
+	var label='';
+	
+	
+	if (currentOrderType === 'takeaway') {
+		label = 'Takeaway';
+	} else if (currentOrderType === 'table' && currentTableNumber && currentTableNumber.trim() !== '') {
+		label = `Table #${currentTableNumber}`;
+	} else {
+		label = 'Takeaway'; 
+	}
+	
+	if(vat>0 || service>0){
+		subTotalTxt='\nSub Total $ '+price.toFixed(2);
+		if(vat>0){
+			vatTxt='\nV.A.T. '+vat*100+'% $ '+vatcost.toFixed(2);
+		}
+		if(service>0){
+			servicext='\nService Charge '+service*100+'% $ '+servicecost.toFixed(2);
+		}
+	}
+	
+	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+'\n'+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
+}
+
+function confirmSendOrder(){
+	
+	if (typeof window.trackOrderSubmission === 'function') {
+		const locationSelect = document.getElementById('locationSelect');
+		const selectedLocation = locationSelect ? locationSelect.options[locationSelect.selectedIndex]?.text : 'Unknown';
+		
+		window.trackOrderSubmission({
+			items: order,
+			totalAmount: price + vatcost + servicecost,
+			orderMode: currentOrderType || currentMode || 'unknown',
+			location: selectedLocation,
+			tableNumber: currentTableNumber || myTable || null
+		});
+	}
+	
+	window.open(message, "_blank" );
+	
+	
+	if (window.posIntegration && window.posIntegration.isPOSEnabled) {
+		window.posIntegration.processOrderWithPOS();
+	}
+	
+	
+	currentOrderType = 'takeaway';
+	currentTableNumber = '';
+}
+
+
+function toggleDiningMode(ele){
+  if (ele.checked == true){
+    selectMode(1);
+   
+  } else{
+    selectMode(0);
+    
+  }
+}
+function selectMode(i){
+  currentMode = modes[i].name;
+  
+  var checkBox2 = document.getElementById("dining-mode-checkbox-2");
+  if(i==1){
+  	
+  	checkBox2.checked=true;
+  	service=0.0;
+  }else{
+  	
+  	checkBox2.checked=false;
+  	myTable='';
+  	service=0.0;
+  }
+  
+  executeMode();
+  buildOrderText();
+}
+
+
+function executeMode(){
+	var cart=document.getElementById('cart')
+	
+	
+	var server=document.getElementById('askforserver');
+	if (currentMode=='dinein'){
+		server.classList.remove("hide");
+	}else{
+		server.classList.add("hide");
+	}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+ }
+
+function executeModeOnModal(){
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+}
+
+function executeModeOnTableModal(){	
+	var ele1 = document.getElementsByClassName('tableBtn');
+	var ele2 = document.getElementsByClassName('takeawayBtn');
+	if (currentMode=='takeaway'){
+		ele2[0].classList.remove('hide');
+		ele2[0].classList.remove('select');
+		for (var i = ele1.length - 1; i >= 0; i--) {
+     		ele1[i].classList.add('hide');
+          	ele1[i].classList.remove('select');
+        }
+	}else if (currentMode=='dinein'){
+		ele2[0].classList.add('hide'); 
+		ele2[0].classList.remove('select');   	
+		for (var i = ele1.length - 1; i >= 0; i--) {
+     		ele1[i].classList.remove('select');
+          	ele1[i].classList.remove('hide');
+        }
+	}
+}
+
+function cartSizeToggle(){
+	 var cart=document.getElementById('cart')
+	 if (cart.classList.contains('cartexpanded')){
+	 	cart.classList.remove('cartexpanded');
+	 	document.getElementById('titleRow').innerHTML='<i class="fa fa-arrow-right"></i> Order';
+	 }else{
+	 	cart.classList.add('cartexpanded');
+	 	document.getElementById('titleRow').innerHTML='<i class="fa fa-arrow-down"></i> Order';
+	 }
+}	
+
+function openTableModal(state){
+	closeCart();
+	if (state=='askforserver'){
+		document.getElementById("tableNumberModal").classList.remove('hide');
+		document.getElementById("confirmmodal").classList.add('hide');
+		document.getElementById("askforservermodal").classList.remove('hide');
+		
+	}else if (currentMode=='takeaway'){
+		confirm();
+		return;
+	}else{
+		document.getElementById("tableNumberModal").classList.remove('hide');
+		document.getElementById("askforservermodal").classList.add('hide');
+		document.getElementById("confirmmodal").classList.remove('hide');
+		
+	}
+	
+}
+function closeTableModal() {
+    document.getElementById('tableNumberModal').classList.add('hide');
+    document.getElementById('confirmmodal').classList.remove('show');
+    document.querySelector('.input').classList.remove('hide');
+    
+    
+    const tableSelectionSection = document.getElementById('tableSelectionSection');
+    if (tableSelectionSection) {
+        tableSelectionSection.classList.remove('show');
+    }
+    
+    
+    const allTableButtons = document.querySelectorAll('.tableBtn');
+    allTableButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    
+    const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+    if (orderSummaryDisplay) {
+        orderSummaryDisplay.classList.add('hide');
+    }
+    
+    
+    const summaryLocationInfo = document.getElementById('summaryLocationInfo');
+    if (summaryLocationInfo) {
+        summaryLocationInfo.innerHTML = '';
+    }
+    
+    
+    window.selectedTableInfo = null;
+    selectedLocationData = null;
+    
+    
+    window.currentOrderLocation = null;
+}
+
+
+function selectTable(buttonElement) {
+    if (!selectedLocationData) {
+        console.error('❌ No location data available for table selection');
+        alert('Please select a location first');
+        return;
+    }
+    
+    
+    const allTableButtons = document.querySelectorAll('.tableBtn');
+    allTableButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    
+    buttonElement.classList.add('selected');
+    
+    const tableNumber = buttonElement.textContent;
+    const isTakeaway = buttonElement.classList.contains('takeaway-btn');
+    
+    
+    window.selectedTableInfo = {
+        tableNumber: tableNumber,
+        isTakeaway: isTakeaway,
+        location: selectedLocationData
+    };
+    
+    
+    currentOrderType = isTakeaway ? 'takeaway' : 'table';
+    currentTableNumber = tableNumber;
+    
+    
+    const tableNumElement = document.getElementById('myTableNum');
+    if (tableNumElement) {
+        if (isTakeaway) {
+            tableNumElement.textContent = 'Ready to place your takeaway order?';
+        } else {
+            tableNumElement.textContent = `Table: ${tableNumber} at ${selectedLocationData.address}`;
+        }
+    }
+    
+    if (isTakeaway) {
+        
+        updateOrderSummary(selectedLocationData);
+        
+        document.getElementById('orderSummaryDisplay').classList.remove('hide');
+    } else {
+        
+        document.getElementById('orderSummaryDisplay').classList.add('hide');
+    }
+    
+    
+    document.getElementById('confirmmodal').classList.add('show');
+}
+
+function confirmTable(state){
+	if(myTable!=''){
+		
+		
+		
+		
+		
+		
+		
+		if (state=='askforserver'){
+			askforserver();
+		}else{
+			confirm();
+		}
+		
+	}
+}
+
+function askforserver(){
+	message = 'https://wa.me/'+number+'?text='+encodeURIComponent('Powered by TTMenus\n'+name+'\n\nHello, Good Day\n'+'Server Requested at Table# '+myTable);
+	confirmSendOrder();
+}
+
+
+function findClosestLocation() {
+	alert('Please use the location dropdown in the cart to select your preferred location.');
+}
+
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+	
+	return 0;
+}
+
+
+function scrollToLocation(locationElement) {
+	
+	console.log('📍 Location scrolling not needed with dropdown system');
+}
+
+
+function setActiveLocation(locationElement) {
+	
+	const locationSelect = document.getElementById('locationSelect');
+	if (locationSelect && locationSelect.value) {
+		selectLocation(locationSelect.value);
+	}
+}
+
+
+function searchLocations(searchTerm) {
+	console.log('🔍 Searching for:', searchTerm);
+	
+	const searchInput = document.getElementById('locationSearch');
+	const locationItems = document.querySelectorAll('.locations .location-item');
+	
+	if (!searchTerm || searchTerm.trim() === '') {
+		
+		locationItems.forEach(item => {
+			item.style.display = 'flex';
+			item.style.opacity = '1';
+			item.style.transform = 'scale(1)';
+		});
+		
+		
+		document.querySelectorAll('.location-item .locbtn').forEach(btn => {
+			btn.style.backgroundColor = '';
+			btn.style.color = '';
+			btn.style.fontWeight = '';
+		});
+		
+		console.log('✅ Showing all locations');
+		return;
+	}
+	
+	const searchLower = searchTerm.toLowerCase().trim();
+	let foundCount = 0;
+	
+	locationItems.forEach(item => {
+		const locationText = item.querySelector('.locbtn').textContent.toLowerCase();
+		const isMatch = locationText.includes(searchLower);
+		
+		if (isMatch) {
+			
+			item.style.display = 'flex';
+			item.style.opacity = '1';
+			item.style.transform = 'scale(1.02)';
+			
+			
+			const btn = item.querySelector('.locbtn');
+			btn.style.backgroundColor = '#4CAF50';
+			btn.style.color = 'white';
+			btn.style.fontWeight = 'bold';
+			
+			foundCount++;
+			console.log('✅ Match found:', item.querySelector('.locbtn').textContent.trim());
+		} else {
+			
+			item.style.display = 'none';
+		}
+	});
+	
+	console.log(`🔍 Search complete: ${foundCount} location(s) found`);
+	
+	
+	if (searchInput) {
+		const currentPlaceholder = searchInput.placeholder;
+		if (foundCount > 0) {
+			searchInput.style.borderColor = '#4CAF50';
+			searchInput.placeholder = `Found ${foundCount} location(s)`;
+		} else {
+			searchInput.style.borderColor = '#f44336';
+			searchInput.placeholder = 'No locations found';
+		}
+		
+		
+		setTimeout(() => {
+			searchInput.placeholder = currentPlaceholder;
+			searchInput.style.borderColor = '#ddd';
+		}, 3000);
+	}
+}
+
+
+function clearLocationSearch() {
+	const searchInput = document.getElementById('locationSearch');
+	if (searchInput) {
+		searchInput.value = '';
+		searchLocations(''); 
+	}
+}
+
+
+function updateCartLocation(locationElement) {
+	
+	updateCartLocationDisplay();
+}
+
+
+function updateSearchPlaceholder() {
+	
+	console.log('🔍 Search placeholder not needed with dropdown system');
+}
+
+
+function scrollLocations(direction) {
+	
+	console.log('🔄 Location scrolling not needed with dropdown system');
+}
+
+
+function toggleDelivery(button) {
+	const deliveryOptions = button.nextElementSibling;
+	if (deliveryOptions && deliveryOptions.classList.contains('delivery-options')) {
+		deliveryOptions.classList.toggle('hide');
+		
+		
+		const buttonText = button.querySelector('span');
+		if (buttonText) {
+			if (deliveryOptions.classList.contains('hide')) {
+				buttonText.textContent = 'Delivery';
+			} else {
+				buttonText.textContent = 'Hide';
+			}
+		}
+		
+		console.log('🛵 Delivery options toggled for location');
+	} else {
+		console.log('❌ Delivery options container not found');
+	}
+}
+
+
+document.addEventListener("DOMContentLoaded", function() {
+  requestAnimationFrame(() => { 
+    
+    buildCartCards();
+    
+    loadCart();  
+    updateCart(order.length);
+    
+    
+    fetchMenuItems().then(() => {
+      console.log('✅ Menu items preloaded and ready');
+    }).catch(err => {
+      console.error('❌ Failed to preload menu items:', err);
+    });
+    
+    
+    const locationSelect = document.getElementById('locationSelect');
+    if (locationSelect) {
+      console.log('📍 Location dropdown initialized');
+      
+      
+      const savedLocation = loadSelectedLocation();
+      if (savedLocation) {
+        
+        if (setLocationDropdown(savedLocation)) {
+          
+          number = savedLocation;
+          selectLocation(savedLocation);
+          console.log('✅ Saved location restored:', savedLocation);
+        }
+      } else {
+        
+        const firstOption = locationSelect.options[1]; 
+        if (firstOption && firstOption.value) {
+          number = firstOption.value;
+          selectLocation(firstOption.value);
+          console.log('📍 Using default location:', firstOption.value);
+        }
+      }
+    }
+    
+    
+    window.testWhatsAppUpdate = function() {
+      console.log('🔧 Manual test triggered');
+      console.log('📱 Current WhatsApp number:', number);
+    };
+    
+    
+    window.debugWhatsAppState = function() {
+      console.log('🔍 DEBUG: Current WhatsApp State');
+      console.log('📱 Current number:', number);
+      console.log('📍 Location dropdown system active');
+    };
+    
+    
+    window.testLocationDetection = function() {
+      console.log('🧪 TESTING: Location Detection');
+      const locationSelect = document.getElementById('locationSelect');
+      if (locationSelect) {
+        console.log('📍 Location dropdown found');
+        console.log('📍 Selected value:', locationSelect.value);
+        console.log('📍 Total options:', locationSelect.options.length);
+      } else {
+        console.log('❌ Location dropdown not found');
+      }
+    };
+    
+    
+    window.testGeolocation = function() {
+      console.log('🧪 TESTING: Geolocation');
+      console.log('navigator.geolocation exists:', !!navigator.geolocation);
+      
+      if (navigator.geolocation) {
+        console.log('✅ Geolocation is supported');
+        console.log('Requesting permission...');
+        
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            console.log('✅ SUCCESS: Location permission granted!');
+            console.log('Coordinates:', position.coords.latitude, position.coords.longitude);
+            console.log('Accuracy:', position.coords.accuracy, 'meters');
+          },
+          function(error) {
+            console.log('❌ ERROR: Location permission denied or error occurred');
+            console.log('Error code:', error.code);
+            console.log('Error message:', error.message);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+          }
+        );
+      } else {
+        console.log('❌ Geolocation not supported');
+      }
+    };
+    
+    
+    window.testScrollToLocation = function(locationIndex = 0) {
+      console.log('🧪 TESTING: Scroll to Location');
+      const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
+      
+      if (locationElements.length === 0) {
+        console.log('❌ No location elements found');
+        return;
+      }
+      
+      const targetLocation = locationElements[locationIndex];
+      if (!targetLocation) {
+        console.log(`❌ Location at index ${locationIndex} not found`);
+        console.log(`Available locations: 0 to ${locationElements.length - 1}`);
+        return;
+      }
+      
+      console.log(`🎯 Testing scroll to location ${locationIndex}:`, targetLocation.textContent.trim());
+      console.log('📍 Current scroll position:', document.querySelector('.locations')?.scrollLeft || 'N/A');
+      
+      
+      scrollToLocation(targetLocation);
+    };
+    
+    
+    window.testAllLocationsScrolling = function() {
+      console.log('🧪 TESTING: All Locations Scrolling');
+      const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
+      
+      if (locationElements.length === 0) {
+        console.log('❌ No location elements found');
+        return;
+      }
+      
+      console.log(`🔍 Found ${locationElements.length} locations`);
+      
+      
+      locationElements.forEach((location, index) => {
+        setTimeout(() => {
+          console.log(`\n🎯 Testing location ${index + 1}/${locationElements.length}:`, location.textContent.trim());
+          scrollToLocation(location);
+        }, index * 2000); 
+      });
+    };
+    
+    
+    window.testLocationSearch = function(searchTerm = 'Port') {
+      console.log('🧪 TESTING: Location Search');
+      console.log('Search term:', searchTerm);
+      
+      
+      searchLocations(searchTerm);
+      
+      
+      const searchInput = document.getElementById('locationSearch');
+      if (searchInput) {
+        console.log('🔍 Search input value:', searchInput.value);
+        console.log('🔍 Search input placeholder:', searchInput.placeholder);
+      }
+      
+      
+      const visibleLocations = document.querySelectorAll('.locations .location-item[style*="display: flex"]');
+      const hiddenLocations = document.querySelectorAll('.locations .location-item[style*="display: none"]');
+      
+      console.log('📍 Visible locations:', visibleLocations.length);
+      console.log('🚫 Hidden locations:', hiddenLocations.length);
+      
+      
+      visibleLocations.forEach((item, index) => {
+        const text = item.querySelector('.locbtn').textContent.trim();
+        console.log(`  ${index + 1}. ${text}`);
+      });
+    };
+    
+    
+    window.testCartLocation = function() {
+      console.log('🧪 TESTING: Cart Location Updates');
+      
+      const locationSelect = document.getElementById('locationSelect');
+      if (locationSelect) {
+        console.log('✅ Location dropdown found');
+        console.log('📍 Current selection:', locationSelect.value);
+        console.log('📍 Current text:', locationSelect.options[locationSelect.selectedIndex]?.text || 'None');
+      } else {
+        console.log('❌ Location dropdown not found');
+      }
+    };
+    
+    
+    window.testSearchPlaceholder = function() {
+      console.log('🧪 TESTING: Search Placeholder');
+      console.log('🔍 Search placeholder not needed with dropdown system');
+    };
+    
+    
+    window.testLocationNavigation = function() {
+      console.log('🧪 TESTING: Location Navigation');
+      console.log('📍 Navigation not needed with dropdown system');
+    };
+    
+    
+    window.testDeliveryOptions = function() {
+      console.log('🧪 TESTING: Delivery Options');
+      console.log('🛵 Delivery options testing not implemented for dropdown system');
+    };
+    
+    
+    window.testLocationsData = function() {
+      console.log('🧪 TESTING: Locations Data Loading');
+      
+      const locationSelect = document.getElementById('locationSelect');
+      if (locationSelect) {
+        console.log('✅ Location dropdown found');
+        console.log('📍 Total options:', locationSelect.options.length);
+        
+        
+        for (let i = 0; i < locationSelect.options.length; i++) {
+          const option = locationSelect.options[i];
+          if (option.value) {
+            console.log(`Location ${i}:`);
+            console.log(`  Address: ${option.text}`);
+            console.log(`  WhatsApp: ${option.value}`);
+            console.log(`  Lat: ${option.getAttribute('data-lat') || 'NOT SET'}`);
+            console.log(`  Lng: ${option.getAttribute('data-lng') || 'NOT SET'}`);
+          }
+        }
+      } else {
+        console.log('❌ Location dropdown not found');
+      }
+    };
+    
+    
+  });
+});
+
+
+window.setTableNumber = setTableNumber;
+window.confirm = confirm;
+window.advanceOrder = advanceOrder;
+window.openTableModalWithLocation = openTableModalWithLocation;
+window.getLocationDataFromElement = getLocationDataFromElement;
+window.updateCartLocationDisplay = updateCartLocationDisplay;
+
+
+window.testTableModalIntegration = function() {
+	console.log('🧪 TESTING: Table Modal Integration');
+	console.log('📍 Current location:', getVisibleLocation()?.textContent.trim() || 'None');
+	console.log('📱 Current WhatsApp number:', number);
+	console.log('🪑 Current table:', myTable);
+	console.log('🛒 Current order mode:', currentMode);
+	console.log('📦 Cart items:', order.length);
+	console.log('🌐 Global functions available:', {
+		setTableNumber: typeof window.setTableNumber,
+		confirm: typeof window.confirm,
+		advanceOrder: typeof window.advanceOrder,
+		openTableModal: typeof window.openTableModal
+	});
+	
+	
+	const currentLocation = getVisibleLocation();
+	if (currentLocation) {
+		const locationData = getLocationDataFromElement(currentLocation);
+		console.log('🔍 Extracted location data:', locationData);
+	} else {
+		console.log('❌ No visible location found');
+	}
+};
+
+window.testLocationDataAttributes = function() {
+	console.log('🧪 TESTING: Location Data Attributes');
+	
+	const locationElements = document.querySelectorAll('li.locations .locbtn');
+	console.log(`Found ${locationElements.length} location elements`);
+	
+	locationElements.forEach((element, index) => {
+		console.log(`\n📍 Location ${index + 1}: "${element.textContent.trim()}"`);
+		console.log('  Data attributes:');
+		console.log('    data-whatsapp:', element.dataset.whatsapp || 'NOT SET');
+		console.log('    data-lat:', element.dataset.lat || 'NOT SET');
+		console.log('    data-lng:', element.dataset.lng || 'NOT SET');
+		console.log('    data-orderingtables:', element.dataset.orderingtables || 'NOT SET');
+		
+		
+		const locationData = getLocationDataFromElement(element);
+		if (locationData) {
+			console.log('  ✅ Data extraction successful:', locationData);
+		} else {
+			console.log('  ❌ Data extraction failed');
+		}
+	});
+};
+
+window.testTableSelection = function() {
+	console.log('🧪 TESTING: Table Selection Process');
+	
+	
+	const currentLocation = getVisibleLocation();
+	if (currentLocation) {
+		console.log('🎯 Testing with location:', currentLocation.textContent.trim());
+		
+		
+		const locationData = getLocationDataFromElement(currentLocation);
+		if (locationData) {
+			console.log('✅ Location data extracted successfully');
+			
+			
+			console.log('🚀 Opening table modal...');
+			openTableModalWithLocation(locationData);
+		} else {
+			console.log('❌ Failed to extract location data');
+		}
+	} else {
+		console.log('❌ No location selected, cannot test table selection');
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function toggleTTMS(){
+    var ttms = document.getElementById("ttmenusModal");
+    var footerBtns = document.getElementById("footerBtns");
+    if(ttms.classList.contains('cart-hidden')){
+      ttms.classList.remove('cart-hidden');
+      footerBtns.classList.add('bigfont');
+      footerBtns.classList.remove('smallfont');
+      footerBtns.classList.add('grad1');
+      footerBtns.classList.remove('grad2');
+    }else{
+      ttms.classList.add('cart-hidden');
+      footerBtns.classList.add('grad2');
+      footerBtns.classList.remove('grad1');
+      footerBtns.classList.remove('bigfont');
+      footerBtns.classList.add('smallfont');
+      
+    }
+  }
+  function closeTTMS(){
+    var ttms = document.getElementById("ttmenusModal");
+    var footerBtns = document.getElementById("footerBtns");
+    ttms.classList.add('cart-hidden');
+    footerBtns.classList.add('grad2');
+    footerBtns.classList.remove('grad1');
+    footerBtns.classList.remove('bigfont');
+    footerBtns.classList.add('smallfont');
+	}
+
+
+function toggleFooterAccessibility(){
+    var settings = document.getElementById("footerSettings");
+    var footerBtns = document.getElementById("footerBtns");
+    if(settings.classList.contains('hide')){
+      settings.classList.remove('hide');
+      footerBtns.classList.add('bigfont');
+      footerBtns.classList.remove('smallfont');
+      footerBtns.classList.add('grad1');
+      footerBtns.classList.remove('grad2');
+    }else{
+      settings.classList.add('hide');
+      footerBtns.classList.add('grad2');
+      footerBtns.classList.remove('grad1');
+      footerBtns.classList.remove('bigfont');
+      footerBtns.classList.add('smallfont');
+    }
+  }
+
+
+
+
+let selectedLocationData = null;
+
+
+let currentOrderType = 'takeaway'; 
+let currentTableNumber = '';
+
+
+function populateTableNumbers(locationData) {
+    const tableButtonsContainer = document.getElementById('dynamicTableButtons');
+    
+    if (!locationData || !locationData.orderingtables) {
+        
+        tableButtonsContainer.innerHTML = `
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">1</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">2</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">3</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">4</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">5</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">6</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">7</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">8</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">9</a>
+            <a class="tableBtn" href="#here" onclick="selectTable(this);">10</a>
+        `;
+        return;
+    }
+    
+    
+    tableButtonsContainer.innerHTML = '';
+    
+    
+    locationData.orderingtables.forEach((tableOption, index) => {
+        if (tableOption === "Takeway Only") {
+            
+            const takeawayBtn = document.createElement('a');
+            takeawayBtn.className = 'tableBtn takeaway-btn';
+            takeawayBtn.href = '#here';
+            takeawayBtn.onclick = function() { selectTable(this); };
+            takeawayBtn.textContent = 'Takeaway';
+            takeawayBtn.style.background = 'linear-gradient(#ff6b35, #f7931e)';
+            tableButtonsContainer.appendChild(takeawayBtn);
+        } else if (tableOption.startsWith('Tables')) {
+            
+            const tableNumber = tableOption.replace('Tables', '');
+            const tableBtn = document.createElement('a');
+            tableBtn.className = 'tableBtn';
+            tableBtn.href = '#here';
+            tableBtn.onclick = function() { selectTable(this); };
+            tableBtn.textContent = tableNumber;
+            tableButtonsContainer.appendChild(tableBtn);
+        } else {
+            
+            const tableBtn = document.createElement('a');
+            tableBtn.className = 'tableBtn';
+            tableBtn.href = '#here';
+            tableBtn.onclick = function() { selectTable(this); };
+            tableBtn.textContent = tableOption;
+            tableButtonsContainer.appendChild(tableBtn);
+        }
+    });
+}
+
+
+function openTableModal() {
+    
+    if (window.currentOrderLocation) {
+        
+        selectedLocationData = window.currentOrderLocation;
+        
+        
+        updateSelectedLocationDisplay(window.currentOrderLocation);
+        
+        
+        if (window.currentOrderLocation.orderingtables && window.currentOrderLocation.orderingtables.length > 0) {
+            selectedLocationData = window.currentOrderLocation;
+            populateTableNumbers(window.currentOrderLocation);
+        } else {
+            
+            populateTableNumbers(null);
+        }
+        
+        
+    } else {
+        alert('Please select a location first before placing your order.');
+        return;
+    }
+    
+    
+    document.getElementById('tableNumberModal').classList.remove('hide');
+    
+    
+    document.getElementById('tableSelectionSection').classList.remove('hide');
+}
+
+
+function updateSelectedLocationDisplay(locationData) {
+    const locationDisplay = document.getElementById('selectedLocationDisplay');
+    if (locationDisplay && locationData) {
+        locationDisplay.innerHTML = `
+            <div class="selected-location-info">
+                <strong>📍 ${locationData.address}</strong>
+                ${locationData.whatsapp ? `<br><small>📱 ${locationData.whatsapp}</small>` : ''}
+                ${locationData.phone ? `<br><small>📞 ${locationData.phone}</small>` : ''}
+            </div>
+        `;
+    }
+}
+
+
+function updateOrderSummary(locationData) {
+    const summaryLocationInfo = document.getElementById('summaryLocationInfo');
+    if (summaryLocationInfo && locationData) {
+        summaryLocationInfo.innerHTML = `
+            <div>${locationData.address}</div>
+            ${locationData.whatsapp ? `<small>📱 ${locationData.whatsapp}</small>` : ''}
+            ${locationData.phone ? `<small>📞 ${locationData.phone}</small>` : ''}
+        `;
+    }
+}
+
+
+
+
+window.testTableModalManually = function() {
+    console.log('🧪 MANUAL TEST: Opening table modal with test data');
+    
+    const testLocationData = {
+        address: 'Test Location - 123 Test Street',
+        whatsapp: '+1234567890',
+        lat: '40.7128',
+        lng: '-74.0060',
+        orderingtables: ['Takeway Only', 'Tables1', 'Tables2', 'Tables3']
+    };
+    
+    console.log('📍 Test location data:', testLocationData);
+    
+    
+    openTableModalWithLocation(testLocationData);
+};
+
+
+window.showTableModal = function() {
+    document.getElementById('tableNumberModal').classList.remove('hide');
+    console.log('✅ Table modal should now be visible');
+};
+
+
+window.testTableModal = function() {
+    console.log('🧪 TESTING: Table Modal Functions');
+    console.log('📍 Selected location data:', selectedLocationData);
+    console.log('🌐 Current order location:', window.currentOrderLocation);
+    console.log('🔧 Functions available:', {
+        populateTableNumbers: typeof populateTableNumbers,
+        openTableModal: typeof openTableModal,
+        openTableModalWithLocation: typeof openTableModalWithLocation,
+        selectTable: typeof selectTable,
+        closeTableModal: typeof closeTableModal,
+        confirmTable: typeof confirmTable,
+        updateSelectedLocationDisplay: typeof updateSelectedLocationDisplay
+    });
+    
+    
+    if (window.currentOrderLocation) {
+        console.log('🔍 Testing location data...');
+        console.log('✅ Location data found:', window.currentOrderLocation);
+        
+        if (window.currentOrderLocation.orderingtables) {
+            console.log('📋 Ordering tables available:', window.currentOrderLocation.orderingtables);
+        }
+    }
+};
+
+
+window.testTablePopulation = function() {
+    console.log('🧪 TESTING: Table Population');
+    
+    if (selectedLocationData) {
+        console.log('📍 Using selected location:', selectedLocationData);
+        populateTableNumbers(selectedLocationData);
+    } else if (window.currentOrderLocation) {
+        console.log('📍 Using current order location:', window.currentOrderLocation);
+        if (window.currentOrderLocation.orderingtables) {
+            populateTableNumbers(window.currentOrderLocation);
+        }
+    } else {
+        console.log('❌ No location data available for testing');
+    }
+};
+
+    
+    window.testHorizontalScrolling = function() {
+      console.log('🧪 TESTING: Horizontal Scrolling (not needed with dropdown)');
+      console.log('📍 Dropdown system does not require horizontal scrolling');
+    };
+    
+    
+    window.testHorizontalScroll = function(direction = 'right') {
+      console.log(`🧪 TESTING: Manual horizontal scroll (not needed with dropdown)`);
+      console.log('📍 Dropdown system does not require scrolling');
+    };
+    
+    
+    window.selectLocationByIndex = function(index = 0) {
+      console.log(`🧪 TESTING: Manually selecting location at index ${index}`);
+      
+      const locationSelect = document.getElementById('locationSelect');
+      if (locationSelect && locationSelect.options.length > index) {
+        locationSelect.selectedIndex = index;
+        locationSelect.dispatchEvent(new Event('change'));
+        console.log('✅ Location selection completed via dropdown');
+      } else {
+        console.log('❌ Location dropdown not found or invalid index');
+      }
+    };
+    
+    
+    window.showAllLocations = function() {
+      console.log('🧪 TESTING: Show all available locations');
+      
+      const locationSelect = document.getElementById('locationSelect');
+      if (locationSelect) {
+        console.log(`Found ${locationSelect.options.length} locations in dropdown:`);
+        
+        for (let i = 0; i < locationSelect.options.length; i++) {
+          const option = locationSelect.options[i];
+          if (option.value) {
+            console.log(`${i}: "${option.text}" - WhatsApp: ${option.value}`);
+          }
+        }
+        
+        console.log('\nUse selectLocationByIndex(index) to select a specific location');
+      } else {
+        console.log('❌ Location dropdown not found');
+      }
+    };
+
+    
+    function closeTableModal() {
+        document.getElementById('tableNumberModal').classList.add('hide');
+        document.getElementById('confirmmodal').classList.remove('show');
+        document.querySelector('.input').classList.remove('hide');
+        
+        
+        const tableSelectionSection = document.getElementById('tableSelectionSection');
+        if (tableSelectionSection) {
+            tableSelectionSection.classList.remove('show');
+        }
+        
+        
+        const allTableButtons = document.querySelectorAll('.tableBtn');
+        allTableButtons.forEach(btn => btn.classList.remove('selected'));
+        
+        
+        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+        if (orderSummaryDisplay) {
+            orderSummaryDisplay.classList.add('hide');
+        }
+        
+        
+        const summaryLocationInfo = document.getElementById('summaryLocationInfo');
+        if (summaryLocationInfo) {
+            summaryLocationInfo.innerHTML = '';
+        }
+        
+        
+        window.selectedTableInfo = null;
+        selectedLocationData = null;
+        
+        
+        window.currentOrderLocation = null;
+        
+        
+        
+    }
+
+    
+    function confirmTable(action) {
+        if (!window.selectedTableInfo) {
+            console.error('❌ No table selected');
+            alert('No table selected. Please try again.');
+            return;
+        }
+        
+        const { tableNumber, isTakeaway, location } = window.selectedTableInfo;
+        
+        
+        console.log(`📋 Placing order for ${isTakeaway ? 'takeaway' : 'table'} ${tableNumber} at location: ${location.address}`);
+        
+        
+        if (typeof window.setTableNumber === 'function') {
+            window.setTableNumber(tableNumber);
+        } else {
+            
+            if (window.myTable !== undefined) {
+                window.myTable = tableNumber;
+            }
+        }
+        
+        
+        closeTableModal();
+        
+        
+        if (typeof window.confirm === 'function') {
+            window.confirm();
+        } else {
+            console.error('❌ Confirm function not found');
+        }
+    }
+
+    
+
+    
+    window.testOrderTypeVariables = function() {
+    	console.log('🧪 TESTING: Order Type Variables');
+    	console.log('📍 Current order type:', currentOrderType);
+    	console.log('🪑 Current table number:', currentTableNumber);
+    	console.log('📱 Current WhatsApp number:', number);
+    	console.log('🛒 Current order mode:', currentMode);
+    	console.log('🌐 Global functions available:', {
+    		setTableNumber: typeof window.setTableNumber,
+    		confirm: typeof window.confirm,
+    		advanceOrder: typeof window.advanceOrder
+    	});
+    	
+    	
+    	console.log('🧪 Testing message construction...');
+    	const testMessageStart = 'Powered by TTMenus\n'+name+'\nHello, Good Day\nI would like to order the following\n\nORDER\n';
+    	const testMessageBody = '#1 | Test Item | Qty1 $10\n';
+    	const testMessageEnd = '\nThank You!\nLooking forward to confirming this order';
+    	
+    	let testLabel = '';
+    	if (currentOrderType === 'takeaway') {
+    		testLabel = 'Takeaway';
+    	} else if (currentOrderType === 'table' && currentTableNumber && currentTableNumber.trim() !== '') {
+    		testLabel = `Table #${currentTableNumber}`;
+    	} else {
+    		testLabel = 'Takeaway'; 
+    	}
+    	
+    	const testMessage = testMessageStart + testLabel + '\n' + testMessageBody + testMessageEnd;
+    	console.log('📝 Test message preview:');
+    	console.log(testMessage);
+    	console.log('✅ Label used:', testLabel);
+    };
+
+    
+
+    
+    function selectLocation(whatsappNumber) {
+        if (whatsappNumber && whatsappNumber.trim() !== '') {
+            const oldNumber = number;
+            number = whatsappNumber;
+            console.log('📍 Location selected - WhatsApp number changed from', oldNumber, 'to:', number);
+            
+            
+            updateCartLocationDisplay();
+        } else {
+            console.log('📍 No location selected');
+            number = '18683286952'; 
+        }
+    }
+
+    
+    function updateCartLocationDisplay() {
+        const locationSelect = document.getElementById('locationSelect');
+        if (locationSelect && locationSelect.value) {
+            const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+            const address = selectedOption.getAttribute('data-address');
+            if (address) {
+                console.log('🛒 Cart location updated to:', address);
+            }
+        }
+    }
+
+    
+    function getCurrentLocationData() {
+        const locationSelect = document.getElementById('locationSelect');
+        if (locationSelect && locationSelect.value) {
+            const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+            const address = selectedOption.getAttribute('data-address');
+            const whatsapp = selectedOption.value;
+            const lat = selectedOption.getAttribute('data-lat');
+            const lng = selectedOption.getAttribute('data-lng');
+            const orderingTables = selectedOption.getAttribute('data-orderingtables');
+            
+            if (address && whatsapp) {
+                let parsedOrderingTables = [];
+                if (orderingTables && orderingTables.trim() !== '') {
+                    parsedOrderingTables = orderingTables.split(',').map(table => table.trim());
+                }
+                
+                return {
+                    address: address,
+                    whatsapp: whatsapp,
+                    lat: lat,
+                    lng: lng,
+                    orderingtables: parsedOrderingTables
+                };
+            }
+        }
+        return null;
+    }
+
+    
+    function displayTaxonomyTags(options) {
+        const tagsContainer = document.getElementById("itemtaxonomytags");
+        
+        if (!tagsContainer) {
+            console.log("❌ Tags container not found");
+            return;
+        }
+        
+        
+        function slugify(text) {
+            return text.toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+        }
+        
+        
+        const taxonomies = [
+            { key: 'tags', label: 'Tags', urlPath: '/tags/' },
+            { key: 'ingredients', label: 'Ingredients', urlPath: '/ingredients/' },
+            { key: 'cookingmethods', label: 'Cooking Methods', urlPath: '/cookingmethods/' },
+            { key: 'types', label: 'Cuisine Types', urlPath: '/types/' },
+            { key: 'events', label: 'Events', urlPath: '/events/' }
+        ];
+        
+        let allTagsHtml = '';
+        let hasAnyTags = false;
+        
+        
+        taxonomies.forEach(taxonomy => {
+            const items = options[taxonomy.key];
+            
+            if (items && Array.isArray(items) && items.length > 0) {
+                hasAnyTags = true;
+                
+                
+                allTagsHtml += `<div class="taxonomy-section" data-taxonomy="${taxonomy.key}">`;
+                allTagsHtml += `<span class="taxonomy-label">${taxonomy.label}:</span> `;
+                
+                
+                items.forEach((item, index) => {
+                    const slug = slugify(item);
+                    const url = `${taxonomy.urlPath}${slug}/`;
+                    allTagsHtml += `<a href="${url}" class="tag tag-${taxonomy.key}" title="View all items with ${item}">${item}</a>`;
+                    if (index < items.length - 1) {
+                        allTagsHtml += ' ';
+                    }
+                });
+                
+                allTagsHtml += '</div>';
+            }
+        });
+        
+        if (hasAnyTags) {
+            tagsContainer.innerHTML = `<div class="tags-container">${allTagsHtml}</div>`;
+            tagsContainer.style.display = 'block';
+            console.log("✅ Taxonomies displayed:", {
+                tags: options.tags?.length || 0,
+                ingredients: options.ingredients?.length || 0,
+                cookingmethods: options.cookingmethods?.length || 0,
+                types: options.types?.length || 0,
+                events: options.events?.length || 0
+            });
+        } else {
+            
+            tagsContainer.innerHTML = '';
+            tagsContainer.style.display = 'none';
+            console.log("ℹ️ No taxonomies to display");
+        }
+    }
+</script>
+
+</body>
+</html>

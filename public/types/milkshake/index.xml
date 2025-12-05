@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Milkshake on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/types/milkshake/</link>
+    <description>Recent content in Milkshake on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/types/milkshake/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Chocolate Milkshake</title>
+      <link>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</guid>
+      <description>&lt;p&gt;Chocolate ice cream, milk, chocolate syrup, whipped cream, sprinkles&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chocolate Oreo Milkshake</title>
+      <link>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-oreo-milkshake/</guid>
+      <description>&lt;p&gt;Chocolate ice cream, milk, Oreo cookies, chocolate syrup, whipped cream, crushed Oreo bits&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Oreo Milkshake</title>
+      <link>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/oreo-milkshake/</guid>
+      <description>&lt;p&gt;Vanilla ice cream, milk, Oreo cookies, whipped cream, crushed Oreo bits&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Strawberry Milkshake</title>
+      <link>https://tinytavern.ttmenus.com/drinks/strawberry-milkshake/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/strawberry-milkshake/</guid>
+      <description>&lt;p&gt;Strawberry ice cream, fresh strawberries, milk, whipped cream&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chocolate on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/ingredients/chocolate/</link>
+    <description>Recent content in Chocolate on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/ingredients/chocolate/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Affogato</title>
+      <link>https://tinytavern.ttmenus.com/drinks/affogato/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/affogato/</guid>
+      <description>&lt;p&gt;A scoop of ice cream mixed with a hot shot of coffee. Served with your choice of vanilla or chocolate ice cream.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chocolate Mocha</title>
+      <link>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-mocha/</guid>
+      <description>&lt;p&gt;The perfect balance of coffee and chocolate, topped with whipped cream and chocolate syrup&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Hot Chocolate</title>
+      <link>https://tinytavern.ttmenus.com/drinks/hot-chocolate/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/hot-chocolate/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Peppermint Chocolate</title>
+      <link>https://tinytavern.ttmenus.com/drinks/peppermint-chocolate/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/peppermint-chocolate/</guid>
+      <description>&lt;p&gt;This delicious chocolatey drink is infused with peppermint syrup and topped with whipped cream&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Salted Caramel Chocolate</title>
+      <link>https://tinytavern.ttmenus.com/drinks/salted-caramel-chocolate/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/salted-caramel-chocolate/</guid>
+      <description>&lt;p&gt;This delicious chocolatey drink is infused with salted caramel and topped with whipped cream&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

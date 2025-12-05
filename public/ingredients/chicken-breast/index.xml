@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chicken Breast on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/ingredients/chicken-breast/</link>
+    <description>Recent content in Chicken Breast on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/ingredients/chicken-breast/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Grilled Chicken Panini</title>
+      <link>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/paninis/grilled-chicken-panini/</guid>
+      <description>&lt;p&gt;This delicious panini is made with tender chicken breast, sweet corn, green peppers, and cheddar cheese sandwiched between two slices of multigrain bread.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

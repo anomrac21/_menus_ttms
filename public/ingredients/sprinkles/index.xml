@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sprinkles on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/ingredients/sprinkles/</link>
+    <description>Recent content in Sprinkles on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/ingredients/sprinkles/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Chocolate Milkshake</title>
+      <link>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/chocolate-milkshake/</guid>
+      <description>&lt;p&gt;Chocolate ice cream, milk, chocolate syrup, whipped cream, sprinkles&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

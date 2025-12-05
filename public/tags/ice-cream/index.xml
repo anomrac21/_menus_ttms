@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ice Cream on Tiny Tavern</title>
+    <link>https://tinytavern.ttmenus.com/tags/ice-cream/</link>
+    <description>Recent content in Ice Cream on Tiny Tavern</description>
+    <generator>Hugo</generator>
+    <language>en-tt</language>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://tinytavern.ttmenus.com/tags/ice-cream/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Affogato</title>
+      <link>https://tinytavern.ttmenus.com/drinks/affogato/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://tinytavern.ttmenus.com/drinks/affogato/</guid>
+      <description>&lt;p&gt;A scoop of ice cream mixed with a hot shot of coffee. Served with your choice of vanilla or chocolate ice cream.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

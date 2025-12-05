@@ -1,0 +1,32 @@
+:root {
+    --hero-bg-image-fg-color: #f4dec3;
+    --contact-info-bg: none;
+    --button-text-color2: #ffffff;
+    --main-bg-color: #f4dec3;
+    --menu-bg-color-1: #22273111;
+    --header-bordercolor-1: #dfeed4ff;
+    --modal-bg-container-color: #00000055;
+    --selected-button-color3: #fff;
+    --header-color: #000000ed;
+    --header-bg-color: #222731ee;
+    --selected-button-color4: #000000ee;
+    --button-color2: #000;
+    --header-bordercolor-2: #dfeed4ff;
+    --selected-text-color2: #fff;
+    --header-icon-color: #fefefe;
+    --menu-bg-color-2: #00000055;
+    --button-color1: #222731;
+    --selected-button-color2: #200;
+    --footer-text-color: #000;
+    --hero-text-color: #000;
+    --header-bg-image: none;
+    --button-text-color3: #fff;
+    --selected-text-color3: #85181c;
+    --selected-button-color1: #200;
+    --button-text-color1: #fefefe;
+    --main-text-color: #ffffff;
+    --main-bg: #000;
+    --footer-bg-color: #fefefe;
+    --selected-text-color1: #fff;
+    --hero-bg-color: #000000;
+}
