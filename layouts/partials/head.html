@@ -99,6 +99,9 @@
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously -->
 <link rel="stylesheet" href="{{ site.BaseURL}}css/colors.css"/>
 <link rel="stylesheet" href="{{ site.BaseURL}}css/custom.css"/>
+{{ if .Site.Params.notifications.enabled }}
+<link rel="stylesheet" href="{{ site.BaseURL}}css/notifications.css"/>
+{{ end }}
 <link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
 
 <!-- Non-critical CSS loaded with low priority -->
