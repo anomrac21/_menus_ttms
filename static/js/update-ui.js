@@ -6018,7 +6018,7 @@ const UpdateUI = {
             console.log(`📂 Full data:`, JSON.stringify(landingData, null, 2));
             
             const response = await UpdateUI.authenticatedFetch(
-              `${UpdateUI.apiConfig.getClientUrl()}/categories/${encodeURIComponent(categoryName)}/landing?push=false&sessionId=${sessionId}`,
+              `${UpdateUI.apiConfig.getClientUrl()}/categories/landing?category=${encodeURIComponent(categoryName)}&push=false&sessionId=${sessionId}`,
               {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
