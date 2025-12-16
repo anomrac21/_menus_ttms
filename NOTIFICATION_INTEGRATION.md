@@ -136,3 +136,4 @@ Edit `static/js/notify-client.js` to customize notification behavior.
 
 For detailed integration documentation, see the notification service documentation in your menu demo or notify-service repository.
 
+
