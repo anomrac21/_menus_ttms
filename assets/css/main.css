@@ -1348,9 +1348,11 @@ details[open] ul.all-hours {
     width: 90%!important;
     max-width: -webkit-fill-available;
     margin-inline:auto!important}
-.menu tr h3{
-    color:var(--button-text-color1) !important;
+
+.menu tr h3 {
+    color: var(--button-text-color1)!important
 }
+
 .headerstyle {
     background-image: none;
     background-size: 96% 86%;
@@ -2755,8 +2757,7 @@ details[open] ul.all-hours {
     height: 4em;
     background: linear-gradient(#d73301ee,#800000ee);
     display: flex;
-    padding-inline: .4em;
-    justify-content: space-between
+    padding-inline:.4em;justify-content: space-between
 }
 
 #dashboard .header a {
@@ -3188,7 +3189,8 @@ details[open] ul.all-hours {
 
 .singlepagemenu .prices {
     display: flex;
-    flex-wrap: wrap
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .singlepagemenu .prices li {
