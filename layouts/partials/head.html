@@ -64,7 +64,7 @@
 
 <!-- Preconnect to external domains for faster resource loading -->
 <link rel="preconnect" href="https://ct.ttmenus.com" crossorigin>
-<link rel="preconnect" href="https://cdn.onesignal.com" crossorigin>
+<link rel="preconnect" href="https://notify.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://analytics.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://code.jquery.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -156,39 +156,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+Oneanddisplay=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700anddisplay=swap" rel="stylesheet"> -->
 
+{{- if site.Params.notifications.enabled -}}
 <script>
-    if (typeof navigator.serviceWorker !== 'undefined') {
-        navigator.serviceWorker.register('{{ site.BaseURL}}OneSignalSDKWorker.js?v=2')
-        .then(function(registration) {
-        console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch(function(error) {
-        console.error('Service Worker registration failed:', error);
+    // Register service worker for background notifications
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('{{ site.BaseURL }}sw.js')
+                .then(function(registration) {
+                    console.log('✅ Service Worker registered with scope:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.error('❌ Service Worker registration failed:', error);
+                });
         });
     }
 </script>
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(function(OneSignal) {
-    const appId = "{{ site.Params.services.onesignalid }}";
-    
-    // Only initialize if appId is provided and valid (check if it's not empty and doesn't contain template syntax)
-    if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
-      OneSignal.init({
-        appId: appId,
-      }).catch(function(error) {
-        console.warn('OneSignal initialization error:', error.message);
-        // If there's an appId mismatch, we could clear the service worker
-        if (error.message.includes("AppID doesn't match")) {
-          console.log('OneSignal: AppID mismatch detected. Service worker may need to be cleared.');
-        }
-      });
-    } else {
-      console.warn('OneSignal: Invalid or missing appId, skipping initialization');
-    }
-  });
-</script>
+{{- end -}}
 <!-- Matomo Tag Manager - Deferred for performance -->
 <script>
   // Defer analytics initialization
@@ -264,4 +247,22 @@ window.SITE_CLIENT_ID = "{{ .Site.Params.clientID }}";
 <script src="{{ site.BaseURL }}js/auth-middleware.js"></script>
 <script src="{{ site.BaseURL }}js/auth-client-access.js"></script>
 <script src="{{ site.BaseURL }}js/admin-users.js"></script>
+{{- end -}}
+
+{{- if site.Params.notifications.enabled -}}
+<script>
+// Notification Service Configuration
+window.NOTIFY_CONFIG = {
+    enabled: {{ site.Params.notifications.enabled }},
+    apiUrl: "{{ site.Params.notifications.apiUrl }}",
+    websocketUrl: "{{ site.Params.notifications.websocketUrl }}",
+    serviceUrl: "{{ site.Params.notifications.serviceUrl }}",
+    clientDomain: window.location.hostname
+};
+
+// Site Config (for compatibility with existing notification code)
+window.SiteConfig = window.SiteConfig || {};
+window.SiteConfig.notifyServiceUrl = "{{ site.Params.notifications.serviceUrl }}";
+</script>
+<script src="{{ site.BaseURL }}js/notifications.js" defer></script>
 {{- end -}}

@@ -1118,13 +1118,6 @@ details[open] ul.all-hours {
 .contactinfo .locbtn {
 }
 
-.onesignal-customlink-container {
-    min-height: fit-content!important
-}
-
-.onesignal-customlink-container button {
-    font-size: x-small!important
-}
 
 .flickity-button {
     display: none

@@ -28,7 +28,7 @@ Integrated with Matomo analytics platform for complete business insights.
 ### 📱 Progressive Web App (PWA)
 - Installable on mobile and desktop
 - Offline support
-- Push notifications via OneSignal
+- Push notifications via TTMenus Notification Service
 
 ### 🛒 WhatsApp Ordering System
 - Multi-location support

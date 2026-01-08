@@ -153,9 +153,12 @@
 				<a id="btn_SubInfo" class="social btn" onclick="expandAppMenu();">
 					<img src="https://ct.ttmenus.com/icons/utilities/apple.svg" alt="Apple iOS">Install App
 				</a>
-				<a class="btn">
-					<div class="subbtn"><img src="https://ct.ttmenus.com/icons/utilities/bell.svg" alt="Subscribe"><div class='onesignal-customlink-container'></div></div>
+				{{- if site.Params.notifications.enabled -}}
+				<a id="subBtn" class="subbtn btn" onclick="toggleNotificationSubscription();" title="Subscribe to notifications">
+					<img src="https://ct.ttmenus.com/icons/utilities/bell.svg" alt="Subscribe">
+					<span id="subBtnText">Subscribe</span>
 				</a>
+				{{- end -}}
 				<a id="btn_install1" class="social btn installBtn hide" >
 					<img src="https://ct.ttmenus.com/icons/utilities/install.svg" alt="Install">Install App
 				</a>

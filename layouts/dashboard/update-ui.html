@@ -64,39 +64,22 @@
 
 
 
+{{- if site.Params.notifications.enabled -}}
 <script>
-    if (typeof navigator.serviceWorker !== 'undefined') {
-        navigator.serviceWorker.register('{{ site.BaseURL }}OneSignalSDKWorker.js?v=2')
-        .then(function(registration) {
-        console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch(function(error) {
-        console.error('Service Worker registration failed:', error);
+    // Register service worker for background notifications
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('{{ site.BaseURL }}sw.js')
+                .then(function(registration) {
+                    console.log('✅ Service Worker registered with scope:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.error('❌ Service Worker registration failed:', error);
+                });
         });
     }
 </script>
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(function(OneSignal) {
-    const appId = "{{ site.Params.services.onesignalid }}";
-    
-    // Only initialize if appId is provided and valid (check if it's not empty and doesn't contain template syntax)
-    if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
-      OneSignal.init({
-        appId: appId,
-      }).catch(function(error) {
-        console.warn('OneSignal initialization error:', error.message);
-        // If there's an appId mismatch, we could clear the service worker
-        if (error.message.includes("AppID doesn't match")) {
-          console.log('OneSignal: AppID mismatch detected. Service worker may need to be cleared.');
-        }
-      });
-    } else {
-      console.warn('OneSignal: Invalid or missing appId, skipping initialization');
-    }
-  });
-</script>
+{{- end -}}
 
 <script>
   var _mtm = window._mtm = window._mtm || [];
