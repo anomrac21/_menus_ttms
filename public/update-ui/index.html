@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Update Menu | Menu Demo</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+
+
+      <script src="/js/main.js"></script>
+
+<meta property="og:title" content="Update Menu | Menu Demo"/>
+
+
+ 
+   <meta property="og:image" content="/branding/favicon152.webp"/>
+
+
+
+<meta name="apple-mobile-web-app-title" content="Menu Demo">
+<meta name="description" content=" "/>
+<meta property="og:description" content=" Digital Menu"/>
+
+
+<meta property="og:url" content="http://localhost:1313/" />
+
+
+<meta name="theme-color" content="#000000"/>
+
+
+<link rel="stylesheet" href="http://localhost:1313/css/colors.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/custom.css"/>
+
+<link rel="stylesheet" href="http://localhost:1313/css/adsbase.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/apple.css"/>
+<link rel="stylesheet" href="http://localhost:1313/css/ordering-system.css"/>
+
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/>
+
+
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/>
+<link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/>
+
+
+
+<link rel="manifest" href="/manifest.json" />
+
+
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shortcut icon" sizes="16x16" href="/branding/favicon16.webp">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon.ico">
+<link rel="shortcut icon" sizes="196x196" href="/branding/favicon196.webp">
+<link rel="apple-touch-icon" href="/branding/favicon192.webp" />
+<link rel="shorcut icon" href="/branding/favicon512.webp"/>
+<link rel="apple-touch-icon-precomposed" href="/branding/favicon152.webp">
+
+
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+
+
+<script>
+    if (typeof navigator.serviceWorker !== 'undefined') {
+        navigator.serviceWorker.register('http:\/\/localhost:1313\/OneSignalSDKWorker.js?v=2')
+        .then(function(registration) {
+        console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(function(error) {
+        console.error('Service Worker registration failed:', error);
+        });
+    }
+</script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function(OneSignal) {
+    const appId = "";
+    
+    
+    if (appId && appId.trim() !== "" && appId.indexOf("{" + "{") === -1) {
+      OneSignal.init({
+        appId: appId,
+      }).catch(function(error) {
+        console.warn('OneSignal initialization error:', error.message);
+        
+        if (error.message.includes("AppID doesn't match")) {
+          console.log('OneSignal: AppID mismatch detected. Service worker may need to be cleared.');
+        }
+      });
+    } else {
+      console.warn('OneSignal: Invalid or missing appId, skipping initialization');
+    }
+  });
+</script>
+
+<script>
+  var _mtm = window._mtm = window._mtm || [];
+  _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+  (function() {
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+
+
+<script>
+  var _paq = window._paq = window._paq || [];
+
+   
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+  _paq.push(["setCookieDomain", "*.ttmenus.com"]);
+  _paq.push(["setDomains", ["*.ttmenus.com"]]);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+
+   
+  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '5']);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+
+  (function() {
+    var u="//analytics.ttmenus.com/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
+
+
+
+<script src="http://localhost:1313/js/analytics-tracking.js"></script><script>
+
+window.AUTH_CONFIG = {
+    apiUrl: "https:\/\/auth.ttmenus.com\/api\/v1"
+};
+
+
+window.UPDATE_API_URL = "https:\/\/content.ttmenus.com\/api";
+window.CLIENT_ID = "ttms_passagetoasia";
+
+
+window.hugoStaticImages = [];
+
+
+window.hugoSiteConfig = {
+  title: "\"Passage to Asia Restaurant \\u0026 Catering\"",
+  baseURL: "\"http://localhost:1313/\"",
+  languageCode: "\"en-tt\"",
+  params: {
+    social: {
+      facebook: "\"\"",
+      instagram: "\"\"",
+      tiktok: "\"\"",
+      youtube: "\"\"",
+      email: "\"interflavors@gmail.com\"",
+      phone: "\"18686718709\""
+    },
+    orderingsystem: {
+      whatsapp: "\"18686718709\"",
+      vat:  0 ,
+      servicecharge:  0 ,
+      hastables:  true 
+    }
+  }
+};
+</script>
+<script src="http://localhost:1313/js/auth-client.js"></script>
+<script src="http://localhost:1313/js/auth-middleware.js"></script>
+<script src="http://localhost:1313/js/admin-users.js"></script>
+  <link rel="stylesheet" href="http://localhost:1313/css/auth.css">
+  <link rel="stylesheet" href="http://localhost:1313/css/update-ui.css">
+  
+  <style>
+     
+    .icon-category-tab {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .icon-category-tab:hover {
+      background: #4b5563 !important;
+      color: #f3f4f6 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .icon-category-tab.active:hover {
+      background: #2563eb !important;
+      color: white !important;
+    }
+    
+     
+    .icon-card {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .icon-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+     
+    #iconGallery::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #iconGallery::-webkit-scrollbar-track {
+      background: #111827;
+      border-radius: 4px;
+    }
+    
+    #iconGallery::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 4px;
+    }
+    
+    #iconGallery::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+    
+     
+    #iconSearchInput:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="dashboard-container">
+    
+    <div class="dashboard-header">
+  
+  <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+    <span class="hamburger-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </button>
+  
+  
+  <div class="dashboard-brand">
+    📋 Dashboard
+  </div>
+  
+  
+  <nav class="dashboard-nav" id="dashboardNav">
+    <a href="/update-ui/" class="dashboard-nav-link active">
+      <span class="nav-icon">📋</span>
+      <span class="nav-text">Dashboard</span>
+    </a>
+    <a href="/admin/users/" class="dashboard-nav-link ">
+      <span class="nav-icon">👥</span>
+      <span class="nav-text">Users</span>
+    </a>
+  </nav>
+  
+  
+  <div class="dashboard-user">
+    <div class="user-info">
+      <span class="user-name" data-user-name title="User account">Loading...</span>
+      <span class="user-email" data-user-email></span>
+    </div>
+    <button class="btn-logout" data-logout aria-label="Logout">
+      <span class="logout-icon">🚪</span>
+      <span class="logout-text">Logout</span>
+    </button>
+  </div>
+</div>
+
+<script>
+
+function toggleMobileMenu() {
+  const nav = document.getElementById('dashboardNav');
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  const isOpen = nav.classList.contains('mobile-open');
+  
+  if (isOpen) {
+    nav.classList.remove('mobile-open');
+    toggle.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+  } else {
+    nav.classList.add('mobile-open');
+    toggle.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+}
+
+
+document.addEventListener('click', (e) => {
+  const nav = document.getElementById('dashboardNav');
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  
+  if (!nav || !toggle) return;
+  
+  if (!nav.contains(e.target) && !toggle.contains(e.target) && nav.classList.contains('mobile-open')) {
+    nav.classList.remove('mobile-open');
+    toggle.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+});
+
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth >= 768) {
+    const nav = document.getElementById('dashboardNav');
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    if (nav && toggle) {
+      nav.classList.remove('mobile-open');
+      toggle.classList.remove('active');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  }
+});
+</script>
+<style>
+ 
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 24px;
+}
+
+.hamburger-icon span {
+  display: block;
+  height: 2px;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-toggle.active .hamburger-icon span:nth-child(1) {
+  transform: rotate(45deg) translate(3px, 3px);
+}
+
+.mobile-menu-toggle.active .hamburger-icon span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-menu-toggle.active .hamburger-icon span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+ 
+
+ 
+
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+
+
+
+
+ 
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.logout-icon {
+  font-size: 1rem;
+}
+
+ 
+.dashboard-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.nav-icon {
+  font-size: 1.125rem;
+}
+
+.nav-text {
+  font-size: 0.9375rem;
+}
+
+ 
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block;
+  } 
+  
+  .dashboard-nav {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #5a6996 0%, #2b3140 100%);
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .dashboard-nav.mobile-open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  .dashboard-nav-link {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+  }
+  
+  .dashboard-nav-link.active {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  
+  .user-info {
+    align-items: flex-start;
+  }
+  
+  
+  .btn-logout {
+    padding: 0.625rem 1.25rem;
+  }
+  
+  .logout-text {
+    display: none;
+  }
+}
+
+ 
+
+
+ 
+@media (min-width: 769px) {
+  .logout-text {
+    display: inline;
+  }
+  
+  .nav-icon {
+    font-size: 1rem;
+  }
+}
+</style>
+
+
+
+
+    
+    <div class="tab-navigation">
+      <button class="tab-btn active" data-tab="pending" id="pendingTabBtn">
+        <span>📋 Pending Changes</span>
+        <span id="pendingTabCount" class="pending-count-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="homepage">🏠 Home Page</button>
+      <button class="tab-btn" data-tab="menu-items">Menu Items</button>
+      <button class="tab-btn" data-tab="advertisements">Advertisements</button>
+      <button class="tab-btn" data-tab="locations">Locations</button>
+      <button class="tab-btn" data-tab="branding">Branding</button>
+      <button class="tab-btn" data-tab="colors">Colors & Theme</button>
+      <button class="tab-btn" data-tab="config">Configuration</button>
+      <button class="tab-btn" data-tab="housekeeping">🧹 Housekeeping</button>
+    </div>
+
+    
+    <div class="dashboard-content">
+      
+      
+      
+      <div class="tab-content active" data-tab-content="pending">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">📋 Pending Changes</h2>
+              <p>Review all draft changes before publishing to the live site.</p>
+            </div>
+            <div class="section-header-actions" id="pendingActions" style="display: none;">
+              <button class="btn btn-secondary" onclick="UpdateUI.discardAllDraftsGlobal()">🔄 Discard All</button>
+              <button class="btn btn-success" onclick="UpdateUI.publishAllChanges()">✅ Publish All Changes</button>
+            </div>
+      </div>
+          
+          <div id="pendingSummary">
+            <div class="loading">Loading pending changes...</div>
+        </div>
+      </div>
+    </div>
+
+      
+      <div class="tab-content" data-tab-content="menu-items">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Menu Items</h2>
+              <p>Changes are saved as drafts. Click "Publish" to commit to live site.</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardMenuItems" onclick="UpdateUI.discardAllDrafts('menuItems')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-primary" onclick="openMenuItemModal()">+ Add Item</button>
+        </div>
+      </div>
+
+          <div class="form-group">
+            <input type="text" class="form-input" id="searchItems" placeholder="Search across all categories and items...">
+          </div>
+          
+          <div id="menuItemsList">
+            <div class="loading">Loading complete menu...</div>
+          </div>
+          </div>
+        </div>
+
+      
+      
+      <div class="tab-content" data-tab-content="advertisements">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Advertisements</h2>
+              <p>Manage promotional ads, daily specials, and announcements. Changes saved as drafts.</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardAdvertisements" onclick="UpdateUI.discardAllDrafts('advertisements')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-primary" onclick="openAdModal()">+ Add Advertisement</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <input type="text" class="form-input" id="searchAds" placeholder="Search advertisements...">
+        </div>
+
+          <div id="advertisementsList">
+            <div class="loading">Loading advertisements...</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="locations">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Locations</h2>
+              <p>Manage your restaurant locations. Changes saved as drafts.</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardLocations" onclick="UpdateUI.discardAllDrafts('locations')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-primary" onclick="openLocationModal()">+ Add Location</button>
+            </div>
+          </div>
+
+          <div id="locationsList">
+            <div class="loading">Loading locations...</div>
+          </div>
+            </div>
+          </div>
+
+      
+      
+      <div class="tab-content" data-tab-content="homepage">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">🏠 Home Page Settings</h2>
+              <p>Manage hero image and photo galleries on your home page</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardHomePage" onclick="discardHomePageDraft()" style="display: none;">🔄 Discard Draft</button>
+              <button class="btn btn-primary" onclick="saveHomePageSettings()">💾 Save as Draft</button>
+            </div>
+          </div>
+
+          <div class="homepage-settings">
+            
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">🏷️</span>
+                  Site Title & Hero Image
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <div class="form-group">
+                  <label class="form-label">Site Title</label>
+                  <input type="text" class="form-input" id="siteTitle" placeholder="Menu Demo">
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                  <label class="form-label">Hero/Main Image</label>
+                  <div id="heroImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+                    <div id="heroImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                      <span style="color: #9ca3af;">No image selected</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                      <button type="button" class="btn btn-secondary" onclick="selectHeroImage()" style="flex: 1;">📁 Choose from Library</button>
+                      <button type="button" class="btn btn-primary" onclick="uploadHeroImage()" style="flex: 1;">📤 Upload New Image</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">📱</span>
+                  Social Media & Contact
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <div style="margin-top: 1rem;">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #1877F2;">📘</span> Facebook
+                  </label>
+                  <input type="text" class="form-input" id="socialFacebook" placeholder="https://facebook.com/yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #E4405F;">📷</span> Instagram
+                  </label>
+                  <input type="text" class="form-input" id="socialInstagram" placeholder="https://instagram.com/yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #000000;">🎵</span> TikTok
+                  </label>
+                  <input type="text" class="form-input" id="socialTiktok" placeholder="https://tiktok.com/@yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #FF0000;">📺</span> YouTube
+                  </label>
+                  <input type="text" class="form-input" id="socialYoutube" placeholder="https://youtube.com/@yourpage">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>📧</span> Email
+                  </label>
+                  <input type="email" class="form-input" id="socialEmail" placeholder="contact@example.com">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>📞</span> Phone
+                  </label>
+                  <input type="tel" class="form-input" id="socialPhone" placeholder="18687060349">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <span style="color: #25D366;">💬</span> WhatsApp
+                  </label>
+                  <input type="tel" class="form-input" id="orderingWhatsapp" placeholder="18687060349">
+                </div>
+              </div>
+                </div>
+              </div>
+            </div>
+
+            
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">📝</span>
+                  Page Content
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Write content for your home page (supports Markdown)</p>
+                <div class="form-group">
+                  <textarea class="form-textarea" id="homePageContent" placeholder="Write your home page content here... Supports Markdown formatting." style="min-height: 200px; font-family: 'Consolas', 'Monaco', monospace;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">🖼️</span>
+                  Featured Images Gallery
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Select images to display in the featured section</p>
+              <div id="featuredImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="addFeaturedImage()" style="flex: 1;">📁 Choose from Library</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFeaturedImage()" style="flex: 1;">📤 Upload New Image</button>
+              </div>
+              </div>
+            </div>
+
+            
+            <div class="collapsible-section">
+              <div class="collapsible-header" onclick="toggleSection(this)">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="collapse-icon">▼</span>
+                  <span style="font-size: 1.25rem;">📸</span>
+                  Client Tour Images
+                </h3>
+              </div>
+              <div class="collapsible-content">
+                <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Images for the virtual tour/gallery</p>
+                <div id="tourImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                  
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button type="button" class="btn btn-secondary" onclick="addTourImage()" style="flex: 1;">📁 Choose from Library</button>
+                  <button type="button" class="btn btn-primary" onclick="uploadTourImage()" style="flex: 1;">📤 Upload New Image</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+            </div>
+          </div>
+
+      
+      <div class="tab-content" data-tab-content="branding">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Branding Assets</h2>
+              <p>Manage your logos, favicons, and brand images from /branding/</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" id="discardBranding" onclick="UpdateUI.discardAllDrafts('branding')" style="display: none;">🔄 Discard All</button>
+              <button class="btn btn-success" id="publishBranding" onclick="UpdateUI.publishBrandingImages()" style="display: none;">✅ Publish Changes</button>
+            </div>
+            </div>
+          
+          <div id="brandingImagesList">
+            <div class="loading">Loading branding images...</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="colors">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">Color Scheme</h2>
+              <p>Customize your menu's color palette. Changes are saved as drafts locally.</p>
+            </div>
+            <button class="btn btn-secondary" id="discardColors" onclick="UpdateUI.discardAllDrafts('colors')" style="display: none;">🔄 Discard All</button>
+          </div>
+          
+          <div class="alert alert-info spacing-bottom">
+            <strong>How it works:</strong> Edit colors below (saved automatically as draft). Click "Publish Colors" to save changes. Your site will update automatically.
+          </div>
+          
+          <div id="colorInputs">
+            <div class="loading">Loading colors...</div>
+          </div>
+          
+          <div class="action-buttons" id="colorActions" style="display: none;">
+            <button class="btn btn-success" onclick="saveColors()">Publish Colors</button>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="config">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title">⚙️ Configuration</h2>
+              <p>Manage your app configuration and integrations</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-primary" onclick="saveManifestSettings()">💾 Save Manifest</button>
+            </div>
+          </div>
+
+          <div class="section-body">
+        
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection(this)">
+            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="collapse-icon">▼</span>
+              <span style="font-size: 1.25rem;">📱</span>
+              PWA Manifest Settings
+            </h3>
+          </div>
+          <div class="collapsible-content">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">App Name</label>
+                <input type="text" class="form-input" id="manifestName" placeholder="My Restaurant">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Short Name</label>
+                <input type="text" class="form-input" id="manifestShortName" placeholder="Restaurant">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="manifestDescription" placeholder="A delicious dining experience..." style="min-height: 80px;"></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Theme Color</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="color" id="manifestThemeColor" style="width: 60px; height: 40px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">
+                  <input type="text" class="form-input" id="manifestThemeColorText" placeholder="#667eea" style="flex: 1;">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Background Color</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="color" id="manifestBgColor" style="width: 60px; height: 40px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">
+                  <input type="text" class="form-input" id="manifestBgColorText" placeholder="#ffffff" style="flex: 1;">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label class="form-label">Start URL</label>
+              <input type="text" class="form-input" id="manifestStartUrl" placeholder="/">
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label class="form-label">Display Mode</label>
+              <select class="form-select" id="manifestDisplay">
+                <option value="standalone">Standalone (App-like)</option>
+                <option value="fullscreen">Fullscreen</option>
+                <option value="minimal-ui">Minimal UI</option>
+                <option value="browser">Browser</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="display: none;">
+              <label class="form-label">Orientation</label>
+              <select class="form-select" id="manifestOrientation">
+                <option value="any">Any</option>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        
+        <div class="collapsible-section">
+          <div class="collapsible-header" onclick="toggleSection(this)">
+            <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="collapse-icon">▼</span>
+              <span style="font-size: 1.25rem;">💳</span>
+              Point of Sale Integration
+            </h3>
+          </div>
+          <div class="collapsible-content">
+            <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Connect your POS system for seamless order management</p>
+            <div class="alert alert-info" style="text-align: center; padding: 3rem 2rem;">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">🚧</div>
+              <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: 600;">Under Development</h3>
+              <p style="margin: 0; color: #6b7280;">Point of Sale integration features are currently being developed and will be available soon.</p>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="tab-content" data-tab-content="housekeeping">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-header-info">
+              <h2 class="section-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.75rem;">🧹</span>
+                Image Housekeeping
+              </h2>
+              <p>Manage your image library - identify and remove unused images</p>
+            </div>
+            <div class="section-header-actions">
+              <button class="btn btn-secondary" onclick="scanImageUsage()">🔍 Scan Images</button>
+              <button class="btn btn-danger" id="deleteSelectedBtn" onclick="deleteSelectedImages()" style="display: none;">🗑️ Delete Selected</button>
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div id="housekeepingContent">
+              <div class="alert alert-info" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+                <p style="margin: 0; font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Ready to Scan</p>
+                <p style="margin: 0; color: #6b7280;">Click "🔍 Scan Images" to analyze your image library and find unused images.</p>
+              </div>
+            </div>
+
+            
+            <div id="imageUsageResults" style="display: none;">
+              
+              <div class="grid-2" style="margin-bottom: 2rem;">
+                <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                  <div style="font-size: 2rem; font-weight: 700;" id="totalImagesCount">0</div>
+                  <div style="opacity: 0.9;">Total Images</div>
+                </div>
+                <div style="padding: 1.5rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; color: white;">
+                  <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+                  <div style="font-size: 2rem; font-weight: 700;" id="unusedImagesCount">0</div>
+                  <div style="opacity: 0.9;">Unused Images</div>
+                </div>
+              </div>
+
+              
+              <div class="collapsible-section">
+                <div class="collapsible-header" onclick="toggleSection(this)">
+                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="collapse-icon">▼</span>
+                    <span style="font-size: 1.25rem;">⚠️</span>
+                    Unused Images (<span id="unusedCount">0</span>)
+                  </h3>
+                </div>
+                <div class="collapsible-content">
+                  <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">These images are not currently used in menu items, advertisements, or home page. Select images to flag for deletion.</p>
+                  
+                  <div style="margin-bottom: 1rem;">
+                    <label class="checkbox-label">
+                      <input type="checkbox" id="selectAllUnused" onchange="toggleSelectAllUnused()">
+                      <span style="font-weight: 600;">Select All Unused Images</span>
+                    </label>
+                  </div>
+
+                  <div id="unusedImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                    
+                  </div>
+                </div>
+              </div>
+
+              
+              <div class="collapsible-section">
+                <div class="collapsible-header" onclick="toggleSection(this)">
+                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="collapse-icon">▼</span>
+                    <span style="font-size: 1.25rem;">✅</span>
+                    Used Images (<span id="usedCount">0</span>)
+                  </h3>
+                </div>
+                <div class="collapsible-content">
+                  <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">These images are currently in use and should not be deleted.</p>
+                  <div id="usedImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <div class="modal" id="menuItemModal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="menuItemModalTitle">Add Menu Item</h3>
+        <button class="btn-close" onclick="closeMenuItemModal()">&times;</button>
+      </div>
+      <form id="menuItemForm" onsubmit="saveMenuItem(event)">
+        <input type="hidden" id="itemId">
+        <input type="hidden" id="itemCategory">
+        
+        
+        <h4 class="form-section-title">📝 Basic Information</h4>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select class="form-select" id="itemCategorySelect" required></select>
+          </div>
+          
+          <div class="form-group" style="display: none;">
+            <label class="form-label">Weight (display order)</label>
+            <input type="number" class="form-input" id="itemWeight" min="0" value="0">
+            <small class="form-helper">Use â†‘â†“ buttons to reorder items</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-input" id="itemTitle" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea class="form-textarea" id="itemDescription" rows="3" required></textarea>
+        </div>
+        
+        
+        <h4 class="form-section-title">💰 Pricing</h4>
+        <div id="pricesContainer">
+          
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addPriceEntry()">+ Add Another Price</button>
+        
+        
+        <h4 class="form-section-title">🖼️ Images</h4>
+        <div id="imagesContainer">
+          
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addImageEntry()">+ Add Another Image</button>
+        
+        
+        <h4 class="form-section-title">Classifications</h4>
+        
+        <div class="form-group">
+          <label class="form-label">Tags</label>
+          <div class="tags-container" id="tagsContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="tagInput" placeholder="Add a tag (e.g., Main, Sushi, Special)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('tags');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('tags')">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Ingredients</label>
+          <div class="tags-container" id="ingredientsContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="ingredientInput" placeholder="Add an ingredient (e.g., Chicken, Shrimp)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('ingredients');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('ingredients')">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Cooking Methods</label>
+          <div class="tags-container" id="cookingMethodsContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="cookingMethodInput" placeholder="Add a cooking method (e.g., Grilled, Fried)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('cookingmethods');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('cookingmethods')">+ Add</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Types</label>
+          <div class="tags-container" id="typesContainer"></div>
+          <div class="tag-input-group">
+            <input type="text" class="form-input" id="typeInput" placeholder="Add a type (e.g., Asian, Japanese)" onkeypress="if(event.key==='Enter'){event.preventDefault();addTag('types');}">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addTag('types')">+ Add</button>
+          </div>
+        </div>
+        
+        
+        <h4 class="form-section-title">Side Categories (Optional)</h4>
+        <p class="form-helper">For combo items that allow customers to choose sides</p>
+        
+        <div id="sideCategoriesContainer"></div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addSideCategory()">+ Add Side Category</button>
+        
+        <div class="modal-form-actions">
+          <button type="submit" class="btn btn-success">💾 Save Item</button>
+          <button type="button" class="btn btn-secondary" onclick="closeMenuItemModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <div class="modal" id="locationModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="locationModalTitle">Add Location</h3>
+        <button class="btn-close" onclick="closeLocationModal()">&times;</button>
+      </div>
+      <form id="locationForm" onsubmit="saveLocation(event)">
+        <input type="hidden" id="locationIndex">
+        
+        <div class="form-group">
+          <label class="form-label">Address *</label>
+          <input type="text" class="form-input" id="locationAddress" required>
+        </div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">City *</label>
+            <input type="text" class="form-input" id="locationCity" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Island *</label>
+            <input type="text" class="form-input" id="locationIsland" required>
+          </div>
+        </div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" id="locationPhone">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">WhatsApp</label>
+            <input type="tel" class="form-input" id="locationWhatsapp">
+          </div>
+        </div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" class="form-input" id="locationLat" step="any">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" class="form-input" id="locationLon" step="any">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()" style="width: 100%;">
+            📍 Use My Current Location
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Subcategories (comma separated)</label>
+          <input type="text" class="form-input" id="locationSubcategories" placeholder="Restaurant, Bar">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Ordering Tables (comma separated)</label>
+          <input type="text" class="form-input" id="locationOrderingTables" placeholder="Takeaway Only, Dine In">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">FoodDrop URL</label>
+          <input type="url" class="form-input" id="locationFoodDrop" placeholder="https://fooddropcaribbean.com/...">
+        </div>
+        
+        <h4 class="form-section-title">🕐 Opening Hours</h4>
+        
+        <div class="form-group">
+          <label class="form-label">General Mode</label>
+          <select class="form-select" id="locationHoursMode">
+            <option value="Auto">Auto (Set specific hours below)</option>
+            <option value="AlwaysOpen">Always Open (24/7)</option>
+            <option value="AlwaysClosed">Always Closed</option>
+          </select>
+        </div>
+        
+        <div id="openingHoursTimeline" style="background: white; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #e5e7eb; max-height: 80vh; overflow-y: auto;">
+          
+          <div class="weekly-timeline">
+            
+            <div class="timeline-actions" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm btn-danger" onclick="clearAllTimeBlocks()">Clear All</button>
+          </div>
+          
+            
+            <div class="continuous-week-grid" style="display: grid; grid-template-columns: 80px 1fr; background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+              
+              <div class="day-labels-column" style="background: #f9fafb; border-right: 2px solid #e5e7eb;">
+                
+                <div class="day-header" style="background: #ef4444; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">📝´ MON</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f97316; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">TUE</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f59e0b; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">WED</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #10b981; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">THU</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #3b82f6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">FRI</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SAT</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #ec4899; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SUN</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                
+                
+                <div class="day-header" style="background: #ef4444; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white; border-top: 3px dashed rgba(59, 130, 246, 0.3);">📝´ MON</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f97316; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">TUE</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f59e0b; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">WED</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #10b981; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">THU</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #3b82f6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">FRI</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SAT</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #ec4899; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SUN</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                
+                
+                <div class="day-header" style="background: #ef4444; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white; border-top: 3px dashed rgba(59, 130, 246, 0.3);">📝´ MON</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f97316; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">TUE</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #f59e0b; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">WED</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #10b981; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">THU</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #3b82f6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">FRI</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SAT</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+                <div class="day-header" style="background: #ec4899; color: white; font-weight: 600; font-size: 0.75rem; padding: 0.5rem; text-align: center; border-bottom: 2px solid white;">SUN</div><div class="day-hours"><div class="hour-label">12am</div><div class="hour-label">1am</div><div class="hour-label">2am</div><div class="hour-label">3am</div><div class="hour-label">4am</div><div class="hour-label">5am</div><div class="hour-label">6am</div><div class="hour-label">7am</div><div class="hour-label">8am</div><div class="hour-label">9am</div><div class="hour-label">10am</div><div class="hour-label">11am</div><div class="hour-label">12pm</div><div class="hour-label">1pm</div><div class="hour-label">2pm</div><div class="hour-label">3pm</div><div class="hour-label">4pm</div><div class="hour-label">5pm</div><div class="hour-label">6pm</div><div class="hour-label">7pm</div><div class="hour-label">8pm</div><div class="hour-label">9pm</div><div class="hour-label">10pm</div><div class="hour-label">11pm</div></div>
+          </div>
+          
+              
+              <div class="week-track" onclick="addTimeBlockAtClick(event)" style="position: relative; background: white; cursor: crosshair; min-height: 15876px;">
+                
+                <div class="time-blocks-container" id="timeBlocks_all" style="position: relative; height: 15876px;">
+                  
+                  <div id="timeBlocks_mon" class="day-blocks" data-day="mon" data-offset="5292"></div>
+                  <div id="timeBlocks_tue" class="day-blocks" data-day="tue" data-offset="6048"></div>
+                  <div id="timeBlocks_wed" class="day-blocks" data-day="wed" data-offset="6804"></div>
+                  <div id="timeBlocks_thu" class="day-blocks" data-day="thu" data-offset="7560"></div>
+                  <div id="timeBlocks_fri" class="day-blocks" data-day="fri" data-offset="8316"></div>
+                  <div id="timeBlocks_sat" class="day-blocks" data-day="sat" data-offset="9072"></div>
+                  <div id="timeBlocks_sun" class="day-blocks" data-day="sun" data-offset="9828"></div>
+                  
+                  <div class="week-loop-divider" style="position: absolute; left: 0; right: 0; top: 5292px; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); opacity: 0.3;"></div>
+                  <div class="week-loop-divider" style="position: absolute; left: 0; right: 0; top: 10584px; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); opacity: 0.3;"></div>
+              </div>
+            </div>
+              </div>
+          </div>
+        </div>
+        
+        <div class="modal-form-actions">
+          <button type="submit" class="btn btn-success">💾 Save Location</button>
+          <button type="button" class="btn btn-danger" id="deleteLocationBtn" onclick="deleteLocation()" style="display: none;">🗑️ Delete Location</button>
+          <button type="button" class="btn btn-secondary" onclick="closeLocationModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <div class="modal" id="adModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="adModalTitle">Add Advertisement</h3>
+        <button class="btn-close" onclick="closeAdModal()">&times;</button>
+      </div>
+      <form id="adForm" onsubmit="saveAd(event)">
+        <input type="hidden" id="adId">
+        
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-input" id="adTitle" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="adDescription"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Link URL (optional)</label>
+          <input type="text" class="form-input" id="adLink" placeholder="/specials/your-special/" oninput="validateAdLink(this)">
+          <small class="form-helper" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+            <span id="adLinkValidation" style="font-size: 0.75rem;"></span>
+          </small>
+        </div>
+        
+        <div class="form-group" style="display: none;">
+          <label class="form-label">Weight (display order)</label>
+          <input type="number" class="form-input" id="adWeight" min="0" value="1">
+          <small class="form-helper">Use â†‘â†“ buttons to reorder advertisements</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="adRecurring">
+            <span class="form-label">Recurring Advertisement</span>
+          </label>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Days of Week</label>
+          <div id="adDaysOfWeekContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Monday">
+              <span>Monday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Tuesday">
+              <span>Tuesday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Wednesday">
+              <span>Wednesday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Thursday">
+              <span>Thursday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Friday">
+              <span>Friday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Saturday">
+              <span>Saturday</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="adDaysOfWeek" value="Sunday">
+              <span>Sunday</span>
+            </label>
+          </div>
+          <small class="form-helper">Leave unchecked for all days</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Locations</label>
+          <div id="adLocationsContainer" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+            
+          </div>
+          <small class="form-helper">Leave unchecked for all locations</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Image</label>
+          <input type="hidden" id="adImageCurrent">
+          <input type="file" class="form-input" id="adImage" accept="image/*" style="display: none;">
+          
+          
+          <div id="adImagePreview" style="display: none; margin-top: 0.5rem; padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
+            <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0; font-weight: 600;">Current Image:</p>
+            <img id="adImagePreviewImg" src="" alt="Advertisement image" style="max-width: 100%; max-height: 200px; border-radius: 4px; display: block; margin: 0 auto;">
+            <p id="adImagePath" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; word-break: break-all;"></p>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="selectAdImageFromLibrary()" style="flex: 1;">📁 Choose from Library</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('adImage').click()" style="flex: 1;">📤 Upload New Image</button>
+          </div>
+          <small class="form-helper">Accepts: JPEG, PNG, WEBP, GIF</small>
+        </div>
+        
+        <div class="modal-form-actions">
+          <button type="submit" class="btn btn-success">Save Advertisement</button>
+          <button type="button" class="btn btn-secondary" onclick="closeAdModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <div class="modal" id="categoryModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Category</h3>
+        <button class="btn-close" onclick="closeCategoryModal()">&times;</button>
+      </div>
+      <form id="categoryForm" onsubmit="saveCategory(event)">
+        <input type="hidden" id="categoryOriginalName">
+        
+        <h3 class="form-section-title">📋 Navigation</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" class="form-input" id="categoryName" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Icon URL</label>
+          <input type="text" class="form-input" id="categoryIconUrl" placeholder="https://example.com/icon.webp" style="display: none;">
+          
+          
+          <div id="iconPreview" style="margin-top: 0.5rem; margin-inline: auto; padding: 1rem; background: #1e293b; border-radius: 8px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px;">
+            <img id="iconPreviewImg" src="" alt="Icon preview" style="max-width: 64px; max-height: 64px; display: none; margin: auto;">
+            <p id="iconPreviewPlaceholder" style="color: #94a3b8; margin: 0;">No icon selected</p>
+          </div>
+          
+          
+          <details style="margin-top: 1rem;" ontoggle="if(this.open) { populateIconGallery(); } else { iconGalleryManager.disconnect(); }" id="iconGalleryDetails">
+            <summary style="cursor: pointer; font-weight: 500; padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">📚 Choose from icon gallery (<span id="iconCount">0</span> icons)</summary>
+            
+            <div style="margin-top: 1rem; background: #1e293b; border-radius: 8px; padding: 1rem;">
+              
+              <div style="margin-bottom: 1rem;">
+                <input 
+                  type="text" 
+                  id="iconSearchInput" 
+                  placeholder="🔍 Search icons..." 
+                  style="width: 100%; padding: 0.5rem; border: 1px solid #374151; border-radius: 6px; background: #111827; color: #f9fafb; font-size: 0.875rem;"
+                  oninput="searchIcons(this.value)">
+              </div>
+              
+              
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid #374151;">
+                <button type="button" class="icon-category-tab active" data-category="all" onclick="filterIconsByCategory('all')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #3b82f6; color: white; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">All</button>
+                <button type="button" class="icon-category-tab" data-category="food" onclick="filterIconsByCategory('food')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🍕 Food</button>
+                <button type="button" class="icon-category-tab" data-category="drink" onclick="filterIconsByCategory('drink')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🍹 Drink</button>
+                <button type="button" class="icon-category-tab" data-category="white" onclick="filterIconsByCategory('white')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">⚪ White</button>
+                <button type="button" class="icon-category-tab" data-category="black" onclick="filterIconsByCategory('black')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">⚫ Black</button>
+                <button type="button" class="icon-category-tab" data-category="activities" onclick="filterIconsByCategory('activities')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🎮 Activities</button>
+                <button type="button" class="icon-category-tab" data-category="utilities" onclick="filterIconsByCategory('utilities')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔧 Utilities</button>
+                <button type="button" class="icon-category-tab" data-category="socialmedia" onclick="filterIconsByCategory('socialmedia')" style="padding: 0.375rem 0.75rem; border: none; border-radius: 6px; background: #374151; color: #9ca3af; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">📱 Social</button>
+              </div>
+              
+              
+              <div id="iconGallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+          </details>
+        </div>
+        
+        <div class="form-group" style="display: none;">
+          <label class="form-label">Weight (display order)</label>
+          <input type="number" class="form-input" id="categoryWeight" min="0" value="0">
+          <small class="form-helper">Use â†‘â†“ buttons to reorder categories</small>
+        </div>
+        
+        <h3 class="form-section-title">🎨 Landing Page</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Hero Image</label>
+          <input type="hidden" id="categoryHeroImageCurrent">
+          <input type="hidden" id="categoryHeroImage">
+          
+          <div id="categoryHeroImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+            <div id="categoryHeroImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <p style="color: #9ca3af; font-size: 0.875rem;">No hero image selected</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary" onclick="selectCategoryHeroImage()" style="flex: 1;">📁 Choose from Library</button>
+              <button type="button" class="btn btn-primary" onclick="uploadCategoryHeroImage()" style="flex: 1;">📤 Upload New Image</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Slide-in Image</label>
+          <input type="hidden" id="categorySlideImageCurrent">
+          <input type="hidden" id="categorySlideImage">
+          
+          <div id="categorySlideImageContainer" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+            <div id="categorySlideImagePreview" style="margin-bottom: 0.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <p style="color: #9ca3af; font-size: 0.875rem;">No slide-in image selected</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary" onclick="selectCategorySlideImage()" style="flex: 1;">📁 Choose from Library</button>
+              <button type="button" class="btn btn-primary" onclick="uploadCategorySlideImage()" style="flex: 1;">📤 Upload New Image</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Slide Direction</label>
+          <select class="form-input" id="categorySlideDirection">
+            <option value="">None</option>
+            <option value="left">Slide from Left</option>
+            <option value="right">Slide from Right</option>
+            <option value="top">Slide from Top</option>
+            <option value="bottom">Slide from Bottom</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Body Content (Markdown)</label>
+          <textarea class="form-textarea" id="categoryBody" placeholder="Enter category description in Markdown format..." style="min-height: 150px;"></textarea>
+          <small class="form-helper">Supports Markdown formatting</small>
+        </div>
+        
+        <div class="modal-form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <div class="modal" id="imageLibraryModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.75rem;">📁</span>
+            Select Images from Library
+          </h3>
+                <p style="margin: 0.5rem 0 0 0; font-size: x-small; color: #6b7280;">Click images to select, click the checkbox or image again to deselect</p>
+        </div>
+        <button class="btn-close" onclick="closeImageLibraryModal()">&times;</button>
+      </div>
+      
+      <div style="padding: 1.25rem; border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+        <input type="text" class="form-input" id="imageSearchInput" placeholder="🔍 Search images by filename..." style="margin: 0;">
+      </div>
+      
+      <div id="imageLibraryGrid" style="overflow-y: auto; padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.25rem; background: #f9fafb; min-height: 400px; max-height: 60vh;">
+        
+      </div>
+      
+      <div class="modal-form-actions">
+        <div style="text-align: left;">
+          <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+            <span id="imageCount"></span> images available
+          </p>
+          <p style="margin: 0; color: #3b82f6; font-size: 0.875rem; font-weight: 600; margin-top: 0.25rem;">
+            <span id="selectedImageCount">0 selected</span>
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeImageLibraryModal()">Cancel</button>
+          <button type="button" id="selectImagesBtn" class="btn btn-primary" onclick="HomePageManager.selectImageFromLibrary()" disabled style="opacity: 0.5; cursor: not-allowed;">
+            Select Images
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <input type="file" id="heroImageUploadInput" accept="image/*" style="display: none;">
+  <input type="file" id="galleryImageUploadInput" accept="image/*" style="display: none;">
+  <input type="file" id="tourImageUploadInput" accept="image/*" style="display: none;">
+
+  
+  <script src="http://localhost:1313/js/cdn-config.js"></script>
+  
+  
+  <script src="http://localhost:1313/js/update-ui.js" defer></script>
+</body>
+</html>
