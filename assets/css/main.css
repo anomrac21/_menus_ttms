@@ -2894,6 +2894,7 @@ details[open] ul.all-hours {
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     flex-direction: row;
+    width: -webkit-fill-available;
     flex-wrap: nowrap
 }
 
@@ -3169,7 +3170,6 @@ details[open] ul.all-hours {
 }
 
 #singlepageimage {
-    max-width: 100dvw;
     object-fit: cover;
     width: -webkit-fill-available
 }
