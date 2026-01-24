@@ -48,7 +48,7 @@
 						          	<!-- Debug: WhatsApp={{ .whatsapp }}, Address={{ .address }} -->
 						          	{{ if and .address .latlon }}
 						          	<a href="https://www.ttmenus.com/map/?lat={{ index .latlon 0 }}&lng={{ index .latlon 1 }}&zoom=19&client={{ site.Title | urlize }}" class="locbtn btn" data-whatsapp="{{ .whatsapp }}" data-lat="{{ index .latlon 0 }}" data-lng="{{ index .latlon 1 }}" data-orderingtables="{{ if .orderingtables }}{{ delimit .orderingtables "," }}{{ end }}" target="_blank">
-						            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
+						            	<img src="https://cdn.ttmenus.com/icons/utilities/location.svg" alt="Location">
 						            	{{ .address }}
 						          	</a>
 								  	{{ if .delivery }}
@@ -84,7 +84,7 @@
 						          	<!-- Debug: Key={{ $key }}, WhatsApp={{ $value.whatsapp }}, Address={{ $value.address }} -->
 						          	{{ if and $value.whatsapp $value.address $value.latlon }}
 						          	<a href="https://www.ttmenus.com/map/?lat={{ index $value.latlon 0 }}&lng={{ index $value.latlon 1 }}&zoom=19&client={{ site.Title | urlize }}" class="locbtn btn" data-whatsapp="{{ $value.whatsapp }}" data-lat="{{ index $value.latlon 0 }}" data-lng="{{ index $value.latlon 1 }}" data-orderingtables="{{ if $value.orderingtables }}{{ delimit $value.orderingtables "," }}{{ end }}" target="_blank">
-						            	<img src="https://ct.ttmenus.com/icons/utilities/location.svg" alt="Location">
+						            	<img src="https://cdn.ttmenus.com/icons/utilities/location.svg" alt="Location">
 						            	{{ $value.address }}
 						          	</a>
 								  	{{ if $value.delivery }}
@@ -128,39 +128,39 @@
 			{{ end }}
 		<li class="socialmedia">
 			{{ if .Site.Params.social.facebook }}
-				<a href="{{ .Site.Params.social.facebook }}" class="social btn" target="_blank"><img src="https://ct.ttmenus.com/icons/socialmedia/fb.svg" alt="Facebook"></a>
+				<a href="{{ .Site.Params.social.facebook }}" class="social btn" target="_blank"><img src="https://cdn.ttmenus.com/icons/socialmedia/fb.svg" alt="Facebook"></a>
 			{{ end }}
 			{{ if .Site.Params.social.instagram }}
-				<a href="{{ .Site.Params.social.instagram }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/ig.svg" alt="Instagram"></a>
+				<a href="{{ .Site.Params.social.instagram }}" target="_blank" class="social btn"><img src="https://cdn.ttmenus.com/icons/socialmedia/ig.svg" alt="Instagram"></a>
 			{{ end }}
 			{{ if .Site.Params.social.youtube }}
-				<a href="{{ .Site.Params.social.youtube }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/yt.svg" alt="Youtube"></a>
+				<a href="{{ .Site.Params.social.youtube }}" target="_blank" class="social btn"><img src="https://cdn.ttmenus.com/icons/socialmedia/yt.svg" alt="Youtube"></a>
 			{{ end }}
 			{{ if .Site.Params.social.tiktok }}
-				<a href="{{ .Site.Params.social.tiktok }}" target="_blank" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/tk.svg" alt="TikTok"></a>
+				<a href="{{ .Site.Params.social.tiktok }}" target="_blank" class="social btn"><img src="https://cdn.ttmenus.com/icons/socialmedia/tk.svg" alt="TikTok"></a>
 			{{ end }}
 		</li>
 		<li class="contact">
 			{{ if .Site.Params.orderingsystem.whatsapp }}
-				<a href="https://wa.me/{{ .Site.Params.orderingsystem.whatsapp }}" class="social btn"><img src="https://ct.ttmenus.com/icons/socialmedia/whatsapp.svg" alt="Whatsapp"></a>
+				<a href="https://wa.me/{{ .Site.Params.orderingsystem.whatsapp }}" class="social btn"><img src="https://cdn.ttmenus.com/icons/socialmedia/whatsapp.svg" alt="Whatsapp"></a>
 			{{ end }}
 			{{ if .Site.Params.social.phone }}
-				<a href="tel:{{ .Site.Params.social.phone }}" class="social btn"><img src="https://ct.ttmenus.com/icons/utilities/phone.svg" alt="Phone"></a>
+				<a href="tel:{{ .Site.Params.social.phone }}" class="social btn"><img src="https://cdn.ttmenus.com/icons/utilities/phone.svg" alt="Phone"></a>
 			{{ end }}
 		</li>
 			<!-- APP FUNCTIONALITY BUTTON -->
 			<li class="subscribe" >
 				<a id="btn_SubInfo" class="social btn" onclick="expandAppMenu();">
-					<img src="https://ct.ttmenus.com/icons/utilities/apple.svg" alt="Apple iOS">Install App
+					<img src="https://cdn.ttmenus.com/icons/utilities/apple.svg" alt="Apple iOS">Install App
 				</a>
 				{{- if site.Params.notifications.enabled -}}
 				<a id="subBtn" class="subbtn btn" onclick="toggleNotificationSubscription();" title="Subscribe to notifications">
-					<img src="https://ct.ttmenus.com/icons/utilities/bell.svg" alt="Subscribe">
+					<img src="https://cdn.ttmenus.com/icons/utilities/bell.svg" alt="Subscribe">
 					<span id="subBtnText">Subscribe</span>
 				</a>
 				{{- end -}}
 				<a id="btn_install1" class="social btn installBtn hide" >
-					<img src="https://ct.ttmenus.com/icons/utilities/install.svg" alt="Install">Install App
+					<img src="https://cdn.ttmenus.com/icons/utilities/install.svg" alt="Install">Install App
 				</a>
 			</li>
 		</ul>

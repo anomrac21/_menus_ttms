@@ -1,0 +1,385 @@
+/**
+ * TTMenus v2 - Modern Header Styles
+ * Beautiful, user-friendly header with glass-morphism effects
+ */
+
+/* ============================================
+   MAIN HEADER CONTAINER
+   ============================================ */
+
+.main-header {
+    background: rgb(0 0 0 / 0%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    top: 0;
+}
+
+/* Header container */
+.main-header .container {
+    max-width: 2560px;
+    margin: 0 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    height: 5em;
+    padding: 0;
+    gap: 0;
+}
+
+/* ============================================
+   DASHBOARD BUTTON
+   ============================================ */
+
+#dashboardBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: unset;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: transparent;
+}
+
+#dashboardBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(1.05);
+}
+
+#dashboardBtn img {
+    object-fit: contain;
+    top: -8px;
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+#dashboardBtn:hover img {
+    transform: scale(1.1);
+}
+
+/* ============================================
+   LOGO CONTAINER
+   ============================================ */
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 4em;
+    height: 4em;
+    padding: 0.4em;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: transparent;
+    position: relative;
+}
+
+.logo-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.logo-container:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.logo-container:hover::before {
+    opacity: 1;
+}
+
+.logo-container .logo {
+    width: 3.2em;
+    height: 3.2em;
+    object-fit: contain;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.logo-container:hover .logo {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* ============================================
+   MENU BLOCK (NAVIGATION)
+   ============================================ */
+
+#menublock {
+    display: flex;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    gap: 0;
+}
+
+#menublock::-webkit-scrollbar {
+    height: 4px;
+}
+
+#menublock::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#menublock::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+#menublock::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Menu Items */
+#menublock li {
+    display: flex;
+    min-width: 4em;
+    max-width: 4em;
+    height: 4em;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+#menublock li::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#menublock li:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+#menublock li:hover::before {
+    opacity: 1;
+}
+
+#menublock li:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Menu Links */
+#menublock li a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 0.4em 0.2em;
+    text-decoration: none;
+    color: var(--header-text-color, #fff);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+/* Menu Icons */
+#menublock .icon {
+    max-width: 32px;
+    max-height: 32px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+#menublock li:hover .icon {
+    transform: scale(1.15) translateY(-2px);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+#menublock li:active .icon {
+    transform: scale(1.05);
+}
+
+/* Menu Labels */
+#menublock span {
+    color: var(--header-text-color, #fff);
+    font-size: 0.65rem;
+    font-variant: all-petite-caps;
+    text-align: center;
+    display: block;
+    width: 100%;
+    margin-top: 0.2em;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+#menublock li:hover span {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+/* Search Button (Last Item) */
+#menublock li:last-child {
+    border-right: none;
+}
+
+/* Active Menu Item Indicator */
+#menublock li.active {
+    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+#menublock li.active .icon {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+}
+
+/* ============================================
+   SEARCH BUTTON (IN MENU BLOCK)
+   ============================================ */
+
+#menublock li a[onclick*="toggleSearch"] {
+    background: transparent;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    #menublock li {
+    }
+
+    #menublock span {
+        font-size: 0.6rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .main-header .container {
+    }
+
+    #dashboardBtn,
+    .logo-container {
+    }
+
+    #dashboardBtn img {
+        height: 2.8em;
+        max-width: 2.8em;
+    }
+
+    .logo-container .logo {
+        width: 2.8em;
+        height: 2.8em;
+    }
+
+    #menublock li {
+    }
+
+    #menublock .icon {
+        max-width: 28px;
+        max-height: 28px;
+    }
+
+    #menublock span {
+        font-size: 0.55rem;
+        margin-top: 0.15em;
+    }
+
+    main {
+        padding-block-start: 3.5em;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    #menublock li {
+    }
+
+    #menublock span {
+        font-size: 0.5rem;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY & REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .main-header,
+    .main-header *,
+    #dashboardBtn,
+    .logo-container,
+    #menublock li,
+    #menublock .icon,
+    #menublock span {
+        transition: none;
+        animation: none;
+    }
+
+    #dashboardBtn:hover,
+    #menublock li:hover {
+        transform: none;
+    }
+}
+
+/* Focus states for keyboard navigation */
+#dashboardBtn:focus,
+.logo-container:focus,
+#menublock li a:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: -2px;
+}
+
+/* ============================================
+   SCROLL SHADOW (for menu overflow)
+   ============================================ */
+
+#menublock {
+    position: relative;
+}
+
+#menublock::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#menublock:not(:hover)::after {
+    opacity: 1;
+}

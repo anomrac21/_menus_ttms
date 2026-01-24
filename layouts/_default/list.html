@@ -18,10 +18,9 @@
       
           {{ $category := .LinkTitle }}
           {{ $categoryurl := .RelPermalink }}            
+          <div class="menu-items-container">
           {{ range .RegularPages.ByWeight }}
             {{ if ne $category ("Advertisments") }}
-              <table class="listpagemenu menu w-{{ .Params.weight }}">
-                <tbody>
                   {{$sizes := slice}}
                   {{range .Params.prices}}
                     {{if not (in $sizes .size)}}
@@ -36,12 +35,50 @@
                     {{end}}
                   {{end}}
                   
-                  <tr class="item" 
+                <div class="menu-item-card" 
                       data-item-url="{{ .RelPermalink }}"
-                      onclick="openItem(this, '{{ .RelPermalink }}');">
-                      <td>
-                        <h3 class="title">{{ .LinkTitle }}</h3>
+                    data-item-expanded="false"
+                    onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
+                    <div class="menu-item-row-top">
+                      {{ if .Params.images }}
+                        {{ $firstImage := index .Params.images 0 }}
+                        {{ if $firstImage.image }}
+                          <a href="{{ .RelPermalink }}" class="menu-item-image-link">
+                            <div class="menu-item-image">
+                              <img src="/{{ $firstImage.image }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img">
+                            </div>
+                          </a>
+                        {{ end }}
+                      {{ end }}
+                      <div class="menu-item-header-content">
+                        <h3 class="menu-item-title">
+                          <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+                        </h3>
+                        <div class="menu-item-row-middle">
+                          <div class="menu-item-description">
                         {{ .Summary }}
+                          </div>
+                          <div class="menu-item-price">
+                            {{$counter := 0}}
+                            {{$number := slice}}
+                            {{$total := 0}}
+                            {{range .Params.prices}}
+                              {{$counter = add $counter 1}}
+                              {{$number = $number | append .price}}
+                              {{$total = add $total .price}}
+                            {{end}} 
+                            {{$number := sort $number}}
+                            {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
+                              {{ $price := float (index $number (sub $counter 1)) }}
+                              ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
+                            {{else }}
+                              {{ $price1 := float (index $number 0) }}
+                              {{ $price2 := float (index $number (sub $counter 1)) }}
+                              ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
+                            {{ end }}
+                          </div>
+                        </div>
+                        <div class="menu-item-options">
                         <ul class="sizes">
                           {{ range $index, $currentItem := $sizes }}
                             {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
@@ -60,31 +97,21 @@
                             {{ end }}
                           {{ end }}
                         </ul> 
-                      </td>
-                      <th>
-                        {{$counter := 0}}
-                        {{$number := slice}}
-                        {{$total := 0}}
-                        {{range .Params.prices}}
-                          {{$counter = add $counter 1}}
-                          {{$number = $number | append .price}}
-                          {{$total = add $total .price}}
-                        {{end}} 
-                        {{$number := sort $number}}
-                        {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
-                          {{ $price := float (index $number (sub $counter 1)) }}
-                          ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
-                        {{else }}
-                          {{ $price1 := float (index $number 0) }}
-                          {{ $price2 := float (index $number (sub $counter 1)) }}
-                          ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Expanded content area (hidden by default) -->
+                    <div class="menu-item-expanded-content" style="display: none;">
+                      <div class="menu-item-expanded-loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading...</div>
+                      </div>
+                      <div class="menu-item-expanded-data" style="display: none;"></div>
+                    </div>
+                </div>
                         {{ end }}                       
-                      </th>
-                  </tr>
-                </tbody>
-              </table> 
             {{ end }}
-          {{ end }}
+          </div>
 
     </div>
   {{ end }}

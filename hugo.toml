@@ -29,3 +29,11 @@ weight = 30
   # For local development, use:
   # apiUrl = "http://localhost:8080/api/v1"
 
+# Content Management Service Configuration
+[params.contentManagement]
+  enabled = true
+  apiUrl = "https://cms.ttmenus.com/api"
+  serviceUrl = "https://cms.ttmenus.com"
+  # For local development, use:
+  # apiUrl = "http://localhost:8084/api"
+  # serviceUrl = "http://localhost:8084"

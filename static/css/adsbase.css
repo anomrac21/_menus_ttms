@@ -99,7 +99,7 @@
 #frontpage-ads-container section,
 .menu-ad {
     position: relative;
-    min-height: calc(100vh - 4em);
+    min-height: calc(100vh - 5em);
     height: auto;
     color: white;
     text-align: center;
@@ -118,7 +118,7 @@
 .menu-ad.sticky {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 4em;
+    top: 5em;
     z-index: 2;
 }
 
@@ -194,7 +194,7 @@
 #client-ads-container section .inner .ad-panel,
 #frontpage-ads-container section .inner .ad-panel{
     width: 100dvw;
-    height: calc(100vh - 4em);
+    height: calc(100vh - 5em);
     left: 0px;
     position: relative;
     top: 0;
