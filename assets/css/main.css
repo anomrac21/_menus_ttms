@@ -53,7 +53,6 @@ header {
 
 main {
     min-height: calc(100vh - 5em);
-    padding-block-start:5em!important;padding-top: ;
     margin-top: 0!important;
     background: var(--main-bg,#000);
     background-size: auto;
@@ -588,7 +587,7 @@ footer {
 .menu-item-card.expanded {
     border-color: rgba(255,255,255,.3);
     box-shadow: 0 6px 20px rgba(0,0,0,.3);
-    background: linear-gradient( var(--selected-button-color1), var(--selected-button-color2));
+    background: linear-gradient( var(--selected-button-color1),var(--selected-button-color2));
     scroll-margin-top: 5em;
     display: flex;
     flex-direction: column
@@ -774,7 +773,7 @@ footer {
 .expanded-add-cart {
     width: 100%;
     padding: 1em;
-    background: linear-gradient(135deg, #25d366, #128c7e);
+    background: linear-gradient(135deg,#25d366,#128c7e);
     color: #fff;
     border: none;
     border-radius: .8em;
