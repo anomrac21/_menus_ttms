@@ -57,7 +57,7 @@ main {
     background: var(--main-bg,#000);
     background-size: auto;
     background-position: 50% 0;
-    padding-block-start: 5;}
+    padding-block-start: 5em;}
 
 main img {
     max-width: 100%;
@@ -276,13 +276,11 @@ footer {
 .main-body {
     background: var(--main-bg,#000);
     position: relative;
-    margin-block-start:0;padding: 1em;
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
+    margin-block-start:0;padding: 1em
 }
 
 #packery-container {
+    display: block
 }
 
 #packery-container::after {
@@ -803,7 +801,7 @@ footer {
 }
 
 .expanded-add-cart:hover {
-    background: linear-gradient(135deg,#25d366,#128c7e);
+    background: linear-gradient(135deg,#5568d3 0%,#6a3f8f 100%);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(102,126,234,.5)
 }
@@ -890,7 +888,7 @@ footer {
     min-height: 100dvh;
     margin: 0;
     padding: 0;
-    padding-block-start: 6em;}
+    padding-block-start:6em}
 
 .icon,img.icon,.icon img,.main-header .icon,.main-header img.icon,#menublock .icon,#menublock img.icon {
     width: 32px;
@@ -1268,7 +1266,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 .single-page-add-cart-btn {
     width: 100%;
     padding: 1em;
-    background: linear-gradient(135deg,#25d366,#128c7e);
+    background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
     color: #fff;
     border: none;
     border-radius: .8em;
