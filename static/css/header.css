@@ -366,19 +366,3 @@
     position: relative;
 }
 
-#menublock::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 40px;
-    background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-#menublock:not(:hover)::after {
-    opacity: 1;
-}
