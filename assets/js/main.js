@@ -379,7 +379,14 @@
                 
                 // Try to get item data from the page
                 const itemName = element.querySelector('.menu-item-title')?.textContent || '';
-                const itemDesc = element.querySelector('.menu-item-description p')?.textContent || '';
+                // Get description from card (summary) - try both with and without p tag
+                const itemDescCard = element.querySelector('.menu-item-description')?.textContent?.trim() || 
+                                     element.querySelector('.menu-item-description p')?.textContent?.trim() || '';
+                
+                // Try to get full description from fetched page
+                const fullDescElement = doc.querySelector('.single-page-description');
+                const itemDesc = fullDescElement ? fullDescElement.innerHTML.trim() : itemDescCard;
+                
                 const itemPriceText = element.querySelector('.menu-item-price')?.textContent || '';
                 
                 // Extract numeric price
@@ -392,7 +399,7 @@
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
                         <div class="expanded-item-description">
-                            <p>${itemDesc || 'No description available'}</p>
+                            ${itemDesc ? (fullDescElement ? itemDesc : `<p>${itemDesc}</p>`) : '<p>No description available</p>'}
                         </div>
                         <div class="expanded-item-controls">
                             <div class="expanded-quantity-control">
