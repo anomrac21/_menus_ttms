@@ -217,7 +217,7 @@
 #homepage-ads-container section .inner .ad-panel video,
 #client-ads-container section .inner .ad-panel video,
 #frontpage-ads-container section .inner .ad-panel video{
-    height: calc(100vh - 4em) !important;
+    height: calc(100vh - 9em) !important;
     width: 100dvw;
     max-width: -webkit-fill-available;
     margin-inline:  auto !important;
@@ -282,7 +282,6 @@
 }
 
 #client-ads-container,#homepage-ads-container  {
-    margin-top: 2em;
 }
 
 #pageadscontainer section#two,
