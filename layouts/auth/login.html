@@ -88,7 +88,7 @@
       if (AuthClient.isAuthenticated()) {
         // Redirect to content-management-service to create session
         const user = AuthClient.getCurrentUser();
-        const token = AuthClient.getToken();
+        const token = AuthClient.getAccessToken();
         const clientId = user?.client_id || '_ttms_menu_demo'; // Fallback to default
         
         if (token) {
@@ -151,7 +151,7 @@
               }
               
               // Verify user has valid token
-              const token = AuthClient.getToken();
+              const token = AuthClient.getAccessToken();
               if (!token) {
                 showAlert('error', 'Invalid authentication token. Please try again.');
                 loginBtn.disabled = false;
