@@ -887,8 +887,8 @@ footer {
     border-radius: .4em;
     min-height: 100dvh;
     margin: 0;
-    padding: 0
-}
+    padding: 0;
+    padding-block-start: 6em;}
 
 .icon,img.icon,.icon img,.main-header .icon,.main-header img.icon,#menublock .icon,#menublock img.icon {
     width: 32px;
@@ -1111,7 +1111,6 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .single-page-item-card {
     max-width: 800px;
-    margin: 2em auto;
     background: linear-gradient(135deg,var(--menu-bg-color-1,#1a1a1a) 0%,var(--menu-bg-color-2,#2a2a2a) 100%);
     border-radius: 1.2em;
     box-shadow: 0 8px 32px rgba(0,0,0,.5);
@@ -1320,8 +1319,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 @media(max-width: 768px) {
     .single-page-item-card {
-        margin:1em;
-        border-radius: 1em
+        border-radius:1em
     }
 
     .single-page-image-container {
