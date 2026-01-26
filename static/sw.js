@@ -34,8 +34,8 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'TTMenus',
     body: 'You have a new notification',
-    icon: 'https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif',
-    badge: 'https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif',
+    icon: 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
+    badge: 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
     tag: 'ttmenus-notification',
     data: {},
   };
@@ -152,8 +152,8 @@ self.addEventListener('message', (event) => {
     const { notification } = event.data;
     self.registration.showNotification(notification.title || 'TTMenus', {
       body: notification.message || notification.body || '',
-      icon: notification.icon || notification.image || 'https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif',
-      badge: notification.badge || 'https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif',
+      icon: notification.icon || notification.image || 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
+      badge: notification.badge || 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
       image: notification.image,
       tag: notification.tag || notification.id,
       data: {

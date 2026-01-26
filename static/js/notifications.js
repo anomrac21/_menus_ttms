@@ -537,7 +537,7 @@ const NotificationService = {
     // Get image URL from notification data, or use default
     const imageUrl = (notification.data && (notification.data.image || notification.data.image_url)) 
       || (notification.image || notification.icon)
-      || 'https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif';
+      || 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
     
     // Get link URL from notification data
     const linkUrl = notification.data && (notification.data.url || notification.data.link);

@@ -20,12 +20,11 @@
       <div class="bottomads">
           {{ partial "ads/frontpageads.html" . }}
       </div>
-        {{ partial "client/openinghours.html" . }}
+        {{ partial "client/opening-hours.html" . }}
     </div>
   </div>
 
   <footer>
-    {{ partial "modals/order_modal.html" . }}
     {{ partial "layout/footer.html" . }}
   </footer>
   
@@ -43,6 +42,7 @@
   <!-- IMPORTANT DEPENDENCIES - jQuery and core features -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
   
+<<<<<<< HEAD
   <!-- Layout Libraries - Packery.js and Isotope.js -->
   <script src="https://cdn.ttmenus.com/plugins/@_ttms_cdn/static/plugins/packery.pkgd.min.js" defer></script>
   <script src="https://cdn.ttmenus.com/plugins/@_ttms_cdn/static/plugins/isotope.pkgd.min.js" defer></script>
@@ -50,17 +50,20 @@
   <script src="https://ct.ttmenus.com/js/askforserver.js" defer></script>
   <script src="https://ct.ttmenus.com/js/cart.js" defer></script>
   <script src="https://ct.ttmenus.com/js/search.js" defer></script>
+=======
+  <!-- Layout Libraries - Isotope.js -->
+  <script src="https://cdn.ttmenus.com/plugins/@_ttms_cdn/static/plugins/isotope.pkgd.min.js" defer></script>
+  
+  <!-- Sortable.js for drag and drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
+  
+  <!-- <script src="https://cdn.ttmenus.com/js/cart.js" defer></script>
+  <script src="https://cdn.ttmenus.com/js/search.js" defer></script> -->
+>>>>>>> eb4b21a6f702b0a989f21d547aadf7685e55119e
   
   <!-- SECONDARY FEATURES - Load after core functionality -->
-  <script src="{{ site.BaseURL}}js/client-ad-manager.js" defer></script>
-  <script src="{{ site.BaseURL}}js/openinghours.js" defer></script>
-  <script src="{{ site.BaseURL}}js/ads-sticky.js" defer></script>
-  <script src="{{ site.BaseURL}}js/ad-scroll-progress.js" defer></script>
-  <script src="{{ site.BaseURL}}js/section-scroll.js" defer></script>
   
   <!-- NON-CRITICAL - Async load for performance -->
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" async></script>
-  <script src="{{ site.BaseURL}}js/aos.js" defer></script>
   <script src="{{ site.BaseURL}}js/analytics-integrations.js" defer></script>
   
   {{ partial "features/whatsapp_ordering_system.html" . }}

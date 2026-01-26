@@ -5,8 +5,8 @@
   {{ $dateHuman := .Date | time.Format ":date_long" }}
   <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time-->
   {{if not (eq .Section ("advertisments")) }}
-    <table class="singlepagemenu {{ .Section }}">
-      <tbody>
+    <div class="main-content">
+      <div class="single-page-item-card">
         {{ $category :=  .Section  }}
         {{ $categoryurl := .Parent.Permalink }}            
         {{$sizes := slice}}
@@ -23,25 +23,31 @@
           {{end}}
         {{end}}
         
-        <tr class="item" 
-            data-item-url="{{ .RelPermalink }}"
-            onclick="openItem(this, '{{ .RelPermalink }}');">
-            <td>
               {{if .Params.images }}
-              <div class="singlepageimages">
+          <div class="single-page-image-container">
                 {{range .Params.images }}
-                <img id="singlepageimage" src="/{{ .image }}" alt="{{ $.Title }}" loading="lazy">
+              <img class="single-page-image" src="/{{ .image }}" alt="{{ $.Title }}" loading="lazy">
                 {{ end }}
               </div>
               {{ else }}
-                <img id="singlepageimage" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  
+          <div class="single-page-image-container">
+            <img class="single-page-image" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  
+          </div>
               {{ end }}  
-              <h1>{{ .Title }}</h1>
+        
+        <div class="single-page-content">
+          <h1 class="single-page-title">{{ .Title }}</h1>
+          
+          <div class="single-page-description">
               {{ .Content }}
+          </div>
+          
               {{$allprices := .Params.prices}}
+          {{ if gt (len $sizes) 0 }}
+            <div class="single-page-prices-section">
               {{ range $index, $currentItem := $sizes }}
-                <br>
-                {{ $currentItem }}
+                <div class="price-group">
+                  <h3 class="price-group-title">{{ $currentItem }}</h3>
                 <ul class="prices">
                   {{ range $allprices }}
                     {{ if eq $currentItem .size }}
@@ -52,11 +58,49 @@
                     {{ end }}
                   {{ end }}
                 </ul>
+                </div>
+              {{ end }}
+            </div>
+          {{ end }}
+          
+          <!-- Add to Cart Section -->
+          <div class="single-page-add-cart">
+            <div class="single-page-quantity-control">
+              <button class="btn-quantity" onclick="adjustSinglePageQuantity(this, -1)">
+                <i class="fa fa-chevron-down"></i>
+              </button>
+              <span class="single-page-quantity" data-item-url="{{ .RelPermalink }}">1</span>
+              <button class="btn-quantity" onclick="adjustSinglePageQuantity(this, 1)">
+                <i class="fa fa-chevron-up"></i>
+              </button>
+              <span class="single-page-price">
+                {{$counter := 0}}
+                {{$number := slice}}
+                {{$total := 0}}
+                {{range .Params.prices}}
+                  {{$counter = add $counter 1}}
+                  {{$number = $number | append .price}}
+                  {{$total = add $total .price}}
+                {{end}} 
+                {{$number := sort $number}}
+                {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
+                  {{ $price := float (index $number (sub $counter 1)) }}
+                  ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
+                {{else }}
+                  {{ $price1 := float (index $number 0) }}
+                  {{ $price2 := float (index $number (sub $counter 1)) }}
+                  ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
               {{ end }}                        
-          </td>
-        </tr>
-      </tbody>
-    </table>
+              </span>
+            </div>
+            <button class="single-page-add-cart-btn" onclick="addSinglePageItemToCart(this, '{{ .RelPermalink }}')">
+              <i class="fa fa-cart-plus"></i>
+              <span class="cart-button-text">Add to Cart</span>
+              <span class="cart-button-price"></span>
+            </button>
+          </div>
+        </div>
+      </div>
   {{ else }}
     <div class="singlepagemenu {{ .Section }}">
       {{ if gt (len .Params.images) 0 }}

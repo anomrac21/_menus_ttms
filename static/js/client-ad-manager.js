@@ -137,26 +137,13 @@ class ClientAdManager {
       window.adScrollProgressManager.refresh();
     }
 
-    // Force AOS to reinitialize for new elements
+    // AOS removed - no longer needed
     setTimeout(() => {
-      if (typeof AOS !== 'undefined') {
-        console.log('Reinitializing AOS for ads...');
-        
-        // Remove AOS classes to reset
-        const aosElements = container.querySelectorAll('[data-aos]');
-        aosElements.forEach(el => {
-          el.classList.remove('aos-init', 'aos-animate');
-        });
-        
-        // Refresh AOS to detect new elements
-        AOS.refresh();
-        
-        // Force hard refresh after a moment
-        setTimeout(() => {
-          AOS.refreshHard();
-          console.log('AOS refreshed for ads');
-        }, 50);
-      }
+      // Remove any remaining AOS classes if present
+      const aosElements = container.querySelectorAll('[data-aos]');
+      aosElements.forEach(el => {
+        el.classList.remove('aos-init', 'aos-animate');
+      });
       
       // Refresh scroll progress again after animations settle
       if (window.adScrollProgressManager) {

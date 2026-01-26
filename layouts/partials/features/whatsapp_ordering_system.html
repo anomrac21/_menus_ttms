@@ -228,18 +228,20 @@ let currentoptions;
 let sizePrice=0;
 
 function showShop(){
-	document.getElementById("orderModal").classList.remove('order-hidden');
-	document.body.classList.add('modal-open');
+	// Modal removed - function kept for backward compatibility
+	console.log('showShop called but modal is no longer used');
 }
 function closeShop(){
-	document.getElementById("orderModal").classList.add('order-hidden');
+	// Modal removed - function kept for backward compatibility
 	var cart = document.getElementById("cart");
   var footerBtns = document.getElementById("footerBtns");
-  cart.classList.add('cart-hidden');
+  if (cart) cart.classList.add('cart-hidden');
+  if (footerBtns) {
   footerBtns.classList.add('grad2');
   footerBtns.classList.remove('grad1');
   footerBtns.classList.remove('bigfont');
   footerBtns.classList.add('smallfont');
+  }
 	var addbtn = document.getElementById("sidesButtonText");
 	var modbtn = document.getElementById("modicon");
 	orderSides=[];
@@ -1390,13 +1392,14 @@ function toggleCart(){
   //printValues();
 }
 function additemtocart(){
-  let modal = document.getElementById("orderModal");
-  modal.classList.add("additemtocart");
+  // Modal removed - just trigger cart animation
+  let cart = document.getElementById("carticon");
+  if (cart) {
+    cart.classList.add("cartadditem");
   setTimeout(()=>{
-  			closeShop();
-        modal.classList.remove("additemtocart");
-  },             500);  
-   
+      cart.classList.remove("cartadditem");
+    }, 500);
+  }
 } 
 function cartadditem(){
   let cart = document.getElementById("carticon");
@@ -2258,11 +2261,8 @@ function updateSearchPlaceholder() {
 	console.log('🔍 Search placeholder not needed with dropdown system');
 }
 
-// Function to navigate locations (simplified for dropdown)
-function scrollLocations(direction) {
-	// This function is kept for compatibility but not used in dropdown system
-	console.log('🔄 Location scrolling not needed with dropdown system');
-}
+// Function to navigate locations - now implemented in main.js
+// This placeholder is removed as scrolling functionality is handled by main.js
 
 // Function to toggle delivery options visibility
 function toggleDelivery(button) {

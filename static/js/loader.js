@@ -155,8 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         randomAnim = animations[Math.floor(Math.random() * animations.length)];
         loader.classList.add(randomAnim);
-        initAOS();
-        AOS.refresh();
+        // AOS removed - no longer needed
         document.getElementById("footerBtns").classList.add("visible");
         
         // Note: Ad loading is now handled by barba transitions for better control
@@ -207,21 +206,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 await new Promise(resolve => setTimeout(resolve, 366));
             },
             async enter(data) {
-                window.scrollTo(0, 100);
+                // Reset scroll position immediately to prevent spacing issues
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                
                 document.getElementById('menublock').scrollTo(12, 0);
                 closeCart();
                 closeShop();
                 await new Promise(resolve => setTimeout(resolve, 366));
                 hideLoader();
+                
+                // Ensure main element padding is correct (reset any inherited styles)
+                requestAnimationFrame(() => {
+                    const mainElement = document.getElementById('main');
+                    if (mainElement) {
+                        mainElement.style.paddingTop = '';
+                        mainElement.style.paddingBlockStart = '';
+                        mainElement.style.marginTop = '';
+                    }
+                    
+                    // Force scroll to top
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                });
+                
                 const savedScroll = localStorage.getItem("headerScroll");
                 if (savedScroll !== null) {
                     requestAnimationFrame(() => { // Ensures DOM is ready before applying scroll
                         document.getElementById("menublock").scrollLeft = savedScroll;
                     });
                 }
-                window.scrollTo(0, 0);
 
-                // Wait for DOM to settle, then refresh AOS and load ads
+                // Wait for DOM to settle, then load ads
                 setTimeout(() => {
                     console.log('=== Barba enter: Post-navigation setup ===');
                     
@@ -230,11 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const foundContainers = containers.filter(id => document.getElementById(id));
                     console.log('Ad containers found:', foundContainers);
                     
-                    // Refresh AOS after content is loaded
-                    if (typeof AOS !== 'undefined') {
-                        console.log('Barba enter: Refreshing AOS');
-                        AOS.refresh();
-                    }
+                    // AOS removed - no longer needed
                     
                     // Force ad reload after barba navigation with fresh state
                     console.log('Barba enter: Forcing ad reload');
@@ -250,13 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             console.log('Secondary ad population attempt...');
                             window.adManager.populateAds(true);
                             
-                            // Force AOS to properly animate the ad elements
-                            setTimeout(() => {
-                                if (typeof AOS !== 'undefined') {
-                                    console.log('Barba enter: Final AOS refresh for ads');
-                                    AOS.refreshHard();
-                                }
-                            }, 100);
+                            // AOS removed - no longer needed
                             
                             // Refresh scroll progress bars
                             setTimeout(() => {

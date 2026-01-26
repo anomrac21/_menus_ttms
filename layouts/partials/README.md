@@ -14,7 +14,7 @@ Advertisement-related partials:
 ### `client/`
 Client-specific customizations:
 - `clienttourimages.html` - Client tour images gallery
-- `openinghours.html` - Opening hours display
+- `opening-hours.html` - Opening hours display
 
 ### `components/`
 Reusable UI components:

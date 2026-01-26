@@ -1,17 +1,27 @@
 <div id="client-openinghours">
-  {{ partial "ads/adsnavbtn.html" . }}
+  <div class="nav-btns">
+    <button class="l-btn" onclick="navigateOpeningHours(-1)" title="Previous location">
+      <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"/></g></svg>
+    </button>
+    <button class="r-btn" onclick="navigateOpeningHours(1)" title="Next location">
+      <svg fill="#ffffff" width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"/><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/><g id="SVGRepo_iconCarrier"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"/></g></svg>
+    </button>
+  </div>
   <ul class="inner">
     {{ $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" }}
     {{ range $i, $loc := site.Data.locations.locations }}
       {{ $index := printf "loc-%d" $i }}
-      <li class="ad-panel">
+      <li class="ad-panel opening-hours-location" 
+          data-location-index="{{ $i }}"
+          data-whatsapp="{{ .whatsapp }}"
+          data-address="{{ .address }}"
+          {{ if ne $i 0 }}style="display: none;"{{ end }}>
         <div class="openstatus center aos-init aos-animate hide" data-aos="zoom-in" data-aos-anchor="#home">
           <a id="opensign-{{ $index }}" class="locbtn btn open hide">Open</a>
           <a id="closedsign-{{ $index }}" class="locbtn btn close hide">Closed</a>
           <a id="soonopen-{{ $index }}" class="locbtn btn open soon hide">Opens Soon</a>
           <a id="soonclose-{{ $index }}" class="locbtn btn close soon hide">Closes Soon</a>
         </div>
-
 
         <div class="location-block">
           <h3>
@@ -23,7 +33,7 @@
           {{ $oh := . }}
           <div class="hours" data-opening-hours>
             <ul class="today-hours">
-              <!-- JavaScript can populate today’s hours here -->
+              <!-- JavaScript can populate today's hours here -->
             </ul>
 
             <details class="accordion">
@@ -82,5 +92,4 @@
     {{ end }}
   </ul>      
 </div>
-<a class="menu-anchor" id="openhours"></a> 
-
+<a class="menu-anchor" id="openhours"></a>

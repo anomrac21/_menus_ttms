@@ -17,7 +17,7 @@
       <div id="alertContainer"></div>
 
       <!-- Login Form -->
-      <form id="loginForm" class="auth-form">
+      <form id="loginForm" class="auth-form" method="post" action="javascript:void(0);" onsubmit="return false;">
         <div class="form-group">
           <label for="email" class="form-label">Email Address</label>
           <input 
@@ -86,13 +86,25 @@
 
       // Check if already logged in
       if (AuthClient.isAuthenticated()) {
-        AuthMiddleware.redirectAfterLogin('/update-ui/');
+        // Redirect to content-management-service to create session
+        const user = AuthClient.getCurrentUser();
+        const token = AuthClient.getToken();
+        const clientId = user?.client_id || '_ttms_menu_demo'; // Fallback to default
+        
+        if (token) {
+          // Create session via POST request (secure, no token in URL)
+          createCMSSession(clientId, token);
+        } else {
+          // Fallback: redirect directly to preview (will create session there)
+          window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview`;
+        }
         return;
       }
 
-      // Handle form submission
+      // Handle form submission - prevent default form submission
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        e.stopPropagation();
 
         // Clear previous errors
         clearErrors();
@@ -128,9 +140,35 @@
           if (result.success) {
             showAlert('success', 'Login successful! Redirecting...');
             
-            // Redirect after short delay
+            // Verify user is authorized and redirect to content-management-service
             setTimeout(() => {
-              AuthMiddleware.redirectAfterLogin('/update-ui/');
+              const user = AuthClient.getCurrentUser();
+              if (!user) {
+                showAlert('error', 'Authentication failed. Please try again.');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In';
+                return;
+              }
+              
+              // Verify user has valid token
+              const token = AuthClient.getToken();
+              if (!token) {
+                showAlert('error', 'Invalid authentication token. Please try again.');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In';
+                return;
+              }
+              
+              // Redirect to CMS service to create session
+              const clientId = user?.client_id || '_ttms_menu_demo'; // Fallback to default
+              
+              if (token) {
+                // Create session via POST request (secure, no token in URL)
+                createCMSSession(clientId, token);
+              } else {
+                // Fallback: redirect directly to preview (will create session there)
+                window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview`;
+              }
             }, 1000);
           } else {
             console.error('❌ Login failed:', result.error);
@@ -203,6 +241,46 @@
         passwordInput.classList.remove('error');
         document.getElementById('passwordError').classList.remove('show');
       });
+
+      // Function to create CMS session securely via POST
+      async function createCMSSession(clientId, token) {
+        try {
+          console.log('🔐 Creating CMS session for client:', clientId);
+          
+          // Create session via POST to CMS API
+          const response = await fetch(`https://cms.ttmenus.com/api/sessions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include', // Include cookies for cross-origin requests
+            mode: 'cors', // Enable CORS
+            body: JSON.stringify({
+              client_id: clientId
+            })
+          });
+
+          const responseData = await response.json();
+          console.log('📥 CMS session response:', response.status, responseData);
+
+          if (response.ok) {
+            // Session created successfully, redirect to preview
+            console.log('✅ Session created, redirecting to preview...');
+            window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview`;
+          } else {
+            // Fallback: try login-redirect endpoint (less secure but works)
+            console.warn('⚠️ Session creation failed, using fallback redirect. Error:', responseData);
+            // Still use fallback but log the issue
+            window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}&token=${encodeURIComponent(token)}`;
+          }
+        } catch (error) {
+          console.error('❌ Error creating CMS session:', error);
+          // Fallback: redirect to login-redirect endpoint
+          // Note: This puts token in URL which is less secure, but necessary for fallback
+          window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}&token=${encodeURIComponent(token)}`;
+        }
+      }
     });
   </script>
 </body>

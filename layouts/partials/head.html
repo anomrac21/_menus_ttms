@@ -4,9 +4,9 @@
 <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ site.Params.description | default "Delicious food and drinks at great prices. View our digital menu and order online." }}{{ end }}">
 
 <!-- Preload critical loader resources FIRST -->
-<link rel="preload" href="https://ct.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
+<link rel="preload" href="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
 <link rel="preload" href="/branding/favicon144.webp" as="image" fetchpriority="high">
-<link rel="preload" href="https://ct.ttmenus.com/css/loader.css" as="style" fetchpriority="high">
+<link rel="preload" href="https://cdn.ttmenus.com/css/loader.css" as="style" fetchpriority="high">
 
 <!-- Inline critical loader CSS for instant rendering -->
 <style>
@@ -63,7 +63,11 @@
 </style>
 
 <!-- Preconnect to external domains for faster resource loading -->
+<<<<<<< HEAD
 <link rel="preconnect" href="https://ct.ttmenus.com" crossorigin>
+=======
+<link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
+>>>>>>> eb4b21a6f702b0a989f21d547aadf7685e55119e
 <link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://notify.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://analytics.ttmenus.com" crossorigin>
@@ -100,10 +104,15 @@
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously -->
 <link rel="stylesheet" href="{{ site.BaseURL}}css/colors.css"/>
 <link rel="stylesheet" href="{{ site.BaseURL}}css/custom.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL}}css/header.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL}}css/cart.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL}}css/contact.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL}}css/hero.css"/>
+<link rel="stylesheet" href="{{ site.BaseURL}}css/slideshow.css"/>
 {{ if .Site.Params.notifications.enabled }}
 <link rel="stylesheet" href="{{ site.BaseURL}}css/notifications.css"/>
 {{ end }}
-<link rel="stylesheet" href="https://ct.ttmenus.com/css/loader.css"/>
+<link rel="stylesheet" href="https://cdn.ttmenus.com/css/loader.css"/>
 
 <!-- Non-critical CSS loaded with low priority -->
 <link rel="stylesheet" href="{{ site.BaseURL}}css/adsbase.css"/>
@@ -114,14 +123,14 @@
 <link rel="preload" href="{{ site.BaseURL}}css/ordering-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="{{ site.BaseURL}}css/ordering-system.css"/></noscript>
 
-<link rel="preload" href="https://ct.ttmenus.com/css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/animations.css"/></noscript>
+<link rel="preload" href="https://cdn.ttmenus.com/css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/animations.css"/></noscript>
 
-<link rel="preload" href="https://ct.ttmenus.com/css/dinein_select.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/dinein_select.css"/></noscript>
+<link rel="preload" href="https://cdn.ttmenus.com/css/dinein_select.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/dinein_select.css"/></noscript>
 
-<link rel="preload" href="https://ct.ttmenus.com/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="https://ct.ttmenus.com/css/search.css"/></noscript>
+<link rel="preload" href="https://cdn.ttmenus.com/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/search.css"/></noscript>
 
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
@@ -134,10 +143,6 @@
 <link rel="apple-touch-icon" href="/branding/favicon192.webp" />
 <link rel="shorcut icon" href="/branding/favicon512.webp"/>
 <link rel="apple-touch-icon-precomposed" href="/branding/favicon152.webp">
-
-<!--ANIMATE ON SCROLL ANIMATIONS - deferred -->
-<link rel="preload" href="https://unpkg.com/aos@2.3.1/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet"></noscript>
 
 <!-- Font Awesome with font-display optimization -->
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
