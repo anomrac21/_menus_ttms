@@ -53,7 +53,7 @@ header {
 
 main {
     min-height: calc(100vh - 5em);
-    padding-block-start:5em!important;padding-top: 5em!important;
+    padding-block-start:5em!important;padding-top: ;
     margin-top: 0!important;
     background: var(--main-bg,#000);
     background-size: auto;
