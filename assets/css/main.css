@@ -317,7 +317,7 @@ footer {
     z-index: 1;
     break-inside: avoid;
     page-break-inside: avoid;
-    margin-block-end: 1;width: 100%;
+    margin-block-end: 1em;width: 100%;
     float: left
 }
 
@@ -887,7 +887,7 @@ footer {
     min-height: 100dvh;
     margin: 0;
     padding: 0;
-    padding-block-start:6em}
+    padding-block-start: 1;}
 
 .icon,img.icon,.icon img,.main-header .icon,.main-header img.icon,#menublock .icon,#menublock img.icon {
     width: 32px;
