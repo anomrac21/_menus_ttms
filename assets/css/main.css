@@ -317,7 +317,7 @@ footer {
     z-index: 1;
     break-inside: avoid;
     page-break-inside: avoid;
-    margin-block-end:0;width: 100%;
+    margin-block-end: 1;width: 100%;
     float: left
 }
 
@@ -344,7 +344,6 @@ footer {
 .menu-header {
     display: block;
     position: relative;
-    padding: ;
     background: rgba(0,0,0,.2);
     border-bottom: 1px solid rgba(255,255,255,.1)
 }
