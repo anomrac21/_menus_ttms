@@ -89,14 +89,25 @@
         // Redirect to content-management-service to create session
         const user = AuthClient.getCurrentUser();
         const token = AuthClient.getAccessToken();
-        const clientId = user?.client_id || '_ttms_menu_demo'; // Fallback to default
+        // Get client_id from user, or extract from current domain, or use default
+        let clientId = user?.client_id;
+        if (!clientId) {
+          // Extract client ID from current domain (e.g., islandbeer.ttmenus.com -> islandbeer)
+          const hostname = window.location.hostname;
+          const domainParts = hostname.split('.');
+          if (domainParts.length >= 2 && domainParts[1] === 'ttmenus' && domainParts[2] === 'com') {
+            clientId = domainParts[0]; // e.g., 'islandbeer'
+          } else {
+            clientId = '_ttms_menu_demo'; // Fallback to default
+          }
+        }
         
         if (token) {
           // Create session via POST request (secure, no token in URL)
           createCMSSession(clientId, token);
         } else {
-          // Fallback: redirect directly to preview (will create session there)
-          window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview`;
+          // Fallback: redirect to login-redirect endpoint which will set session and redirect
+          window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}`;
         }
         return;
       }
@@ -160,14 +171,25 @@
               }
               
               // Redirect to CMS service to create session
-              const clientId = user?.client_id || '_ttms_menu_demo'; // Fallback to default
+              // Get client_id from user, or extract from current domain, or use default
+              let clientId = user?.client_id;
+              if (!clientId) {
+                // Extract client ID from current domain (e.g., islandbeer.ttmenus.com -> islandbeer)
+                const hostname = window.location.hostname;
+                const domainParts = hostname.split('.');
+                if (domainParts.length >= 2 && domainParts[1] === 'ttmenus' && domainParts[2] === 'com') {
+                  clientId = domainParts[0]; // e.g., 'islandbeer'
+                } else {
+                  clientId = '_ttms_menu_demo'; // Fallback to default
+                }
+              }
               
               if (token) {
                 // Create session via POST request (secure, no token in URL)
                 createCMSSession(clientId, token);
               } else {
-                // Fallback: redirect directly to preview (will create session there)
-                window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview`;
+                // Fallback: redirect to login-redirect endpoint which will set session and redirect
+                window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}`;
               }
             }, 1000);
           } else {
@@ -265,19 +287,20 @@
           console.log('📥 CMS session response:', response.status, responseData);
 
           if (response.ok) {
-            // Session created successfully, redirect to preview
-            console.log('✅ Session created, redirecting to preview...');
-            window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview`;
+            // Session created successfully, redirect to update-ui editor (public route)
+            console.log('✅ Session created, redirecting to update-ui editor...');
+            window.location.href = `https://cms.ttmenus.com/api/clients/${encodeURIComponent(clientId)}/preview/update-ui`;
           } else {
             // Fallback: try login-redirect endpoint (less secure but works)
             console.warn('⚠️ Session creation failed, using fallback redirect. Error:', responseData);
-            // Still use fallback but log the issue
+            // Use login-redirect endpoint which will set session and redirect to update-ui
             window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}&token=${encodeURIComponent(token)}`;
           }
         } catch (error) {
           console.error('❌ Error creating CMS session:', error);
           // Fallback: redirect to login-redirect endpoint
           // Note: This puts token in URL which is less secure, but necessary for fallback
+          // The login-redirect endpoint will set the session cookie and redirect to update-ui
           window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}&token=${encodeURIComponent(token)}`;
         }
       }
