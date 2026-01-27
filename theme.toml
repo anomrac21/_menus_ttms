@@ -10,7 +10,7 @@ homepage = 'https://github.com/anomrac21/_menus_ttms'
 demosite = 'https://anomrac21.github.io/_menus_ttms'
 
 # Taxonomy terms
-tags = ['menu', 'advertisments']
+tags = ['menu', 'promotions']
 features = ['odoo', 'ttmenus', 'payments']
 
 # If the theme has multiple authors

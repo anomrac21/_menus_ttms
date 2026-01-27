@@ -4,22 +4,26 @@
   <!--{{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
   {{ $dateHuman := .Date | time.Format ":date_long" }}
   <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time-->
-  {{if not (eq .Section ("advertisments")) }}
+  {{if not (eq .Section ("promotions")) }}
     <div class="main-content">
       <div class="single-page-item-card">
         {{ $category :=  .Section  }}
         {{ $categoryurl := .Parent.Permalink }}            
         {{$sizes := slice}}
-        {{range .Params.prices}}
-          {{if not (in $sizes .size)}}
-            {{$sizes = $sizes | append .size}}
+        {{if .Params.prices}}
+          {{range .Params.prices}}
+            {{if not (in $sizes .size)}}
+              {{$sizes = $sizes | append .size}}
+            {{end}}
           {{end}}
         {{end}}
 
         {{$flavours := slice}}
-        {{range .Params.prices}}
-          {{if not (in $flavours .flavour)}}
-            {{$flavours = $flavours | append .flavour}}
+        {{if .Params.prices}}
+          {{range .Params.prices}}
+            {{if not (in $flavours .flavour)}}
+              {{$flavours = $flavours | append .flavour}}
+            {{end}}
           {{end}}
         {{end}}
         
@@ -42,12 +46,12 @@
               {{ .Content }}
           </div>
           
-              {{$allprices := .Params.prices}}
+              {{$allprices := .Params.prices | default slice}}
           {{/* Only show prices section if there are no interactive options to select */}}
           {{ $hasSideCategories := and .Params.side_categories (gt (len .Params.side_categories) 0) }}
           {{ $hasAdditions := and .Params.additions (gt (len .Params.additions) 0) }}
           {{ $hasSelectableOptions := or (gt (len $sizes) 1) (gt (len $flavours) 1) $hasSideCategories $hasAdditions }}
-          {{ if and (gt (len $allprices) 0) (not $hasSelectableOptions) }}
+          {{ if and $allprices (gt (len $allprices) 0) (not $hasSelectableOptions) }}
             <div class="single-page-prices-section">
               {{ range $index, $currentItem := $sizes }}
                 {{ if ne $currentItem "-" }}
@@ -125,10 +129,12 @@
           
           {{/* Build prices array for JavaScript */}}
           {{ $pricesArray := slice }}
-          {{ range .Params.prices }}
-            {{ $pricesArray = $pricesArray | append .size }}
-            {{ $pricesArray = $pricesArray | append .flavour }}
-            {{ $pricesArray = $pricesArray | append .price }}
+          {{ if .Params.prices }}
+            {{ range .Params.prices }}
+              {{ $pricesArray = $pricesArray | append .size }}
+              {{ $pricesArray = $pricesArray | append .flavour }}
+              {{ $pricesArray = $pricesArray | append .price }}
+            {{ end }}
           {{ end }}
           
           {{/* Store data in data attributes for JavaScript */}}
@@ -235,20 +241,24 @@
                 {{$counter := 0}}
                 {{$number := slice}}
                 {{$total := 0}}
-                {{range .Params.prices}}
-                  {{$counter = add $counter 1}}
-                  {{$number = $number | append .price}}
-                  {{$total = add $total .price}}
+                {{if .Params.prices}}
+                  {{range .Params.prices}}
+                    {{$counter = add $counter 1}}
+                    {{$number = $number | append .price}}
+                    {{$total = add $total .price}}
+                  {{end}}
                 {{end}} 
-                {{$number := sort $number}}
-                {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
-                  {{ $price := float (index $number (sub $counter 1)) }}
-                  ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
-                {{else }}
-                  {{ $price1 := float (index $number 0) }}
-                  {{ $price2 := float (index $number (sub $counter 1)) }}
-                  ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
-              {{ end }}                        
+                {{if gt $counter 0}}
+                  {{$number := sort $number}}
+                  {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
+                    {{ $price := float (index $number (sub $counter 1)) }}
+                    ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
+                  {{else }}
+                    {{ $price1 := float (index $number 0) }}
+                    {{ $price2 := float (index $number (sub $counter 1)) }}
+                    ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
+                  {{ end }}
+                {{end}}
               </span>
             </div>
             <button class="single-page-add-cart-btn" onclick="addSinglePageItemToCart(this, '{{ .RelPermalink }}')">

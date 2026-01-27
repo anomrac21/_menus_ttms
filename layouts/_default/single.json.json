@@ -1,4 +1,4 @@
-{{- if not (eq .Section "advertisments") -}}
+{{- if not (eq .Section "promotions") -}}
   {{- $category := .Section -}}
   {{- $categoryurl := .Parent.Permalink -}}
   

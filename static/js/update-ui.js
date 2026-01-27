@@ -1070,10 +1070,10 @@ const UpdateUI = {
    */
   async loadAdvertisements() {
     try {
-      console.log('Loading advertisements from advertisments/index.json...');
+      console.log('Loading advertisements from promotions/index.json...');
       
-      // Load from Hugo's index.json for Advertisments section
-      const response = await fetch('/advertisments/index.json');
+      // Load from Hugo's index.json for Promotions section
+      const response = await fetch('/promotions/index.json');
       
       if (!response.ok) {
         throw new Error('Failed to load advertisements');
@@ -1095,10 +1095,10 @@ const UpdateUI = {
           imagePath = img.startsWith('/') ? img : `/${img}`;
         }
         
-        // Extract ID from Hugo URL (e.g., "/advertisments/more-ish-monday/" -> "more-ish-monday")
+        // Extract ID from Hugo URL (e.g., "/promotions/more-ish-monday/" -> "more-ish-monday")
         let adId = ad.title.toLowerCase().replace(/\s+/g, '-');
         if (ad.url) {
-          const urlMatch = ad.url.match(/\/advertisments\/([^/]+)\/?$/);
+          const urlMatch = ad.url.match(/\/promotions\/([^/]+)\/?$/);
           if (urlMatch) {
             adId = urlMatch[1];
           }
@@ -12232,10 +12232,10 @@ const HousekeepingManager = {
       
       // Scan advertisements from Hugo content
       try {
-        const adsResponse = await fetch('/advertisments/index.json');
+        const adsResponse = await fetch('/promotions/index.json');
         if (adsResponse.ok) {
           const adsData = await adsResponse.json();
-          console.log('Advertisments data:', adsData);
+          console.log('Promotions data:', adsData);
           
           if (adsData.items && Array.isArray(adsData.items)) {
             adsData.items.forEach(ad => {
@@ -12255,7 +12255,7 @@ const HousekeepingManager = {
             });
           }
         } else {
-          console.log('Could not fetch advertisments/index.json');
+          console.log('Could not fetch promotions/index.json');
         }
       } catch (adsError) {
         console.log('Error fetching advertisements:', adsError);

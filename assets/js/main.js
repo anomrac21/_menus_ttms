@@ -676,7 +676,9 @@
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
                         <div class="expanded-item-description">
-                            ${itemDesc ? (fullDescElement ? itemDesc : `<p>${itemDesc}</p>`) : '<p>No description available</p>'}
+                            <a href="${url}" style="color: inherit; text-decoration: none;">
+                                ${itemDesc ? (fullDescElement ? itemDesc : `<p>${itemDesc}</p>`) : '<p>No description available</p>'}
+                            </a>
                         </div>
                         ${sizesHTML || flavoursHTML ? `
                         <div class="menu-item-options">

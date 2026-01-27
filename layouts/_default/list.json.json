@@ -20,7 +20,7 @@
       "cookingmethods" ($page.Params.cookingmethods | default slice)
   -}}
 
-  {{- if eq $.Section "advertisments" }}
+  {{- if eq $.Section "promotions" }}
     {{- $adLocations := slice -}}
     {{- with site.Data.locations.locations }}
       {{- range . }}

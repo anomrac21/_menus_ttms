@@ -1583,7 +1583,20 @@ function buildCartCards() {
 		let itemSides = '';
 		let itemAdds = '';
 		let itemMods = '';
+		let itemSize = '';
+		let itemFlavour = '';
 		let hasDetails = false;
+		
+		// Parse size and flavour (size can be "size flavour" or just "size" or "-")
+		if (item.size && item.size !== '-') {
+			const sizeParts = item.size.split(' ');
+			if (sizeParts.length > 1) {
+				itemSize = sizeParts[0];
+				itemFlavour = sizeParts.slice(1).join(' ');
+			} else {
+				itemSize = item.size;
+			}
+		}
 		
 		// Handle sides with category tracking (new format)
 		if (item.sides && typeof item.sides === 'object' && item.sides.categories) {
@@ -1612,14 +1625,27 @@ function buildCartCards() {
 			itemSides = `<div class="cart-item-category"><strong>Sides:</strong> ${item.sides.join(', ')}</div>`;
 		}
 		
+		// Handle additions (can be array of strings or array of [name, price] pairs)
 		if (item.adds && item.adds.length > 0) {
 			hasDetails = true;
-			itemAdds = `<div class="cart-item-category"><strong>Additional Mods:</strong> ${item.adds.join(', ')}</div>`;
+			const addNames = item.adds.filter((add, idx) => idx % 2 === 0); // Get names (even indices)
+			itemAdds = `<div class="cart-item-category"><strong>Additions:</strong> ${addNames.join(', ')}</div>`;
 		}
 		
 		if (item.mods && item.mods.length > 0) {
 			hasDetails = true;
 			itemMods = `<div class="cart-item-category"><strong>Modifications:</strong> ${item.mods.join(', ')}</div>`;
+		}
+		
+		// Show size/flavour in details if they exist and are not "-"
+		let itemSizeFlavour = '';
+		if (itemSize && itemSize !== '-') {
+			itemSizeFlavour += `<div class="cart-item-category"><strong>Size:</strong> ${itemSize}</div>`;
+			hasDetails = true;
+		}
+		if (itemFlavour && itemFlavour !== '-') {
+			itemSizeFlavour += `<div class="cart-item-category"><strong>Flavour:</strong> ${itemFlavour}</div>`;
+			hasDetails = true;
 		}
 		
 		// Build the card with collapsible feature
@@ -1637,13 +1663,14 @@ function buildCartCards() {
 							<div class="cart-item-name">${item.item}</div>
 							${hasDetails ? '<i class="fa fa-chevron-down cart-expand-icon"></i>' : ''}
 						</div>
-						${item.size ? `<div class="cart-item-size">${item.size}</div>` : ''}
+						${item.size && item.size !== '-' ? `<div class="cart-item-size">${item.size}</div>` : '<div class="cart-item-size">-</div>'}
 					</div>
 					${hasDetails ? `
 						<div class="cart-item-details">
+							${itemSizeFlavour}
 							${itemSides}
-							${itemMods}
 							${itemAdds}
+							${itemMods}
 						</div>
 					` : ''}
 				</div>

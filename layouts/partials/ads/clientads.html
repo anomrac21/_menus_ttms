@@ -1,6 +1,6 @@
 <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
 <div id="client-ads-container" class="frontpageads item">
-  {{ $advertisements := site.GetPage "Advertisments" }}
+  {{ $advertisements := site.GetPage "Promotions" }}
   {{ if $advertisements }}
     {{ range $advertisements.RegularPages.ByWeight }}
       {{ $adstitle := .LinkTitle }}

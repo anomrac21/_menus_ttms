@@ -35,6 +35,9 @@
   <!-- Loader script - High priority, loads after Barba -->
   <script src="{{ site.BaseURL}}js/loader.js" defer></script>
   
+  <!-- Client Ad Manager - Load before other scripts that depend on it -->
+  <script src="{{ site.BaseURL}}js/client-ad-manager.js" defer></script>
+  
   <!-- Core app functionality - deferred -->
   <script src="{{ site.BaseURL}}js/app.js" defer></script>
   <script src="{{ site.BaseURL}}js/custom.js" defer></script>

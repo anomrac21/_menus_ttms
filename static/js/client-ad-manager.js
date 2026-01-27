@@ -25,7 +25,7 @@ class ClientAdManager {
   // Load ads from JSON
   async loadAds() {
     try {
-      const url = `/advertisments/index.json?t=${Date.now()}`;
+      const url = `/promotions/index.json?t=${Date.now()}`;
       console.log('Loading ads from:', url);
       
       const response = await fetch(url);
@@ -37,8 +37,10 @@ class ClientAdManager {
       if (data && data.items) {
         this.ads = data.items;
         console.log('Loaded ads:', this.ads.length);
+        console.log('Sample ad:', this.ads[0]);
         return true;
       }
+      console.warn('No items in promotions data:', data);
       return false;
     } catch (error) {
       console.error('Failed to load ads:', error);
@@ -48,18 +50,23 @@ class ClientAdManager {
 
   // Generate HTML for one ad
   generateAdHTML(ad) {
-    const finalUrl = ad.link || ad.url || `/advertisments/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
+    const finalUrl = ad.link || ad.url || `/promotions/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
     const adId = ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     
-    const imagesHTML = (ad.images || []).map(img => `
+    const imagesHTML = (ad.images || []).map(img => {
+      // Handle both object format {image: "path"} and string format
+      const imagePath = typeof img === 'string' ? img : (img.image || img);
+      if (!imagePath) return '';
+      return `
       <li class="ad-panel">
           <a href="${finalUrl}" class="content-panel">
-          <img src="/${img.image}" class="ad-portrait-bg">
-          <img src="/${img.image}" class="ad-portrait">
+          <img src="/${imagePath}" class="ad-portrait-bg">
+          <img src="/${imagePath}" class="ad-portrait">
             <div class="adbottomspacer"></div>
           </a>
         </li>
-    `).join('');
+    `;
+    }).filter(html => html).join('');
 
     return `
       <section id="menu-ad-${adId}" class="ads menu-ad sticky">
@@ -102,7 +109,13 @@ class ClientAdManager {
     // Load ads if not already loaded
     if (this.ads.length === 0) {
       const loaded = await this.loadAds();
-      if (!loaded || this.ads.length === 0) {
+      if (!loaded) {
+        console.error('Failed to load promotions');
+        container.innerHTML = '<p style="text-align: center; padding: 2em; color: red;">Failed to load promotions. Please refresh the page.</p>';
+        return;
+      }
+      if (this.ads.length === 0) {
+        console.warn('No promotions found in data');
         container.innerHTML = '<p style="text-align: center; padding: 2em;">No promotions available</p>';
         return;
       }

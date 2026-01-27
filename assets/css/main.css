@@ -504,6 +504,9 @@ footer {
     font-weight: 600;
     line-height: 1.2
 }
+.expanded .menu-item-title {
+    font-size: 1.4em;
+}
 
 .menu-item-title a {
     color: var(--button-text-color1,#fff);
@@ -902,6 +905,19 @@ footer {
     color: var(--button-text-color2,#ccc);
     line-height: 1.6;
     font-size: .9em
+}
+
+.expanded-item-description a {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    transition: color .2s ease;
+    cursor: pointer
+}
+
+.expanded-item-description a:hover {
+    color: var(--button-text-color1,#fff);
+    text-decoration: underline
 }
 
 .expanded-item-description p {

@@ -1,7 +1,7 @@
 {{- $menuItems := slice -}}
 
 {{- range site.Sections -}}
-  {{- if and (ne .Section "content") (ne .Section "advertisments") (ne .Section "tags") (ne .Section "categories") (ne .Section "subcategories") (ne .Section "types") (ne .Section "events") (ne .Section "ingredients") (ne .Section "cookingmethods") (ne .Section "admins") (ne .Section "admin") -}}
+  {{- if and (ne .Section "content") (ne .Section "promotions") (ne .Section "tags") (ne .Section "categories") (ne .Section "subcategories") (ne .Section "types") (ne .Section "events") (ne .Section "ingredients") (ne .Section "cookingmethods") (ne .Section "admins") (ne .Section "admin") -}}
     
     {{- range .Pages -}}
       {{- /* Build sizes array */ -}}
