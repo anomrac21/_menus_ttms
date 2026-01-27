@@ -423,6 +423,39 @@
                     console.log('JSON fetch failed, falling back to HTML:', jsonError);
                 }
                 
+                // Fallback: Get data from card's data attributes if JSON failed
+                if (!itemData || Object.keys(itemData).length === 0) {
+                    const pricesArrayStr = element.getAttribute('data-prices-array');
+                    if (pricesArrayStr) {
+                        try {
+                            pricesArray = JSON.parse(pricesArrayStr);
+                            console.log('📊 Loaded prices array from data attribute:', pricesArray);
+                        } catch (e) {
+                            console.log('⚠️ Failed to parse data-prices-array:', e);
+                        }
+                    }
+                    
+                    const sideCategoriesStr = element.getAttribute('data-side-categories');
+                    if (sideCategoriesStr) {
+                        try {
+                            sideCategories = JSON.parse(sideCategoriesStr);
+                            console.log('📊 Loaded side categories from data attribute:', sideCategories);
+                        } catch (e) {
+                            console.log('⚠️ Failed to parse data-side-categories:', e);
+                        }
+                    }
+                    
+                    const additionsStr = element.getAttribute('data-additions');
+                    if (additionsStr) {
+                        try {
+                            additions = JSON.parse(additionsStr);
+                            console.log('📊 Loaded additions from data attribute:', additions);
+                        } catch (e) {
+                            console.log('⚠️ Failed to parse data-additions:', e);
+                        }
+                    }
+                }
+                
                 // If JSON didn't provide sizes/flavours, try extracting from card element
                 if (sizes.length === 0 && flavours.length === 0) {
                     const sizesList = element.querySelector('.menu-item-options .sizes');
