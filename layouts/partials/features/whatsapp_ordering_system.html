@@ -1473,7 +1473,10 @@ function buildOrderText(){
 					if (catItems && catItems.length > 0) {
 						let catStr = catName + ': ';
 						for (var j = 0; j < catItems.length; j++) {
-							catStr += catItems[j];
+							const item = catItems[j];
+							// Extract item name from object or use string directly
+							const itemName = typeof item === 'object' && item !== null ? (item.name || JSON.stringify(item)) : item;
+							catStr += itemName;
 							if (j < catItems.length - 1) {
 								catStr += ', ';
 							}
@@ -1593,7 +1596,11 @@ function buildCartCards() {
 				categoryNames.forEach(function(catName) {
 					const catItems = categories[catName];
 					if (catItems && catItems.length > 0) {
-						categoryStrings.push(`<div class="cart-item-category"><strong>${catName}:</strong> ${catItems.join(', ')}</div>`);
+						// Extract item names from objects or use strings directly
+						const itemNames = catItems.map(function(item) {
+							return typeof item === 'object' && item !== null ? (item.name || JSON.stringify(item)) : item;
+						});
+						categoryStrings.push(`<div class="cart-item-category"><strong>${catName}:</strong> ${itemNames.join(', ')}</div>`);
 					}
 				});
 				itemSides = categoryStrings.join('');

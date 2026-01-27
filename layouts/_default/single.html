@@ -43,21 +43,179 @@
           </div>
           
               {{$allprices := .Params.prices}}
-          {{ if gt (len $sizes) 0 }}
+          {{/* Only show prices section if there are no interactive options to select */}}
+          {{ $hasSideCategories := and .Params.side_categories (gt (len .Params.side_categories) 0) }}
+          {{ $hasAdditions := and .Params.additions (gt (len .Params.additions) 0) }}
+          {{ $hasSelectableOptions := or (gt (len $sizes) 1) (gt (len $flavours) 1) $hasSideCategories $hasAdditions }}
+          {{ if and (gt (len $allprices) 0) (not $hasSelectableOptions) }}
             <div class="single-page-prices-section">
               {{ range $index, $currentItem := $sizes }}
-                <div class="price-group">
-                  <h3 class="price-group-title">{{ $currentItem }}</h3>
-                <ul class="prices">
-                  {{ range $allprices }}
-                    {{ if eq $currentItem .size }}
+                {{ if ne $currentItem "-" }}
+                  <div class="price-group">
+                    <h3 class="price-group-title">{{ $currentItem }}</h3>
+                    <ul class="prices">
+                      {{ range $allprices }}
+                        {{ if eq $currentItem .size }}
+                          <li>
+                            {{ $price := float .price }}
+                            {{ if and .flavour (ne .flavour "-") }}{{ .flavour }} {{ end }}<b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                          </li>
+                        {{ end }}
+                      {{ end }}
+                    </ul>
+                  </div>
+                {{ end }}
+              {{ end }}
+              {{/* Show single price if no sizes or all sizes are "-" */}}
+              {{ if or (eq (len $sizes) 0) (and (eq (len $sizes) 1) (eq (index $sizes 0) "-")) }}
+                {{ $firstPrice := index $allprices 0 }}
+                {{ if $firstPrice }}
+                  <div class="price-group">
+                    <ul class="prices">
                       <li>
-                        {{ $price := float .price }}
-                        {{ .flavour }} <b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                        {{ $price := float $firstPrice.price }}
+                        <b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                      </li>
+                    </ul>
+                  </div>
+                {{ end }}
+              {{ end }}
+            </div>
+          {{ end }}
+          
+          {{/* Build side categories data */}}
+          {{ $sideCategories := slice }}
+          {{ if .Params.side_categories }}
+            {{ range .Params.side_categories }}
+              {{ $category := dict }}
+              {{ $category = merge $category (dict "category_name" .category_name) }}
+              {{ $category = merge $category (dict "display_name" .display_name) }}
+              {{ $items := slice }}
+              {{ range .items }}
+                {{ $item := slice }}
+                {{ $item = $item | append .name }}
+                {{ $item = $item | append .type }}
+                {{ $item = $item | append .price }}
+                {{ $items = $items | append $item }}
+              {{ end }}
+              {{ $category = merge $category (dict "items" $items) }}
+              {{ if .config }}
+                {{ $config := slice }}
+                {{ $config = $config | append .config.all_max }}
+                {{ $config = $config | append .config.all_valuecount }}
+                {{ $config = $config | append .config.all_value }}
+                {{ $config = $config | append .config.regular_max }}
+                {{ $config = $config | append .config.regular_valuecount }}
+                {{ $config = $config | append .config.regular_value }}
+                {{ $config = $config | append .config.premium_max }}
+                {{ $config = $config | append .config.premium_valuecount }}
+                {{ $config = $config | append .config.premium_value }}
+                {{ $category = merge $category (dict "config" $config) }}
+              {{ end }}
+              {{ $sideCategories = $sideCategories | append $category }}
+            {{ end }}
+          {{ end }}
+          
+          {{/* Build additions data */}}
+          {{ $additions := slice }}
+          {{ range .Params.additions }}
+            {{ $additions = $additions | append .name }}
+            {{ $additions = $additions | append .price }}
+          {{ end }}
+          
+          {{/* Build prices array for JavaScript */}}
+          {{ $pricesArray := slice }}
+          {{ range .Params.prices }}
+            {{ $pricesArray = $pricesArray | append .size }}
+            {{ $pricesArray = $pricesArray | append .flavour }}
+            {{ $pricesArray = $pricesArray | append .price }}
+          {{ end }}
+          
+          {{/* Store data in data attributes for JavaScript */}}
+          <div id="single-page-item-data" 
+               data-prices-array="{{ $pricesArray | jsonify }}"
+               data-sizes="{{ $sizes | jsonify }}"
+               data-flavours="{{ $flavours | jsonify }}"
+               data-side-categories="{{ $sideCategories | jsonify }}"
+               data-additions="{{ $additions | jsonify }}"
+               data-item-url="{{ .RelPermalink }}"
+               style="display: none;"></div>
+          
+          {{/* Options Sections */}}
+          {{ if or (gt (len $sizes) 1) (gt (len $flavours) 1) (gt (len $sideCategories) 0) (gt (len $additions) 0) }}
+            <div class="single-page-options-section">
+              {{/* Sizes */}}
+              {{ if gt (len $sizes) 1 }}
+                <div class="single-page-options-group">
+                  <h4 class="single-page-options-title">Size</h4>
+                  <ul class="single-page-options-list">
+                    {{ range $index, $size := $sizes }}
+                      <li class="single-page-option {{ if eq $index 0 }}selected{{ end }}" 
+                          data-option-type="size" 
+                          data-option-value="{{ $size }}"
+                          onclick="selectSinglePageOption(this, event)">
+                        {{ $size }}
                       </li>
                     {{ end }}
+                  </ul>
+                </div>
+              {{ end }}
+              
+              {{/* Flavours */}}
+              {{ if gt (len $flavours) 1 }}
+                <div class="single-page-options-group">
+                  <h4 class="single-page-options-title">Flavour</h4>
+                  <ul class="single-page-options-list">
+                    {{ range $index, $flavour := $flavours }}
+                      <li class="single-page-option {{ if eq $index 0 }}selected{{ end }}" 
+                          data-option-type="flavour" 
+                          data-option-value="{{ $flavour }}"
+                          onclick="selectSinglePageOption(this, event)">
+                        {{ $flavour }}
+                      </li>
+                    {{ end }}
+                  </ul>
+                </div>
+              {{ end }}
+              
+              {{/* Side Categories */}}
+              {{ if .Params.side_categories }}
+                <div class="single-page-side-categories">
+                  {{ range .Params.side_categories }}
+                    {{ $categoryName := .category_name }}
+                    <div class="single-page-side-category" data-category-name="{{ $categoryName }}">
+                      <h4 class="single-page-side-category-title">{{ .display_name }}</h4>
+                      <ul class="single-page-side-items">
+                        {{ range .items }}
+                          <li class="single-page-side-option regularside" 
+                              data-category="{{ $categoryName }}"
+                              data-item-name="{{ .name }}"
+                              data-item-type="{{ .type }}"
+                              data-item-price="{{ .price }}"
+                              onclick="selectSinglePageSide(this, event)">
+                            {{ .name }}
+                          </li>
+                        {{ end }}
+                      </ul>
+                    </div>
                   {{ end }}
-                </ul>
+                </div>
+              {{ end }}
+              
+              {{/* Additions */}}
+              {{ if gt (len $additions) 0 }}
+                <div class="single-page-additions">
+                  <h4 class="single-page-additions-title">Additions</h4>
+                  <ul class="single-page-addition-items">
+                    {{ range .Params.additions }}
+                      <li class="single-page-addition-option" 
+                          data-addition-name="{{ .name }}"
+                          data-addition-price="{{ .price }}"
+                          onclick="selectSinglePageAddition(this, event)">
+                        {{ .name }} <span class="addition-price">+${{ (printf "%.2f" (float .price)) | replaceRE "\\.00$" "" }}</span>
+                      </li>
+                    {{ end }}
+                  </ul>
                 </div>
               {{ end }}
             </div>

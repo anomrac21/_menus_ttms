@@ -375,11 +375,19 @@
                 let sizes = [];
                 let flavours = [];
                 let pricesArray = []; // Array of [size, flavour, price] tuples
+                let sideCategories = []; // Array of side category objects
+                let additions = []; // Array of [name, price] tuples
                 
                 try {
-                    const jsonResponse = await fetch(url + '.json');
+                    // Hugo serves JSON at /path/index.json
+                    let jsonResponse = await fetch(url + '/index.json');
+                    if (!jsonResponse.ok) {
+                        // Fallback to .json format
+                        jsonResponse = await fetch(url + '.json');
+                    }
                     if (jsonResponse.ok) {
                         itemData = await jsonResponse.json();
+                        console.log('📊 Full itemData loaded:', itemData);
                         if (itemData.sizes) {
                             sizes = itemData.sizes.filter(s => s && s !== '-' && s !== 'None');
                         }
@@ -390,6 +398,25 @@
                         if (itemData.items && Array.isArray(itemData.items)) {
                             pricesArray = itemData.items;
                             console.log('📊 Loaded prices array from JSON:', pricesArray);
+                        }
+                        // Get side categories
+                        if (itemData.side_categories && Array.isArray(itemData.side_categories)) {
+                            sideCategories = itemData.side_categories;
+                            console.log('📊 Loaded side categories from JSON:', sideCategories);
+                            console.log('📊 Side categories count:', sideCategories.length);
+                            if (sideCategories.length > 0) {
+                                console.log('📊 First category:', sideCategories[0]);
+                                console.log('📊 First category items:', sideCategories[0].items);
+                            }
+                        } else {
+                            console.log('⚠️ No side_categories found in JSON or not an array');
+                            console.log('⚠️ itemData keys:', Object.keys(itemData || {}));
+                            console.log('⚠️ itemData.side_categories:', itemData?.side_categories);
+                        }
+                        // Get additions
+                        if (itemData.additions && Array.isArray(itemData.additions)) {
+                            additions = itemData.additions;
+                            console.log('📊 Loaded additions from JSON:', additions);
                         }
                     }
                 } catch (jsonError) {
@@ -497,7 +524,7 @@
                                 <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
                                     data-option-type="size" 
                                     data-option-value="${size}"
-                                    onclick="selectExpandedOption(this, '${url}')">${size}</li>
+                                    onclick="selectExpandedOption(this, '${url}', event)">${size}</li>
                             `).join('')}
                         </ul>
                     `;
@@ -510,16 +537,107 @@
                                 <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
                                     data-option-type="flavour" 
                                     data-option-value="${flavour}"
-                                    onclick="selectExpandedOption(this, '${url}')">${flavour}</li>
+                                    onclick="selectExpandedOption(this, '${url}', event)">${flavour}</li>
                             `).join('')}
                         </ul>
                     `;
                 }
                 
-                // Store prices array and default selections in data attributes
+                // Build side categories HTML
+                let sideCategoriesHTML = '';
+                console.log('🔧 Building side categories HTML, count:', sideCategories.length);
+                if (sideCategories && sideCategories.length > 0) {
+                    sideCategories.forEach((category, catIndex) => {
+                        const categoryName = category.category_name || `category_${catIndex}`;
+                        const displayName = category.display_name || 'Choose Options';
+                        const rawItems = category.items || [];
+                        const configArray = category.config || [];
+                        
+                        console.log(`🔧 Processing category ${catIndex}: ${categoryName}, items:`, rawItems);
+                        
+                        // Convert config array to object
+                        const config = {
+                            all_max: configArray[0] || 0,
+                            regular_max: configArray[3] || 0,
+                            premium_max: configArray[6] || 0
+                        };
+                        
+                        // Build items HTML
+                        let itemsHTML = '';
+                        if (rawItems && rawItems.length > 0) {
+                            // Items come as flat array [name, type, price, name, type, price, ...]
+                            for (let i = 0; i < rawItems.length; i += 3) {
+                                if (i + 2 < rawItems.length) {
+                                    const name = rawItems[i];
+                                    const type = rawItems[i + 1];
+                                    const price = parseFloat(rawItems[i + 2]) || 0;
+                                    const priceDisplay = price > 0 ? ` (+$${price})` : '';
+                                    const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
+                                    const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+                                    
+                                    itemsHTML += `
+                                        <li class="expanded-side-option ${cssClass}" 
+                                            data-category="${categoryName}"
+                                            data-item-name="${name}"
+                                            data-item-type="${type}"
+                                            data-item-price="${price}"
+                                            onclick="selectExpandedSide(this, '${url}', event)">
+                                            ${name}${starIcon}${priceDisplay}
+                                        </li>
+                                    `;
+                                }
+                            }
+                        }
+                        
+                        if (itemsHTML) {
+                            sideCategoriesHTML += `
+                                <div class="expanded-side-category" data-category-name="${categoryName}">
+                                    <h4 class="expanded-side-category-title">${displayName}</h4>
+                                    <ul class="expanded-side-items">
+                                        ${itemsHTML}
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    });
+                    console.log('✅ Built side categories HTML:', sideCategoriesHTML ? 'Yes' : 'No');
+                } else {
+                    console.log('⚠️ No side categories to display');
+                }
+                
+                // Build additions HTML
+                let additionsHTML = '';
+                if (additions && additions.length > 0) {
+                    additionsHTML = `
+                        <div class="expanded-additions">
+                            <h4 class="expanded-additions-title">Additions</h4>
+                            <ul class="expanded-addition-items">
+                                ${additions.map((addition, index) => {
+                                    if (index % 2 === 0 && index + 1 < additions.length) {
+                                        const name = additions[index];
+                                        const price = parseFloat(additions[index + 1]) || 0;
+                                        return `
+                                            <li class="expanded-addition-option" 
+                                                data-addition-name="${name}" 
+                                                data-addition-price="${price}"
+                                                onclick="selectExpandedAddition(this, '${url}', event)">
+                                                ${name} <span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span>
+                                            </li>
+                                        `;
+                                    }
+                                    return '';
+                                }).filter(html => html).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                // Store prices array, side categories, additions, and default selections in data attributes
                 element.setAttribute('data-prices-array', JSON.stringify(pricesArray));
                 element.setAttribute('data-selected-size', defaultSize);
                 element.setAttribute('data-selected-flavour', defaultFlavour);
+                element.setAttribute('data-side-categories', JSON.stringify(sideCategories));
+                element.setAttribute('data-additions', JSON.stringify(additions));
                 
                 // Create expanded content HTML
                 dataDiv.innerHTML = `
@@ -531,6 +649,16 @@
                         <div class="menu-item-options">
                             ${sizesHTML}
                             ${flavoursHTML}
+                        </div>
+                        ` : ''}
+                        ${sideCategoriesHTML ? `
+                        <div class="expanded-side-categories">
+                            ${sideCategoriesHTML}
+                        </div>
+                        ` : ''}
+                        ${additionsHTML ? `
+                        <div class="expanded-additions-section">
+                            ${additionsHTML}
                         </div>
                         ` : ''}
                         <div class="expanded-item-controls">
@@ -642,40 +770,8 @@
      * @param {number} quantity - The new quantity
      */
     function updateExpandedItemPrice(card, quantity) {
-        // First try to update from options (size/flavour selection)
-        updateExpandedItemPriceFromOptions(card);
-        
-        // Get unit price from the price element or button
-        const priceElement = card.querySelector('.expanded-price');
-        const addCartButton = card.querySelector('.expanded-add-cart');
-        
-        if (!priceElement || !addCartButton) return;
-        
-        const unitPrice = parseFloat(priceElement.getAttribute('data-unit-price')) || 
-                         parseFloat(addCartButton.getAttribute('data-unit-price')) || 0;
-        
-        if (unitPrice === 0) {
-            // Try to extract from price text
-            const priceText = priceElement.textContent || '';
-            const priceMatch = priceText.match(/\$?([\d.]+)/);
-            const extractedPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
-            if (extractedPrice > 0) {
-                const totalPrice = extractedPrice * quantity;
-                const priceButton = addCartButton.querySelector('.cart-button-price');
-                if (priceButton) {
-                    priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
-                }
-            }
-            return;
-        }
-        
-        const totalPrice = unitPrice * quantity;
-        
-        // Update cart button price
-        const priceButton = addCartButton.querySelector('.cart-button-price');
-        if (priceButton) {
-            priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
-        }
+        // Update price including sides
+        updateExpandedItemPriceWithSides(card);
     }
 
     /**
@@ -683,8 +779,14 @@
      * @global
      * @param {HTMLElement} optionElement - The clicked option element
      * @param {string} url - Item URL
+     * @param {Event} event - The click event (optional)
      */
-    function selectExpandedOption(optionElement, url) {
+    function selectExpandedOption(optionElement, url, event) {
+        // Prevent event from bubbling up to the card's onclick handler
+        if (event) {
+            event.stopPropagation();
+        }
+        
         const card = optionElement.closest('.menu-item-card');
         if (!card) return;
         
@@ -705,8 +807,136 @@
             card.setAttribute('data-selected-flavour', optionValue);
         }
         
-        // Update price based on selection
+        // Update price based on selection (including sides)
+        updateExpandedItemPriceWithSides(card);
+    }
+    
+    /**
+     * Select an addition in expanded view
+     * @global
+     * @param {HTMLElement} additionElement - The clicked addition element
+     * @param {string} url - Item URL
+     * @param {Event} event - The click event (optional)
+     */
+    function selectExpandedAddition(additionElement, url, event) {
+        // Prevent event from bubbling up to the card's onclick handler
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const card = additionElement.closest('.menu-item-card');
+        if (!card) return;
+        
+        // Toggle selected class (additions can be multiple selections)
+        additionElement.classList.toggle('selected');
+        
+        // Update price based on selection (including sides and additions)
+        updateExpandedItemPriceWithSides(card);
+    }
+    
+    /**
+     * Select a side item in expanded view
+     * @global
+     * @param {HTMLElement} sideElement - The clicked side element
+     * @param {string} url - Item URL
+     * @param {Event} event - The click event (optional)
+     */
+    function selectExpandedSide(sideElement, url, event) {
+        // Prevent event from bubbling up to the card's onclick handler
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const card = sideElement.closest('.menu-item-card');
+        if (!card) return;
+        
+        const categoryName = sideElement.getAttribute('data-category');
+        const itemName = sideElement.getAttribute('data-item-name');
+        const itemType = sideElement.getAttribute('data-item-type');
+        const itemPrice = parseFloat(sideElement.getAttribute('data-item-price')) || 0;
+        
+        // Get side categories config
+        const sideCategoriesStr = card.getAttribute('data-side-categories');
+        if (!sideCategoriesStr) return;
+        
+        const sideCategories = JSON.parse(sideCategoriesStr);
+        const category = sideCategories.find(cat => cat.category_name === categoryName);
+        if (!category) return;
+        
+        const configArray = category.config || [];
+        const maxSelections = configArray[3] || 1; // regular_max
+        
+        // Get currently selected sides for this category
+        const categoryContainer = sideElement.closest('.expanded-side-category');
+        const selectedSides = categoryContainer.querySelectorAll('.expanded-side-option.selected');
+        
+        // If max selections reached and this item is not already selected, don't allow selection
+        if (selectedSides.length >= maxSelections && !sideElement.classList.contains('selected')) {
+            // Optionally show a message or just return
+            return;
+        }
+        
+        // Toggle selection
+        if (sideElement.classList.contains('selected')) {
+            sideElement.classList.remove('selected');
+        } else {
+            // If single selection, remove other selections in this category
+            if (maxSelections === 1) {
+                categoryContainer.querySelectorAll('.expanded-side-option.selected').forEach(sel => {
+                    sel.classList.remove('selected');
+                });
+            }
+            sideElement.classList.add('selected');
+        }
+        
+        // Update price based on selected sides
+        updateExpandedItemPriceWithSides(card);
+    }
+    
+    /**
+     * Update price including selected sides
+     * @param {HTMLElement} card - The menu item card
+     */
+    function updateExpandedItemPriceWithSides(card) {
+        // First update base price from size/flavour
         updateExpandedItemPriceFromOptions(card);
+        
+        // Get base unit price
+        const priceElement = card.querySelector('.expanded-price');
+        const baseUnitPrice = parseFloat(priceElement?.getAttribute('data-unit-price')) || 0;
+        
+        // Calculate side prices
+        let sidePrice = 0;
+        const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
+        selectedSides.forEach(side => {
+            const price = parseFloat(side.getAttribute('data-item-price')) || 0;
+            sidePrice += price;
+        });
+        
+        // Calculate addition prices
+        let additionPrice = 0;
+        const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected');
+        selectedAdditions.forEach(addition => {
+            const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
+            additionPrice += price;
+        });
+        
+        // Get quantity
+        const quantitySpan = card.querySelector('.expanded-quantity');
+        const quantity = parseInt(quantitySpan?.textContent) || 1;
+        
+        // Calculate total
+        const totalPrice = (baseUnitPrice + sidePrice + additionPrice) * quantity;
+        
+        // Update price display
+        const addCartButton = card.querySelector('.expanded-add-cart');
+        const priceButton = addCartButton?.querySelector('.cart-button-price');
+        
+        if (priceButton) {
+            priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
+        }
     }
     
     /**
@@ -784,7 +1014,16 @@
         // Update price display
         const quantitySpan = card.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
-        const totalPrice = unitPrice * quantity;
+        
+        // Calculate side prices
+        let sidePrice = 0;
+        const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
+        selectedSides.forEach(side => {
+            const price = parseFloat(side.getAttribute('data-item-price')) || 0;
+            sidePrice += price;
+        });
+        
+        const totalPrice = (unitPrice + sidePrice) * quantity;
         
         const priceElement = card.querySelector('.expanded-price');
         const addCartButton = card.querySelector('.expanded-add-cart');
@@ -815,6 +1054,36 @@
         if (!card) {
             console.warn('Card not found for add to cart');
             return;
+        }
+
+        // Check if required side categories have selections
+        const sideCategoriesStr = card.getAttribute('data-side-categories');
+        if (sideCategoriesStr) {
+            const sideCategories = JSON.parse(sideCategoriesStr);
+            const missingSelections = [];
+            
+            sideCategories.forEach(category => {
+                const categoryName = category.category_name;
+                const displayName = category.display_name;
+                const configArray = category.config || [];
+                const requiredMax = configArray[3] || 0; // regular_max
+                
+                if (requiredMax > 0) {
+                    const categoryContainer = card.querySelector(`.expanded-side-category[data-category-name="${categoryName}"]`);
+                    if (categoryContainer) {
+                        const selectedSides = categoryContainer.querySelectorAll('.expanded-side-option.selected');
+                        if (selectedSides.length < requiredMax) {
+                            missingSelections.push(displayName || categoryName);
+                        }
+                    }
+                }
+            });
+            
+            if (missingSelections.length > 0) {
+                const message = `Please select ${missingSelections.length === 1 ? 'a' : ''} ${missingSelections.join(' and ')} before adding to cart.`;
+                alert(message);
+                return;
+            }
         }
 
         // Get item details
@@ -853,20 +1122,73 @@
             const size = selectedSize !== '-' && selectedFlavour !== '-' 
                 ? `${selectedSize} ${selectedFlavour}`.trim()
                 : selectedSize !== '-' ? selectedSize : '-';
-            const sides = { items: [], categories: {} }; // No sides by default
-            const adds = []; // No additions by default
+            
+            // Get selected sides
+            const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
+            const sidesData = { items: [], categories: {} };
+            
+            selectedSides.forEach(side => {
+                const categoryName = side.getAttribute('data-category');
+                const sideName = side.getAttribute('data-item-name');
+                const sideType = side.getAttribute('data-item-type');
+                const sidePrice = parseFloat(side.getAttribute('data-item-price')) || 0;
+                
+                // Add to items array
+                sidesData.items.push([sideName, sideType, sidePrice]);
+                
+                // Track by category
+                if (!sidesData.categories[categoryName]) {
+                    sidesData.categories[categoryName] = [];
+                }
+                sidesData.categories[categoryName].push({
+                    name: sideName,
+                    type: sideType,
+                    price: sidePrice
+                });
+            });
+            
+            // Get selected additions
+            const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected');
+            const adds = [];
+            selectedAdditions.forEach(addition => {
+                const additionName = addition.getAttribute('data-addition-name');
+                const additionPrice = parseFloat(addition.getAttribute('data-addition-price')) || 0;
+                if (additionName) {
+                    adds.push(additionName, additionPrice);
+                }
+            });
+            
             const mods = []; // No modifications by default
+            
+            // Recalculate total cost including sides and additions
+            let sidePrice = 0;
+            selectedSides.forEach(side => {
+                const price = parseFloat(side.getAttribute('data-item-price')) || 0;
+                sidePrice += price;
+            });
+            
+            let additionPrice = 0;
+            selectedAdditions.forEach(addition => {
+                const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
+                additionPrice += price;
+            });
+            
+            const finalTotalCost = (unitPrice + sidePrice + additionPrice) * quantity;
             
             console.log('📦 Adding to cart:', { 
                 item: itemName, 
                 size: size,
+                sides: sidesData,
+                additions: adds,
                 quantity, 
                 unitPrice, 
-                totalCost,
+                sidePrice,
+                additionPrice,
+                totalCost: finalTotalCost,
                 url 
             });
             
-            addItem(itemName, size, sides, adds, mods, quantity.toString(), totalCost);
+            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost);
             
             // Show visual feedback
             button.classList.add('adding');
@@ -1052,6 +1374,8 @@
     window.adjustExpandedQuantity = adjustExpandedQuantity;
     window.addExpandedItemToCart = addExpandedItemToCart;
     window.selectExpandedOption = selectExpandedOption;
+    window.selectExpandedSide = selectExpandedSide;
+    window.selectExpandedAddition = selectExpandedAddition;
 
     /**
      * Adjust quantity on single page
@@ -1067,8 +1391,8 @@
         currentQty = Math.max(1, currentQty + change);
         quantitySpan.textContent = currentQty;
         
-        // Update price and cart button
-        updateSinglePagePrice(quantitySpan, currentQty);
+        // Update price and cart button (includes all options)
+        updateSinglePagePriceWithOptions();
     }
 
     /**
@@ -1077,22 +1401,8 @@
      * @param {number} quantity - The new quantity
      */
     function updateSinglePagePrice(quantitySpan, quantity) {
-        const priceElement = document.querySelector('.single-page-price');
-        const addCartButton = document.querySelector('.single-page-add-cart-btn');
-        const priceButton = addCartButton?.querySelector('.cart-button-price');
-        
-        if (!priceElement || !addCartButton || !priceButton) return;
-        
-        // Extract price from price element
-        const priceText = priceElement.textContent || '';
-        // Handle price ranges (e.g., "$10 | $20")
-        const priceMatch = priceText.match(/\$?([\d.]+)/);
-        const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
-        
-        if (unitPrice === 0) return;
-        
-        const totalPrice = unitPrice * quantity;
-        priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
+        // Use the new function that includes options
+        updateSinglePagePriceWithOptions();
     }
 
     /**
@@ -1108,35 +1418,130 @@
         const titleElement = document.querySelector('h1');
         const itemName = titleElement?.textContent?.trim() || '';
         
-        const priceElement = document.querySelector('.single-page-price');
-        const priceText = priceElement?.textContent?.trim() || '';
+        const dataContainer = document.getElementById('single-page-item-data');
+        if (!dataContainer) return;
         
-        // Extract numeric price
-        const priceMatch = priceText.match(/\$?([\d.]+)/);
-        const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
-        const totalCost = unitPrice * quantity;
+        // Check if required side categories have selections
+        const sideCategoriesStr = dataContainer.getAttribute('data-side-categories');
+        if (sideCategoriesStr) {
+            const sideCategories = JSON.parse(sideCategoriesStr);
+            const missingSelections = [];
+            
+            sideCategories.forEach(category => {
+                const categoryName = category.category_name;
+                const displayName = category.display_name;
+                const configArray = category.config || [];
+                const requiredMax = configArray[3] || 0; // regular_max
+                
+                if (requiredMax > 0) {
+                    const categoryContainer = document.querySelector(`.single-page-side-category[data-category-name="${categoryName}"]`);
+                    if (categoryContainer) {
+                        const selectedSides = categoryContainer.querySelectorAll('.single-page-side-option.selected');
+                        if (selectedSides.length < requiredMax) {
+                            missingSelections.push(displayName || categoryName);
+                        }
+                    }
+                }
+            });
+            
+            if (missingSelections.length > 0) {
+                const message = `Please select ${missingSelections.length === 1 ? 'a' : ''} ${missingSelections.join(' and ')} before adding to cart.`;
+                alert(message);
+                return;
+            }
+        }
+        
+        // Calculate unit price from selected options
+        const unitPrice = updateSinglePagePriceWithOptions();
+        if (unitPrice === 0) {
+            console.warn('Missing item name or price:', { itemName, unitPrice });
+            return;
+        }
 
-        if (!itemName || unitPrice === 0) {
-            console.warn('Missing item name or price:', { itemName, unitPrice, priceText });
+        if (!itemName) {
+            console.warn('Missing item name:', { itemName });
             return;
         }
 
         // Call existing addItem function if available
         if (typeof addItem === 'function') {
-            const size = '-'; // Default size
-            const sides = { items: [], categories: {} }; // No sides by default
-            const adds = []; // No additions by default
+            // Get selected size and flavour
+            const selectedSizeOption = document.querySelector('.single-page-option[data-option-type="size"].selected');
+            const selectedFlavourOption = document.querySelector('.single-page-option[data-option-type="flavour"].selected');
+            const selectedSize = selectedSizeOption?.getAttribute('data-option-value') || '-';
+            const selectedFlavour = selectedFlavourOption?.getAttribute('data-option-value') || '-';
+            
+            // Combine size and flavour for the size parameter (format: "size flavour")
+            const size = selectedSize !== '-' && selectedFlavour !== '-' 
+                ? `${selectedSize} ${selectedFlavour}`.trim()
+                : selectedSize !== '-' ? selectedSize : '-';
+            
+            // Get selected sides
+            const selectedSides = document.querySelectorAll('.single-page-side-option.selected');
+            const sidesData = { items: [], categories: {} };
+            
+            selectedSides.forEach(side => {
+                const categoryName = side.getAttribute('data-category');
+                const sideName = side.getAttribute('data-item-name');
+                const sideType = side.getAttribute('data-item-type');
+                const sidePrice = parseFloat(side.getAttribute('data-item-price')) || 0;
+                
+                // Add to items array
+                sidesData.items.push([sideName, sideType, sidePrice]);
+                
+                // Track by category
+                if (!sidesData.categories[categoryName]) {
+                    sidesData.categories[categoryName] = [];
+                }
+                sidesData.categories[categoryName].push({
+                    name: sideName,
+                    type: sideType,
+                    price: sidePrice
+                });
+            });
+            
+            // Get selected additions
+            const selectedAdditions = document.querySelectorAll('.single-page-addition-option.selected');
+            const adds = [];
+            selectedAdditions.forEach(addition => {
+                const additionName = addition.getAttribute('data-addition-name');
+                const additionPrice = parseFloat(addition.getAttribute('data-addition-price')) || 0;
+                if (additionName) {
+                    adds.push(additionName, additionPrice);
+                }
+            });
+            
             const mods = []; // No modifications by default
+            
+            // Recalculate total cost including sides and additions
+            let sidePrice = 0;
+            selectedSides.forEach(side => {
+                const price = parseFloat(side.getAttribute('data-item-price')) || 0;
+                sidePrice += price;
+            });
+            
+            let additionPrice = 0;
+            selectedAdditions.forEach(addition => {
+                const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
+                additionPrice += price;
+            });
+            
+            const finalTotalCost = (unitPrice + sidePrice + additionPrice) * quantity;
             
             console.log('📦 Adding to cart from single page:', { 
                 item: itemName, 
+                size: size,
+                sides: sidesData,
+                additions: adds,
                 quantity, 
                 unitPrice, 
-                totalCost,
+                sidePrice,
+                additionPrice,
+                totalCost: finalTotalCost,
                 url 
             });
             
-            addItem(itemName, size, sides, adds, mods, quantity.toString(), totalCost);
+            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost);
             
             // Show visual feedback
             button.classList.add('adding');
@@ -1149,25 +1554,241 @@
         }
     }
 
+    /**
+     * Select an option (size or flavour) on single page
+     * @global
+     * @param {HTMLElement} optionElement - The clicked option element
+     * @param {Event} event - The click event
+     */
+    function selectSinglePageOption(optionElement, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const optionType = optionElement.getAttribute('data-option-type');
+        const optionValue = optionElement.getAttribute('data-option-value');
+        
+        // Remove selected class from siblings
+        const container = optionElement.closest('.single-page-options-group');
+        if (container) {
+            const siblings = container.querySelectorAll('.single-page-option');
+            siblings.forEach(sib => sib.classList.remove('selected'));
+        }
+        
+        // Add selected class to clicked element
+        optionElement.classList.add('selected');
+        
+        // Update price
+        updateSinglePagePriceWithOptions();
+    }
+    
+    /**
+     * Select a side item on single page
+     * @global
+     * @param {HTMLElement} sideElement - The clicked side element
+     * @param {Event} event - The click event
+     */
+    function selectSinglePageSide(sideElement, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const categoryName = sideElement.getAttribute('data-category');
+        const itemName = sideElement.getAttribute('data-item-name');
+        const itemType = sideElement.getAttribute('data-item-type');
+        const itemPrice = parseFloat(sideElement.getAttribute('data-item-price')) || 0;
+        
+        // Get data container
+        const dataContainer = document.getElementById('single-page-item-data');
+        if (!dataContainer) return;
+        
+        const sideCategoriesStr = dataContainer.getAttribute('data-side-categories');
+        if (!sideCategoriesStr) return;
+        
+        const sideCategories = JSON.parse(sideCategoriesStr);
+        const category = sideCategories.find(cat => cat.category_name === categoryName);
+        if (!category) return;
+        
+        const configArray = category.config || [];
+        const maxSelections = configArray[3] || 1; // regular_max
+        
+        // Get currently selected sides for this category
+        const categoryContainer = sideElement.closest('.single-page-side-category');
+        const selectedSides = categoryContainer.querySelectorAll('.single-page-side-option.selected');
+        
+        // If max selections reached and this item is not already selected, don't allow selection
+        if (selectedSides.length >= maxSelections && !sideElement.classList.contains('selected')) {
+            return;
+        }
+        
+        // Toggle selection
+        if (sideElement.classList.contains('selected')) {
+            sideElement.classList.remove('selected');
+        } else {
+            // If single selection, remove other selections in this category
+            if (maxSelections === 1) {
+                categoryContainer.querySelectorAll('.single-page-side-option.selected').forEach(sel => {
+                    sel.classList.remove('selected');
+                });
+            }
+            sideElement.classList.add('selected');
+        }
+        
+        // Update price
+        updateSinglePagePriceWithOptions();
+    }
+    
+    /**
+     * Select an addition on single page
+     * @global
+     * @param {HTMLElement} additionElement - The clicked addition element
+     * @param {Event} event - The click event
+     */
+    function selectSinglePageAddition(additionElement, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Toggle selected class (additions can be multiple selections)
+        additionElement.classList.toggle('selected');
+        
+        // Update price
+        updateSinglePagePriceWithOptions();
+    }
+    
+    /**
+     * Update price on single page including all selected options
+     */
+    function updateSinglePagePriceWithOptions() {
+        const quantitySpan = document.querySelector('.single-page-quantity');
+        const quantity = parseInt(quantitySpan?.textContent) || 1;
+        
+        const dataContainer = document.getElementById('single-page-item-data');
+        if (!dataContainer) return;
+        
+        const pricesArrayStr = dataContainer.getAttribute('data-prices-array');
+        if (!pricesArrayStr) return;
+        
+        const pricesArray = JSON.parse(pricesArrayStr);
+        
+        // Get selected size and flavour
+        const selectedSizeOption = document.querySelector('.single-page-option[data-option-type="size"].selected');
+        const selectedFlavourOption = document.querySelector('.single-page-option[data-option-type="flavour"].selected');
+        const selectedSize = selectedSizeOption?.getAttribute('data-option-value') || '-';
+        const selectedFlavour = selectedFlavourOption?.getAttribute('data-option-value') || '-';
+        
+        // Find matching price
+        let unitPrice = 0;
+        for (let i = 0; i < pricesArray.length; i += 3) {
+            if (i + 2 < pricesArray.length) {
+                const size = pricesArray[i];
+                const flavour = pricesArray[i + 1];
+                const price = parseFloat(pricesArray[i + 2]);
+                
+                if (size === selectedSize && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                    unitPrice = price;
+                    break;
+                }
+            }
+        }
+        
+        // If no exact match, try matching just flavour (when size is "-")
+        if (unitPrice === 0 && selectedSize === '-') {
+            for (let i = 0; i < pricesArray.length; i += 3) {
+                if (i + 2 < pricesArray.length) {
+                    const size = pricesArray[i];
+                    const flavour = pricesArray[i + 1];
+                    const price = parseFloat(pricesArray[i + 2]);
+                    
+                    if (size === '-' && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                        unitPrice = price;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If still no match, try matching just size (when flavour is "-")
+        if (unitPrice === 0 && selectedFlavour === '-') {
+            for (let i = 0; i < pricesArray.length; i += 3) {
+                if (i + 2 < pricesArray.length) {
+                    const size = pricesArray[i];
+                    const flavour = pricesArray[i + 1];
+                    const price = parseFloat(pricesArray[i + 2]);
+                    
+                    if (size === selectedSize && flavour === '-' && !isNaN(price) && price > 0) {
+                        unitPrice = price;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If still no match, use first available price
+        if (unitPrice === 0) {
+            for (let i = 2; i < pricesArray.length; i += 3) {
+                const price = parseFloat(pricesArray[i]);
+                if (!isNaN(price) && price > 0) {
+                    unitPrice = price;
+                    break;
+                }
+            }
+        }
+        
+        // Calculate side prices
+        let sidePrice = 0;
+        const selectedSides = document.querySelectorAll('.single-page-side-option.selected');
+        selectedSides.forEach(side => {
+            const price = parseFloat(side.getAttribute('data-item-price')) || 0;
+            sidePrice += price;
+        });
+        
+        // Calculate addition prices
+        let additionPrice = 0;
+        const selectedAdditions = document.querySelectorAll('.single-page-addition-option.selected');
+        selectedAdditions.forEach(addition => {
+            const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
+            additionPrice += price;
+        });
+        
+        const totalPrice = (unitPrice + sidePrice + additionPrice) * quantity;
+        
+        // Update price display
+        const addCartButton = document.querySelector('.single-page-add-cart-btn');
+        const priceButton = addCartButton?.querySelector('.cart-button-price');
+        
+        if (priceButton) {
+            priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
+        }
+        
+        return unitPrice; // Return unit price for use in addSinglePageItemToCart
+    }
+    
     // Initialize single page price on load
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             const quantitySpan = document.querySelector('.single-page-quantity');
             if (quantitySpan) {
                 const quantity = parseInt(quantitySpan.textContent) || 1;
-                updateSinglePagePrice(quantitySpan, quantity);
+                updateSinglePagePriceWithOptions();
             }
         });
     } else {
         const quantitySpan = document.querySelector('.single-page-quantity');
         if (quantitySpan) {
             const quantity = parseInt(quantitySpan.textContent) || 1;
-            updateSinglePagePrice(quantitySpan, quantity);
+            updateSinglePagePriceWithOptions();
         }
     }
 
     window.adjustSinglePageQuantity = adjustSinglePageQuantity;
     window.addSinglePageItemToCart = addSinglePageItemToCart;
+    window.selectSinglePageOption = selectSinglePageOption;
+    window.selectSinglePageSide = selectSinglePageSide;
+    window.selectSinglePageAddition = selectSinglePageAddition;
     window.toggleDashboard = toggleDashboard;
     window.closeDashboard = closeDashboard;
     window.updateCart = updateCart;
