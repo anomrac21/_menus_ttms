@@ -374,6 +374,7 @@
                 let itemData = null;
                 let sizes = [];
                 let flavours = [];
+                let pricesArray = []; // Array of [size, flavour, price] tuples
                 
                 try {
                     const jsonResponse = await fetch(url + '.json');
@@ -384,6 +385,10 @@
                         }
                         if (itemData.flavours) {
                             flavours = itemData.flavours.filter(f => f && f !== '-' && f !== 'None');
+                        }
+                        // Build prices array from items (format: [size, flavour, price, size, flavour, price, ...])
+                        if (itemData.items && Array.isArray(itemData.items)) {
+                            pricesArray = itemData.items;
                         }
                     }
                 } catch (jsonError) {
@@ -423,20 +428,43 @@
                 
                 const itemPriceText = element.querySelector('.menu-item-price')?.textContent || '';
                 
-                // Extract numeric price
-                const priceMatch = itemPriceText.match(/\$?([\d.]+)/);
-                const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+                // Extract numeric price - use first available price as default
+                let unitPrice = 0;
+                if (pricesArray.length >= 3) {
+                    // Find first valid price
+                    for (let i = 2; i < pricesArray.length; i += 3) {
+                        const price = parseFloat(pricesArray[i]);
+                        if (!isNaN(price) && price > 0) {
+                            unitPrice = price;
+                            break;
+                        }
+                    }
+                }
+                if (unitPrice === 0) {
+                    const priceMatch = itemPriceText.match(/\$?([\d.]+)/);
+                    unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+                }
+                
                 const initialQuantity = 1;
                 const initialTotal = unitPrice * initialQuantity;
                 
-                // Build sizes and flavours HTML
+                // Determine default selected size and flavour
+                const defaultSize = sizes.length > 0 ? sizes[0] : '-';
+                const defaultFlavour = flavours.length > 0 ? flavours[0] : '-';
+                
+                // Build sizes and flavours HTML with click handlers
                 let sizesHTML = '';
                 let flavoursHTML = '';
                 
                 if (sizes.length > 0) {
                     sizesHTML = `
                         <ul class="sizes">
-                            ${sizes.map(size => `<li>${size}</li>`).join('')}
+                            ${sizes.map((size, index) => `
+                                <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
+                                    data-option-type="size" 
+                                    data-option-value="${size}"
+                                    onclick="selectExpandedOption(this, '${url}')">${size}</li>
+                            `).join('')}
                         </ul>
                     `;
                 }
@@ -444,10 +472,20 @@
                 if (flavours.length > 0) {
                     flavoursHTML = `
                         <ul class="flavours">
-                            ${flavours.map(flavour => `<li>${flavour}</li>`).join('')}
+                            ${flavours.map((flavour, index) => `
+                                <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
+                                    data-option-type="flavour" 
+                                    data-option-value="${flavour}"
+                                    onclick="selectExpandedOption(this, '${url}')">${flavour}</li>
+                            `).join('')}
                         </ul>
                     `;
                 }
+                
+                // Store prices array and default selections in data attributes
+                element.setAttribute('data-prices-array', JSON.stringify(pricesArray));
+                element.setAttribute('data-selected-size', defaultSize);
+                element.setAttribute('data-selected-flavour', defaultFlavour);
                 
                 // Create expanded content HTML
                 dataDiv.innerHTML = `
@@ -472,7 +510,7 @@
                                 </button>
                                 <span class="expanded-price" data-unit-price="${unitPrice}">${itemPriceText}</span>
                             </div>
-                            <button class="expanded-add-cart" onclick="addExpandedItemToCart(this, '${url}')" data-unit-price="${unitPrice}">
+                            <button class="expanded-add-cart" onclick="addExpandedItemToCart(this, '${url}')" data-unit-price="${unitPrice}" data-item-url="${url}">
                                 <i class="fa fa-cart-plus"></i>
                                 <span class="cart-button-text">Add to Cart</span>
                                 <span class="cart-button-price">$${initialTotal.toFixed(2).replace(/\.00$/, '')}</span>
@@ -500,6 +538,11 @@
             // Hide loading, show data
             loadingDiv.style.display = 'none';
             dataDiv.style.display = 'block';
+            
+            // Update price based on initial selections
+            setTimeout(() => {
+                updateExpandedItemPriceFromOptions(element);
+            }, 50);
 
             // Scroll into view with 5em offset from top
             setTimeout(() => {
@@ -565,6 +608,9 @@
      * @param {number} quantity - The new quantity
      */
     function updateExpandedItemPrice(card, quantity) {
+        // First try to update from options (size/flavour selection)
+        updateExpandedItemPriceFromOptions(card);
+        
         // Get unit price from the price element or button
         const priceElement = card.querySelector('.expanded-price');
         const addCartButton = card.querySelector('.expanded-add-cart');
@@ -599,6 +645,98 @@
     }
 
     /**
+     * Select an option (size or flavour) in expanded view
+     * @global
+     * @param {HTMLElement} optionElement - The clicked option element
+     * @param {string} url - Item URL
+     */
+    function selectExpandedOption(optionElement, url) {
+        const card = optionElement.closest('.menu-item-card');
+        if (!card) return;
+        
+        const optionType = optionElement.getAttribute('data-option-type');
+        const optionValue = optionElement.getAttribute('data-option-value');
+        
+        // Remove selected class from siblings
+        const siblings = optionElement.parentElement.querySelectorAll('.expanded-option');
+        siblings.forEach(sib => sib.classList.remove('selected'));
+        
+        // Add selected class to clicked element
+        optionElement.classList.add('selected');
+        
+        // Update stored selection
+        if (optionType === 'size') {
+            card.setAttribute('data-selected-size', optionValue);
+        } else if (optionType === 'flavour') {
+            card.setAttribute('data-selected-flavour', optionValue);
+        }
+        
+        // Update price based on selection
+        updateExpandedItemPriceFromOptions(card);
+    }
+    
+    /**
+     * Update price based on selected size and flavour
+     * @param {HTMLElement} card - The menu item card
+     */
+    function updateExpandedItemPriceFromOptions(card) {
+        const pricesArrayStr = card.getAttribute('data-prices-array');
+        if (!pricesArrayStr) return;
+        
+        const pricesArray = JSON.parse(pricesArrayStr);
+        const selectedSize = card.getAttribute('data-selected-size') || '-';
+        const selectedFlavour = card.getAttribute('data-selected-flavour') || '-';
+        
+        // Find matching price in prices array (format: [size, flavour, price, ...])
+        let unitPrice = 0;
+        for (let i = 0; i < pricesArray.length; i += 3) {
+            if (i + 2 < pricesArray.length) {
+                const size = pricesArray[i];
+                const flavour = pricesArray[i + 1];
+                const price = parseFloat(pricesArray[i + 2]);
+                
+                if (size === selectedSize && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                    unitPrice = price;
+                    break;
+                }
+            }
+        }
+        
+        // If no match found, try to find first available price
+        if (unitPrice === 0) {
+            for (let i = 2; i < pricesArray.length; i += 3) {
+                const price = parseFloat(pricesArray[i]);
+                if (!isNaN(price) && price > 0) {
+                    unitPrice = price;
+                    break;
+                }
+            }
+        }
+        
+        // Update price display
+        const quantitySpan = card.querySelector('.expanded-quantity');
+        const quantity = parseInt(quantitySpan?.textContent) || 1;
+        const totalPrice = unitPrice * quantity;
+        
+        const priceElement = card.querySelector('.expanded-price');
+        const addCartButton = card.querySelector('.expanded-add-cart');
+        const priceButton = addCartButton?.querySelector('.cart-button-price');
+        
+        if (priceElement) {
+            priceElement.textContent = `$${unitPrice.toFixed(2).replace(/\.00$/, '')}`;
+            priceElement.setAttribute('data-unit-price', unitPrice.toString());
+        }
+        
+        if (addCartButton) {
+            addCartButton.setAttribute('data-unit-price', unitPrice.toString());
+        }
+        
+        if (priceButton) {
+            priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
+        }
+    }
+
+    /**
      * Add expanded item to cart
      * @global
      * @param {HTMLElement} button - The add to cart button
@@ -618,13 +756,17 @@
         const titleElement = card.querySelector('.menu-item-title a') || card.querySelector('.menu-item-title');
         const itemName = titleElement?.textContent?.trim() || '';
         
+        // Get selected size and flavour
+        const selectedSize = card.getAttribute('data-selected-size') || '-';
+        const selectedFlavour = card.getAttribute('data-selected-flavour') || '-';
+        
         // Get price - try expanded price first, then regular price
         const priceElement = card.querySelector('.expanded-price') || card.querySelector('.menu-item-price');
         const priceText = priceElement?.textContent?.trim() || '';
         
         // Extract numeric price (remove $ and any other characters)
         const priceMatch = priceText.match(/\$?([\d.]+)/);
-        const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+        const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : parseFloat(button.getAttribute('data-unit-price')) || 0;
         const totalCost = unitPrice * quantity;
 
         if (!itemName || unitPrice === 0) {
@@ -639,14 +781,17 @@
         // Call existing addItem function if available
         if (typeof addItem === 'function') {
             // addItem(item, size, sides, adds, mods, amt, cost)
-            // For expanded items, we use defaults for size, sides, adds, mods
-            const size = '-'; // Default size
+            // Combine size and flavour for the size parameter (format: "size flavour")
+            const size = selectedSize !== '-' && selectedFlavour !== '-' 
+                ? `${selectedSize} ${selectedFlavour}`.trim()
+                : selectedSize !== '-' ? selectedSize : '-';
             const sides = { items: [], categories: {} }; // No sides by default
             const adds = []; // No additions by default
             const mods = []; // No modifications by default
             
             console.log('📦 Adding to cart:', { 
                 item: itemName, 
+                size: size,
                 quantity, 
                 unitPrice, 
                 totalCost,
@@ -838,6 +983,7 @@
     window.toggleItemExpansion = toggleItemExpansion;
     window.adjustExpandedQuantity = adjustExpandedQuantity;
     window.addExpandedItemToCart = addExpandedItemToCart;
+    window.selectExpandedOption = selectExpandedOption;
 
     /**
      * Adjust quantity on single page

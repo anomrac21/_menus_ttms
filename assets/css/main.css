@@ -580,7 +580,25 @@ footer {
     background: rgba(255,255,255,.1);
     border: 1px solid rgba(255,255,255,.15);
     border-radius: 1em;
-    color: var(--button-text-color2,#ccc)
+    color: var(--button-text-color2,#ccc);
+    transition: all .2s ease
+}
+
+.menu-item-options .sizes li.expanded-option,.menu-item-options .flavours li.expanded-option {
+    cursor: pointer;
+    user-select: none
+}
+
+.menu-item-options .sizes li.expanded-option:hover,.menu-item-options .flavours li.expanded-option:hover {
+    background: rgba(255,255,255,.2);
+    transform: translateY(-1px)
+}
+
+.menu-item-options .sizes li.expanded-option.selected,.menu-item-options .flavours li.expanded-option.selected {
+    background: rgba(255,255,255,.3);
+    border-color: rgba(255,255,255,.5);
+    color: var(--button-text-color1,#fff);
+    font-weight: 600
 }
 
 .menu-item-card.expanded {
