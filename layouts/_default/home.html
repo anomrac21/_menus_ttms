@@ -80,10 +80,73 @@
                             {{$flavours = $flavours | append .flavour}}
                           {{end}}
                         {{end}}
+                        
+                        {{/* Build prices array for JavaScript */}}
+                        {{$pricesArray := slice}}
+                        {{range .Params.prices}}
+                          {{$pricesArray = $pricesArray | append .size}}
+                          {{$pricesArray = $pricesArray | append .flavour}}
+                          {{$pricesArray = $pricesArray | append .price}}
+                        {{end}}
+                        
+                        {{/* Build side categories data */}}
+                        {{$sideCategories := slice}}
+                        {{if .Params.side_categories}}
+                          {{range .Params.side_categories}}
+                            {{$category := dict}}
+                            {{$category = merge $category (dict "category_name" .category_name)}}
+                            {{$category = merge $category (dict "display_name" .display_name)}}
+                            {{$items := slice}}
+                            {{range .items}}
+                              {{$item := slice}}
+                              {{$item = $item | append .name}}
+                              {{$item = $item | append .type}}
+                              {{$item = $item | append .price}}
+                              {{$items = $items | append $item}}
+                            {{end}}
+                            {{$category = merge $category (dict "items" $items)}}
+                            {{if .config}}
+                              {{$config := slice}}
+                              {{$config = $config | append .config.all_max}}
+                              {{$config = $config | append .config.all_valuecount}}
+                              {{$config = $config | append .config.all_value}}
+                              {{$config = $config | append .config.regular_max}}
+                              {{$config = $config | append .config.regular_valuecount}}
+                              {{$config = $config | append .config.regular_value}}
+                              {{$config = $config | append .config.premium_max}}
+                              {{$config = $config | append .config.premium_valuecount}}
+                              {{$config = $config | append .config.premium_value}}
+                              {{$category = merge $category (dict "config" $config)}}
+                            {{end}}
+                            {{$sideCategories = $sideCategories | append $category}}
+                          {{end}}
+                        {{end}}
+                        
+                        {{/* Build additions data */}}
+                        {{$additions := slice}}
+                        {{range .Params.additions}}
+                          {{$additions = $additions | append .name}}
+                          {{$additions = $additions | append .price}}
+                        {{end}}
+                        
+                        {{/* Determine default selected size and flavour */}}
+                        {{$defaultSize := "-"}}
+                        {{if gt (len $sizes) 0}}
+                          {{$defaultSize = index $sizes 0}}
+                        {{end}}
+                        {{$defaultFlavour := "-"}}
+                        {{if gt (len $flavours) 0}}
+                          {{$defaultFlavour = index $flavours 0}}
+                        {{end}}
      
                         <div class="menu-item-card" 
                             data-item-url="{{ .RelPermalink }}"
                             data-item-expanded="false"
+                            data-prices-array="{{ $pricesArray | jsonify }}"
+                            data-selected-size="{{ $defaultSize }}"
+                            data-selected-flavour="{{ $defaultFlavour }}"
+                            data-side-categories="{{ $sideCategories | jsonify }}"
+                            data-additions="{{ $additions | jsonify }}"
                             onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
                             <div class="menu-item-row-top">
                               {{ if .Params.images }}
