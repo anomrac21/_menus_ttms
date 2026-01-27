@@ -49,6 +49,44 @@
     {{- $sideconfig = $sideconfig | append $config -}}
   {{- end -}}
 
+  {{- /* Build side categories array (new structure) */ -}}
+  {{- $sideCategories := slice -}}
+  {{- if .Params.side_categories -}}
+    {{- range .Params.side_categories -}}
+      {{- $category := dict -}}
+      {{- $category = merge $category (dict "category_name" .category_name) -}}
+      {{- $category = merge $category (dict "display_name" .display_name) -}}
+      
+      {{- /* Build items for this category */ -}}
+      {{- $items := slice -}}
+      {{- range .items -}}
+        {{- $item := slice -}}
+        {{- $item = $item | append .name -}}
+        {{- $item = $item | append .type -}}
+        {{- $item = $item | append .price -}}
+        {{- $items = $items | append $item -}}
+      {{- end -}}
+      {{- $category = merge $category (dict "items" $items) -}}
+      
+      {{- /* Build config for this category */ -}}
+      {{- if .config -}}
+        {{- $config := slice -}}
+        {{- $config = $config | append .config.all_max -}}
+        {{- $config = $config | append .config.all_valuecount -}}
+        {{- $config = $config | append .config.all_value -}}
+        {{- $config = $config | append .config.regular_max -}}
+        {{- $config = $config | append .config.regular_valuecount -}}
+        {{- $config = $config | append .config.regular_value -}}
+        {{- $config = $config | append .config.premium_max -}}
+        {{- $config = $config | append .config.premium_valuecount -}}
+        {{- $config = $config | append .config.premium_value -}}
+        {{- $category = merge $category (dict "config" $config) -}}
+      {{- end -}}
+      
+      {{- $sideCategories = $sideCategories | append $category -}}
+    {{- end -}}
+  {{- end -}}
+
   {{- $additions := slice -}}
   {{- range .Params.additions -}}
     {{- $addition := slice -}}
@@ -82,6 +120,7 @@
     "items" $prices
     "sides" $sides
     "sideoptions" $sideconfig
+    "side_categories" $sideCategories
     "additions" $additions
     "modifications" $modifications
     "title" .Title
