@@ -370,8 +370,41 @@
         try {
             // Use existing openItem function to get item data, but render inline
             if (typeof window.openItem === 'function' && window.openItem.length >= 2) {
-                // Call the existing openItem but prevent modal from showing
-                // We'll fetch the data ourselves
+                // Try to fetch JSON data first
+                let itemData = null;
+                let sizes = [];
+                let flavours = [];
+                
+                try {
+                    const jsonResponse = await fetch(url + '.json');
+                    if (jsonResponse.ok) {
+                        itemData = await jsonResponse.json();
+                        if (itemData.sizes) {
+                            sizes = itemData.sizes.filter(s => s && s !== '-' && s !== 'None');
+                        }
+                        if (itemData.flavours) {
+                            flavours = itemData.flavours.filter(f => f && f !== '-' && f !== 'None');
+                        }
+                    }
+                } catch (jsonError) {
+                    console.log('JSON fetch failed, falling back to HTML:', jsonError);
+                }
+                
+                // If JSON didn't provide sizes/flavours, try extracting from card element
+                if (sizes.length === 0 && flavours.length === 0) {
+                    const sizesList = element.querySelector('.menu-item-options .sizes');
+                    const flavoursList = element.querySelector('.menu-item-options .flavours');
+                    
+                    if (sizesList && sizesList.children.length > 0) {
+                        sizes = Array.from(sizesList.querySelectorAll('li')).map(li => li.textContent.trim()).filter(s => s && s !== '-' && s !== 'None');
+                    }
+                    
+                    if (flavoursList && flavoursList.children.length > 0) {
+                        flavours = Array.from(flavoursList.querySelectorAll('li')).map(li => li.textContent.trim()).filter(f => f && f !== '-' && f !== 'None');
+                    }
+                }
+                
+                // Fetch HTML for description
                 const response = await fetch(url + '?format=json').catch(() => fetch(url));
                 const html = await response.text();
                 const parser = new DOMParser();
@@ -383,9 +416,10 @@
                 const itemDescCard = element.querySelector('.menu-item-description')?.textContent?.trim() || 
                                      element.querySelector('.menu-item-description p')?.textContent?.trim() || '';
                 
-                // Try to get full description from fetched page
+                // Try to get full description from fetched page or JSON
                 const fullDescElement = doc.querySelector('.single-page-description');
-                const itemDesc = fullDescElement ? fullDescElement.innerHTML.trim() : itemDescCard;
+                const itemDesc = (itemData && itemData.content) ? itemData.content.trim() : 
+                                (fullDescElement ? fullDescElement.innerHTML.trim() : itemDescCard);
                 
                 const itemPriceText = element.querySelector('.menu-item-price')?.textContent || '';
                 
@@ -395,12 +429,38 @@
                 const initialQuantity = 1;
                 const initialTotal = unitPrice * initialQuantity;
                 
+                // Build sizes and flavours HTML
+                let sizesHTML = '';
+                let flavoursHTML = '';
+                
+                if (sizes.length > 0) {
+                    sizesHTML = `
+                        <ul class="sizes">
+                            ${sizes.map(size => `<li>${size}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
+                if (flavours.length > 0) {
+                    flavoursHTML = `
+                        <ul class="flavours">
+                            ${flavours.map(flavour => `<li>${flavour}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
                 // Create expanded content HTML
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
                         <div class="expanded-item-description">
                             ${itemDesc ? (fullDescElement ? itemDesc : `<p>${itemDesc}</p>`) : '<p>No description available</p>'}
                         </div>
+                        ${sizesHTML || flavoursHTML ? `
+                        <div class="menu-item-options">
+                            ${sizesHTML}
+                            ${flavoursHTML}
+                        </div>
+                        ` : ''}
                         <div class="expanded-item-controls">
                             <div class="expanded-quantity-control">
                                 <button class="btn-quantity" onclick="adjustExpandedQuantity(this, -1)">
