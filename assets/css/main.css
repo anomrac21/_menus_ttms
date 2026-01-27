@@ -362,6 +362,7 @@ footer {
 }
 
 .headerstyle {
+    display: flex;
     background-image: none;
     background-size: 96% 86%;
     background-position: 50%;
@@ -369,7 +370,7 @@ footer {
     position: relative;
     color: var(--main-text-color,#fff);
     background-color: transparent;
-    padding: .5em 0
+    padding: 1em;
 }
 
 .headerstyle h2 {
