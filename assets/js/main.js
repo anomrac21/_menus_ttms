@@ -389,6 +389,7 @@
                         // Build prices array from items (format: [size, flavour, price, size, flavour, price, ...])
                         if (itemData.items && Array.isArray(itemData.items)) {
                             pricesArray = itemData.items;
+                            console.log('📊 Loaded prices array from JSON:', pricesArray);
                         }
                     }
                 } catch (jsonError) {
@@ -428,6 +429,40 @@
                 
                 const itemPriceText = element.querySelector('.menu-item-price')?.textContent || '';
                 
+                // Extract base price from card
+                const priceMatch = itemPriceText.match(/\$?([\d.]+)/);
+                const basePrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+                
+                // If prices array is empty but we have flavours, build prices array
+                // Each flavour gets the same base price with size "-"
+                if (pricesArray.length === 0 && flavours.length > 0 && basePrice > 0) {
+                    flavours.forEach(flavour => {
+                        pricesArray.push('-', flavour, basePrice);
+                    });
+                    console.log('📊 Built prices array from flavours:', pricesArray);
+                }
+                // If we have sizes but no flavours, build prices array
+                if (pricesArray.length === 0 && sizes.length > 0 && basePrice > 0) {
+                    sizes.forEach(size => {
+                        pricesArray.push(size, '-', basePrice);
+                    });
+                    console.log('📊 Built prices array from sizes:', pricesArray);
+                }
+                // If we have both sizes and flavours but no prices array, build it
+                if (pricesArray.length === 0 && sizes.length > 0 && flavours.length > 0 && basePrice > 0) {
+                    sizes.forEach(size => {
+                        flavours.forEach(flavour => {
+                            pricesArray.push(size, flavour, basePrice);
+                        });
+                    });
+                    console.log('📊 Built prices array from sizes and flavours:', pricesArray);
+                }
+                // If still empty but we have a base price, add a default entry
+                if (pricesArray.length === 0 && basePrice > 0) {
+                    pricesArray.push('-', '-', basePrice);
+                    console.log('📊 Built default prices array:', pricesArray);
+                }
+                
                 // Extract numeric price - use first available price as default
                 let unitPrice = 0;
                 if (pricesArray.length >= 3) {
@@ -441,8 +476,7 @@
                     }
                 }
                 if (unitPrice === 0) {
-                    const priceMatch = itemPriceText.match(/\$?([\d.]+)/);
-                    unitPrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
+                    unitPrice = basePrice;
                 }
                 
                 const initialQuantity = 1;
@@ -689,6 +723,8 @@
         
         // Find matching price in prices array (format: [size, flavour, price, ...])
         let unitPrice = 0;
+        
+        // First try exact match
         for (let i = 0; i < pricesArray.length; i += 3) {
             if (i + 2 < pricesArray.length) {
                 const size = pricesArray[i];
@@ -702,7 +738,39 @@
             }
         }
         
-        // If no match found, try to find first available price
+        // If no exact match, try matching just flavour (when size is "-")
+        if (unitPrice === 0 && selectedSize === '-') {
+            for (let i = 0; i < pricesArray.length; i += 3) {
+                if (i + 2 < pricesArray.length) {
+                    const size = pricesArray[i];
+                    const flavour = pricesArray[i + 1];
+                    const price = parseFloat(pricesArray[i + 2]);
+                    
+                    if (size === '-' && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                        unitPrice = price;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If still no match, try matching just size (when flavour is "-")
+        if (unitPrice === 0 && selectedFlavour === '-') {
+            for (let i = 0; i < pricesArray.length; i += 3) {
+                if (i + 2 < pricesArray.length) {
+                    const size = pricesArray[i];
+                    const flavour = pricesArray[i + 1];
+                    const price = parseFloat(pricesArray[i + 2]);
+                    
+                    if (size === selectedSize && flavour === '-' && !isNaN(price) && price > 0) {
+                        unitPrice = price;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If still no match, try to find first available price
         if (unitPrice === 0) {
             for (let i = 2; i < pricesArray.length; i += 3) {
                 const price = parseFloat(pricesArray[i]);
