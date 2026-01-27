@@ -18,6 +18,7 @@
         initializeFooter();
         initializeModals();
         initializeMenu();
+        initializeFooterVisibility();
         // Packery removed - no initialization needed
     }
 
@@ -196,6 +197,104 @@
         footerBtns.classList.remove('grad1');
         footerBtns.classList.remove('bigfont');
         footerBtns.classList.add('smallfont');
+    }
+
+    /**
+     * Hide footer when promotions/ads are visible in viewport
+     */
+    function initializeFooterVisibility() {
+        const footer = document.getElementById('footer');
+        if (!footer) return;
+
+        let observer = null;
+        let scrollTimeout = null;
+        let isAdVisible = false;
+
+        function checkAdVisibility() {
+            // Selectors for all promotion/ad containers
+            const adSelectors = [
+                '#homepage-ads-container',
+                '#client-ads-container',
+                '#frontpage-ads-container',
+                '.frontpageads'
+            ];
+
+            // Collect all ad/promotion elements
+            const adElements = [];
+            adSelectors.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                    // Only include if element has visible content (not empty or loading)
+                    const hasContent = el.children.length > 0 && 
+                                     !el.textContent.includes('Loading') &&
+                                     !el.textContent.includes('Loading promotions') &&
+                                     el.offsetHeight > 0 &&
+                                     el.offsetWidth > 0;
+                    if (hasContent) {
+                        adElements.push(el);
+                    }
+                });
+            });
+
+            // Check if any ad is visible in viewport
+            let hasVisibleAd = false;
+            adElements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+                if (isInViewport && el.offsetHeight > 0 && el.offsetWidth > 0) {
+                    hasVisibleAd = true;
+                }
+            });
+
+            // Update footer visibility
+            if (hasVisibleAd !== isAdVisible) {
+                isAdVisible = hasVisibleAd;
+                if (isAdVisible) {
+                    footer.style.display = 'none';
+                } else {
+                    footer.style.display = '';
+                }
+            }
+
+            // Re-setup observer if elements changed
+            if (observer && adElements.length > 0) {
+                adElements.forEach(el => {
+                    try {
+                        observer.observe(el);
+                    } catch (e) {
+                        // Element already observed
+                    }
+                });
+            }
+        }
+
+        // Create Intersection Observer to detect when ads are in viewport
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '0px',
+            threshold: 0.1 // Trigger when 10% of element is visible
+        };
+
+        observer = new IntersectionObserver((entries) => {
+            checkAdVisibility();
+        }, observerOptions);
+
+        // Initial check
+        checkAdVisibility();
+
+        // Check on scroll for better performance
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(checkAdVisibility, 100);
+        }, { passive: true });
+
+        // Re-check when ads are loaded dynamically
+        window.addEventListener('adsPopulated', () => {
+            setTimeout(checkAdVisibility, 500);
+        });
+
+        // Re-check periodically for dynamically loaded content
+        setInterval(checkAdVisibility, 2000);
     }
 
     // ============================================
