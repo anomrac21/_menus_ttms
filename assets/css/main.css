@@ -2136,3 +2136,20 @@ footer .icon,#footer .icon,#footerBtns .icon {
         height: 24px
     }
 }
+@media (min-width: 900px) {
+    .main-body {
+        column-count: 3;
+    }
+}
+@media (min-width: 600px) {
+    .main-body {
+        column-count: 2;
+    }
+}
+
+.main-body {
+    column-count: 1;
+    background: var(--main-bg);
+    position: relative;
+    margin-block-start: 4em;
+}
