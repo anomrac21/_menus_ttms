@@ -1549,8 +1549,18 @@
         const quantitySpan = document.querySelector('.single-page-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
-        const titleElement = document.querySelector('h1');
+        // Get item name from the single page title (prioritize .single-page-title to avoid selecting wrong h1)
+        const titleElement = document.querySelector('h1.single-page-title') || document.querySelector('.single-page-title') || document.querySelector('.single-page-content h1') || document.querySelector('h1');
         const itemName = titleElement?.textContent?.trim() || '';
+        
+        // Debug log to help identify issues
+        if (!itemName || itemName === 'Results') {
+            console.warn('⚠️ Item name issue detected:', {
+                foundName: itemName,
+                titleElement: titleElement,
+                allH1s: Array.from(document.querySelectorAll('h1')).map(h => ({ text: h.textContent.trim(), classes: h.className }))
+            });
+        }
         
         const dataContainer = document.getElementById('single-page-item-data');
         if (!dataContainer) return;
@@ -1605,10 +1615,20 @@
             const selectedSize = selectedSizeOption?.getAttribute('data-option-value') || '-';
             const selectedFlavour = selectedFlavourOption?.getAttribute('data-option-value') || '-';
             
-            // Combine size and flavour for the size parameter (format: "size flavour")
-            const size = selectedSize !== '-' && selectedFlavour !== '-' 
-                ? `${selectedSize} ${selectedFlavour}`.trim()
-                : selectedSize !== '-' ? selectedSize : '-';
+            // Determine the size value to use
+            // Priority: flavour if available (since flavours often represent the actual selection like "Hard Shell" or "Soft Shell")
+            // Otherwise use size, or '-' if neither is selected
+            let size = '-';
+            if (selectedFlavour !== '-') {
+                size = selectedFlavour;
+            } else if (selectedSize !== '-') {
+                size = selectedSize;
+            }
+            
+            // If both are selected, combine them (size first, then flavour)
+            if (selectedSize !== '-' && selectedFlavour !== '-') {
+                size = `${selectedSize} ${selectedFlavour}`.trim();
+            }
             
             // Get selected sides
             const selectedSides = document.querySelectorAll('.single-page-side-option.selected');

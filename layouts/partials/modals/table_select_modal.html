@@ -1,30 +1,41 @@
 <!-- Table Number Modal-->
-<div id="tableNumberModal" class="hide">
-	<div class="container">
-		<div class="modal">
-			<div class="input">
-				<div class="header">
-					<img data-aos="zoom-out" src="/branding/favicon192.webp" class="aos-init aos-animate">
-					<h3 class="title">Finalize Order</h3>
-					<a id="itemClose" class="btn-close close" onclick="closeTableModal();"><img class="icon center" src="https://cdn.ttmenus.com/icons/utilities/close.svg"></a>
-				</div>
-				<div class="container">
-					<!-- Selected Location Display -->
-					<div class="location-display-section">
-						<div id="selectedLocationDisplay" class="selected-location-display">
-							<!-- Selected location will be displayed here -->
-						</div>
+<div id="tableNumberModal" class="table-modal-overlay hide">
+	<div class="table-modal-container">
+		<div class="table-modal-content">
+			<!-- Modal Header -->
+			<div class="table-modal-header">
+				<div class="table-modal-header-left">
+					<img data-aos="zoom-out" src="/branding/favicon192.webp" class="table-modal-logo aos-init aos-animate" alt="Logo">
+					<div class="table-modal-title-section">
+						<h3 class="table-modal-title">Finalize Your Order</h3>
+						<p class="table-modal-subtitle">Select your table or order type</p>
 					</div>
-					
-					<!-- Table Selection Section -->
-					<div id="tableSelectionSection" class="table-selection-section">
-						<div id="dynamicTableButtons">
-							<!-- Dynamic table buttons will be populated here by JavaScript -->
-						</div>
+				</div>
+				<button id="itemClose" class="table-modal-close" onclick="closeTableModal();" aria-label="Close modal">
+					<i class="fa fa-times"></i>
+				</button>
+			</div>
+
+			<!-- Modal Body -->
+			<div class="table-modal-body">
+				<!-- Selected Location Display -->
+				<div class="location-display-section">
+					<div id="selectedLocationDisplay" class="selected-location-display">
+						<!-- Selected location will be displayed here -->
+					</div>
+				</div>
+				
+				<!-- Table Selection Section -->
+				<div id="tableSelectionSection" class="table-selection-section">
+					<h4 class="table-selection-title">Select Table or Order Type</h4>
+					<div id="dynamicTableButtons" class="table-buttons-grid">
+						<!-- Dynamic table buttons will be populated here by JavaScript -->
 					</div>
 				</div>
 			</div>
-			<div class="confirm" id="confirmmodal">
+
+			<!-- Modal Footer -->
+			<div class="table-modal-footer" id="confirmmodal">
 				<!-- Order Summary Display (hidden by default) -->
 				<div class="order-summary-display hide" id="orderSummaryDisplay">
 					<div class="summary-location">
@@ -42,10 +53,17 @@
 					</div>
 				</div>
 				
-				<h2 id="myTableNum"></h2>
-				<div class="options" id="here">
-					<a onclick="confirmTable('order');" class="btn-confirm"><i class="fa fa-whatsapp"></i> YES</a>
-					<a onclick="closeTableModal();" class="btn-cancel">CANCEL</a>
+				<div class="table-selection-confirmation">
+					<h2 id="myTableNum" class="selected-table-display"></h2>
+					<div class="table-modal-actions" id="here">
+						<button onclick="confirmTable('order');" class="btn-confirm-table">
+							<i class="fa fa-whatsapp"></i>
+							<span>Confirm Order</span>
+						</button>
+						<button onclick="closeTableModal();" class="btn-cancel-table">
+							<span>Cancel</span>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>

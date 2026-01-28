@@ -113,27 +113,44 @@ function updateCartLocationDisplay() {
 // Function to get current location data for table modal
 function getCurrentLocationData() {
 	const locationSelect = document.getElementById('locationSelect');
-	if (!locationSelect) {
+	if (!locationSelect || locationSelect.options.length <= 1) {
 		return null;
 	}
 	
-	// Check if a location is selected (has a value)
+	// Find the selected option or default to first real location
 	let selectedOption = null;
-	if (locationSelect.value && locationSelect.selectedIndex >= 0) {
-		selectedOption = locationSelect.options[locationSelect.selectedIndex];
-	} else if (locationSelect.options.length > 1) {
-		// No value selected, but we have options - use the first real location (skip placeholder)
+	const selectedIndex = locationSelect.selectedIndex;
+	
+	// Check if current selection is valid (not placeholder)
+	if (selectedIndex > 0 && selectedIndex < locationSelect.options.length) {
+		selectedOption = locationSelect.options[selectedIndex];
+		// If selected option has address data, use it even if value is empty
+		if (selectedOption.getAttribute('data-address')) {
+			// This is a valid location option
+		} else {
+			selectedOption = null;
+		}
+	}
+	
+	// If no valid selection, use first real location (skip placeholder at index 0)
+	if (!selectedOption && locationSelect.options.length > 1) {
 		selectedOption = locationSelect.options[1];
 	}
 	
 	if (selectedOption) {
 		const address = selectedOption.getAttribute('data-address');
-		const whatsapp = selectedOption.value;
+		let whatsapp = selectedOption.value;
 		const lat = selectedOption.getAttribute('data-lat');
 		const lng = selectedOption.getAttribute('data-lng');
 		const orderingtables = selectedOption.getAttribute('data-orderingtables');
 		
-		if (address && whatsapp) {
+		// If address exists, use this location (even if WhatsApp is empty, we'll use fallback)
+		if (address) {
+			// Use fallback WhatsApp if value is empty
+			if (!whatsapp || whatsapp.trim() === '') {
+				whatsapp = '{{ site.Params.orderingsystem.whatsapp }}';
+			}
+			
 			let parsedOrderingTables = [];
 			if (orderingtables && orderingtables.trim() !== '') {
 				parsedOrderingTables = orderingtables.split(',').map(table => table.trim());
@@ -1815,18 +1832,19 @@ function advanceOrder(){
 		// Get the currently selected location from dropdown
 		let currentLocationData = getCurrentLocationData();
 		
-		// If no location is selected, try to use the default (first available location)
+		// If no location data found, try to use the default (first available location)
 		if (!currentLocationData) {
 			const locationSelect = document.getElementById('locationSelect');
 			if (locationSelect && locationSelect.options.length > 1) {
 				// Skip the placeholder option (index 0) and use the first real location (index 1)
 				const firstOption = locationSelect.options[1];
-				if (firstOption && firstOption.value) {
+				if (firstOption && firstOption.getAttribute('data-address')) {
 					// Set the dropdown to the first option
 					locationSelect.selectedIndex = 1;
-					// Update the WhatsApp number
-					number = firstOption.value;
-					selectLocation(firstOption.value);
+					// Update the WhatsApp number (use value if available, otherwise use fallback)
+					const whatsappValue = firstOption.value || '{{ site.Params.orderingsystem.whatsapp }}';
+					number = whatsappValue;
+					selectLocation(whatsappValue);
 					// Get the location data again
 					currentLocationData = getCurrentLocationData();
 				}
@@ -1834,6 +1852,10 @@ function advanceOrder(){
 		}
 		
 		if (currentLocationData) {
+			// Update the global WhatsApp number to match the location data
+			if (currentLocationData.whatsapp) {
+				number = currentLocationData.whatsapp;
+			}
 			// Close the cart first
 			closeCart();
 			openTableModalWithLocation(currentLocationData);
@@ -2144,8 +2166,13 @@ function selectTable(buttonElement) {
     // Add selected class to the clicked button
     buttonElement.classList.add('selected');
     
-    const tableNumber = buttonElement.textContent;
+    let tableNumber = buttonElement.textContent.trim();
     const isTakeaway = buttonElement.classList.contains('takeaway-btn');
+    
+    // Extract table number if it starts with "Table "
+    if (!isTakeaway && tableNumber.startsWith('Table ')) {
+        tableNumber = tableNumber.replace('Table ', '');
+    }
     
     // Store selected table info
     window.selectedTableInfo = {
@@ -2157,6 +2184,7 @@ function selectTable(buttonElement) {
     // Set global order type variables for WhatsApp message
     currentOrderType = isTakeaway ? 'takeaway' : 'table';
     currentTableNumber = tableNumber;
+    myTable = tableNumber; // Set for backward compatibility
     
     // Update the modal to show confirmation
     const tableNumElement = document.getElementById('myTableNum');
@@ -2164,7 +2192,7 @@ function selectTable(buttonElement) {
         if (isTakeaway) {
             tableNumElement.textContent = 'Ready to place your takeaway order?';
         } else {
-            tableNumElement.textContent = `Table: ${tableNumber} at ${selectedLocationData.address}`;
+            tableNumElement.textContent = `Table ${tableNumber}`;
         }
     }
     
@@ -2172,14 +2200,23 @@ function selectTable(buttonElement) {
         // For takeaway, update the summary display and go to order confirmation
         updateOrderSummary(selectedLocationData);
         // Show the summary for takeaway orders
-        document.getElementById('orderSummaryDisplay').classList.remove('hide');
+        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+        if (orderSummaryDisplay) {
+            orderSummaryDisplay.classList.remove('hide');
+        }
     } else {
         // For table orders, hide the summary
-        document.getElementById('orderSummaryDisplay').classList.add('hide');
+        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+        if (orderSummaryDisplay) {
+            orderSummaryDisplay.classList.add('hide');
+        }
     }
     
-    // Show the confirmation modal
-    document.getElementById('confirmmodal').classList.add('show');
+    // Scroll to confirmation section smoothly
+    const confirmSection = document.getElementById('confirmmodal');
+    if (confirmSection) {
+        confirmSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 }
 
 function confirmTable(state){
@@ -2751,55 +2788,48 @@ let currentTableNumber = '';
 function populateTableNumbers(locationData) {
     const tableButtonsContainer = document.getElementById('dynamicTableButtons');
     
-    if (!locationData || !locationData.orderingtables) {
-        // Fallback to default table numbers if no location data
-        tableButtonsContainer.innerHTML = `
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">1</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">2</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">3</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">4</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">5</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">6</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">7</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">8</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">9</a>
-            <a class="tableBtn" href="#here" onclick="selectTable(this);">10</a>
-        `;
+    if (!tableButtonsContainer) {
+        console.error('❌ Table buttons container not found');
         return;
     }
     
     // Clear existing buttons
     tableButtonsContainer.innerHTML = '';
     
+    if (!locationData || !locationData.orderingtables || locationData.orderingtables.length === 0) {
+        // Fallback to default table numbers if no location data
+        for (let i = 1; i <= 10; i++) {
+            const tableBtn = document.createElement('button');
+            tableBtn.className = 'tableBtn';
+            tableBtn.type = 'button';
+            tableBtn.onclick = function() { selectTable(this); };
+            tableBtn.textContent = i.toString();
+            tableButtonsContainer.appendChild(tableBtn);
+        }
+        return;
+    }
+    
     // Process each ordering table option
     locationData.orderingtables.forEach((tableOption, index) => {
-        if (tableOption === "Takeway Only") {
+        const tableBtn = document.createElement('button');
+        tableBtn.type = 'button';
+        tableBtn.className = 'tableBtn';
+        tableBtn.onclick = function() { selectTable(this); };
+        
+        if (tableOption === "Takeway Only" || tableOption === "Takeaway Only" || tableOption.toLowerCase().includes('takeaway')) {
             // Add takeaway option
-            const takeawayBtn = document.createElement('a');
-            takeawayBtn.className = 'tableBtn takeaway-btn';
-            takeawayBtn.href = '#here';
-            takeawayBtn.onclick = function() { selectTable(this); };
-            takeawayBtn.textContent = 'Takeaway';
-            takeawayBtn.style.background = 'linear-gradient(#ff6b35, #f7931e)';
-            tableButtonsContainer.appendChild(takeawayBtn);
+            tableBtn.className = 'tableBtn takeaway-btn';
+            tableBtn.textContent = 'Takeaway';
         } else if (tableOption.startsWith('Tables')) {
             // Extract table numbers from "Tables1", "Tables2", etc.
             const tableNumber = tableOption.replace('Tables', '');
-            const tableBtn = document.createElement('a');
-            tableBtn.className = 'tableBtn';
-            tableBtn.href = '#here';
-            tableBtn.onclick = function() { selectTable(this); };
-            tableBtn.textContent = tableNumber;
-            tableButtonsContainer.appendChild(tableBtn);
+            tableBtn.textContent = `Table ${tableNumber}`;
         } else {
-            // Handle other table options
-            const tableBtn = document.createElement('a');
-            tableBtn.className = 'tableBtn';
-            tableBtn.href = '#here';
-            tableBtn.onclick = function() { selectTable(this); };
-            tableBtn.textContent = tableOption;
-            tableButtonsContainer.appendChild(tableBtn);
+            // Handle other table options (display as-is or format)
+            tableBtn.textContent = tableOption.startsWith('Table') ? tableOption : `Table ${tableOption}`;
         }
+        
+        tableButtonsContainer.appendChild(tableBtn);
     });
 }
 
@@ -2979,9 +3009,10 @@ window.testTablePopulation = function() {
 
     // Function to close table modal
     function closeTableModal() {
-        document.getElementById('tableNumberModal').classList.add('hide');
-        document.getElementById('confirmmodal').classList.remove('show');
-        document.querySelector('.input').classList.remove('hide');
+        const modal = document.getElementById('tableNumberModal');
+        if (modal) {
+            modal.classList.add('hide');
+        }
         
         // Hide the table selection section
         const tableSelectionSection = document.getElementById('tableSelectionSection');
@@ -3003,6 +3034,12 @@ window.testTablePopulation = function() {
         const summaryLocationInfo = document.getElementById('summaryLocationInfo');
         if (summaryLocationInfo) {
             summaryLocationInfo.innerHTML = '';
+        }
+        
+        // Clear the selected table display
+        const tableNumElement = document.getElementById('myTableNum');
+        if (tableNumElement) {
+            tableNumElement.textContent = '';
         }
         
         // Reset selected table info
@@ -3118,15 +3155,44 @@ window.testTablePopulation = function() {
     // Function to get current location data for table modal
     function getCurrentLocationData() {
         const locationSelect = document.getElementById('locationSelect');
-        if (locationSelect && locationSelect.value) {
-            const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+        if (!locationSelect || locationSelect.options.length <= 1) {
+            return null;
+        }
+        
+        // Find the selected option or default to first real location
+        let selectedOption = null;
+        const selectedIndex = locationSelect.selectedIndex;
+        
+        // Check if current selection is valid (not placeholder)
+        if (selectedIndex > 0 && selectedIndex < locationSelect.options.length) {
+            selectedOption = locationSelect.options[selectedIndex];
+            // If selected option has address data, use it even if value is empty
+            if (selectedOption.getAttribute('data-address')) {
+                // This is a valid location option
+            } else {
+                selectedOption = null;
+            }
+        }
+        
+        // If no valid selection, use first real location (skip placeholder at index 0)
+        if (!selectedOption && locationSelect.options.length > 1) {
+            selectedOption = locationSelect.options[1];
+        }
+        
+        if (selectedOption) {
             const address = selectedOption.getAttribute('data-address');
-            const whatsapp = selectedOption.value;
+            let whatsapp = selectedOption.value;
             const lat = selectedOption.getAttribute('data-lat');
             const lng = selectedOption.getAttribute('data-lng');
             const orderingTables = selectedOption.getAttribute('data-orderingtables');
             
-            if (address && whatsapp) {
+            // If address exists, use this location (even if WhatsApp is empty, we'll use fallback)
+            if (address) {
+                // Use fallback WhatsApp if value is empty
+                if (!whatsapp || whatsapp.trim() === '') {
+                    whatsapp = '{{ site.Params.orderingsystem.whatsapp }}';
+                }
+                
                 let parsedOrderingTables = [];
                 if (orderingTables && orderingTables.trim() !== '') {
                     parsedOrderingTables = orderingTables.split(',').map(table => table.trim());

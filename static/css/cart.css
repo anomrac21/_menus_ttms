@@ -239,7 +239,7 @@
    ============================================ */
 
 #cart .order {
-    height: calc(100dvh - 16em);
+    height: calc(100dvh - 12em);
     display: flex;
     overflow: hidden;
     flex-direction: column;
@@ -410,7 +410,7 @@
 #whatsappOrderBtn {
     width: -webkit-fill-available;
     border-top: 1px solid rgba(255, 255, 255, .2);
-    padding: .8em;
+    padding: 0 .8em .8em;
     background: rgba(0, 0, 0, .5);
 }
 
@@ -421,7 +421,6 @@
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: flex-end;
-    padding: .4em 0;
     font-size: small;
 }
 
@@ -445,12 +444,11 @@
     font-size: x-large;
     font-weight: 700;
     text-align: end;
-    padding: .8em 0;
     border-top: 1px solid rgba(255, 255, 255, .15);
     border-bottom: 1px solid rgba(255, 255, 255, .15);
     background-color: #00000019;
     color: #4caf50;
-    margin: .4em 0;
+    margin-bottom: .4em;
 }
 
 .btn-place-order,
