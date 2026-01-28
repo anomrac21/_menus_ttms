@@ -276,11 +276,10 @@ footer {
 .main-body {
     background: var(--main-bg,#000);
     position: relative;
-    margin-block-start:0;padding: 1em
+    margin-block-start:0;padding: 1em;
 }
 
 #packery-container {
-    display: block
 }
 
 #packery-container::after {
@@ -290,18 +289,15 @@ footer {
 }
 
 #packery-container .main-menu-bg {
-    width: 100%
 }
 
 @media(min-width: 600px) {
     #packery-container .main-menu-bg {
-        width:calc(50% - 12px)
     }
 }
 
 @media(min-width: 900px) {
     #packery-container .main-menu-bg {
-        width:calc(33.333% - 16px)
     }
 }
 
@@ -315,10 +311,7 @@ footer {
     background-color: transparent;
     position: relative;
     z-index: 1;
-    break-inside: avoid;
-    page-break-inside: avoid;
-    margin-block-end:1em;width: 100%;
-    float: left
+    margin-block-end:1em;width: -webkit-fill-available;
 }
 
 .main-menu {
@@ -2107,8 +2100,13 @@ footer .icon,#footer .icon,#footerBtns .icon {
 #client-openinghours .opening-hours-location {
     display: block
 }
-
+.main-body {
+    column-count: 1;
+}
 @media(max-width: 768px) {
+    .main-body {
+        column-count:3
+    }
     .locations-page {
         padding:.5em
     }
@@ -2136,20 +2134,11 @@ footer .icon,#footer .icon,#footerBtns .icon {
         height: 24px
     }
 }
-@media (min-width: 900px) {
-    .main-body {
-        column-count: 3;
-    }
-}
-@media (min-width: 600px) {
+
+@media(max-width: 600px) {
     .main-body {
         column-count: 2;
     }
 }
 
-.main-body {
-    column-count: 1;
-    background: var(--main-bg);
-    position: relative;
-    margin-block-start: 4em;
-}
+
