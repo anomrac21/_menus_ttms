@@ -113,8 +113,20 @@ function updateCartLocationDisplay() {
 // Function to get current location data for table modal
 function getCurrentLocationData() {
 	const locationSelect = document.getElementById('locationSelect');
-	if (locationSelect && locationSelect.value) {
-		const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+	if (!locationSelect) {
+		return null;
+	}
+	
+	// Check if a location is selected (has a value)
+	let selectedOption = null;
+	if (locationSelect.value && locationSelect.selectedIndex >= 0) {
+		selectedOption = locationSelect.options[locationSelect.selectedIndex];
+	} else if (locationSelect.options.length > 1) {
+		// No value selected, but we have options - use the first real location (skip placeholder)
+		selectedOption = locationSelect.options[1];
+	}
+	
+	if (selectedOption) {
 		const address = selectedOption.getAttribute('data-address');
 		const whatsapp = selectedOption.value;
 		const lat = selectedOption.getAttribute('data-lat');
@@ -1801,13 +1813,32 @@ function advanceOrder(){
 	if (hastables) {
 	
 		// Get the currently selected location from dropdown
-		const currentLocationData = getCurrentLocationData();
+		let currentLocationData = getCurrentLocationData();
+		
+		// If no location is selected, try to use the default (first available location)
+		if (!currentLocationData) {
+			const locationSelect = document.getElementById('locationSelect');
+			if (locationSelect && locationSelect.options.length > 1) {
+				// Skip the placeholder option (index 0) and use the first real location (index 1)
+				const firstOption = locationSelect.options[1];
+				if (firstOption && firstOption.value) {
+					// Set the dropdown to the first option
+					locationSelect.selectedIndex = 1;
+					// Update the WhatsApp number
+					number = firstOption.value;
+					selectLocation(firstOption.value);
+					// Get the location data again
+					currentLocationData = getCurrentLocationData();
+				}
+			}
+		}
+		
 		if (currentLocationData) {
 			// Close the cart first
 			closeCart();
 			openTableModalWithLocation(currentLocationData);
 		} else {
-			// No location selected, show alert
+			// No location available, show alert
 			alert('Please select a location first before placing your order.');
 			return;
 		}
