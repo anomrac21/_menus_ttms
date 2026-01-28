@@ -2104,9 +2104,6 @@ footer .icon,#footer .icon,#footerBtns .icon {
     column-count: 1;
 }
 @media(max-width: 768px) {
-    .main-body {
-        column-count:3
-    }
     .locations-page {
         padding:.5em
     }
@@ -2135,7 +2132,13 @@ footer .icon,#footer .icon,#footerBtns .icon {
     }
 }
 
-@media(max-width: 600px) {
+@media(min-width: 900px) {
+    .main-body {
+        column-count:3
+    }
+}
+
+@media(min-width: 600px) {
     .main-body {
         column-count: 2;
     }
