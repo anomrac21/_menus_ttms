@@ -344,7 +344,6 @@ footer {
 .menu-header {
     display: block;
     position: relative;
-    background: rgba(0,0,0,.2);
     border-bottom: 1px solid rgba(255,255,255,.1)
 }
 
@@ -370,7 +369,7 @@ footer {
     position: relative;
     color: var(--main-text-color,#fff);
     background-color: transparent;
-    padding: 1em;
+    padding: 1em
 }
 
 .headerstyle h2 {
@@ -434,7 +433,7 @@ footer {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,.25);
     border-color: rgba(255,255,255,.2);
-    background: var(--selected-button-color1);
+    background: var(--selected-button-color1)
 }
 
 .menu-item-row-top {
@@ -505,8 +504,9 @@ footer {
     font-weight: 600;
     line-height: 1.2
 }
+
 .expanded .menu-item-title {
-    font-size: 1.4em;
+    font-size: 1.4em
 }
 
 .menu-item-title a {
@@ -567,7 +567,7 @@ footer {
     flex-wrap: wrap;
     gap: .5em;
     margin-top: .3em;
-    flex-direction: column;
+    flex-direction: column
 }
 
 .menu-item-options .sizes,.menu-item-options .flavours {
@@ -610,10 +610,10 @@ footer {
 
 .menu-item-options .sizes li.expanded-option.selected::before,.menu-item-options .flavours li.expanded-option.selected::before {
     content: '\f00c';
-    font-family: 'FontAwesome';
-    font-weight: normal;
+    font-family: fontawesome;
+    font-weight: 400;
     position: absolute;
-    right: 0.75em;
+    right: .75em;
     top: 50%;
     transform: translateY(-50%);
     font-size: 1em;
@@ -679,10 +679,10 @@ footer {
 
 .expanded-side-option.selected::before {
     content: '\f00c';
-    font-family: 'FontAwesome';
-    font-weight: normal;
+    font-family: fontawesome;
+    font-weight: 400;
     position: absolute;
-    right: 0.75em;
+    right: .75em;
     top: 50%;
     transform: translateY(-50%);
     font-size: 1em;
@@ -690,13 +690,13 @@ footer {
 }
 
 .expanded-side-option.premiumside {
-    border-left: 3px solid #ffd700
+    border-left: 3px solid gold
 }
 
 .expanded-side-option.premiumside.selected {
     background: linear-gradient(135deg,#25d366,#128c7e);
     border-color: #25d366;
-    border-left-color: #ffd700
+    border-left-color: gold
 }
 
 .expanded-additions-section {
@@ -753,10 +753,10 @@ footer {
 
 .expanded-addition-option.selected::before {
     content: '\f00c';
-    font-family: 'FontAwesome';
-    font-weight: normal;
+    font-family: fontawesome;
+    font-weight: 400;
     position: absolute;
-    right: 0.75em;
+    right: .75em;
     top: 50%;
     transform: translateY(-50%);
     font-size: 1em;
@@ -766,7 +766,7 @@ footer {
 
 .expanded-addition-option .addition-price {
     font-weight: 600;
-    opacity: 0.9;
+    opacity: .9;
     margin-right: 0
 }
 
@@ -882,7 +882,7 @@ footer {
     border-top-color: var(--button-text-color1,#fff);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: auto;
+    margin: auto
 }
 
 @keyframes spin {
@@ -1087,7 +1087,6 @@ footer {
 }
 
 .hero-content {
-    background: linear-gradient(var(--menu-bg-color-1,#111),var(--menu-bg-color-2,#222));
     border-radius: .4em
 }
 
@@ -1584,10 +1583,10 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .single-page-option.selected::before {
     content: '\f00c';
-    font-family: 'FontAwesome';
-    font-weight: normal;
+    font-family: fontawesome;
+    font-weight: 400;
     position: absolute;
-    right: 0.75em;
+    right: .75em;
     top: 50%;
     transform: translateY(-50%);
     font-size: 1em;
@@ -1653,10 +1652,10 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .single-page-side-option.selected::before {
     content: '\f00c';
-    font-family: 'FontAwesome';
-    font-weight: normal;
+    font-family: fontawesome;
+    font-weight: 400;
     position: absolute;
-    right: 0.75em;
+    right: .75em;
     top: 50%;
     transform: translateY(-50%);
     font-size: 1em;
@@ -1664,13 +1663,13 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .single-page-side-option.premiumside {
-    border-left: 3px solid #ffd700
+    border-left: 3px solid gold
 }
 
 .single-page-side-option.premiumside.selected {
     background: linear-gradient(135deg,#25d366,#128c7e);
     border-color: #25d366;
-    border-left-color: #ffd700
+    border-left-color: gold
 }
 
 .single-page-additions {
@@ -1727,10 +1726,10 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .single-page-addition-option.selected::before {
     content: '\f00c';
-    font-family: 'FontAwesome';
-    font-weight: normal;
+    font-family: fontawesome;
+    font-weight: 400;
     position: absolute;
-    right: 0.75em;
+    right: .75em;
     top: 50%;
     transform: translateY(-50%);
     font-size: 1em;
@@ -1740,7 +1739,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .single-page-addition-option .addition-price {
     font-weight: 600;
-    opacity: 0.9;
+    opacity: .9;
     margin-right: 0
 }
 
