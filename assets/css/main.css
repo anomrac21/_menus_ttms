@@ -872,7 +872,7 @@ footer {
     color: #333;
     width: 44px;
     height: 44px;
-    border-radius: 50%;
+    border-radius: .5em;
     cursor: pointer;
     display: flex;
     align-items: center;
