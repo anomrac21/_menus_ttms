@@ -788,10 +788,12 @@
                 element.setAttribute('data-additions', JSON.stringify(additions));
                 element.setAttribute('data-images-array', JSON.stringify(imagesArray));
                 
-                // Build image carousel HTML if multiple images exist
+                // Build image carousel HTML if images exist (even for single image)
                 let imageCarouselHTML = '';
-                if (imagesArray && imagesArray.length > 1) {
+                if (imagesArray && imagesArray.length > 0) {
                     const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
+                    const showNavButtons = imagesArray.length > 1;
+                    const showIndicators = imagesArray.length > 1;
                     imageCarouselHTML = `
                         <div class="expanded-image-carousel" data-current-image="0">
                             <div class="expanded-image-carousel-container">
@@ -801,6 +803,7 @@
                                     </div>
                                 `).join('')}
                             </div>
+                            ${showNavButtons ? `
                             <div class="expanded-image-nav-buttons">
                                 <button class="expanded-image-nav expanded-image-nav-prev" onclick="navigateExpandedImage(this, -1, '${url}', event)" aria-label="Previous image">
                                     <i class="fa fa-chevron-left"></i>
@@ -809,23 +812,16 @@
                                     <i class="fa fa-chevron-right"></i>
                                 </button>
                             </div>
+                            ` : ''}
+                            ${showIndicators ? `
                             <div class="expanded-image-indicators">
                                 ${imagesArray.map((img, index) => `
                                     <span class="expanded-image-indicator ${index === 0 ? 'active' : ''}" data-indicator-index="${index}" onclick="goToExpandedImage(this, ${index}, '${url}', event)"></span>
                                 `).join('')}
                             </div>
+                            ` : ''}
                         </div>
                     `;
-                } else if (imagesArray && imagesArray.length === 1) {
-                    // Single image - no carousel needed, but update the expanded image
-                    const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
-                    const existingImageLink = element.querySelector('.menu-item-image-link');
-                    if (existingImageLink) {
-                        const existingImg = existingImageLink.querySelector('.menu-item-img');
-                        if (existingImg && existingImg.src !== `/${imagesArray[0]}`) {
-                            existingImg.src = `/${imagesArray[0]}`;
-                        }
-                    }
                 }
                 
                 // Create expanded content HTML
