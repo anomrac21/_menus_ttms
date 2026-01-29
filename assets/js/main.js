@@ -476,6 +476,7 @@
                 let pricesArray = []; // Array of [size, flavour, price] tuples
                 let sideCategories = []; // Array of side category objects
                 let additions = []; // Array of [name, price] tuples
+                let imagesArray = []; // Array of image paths
                 
                 try {
                     // Hugo serves JSON at /path/index.json
@@ -517,6 +518,11 @@
                             additions = itemData.additions;
                             console.log('📊 Loaded additions from JSON:', additions);
                         }
+                        // Get images
+                        if (itemData.images && Array.isArray(itemData.images)) {
+                            imagesArray = itemData.images;
+                            console.log('📊 Loaded images from JSON:', imagesArray);
+                        }
                     }
                 } catch (jsonError) {
                     console.log('JSON fetch failed, falling back to HTML:', jsonError);
@@ -551,6 +557,16 @@
                             console.log('📊 Loaded additions from data attribute:', additions);
                         } catch (e) {
                             console.log('⚠️ Failed to parse data-additions:', e);
+                        }
+                    }
+                    
+                    const imagesArrayStr = element.getAttribute('data-images-array');
+                    if (imagesArrayStr) {
+                        try {
+                            imagesArray = JSON.parse(imagesArrayStr);
+                            console.log('📊 Loaded images from data attribute:', imagesArray);
+                        } catch (e) {
+                            console.log('⚠️ Failed to parse data-images-array:', e);
                         }
                     }
                 }
@@ -770,10 +786,52 @@
                 element.setAttribute('data-selected-flavour', defaultFlavour);
                 element.setAttribute('data-side-categories', JSON.stringify(sideCategories));
                 element.setAttribute('data-additions', JSON.stringify(additions));
+                element.setAttribute('data-images-array', JSON.stringify(imagesArray));
+                
+                // Build image carousel HTML if multiple images exist
+                let imageCarouselHTML = '';
+                if (imagesArray && imagesArray.length > 1) {
+                    const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
+                    imageCarouselHTML = `
+                        <div class="expanded-image-carousel" data-current-image="0">
+                            <div class="expanded-image-carousel-container">
+                                ${imagesArray.map((img, index) => `
+                                    <div class="expanded-image-slide ${index === 0 ? 'active' : ''}" data-image-index="${index}">
+                                        <img src="/${img}" alt="${itemName} - Image ${index + 1}" loading="lazy" class="expanded-image-carousel-img">
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="expanded-image-nav-buttons">
+                                <button class="expanded-image-nav expanded-image-nav-prev" onclick="navigateExpandedImage(this, -1, '${url}', event)" aria-label="Previous image">
+                                    <i class="fa fa-chevron-left"></i>
+                                </button>
+                                <button class="expanded-image-nav expanded-image-nav-next" onclick="navigateExpandedImage(this, 1, '${url}', event)" aria-label="Next image">
+                                    <i class="fa fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="expanded-image-indicators">
+                                ${imagesArray.map((img, index) => `
+                                    <span class="expanded-image-indicator ${index === 0 ? 'active' : ''}" data-indicator-index="${index}" onclick="goToExpandedImage(this, ${index}, '${url}', event)"></span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                } else if (imagesArray && imagesArray.length === 1) {
+                    // Single image - no carousel needed, but update the expanded image
+                    const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
+                    const existingImageLink = element.querySelector('.menu-item-image-link');
+                    if (existingImageLink) {
+                        const existingImg = existingImageLink.querySelector('.menu-item-img');
+                        if (existingImg && existingImg.src !== `/${imagesArray[0]}`) {
+                            existingImg.src = `/${imagesArray[0]}`;
+                        }
+                    }
+                }
                 
                 // Create expanded content HTML
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
+                        ${imageCarouselHTML}
                         <div class="expanded-item-description">
                             <a href="${url}" style="color: inherit; text-decoration: none;">
                                 ${itemDesc ? (fullDescElement ? itemDesc : `<p>${itemDesc}</p>`) : '<p>No description available</p>'}
@@ -1510,6 +1568,95 @@
     window.selectExpandedOption = selectExpandedOption;
     window.selectExpandedSide = selectExpandedSide;
     window.selectExpandedAddition = selectExpandedAddition;
+    
+    /**
+     * Navigate to previous/next image in expanded carousel
+     * @global
+     * @param {HTMLElement} button - The navigation button
+     * @param {number} direction - -1 for previous, 1 for next
+     * @param {string} url - Item URL (for compatibility)
+     * @param {Event} event - The click event
+     */
+    function navigateExpandedImage(button, direction, url, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const carousel = button.closest('.expanded-image-carousel');
+        if (!carousel) return;
+        
+        const slides = carousel.querySelectorAll('.expanded-image-slide');
+        if (slides.length <= 1) return;
+        
+        const currentIndex = parseInt(carousel.getAttribute('data-current-image')) || 0;
+        let newIndex = currentIndex + direction;
+        
+        // Wrap around
+        if (newIndex < 0) {
+            newIndex = slides.length - 1;
+        } else if (newIndex >= slides.length) {
+            newIndex = 0;
+        }
+        
+        goToExpandedImageIndex(carousel, newIndex);
+    }
+    
+    /**
+     * Go to specific image by indicator click
+     * @global
+     * @param {HTMLElement} indicator - The indicator element
+     * @param {number} index - The image index to go to
+     * @param {string} url - Item URL (for compatibility)
+     * @param {Event} event - The click event
+     */
+    function goToExpandedImage(indicator, index, url, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const carousel = indicator.closest('.expanded-image-carousel');
+        if (!carousel) return;
+        
+        goToExpandedImageIndex(carousel, index);
+    }
+    
+    /**
+     * Go to specific image index in carousel
+     * @param {HTMLElement} carousel - The carousel element
+     * @param {number} index - The image index to show
+     */
+    function goToExpandedImageIndex(carousel, index) {
+        const slides = carousel.querySelectorAll('.expanded-image-slide');
+        const indicators = carousel.querySelectorAll('.expanded-image-indicator');
+        
+        if (index < 0 || index >= slides.length) return;
+        
+        // Update slides
+        slides.forEach((slide, i) => {
+            if (i === index) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Update indicators
+        indicators.forEach((indicator, i) => {
+            if (i === index) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        });
+        
+        // Update current index
+        carousel.setAttribute('data-current-image', index.toString());
+    }
+    
+    window.navigateExpandedImage = navigateExpandedImage;
+    window.goToExpandedImage = goToExpandedImage;
 
     /**
      * Adjust quantity on single page

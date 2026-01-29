@@ -83,6 +83,16 @@
                     {{$additions = $additions | append .price}}
                   {{end}}
                   
+                  {{/* Build images array for carousel */}}
+                  {{$imagesArray := slice}}
+                  {{if .Params.images}}
+                    {{range .Params.images}}
+                      {{if .image}}
+                        {{$imagesArray = $imagesArray | append .image}}
+                      {{end}}
+                    {{end}}
+                  {{end}}
+                  
                   {{/* Determine default selected size and flavour */}}
                   {{$defaultSize := "-"}}
                   {{if gt (len $sizes) 0}}
@@ -101,6 +111,7 @@
                     data-selected-flavour="{{ $defaultFlavour }}"
                     data-side-categories="{{ $sideCategories | jsonify }}"
                     data-additions="{{ $additions | jsonify }}"
+                    data-images-array="{{ $imagesArray | jsonify }}"
                     onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
                     <div class="menu-item-row-top">
                       {{ if .Params.images }}
