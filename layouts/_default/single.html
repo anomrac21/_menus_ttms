@@ -28,11 +28,38 @@
         {{end}}
         
               {{if .Params.images }}
-          <div class="single-page-image-container">
-                {{range .Params.images }}
-              <img class="single-page-image" src="/{{ .image }}" alt="{{ $.Title }}" loading="lazy">
+          {{ $imagesArray := slice }}
+          {{ range .Params.images }}
+            {{ if .image }}
+              {{ $imagesArray = $imagesArray | append .image }}
+            {{ end }}
+          {{ end }}
+          {{ if gt (len $imagesArray) 0 }}
+            <div class="single-page-image-carousel" data-current-image="0">
+              <div class="single-page-image-carousel-container">
+                {{ range $index, $img := $imagesArray }}
+                  <div class="single-page-image-slide {{ if eq $index 0 }}active{{ end }}" data-image-index="{{ $index }}">
+                    <img src="/{{ $img }}" alt="{{ $.Title }} - Image {{ add $index 1 }}" loading="lazy" class="single-page-image-carousel-img">
+                  </div>
                 {{ end }}
               </div>
+              {{ if gt (len $imagesArray) 1 }}
+              <div class="single-page-image-nav-buttons">
+                <button class="single-page-image-nav single-page-image-nav-prev" onclick="navigateSinglePageImage(this, -1, event)" aria-label="Previous image">
+                  <i class="fa fa-chevron-left"></i>
+                </button>
+                <button class="single-page-image-nav single-page-image-nav-next" onclick="navigateSinglePageImage(this, 1, event)" aria-label="Next image">
+                  <i class="fa fa-chevron-right"></i>
+                </button>
+              </div>
+              <div class="single-page-image-indicators">
+                {{ range $index, $img := $imagesArray }}
+                  <span class="single-page-image-indicator {{ if eq $index 0 }}active{{ end }}" data-indicator-index="{{ $index }}" onclick="goToSinglePageImage(this, {{ $index }}, event)"></span>
+                {{ end }}
+              </div>
+              {{ end }}
+            </div>
+          {{ end }}
               {{ else }}
           <div class="single-page-image-container">
             <img class="single-page-image" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  

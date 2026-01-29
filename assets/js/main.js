@@ -1653,6 +1653,93 @@
     
     window.navigateExpandedImage = navigateExpandedImage;
     window.goToExpandedImage = goToExpandedImage;
+    
+    /**
+     * Navigate to previous/next image in single page carousel
+     * @global
+     * @param {HTMLElement} button - The navigation button
+     * @param {number} direction - -1 for previous, 1 for next
+     * @param {Event} event - The click event
+     */
+    function navigateSinglePageImage(button, direction, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const carousel = button.closest('.single-page-image-carousel');
+        if (!carousel) return;
+        
+        const slides = carousel.querySelectorAll('.single-page-image-slide');
+        if (slides.length <= 1) return;
+        
+        const currentIndex = parseInt(carousel.getAttribute('data-current-image')) || 0;
+        let newIndex = currentIndex + direction;
+        
+        // Wrap around
+        if (newIndex < 0) {
+            newIndex = slides.length - 1;
+        } else if (newIndex >= slides.length) {
+            newIndex = 0;
+        }
+        
+        goToSinglePageImageIndex(carousel, newIndex);
+    }
+    
+    /**
+     * Go to specific image by indicator click on single page
+     * @global
+     * @param {HTMLElement} indicator - The indicator element
+     * @param {number} index - The image index to go to
+     * @param {Event} event - The click event
+     */
+    function goToSinglePageImage(indicator, index, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const carousel = indicator.closest('.single-page-image-carousel');
+        if (!carousel) return;
+        
+        goToSinglePageImageIndex(carousel, index);
+    }
+    
+    /**
+     * Go to specific image index in single page carousel
+     * @param {HTMLElement} carousel - The carousel element
+     * @param {number} index - The image index to show
+     */
+    function goToSinglePageImageIndex(carousel, index) {
+        const slides = carousel.querySelectorAll('.single-page-image-slide');
+        const indicators = carousel.querySelectorAll('.single-page-image-indicator');
+        
+        if (index < 0 || index >= slides.length) return;
+        
+        // Update slides
+        slides.forEach((slide, i) => {
+            if (i === index) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Update indicators
+        indicators.forEach((indicator, i) => {
+            if (i === index) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        });
+        
+        // Update current index
+        carousel.setAttribute('data-current-image', index.toString());
+    }
+    
+    window.navigateSinglePageImage = navigateSinglePageImage;
+    window.goToSinglePageImage = goToSinglePageImage;
 
     /**
      * Adjust quantity on single page
