@@ -49,6 +49,7 @@
     max-width: 480px;
     width: 100%;
     overflow: hidden;
+    position: relative;
 }
 
 .locations {
@@ -61,6 +62,7 @@
     -webkit-overflow-scrolling: touch;
     padding: .5em 0;
     margin: 0;
+    width: 100%;
 }
 
 .locations::-webkit-scrollbar {
@@ -91,7 +93,9 @@
     transition: all .3s ease;
     scroll-snap-align: start;
     flex-shrink: 0;
-    width: calc(100%);
+    min-width: calc(100% - 2em);
+    width: calc(100% - 0em);
+    box-sizing: border-box;
 }
 
 .location-item:hover {
@@ -657,6 +661,33 @@
 
 @media (min-width: 641px) {
     .locations {
-        justify-content: center;
+        justify-content: flex-start;
+    }
+    
+    .location-item {
+        min-width: calc(100% - 2em);
+        width: calc(100% - 2em);
+    }
+}
+
+@media (min-width: 1024px) {
+    .locations-wrapper {
+        max-width: 600px;
+    }
+    
+    .location-item {
+        min-width: calc(50% - 1em);
+        width: calc(50% - 1em);
+    }
+}
+
+@media (min-width: 1440px) {
+    .locations-wrapper {
+        max-width: 900px;
+    }
+    
+    .location-item {
+        min-width: calc(33.333% - 1.34em);
+        width: calc(33.333% - 1.34em);
     }
 }
