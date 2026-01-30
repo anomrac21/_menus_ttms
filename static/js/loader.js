@@ -254,6 +254,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Barba enter: Forcing ad reload');
                     console.log('window.adManager exists:', !!window.adManager);
                     
+                    // Re-initialize ad manager (will handle container check and re-population)
+                    if (typeof initAdManager === 'function') {
+                        console.log('Re-initializing AdManager...');
+                        initAdManager();
+                    }
+                    
+                    // Also try with existing instance if available
                     if (window.adManager) {
                         console.log('Calling populateAds with forceRepopulate=true');
                         // Directly call populateAds with force flag
@@ -262,9 +269,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Also try again after a delay in case DOM wasn't fully ready
                         setTimeout(() => {
                             console.log('Secondary ad population attempt...');
-                            window.adManager.populateAds(true);
-                            
-                            // AOS removed - no longer needed
+                            if (window.adManager) {
+                                window.adManager.populateAds(true);
+                            }
                             
                             // Refresh scroll progress bars
                             setTimeout(() => {
@@ -274,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             }, 500);
                         }, 500);
                     } else {
-                        console.error('AdManager not available during barba transition!');
+                        console.log('AdManager not yet available, will be initialized by barba:after event');
                     }
                 }, 300);
                 

@@ -190,16 +190,25 @@ class ClientAdManager {
 let adManagerInstance = null;
 
 function initAdManager() {
-  if (adManagerInstance) {
-    console.log('AdManager already exists');
-      return;
-    }
-    
   // Only initialize if homepage-ads-container exists
   if (!document.getElementById('homepage-ads-container')) {
     console.log('No homepage-ads-container, skipping ClientAdManager');
-      return;
+    // Clear instance if container doesn't exist (e.g., navigated away from homepage)
+    if (adManagerInstance) {
+      adManagerInstance = null;
+      window.adManager = null;
     }
+    return;
+  }
+
+  // If instance exists, just re-populate (for Barba transitions)
+  if (adManagerInstance) {
+    console.log('AdManager exists, re-populating for Barba transition...');
+    // Reset hasPopulated flag to allow re-population
+    adManagerInstance.hasPopulated = false;
+    adManagerInstance.init();
+    return;
+  }
 
   console.log('Initializing ClientAdManager...');
   adManagerInstance = new ClientAdManager();
@@ -212,4 +221,18 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initAdManager);
 } else {
   initAdManager();
+}
+
+// Expose initAdManager globally for Barba.js integration
+window.initAdManager = initAdManager;
+
+// Re-initialize on Barba transitions
+if (typeof window.barba !== 'undefined') {
+  document.addEventListener('barba:after', function() {
+    console.log('Barba transition complete, checking for ad container...');
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      initAdManager();
+    }, 100);
+  });
 }
