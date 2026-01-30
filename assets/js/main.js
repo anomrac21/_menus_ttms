@@ -2512,3 +2512,213 @@
     window.showOpeningHoursLocation = showOpeningHoursLocation;
 
 })();
+
+// ========================================
+// LOCATION STATUS DISPLAY
+// ========================================
+
+(function() {
+    'use strict';
+
+    /**
+     * Calculate and display open/closed status for location items
+     */
+    function updateLocationStatuses() {
+        const locationItems = document.querySelectorAll('.location-item[data-location-index]');
+        if (locationItems.length === 0) return;
+
+        // First, try to use data attributes (embedded in HTML)
+        let allHaveData = true;
+        locationItems.forEach(item => {
+            const openingHoursData = item.getAttribute('data-opening-hours');
+            if (openingHoursData) {
+                try {
+                    const openingHours = JSON.parse(openingHoursData);
+                    const status = calculateLocationStatus(openingHours);
+                    updateStatusBadge(item, status.type, status.text);
+                } catch (e) {
+                    console.error('Error parsing opening hours from data attribute:', e);
+                    allHaveData = false;
+                }
+            } else {
+                allHaveData = false;
+            }
+        });
+
+        // If all items have data attributes, we're done
+        if (allHaveData) return;
+
+        // Otherwise, fetch from index.json as fallback
+        fetch('/index.json')
+            .then(response => response.json())
+            .then(data => {
+                // Handle both data.locations and data.locations.locations structures
+                const locations = (data.locations && Array.isArray(data.locations)) 
+                    ? data.locations 
+                    : (data.locations && data.locations.locations && Array.isArray(data.locations.locations))
+                        ? data.locations.locations
+                        : [];
+                
+                locationItems.forEach(item => {
+                    // Skip if already updated from data attribute
+                    const openingHoursData = item.getAttribute('data-opening-hours');
+                    if (openingHoursData) return;
+
+                    const index = parseInt(item.getAttribute('data-location-index'), 10);
+                    const location = locations[index];
+                    if (!location || !location.opening_hours) {
+                        updateStatusBadge(item, 'closed', 'Closed');
+                        return;
+                    }
+
+                    const status = calculateLocationStatus(location.opening_hours);
+                    updateStatusBadge(item, status.type, status.text);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching locations data:', error);
+                // Set all to closed on error (only for items without data attributes)
+                locationItems.forEach(item => {
+                    const openingHoursData = item.getAttribute('data-opening-hours');
+                    if (!openingHoursData) {
+                        updateStatusBadge(item, 'closed', 'Closed');
+                    }
+                });
+            });
+    }
+
+    /**
+     * Calculate location status based on opening hours
+     * @param {Object} openingHours - Opening hours data
+     * @returns {Object} Status object with type and text
+     */
+    function calculateLocationStatus(openingHours) {
+        const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+        const now = new Date();
+        const todayIndex = now.getDay();
+        const todayDay = days[todayIndex];
+        const yesterdayIndex = (todayIndex - 1 + 7) % 7;
+        const yesterdayDay = days[yesterdayIndex];
+
+        function parseTime(timeStr) {
+            if (!timeStr) return null;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+            return date;
+        }
+
+        function getHoursForDay(day) {
+            if (!openingHours[day] || !Array.isArray(openingHours[day])) return null;
+            
+            const entries = openingHours[day];
+            let openTime = null;
+            let closeTime = null;
+
+            for (const entry of entries) {
+                if (entry.type === 'Open') {
+                    openTime = parseTime(entry.time);
+                } else if (entry.type === 'Close') {
+                    closeTime = parseTime(entry.time);
+                }
+            }
+
+            return { openTime, closeTime };
+        }
+
+        // Check yesterday's overnight hours first
+        const yesterdayHours = getHoursForDay(yesterdayDay);
+        if (yesterdayHours && yesterdayHours.openTime && yesterdayHours.closeTime) {
+            const yesterdayOpen = new Date(yesterdayHours.openTime);
+            yesterdayOpen.setDate(yesterdayOpen.getDate() - 1);
+            
+            let yesterdayClose = new Date(yesterdayHours.closeTime);
+            // If close time is before open time, it's overnight
+            if (yesterdayClose <= yesterdayOpen) {
+                yesterdayClose.setDate(yesterdayClose.getDate() + 1);
+            }
+
+            if (now >= yesterdayOpen && now < yesterdayClose) {
+                const minsToClose = Math.floor((yesterdayClose - now) / 60000);
+                if (minsToClose <= 30) {
+                    return { type: 'soon-close', text: 'Closes Soon' };
+                }
+                return { type: 'open', text: 'Open' };
+            }
+        }
+
+        // Check today's hours
+        const todayHours = getHoursForDay(todayDay);
+        if (todayHours && todayHours.openTime && todayHours.closeTime) {
+            const todayOpen = new Date(todayHours.openTime);
+            let todayClose = new Date(todayHours.closeTime);
+            
+            // If close time is before open time, it's overnight
+            if (todayClose <= todayOpen) {
+                todayClose.setDate(todayClose.getDate() + 1);
+            }
+
+            if (now >= todayOpen && now < todayClose) {
+                const minsToClose = Math.floor((todayClose - now) / 60000);
+                if (minsToClose <= 30) {
+                    return { type: 'soon-close', text: 'Closes Soon' };
+                }
+                return { type: 'open', text: 'Open' };
+            } else if (now < todayOpen) {
+                const minsToOpen = Math.floor((todayOpen - now) / 60000);
+                if (minsToOpen > 0 && minsToOpen <= 30) {
+                    return { type: 'soon-open', text: 'Opens Soon' };
+                }
+            }
+        }
+
+        return { type: 'closed', text: 'Closed' };
+    }
+
+    /**
+     * Update status badge for a location item
+     * @param {HTMLElement} item - Location item element
+     * @param {string} statusType - Status type (open, closed, soon-open, soon-close)
+     * @param {string} statusText - Status text to display
+     */
+    function updateStatusBadge(item, statusType, statusText) {
+        const statusElement = item.querySelector('.location-status-badge');
+        if (!statusElement) return;
+
+        // Remove all status classes
+        statusElement.classList.remove('open', 'closed', 'soon-open', 'soon-close');
+        
+        // Add current status class
+        statusElement.classList.add(statusType);
+        statusElement.textContent = statusText;
+    }
+
+    /**
+     * Initialize location status display
+     */
+    function initLocationStatuses() {
+        updateLocationStatuses();
+        // Update every minute
+        setInterval(updateLocationStatuses, 60000);
+    }
+
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initLocationStatuses, 500);
+        });
+    } else {
+        setTimeout(initLocationStatuses, 500);
+    }
+
+    // Re-initialize after Barba.js transitions
+    if (typeof window.barba !== 'undefined') {
+        document.addEventListener('barba:after', () => {
+            setTimeout(initLocationStatuses, 500);
+        });
+    }
+
+    // Expose function globally
+    window.updateLocationStatuses = updateLocationStatuses;
+
+})();
