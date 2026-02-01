@@ -661,12 +661,9 @@
 
 @media (min-width: 641px) {
     .locations {
-        justify-content: flex-start;
     }
     
     .location-item {
-        min-width: calc(100% - 2em);
-        width: calc(100% - 2em);
     }
 }
 
@@ -676,8 +673,6 @@
     }
     
     .location-item {
-        min-width: calc(50% - 1em);
-        width: calc(50% - 1em);
     }
 }
 
