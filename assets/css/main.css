@@ -1090,7 +1090,7 @@ footer {
     background: rgba(255,255,255,.1);
     border: 1px solid rgba(255,255,255,.2);
     border-radius: .5em;
-    color: var(--main-text-color,#fff);
+    color: var(--button-text-color1);
     cursor: pointer;
     transition: all .3s ease;
     font-size: .9em
@@ -1104,7 +1104,7 @@ footer {
 .expanded-quantity {
     font-size: 1.2em;
     font-weight: 600;
-    color: var(--main-text-color,#fff);
+    color: var(--button-text-color1);
     min-width: 30px;
     text-align: center
 }
