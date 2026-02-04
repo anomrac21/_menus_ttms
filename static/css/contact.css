@@ -28,7 +28,6 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0em;
     margin: 0;
 }
 
@@ -41,7 +40,7 @@
     align-items: center;
     justify-content: center;
     gap: 1em;
-    padding: .5em 0;
+    padding: 0;
     position: relative;
 }
 
@@ -188,6 +187,41 @@
     filter: brightness(1.2);
 }
 
+.location-whatsapp-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(37, 211, 102, .2), rgba(18, 140, 126, .15));
+    border: 1.5px solid rgba(37, 211, 102, .4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+    transition: all .3s ease;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.location-whatsapp-btn:hover {
+    background: linear-gradient(135deg, rgba(37, 211, 102, .3), rgba(18, 140, 126, .25));
+    border-color: rgba(37, 211, 102, .6);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, .4);
+}
+
+.location-whatsapp-btn:active {
+    transform: translateY(0) scale(1);
+}
+
+.location-whatsapp-btn img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(1.2);
+}
+
 .location-status {
     display: flex;
     align-items: center;
@@ -212,6 +246,40 @@
     height: -webkit-fill-available;
     position: relative;
     overflow: hidden;
+    /* Button-specific styles */
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    background: transparent;
+}
+
+.location-status-badge:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Throbber/Spinner for location status refresh */
+.location-status-badge .throbber {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: location-status-spin 0.6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+@keyframes location-status-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .location-status-badge::before {
@@ -454,7 +522,7 @@
    ============================================ */
 
 .contact {
-    display: flex;
+    display: none;
     justify-content: center;
     gap: 1em;
     flex-wrap: wrap;
@@ -517,7 +585,7 @@
     justify-content: center;
     gap: .8em;
     flex-wrap: wrap;
-    padding: 1em 0;
+    padding: .5em 0;
 }
 
 .subscribe .btn,
@@ -581,20 +649,223 @@
 }
 
 #appleMessage {
-    background: rgba(0, 0, 0, .9);
-    border-radius: 16px;
-    padding: 1.5em;
-    border: 1px solid rgba(255, 255, 255, .1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 30, 0.98));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-.appleInstallHide {
+#appleMessage .container {
+    width: 100%;
+    max-width: 600px;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+#appleMessage .card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#appleMessage .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5em 1.5em 1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    flex-shrink: 0;
+}
+
+#appleMessage .header .text {
+    color: var(--hero-text-color, #fff);
+    font-size: 1.2em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: auto;
+}
+
+#appleMessage .header .text i {
+    font-size: 1.1em;
+}
+
+#appleMessage .appleMsgBtnClose {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hero-text-color, #fff);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+#appleMessage .appleMsgBtnClose:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+#appleMessage .appleMsgBtnClose i {
+    font-size: 1.2em;
+}
+
+#appleMessage #slides {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1.5em;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    position: relative;
+}
+
+#appleMessage .msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    min-height: 100%;
+    gap: .5em;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#appleMessage .msg.hide {
     display: none;
 }
 
+#appleMessage .msgtxt {
+    color: var(--hero-text-color, #fff);
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom: 0.5em;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+#appleMessage .msgtxt p {
+    margin: 0;
+    color: var(--hero-text-color, #fff);
+}
+
+#appleMessage .msgtxt img.icon {
+}
+
+#appleMessage .msg > p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1em;
+    margin: 0;
+    line-height: 1.5;
+}
+
+#appleMessage .apple_tutorial_img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    margin: 1em 0;
+}
+
+#appleMessage .appleMsgBtns {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hero-text-color, #fff);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0.5em;
+}
+
+#appleMessage .appleMsgBtns:hover,
+#appleMessage .appleMsgBtns:active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
+#appleMessage .appleMsgBtns i {
+    font-size: 1.2em;
+}
+
+#appleMessage .appleMsgBtnLeft,
+#appleMessage .appleMsgBtnRight {
+    position: relative;
+}
+
+/* Navigation buttons wrapper for better positioning */
+#appleMessage .msg {
+    position: relative;
+}
+
+#appleMessage .msg .appleMsgBtns {
+    z-index: 10;
+}
+#appleMessage .msg-content {
+    display: flex;
+}
+.appleInstallHide {
+    display: none !important;
+}
+
 .appleInstallHide:not(.hide) {
-    display: block;
+    display: flex !important;
 }
 
 /* ============================================
@@ -619,6 +890,14 @@
     }
 
     .location-call-btn img {
+        width: 18px;
+        height: 18px;
+    }
+
+    .location-whatsapp-btn {
+    }
+
+    .location-whatsapp-btn img {
         width: 18px;
         height: 18px;
     }
@@ -656,6 +935,169 @@
     .btn-nav-location svg {
         width: 20px;
         height: 20px;
+    }
+
+    /* Apple Instructions Modal - Mobile */
+    #appleMessage {
+        padding: 0;
+    }
+
+    #appleMessage .container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    #appleMessage .card {
+        border-radius: 0;
+        max-height: 100vh;
+        max-height: 100dvh;
+        height: 100%;
+    }
+
+    #appleMessage .header {
+        padding: 1em 1em 0.8em;
+        flex-shrink: 0;
+    }
+
+    #appleMessage .header .text {
+        font-size: 0.95em;
+        flex-wrap: wrap;
+        gap: 0.3em;
+    }
+
+    #appleMessage .header .text i {
+        font-size: 0.85em;
+    }
+
+    #appleMessage .appleMsgBtnClose {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+    }
+
+    #appleMessage .appleMsgBtnClose i {
+        font-size: 1em;
+    }
+
+    #appleMessage #slides {
+        padding: 0.8em 0.5em;
+        gap: 0;
+        flex: 1;
+        max-height: calc(100vh - 5em);
+        overflow-y: auto;
+    }
+
+    #appleMessage .msg {
+    }
+
+    #appleMessage .msgtxt {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin-bottom: 0.3em;
+        width: 100%;
+    }
+
+    #appleMessage .msgtxt p {
+        font-size: 1em;
+        line-height: 1.3;
+    }
+
+    #appleMessage .msgtxt img.icon {
+    }
+
+    #appleMessage .msg > p {
+        font-size: 0.85em;
+        padding: 0 0.8em;
+        line-height: 1.4;
+        margin: 0;
+        max-width: 100%;
+    }
+
+    #appleMessage .apple_tutorial_img {
+        border-radius: 12px;
+        width: auto;
+        height: 50vh;
+        object-fit: contain;
+    }
+
+    #appleMessage .appleMsgBtns {
+        width: 42px;
+        height: 42px;
+        margin: 0.2em;
+        flex-shrink: 0;
+    }
+
+    #appleMessage .appleMsgBtns i {
+        font-size: 1em;
+    }
+
+    /* Better button positioning on mobile */
+    #appleMessage .msg {
+    }
+
+    /* Navigation buttons at bottom */
+    #appleMessage .msg .appleMsgBtnLeft,
+    #appleMessage .msg .appleMsgBtnRight {
+        margin: 0;
+    }
+
+    #appleMessage .msg .appleMsgBtnLeft {
+        left: 50%;
+        transform: translateX(-120%);
+    }
+
+    #appleMessage .msg .appleMsgBtnRight {
+    }
+
+    /* Hide left button on first slide */
+    #appleMessage .msg_1 .appleMsgBtnLeft {
+        display: none;
+    }
+
+    /* Hide right button on last slide */
+    #appleMessage .msg_5 .appleMsgBtnRight {
+        display: none;
+    }
+
+    /* Center single button on last slide */
+    #appleMessage .msg_5 .appleMsgBtnLeft {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* Ensure content doesn't overflow */
+    #appleMessage .msg > * {
+        box-sizing: border-box;
+    }
+
+    /* Better image container */
+    #appleMessage .msg {
+    }
+
+    /* Adjust spacing for very small screens */
+    @media (max-height: 600px) {
+        #appleMessage .header {
+            padding: 0.8em 1em 0.6em;
+        }
+
+        #appleMessage #slides {
+            padding: 0.5em 0.5em;
+        }
+
+        #appleMessage .msg {
+        }
+
+        #appleMessage .msgtxt {
+            font-size: 1em;
+        }
+
+        #appleMessage .msg > p {
+            font-size: 0.8em;
+        }
+
+        #appleMessage .apple_tutorial_img {
+            margin: 0.3em 0;
+        }
     }
 }
 

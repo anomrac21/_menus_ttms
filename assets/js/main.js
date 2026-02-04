@@ -56,7 +56,7 @@
         // Hide dashboard
         const dashboard = document.getElementById('dashboard');
         if (dashboard) {
-            dashboard.classList.add('hide');
+            dashboard.classList.add('loader-hide-left');
         }
 
         // Ensure body is not in modal-open state
@@ -1438,8 +1438,8 @@
         
         if (!dashboard) return;
 
-        if (dashboard.classList.contains('hide')) {
-            dashboard.classList.remove('hide');
+        if (dashboard.classList.contains('loader-hide-left')) {
+            dashboard.classList.remove('loader-hide-left');
             document.body.classList.add('modal-open');
         } else {
             closeDashboard();
@@ -1455,7 +1455,7 @@
         
         if (!dashboard) return;
 
-        dashboard.classList.add('hide');
+        dashboard.classList.add('loader-hide-left');
         document.body.classList.remove('modal-open');
     }
 
@@ -1553,6 +1553,78 @@
     window.toggleCart = toggleCart;
     window.closeCart = closeCart;
     window.toggleSearch = toggleSearch;
+
+    /**
+     * Live search functionality for menu items
+     * @global
+     */
+    function liveSearch() {
+        const searchInput = document.getElementById('searchbox');
+        
+        if (!searchInput) return;
+        
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        
+        // If no search term, show all items and sections
+        if (searchTerm.length === 0) {
+            const allCards = document.querySelectorAll('.menu-item-card');
+            allCards.forEach(card => {
+                card.style.display = '';
+            });
+            
+            const menuSections = document.querySelectorAll('.main-menu-bg');
+            menuSections.forEach(section => {
+                section.style.display = '';
+            });
+            return;
+        }
+        
+        // Search through menu items
+        const menuItemCards = document.querySelectorAll('.menu-item-card');
+        const sectionsWithMatches = new Set();
+        
+        menuItemCards.forEach(card => {
+            const titleElement = card.querySelector('.menu-item-title a, .menu-item-title');
+            const descriptionElement = card.querySelector('.menu-item-description');
+            
+            let titleText = '';
+            let descriptionText = '';
+            
+            if (titleElement) {
+                titleText = titleElement.textContent.trim().toLowerCase();
+            }
+            
+            if (descriptionElement) {
+                descriptionText = descriptionElement.textContent.trim().toLowerCase();
+            }
+            
+            const matches = titleText.includes(searchTerm) || descriptionText.includes(searchTerm);
+            
+            if (matches) {
+                card.style.display = '';
+                
+                // Track which sections have matches
+                const menuSection = card.closest('.main-menu-bg');
+                if (menuSection) {
+                    sectionsWithMatches.add(menuSection);
+                }
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide menu sections based on whether they have matches
+        const menuSections = document.querySelectorAll('.main-menu-bg');
+        menuSections.forEach(section => {
+            if (sectionsWithMatches.has(section)) {
+                section.style.display = '';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    }
+    
+    window.liveSearch = liveSearch;
     window.toggleFooterAccessibility = toggleFooterAccessibility;
     window.toggleTTMS = toggleTTMS;
     window.closeTTMS = closeTTMS;
@@ -2692,6 +2764,103 @@
         statusElement.classList.add(statusType);
         statusElement.textContent = statusText;
     }
+
+    /**
+     * Refresh status for a single location when button is clicked
+     * @param {HTMLElement} button - The status button element
+     */
+    function refreshLocationStatus(button) {
+        // Find the parent location-item
+        const locationStatusDiv = button.closest('.location-status');
+        if (!locationStatusDiv) return;
+
+        const locationItem = locationStatusDiv.closest('.location-item');
+        if (!locationItem) return;
+
+        // Disable button and show throbber
+        button.disabled = true;
+        const originalText = button.textContent.trim();
+        
+        // Remove any existing throbber
+        const existingThrobber = button.querySelector('.throbber');
+        if (existingThrobber) {
+            existingThrobber.remove();
+        }
+        
+        // Create and show throbber
+        const throbber = document.createElement('span');
+        throbber.className = 'throbber';
+        throbber.style.display = 'inline-block';
+        
+        // Set button content with throbber and text
+        button.innerHTML = '';
+        button.appendChild(throbber);
+        button.appendChild(document.createTextNode(' ' + originalText));
+
+        // Get opening hours from data attribute
+        const openingHoursData = locationItem.getAttribute('data-opening-hours');
+        
+        // Function to update status and hide throbber
+        const updateStatus = (statusType, statusText) => {
+            // Update status badge (this will replace the button content)
+            updateStatusBadge(locationItem, statusType, statusText);
+            
+            // Re-enable button after throbber animation completes
+            setTimeout(() => {
+                button.disabled = false;
+            }, 100);
+        };
+        
+        if (openingHoursData) {
+            try {
+                const openingHours = JSON.parse(openingHoursData);
+                const status = calculateLocationStatus(openingHours);
+                // Wait 1 second to show throbber feedback
+                setTimeout(() => {
+                    updateStatus(status.type, status.text);
+                }, 1000);
+            } catch (e) {
+                console.error('Error parsing opening hours:', e);
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 1000);
+            }
+        } else {
+            // Fallback: fetch from index.json
+            const index = parseInt(locationStatusDiv.getAttribute('data-location-index'), 10);
+            fetch('/index.json')
+                .then(response => response.json())
+                .then(data => {
+                    const locations = (data.locations && Array.isArray(data.locations)) 
+                        ? data.locations 
+                        : (data.locations && data.locations.locations && Array.isArray(data.locations.locations))
+                            ? data.locations.locations
+                            : [];
+                    
+                    const location = locations[index];
+                    // Wait 1 second to show throbber feedback
+                    setTimeout(() => {
+                        if (!location || !location.opening_hours) {
+                            updateStatus('closed', 'Closed');
+                        } else {
+                            const status = calculateLocationStatus(location.opening_hours);
+                            updateStatus(status.type, status.text);
+                        }
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error fetching location data:', error);
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 1000);
+                });
+        }
+    }
+
+    // Expose function globally
+    window.refreshLocationStatus = refreshLocationStatus;
 
     /**
      * Initialize location status display

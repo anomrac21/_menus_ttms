@@ -6,7 +6,8 @@
 <body>
   {{ partial "layout/loader.html" . }}
   {{ partial "features/askofserver.html" . }}
-  <div data-barba="wrapper">
+  {{ partial "modals/apple_instructions.html" . }}
+	<div data-barba="wrapper">
     <div data-barba="container" data-barba-namespace="{{ .Title }}">
       <header>
         {{ partial "layout/header.html" . }}

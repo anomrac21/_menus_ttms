@@ -29,9 +29,43 @@ const NotificationService = {
     this.checkSubscriptionStatus();
     this.loadSubscriptionFromStorage();
     
-    // If user is subscribed, connect to WebSocket to receive notifications
+    // Verify push subscription is still valid
+    if (this.subscriptionId && this.serviceWorkerRegistration) {
+      await this.verifyPushSubscription();
+    }
+    
+    // If user is subscribed, connect to WebSocket to receive notifications (when site is open)
     if (this.subscriptionId) {
       this.connectWebSocket();
+    }
+  },
+
+  /**
+   * Verify and restore push subscription if needed
+   */
+  async verifyPushSubscription() {
+    if (!this.serviceWorkerRegistration || !this.serviceWorkerRegistration.pushManager) {
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem('ttmenus_notification_subscription');
+      if (!stored) return;
+
+      const subscription = JSON.parse(stored);
+      const currentPushSubscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
+
+      // If we have a stored push subscription but no current one, try to restore
+      if (subscription.pushSubscription && !currentPushSubscription) {
+        console.log('⚠️ Push subscription lost, attempting to restore...');
+        // The push subscription cannot be restored directly - user needs to resubscribe
+        // But we can continue with WebSocket for now
+        console.log('ℹ️ Push subscription cannot be auto-restored. WebSocket notifications will still work when site is open.');
+      } else if (currentPushSubscription) {
+        console.log('✅ Push subscription verified and active');
+      }
+    } catch (error) {
+      console.error('Error verifying push subscription:', error);
     }
   },
 
@@ -309,14 +343,21 @@ const NotificationService = {
    */
   async subscribe() {
     try {
-      // Always use 'web' platform for web push notifications (WebSocket)
-      // This applies to all devices (desktop, mobile browsers) since we're using web push, not native apps
       const platform = 'web';
       
       // Check if browser supports notifications
       if (!('Notification' in window)) {
         alert('This browser does not support notifications.');
         return;
+      }
+
+      // Check if service worker is registered
+      if (!this.serviceWorkerRegistration) {
+        await this.registerServiceWorker();
+      }
+
+      if (!this.serviceWorkerRegistration) {
+        throw new Error('Service Worker registration failed. Push notifications require a service worker.');
       }
 
       // Request permission
@@ -327,7 +368,6 @@ const NotificationService = {
       }
 
       const userId = this.generateUserID();
-      const deviceToken = this.getWebSocketConnectionID();
       
       // Collect demographic information
       const demographics = this.collectDemographics();
@@ -335,20 +375,89 @@ const NotificationService = {
       // Use the main domain (remove www. prefix if present)
       const clientDomain = this.clientDomain.replace('www.', '');
 
+      // First, ensure the client is registered
+      await this.ensureClientRegistered(clientDomain);
+
+      // Get VAPID public key from server
+      const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      let vapidPublicKey = null;
+      
+      try {
+        const keyResponse = await fetch(`${apiUrl}/clients/${clientDomain}/vapid-key`);
+        if (keyResponse.ok) {
+          const keyData = await keyResponse.json();
+          vapidPublicKey = keyData.publicKey || keyData.vapid_public_key;
+          console.log('✅ VAPID public key retrieved');
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch VAPID key, will try to create push subscription without it:', e);
+      }
+
+      // Create Push API subscription for background notifications
+      let pushSubscription = null;
+      let deviceToken = this.getWebSocketConnectionID();
+      
+      try {
+        if (this.serviceWorkerRegistration.pushManager) {
+          // Check if already subscribed
+          let existingSubscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
+          
+          if (!existingSubscription) {
+            // Create new push subscription
+            const applicationServerKey = vapidPublicKey ? this.urlBase64ToUint8Array(vapidPublicKey) : null;
+            
+            pushSubscription = await this.serviceWorkerRegistration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: applicationServerKey,
+            });
+            
+            console.log('✅ Push API subscription created:', pushSubscription.endpoint.substring(0, 50) + '...');
+          } else {
+            pushSubscription = existingSubscription;
+            console.log('✅ Using existing Push API subscription');
+          }
+          
+          // Use push subscription endpoint as device token for push notifications
+          if (pushSubscription) {
+            deviceToken = pushSubscription.endpoint;
+          }
+        } else {
+          console.warn('⚠️ PushManager not available, using WebSocket only');
+        }
+      } catch (pushError) {
+        console.warn('⚠️ Failed to create Push API subscription, will use WebSocket only:', pushError);
+        // Continue with WebSocket subscription
+      }
+
       console.log('Subscribing to notifications:', {
         notifyServiceUrl: this.notifyServiceUrl,
         clientDomain: clientDomain,
         userId: userId,
         platform: platform,
-        deviceToken: deviceToken.substring(0, 20) + '...',
+        hasPushSubscription: !!pushSubscription,
+        deviceToken: deviceToken.substring(0, 50) + '...',
         demographics: demographics
       });
 
-      // First, ensure the client is registered
-      await this.ensureClientRegistered(clientDomain);
+      // Prepare subscription data
+      const subscriptionData = {
+        client_domain: clientDomain,
+        user_id: userId,
+        device_token: deviceToken,
+        platform: platform,
+        demographics: demographics,
+      };
+
+      // Add push subscription details if available
+      if (pushSubscription) {
+        subscriptionData.push_endpoint = pushSubscription.endpoint;
+        subscriptionData.push_keys = {
+          p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
+          auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
+        };
+      }
 
       // Subscribe via notify-service API
-      const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
       const subscribeUrl = `${apiUrl}/subscriptions`;
       console.log('Subscription URL:', subscribeUrl);
 
@@ -357,13 +466,7 @@ const NotificationService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          client_domain: clientDomain,
-          user_id: userId,
-          device_token: deviceToken,
-          platform: platform,
-          demographics: demographics,
-        }),
+        body: JSON.stringify(subscriptionData),
       });
 
       console.log('Subscription response status:', response.status, response.statusText);
@@ -385,14 +488,24 @@ const NotificationService = {
       console.log('Subscription successful:', subscription);
       this.subscriptionId = subscription.id;
 
-      // Store subscription
-      localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(subscription));
+      // Store subscription with push subscription details
+      const subscriptionToStore = {
+        ...subscription,
+        pushSubscription: pushSubscription ? {
+          endpoint: pushSubscription.endpoint,
+          keys: {
+            p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
+            auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
+          },
+        } : null,
+      };
+      localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(subscriptionToStore));
 
-      // Connect to WebSocket for real-time notifications
+      // Connect to WebSocket for real-time notifications (when site is open)
       this.connectWebSocket();
 
       this.updateSubscribeButton(true);
-      this.showMessage('Successfully subscribed to notifications!', 'success');
+      this.showMessage('Successfully subscribed to notifications! You will receive notifications even when the site is closed.', 'success');
     } catch (error) {
       console.error('Subscription error:', error);
       let errorMessage = error.message;
@@ -401,6 +514,36 @@ const NotificationService = {
       }
       this.showMessage('Failed to subscribe: ' + errorMessage, 'error');
     }
+  },
+
+  /**
+   * Convert VAPID key from URL-safe base64 to Uint8Array
+   */
+  urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  },
+
+  /**
+   * Convert ArrayBuffer to base64 string
+   */
+  arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
   },
 
   /**
@@ -420,6 +563,19 @@ const NotificationService = {
 
       if (!response.ok) {
         throw new Error('Failed to unsubscribe');
+      }
+
+      // Unsubscribe from Push API
+      if (this.serviceWorkerRegistration && this.serviceWorkerRegistration.pushManager) {
+        try {
+          const pushSubscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
+          if (pushSubscription) {
+            await pushSubscription.unsubscribe();
+            console.log('✅ Push API subscription removed');
+          }
+        } catch (pushError) {
+          console.warn('⚠️ Failed to unsubscribe from Push API:', pushError);
+        }
       }
 
       // Clear subscription

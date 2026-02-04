@@ -10,35 +10,33 @@
 					<div class="msg msg_1">
 						<div class="msgtxt msg_1_text"><p>1. Open Menu</p><img class="icon center" src="https://cdn.ttmenus.com/tutorial/apple/box-arrow-up_ios.webp"></div>
 						<p>Located at the bottom of the screen.</p>
-						<a class="appleMsgBtns appleMsgBtnRight" onclick="showAppleMsg(1);"><i class="fa fa-arrow-right"></i></a>
+						<div class="msg-content">
+							<a class="appleMsgBtns appleMsgBtnRight" onclick="showAppleMsg(1);"><i class="fa fa-arrow-right"></i></a>
+						</div>
 						<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/1.webp">
 					</div>
 					<div class="msg msg_2 hide">
 						<div class="msgtxt msg_1_text"><p>2. Add to Home Screen</p></div>
-						<p>Select add to home screen from menu</p>
-						<a class="appleMsgBtns appleMsgBtnLeft" onclick="showAppleMsg(0);"><i class="fa fa-arrow-left"></i></a>
-						<a class="appleMsgBtns appleMsgBtnRight" onclick="showAppleMsg(2);"><i class="fa fa-arrow-right"></i></a>
-						<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/2.webp">
+						<p>Select add to home screen from menu, then confirm and add</p>
+						<div class="msg-content">
+							<a class="appleMsgBtns appleMsgBtnLeft" onclick="showAppleMsg(0);"><i class="fa fa-arrow-left"></i></a>
+							<a class="appleMsgBtns appleMsgBtnRight" onclick="showAppleMsg(2);"><i class="fa fa-arrow-right"></i></a>
+						</div>
+						<div class="msg-images">
+							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/2.webp">
+							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/3.webp">
+						</div>
 					</div>
 					<div class="msg msg_3 hide">
-						<div class="msgtxt msg_1_text"><p>2. Add to Home Screen</p></div>
-						<p>Confirm and Add</p>
-						<a class="appleMsgBtns appleMsgBtnLeft"  onclick="showAppleMsg(1);"><i class="fa fa-arrow-left"></i></a>
-						<a class="appleMsgBtns appleMsgBtnRight"  onclick="showAppleMsg(3);"><i class="fa fa-arrow-right"></i></a>
-						<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/3.webp">
-					</div>
-					<div class="msg msg_4 hide">
-						<div class="msgtxt msg_1_text"><p>3. Open App on Home Screen</p></div>
-						<p>Select app from home screen</p>
-						<a class="appleMsgBtns appleMsgBtnLeft"  onclick="showAppleMsg(2);"><i class="fa fa-arrow-left"></i></a>
-						<a class="appleMsgBtns appleMsgBtnRight"  onclick="showAppleMsg(4);"><i class="fa fa-arrow-right"></i></a>
-						<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/4.webp">
-					</div>
-					<div class="msg msg_4 hide">
-						<div class="msgtxt msg_1_text"><p>4. Subcribe to Notifications</p></div>
-						<p>Enjoy Updates from Mini Bar</p>
-						<a class="appleMsgBtns appleMsgBtnLeft"  onclick="showAppleMsg(3);"><i class="fa fa-arrow-left"></i></a>
-						<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/5.webp">
+						<div class="msgtxt msg_1_text"><p>3. Open App & Subscribe to Notifications</p></div>
+						<p>Select app from home screen, then subscribe to enjoy updates from {{ .Site.Title }}</p>
+						<div class="msg-content">
+							<a class="appleMsgBtns appleMsgBtnLeft"  onclick="showAppleMsg(1);"><i class="fa fa-arrow-left"></i></a>
+						</div>
+						<div class="msg-images">
+							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/4.webp">
+							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/5.webp">
+						</div>
 					</div>
 				</div>
 			</div>

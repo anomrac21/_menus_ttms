@@ -57,7 +57,7 @@ main {
     background: var(--main-bg,#000);
     background-size: auto;
     background-position: 50% 0;
-    padding-block-start:5em}
+    }
 
 main img {
     max-width: 100%;
@@ -319,7 +319,7 @@ footer {
     margin: 0;
     overflow: hidden;
     position: relative;
-    padding: 0;
+    padding-block-start: .5em;
     border-radius: 1.2em;
     background: linear-gradient(135deg,var(--menu-bg-color-1,#1a1a1a) 0%,var(--menu-bg-color-2,#2a2a2a) 100%);
     box-shadow: 0 8px 24px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.2);
@@ -362,7 +362,7 @@ footer {
     position: relative;
     color: var(--main-text-color,#fff);
     background-color: transparent;
-    padding: 1em
+    padding-inline: 1em;
 }
 
 .headerstyle h2 {
@@ -1235,6 +1235,10 @@ footer {
     padding: 0;
     padding-block-start:1}
 
+.main-content > :first-child {
+    padding-block-start: 5em;
+}
+
 .icon,img.icon,.icon img,.main-header .icon,.main-header img.icon,#menublock .icon,#menublock img.icon {
     width: 32px;
     height: 32px;
@@ -1359,7 +1363,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     flex-direction: column
 }
 
-#dashboard.hide {
+#dashboard.loader-hide-left {
     display: none!important;
     visibility: hidden!important;
     opacity: 0!important;

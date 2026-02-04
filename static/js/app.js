@@ -156,15 +156,45 @@ function currentSlide(index) {
 
 
 function expandAppMenu() {
-    var subInfoBtn = document.getElementById("SubInfoBtn");
-    var subBtnItems = document.getElementById("SubBtnItems");
-    if(subInfoBtn.classList.contains('hide')){
-      subInfoBtn.classList.remove('hide');
+    try {
+      var subBtnItems = document.getElementById("SubBtnItems");
+      if(!subBtnItems || !subBtnItems.classList) {
+        console.warn('SubBtnItems element not found or missing classList');
+        return;
+      }
       
-    }else{
-      subInfoBtn.classList.add('hide');
+      // Check if it's an Apple device (iOS)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const iOSIsInstalled = window.navigator.standalone === true;
+      
+      if(subBtnItems.classList.contains('hide')){
+        subBtnItems.classList.remove('hide');
+        
+        // Always reset to first slide when opening
+        if(typeof showAppleMsg === 'function') {
+          showAppleMsg(0); // Show first step
+        }
+        
+        // If it's iOS and not installed, show Apple instructions
+        if(isIOS && !iOSIsInstalled) {
+          var appleMessage = document.getElementById("appleMessage");
+          if(appleMessage && appleMessage.classList) {
+            appleMessage.classList.remove('appleInstallHide');
+          }
+        }
+      } else {
+        subBtnItems.classList.add('hide');
+        
+        // Hide Apple message when closing
+        var appleMessage = document.getElementById("appleMessage");
+        if(appleMessage && appleMessage.classList) {
+          appleMessage.classList.add('appleInstallHide');
+        }
+      }
+    } catch(error) {
+      console.error('Error in expandAppMenu:', error);
     }
-    
   }
 
 function showAppleMsg(x) {
