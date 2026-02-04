@@ -2596,7 +2596,8 @@
      * Calculate and display open/closed status for location items
      */
     function updateLocationStatuses() {
-        const locationItems = document.querySelectorAll('.location-item[data-location-index]');
+        // Support both .location-item format (contact_info) and .location-card format (locations page)
+        const locationItems = document.querySelectorAll('.location-item[data-location-index], .location-card[data-location-index]');
         if (locationItems.length === 0) return;
 
         // First, try to use data attributes (embedded in HTML)
@@ -2754,11 +2755,16 @@
      * @param {string} statusText - Status text to display
      */
     function updateStatusBadge(item, statusType, statusText) {
-        const statusElement = item.querySelector('.location-status-badge');
+        // Support both .location-item format (contact_info) and .location-card format (locations page)
+        let statusElement = item.querySelector('.location-status-badge');
+        if (!statusElement) {
+            // Try locations page format
+            statusElement = item.querySelector('.openstatus .status-badge');
+        }
         if (!statusElement) return;
 
         // Remove all status classes
-        statusElement.classList.remove('open', 'closed', 'soon-open', 'soon-close');
+        statusElement.classList.remove('open', 'closed', 'soon-open', 'soon-close', 'hide');
         
         // Add current status class
         statusElement.classList.add(statusType);
@@ -2770,12 +2776,15 @@
      * @param {HTMLElement} button - The status button element
      */
     function refreshLocationStatus(button) {
-        // Find the parent location-item
+        // Find the parent location-item or location-card (for locations page)
         const locationStatusDiv = button.closest('.location-status');
-        if (!locationStatusDiv) return;
-
-        const locationItem = locationStatusDiv.closest('.location-item');
-        if (!locationItem) return;
+        const locationCard = button.closest('.location-card');
+        
+        // Support both contact_info format (.location-item) and locations page format (.location-card)
+        const locationItem = locationStatusDiv ? locationStatusDiv.closest('.location-item') : locationCard;
+        if (!locationItem && !locationCard) return;
+        
+        const targetElement = locationItem || locationCard;
 
         // Disable button and show throbber
         button.disabled = true;
@@ -2798,12 +2807,23 @@
         button.appendChild(document.createTextNode(' ' + originalText));
 
         // Get opening hours from data attribute
-        const openingHoursData = locationItem.getAttribute('data-opening-hours');
+        const openingHoursData = targetElement.getAttribute('data-opening-hours');
         
         // Function to update status and hide throbber
         const updateStatus = (statusType, statusText) => {
             // Update status badge (this will replace the button content)
-            updateStatusBadge(locationItem, statusType, statusText);
+            // Support both formats: .location-item (contact_info) and .location-card (locations page)
+            if (locationItem) {
+                updateStatusBadge(locationItem, statusType, statusText);
+            } else if (locationCard) {
+                // For locations page, update the button directly
+                const statusButton = locationCard.querySelector('.openstatus .status-badge');
+                if (statusButton) {
+                    statusButton.classList.remove('open', 'closed', 'soon-open', 'soon-close', 'hide');
+                    statusButton.classList.add(statusType);
+                    statusButton.textContent = statusText;
+                }
+            }
             
             // Re-enable button after throbber animation completes
             setTimeout(() => {
@@ -2828,7 +2848,8 @@
             }
         } else {
             // Fallback: fetch from index.json
-            const index = parseInt(locationStatusDiv.getAttribute('data-location-index'), 10);
+            const indexDiv = locationStatusDiv || locationCard;
+            const index = parseInt(indexDiv.getAttribute('data-location-index'), 10);
             fetch('/index.json')
                 .then(response => response.json())
                 .then(data => {

@@ -10,7 +10,7 @@
     
     {{ range $i, $loc := site.Data.locations.locations }}
       {{ $index := printf "loc-%d" $i }}
-      <div class="location-card">
+      <div class="location-card" data-location-index="{{ $i }}" {{ if .opening_hours }}data-opening-hours="{{ .opening_hours | jsonify | safeHTMLAttr }}"{{ end }}>
         <div class="location-header">
           <h2>{{ .address }}</h2>
           {{ if or .city .island }}
@@ -22,10 +22,7 @@
 
         <!-- Open Status -->
         <div class="openstatus center" id="opensign-{{ $index }}-page">
-          <span class="status-badge open hide">Open</span>
-          <span class="status-badge closed hide">Closed</span>
-          <span class="status-badge opens-soon hide">Opens Soon</span>
-          <span class="status-badge closes-soon hide">Closes Soon</span>
+          <button type="button" class="status-badge closed" onclick="refreshLocationStatusPage(this);" title="Click to refresh status">Loading...</button>
         </div>
 
         <!-- Location Actions -->
@@ -153,7 +150,7 @@
 </div>
 
 <script>
-// Initialize opening hours display for locations page
+// Initialize opening hours display and status for locations page
 (function() {
   'use strict';
   
@@ -183,27 +180,245 @@
         } else {
           todayHoursText.textContent = 'Closed';
         }
+      } else if (todayHoursText) {
+        todayHoursText.textContent = 'Closed';
       }
     });
   }
   
-  // Update today's hours on load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateTodayHours);
-  } else {
-    updateTodayHours();
-  }
-  
-  // Update status badges (simplified - full implementation would check current time)
-  document.querySelectorAll('.openstatus').forEach((statusEl, index) => {
-    const todayHoursText = statusEl.closest('.location-card')?.querySelector('.today-hours-text');
-    if (todayHoursText && todayHoursText.textContent !== 'Closed') {
-      const openBadge = statusEl.querySelector('.status-badge.open');
-      if (openBadge) {
-        openBadge.classList.remove('hide');
+  function calculateLocationStatusPage(openingHours) {
+    const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+    const now = new Date();
+    const todayIndex = now.getDay();
+    const todayDay = days[todayIndex];
+    const yesterdayIndex = (todayIndex - 1 + 7) % 7;
+    const yesterdayDay = days[yesterdayIndex];
+
+    function parseTime(timeStr) {
+      if (!timeStr) return null;
+      const parts = timeStr.split(':');
+      const date = new Date();
+      date.setHours(parseInt(parts[0]), parseInt(parts[1] || 0), 0, 0);
+      return date;
+    }
+
+    function getHoursForDay(day) {
+      const entries = openingHours[day];
+      if (!entries || !Array.isArray(entries)) return null;
+
+      let openTime = null;
+      let closeTime = null;
+      for (const entry of entries) {
+        if (entry.type === 'Open') {
+          openTime = parseTime(entry.time);
+        } else if (entry.type === 'Close') {
+          closeTime = parseTime(entry.time);
+        }
+      }
+
+      return { openTime, closeTime };
+    }
+
+    // Check yesterday's overnight hours first
+    const yesterdayHours = getHoursForDay(yesterdayDay);
+    if (yesterdayHours && yesterdayHours.openTime && yesterdayHours.closeTime) {
+      const yesterdayOpen = new Date(yesterdayHours.openTime);
+      yesterdayOpen.setDate(yesterdayOpen.getDate() - 1);
+      
+      let yesterdayClose = new Date(yesterdayHours.closeTime);
+      if (yesterdayClose <= yesterdayOpen) {
+        yesterdayClose.setDate(yesterdayClose.getDate() + 1);
+      }
+
+      if (now >= yesterdayOpen && now < yesterdayClose) {
+        const minsToClose = Math.floor((yesterdayClose - now) / 60000);
+        if (minsToClose <= 30) {
+          return { type: 'closes-soon', text: 'Closes Soon' };
+        }
+        return { type: 'open', text: 'Open' };
       }
     }
-  });
+
+    // Check today's hours
+    const todayHours = getHoursForDay(todayDay);
+    if (todayHours && todayHours.openTime && todayHours.closeTime) {
+      const todayOpen = new Date(todayHours.openTime);
+      let todayClose = new Date(todayHours.closeTime);
+      
+      if (todayClose <= todayOpen) {
+        todayClose.setDate(todayClose.getDate() + 1);
+      }
+
+      if (now >= todayOpen && now < todayClose) {
+        const minsToClose = Math.floor((todayClose - now) / 60000);
+        if (minsToClose <= 30) {
+          return { type: 'closes-soon', text: 'Closes Soon' };
+        }
+        return { type: 'open', text: 'Open' };
+      } else if (now < todayOpen) {
+        const minsToOpen = Math.floor((todayOpen - now) / 60000);
+        if (minsToOpen > 0 && minsToOpen <= 30) {
+          return { type: 'opens-soon', text: 'Opens Soon' };
+        }
+      }
+    }
+
+    return { type: 'closed', text: 'Closed' };
+  }
+
+  function updateLocationStatusesPage() {
+    document.querySelectorAll('.location-card').forEach((card) => {
+      const openingHoursData = card.getAttribute('data-opening-hours');
+      const statusButton = card.querySelector('.openstatus .status-badge');
+      
+      if (!statusButton) {
+        console.warn('Status button not found for location card');
+        return;
+      }
+      
+      if (openingHoursData && openingHoursData !== 'null' && openingHoursData !== '') {
+        try {
+          const openingHours = JSON.parse(openingHoursData);
+          // Try to use global function first, fallback to local
+          const calculateStatus = typeof calculateLocationStatus === 'function' 
+            ? calculateLocationStatus 
+            : calculateLocationStatusPage;
+          const status = calculateStatus(openingHours);
+          updateStatusBadgePage(card, status.type, status.text);
+        } catch (e) {
+          console.error('Error parsing opening hours:', e, openingHoursData);
+          updateStatusBadgePage(card, 'closed', 'Closed');
+        }
+      } else {
+        // If no opening hours data, try to get it from the hours list
+        const today = new Date().getDay();
+        const dayMap = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' };
+        const todayKey = dayMap[today];
+        const hoursItem = card.querySelector(`.hours-item[data-day="${todayKey}"]`);
+        
+        if (hoursItem) {
+          const hoursTime = hoursItem.querySelector('.hours-time');
+          if (hoursTime && !hoursTime.classList.contains('closed')) {
+            // If we have hours displayed, assume open for now
+            updateStatusBadgePage(card, 'open', 'Open');
+          } else {
+            updateStatusBadgePage(card, 'closed', 'Closed');
+          }
+        } else {
+          updateStatusBadgePage(card, 'closed', 'Closed');
+        }
+      }
+    });
+  }
+  
+  function updateStatusBadgePage(card, statusType, statusText) {
+    const statusButton = card.querySelector('.openstatus .status-badge');
+    if (!statusButton) return;
+    
+    // Remove all status classes
+    statusButton.classList.remove('open', 'closed', 'opens-soon', 'closes-soon', 'hide');
+    
+    // Add current status class
+    statusButton.classList.add(statusType);
+    statusButton.textContent = statusText;
+  }
+  
+  function refreshLocationStatusPage(button) {
+    const card = button.closest('.location-card');
+    if (!card) return;
+    
+    // Disable button and show throbber
+    button.disabled = true;
+    const originalText = button.textContent.trim();
+    
+    // Remove any existing throbber
+    const existingThrobber = button.querySelector('.throbber');
+    if (existingThrobber) {
+      existingThrobber.remove();
+    }
+    
+    // Create and show throbber
+    const throbber = document.createElement('span');
+    throbber.className = 'throbber';
+    throbber.style.display = 'inline-block';
+    
+    // Set button content with throbber and text
+    button.innerHTML = '';
+    button.appendChild(throbber);
+    button.appendChild(document.createTextNode(' ' + originalText));
+    
+    const openingHoursData = card.getAttribute('data-opening-hours');
+    
+    const updateStatus = (statusType, statusText) => {
+      updateStatusBadgePage(card, statusType, statusText);
+      setTimeout(() => {
+        button.disabled = false;
+      }, 100);
+    };
+    
+    if (openingHoursData) {
+      try {
+        const openingHours = JSON.parse(openingHoursData);
+        // Try to use global function first, fallback to local
+        const calculateStatus = typeof calculateLocationStatus === 'function' 
+          ? calculateLocationStatus 
+          : calculateLocationStatusPage;
+        const status = calculateStatus(openingHours);
+        setTimeout(() => {
+          updateStatus(status.type, status.text);
+        }, 1000);
+      } catch (e) {
+        console.error('Error parsing opening hours:', e);
+        setTimeout(() => {
+          updateStatusBadgePage(card, 'closed', 'Closed');
+          button.disabled = false;
+        }, 1000);
+      }
+    } else {
+      setTimeout(() => {
+        updateStatusBadgePage(card, 'closed', 'Closed');
+        button.disabled = false;
+      }, 1000);
+    }
+  }
+  
+  // Initialize on load
+  function init() {
+    updateTodayHours();
+    // Wait a bit for main.js to load if it exists
+    setTimeout(() => {
+      updateLocationStatusesPage();
+    }, 200);
+  }
+  
+  // Initial load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  
+  // Re-initialize after Barba.js transitions
+  if (typeof window.barba !== 'undefined') {
+    document.addEventListener('barba:after', function() {
+      setTimeout(() => {
+        updateTodayHours();
+        updateLocationStatusesPage();
+      }, 100);
+    });
+    
+    document.addEventListener('barba:afterEnter', function() {
+      setTimeout(() => {
+        updateTodayHours();
+        updateLocationStatusesPage();
+      }, 100);
+    });
+  }
+  
+  // Expose functions globally
+  window.refreshLocationStatusPage = refreshLocationStatusPage;
+  window.updateLocationStatusesPage = updateLocationStatusesPage;
+  window.updateTodayHours = updateTodayHours;
 })();
 </script>
 {{ end }}

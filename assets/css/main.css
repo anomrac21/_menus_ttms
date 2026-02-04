@@ -2114,6 +2114,11 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .status-badge {
+    /* Button-specific styles */
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    background: transparent;
     padding: .5em 1em;
     border-radius: 2em;
     font-weight: 600;
@@ -2137,6 +2142,34 @@ footer .icon,#footer .icon,#footerBtns .icon {
     background: rgba(255,200,0,.2);
     color: #ff0;
     border: 1px solid rgba(255,200,0,.5)
+}
+
+.status-badge:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.status-badge .throbber {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: location-status-spin 0.6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+@keyframes location-status-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .status-badge.hide {
