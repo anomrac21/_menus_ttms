@@ -575,7 +575,7 @@ footer {
 }
 
 .menu-item-options .sizes li,.menu-item-options .flavours li {
-    padding: .3em .6em;
+    padding: .6em .8em;
     background: rgba(255,255,255,.1);
     border: 1px solid rgba(255,255,255,.15);
     border-radius: 1em;

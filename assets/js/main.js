@@ -475,7 +475,8 @@
                 let flavours = [];
                 let pricesArray = []; // Array of [size, flavour, price] tuples
                 let sideCategories = []; // Array of side category objects
-                let additions = []; // Array of [name, price] tuples
+                let modifications = []; // Array of [name, price] tuples (flat format)
+                let additions = []; // Array of [name, price] tuples (flat format)
                 let imagesArray = []; // Array of image paths
                 
                 try {
@@ -513,9 +514,39 @@
                             console.log('⚠️ itemData keys:', Object.keys(itemData || {}));
                             console.log('⚠️ itemData.side_categories:', itemData?.side_categories);
                         }
-                        // Get additions
+                        // Get modifications - handle both flat array format and nested array format
+                        modifications = [];
+                        if (itemData.modifications && Array.isArray(itemData.modifications)) {
+                            // Check if it's a flat array [name, price, name, price, ...] or nested [[name, price], ...]
+                            if (itemData.modifications.length > 0 && Array.isArray(itemData.modifications[0])) {
+                                // Nested array format - convert to flat
+                                itemData.modifications.forEach(mod => {
+                                    if (Array.isArray(mod) && mod.length >= 2) {
+                                        modifications.push(mod[0], mod[1]);
+                                    }
+                                });
+                            } else {
+                                // Already flat array format
+                                modifications = itemData.modifications;
+                            }
+                            console.log('📊 Loaded modifications from JSON:', modifications);
+                        }
+                        
+                        // Get additions - handle both flat array format and nested array format
+                        additions = [];
                         if (itemData.additions && Array.isArray(itemData.additions)) {
-                            additions = itemData.additions;
+                            // Check if it's a flat array [name, price, name, price, ...] or nested [[name, price], ...]
+                            if (itemData.additions.length > 0 && Array.isArray(itemData.additions[0])) {
+                                // Nested array format - convert to flat
+                                itemData.additions.forEach(add => {
+                                    if (Array.isArray(add) && add.length >= 2) {
+                                        additions.push(add[0], add[1]);
+                                    }
+                                });
+                            } else {
+                                // Already flat array format
+                                additions = itemData.additions;
+                            }
                             console.log('📊 Loaded additions from JSON:', additions);
                         }
                         // Get images
@@ -547,6 +578,16 @@
                             console.log('📊 Loaded side categories from data attribute:', sideCategories);
                         } catch (e) {
                             console.log('⚠️ Failed to parse data-side-categories:', e);
+                        }
+                    }
+                    
+                    const modificationsStr = element.getAttribute('data-modifications');
+                    if (modificationsStr) {
+                        try {
+                            modifications = JSON.parse(modificationsStr);
+                            console.log('📊 Loaded modifications from data attribute:', modifications);
+                        } catch (e) {
+                            console.log('⚠️ Failed to parse data-modifications:', e);
                         }
                     }
                     
@@ -753,19 +794,20 @@
                     console.log('⚠️ No side categories to display');
                 }
                 
-                // Build additions HTML
-                let additionsHTML = '';
-                if (additions && additions.length > 0) {
-                    additionsHTML = `
+                // Build modifications HTML
+                let modificationsHTML = '';
+                if (modifications && modifications.length > 0) {
+                    modificationsHTML = `
                         <div class="expanded-additions">
-                            <h4 class="expanded-additions-title">Additions</h4>
+                            <h4 class="expanded-additions-title">Modifications</h4>
                             <ul class="expanded-addition-items">
-                                ${additions.map((addition, index) => {
-                                    if (index % 2 === 0 && index + 1 < additions.length) {
-                                        const name = additions[index];
-                                        const price = parseFloat(additions[index + 1]) || 0;
+                                ${modifications.map((mod, index) => {
+                                    if (index % 2 === 0 && index + 1 < modifications.length) {
+                                        const name = modifications[index];
+                                        const price = parseFloat(modifications[index + 1]) || 0;
                                         return `
                                             <li class="expanded-addition-option" 
+                                                data-addition-type="modification"
                                                 data-addition-name="${name}" 
                                                 data-addition-price="${price}"
                                                 onclick="selectExpandedAddition(this, '${url}', event)">
@@ -780,11 +822,40 @@
                     `;
                 }
                 
-                // Store prices array, side categories, additions, and default selections in data attributes
+                // Build additions HTML
+                let additionsHTML = '';
+                if (additions && additions.length > 0) {
+                    additionsHTML = `
+                        <div class="expanded-additions">
+                            <h4 class="expanded-additions-title">Additions</h4>
+                            <ul class="expanded-addition-items">
+                                ${additions.map((addition, index) => {
+                                    if (index % 2 === 0 && index + 1 < additions.length) {
+                                        const name = additions[index];
+                                        const price = parseFloat(additions[index + 1]) || 0;
+                                        return `
+                                            <li class="expanded-addition-option" 
+                                                data-addition-type="addition"
+                                                data-addition-name="${name}" 
+                                                data-addition-price="${price}"
+                                                onclick="selectExpandedAddition(this, '${url}', event)">
+                                                ${name} <span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span>
+                                            </li>
+                                        `;
+                                    }
+                                    return '';
+                                }).filter(html => html).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                // Store prices array, side categories, modifications, additions, and default selections in data attributes
                 element.setAttribute('data-prices-array', JSON.stringify(pricesArray));
                 element.setAttribute('data-selected-size', defaultSize);
                 element.setAttribute('data-selected-flavour', defaultFlavour);
                 element.setAttribute('data-side-categories', JSON.stringify(sideCategories));
+                element.setAttribute('data-modifications', JSON.stringify(modifications));
                 element.setAttribute('data-additions', JSON.stringify(additions));
                 element.setAttribute('data-images-array', JSON.stringify(imagesArray));
                 
@@ -842,6 +913,11 @@
                         ${sideCategoriesHTML ? `
                         <div class="expanded-side-categories">
                             ${sideCategoriesHTML}
+                        </div>
+                        ` : ''}
+                        ${modificationsHTML ? `
+                        <div class="expanded-additions-section">
+                            ${modificationsHTML}
                         </div>
                         ` : ''}
                         ${additionsHTML ? `
@@ -1103,20 +1179,29 @@
             sidePrice += price;
         });
         
-        // Calculate addition prices
+        // Calculate modification and addition prices
+        let modificationPrice = 0;
+        const selectedModifications = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="modification"]');
+        selectedModifications.forEach(modification => {
+            const price = parseFloat(modification.getAttribute('data-addition-price')) || 0;
+            modificationPrice += price;
+        });
+        
         let additionPrice = 0;
-        const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected');
+        const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="addition"]');
         selectedAdditions.forEach(addition => {
             const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
             additionPrice += price;
         });
+        
+        const totalModAndAddPrice = modificationPrice + additionPrice;
         
         // Get quantity
         const quantitySpan = card.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
         // Calculate total
-        const totalPrice = (baseUnitPrice + sidePrice + additionPrice) * quantity;
+        const totalPrice = (baseUnitPrice + sidePrice + totalModAndAddPrice) * quantity;
         
         // Update price display
         const addCartButton = card.querySelector('.expanded-add-cart');
@@ -1335,8 +1420,19 @@
                 });
             });
             
-            // Get selected additions
-            const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected');
+            // Get selected modifications and additions separately
+            const selectedModifications = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="modification"]');
+            const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="addition"]');
+            
+            const mods = [];
+            selectedModifications.forEach(modification => {
+                const modName = modification.getAttribute('data-addition-name');
+                const modPrice = parseFloat(modification.getAttribute('data-addition-price')) || 0;
+                if (modName) {
+                    mods.push(modName, modPrice);
+                }
+            });
+            
             const adds = [];
             selectedAdditions.forEach(addition => {
                 const additionName = addition.getAttribute('data-addition-name');
@@ -1345,8 +1441,6 @@
                     adds.push(additionName, additionPrice);
                 }
             });
-            
-            const mods = []; // No modifications by default
             
             // Recalculate total cost including sides and additions
             let sidePrice = 0;
@@ -1956,8 +2050,19 @@
                 });
             });
             
-            // Get selected additions
-            const selectedAdditions = document.querySelectorAll('.single-page-addition-option.selected');
+            // Get selected modifications and additions separately
+            const selectedModifications = document.querySelectorAll('.single-page-addition-option.selected[data-addition-type="modification"]');
+            const selectedAdditions = document.querySelectorAll('.single-page-addition-option.selected[data-addition-type="addition"]');
+            
+            const mods = [];
+            selectedModifications.forEach(modification => {
+                const modName = modification.getAttribute('data-addition-name');
+                const modPrice = parseFloat(modification.getAttribute('data-addition-price')) || 0;
+                if (modName) {
+                    mods.push(modName, modPrice);
+                }
+            });
+            
             const adds = [];
             selectedAdditions.forEach(addition => {
                 const additionName = addition.getAttribute('data-addition-name');
@@ -1967,13 +2072,17 @@
                 }
             });
             
-            const mods = []; // No modifications by default
-            
-            // Recalculate total cost including sides and additions
+            // Recalculate total cost including sides, modifications, and additions
             let sidePrice = 0;
             selectedSides.forEach(side => {
                 const price = parseFloat(side.getAttribute('data-item-price')) || 0;
                 sidePrice += price;
+            });
+            
+            let modificationPrice = 0;
+            selectedModifications.forEach(modification => {
+                const price = parseFloat(modification.getAttribute('data-addition-price')) || 0;
+                modificationPrice += price;
             });
             
             let additionPrice = 0;
@@ -1982,7 +2091,8 @@
                 additionPrice += price;
             });
             
-            const finalTotalCost = (unitPrice + sidePrice + additionPrice) * quantity;
+            const totalModAndAddPrice = modificationPrice + additionPrice;
+            const finalTotalCost = (unitPrice + sidePrice + totalModAndAddPrice) * quantity;
             
             console.log('📦 Adding to cart from single page:', { 
                 item: itemName, 
@@ -2202,15 +2312,23 @@
             sidePrice += price;
         });
         
-        // Calculate addition prices
+        // Calculate modification and addition prices separately
+        let modificationPrice = 0;
+        const selectedModifications = document.querySelectorAll('.single-page-addition-option.selected[data-addition-type="modification"]');
+        selectedModifications.forEach(modification => {
+            const price = parseFloat(modification.getAttribute('data-addition-price')) || 0;
+            modificationPrice += price;
+        });
+        
         let additionPrice = 0;
-        const selectedAdditions = document.querySelectorAll('.single-page-addition-option.selected');
+        const selectedAdditions = document.querySelectorAll('.single-page-addition-option.selected[data-addition-type="addition"]');
         selectedAdditions.forEach(addition => {
             const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
             additionPrice += price;
         });
         
-        const totalPrice = (unitPrice + sidePrice + additionPrice) * quantity;
+        const totalModAndAddPrice = modificationPrice + additionPrice;
+        const totalPrice = (unitPrice + sidePrice + totalModAndAddPrice) * quantity;
         
         // Update price display
         const addCartButton = document.querySelector('.single-page-add-cart-btn');

@@ -76,11 +76,22 @@
                     {{end}}
                   {{end}}
                   
+                  {{/* Build modifications data */}}
+                  {{$modifications := slice}}
+                  {{if .Params.modifications}}
+                    {{range .Params.modifications}}
+                      {{$modifications = $modifications | append .name}}
+                      {{$modifications = $modifications | append .price}}
+                    {{end}}
+                  {{end}}
+                  
                   {{/* Build additions data */}}
                   {{$additions := slice}}
-                  {{range .Params.additions}}
-                    {{$additions = $additions | append .name}}
-                    {{$additions = $additions | append .price}}
+                  {{if .Params.additions}}
+                    {{range .Params.additions}}
+                      {{$additions = $additions | append .name}}
+                      {{$additions = $additions | append .price}}
+                    {{end}}
                   {{end}}
                   
                   {{/* Build images array for carousel */}}
@@ -110,6 +121,7 @@
                     data-selected-size="{{ $defaultSize }}"
                     data-selected-flavour="{{ $defaultFlavour }}"
                     data-side-categories="{{ $sideCategories | jsonify }}"
+                    data-modifications="{{ $modifications | jsonify }}"
                     data-additions="{{ $additions | jsonify }}"
                     data-images-array="{{ $imagesArray | jsonify }}"
                     onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">

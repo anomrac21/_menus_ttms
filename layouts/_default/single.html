@@ -76,8 +76,9 @@
               {{$allprices := .Params.prices | default slice}}
           {{/* Only show prices section if there are no interactive options to select */}}
           {{ $hasSideCategories := and .Params.side_categories (gt (len .Params.side_categories) 0) }}
+          {{ $hasModifications := and .Params.modifications (gt (len .Params.modifications) 0) }}
           {{ $hasAdditions := and .Params.additions (gt (len .Params.additions) 0) }}
-          {{ $hasSelectableOptions := or (gt (len $sizes) 1) (gt (len $flavours) 1) $hasSideCategories $hasAdditions }}
+          {{ $hasSelectableOptions := or (gt (len $sizes) 1) (gt (len $flavours) 1) $hasSideCategories $hasModifications $hasAdditions }}
           {{ if and $allprices (gt (len $allprices) 0) (not $hasSelectableOptions) }}
             <div class="single-page-prices-section">
               {{ range $index, $currentItem := $sizes }}
@@ -147,11 +148,22 @@
             {{ end }}
           {{ end }}
           
+          {{/* Build modifications data */}}
+          {{ $modifications := slice }}
+          {{ if .Params.modifications }}
+            {{ range .Params.modifications }}
+              {{ $modifications = $modifications | append .name }}
+              {{ $modifications = $modifications | append .price }}
+            {{ end }}
+          {{ end }}
+          
           {{/* Build additions data */}}
           {{ $additions := slice }}
-          {{ range .Params.additions }}
-            {{ $additions = $additions | append .name }}
-            {{ $additions = $additions | append .price }}
+          {{ if .Params.additions }}
+            {{ range .Params.additions }}
+              {{ $additions = $additions | append .name }}
+              {{ $additions = $additions | append .price }}
+            {{ end }}
           {{ end }}
           
           {{/* Build prices array for JavaScript */}}
@@ -170,12 +182,13 @@
                data-sizes="{{ $sizes | jsonify }}"
                data-flavours="{{ $flavours | jsonify }}"
                data-side-categories="{{ $sideCategories | jsonify }}"
+               data-modifications="{{ $modifications | jsonify }}"
                data-additions="{{ $additions | jsonify }}"
                data-item-url="{{ .RelPermalink }}"
                style="display: none;"></div>
           
           {{/* Options Sections */}}
-          {{ if or (gt (len $sizes) 1) (gt (len $flavours) 1) (gt (len $sideCategories) 0) (gt (len $additions) 0) }}
+          {{ if or (gt (len $sizes) 1) (gt (len $flavours) 1) (gt (len $sideCategories) 0) (gt (len $modifications) 0) (gt (len $additions) 0) }}
             <div class="single-page-options-section">
               {{/* Sizes */}}
               {{ if gt (len $sizes) 1 }}
@@ -235,6 +248,24 @@
                 </div>
               {{ end }}
               
+              {{/* Modifications */}}
+              {{ if gt (len $modifications) 0 }}
+                <div class="single-page-additions">
+                  <h4 class="single-page-additions-title">Modifications</h4>
+                  <ul class="single-page-addition-items">
+                    {{ range .Params.modifications }}
+                      <li class="single-page-addition-option" 
+                          data-addition-type="modification"
+                          data-addition-name="{{ .name }}"
+                          data-addition-price="{{ .price }}"
+                          onclick="selectSinglePageAddition(this, event)">
+                        {{ .name }} <span class="addition-price">+${{ (printf "%.2f" (float .price)) | replaceRE "\\.00$" "" }}</span>
+                      </li>
+                    {{ end }}
+                  </ul>
+                </div>
+              {{ end }}
+              
               {{/* Additions */}}
               {{ if gt (len $additions) 0 }}
                 <div class="single-page-additions">
@@ -242,6 +273,7 @@
                   <ul class="single-page-addition-items">
                     {{ range .Params.additions }}
                       <li class="single-page-addition-option" 
+                          data-addition-type="addition"
                           data-addition-name="{{ .name }}"
                           data-addition-price="{{ .price }}"
                           onclick="selectSinglePageAddition(this, event)">

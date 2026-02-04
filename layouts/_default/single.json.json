@@ -87,20 +87,22 @@
     {{- end -}}
   {{- end -}}
 
-  {{- $additions := slice -}}
-  {{- range .Params.additions -}}
-    {{- $addition := slice -}}
-    {{- $addition = $addition | append .name -}}
-    {{- $addition = $addition | append .price -}}
-    {{- $additions = $additions | append $addition -}}
+  {{- /* Build modifications array - flat array format [name, price, name, price, ...] */ -}}
+  {{- $modifications := slice -}}
+  {{- if .Params.modifications -}}
+    {{- range .Params.modifications -}}
+      {{- $modifications = $modifications | append .name -}}
+      {{- $modifications = $modifications | append .price -}}
+    {{- end -}}
   {{- end -}}
   
-  {{- $modifications := slice -}}
-  {{- range .Params.modifications -}}
-    {{- $modification := slice -}}
-    {{- $modification = $modification | append .name -}}
-    {{- $modification = $modification | append .price -}}
-    {{- $modifications = $modifications | append $modification -}}
+  {{- /* Build additions array - flat array format [name, price, name, price, ...] */ -}}
+  {{- $additions := slice -}}
+  {{- if .Params.additions -}}
+    {{- range .Params.additions -}}
+      {{- $additions = $additions | append .name -}}
+      {{- $additions = $additions | append .price -}}
+    {{- end -}}
   {{- end -}}
   
   {{- $images := slice -}}
