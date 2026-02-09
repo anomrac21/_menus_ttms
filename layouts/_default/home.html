@@ -98,24 +98,29 @@
                             {{$category = merge $category (dict "display_name" .display_name)}}
                             {{$items := slice}}
                             {{range .items}}
-                              {{$item := slice}}
-                              {{$item = $item | append .name}}
-                              {{$item = $item | append .type}}
-                              {{$item = $item | append .price}}
-                              {{$items = $items | append $item}}
+                              {{/* Support both object format (with image) and flat array format (backward compatible) */}}
+                              {{if .name}}
+                                {{/* Object format: {name, type, price, image} */}}
+                                {{$item := dict}}
+                                {{$item = merge $item (dict "name" .name)}}
+                                {{$item = merge $item (dict "type" (.type | default "Regular"))}}
+                                {{$item = merge $item (dict "price" (.price | default 0))}}
+                                {{if .image}}
+                                  {{$item = merge $item (dict "image" .image)}}
+                                {{end}}
+                                {{$items = $items | append $item}}
+                              {{else}}
+                                {{/* Flat array format: [name, type, price] - backward compatible */}}
+                                {{$item := slice}}
+                                {{$item = $item | append .}}
+                                {{$items = $items | append $item}}
+                              {{end}}
                             {{end}}
                             {{$category = merge $category (dict "items" $items)}}
                             {{if .config}}
-                              {{$config := slice}}
-                              {{$config = $config | append .config.all_max}}
-                              {{$config = $config | append .config.all_valuecount}}
-                              {{$config = $config | append .config.all_value}}
-                              {{$config = $config | append .config.regular_max}}
-                              {{$config = $config | append .config.regular_valuecount}}
-                              {{$config = $config | append .config.regular_value}}
-                              {{$config = $config | append .config.premium_max}}
-                              {{$config = $config | append .config.premium_valuecount}}
-                              {{$config = $config | append .config.premium_value}}
+                              {{$config := dict}}
+                              {{$config = merge $config (dict "minimum" (.config.minimum | default 0))}}
+                              {{$config = merge $config (dict "maximum" (.config.maximum | default 99))}}
                               {{$category = merge $category (dict "config" $config)}}
                             {{end}}
                             {{$sideCategories = $sideCategories | append $category}}

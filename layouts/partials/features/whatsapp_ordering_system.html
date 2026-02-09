@@ -14,6 +14,235 @@ let menuItemsCachePromise = null;
 // Track selections per category
 let categorySidesTracking = {};
 
+// ============================================================================
+// UNIFIED SIDE CATEGORY MANAGER - Efficient, centralized system
+// ============================================================================
+class SideCategoryManager {
+	constructor() {
+		this.categories = new Map(); // categoryName -> { config, items, selections }
+		this.selections = new Map(); // categoryName -> Map(itemName -> { element, quantity, price })
+	}
+	
+	// Initialize categories from data
+	initialize(sideCategories) {
+		this.categories.clear();
+		this.selections.clear();
+		
+		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
+		
+		sideCategories.forEach((category, index) => {
+			const categoryName = category.category_name || `category_${index}`;
+			const displayName = category.display_name || 'Choose Options';
+			const rawItems = category.items || [];
+			const configObj = category.config || {};
+			
+			const config = {
+				minimum: configObj.minimum || 0,
+				maximum: configObj.maximum || 99
+			};
+			
+			// Parse items - support both flat array [name, type, price, ...] and object array [{name, type, price, image}, ...]
+			const items = [];
+			if (rawItems.length > 0 && typeof rawItems[0] === 'object' && rawItems[0].name) {
+				// Object array format (new format with image support)
+				rawItems.forEach(item => {
+					items.push({
+						name: item.name || '',
+						type: item.type || 'Regular',
+						price: parseFloat(item.price) || 0,
+						image: item.image || null
+					});
+				});
+			} else {
+				// Flat array format (backward compatible)
+				for (let i = 0; i < rawItems.length; i += 3) {
+					items.push({
+						name: rawItems[i],
+						type: rawItems[i + 1] || 'Regular',
+						price: parseFloat(rawItems[i + 2]) || 0,
+						image: null
+					});
+				}
+			}
+			
+			this.categories.set(categoryName, { config, displayName, items });
+			window.sideCategoryConfigs[categoryName] = config;
+			this.selections.set(categoryName, new Map());
+		});
+		
+		console.log(`✅ SideCategoryManager initialized with ${this.categories.size} categories`);
+	}
+	
+	// Get category config
+	getConfig(categoryName) {
+		const category = this.categories.get(categoryName);
+		return category ? category.config : null;
+	}
+	
+	// Get selections for a category
+	getSelections(categoryName) {
+		return this.selections.get(categoryName) || new Map();
+	}
+	
+	// Get total quantity for a category
+	getTotalQuantity(categoryName) {
+		const selections = this.getSelections(categoryName);
+		let total = 0;
+		selections.forEach(item => {
+			total += item.quantity;
+		});
+		return total;
+	}
+	
+	// Check if selection is valid
+	canSelect(categoryName, itemName) {
+		const config = this.getConfig(categoryName);
+		if (!config) return false;
+		
+		const currentTotal = this.getTotalQuantity(categoryName);
+		return (currentTotal + 1) <= config.maximum;
+	}
+	
+	// Check if minimum is met
+	meetsMinimum(categoryName) {
+		const config = this.getConfig(categoryName);
+		if (!config || config.minimum === 0) return true;
+		
+		const currentTotal = this.getTotalQuantity(categoryName);
+		return currentTotal >= config.minimum;
+	}
+	
+	// Add selection
+	addSelection(categoryName, itemName, element, quantity = 1, price = 0) {
+		const selections = this.getSelections(categoryName);
+		selections.set(itemName, { element, quantity, price });
+		
+		// Update tracking array for backward compatibility
+		if (!categorySidesTracking[categoryName]) {
+			categorySidesTracking[categoryName] = [];
+		}
+		const orderItemName = `${quantity} ${itemName}`;
+		if (!categorySidesTracking[categoryName].includes(orderItemName)) {
+			categorySidesTracking[categoryName].push(orderItemName);
+		}
+		
+		// Update orderSides array
+		if (!orderSides.includes(orderItemName)) {
+			orderSides.push(orderItemName);
+		}
+		
+		// Update price
+		sidePrice += (price * quantity);
+		updatePrices();
+	}
+	
+	// Remove selection
+	removeSelection(categoryName, itemName) {
+		const selections = this.getSelections(categoryName);
+		const item = selections.get(itemName);
+		if (!item) return;
+		
+		selections.delete(itemName);
+		
+		// Update tracking array
+		if (categorySidesTracking[categoryName]) {
+			const orderItemName = `${item.quantity} ${itemName}`;
+			const index = categorySidesTracking[categoryName].indexOf(orderItemName);
+			if (index > -1) {
+				categorySidesTracking[categoryName].splice(index, 1);
+			}
+		}
+		
+		// Update orderSides array
+		const orderItemName = `${item.quantity} ${itemName}`;
+		const index = orderSides.indexOf(orderItemName);
+		if (index > -1) {
+			orderSides.splice(index, 1);
+		}
+		
+		// Update price
+		sidePrice -= (item.price * item.quantity);
+		updatePrices();
+	}
+	
+	// Update quantity for a selection
+	updateQuantity(categoryName, itemName, newQuantity) {
+		const selections = this.getSelections(categoryName);
+		const item = selections.get(itemName);
+		if (!item) return false;
+		
+		const config = this.getConfig(categoryName);
+		if (!config) return false;
+		
+		// Calculate total with new quantity
+		const currentTotal = this.getTotalQuantity(categoryName);
+		const newTotal = currentTotal - item.quantity + newQuantity;
+		
+		if (newTotal > config.maximum) {
+			return false; // Would exceed maximum
+		}
+		
+		// Remove old entry
+		const oldOrderItemName = `${item.quantity} ${itemName}`;
+		const oldIndex = orderSides.indexOf(oldOrderItemName);
+		if (oldIndex > -1) {
+			orderSides.splice(oldIndex, 1);
+		}
+		if (categorySidesTracking[categoryName]) {
+			const catIndex = categorySidesTracking[categoryName].indexOf(oldOrderItemName);
+			if (catIndex > -1) {
+				categorySidesTracking[categoryName].splice(catIndex, 1);
+			}
+		}
+		
+		// Update price
+		sidePrice -= (item.price * item.quantity);
+		
+		// Update item
+		item.quantity = newQuantity;
+		sidePrice += (item.price * newQuantity);
+		
+		// Add new entry
+		const newOrderItemName = `${newQuantity} ${itemName}`;
+		orderSides.push(newOrderItemName);
+		if (!categorySidesTracking[categoryName]) {
+			categorySidesTracking[categoryName] = [];
+		}
+		categorySidesTracking[categoryName].push(newOrderItemName);
+		
+		updatePrices();
+		return true;
+	}
+	
+	// Validate all categories meet minimum requirements
+	validateAll() {
+		const missing = [];
+		
+		this.categories.forEach((categoryData, categoryName) => {
+			if (!this.meetsMinimum(categoryName)) {
+				missing.push({
+					name: categoryData.displayName,
+					required: categoryData.config.minimum,
+					selected: this.getTotalQuantity(categoryName)
+				});
+			}
+		});
+		
+		return missing;
+	}
+	
+	// Clear all selections
+	clear() {
+		this.selections.forEach((selections, categoryName) => {
+			selections.clear();
+		});
+		categorySidesTracking = {};
+	}
+}
+
+// Global instance
+const sideCategoryManager = new SideCategoryManager();
+
 // Function to fetch menu items JSON
 async function fetchMenuItems() {
 	if (menuItemsCache) {
@@ -345,7 +574,8 @@ async function openItem(ele, options) {
 	// Clear side categories containers and tracking
 	document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
 	document.getElementById("itemSideControl").innerHTML = '';
-	categorySidesTracking = {}; // Reset category tracking
+	sideCategoryManager.clear(); // Reset using manager
+	categorySidesTracking = {}; // Also clear legacy tracking
 
 	document.getElementById("itemCategory").innerText=(options.category);
 	const currentPageName = document.title;
@@ -471,9 +701,12 @@ async function openItem(ele, options) {
 	updatePrices();
 }
 
-// New function to render individual buttons and overlays for each category
+// Unified function to render side categories (replaces both old systems)
 function renderSideCategoryButtons(sideCategories) {
-	console.log('🔧 Creating separate buttons for', sideCategories.length, 'categories');
+	console.log('🔧 Rendering side categories:', sideCategories.length);
+	
+	// Initialize manager
+	sideCategoryManager.initialize(sideCategories);
 	
 	const buttonsContainer = document.getElementById("sideCategoriesButtonsContainer");
 	const overlaysContainer = document.getElementById("itemSideControl");
@@ -490,26 +723,11 @@ function renderSideCategoryButtons(sideCategories) {
 	// Create a button and overlay for each category
 	sideCategories.forEach((category, categoryIndex) => {
 		const categoryName = category.category_name || `category_${categoryIndex}`;
-		const displayName = category.display_name || 'Choose Options';
-		const rawItems = category.items || [];
-		const configArray = category.config || [];
+		const categoryData = sideCategoryManager.categories.get(categoryName);
+		if (!categoryData) return;
 		
-		// Convert config array to object
-		const config = {
-			all_max: configArray[0] || 0,
-			all_valuecount: configArray[1] || 0,
-			all_value: configArray[2] || 0,
-			regular_max: configArray[3] || 0,
-			regular_valuecount: configArray[4] || 0,
-			regular_value: configArray[5] || 0,
-			premium_max: configArray[6] || 0,
-			premium_valuecount: configArray[7] || 0,
-			premium_value: configArray[8] || 0
-		};
-		
-		// Store config globally
-		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
-		window.sideCategoryConfigs[categoryName] = config;
+		const displayName = categoryData.displayName;
+		const items = categoryData.items;
 		
 		// Create button HTML
 		const buttonHtml = `
@@ -524,18 +742,15 @@ function renderSideCategoryButtons(sideCategories) {
 		
 		// Build items HTML for this category
 		let itemsHtml = '';
-		console.log(`📦 Category "${categoryName}" has ${rawItems.length / 3} items`);
+		console.log(`📦 Category "${categoryName}" has ${items.length} items`);
 		
-		for (let i = 0; i < rawItems.length; i += 3) {
-			const name = rawItems[i];
-			const type = rawItems[i + 1];
-			const price = rawItems[i + 2];
+		items.forEach(item => {
+			const cssClass = item.type === 'Premium' ? 'premiumside' : 'regularside';
+			const starIcon = item.type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+			const imageHtml = item.image ? `<img src="${item.image}" alt="${item.name}" class="side-item-image" onerror="this.style.display='none';">` : '';
 			
-			const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
-			const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
-			
-			itemsHtml += `<div class="side-item-container"><b class="hide">1</b><a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${name}" data-item-type="${type}" data-item-price="${price}" onclick="selectSideItem(this, '${categoryName}');">${name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
-		}
+			itemsHtml += `<div class="side-item-container"><b class="hide">1</b>${imageHtml}<a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${item.name}" data-item-type="${item.type}" data-item-price="${item.price}" onclick="selectSideItem(this, '${categoryName}');">${item.name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
+		});
 		
 		// Create overlay HTML for this category (match old itemSideControl structure exactly)
 		const overlayId = `itemSideControl_${categoryName}`;
@@ -585,21 +800,35 @@ function openSingleCategoryMenu(categoryName) {
 	}
 }
 
-// Function to close a single category menu
+// Function to close a single category menu (uses manager)
 function closeSingleCategoryMenu(categoryName) {
 	const parentContainer = document.getElementById('itemSideControl');
 	const overlay = document.getElementById(`itemSideControl_${categoryName}`);
 	const summaryList = document.getElementById(`sideList_${categoryName}`);
 	
 	if (overlay) {
+		// Validate minimum requirement using manager
+		if (!sideCategoryManager.meetsMinimum(categoryName)) {
+			const categoryData = sideCategoryManager.categories.get(categoryName);
+			const displayName = categoryData ? categoryData.displayName : categoryName;
+			const config = sideCategoryManager.getConfig(categoryName);
+			const currentTotal = sideCategoryManager.getTotalQuantity(categoryName);
+			
+			alert(`Please select at least ${config.minimum} item(s) from "${displayName}". Currently selected: ${currentTotal}`);
+			return; // Don't close if minimum not met
+		}
+		
 		// Hide this specific overlay
 		overlay.classList.add('hide');
 		
-		// Update summary text for this category using category tracking
+		// Update summary text for this category
 		if (summaryList) {
-			const categoryItems = categorySidesTracking[categoryName] || [];
-			summaryList.innerText = printArray(categoryItems);
-			console.log(`📝 Summary for ${categoryName}:`, categoryItems);
+			const selections = sideCategoryManager.getSelections(categoryName);
+			const items = [];
+			selections.forEach((item, itemName) => {
+				items.push(`${item.quantity} ${itemName}`);
+			});
+			summaryList.innerText = printArray(items);
 		}
 		
 		// Check if all overlays are now hidden - if so, hide parent container
@@ -634,26 +863,19 @@ function renderSideCategories(sideCategories) {
 		const categoryName = category.category_name || `category_${categoryIndex}`;
 		const displayName = category.display_name || 'Choose Options';
 		const rawItems = category.items || [];
-		const configArray = category.config || [];
+		const configObj = category.config || {};
 		
-		// Convert config array to object for easier access
+		// Convert config object to standardized format
 		const config = {
-			all_max: configArray[0] || 0,
-			all_valuecount: configArray[1] || 0,
-			all_value: configArray[2] || 0,
-			regular_max: configArray[3] || 0,
-			regular_valuecount: configArray[4] || 0,
-			regular_value: configArray[5] || 0,
-			premium_max: configArray[6] || 0,
-			premium_valuecount: configArray[7] || 0,
-			premium_value: configArray[8] || 0
+			minimum: configObj.minimum || 0,
+			maximum: configObj.maximum || 99
 		};
 		
 		// Store category config globally (we'll need it for validation)
 		if (!window.sideCategoryConfigs) window.sideCategoryConfigs = {};
 		window.sideCategoryConfigs[categoryName] = config;
 		
-		console.log(`📋 Category: ${categoryName}, Items: ${rawItems.length / 3}, Max: ${config.all_max}`);
+		console.log(`📋 Category: ${categoryName}, Items: ${rawItems.length / 3}, Min: ${config.minimum}, Max: ${config.maximum}`);
 		
 		// Build items HTML for this category
 		// Items come as flat array [name, type, price, name, type, price, ...]
@@ -713,264 +935,88 @@ function renderSideCategories(sideCategories) {
 	console.log('✅ Side categories rendered');
 }
 
-// Function to select a side item from a category
+// Unified function to select a side item (uses manager)
 function selectSideItem(element, categoryName) {
-	console.log(`🖱️ Click detected on item:`, element.dataset.itemName, `in category:`, categoryName);
+	const itemName = element.dataset.itemName;
+	const itemPrice = parseFloat(element.dataset.itemPrice) || 0;
+	const isSelected = element.classList.contains('select');
 	
-	try {
-		const config = window.sideCategoryConfigs[categoryName];
-		if (!config) {
-			console.error(`❌ No config found for category: ${categoryName}`);
-			console.log('Available configs:', window.sideCategoryConfigs);
+	console.log(`🖱️ Click: ${itemName} in ${categoryName}, selected: ${isSelected}`);
+	
+	if (isSelected) {
+		// Deselect
+		sideCategoryManager.removeSelection(categoryName, itemName);
+		element.classList.remove('select');
+		
+		const parent = element.parentElement;
+		const quantityDisplay = parent.querySelector('b');
+		const extraButton = parent.querySelector('.btn-add-extra');
+		
+		if (quantityDisplay) {
+			quantityDisplay.classList.add('hide');
+			quantityDisplay.innerText = 1;
+		}
+		if (extraButton) extraButton.classList.add('hide');
+	} else {
+		// Check if we can select
+		if (!sideCategoryManager.canSelect(categoryName, itemName)) {
+			const config = sideCategoryManager.getConfig(categoryName);
+			const currentTotal = sideCategoryManager.getTotalQuantity(categoryName);
+			alert(`You can only select ${config.maximum} item(s) total. Currently selected: ${currentTotal}.`);
 			return;
 		}
 		
-		const type = element.dataset.itemType;
-		const isSelected = element.classList.contains('select');
+		// Select
+		sideCategoryManager.addSelection(categoryName, itemName, element, 1, itemPrice);
+		element.classList.add('select');
 		
-		console.log(`   Is selected: ${isSelected}, Type: ${type}`);
+		const parent = element.parentElement;
+		const quantityDisplay = parent.querySelector('b');
+		const extraButton = parent.querySelector('.btn-add-extra');
 		
-		if (isSelected) {
-			// Deselect
-			console.log('   → Deselecting...');
-			removeSideItem(element, categoryName);
-		} else {
-			// Check if we can add more - COUNT TOTAL QUANTITY, not just number of items
-			console.log('   → Selecting...');
-			
-			// Find the overlay container for this category
-			const overlayId = `itemSideControl_${categoryName}`;
-			const overlay = document.getElementById(overlayId);
-			if (!overlay) {
-				console.error(`❌ Overlay not found: ${overlayId}`);
-				return;
-			}
-			
-			const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
-			const maxItems = config.all_max || 99;
-			
-			console.log(`   Current selected items: ${selectedItems.length}, Max: ${maxItems}`);
-		
-		// Calculate total quantity across all selected items
-		let totalQuantity = 0;
-		selectedItems.forEach(item => {
-			const itemParent = item.parentElement;
-			const qtyDisplay = itemParent.querySelector('b');
-			totalQuantity += qtyDisplay ? parseInt(qtyDisplay.innerText) || 1 : 1;
-		});
-		
-		console.log(`📊 Current total quantity: ${totalQuantity}, Max allowed: ${maxItems}`);
-		
-		// Check if adding this item (qty 1) would exceed max
-		if (totalQuantity < maxItems) {
-			element.classList.add('select');
-			addSideItem(element, categoryName);
-			
-			// Find quantity display and extra button (proper siblings)
-			const parent = element.parentElement;
-			const quantityDisplay = parent.querySelector('b');
-			const extraButton = parent.querySelector('.btn-add-extra');
-			
-			if (quantityDisplay) quantityDisplay.classList.remove('hide');
-			if (extraButton) extraButton.classList.remove('hide');
-		} else {
-			console.log(`⚠️ Maximum ${maxItems} items allowed for ${categoryName}. Currently at ${totalQuantity}.`);
-			alert(`You can only select ${maxItems} item(s) total.`);
-		}
-	}
-	} catch (error) {
-		console.error('❌ Error in selectSideItem:', error);
-		console.error('Stack trace:', error.stack);
+		if (quantityDisplay) quantityDisplay.classList.remove('hide');
+		if (extraButton) extraButton.classList.remove('hide');
 	}
 }
 
-// Function to add a side item to the order
+// Legacy functions kept for backward compatibility (now use manager internally)
 function addSideItem(element, categoryName) {
-	try {
-		console.log(`  📝 addSideItem called for:`, element.dataset.itemName);
-		
-		const name = element.dataset.itemName;
-		const type = element.dataset.itemType;
-		const price = parseFloat(element.dataset.itemPrice) || 0;
-	
-	// Get quantity from parent's <b> element
+	const itemName = element.dataset.itemName;
+	const itemPrice = parseFloat(element.dataset.itemPrice) || 0;
 	const parent = element.parentElement;
 	const quantityDisplay = parent.querySelector('b');
 	const quantity = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
 	
-	// Add to order with quantity prefix
-	const orderItemName = `${quantity} ${name}`;
-	orderSides.push(orderItemName);
-	
-	// Track this item for this category
-	if (!categorySidesTracking[categoryName]) {
-		categorySidesTracking[categoryName] = [];
-	}
-	categorySidesTracking[categoryName].push(orderItemName);
-	
-	// Update pricing based on config (match old addSides logic exactly)
-	const config = window.sideCategoryConfigs[categoryName];
-	
-	if (type === 'Regular') {
-		regAmt = regAmt + quantity;
-		// Use >= to match old logic: if(regAmt>=currentoptions.sideoptions[4])
-		if (config && regAmt >= (config.regular_valuecount || 0)) {
-			sidePrice = sidePrice + (config.regular_value || price);
-		}
-	} else if (type === 'Premium') {
-		premAmt = premAmt + quantity;
-		// Use >= to match old logic: if(premAmt>=currentoptions.sideoptions[7])
-		if (config && premAmt >= (config.premium_valuecount || 0)) {
-			sidePrice = sidePrice + (config.premium_value || price);
-		}
-	}
-	
-	console.log(`➕ Added: ${orderItemName} (${type}), regAmt: ${regAmt}, premAmt: ${premAmt}, sidePrice: $${sidePrice}`);
-	updatePrices();
-	} catch (error) {
-		console.error('❌ Error in addSideItem:', error);
-		console.error('Stack trace:', error.stack);
-	}
+	sideCategoryManager.addSelection(categoryName, itemName, element, quantity, itemPrice);
 }
 
-// Function to remove a side item from the order
 function removeSideItem(element, categoryName) {
-	try {
-		console.log(`  🗑️ removeSideItem called for:`, element.dataset.itemName);
-	const name = element.dataset.itemName;
-	const type = element.dataset.itemType;
-	const config = window.sideCategoryConfigs[categoryName];
-	
-	// Get quantity from parent's <b> element
-	const parent = element.parentElement;
-	const quantityDisplay = parent.querySelector('b');
-	const quantity = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
-	
-	// Remove from order
-	const orderItemName = `${quantity} ${name}`;
-	const index = orderSides.indexOf(orderItemName);
-	if (index > -1) {
-		orderSides.splice(index, 1);
-	}
-	
-	// Remove from category tracking
-	if (categorySidesTracking[categoryName]) {
-		const catIndex = categorySidesTracking[categoryName].indexOf(orderItemName);
-		if (catIndex > -1) {
-			categorySidesTracking[categoryName].splice(catIndex, 1);
-		}
-	}
-	
-	// Update pricing (match old removeSides logic exactly)
-	if (type === 'Regular') {
-		// Use >= to match old logic: if(regAmt>=currentoptions.sideoptions[4])
-		if (config && regAmt >= (config.regular_valuecount || 0)) {
-			sidePrice = sidePrice - (config.regular_value || 0);
-		}
-		regAmt = regAmt - quantity;
-	} else if (type === 'Premium') {
-		// Use >= to match old logic: if(premAmt>=currentoptions.sideoptions[7])
-		if (config && premAmt >= (config.premium_valuecount || 0)) {
-			sidePrice = sidePrice - (config.premium_value || 0);
-		}
-		premAmt = premAmt - quantity;
-	}
-	
-	// Update UI
-	element.classList.remove('select');
-	
-	// Find and hide quantity and extra button
-	const extraButton = parent.querySelector('.btn-add-extra');
-	if (quantityDisplay) {
-		quantityDisplay.classList.add('hide');
-		quantityDisplay.innerText = 1;
-	}
-	if (extraButton) {
-		extraButton.classList.add('hide');
-	}
-	
-	console.log(`➖ Removed: ${orderItemName} from order, regAmt: ${regAmt}, premAmt: ${premAmt}, sidePrice: $${sidePrice}`);
-	updatePrices();
-	} catch (error) {
-		console.error('❌ Error in removeSideItem:', error);
-		console.error('Stack trace:', error.stack);
-	}
+	const itemName = element.dataset.itemName;
+	sideCategoryManager.removeSelection(categoryName, itemName);
 }
 
-// Function to add extra quantity to a side item
+// Function to add extra quantity to a side item (uses manager)
 function addExtraSide(element, categoryName) {
-	console.log(`➕ addExtraSide called for category: ${categoryName}`);
-	
 	const parent = element.parentElement;
 	const sideButton = parent.querySelector('.btn-side-option');
 	const quantityDisplay = parent.querySelector('b');
 	
 	if (!sideButton || !sideButton.classList.contains('select')) {
-		console.log('❌ Item not selected or button not found');
 		return;
 	}
 	
-	const config = window.sideCategoryConfigs[categoryName];
-	if (!config) {
-		console.error(`❌ No config found for category: ${categoryName}`);
-		return;
-	}
+	const itemName = sideButton.dataset.itemName;
+	const currentQty = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
+	const newQty = currentQty + 1;
 	
-	const maxItems = config.all_max || 99;
-	
-	// Find the overlay for this category (NEW structure)
-	const overlayId = `itemSideControl_${categoryName}`;
-	const overlay = document.getElementById(overlayId);
-	
-	if (!overlay) {
-		console.error(`❌ Overlay not found: ${overlayId}`);
-		return;
-	}
-	
-	// Get all selected items within this overlay
-	const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
-	
-	// Calculate total quantity
-	let totalQuantity = 0;
-	selectedItems.forEach(item => {
-		const itemParent = item.parentElement;
-		const itemQty = itemParent.querySelector('b');
-		totalQuantity += itemQty ? parseInt(itemQty.innerText) || 1 : 1;
-	});
-	
-	console.log(`📊 Current total: ${totalQuantity}, Max: ${maxItems}`);
-	
-	if (totalQuantity < maxItems) {
-		const currentQty = quantityDisplay ? parseInt(quantityDisplay.innerText) || 1 : 1;
-		const itemName = sideButton.dataset.itemName;
-		
-		// Remove old entry from global order
-		const oldName = `${currentQty} ${itemName}`;
-		const index = orderSides.indexOf(oldName);
-		if (index > -1) {
-			orderSides.splice(index, 1);
-		}
-		
-		// Remove old entry from category tracking
-		if (categorySidesTracking[categoryName]) {
-			const catIndex = categorySidesTracking[categoryName].indexOf(oldName);
-			if (catIndex > -1) {
-				categorySidesTracking[categoryName].splice(catIndex, 1);
-			}
-		}
-		
-		// Update quantity
+	if (sideCategoryManager.updateQuantity(categoryName, itemName, newQty)) {
 		if (quantityDisplay) {
-			quantityDisplay.innerText = currentQty + 1;
+			quantityDisplay.innerText = newQty;
 		}
-		
-		// Add new entry with updated quantity
-		addSideItem(sideButton, categoryName);
-		
-		console.log(`⬆️ Increased quantity for ${itemName} to ${currentQty + 1}`);
 	} else {
-		console.log(`⚠️ Cannot add more - at maximum (${maxItems})`);
-		alert(`You can only select ${maxItems} item(s) total.`);
+		const config = sideCategoryManager.getConfig(categoryName);
+		const currentTotal = sideCategoryManager.getTotalQuantity(categoryName);
+		alert(`You can only select ${config.maximum} item(s) total. Currently selected: ${currentTotal}.`);
 	}
 }
 
@@ -990,6 +1036,57 @@ function openSideCategoriesMenu() {
 function closeSideCategoriesMenu() {
 	const list = document.getElementById("sideList");
 	const con = document.getElementById("itemSideControl");
+	
+	// Validate minimum requirements for each category
+	if (window.sideCategoryConfigs) {
+		for (const [categoryName, config] of Object.entries(window.sideCategoryConfigs)) {
+			if (config.minimum > 0) {
+				// Find the overlay for this category
+				const overlayId = `itemSideControl_${categoryName}`;
+				const overlay = document.getElementById(overlayId);
+				
+				if (overlay) {
+					// Get all selected items within this category's overlay
+					const selectedItems = overlay.querySelectorAll('.btn-side-option.select');
+					
+					// Calculate total quantity across all selected items in this category
+					let totalQuantity = 0;
+					selectedItems.forEach(item => {
+						const itemParent = item.parentElement;
+						const qtyDisplay = itemParent.querySelector('b');
+						totalQuantity += qtyDisplay ? parseInt(qtyDisplay.innerText) || 1 : 1;
+					});
+					
+					if (totalQuantity < config.minimum) {
+						// Find the display name for this category
+						const categoryElement = document.querySelector(`[data-category="${categoryName}"]`);
+						const displayName = categoryElement ? (categoryElement.querySelector('h3')?.innerText || categoryName) : categoryName;
+						
+						alert(`Please select at least ${config.minimum} item(s) from "${displayName}". Currently selected: ${totalQuantity}`);
+						return; // Don't close if minimum not met
+					}
+				} else {
+					// If overlay doesn't exist, check tracking array as fallback
+					const categoryItems = categorySidesTracking[categoryName] || [];
+					let totalQuantity = 0;
+					categoryItems.forEach(itemName => {
+						const match = itemName.match(/^(\d+)\s+/);
+						if (match) {
+							totalQuantity += parseInt(match[1]) || 1;
+						} else {
+							totalQuantity += 1;
+						}
+					});
+					
+					if (totalQuantity < config.minimum) {
+						const displayName = document.querySelector(`[data-category="${categoryName}"] h3`)?.innerText || categoryName;
+						alert(`Please select at least ${config.minimum} item(s) from "${displayName}". Currently selected: ${totalQuantity}`);
+						return; // Don't close if minimum not met
+					}
+				}
+			}
+		}
+	}
 	
 	// Update the summary list
 	list.innerText = printArray(orderSides);
@@ -1357,6 +1454,17 @@ function toggleCart(){
 	}
 
   function addItem(item,size,sides,adds,mods,amt,cost){
+  // Validate minimum requirements using manager
+  const missingCategories = sideCategoryManager.validateAll();
+  
+  if (missingCategories.length > 0) {
+    const messages = missingCategories.map(cat => 
+      `"${cat.name}": ${cat.selected} selected (minimum ${cat.required} required)`
+    );
+    alert(`Please select the required side categories before adding to cart:\n\n${messages.join('\n')}`);
+    return; // Prevent adding to cart
+  }
+  
   // Handle new structure with category tracking
   let sidesData = sides;
   

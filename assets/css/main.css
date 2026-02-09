@@ -244,7 +244,7 @@ footer {
 
 .bottomads {
     background: var(--main-bg,#000);
-    z-index: 1;
+    z-index: 11;
     position: relative;
     overflow: visible
 }
@@ -614,26 +614,54 @@ footer {
     color: #fff
 }
 
-.expanded-side-categories {
-    margin-top: 1em;
-    padding-top: 1em;
-    border-top: 1px solid rgba(255,255,255,.1)
-}
+.expanded-side-categories {display: flex;flex-direction: column;}
 
-.expanded-side-category {
-    margin-bottom: 1em
-}
+.expanded-side-category {display: flex;flex-direction: column;gap: .5em;}
 
 .expanded-side-category:last-child {
     margin-bottom: 0
 }
 
 .expanded-side-category-title {
-    margin: 0 0 .5em;
-    padding: 0;
+    padding: .5em .8em;
     font-size: 1em;
+    text-transform: capitalize;
     font-weight: 600;
-    color: var(--button-text-color1,#fff)
+    color: var(--button-text-color1,#fff);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,.05);
+    border-radius: .5em;
+    transition: background-color .2s ease;
+    user-select: none;
+    position: relative;
+    z-index: 10;
+}
+
+.expanded-side-category-title:hover {
+    background: rgba(255,255,255,.1);
+}
+
+.expanded-side-category-count {
+    font-weight: 400;
+    opacity: .8;
+    margin-left: .3em;
+    font-size: .9em;
+}
+
+.expanded-side-category-toggle {
+    font-size: .85em;
+    transition: transform .3s ease;
+}
+
+.expanded-side-category.collapsed .expanded-side-category-toggle {
+    transform: rotate(0deg);
+}
+
+.expanded-side-category:not(.collapsed) .expanded-side-category-toggle {
+    transform: rotate(180deg);
 }
 
 .expanded-side-items {
@@ -642,7 +670,18 @@ footer {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: .5em
+    gap: .5em;
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height .3s ease, opacity .3s ease;
+    opacity: 1;
+}
+
+.expanded-side-category.collapsed .expanded-side-items {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .expanded-side-option {
@@ -650,11 +689,66 @@ footer {
     background: rgba(255,255,255,.1);
     border: 1px solid rgba(255,255,255,.15);
     border-radius: .5em;
+    display: flex;
+    text-transform: capitalize;
+    align-items: center;
+    gap: .8em;
+}
+
+.expanded-side-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: .3em;
+    flex-shrink: 0;
+}
+
+.expanded-side-item-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.side-item-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: .3em;
+    margin-right: .5em;
+    flex-shrink: 0;
+}
+
+.side-item-container {
+    display: flex;
+    align-items: center;
+}
+
+.single-page-side-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: .3em;
+    margin-right: .8em;
+    flex-shrink: 0;
+}
+
+.single-page-side-option {
+    display: flex;
+    align-items: center;
+}
+
+.single-page-side-item-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+}
     color: var(--button-text-color2,#ccc);
     cursor: pointer;
     transition: all .2s ease;
     user-select: none;
-    font-size: .9em
+    font-size: .9em;
+    margin-inline: .8em;
 }
 
 .expanded-side-option:hover {
@@ -694,9 +788,6 @@ footer {
 }
 
 .expanded-additions-section {
-    margin-top: 1em;
-    padding-top: 1em;
-    border-top: 1px solid rgba(255,255,255,.1)
 }
 
 .expanded-additions-title {
@@ -1035,7 +1126,7 @@ footer {
 .expanded-item-details {
     display: flex;
     flex-direction: column;
-    gap: 1em
+    gap: .5em;
 }
 
 .expanded-item-description {
@@ -1067,7 +1158,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 1em;
-    padding-top: 1em;
+    padding-top: .5em;
     border-top: 1px solid rgba(255,255,255,.1)
 }
 
@@ -2463,7 +2554,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 @media(min-width: 800px) {
     .main-body {
-        column-count:3
+        column-count: 3 !important;
     }
 }
 

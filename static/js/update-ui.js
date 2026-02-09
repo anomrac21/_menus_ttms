@@ -8089,18 +8089,16 @@ function openMenuItemModal(itemId = null, categoryName = null) {
             });
           }
           
-          // Load config - handle both array format and object format
+          // Load config - handle both old and new formats
           if (cat.config) {
             if (Array.isArray(cat.config)) {
-              // Array format: [all_max, all_valuecount, all_value, regular_max, regular_valuecount, regular_value, premium_max, premium_valuecount, premium_value]
-              catEntry.querySelector('.side-config-max').value = cat.config[0] || 0;
-              catEntry.querySelector('.side-config-valuecount').value = cat.config[1] || 0;
-              catEntry.querySelector('.side-config-value').value = cat.config[2] || 0;
+              // Old array format - convert to new format (use regular_max as maximum)
+              catEntry.querySelector('.side-config-minimum').value = 0;
+              catEntry.querySelector('.side-config-maximum').value = cat.config[3] || 1;
             } else {
-              // Object format
-              catEntry.querySelector('.side-config-max').value = cat.config.all_max || 0;
-              catEntry.querySelector('.side-config-valuecount').value = cat.config.all_valuecount || 0;
-              catEntry.querySelector('.side-config-value').value = cat.config.all_value || 0;
+              // New object format or old object format
+              catEntry.querySelector('.side-config-minimum').value = cat.config.minimum || cat.config.regular_max || 0;
+              catEntry.querySelector('.side-config-maximum').value = cat.config.maximum || cat.config.all_max || cat.config.regular_max || 1;
             }
           }
         });
@@ -8224,15 +8222,8 @@ async function saveMenuItem(event) {
     
     // Collect config
     const config = {
-      all_max: parseInt(catEntry.querySelector('.side-config-max').value) || 0,
-      all_valuecount: parseInt(catEntry.querySelector('.side-config-valuecount').value) || 0,
-      all_value: parseInt(catEntry.querySelector('.side-config-value').value) || 0,
-      regular_max: parseInt(catEntry.querySelector('.side-config-max').value) || 0,
-      regular_valuecount: parseInt(catEntry.querySelector('.side-config-valuecount').value) || 0,
-      regular_value: parseInt(catEntry.querySelector('.side-config-value').value) || 0,
-      premium_max: 0,
-      premium_valuecount: 0,
-      premium_value: 0,
+      minimum: parseInt(catEntry.querySelector('.side-config-minimum').value) || 0,
+      maximum: parseInt(catEntry.querySelector('.side-config-maximum').value) || 1,
     };
     
     sideCategories.push({
@@ -10887,18 +10878,14 @@ function addSideCategory() {
     <button type="button" class="btn btn-sm btn-secondary entry-add-margin" onclick="addSideItem('${categoryId}')">+ Add Item</button>
     
     <h5 class="form-subsection-title">Configuration</h5>
-    <div class="grid-3">
+    <div class="grid-2">
       <div class="form-group">
-        <label class="form-label">Max Items</label>
-        <input type="number" class="form-input side-config-max" min="0" value="3">
+        <label class="form-label">Minimum (0 = optional, >0 = required)</label>
+        <input type="number" class="form-input side-config-minimum" min="0" value="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Value Count</label>
-        <input type="number" class="form-input side-config-valuecount" min="0" value="3">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Value</label>
-        <input type="number" class="form-input side-config-value" min="0" value="0">
+        <label class="form-label">Maximum</label>
+        <input type="number" class="form-input side-config-maximum" min="1" value="1">
       </div>
     </div>
     

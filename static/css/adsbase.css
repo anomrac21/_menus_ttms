@@ -90,6 +90,7 @@
     position: relative;
     width: 100%;
     overflow: visible;
+    z-index: 11;
 }
 
 /* All ad sections - stack vertically */
@@ -99,7 +100,7 @@
 #frontpage-ads-container section,
 .menu-ad {
     position: relative;
-    min-height: calc(100vh - 5em);
+    min-height: calc(100vh);
     height: auto;
     color: white;
     text-align: center;
@@ -118,8 +119,8 @@
 .menu-ad.sticky {
     position: -webkit-sticky !important;
     position: sticky !important;
-    top: 5em;
     z-index: 2;
+    top: 0;
 }
 
 /* Remove sticky from inner when parent section is sticky */

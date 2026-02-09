@@ -379,6 +379,8 @@
             const isImageLink = target.closest('.menu-item-image-link');
             const isTitleLink = target.closest('.menu-item-title a');
             const isExpandedInteractive = target.closest('.expanded-item-controls a, .expanded-item-controls button, .btn-quantity, .expanded-add-cart');
+            const isSideCategoryTitle = target.closest('.expanded-side-category-title');
+            const isSideOption = target.closest('.expanded-side-option');
             
             // If clicking on drag handle, don't expand - let drag handle handle it
             if (isDragHandle) {
@@ -394,8 +396,15 @@
             }
             // When expanded: allow buttons in expanded content to work
             if (isExpanded && isExpandedInteractive) {
-                // Let the button handle its own click
-                return;
+                return; // Let the button handle its own click
+            }
+            // When expanded: allow side category title to toggle collapse/expand
+            if (isExpanded && isSideCategoryTitle) {
+                return; // Let the toggle function handle it
+            }
+            // When expanded: allow side options to be selected
+            if (isExpanded && isSideOption) {
+                return; // Let the side selection function handle it
             }
             // When NOT expanded: prevent image and title links from navigating, just expand
             if (!isExpanded && (isImageLink || isTitleLink)) {
@@ -406,7 +415,7 @@
                 // Continue to expansion logic below
             }
             // When NOT expanded and clicking on card background: track and expand
-            else if (!isExpanded && !isImageLink && !isTitleLink && !isExpandedInteractive) {
+            else if (!isExpanded && !isImageLink && !isTitleLink && !isExpandedInteractive && !isSideCategoryTitle && !isSideOption) {
                 trackMenuItemCardClick(element, url);
                 // Continue to expansion logic below
             }
@@ -754,15 +763,18 @@
                         // Build items HTML
                         let itemsHTML = '';
                         if (rawItems && rawItems.length > 0) {
-                            // Items come as flat array [name, type, price, name, type, price, ...]
-                            for (let i = 0; i < rawItems.length; i += 3) {
-                                if (i + 2 < rawItems.length) {
-                                    const name = rawItems[i];
-                                    const type = rawItems[i + 1];
-                                    const price = parseFloat(rawItems[i + 2]) || 0;
-                                    const priceDisplay = price > 0 ? ` (+$${price})` : '';
+                            // Support both flat array [name, type, price, ...] and object array [{name, type, price, image}, ...]
+                            if (rawItems.length > 0 && typeof rawItems[0] === 'object' && rawItems[0].name) {
+                                // Object array format (new format with image support)
+                                rawItems.forEach(item => {
+                                    const name = item.name || '';
+                                    const type = item.type || 'Regular';
+                                    const price = parseFloat(item.price) || 0;
+                                    const image = item.image || null;
+                                    const priceDisplay = price > 0 ? `<span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span>` : '';
                                     const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
                                     const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+                                    const imageHtml = image ? `<img src="${image}" alt="${name}" class="expanded-side-item-image" onerror="this.style.display='none';">` : '';
                                     
                                     itemsHTML += `
                                         <li class="expanded-side-option ${cssClass}" 
@@ -771,17 +783,52 @@
                                             data-item-type="${type}"
                                             data-item-price="${price}"
                                             onclick="selectExpandedSide(this, '${url}', event)">
-                                            ${name}${starIcon}${priceDisplay}
+                                            ${imageHtml}
+                                            <span class="expanded-side-item-content">
+                                                ${name}${starIcon} ${priceDisplay}
+                                            </span>
                                         </li>
                                     `;
+                                });
+                            } else {
+                                // Flat array format (backward compatible)
+                                for (let i = 0; i < rawItems.length; i += 3) {
+                                    if (i + 2 < rawItems.length) {
+                                        const name = rawItems[i];
+                                        const type = rawItems[i + 1];
+                                        const price = parseFloat(rawItems[i + 2]) || 0;
+                                        const priceDisplay = price > 0 ? `<span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span>` : '';
+                                        const cssClass = type === 'Premium' ? 'premiumside' : 'regularside';
+                                        const starIcon = type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
+                                        
+                                        itemsHTML += `
+                                            <li class="expanded-side-option ${cssClass}" 
+                                                data-category="${categoryName}"
+                                                data-item-name="${name}"
+                                                data-item-type="${type}"
+                                                data-item-price="${price}"
+                                                onclick="selectExpandedSide(this, '${url}', event)">
+                                                ${name}${starIcon} ${priceDisplay}
+                                            </li>
+                                        `;
+                                    }
                                 }
                             }
                         }
                         
                         if (itemsHTML) {
+                            // Count items (each item is 3 elements in the array)
+                            const itemCount = rawItems.length / 3;
+                            const shouldCollapse = itemCount > 8;
+                            const collapsedClass = shouldCollapse ? 'collapsed' : '';
+                            const iconClass = shouldCollapse ? 'fa-chevron-down' : 'fa-chevron-up';
+                            
                             sideCategoriesHTML += `
-                                <div class="expanded-side-category" data-category-name="${categoryName}">
-                                    <h4 class="expanded-side-category-title">${displayName}</h4>
+                                <div class="expanded-side-category ${collapsedClass}" data-category-name="${categoryName}">
+                                    <h4 class="expanded-side-category-title" onclick="toggleExpandedSideCategory(this, event)">
+                                        <span>${displayName} <span class="expanded-side-category-count" style="display: none;">(0)</span></span>
+                                        <i class="fa ${iconClass} expanded-side-category-toggle"></i>
+                                    </h4>
                                     <ul class="expanded-side-items">
                                         ${itemsHTML}
                                     </ul>
@@ -805,15 +852,7 @@
                                     if (index % 2 === 0 && index + 1 < modifications.length) {
                                         const name = modifications[index];
                                         const price = parseFloat(modifications[index + 1]) || 0;
-                                        return `
-                                            <li class="expanded-addition-option" 
-                                                data-addition-type="modification"
-                                                data-addition-name="${name}" 
-                                                data-addition-price="${price}"
-                                                onclick="selectExpandedAddition(this, '${url}', event)">
-                                                ${name} <span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span>
-                                            </li>
-                                        `;
+                                        return `<li class="expanded-addition-option" data-addition-type="modification" data-addition-name="${name}" data-addition-price="${price}" onclick="selectExpandedAddition(this, '${url}', event)">${name} <span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span></li>`;
                                     }
                                     return '';
                                 }).filter(html => html).join('')}
@@ -833,15 +872,7 @@
                                     if (index % 2 === 0 && index + 1 < additions.length) {
                                         const name = additions[index];
                                         const price = parseFloat(additions[index + 1]) || 0;
-                                        return `
-                                            <li class="expanded-addition-option" 
-                                                data-addition-type="addition"
-                                                data-addition-name="${name}" 
-                                                data-addition-price="${price}"
-                                                onclick="selectExpandedAddition(this, '${url}', event)">
-                                                ${name} <span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span>
-                                            </li>
-                                        `;
+                                        return `<li class="expanded-addition-option" data-addition-type="addition" data-addition-name="${name}" data-addition-price="${price}" onclick="selectExpandedAddition(this, '${url}', event)">${name} <span class="addition-price">+$${price.toFixed(2).replace(/\.00$/, '')}</span></li>`;
                                     }
                                     return '';
                                 }).filter(html => html).join('')}
@@ -899,11 +930,13 @@
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
                         ${imageCarouselHTML}
+                        ${itemDesc ? `
                         <div class="expanded-item-description">
                             <a href="${url}" style="color: inherit; text-decoration: none;">
-                                ${itemDesc ? (fullDescElement ? itemDesc : `<p>${itemDesc}</p>`) : '<p>No description available</p>'}
+                                ${fullDescElement ? itemDesc : `<p>${itemDesc}</p>`}
                             </a>
                         </div>
+                        ` : ''}
                         ${sizesHTML || flavoursHTML ? `
                         <div class="menu-item-options">
                             ${sizesHTML}
@@ -964,6 +997,12 @@
             // Hide loading, show data
             loadingDiv.style.display = 'none';
             dataDiv.style.display = 'block';
+            
+            // Initialize category counters
+            const categoryContainers = dataDiv.querySelectorAll('.expanded-side-category');
+            categoryContainers.forEach(container => {
+                updateExpandedSideCategoryCounter(container);
+            });
             
             // Update price based on initial selections
             setTimeout(() => {
@@ -1118,8 +1157,8 @@
         
         const categoryName = sideElement.getAttribute('data-category');
         const itemName = sideElement.getAttribute('data-item-name');
-        const itemType = sideElement.getAttribute('data-item-type');
         const itemPrice = parseFloat(sideElement.getAttribute('data-item-price')) || 0;
+        const isSelected = sideElement.classList.contains('selected');
         
         // Get side categories config
         const sideCategoriesStr = card.getAttribute('data-side-categories');
@@ -1129,35 +1168,112 @@
         const category = sideCategories.find(cat => cat.category_name === categoryName);
         if (!category) return;
         
-        const configArray = category.config || [];
-        const maxSelections = configArray[3] || 1; // regular_max
+        // Use new config format (minimum/maximum)
+        const config = category.config || {};
+        const maximum = config.maximum || 99;
         
         // Get currently selected sides for this category
         const categoryContainer = sideElement.closest('.expanded-side-category');
         const selectedSides = categoryContainer.querySelectorAll('.expanded-side-option.selected');
         
-        // If max selections reached and this item is not already selected, don't allow selection
-        if (selectedSides.length >= maxSelections && !sideElement.classList.contains('selected')) {
-            // Optionally show a message or just return
-            return;
-        }
+        // Calculate total quantity (each selected item counts as 1)
+        const currentTotal = selectedSides.length;
         
-        // Toggle selection
-        if (sideElement.classList.contains('selected')) {
+        if (isSelected) {
+            // Deselect
             sideElement.classList.remove('selected');
         } else {
-            // If single selection, remove other selections in this category
-            if (maxSelections === 1) {
-                categoryContainer.querySelectorAll('.expanded-side-option.selected').forEach(sel => {
-                    sel.classList.remove('selected');
-                });
+            // Check if we can add more
+            if (currentTotal >= maximum) {
+                alert(`You can only select ${maximum} item(s) total. Currently selected: ${currentTotal}.`);
+                return;
             }
+            
+            // Select
             sideElement.classList.add('selected');
         }
+        
+        // Update category counter
+        updateExpandedSideCategoryCounter(categoryContainer);
         
         // Update price based on selected sides
         updateExpandedItemPriceWithSides(card);
     }
+    
+    /**
+     * Toggle expanded side category collapse/expand
+     * @global
+     * @param {HTMLElement} titleElement - The category title element
+     * @param {Event} event - Optional event object
+     */
+    function toggleExpandedSideCategory(titleElement, event) {
+        // Prevent event from bubbling up to parent card's onclick
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const category = titleElement.closest('.expanded-side-category');
+        if (!category) return;
+        
+        const toggleIcon = titleElement.querySelector('.expanded-side-category-toggle');
+        
+        if (category.classList.contains('collapsed')) {
+            category.classList.remove('collapsed');
+            if (toggleIcon) {
+                toggleIcon.classList.remove('fa-chevron-down');
+                toggleIcon.classList.add('fa-chevron-up');
+            }
+        } else {
+            category.classList.add('collapsed');
+            if (toggleIcon) {
+                toggleIcon.classList.remove('fa-chevron-up');
+                toggleIcon.classList.add('fa-chevron-down');
+            }
+        }
+    }
+    
+    // Make function globally available
+    window.toggleExpandedSideCategory = toggleExpandedSideCategory;
+    
+    /**
+     * Update the counter for expanded side category title
+     * @param {HTMLElement} categoryContainer - The category container element
+     */
+    function updateExpandedSideCategoryCounter(categoryContainer) {
+        if (!categoryContainer) return;
+        
+        const selectedSides = categoryContainer.querySelectorAll('.expanded-side-option.selected');
+        const count = selectedSides.length;
+        
+        const titleElement = categoryContainer.querySelector('.expanded-side-category-title');
+        if (!titleElement) return;
+        
+        let countElement = titleElement.querySelector('.expanded-side-category-count');
+        if (!countElement) {
+            // Create counter if it doesn't exist
+            const spanElement = titleElement.querySelector('span');
+            if (spanElement) {
+                countElement = document.createElement('span');
+                countElement.className = 'expanded-side-category-count';
+                spanElement.appendChild(countElement);
+            } else {
+                return;
+            }
+        }
+        
+        // Update counter text and visibility
+        if (count > 0) {
+            countElement.textContent = `(${count})`;
+            countElement.style.display = '';
+        } else {
+            countElement.textContent = '(0)';
+            countElement.style.display = 'none';
+        }
+    }
+    
+    // Make function globally available
+    window.updateExpandedSideCategoryCounter = updateExpandedSideCategoryCounter;
     
     /**
      * Update price including selected sides
@@ -1338,23 +1454,39 @@
             sideCategories.forEach(category => {
                 const categoryName = category.category_name;
                 const displayName = category.display_name;
-                const configArray = category.config || [];
-                const requiredMax = configArray[3] || 0; // regular_max
+                const config = category.config || {};
+                const minimum = config.minimum || 0;
                 
-                if (requiredMax > 0) {
+                if (minimum > 0) {
                     const categoryContainer = card.querySelector(`.expanded-side-category[data-category-name="${categoryName}"]`);
                     if (categoryContainer) {
                         const selectedSides = categoryContainer.querySelectorAll('.expanded-side-option.selected');
-                        if (selectedSides.length < requiredMax) {
-                            missingSelections.push(displayName || categoryName);
+                        // In expanded view, each selected item counts as 1
+                        const totalQuantity = selectedSides.length;
+                        
+                        if (totalQuantity < minimum) {
+                            missingSelections.push({
+                                name: displayName || categoryName,
+                                required: minimum,
+                                selected: totalQuantity
+                            });
                         }
+                    } else {
+                        // Category container not found, assume no selections
+                        missingSelections.push({
+                            name: displayName || categoryName,
+                            required: minimum,
+                            selected: 0
+                        });
                     }
                 }
             });
             
             if (missingSelections.length > 0) {
-                const message = `Please select ${missingSelections.length === 1 ? 'a' : ''} ${missingSelections.join(' and ')} before adding to cart.`;
-                alert(message);
+                const messages = missingSelections.map(sel => 
+                    `"${sel.name}": ${sel.selected} selected (minimum ${sel.required} required)`
+                );
+                alert(`Please select the required side categories before adding to cart:\n\n${messages.join('\n')}`);
                 return;
             }
         }
@@ -1970,23 +2102,44 @@
             sideCategories.forEach(category => {
                 const categoryName = category.category_name;
                 const displayName = category.display_name;
-                const configArray = category.config || [];
-                const requiredMax = configArray[3] || 0; // regular_max
+                const config = category.config || {};
+                const minimum = config.minimum || 0;
                 
-                if (requiredMax > 0) {
+                if (minimum > 0) {
                     const categoryContainer = document.querySelector(`.single-page-side-category[data-category-name="${categoryName}"]`);
                     if (categoryContainer) {
                         const selectedSides = categoryContainer.querySelectorAll('.single-page-side-option.selected');
-                        if (selectedSides.length < requiredMax) {
-                            missingSelections.push(displayName || categoryName);
+                        
+                        // Calculate total quantity (handling quantity displays)
+                        let totalQuantity = 0;
+                        selectedSides.forEach(side => {
+                            const qtyElement = side.closest('.single-page-side-item')?.querySelector('.single-page-side-quantity');
+                            totalQuantity += qtyElement ? parseInt(qtyElement.textContent) || 1 : 1;
+                        });
+                        
+                        if (totalQuantity < minimum) {
+                            missingSelections.push({
+                                name: displayName || categoryName,
+                                required: minimum,
+                                selected: totalQuantity
+                            });
                         }
+                    } else {
+                        // Category container not found, assume no selections
+                        missingSelections.push({
+                            name: displayName || categoryName,
+                            required: minimum,
+                            selected: 0
+                        });
                     }
                 }
             });
             
             if (missingSelections.length > 0) {
-                const message = `Please select ${missingSelections.length === 1 ? 'a' : ''} ${missingSelections.join(' and ')} before adding to cart.`;
-                alert(message);
+                const messages = missingSelections.map(sel => 
+                    `"${sel.name}": ${sel.selected} selected (minimum ${sel.required} required)`
+                );
+                alert(`Please select the required side categories before adding to cart:\n\n${messages.join('\n')}`);
                 return;
             }
         }
@@ -2791,47 +2944,60 @@
         const yesterdayIndex = (todayIndex - 1 + 7) % 7;
         const yesterdayDay = days[yesterdayIndex];
 
-        function parseTime(timeStr) {
+        function parseTime(timeStr, baseDate) {
             if (!timeStr) return null;
             const [hours, minutes] = timeStr.split(':').map(Number);
-            const date = new Date();
+            const date = new Date(baseDate || now);
             date.setHours(hours, minutes, 0, 0);
             return date;
         }
 
-        function getHoursForDay(day) {
+        function getHoursForDay(day, baseDate) {
             if (!openingHours[day] || !Array.isArray(openingHours[day])) return null;
             
             const entries = openingHours[day];
-            let openTime = null;
-            let closeTime = null;
+            let openTimeStr = null;
+            let closeTimeStr = null;
 
             for (const entry of entries) {
                 if (entry.type === 'Open') {
-                    openTime = parseTime(entry.time);
+                    openTimeStr = entry.time;
                 } else if (entry.type === 'Close') {
-                    closeTime = parseTime(entry.time);
+                    closeTimeStr = entry.time;
                 }
             }
 
-            return { openTime, closeTime };
+            if (!openTimeStr || !closeTimeStr) return null;
+
+            return { 
+                openTime: parseTime(openTimeStr, baseDate),
+                closeTime: parseTime(closeTimeStr, baseDate),
+                openTimeStr,
+                closeTimeStr
+            };
         }
 
-        // Check yesterday's overnight hours first
-        const yesterdayHours = getHoursForDay(yesterdayDay);
+        // Check yesterday's overnight hours first (for places that close after midnight)
+        const yesterdayDate = new Date(now);
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayHours = getHoursForDay(yesterdayDay, yesterdayDate);
+        
         if (yesterdayHours && yesterdayHours.openTime && yesterdayHours.closeTime) {
-            const yesterdayOpen = new Date(yesterdayHours.openTime);
-            yesterdayOpen.setDate(yesterdayOpen.getDate() - 1);
-            
+            const yesterdayOpen = yesterdayHours.openTime;
             let yesterdayClose = new Date(yesterdayHours.closeTime);
-            // If close time is before open time, it's overnight
-            if (yesterdayClose <= yesterdayOpen) {
+            
+            // Parse close time to check if it's overnight
+            const [closeHours, closeMins] = yesterdayHours.closeTimeStr.split(':').map(Number);
+            const [openHours, openMins] = yesterdayHours.openTimeStr.split(':').map(Number);
+            
+            // If close time is before open time, it's overnight (closes next day)
+            if (closeHours < openHours || (closeHours === openHours && closeMins <= openMins)) {
                 yesterdayClose.setDate(yesterdayClose.getDate() + 1);
             }
 
             if (now >= yesterdayOpen && now < yesterdayClose) {
                 const minsToClose = Math.floor((yesterdayClose - now) / 60000);
-                if (minsToClose <= 30) {
+                if (minsToClose <= 30 && minsToClose > 0) {
                     return { type: 'soon-close', text: 'Closes Soon' };
                 }
                 return { type: 'open', text: 'Open' };
@@ -2839,19 +3005,23 @@
         }
 
         // Check today's hours
-        const todayHours = getHoursForDay(todayDay);
+        const todayHours = getHoursForDay(todayDay, now);
         if (todayHours && todayHours.openTime && todayHours.closeTime) {
-            const todayOpen = new Date(todayHours.openTime);
+            const todayOpen = todayHours.openTime;
             let todayClose = new Date(todayHours.closeTime);
             
-            // If close time is before open time, it's overnight
-            if (todayClose <= todayOpen) {
+            // Parse close time to check if it's overnight
+            const [closeHours, closeMins] = todayHours.closeTimeStr.split(':').map(Number);
+            const [openHours, openMins] = todayHours.openTimeStr.split(':').map(Number);
+            
+            // If close time is before or equal to open time, it's overnight (closes next day)
+            if (closeHours < openHours || (closeHours === openHours && closeMins <= openMins)) {
                 todayClose.setDate(todayClose.getDate() + 1);
             }
 
             if (now >= todayOpen && now < todayClose) {
                 const minsToClose = Math.floor((todayClose - now) / 60000);
-                if (minsToClose <= 30) {
+                if (minsToClose <= 30 && minsToClose > 0) {
                     return { type: 'soon-close', text: 'Closes Soon' };
                 }
                 return { type: 'open', text: 'Open' };

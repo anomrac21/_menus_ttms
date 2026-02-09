@@ -132,16 +132,9 @@
               {{ end }}
               {{ $category = merge $category (dict "items" $items) }}
               {{ if .config }}
-                {{ $config := slice }}
-                {{ $config = $config | append .config.all_max }}
-                {{ $config = $config | append .config.all_valuecount }}
-                {{ $config = $config | append .config.all_value }}
-                {{ $config = $config | append .config.regular_max }}
-                {{ $config = $config | append .config.regular_valuecount }}
-                {{ $config = $config | append .config.regular_value }}
-                {{ $config = $config | append .config.premium_max }}
-                {{ $config = $config | append .config.premium_valuecount }}
-                {{ $config = $config | append .config.premium_value }}
+                {{ $config := dict }}
+                {{ $config = merge $config (dict "minimum" (.config.minimum | default 0)) }}
+                {{ $config = merge $config (dict "maximum" (.config.maximum | default 99)) }}
                 {{ $category = merge $category (dict "config" $config) }}
               {{ end }}
               {{ $sideCategories = $sideCategories | append $category }}
@@ -239,7 +232,12 @@
                               data-item-type="{{ .type }}"
                               data-item-price="{{ .price }}"
                               onclick="selectSinglePageSide(this, event)">
-                            {{ .name }}
+                            {{ if .image }}
+                              <img src="{{ .image }}" alt="{{ .name }}" class="single-page-side-item-image" onerror="this.style.display='none';">
+                            {{ end }}
+                            <span class="single-page-side-item-content">
+                              {{ .name }} {{ if gt (float .price) 0 }}<span class="addition-price">+${{ (printf "%.2f" (float .price)) | replaceRE "\\.00$" "" }}</span>{{ end }}
+                            </span>
                           </li>
                         {{ end }}
                       </ul>
