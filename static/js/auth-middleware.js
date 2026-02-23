@@ -120,12 +120,29 @@ const AuthMiddleware = {
   },
 
   /**
+   * Update settings panel login link: show "Dashboard" only for users with admin/client access, otherwise "Login"
+   */
+  updateSettingsLoginLink() {
+    const el = document.getElementById('settingsLoginOrDashboard');
+    if (!el) return;
+    const hasAdminAccess = window.AuthClientAccess && typeof window.AuthClientAccess.hasClientAccess === 'function' && window.AuthClientAccess.hasClientAccess();
+    if (hasAdminAccess) {
+      el.href = '/dashboard/';
+      el.innerHTML = '<i class="fa fa-th-large"></i> Dashboard';
+    } else {
+      el.href = '/login/';
+      el.innerHTML = '<i class="fa fa-user"></i> Login';
+    }
+  },
+
+  /**
    * Initialize auth middleware
    */
   init() {
     this.toggleAuthElements();
     this.setupLogoutButtons();
     this.displayUserInfo();
+    this.updateSettingsLoginLink();
   },
 };
 

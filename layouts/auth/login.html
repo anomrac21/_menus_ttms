@@ -86,30 +86,26 @@
 
       // Check if already logged in
       if (AuthClient.isAuthenticated()) {
-        // Redirect to content-management-service to create session
-        const user = AuthClient.getCurrentUser();
-        const token = AuthClient.getAccessToken();
-        // Get client_id from user, or extract from current domain, or use default
+        if (window.AuthClientAccess && !AuthClientAccess.hasClientAccess()) {
+          showAlert('error', 'You don\'t have permission to access this menu. Contact your administrator.');
+          return;
+        }
+        window.location.href = '/dashboard/';
+        return;
+      }
+
+      function getClientIdForRedirect(user) {
         let clientId = user?.client_id;
         if (!clientId) {
-          // Extract client ID from current domain (e.g., islandbeer.ttmenus.com -> islandbeer)
           const hostname = window.location.hostname;
           const domainParts = hostname.split('.');
           if (domainParts.length >= 2 && domainParts[1] === 'ttmenus' && domainParts[2] === 'com') {
-            clientId = domainParts[0]; // e.g., 'islandbeer'
+            clientId = domainParts[0];
           } else {
-            clientId = '_ttms_menu_demo'; // Fallback to default
+            clientId = window.SITE_CLIENT_ID || '_ttms_menu_demo';
           }
         }
-        
-        if (token) {
-          // Create session via POST request (secure, no token in URL)
-          createCMSSession(clientId, token);
-        } else {
-          // Fallback: redirect to login-redirect endpoint which will set session and redirect
-          window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}`;
-        }
-        return;
+        return clientId;
       }
 
       // Handle form submission - prevent default form submission
@@ -149,9 +145,14 @@
           console.log('📥 Login result:', result);
 
           if (result.success) {
-            showAlert('success', 'Login successful! Redirecting...');
-            
-            // Verify user is authorized and redirect to content-management-service
+            // Client access check: only users with access to this site can access dashboard/CMS
+            if (window.AuthClientAccess && !AuthClientAccess.hasClientAccess()) {
+              showAlert('error', 'You don\'t have permission to access this menu. Contact your administrator.');
+              loginBtn.disabled = false;
+              loginBtn.innerHTML = 'Sign In';
+              return;
+            }
+            showAlert('success', 'Login successful! Redirecting to dashboard...');
             setTimeout(() => {
               const user = AuthClient.getCurrentUser();
               if (!user) {
@@ -160,8 +161,6 @@
                 loginBtn.innerHTML = 'Sign In';
                 return;
               }
-              
-              // Verify user has valid token
               const token = AuthClient.getAccessToken();
               if (!token) {
                 showAlert('error', 'Invalid authentication token. Please try again.');
@@ -169,28 +168,9 @@
                 loginBtn.innerHTML = 'Sign In';
                 return;
               }
-              
-              // Redirect to CMS service to create session
-              // Get client_id from user, or extract from current domain, or use default
-              let clientId = user?.client_id;
-              if (!clientId) {
-                // Extract client ID from current domain (e.g., islandbeer.ttmenus.com -> islandbeer)
-                const hostname = window.location.hostname;
-                const domainParts = hostname.split('.');
-                if (domainParts.length >= 2 && domainParts[1] === 'ttmenus' && domainParts[2] === 'com') {
-                  clientId = domainParts[0]; // e.g., 'islandbeer'
-                } else {
-                  clientId = '_ttms_menu_demo'; // Fallback to default
-                }
-              }
-              
-              if (token) {
-                // Create session via POST request (secure, no token in URL)
-                createCMSSession(clientId, token);
-              } else {
-                // Fallback: redirect to login-redirect endpoint which will set session and redirect
-                window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}`;
-              }
+              const clientId = getClientIdForRedirect(user);
+              // Redirect to dashboard (control room) instead of CMS directly
+              window.location.href = '/dashboard/';
             }, 1000);
           } else {
             console.error('❌ Login failed:', result.error);

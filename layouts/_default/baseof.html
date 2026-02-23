@@ -1,3 +1,17 @@
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
+{{- if $dashboardLayout -}}
+<!DOCTYPE html>
+<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/auth.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/dashboard.css">
+</head>
+<body>
+  {{ block "main" . }}{{ end }}
+</body>
+</html>
+{{- else -}}
 <!DOCTYPE html>
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
 <head>
@@ -65,3 +79,4 @@
 
 </body>
 </html>
+{{- end -}}

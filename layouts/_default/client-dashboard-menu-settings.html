@@ -1,0 +1,27 @@
+{{ define "main" }}
+<div class="dashboard-analytics-page" id="dashboardMenuSettingsPage">
+  <div class="dashboard-edit-header">
+    <div class="dashboard-edit-header-inner">
+      <a href="/dashboard/" class="btn-dash btn-dash-secondary">← Dashboard</a>
+      <h1 class="dashboard-edit-title">Menu settings</h1>
+    </div>
+  </div>
+
+  <main class="dashboard-analytics-main">
+    <section class="dashboard-analytics-period" aria-labelledby="menu-settings-heading">
+      <h2 id="menu-settings-heading" class="dashboard-analytics-heading">Menu options</h2>
+      <p class="dashboard-analytics-subtitle">Configure display options and settings for your digital menu.</p>
+
+      <p class="dashboard-analytics-note">Menu settings can be wired to your backend or CMS when ready.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+      return;
+    }
+  });
+</script>
+{{ end }}

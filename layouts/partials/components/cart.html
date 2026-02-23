@@ -91,9 +91,9 @@
 		</div>
 		<div id="itemTotal">TOTAL $0</div>
 		{{ if site.Params.orderingsystem.usephonecall }}
-			<a class="placeOrder" href='tel:{{ site.Params.orderingsystem.phone }}'><i class="fa fa-phone"></i> Order Now</a>
+			<button type="button" class="placeOrder" onclick="placeOrderClick();"><i class="fa fa-phone"></i> Order Now</button>
 		{{ else }}
-			<button class="btn-place-order" onclick="advanceOrder();"><i class="fa fa-whatsapp"></i> Order Now</button>
+			<button type="button" class="btn-place-order" onclick="placeOrderClick();"><i class="fa fa-whatsapp"></i> Order Now</button>
 		{{ end }}
 	</div>
 </div>

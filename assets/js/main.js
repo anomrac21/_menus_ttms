@@ -44,12 +44,6 @@
             settings.classList.add('hide');
         }
 
-        // Hide TTMS modal
-        const ttms = document.getElementById('ttmenusModal');
-        if (ttms) {
-            ttms.classList.add('cart-hidden');
-        }
-
         // Hide order modal
         // Order modal removed - no longer needed
 
@@ -162,44 +156,6 @@
     }
 
     /**
-     * Toggle TTMS modal
-     * @global
-     */
-    function toggleTTMS() {
-        const ttms = document.getElementById('ttmenusModal');
-        const footerBtns = document.getElementById('footerBtns');
-        
-        if (!ttms || !footerBtns) return;
-
-        if (ttms.classList.contains('cart-hidden')) {
-            ttms.classList.remove('cart-hidden');
-            footerBtns.classList.add('bigfont');
-            footerBtns.classList.remove('smallfont');
-            footerBtns.classList.add('grad1');
-            footerBtns.classList.remove('grad2');
-        } else {
-            closeTTMS();
-        }
-    }
-
-    /**
-     * Close TTMS modal
-     * @global
-     */
-    function closeTTMS() {
-        const ttms = document.getElementById('ttmenusModal');
-        const footerBtns = document.getElementById('footerBtns');
-        
-        if (!ttms || !footerBtns) return;
-
-        ttms.classList.add('cart-hidden');
-        footerBtns.classList.add('grad2');
-        footerBtns.classList.remove('grad1');
-        footerBtns.classList.remove('bigfont');
-        footerBtns.classList.add('smallfont');
-    }
-
-    /**
      * Hide footer when promotions/ads are visible in viewport
      */
     function initializeFooterVisibility() {
@@ -309,7 +265,7 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeCart();
-                closeTTMS();
+                if (typeof closeDashboard === 'function') closeDashboard();
             }
         });
     }
@@ -1852,8 +1808,6 @@
     
     window.liveSearch = liveSearch;
     window.toggleFooterAccessibility = toggleFooterAccessibility;
-    window.toggleTTMS = toggleTTMS;
-    window.closeTTMS = closeTTMS;
     window.closeShop = closeShop;
     window.openItem = openItem;
     window.toggleItemExpansion = toggleItemExpansion;

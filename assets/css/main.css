@@ -319,7 +319,7 @@ footer {
     margin: 0;
     overflow: hidden;
     position: relative;
-    padding-block-start: .5em;
+    padding-block-start: 1px;
     border-radius: 1.2em;
     background: linear-gradient(135deg,var(--menu-bg-color-1,#1a1a1a) 0%,var(--menu-bg-color-2,#2a2a2a) 100%);
     box-shadow: 0 8px 24px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.2);
@@ -404,7 +404,7 @@ footer {
 .menu-item-card {
     border: 1px solid rgba(255,255,255,.1);
     border-radius: .75em;
-    background: var(--selected-button-color1);
+    background: linear-gradient(var(--button-color1), var(--button-color2));
     color: var(--button-text-color1,#fff);
     font-family: sans-serif;
     padding: .75em;
@@ -861,8 +861,8 @@ footer {
 }
 
 .menu-item-card.expanded {
-    border-color: rgba(255,255,255,.3);
-    box-shadow: 0 6px 20px rgba(0,0,0,.3);
+    border-color: var(--selected-button-color3);
+    box-shadow: 0 0px 10px var(--selected-button-color3);
     background: linear-gradient( var(--selected-button-color1),var(--selected-button-color2));
     scroll-margin-top: 5em;
     display: flex;

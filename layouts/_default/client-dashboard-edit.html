@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/auth.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-edit-page" id="dashboardEditPage">
+    <div class="dashboard-edit-header">
+      <div class="dashboard-edit-header-inner">
+        <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+        <div class="dashboard-edit-mode-toggle" role="group" aria-label="Preview or Edit mode">
+          <button type="button" class="dashboard-edit-toggle-btn active" id="btnModePreview" aria-pressed="true" title="Preview" aria-label="Preview"><i class="fa fa-eye" aria-hidden="true"></i></button>
+          <button type="button" class="dashboard-edit-toggle-btn" id="btnModeEdit" aria-pressed="false" title="Edit" aria-label="Edit"><i class="fa fa-pencil" aria-hidden="true"></i></button>
+        </div>
+        <div class="dashboard-edit-submode-wrap hidden" id="dashboardEditSubmodeWrap" aria-label="Content or Color">
+          <div class="dashboard-edit-mode-toggle" role="group" aria-label="Content or Color mode">
+            <button type="button" class="dashboard-edit-toggle-btn active" id="btnSubmodeContent" aria-pressed="true" title="Content" aria-label="Content"><i class="fa fa-file-text-o" aria-hidden="true"></i></button>
+            <button type="button" class="dashboard-edit-toggle-btn" id="btnSubmodeColor" aria-pressed="false" title="Color" aria-label="Color"><i class="fa fa-paint-brush" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-edit-layout">
+      <section class="dashboard-edit-preview" aria-label="Menu preview">
+        <div class="dashboard-edit-preview-frame-wrap">
+          <iframe
+            id="menuPreviewFrame"
+            class="dashboard-edit-preview-frame"
+            title="Menu preview"
+            src="/"
+          ></iframe>
+        </div>
+      </section>
+
+      <aside class="dashboard-edit-options dashboard-edit-options-collapsed" id="dashboardEditAside" aria-label="Edit selected content">
+        <div class="dashboard-edit-options-header">
+          <button type="button" class="dashboard-edit-options-toggle" id="btnToggleEditPanel" aria-expanded="false" aria-label="Expand edit panel">
+            <span class="dashboard-edit-options-toggle-icon" aria-hidden="true">▶</span>
+            <span class="dashboard-edit-options-toggle-text">Expand</span>
+          </button>
+        </div>
+        <div class="dashboard-edit-options-inner">
+          <div id="dashboardEditPrompt" class="dashboard-edit-prompt">
+            <p class="dashboard-edit-options-intro">Switch to <strong>Edit</strong> above, then click a menu item, heading, or other element in the preview to select it and edit or add information here.</p>
+          </div>
+
+          <div id="dashboardEditForm" class="dashboard-edit-form hidden">
+            <p class="dashboard-edit-selected-type" id="dashboardEditSelectedType"></p>
+            <div class="dashboard-edit-meta" id="dashboardEditMeta" aria-label="Menu item elements summary">
+              <div class="dashboard-edit-meta-item" data-key="title" title="Title">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-heading" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountTitle">0</span>
+              </div>
+              <div class="dashboard-edit-meta-item" data-key="description" title="Description">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-align-left" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountDescription">0</span>
+              </div>
+              <div class="dashboard-edit-meta-item" data-key="images" title="Images">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-image" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountImages">0</span>
+              </div>
+              <div class="dashboard-edit-meta-item" data-key="prices" title="Prices">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-dollar" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountPrices">0</span>
+              </div>
+              <div class="dashboard-edit-meta-item" data-key="sides" title="Sides">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-list-alt" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountSides">0</span>
+              </div>
+              <div class="dashboard-edit-meta-item" data-key="additions" title="Additions">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-plus-circle" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountAdditions">0</span>
+              </div>
+              <div class="dashboard-edit-meta-item" data-key="modifications" title="Modifications">
+                <span class="dashboard-edit-meta-icon"><i class="fa fa-wrench" aria-hidden="true"></i></span>
+                <span class="dashboard-edit-meta-count" id="metaCountModifications">0</span>
+              </div>
+            </div>
+            <div class="dashboard-edit-form-fields">
+              <div class="dashboard-edit-field">
+                <label for="dashboardEditTitle">Title / Name</label>
+                <input type="text" id="dashboardEditTitle" class="dashboard-edit-input" placeholder="Item or section name">
+              </div>
+              <div class="dashboard-edit-field">
+                <label for="dashboardEditDescription">Description</label>
+                <textarea id="dashboardEditDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Description" rows="3"></textarea>
+              </div>
+              <div class="dashboard-edit-field">
+                <label for="dashboardEditPrice">Price</label>
+                <input type="text" id="dashboardEditPrice" class="dashboard-edit-input" placeholder="e.g. 12.00 or 10 | 12">
+              </div>
+            </div>
+            <div class="dashboard-edit-form-actions">
+              <button type="button" class="btn-dash btn-dash-primary" id="btnApplyEdit">Apply</button>
+              <button type="button" class="btn-dash btn-dash-secondary" id="btnClearSelection">Clear selection</button>
+            </div>
+            <p class="dashboard-edit-option-note">Saving to your backend can be wired when ready.</p>
+          </div>
+        </div>
+      </aside>
+
+      <aside class="dashboard-edit-color-aside dashboard-edit-color-aside-collapsed hidden" id="dashboardEditColorAside" aria-label="Edit theme colors">
+        <div class="dashboard-edit-color-aside-inner">
+          <div id="dashboardEditColorPrompt" class="dashboard-edit-color-prompt">
+            <button type="button" class="dashboard-edit-color-aside-toggle" id="btnToggleColorPanel" aria-expanded="false" aria-label="Expand color panel">
+              <span class="dashboard-edit-color-aside-toggle-icon" aria-hidden="true">▶</span>
+              <span class="dashboard-edit-color-aside-toggle-text">Expand</span>
+            </button>
+            <div class="dashboard-edit-color-sections" id="dashboardEditColorSections"></div>
+          </div>
+          <div id="dashboardEditColorForm" class="dashboard-edit-color-form hidden">
+            <p class="dashboard-edit-color-section-label" id="dashboardEditColorSectionLabel"></p>
+            <div id="dashboardEditColorFields" class="dashboard-edit-color-fields"></div>
+            <div class="dashboard-edit-color-actions">
+              <button type="button" class="btn-dash btn-dash-primary" id="btnApplyColor">Apply</button>
+              <button type="button" class="btn-dash btn-dash-secondary" id="btnBackColorSections">← Back</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+        return;
+      }
+
+      var page = document.getElementById('dashboardEditPage');
+      var iframe = document.getElementById('menuPreviewFrame');
+      var btnPreview = document.getElementById('btnModePreview');
+      var btnEdit = document.getElementById('btnModeEdit');
+      var promptEl = document.getElementById('dashboardEditPrompt');
+      var formEl = document.getElementById('dashboardEditForm');
+      var selectedTypeEl = document.getElementById('dashboardEditSelectedType');
+      var inputTitle = document.getElementById('dashboardEditTitle');
+      var inputDesc = document.getElementById('dashboardEditDescription');
+      var inputPrice = document.getElementById('dashboardEditPrice');
+      var btnApply = document.getElementById('btnApplyEdit');
+      var btnClear = document.getElementById('btnClearSelection');
+      var asideEl = document.getElementById('dashboardEditAside');
+      var btnTogglePanel = document.getElementById('btnToggleEditPanel');
+      var colorAsideEl = document.getElementById('dashboardEditColorAside');
+      var btnToggleColorPanel = document.getElementById('btnToggleColorPanel');
+      var submodeWrap = document.getElementById('dashboardEditSubmodeWrap');
+      var btnSubmodeContent = document.getElementById('btnSubmodeContent');
+      var btnSubmodeColor = document.getElementById('btnSubmodeColor');
+      var colorPrompt = document.getElementById('dashboardEditColorPrompt');
+      var colorSectionsEl = document.getElementById('dashboardEditColorSections');
+      var colorForm = document.getElementById('dashboardEditColorForm');
+      var colorSectionLabel = document.getElementById('dashboardEditColorSectionLabel');
+      var colorFieldsEl = document.getElementById('dashboardEditColorFields');
+      var btnApplyColor = document.getElementById('btnApplyColor');
+      var btnBackColorSections = document.getElementById('btnBackColorSections');
+
+      var editMode = false;
+      var editSubmode = 'content'; // 'content' | 'color'
+      var selectedElement = null;
+      var selectedInfo = null;
+      var selectedColorSectionId = null;
+
+      // Maps to static/css/colors.css – section id -> { label, vars: [ { name, label } ] }
+      var COLOR_SECTIONS = [
+        { id: 'header', label: 'Header', vars: [
+          { name: '--header-color', label: 'Text' },
+          { name: '--header-bg-color', label: 'Background' },
+          { name: '--header-icon-color', label: 'Icons' },
+          { name: '--header-text-color', label: 'Nav text' },
+          { name: '--header-text-shadow-color', label: 'Text shadow' },
+          { name: '--header-bordercolor-1', label: 'Border 1' },
+          { name: '--header-bordercolor-2', label: 'Border 2' },
+          { name: '--header-bg-image', label: 'Background image' }
+        ]},
+        { id: 'hero', label: 'Hero', vars: [
+          { name: '--hero-bg-image-fg-color', label: 'Foreground' },
+          { name: '--hero-bg-color', label: 'Background' },
+          { name: '--hero-text-color', label: 'Text' }
+        ]},
+        { id: 'main', label: 'Main', vars: [
+          { name: '--main-bg', label: 'Background' },
+          { name: '--main-bg-color', label: 'Background color' },
+          { name: '--main-text-color', label: 'Text' }
+        ]},
+        { id: 'menu', label: 'Menu', vars: [
+          { name: '--menu-bg-color-1', label: 'Background 1' },
+          { name: '--menu-bg-color-2', label: 'Background 2' }
+        ]},
+        { id: 'buttons', label: 'Buttons', vars: [
+          { name: '--button-color1', label: 'Button 1' },
+          { name: '--button-color2', label: 'Button 2' },
+          { name: '--button-text-color1', label: 'Button text' },
+          { name: '--selected-button-color1', label: 'Selected bg 1' },
+          { name: '--selected-button-color2', label: 'Selected bg 2' },
+          { name: '--selected-button-color3', label: 'Selected bg 3' },
+          { name: '--selected-text-color1', label: 'Selected text' }
+        ]},
+        { id: 'footer', label: 'Footer', vars: [
+          { name: '--footer-bg-color', label: 'Background' },
+          { name: '--footer-text-color', label: 'Text' }
+        ]}
+      ];
+
+      // Editable selectors (order: more specific first). Click target is matched against these or their descendants.
+      var EDITABLE_SELECTORS = [
+        { selector: '.menu-item-title, .menu-item-title a', type: 'Menu item name' },
+        { selector: '.menu-item-description', type: 'Menu item description' },
+        { selector: '.menu-item-price', type: 'Menu item price' },
+        { selector: '.menu-item-card', type: 'Menu item' },
+        { selector: '.menu-header h2, .menu-header h2 a', type: 'Section title' },
+        { selector: '.menu-summary', type: 'Section summary' },
+        { selector: '.headerstyle h1', type: 'Page title' },
+        { selector: '#logo', type: 'Logo' },
+        { selector: '.logo_container', type: 'Logo area' }
+      ];
+
+      function getEditableAncestor(elt) {
+        if (!elt || !elt.closest) return null;
+        for (var i = 0; i < EDITABLE_SELECTORS.length; i++) {
+          var sel = EDITABLE_SELECTORS[i].selector;
+          var match = elt.closest(sel);
+          if (match) return { element: match, type: EDITABLE_SELECTORS[i].type };
+        }
+        return null;
+      }
+
+      function getTextContent(elt) {
+        return elt ? (elt.textContent || '').trim() : '';
+      }
+
+      function getPriceFromElement(elt) {
+        var text = getTextContent(elt);
+        var match = text.match(/\$?([\d.]+)\s*\|\s*\$?([\d.]+)/);
+        if (match) return match[1] + ' | ' + match[2];
+        match = text.match(/\$?([\d.]+)/);
+        return match ? match[1] : text;
+      }
+
+      function setEditMode(on) {
+        editMode = !!on;
+        page.setAttribute('data-edit-mode', editMode ? 'edit' : 'preview');
+        btnPreview.classList.toggle('active', !editMode);
+        btnPreview.setAttribute('aria-pressed', !editMode);
+        btnEdit.classList.toggle('active', editMode);
+        btnEdit.setAttribute('aria-pressed', editMode);
+        if (submodeWrap) submodeWrap.classList.toggle('hidden', !editMode);
+        if (!editMode) {
+          clearSelection();
+          showColorSectionList();
+          colorForm.classList.add('hidden');
+        }
+        setupIframeEditMode(editMode && editSubmode === 'content');
+      }
+
+      function setEditSubmode(mode) {
+        editSubmode = mode;
+        btnSubmodeContent.classList.toggle('active', mode === 'content');
+        btnSubmodeContent.setAttribute('aria-pressed', mode === 'content');
+        btnSubmodeColor.classList.toggle('active', mode === 'color');
+        btnSubmodeColor.setAttribute('aria-pressed', mode === 'color');
+        if (mode === 'content') {
+          clearSelection();
+          if (asideEl) asideEl.classList.remove('hidden');
+          if (colorAsideEl) colorAsideEl.classList.add('hidden');
+          promptEl.classList.remove('hidden');
+          formEl.classList.add('hidden');
+        } else {
+          if (asideEl) asideEl.classList.add('hidden');
+          if (colorAsideEl) {
+            colorAsideEl.classList.remove('hidden');
+            colorAsideEl.classList.add('dashboard-edit-color-aside-collapsed');
+          }
+          colorPrompt.classList.remove('hidden');
+          showColorSectionList();
+          colorForm.classList.add('hidden');
+          if (btnToggleColorPanel) {
+            btnToggleColorPanel.setAttribute('aria-expanded', 'false');
+            btnToggleColorPanel.setAttribute('aria-label', 'Expand color panel');
+            var iconEl = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-icon');
+            if (iconEl) iconEl.textContent = '\u25B6';
+            var textEl = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-text');
+            if (textEl) textEl.textContent = 'Expand';
+          }
+        }
+        setupIframeEditMode(editMode && editSubmode === 'content');
+      }
+
+      function showColorSectionList() {
+        selectedColorSectionId = null;
+        colorSectionsEl.innerHTML = '';
+        colorPrompt.classList.remove('dashboard-edit-color-prompt-section-selected');
+        COLOR_SECTIONS.forEach(function(section) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-dash btn-dash-secondary dashboard-edit-color-section-btn';
+          btn.setAttribute('data-section-id', section.id);
+          btn.textContent = section.label;
+          btn.addEventListener('click', function() {
+            selectedColorSectionId = section.id;
+            if (colorAsideEl) colorAsideEl.classList.remove('dashboard-edit-color-aside-collapsed');
+            if (btnToggleColorPanel) {
+              btnToggleColorPanel.setAttribute('aria-expanded', 'true');
+              btnToggleColorPanel.setAttribute('aria-label', 'Collapse color panel');
+              var icon = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-icon');
+              if (icon) icon.textContent = '\u25C0';
+            }
+            colorPrompt.classList.add('dashboard-edit-color-prompt-section-selected');
+            colorSectionsEl.querySelectorAll('.dashboard-edit-color-section-btn').forEach(function(b) {
+              b.classList.toggle('hidden', b.getAttribute('data-section-id') !== section.id);
+            });
+            colorSectionLabel.textContent = 'Editing: ' + section.label;
+            colorFieldsEl.innerHTML = '';
+            section.vars.forEach(function(v) {
+              var val = getIframeRootVar(v.name);
+              var isColor = isColorVar(v.name, val);
+              var wrap = document.createElement('div');
+              wrap.className = 'dashboard-edit-field';
+              var label = document.createElement('label');
+              label.textContent = v.label;
+              wrap.appendChild(label);
+              if (isColor) {
+                var hex6 = toHex6(val);
+                if (!hex6) hex6 = '#000000';
+                var row = document.createElement('div');
+                row.className = 'dashboard-edit-color-field-row';
+                var colorInp = document.createElement('input');
+                colorInp.type = 'color';
+                colorInp.className = 'dashboard-edit-color-picker';
+                colorInp.value = hex6;
+                colorInp.setAttribute('data-var', v.name);
+                var textInp = document.createElement('input');
+                textInp.type = 'text';
+                textInp.className = 'dashboard-edit-input';
+                textInp.placeholder = v.name;
+                textInp.setAttribute('data-var', v.name);
+                textInp.value = val || hex6;
+                var alpha = getAlphaFromValue(val);
+                var slider = document.createElement('input');
+                slider.type = 'range';
+                slider.className = 'dashboard-edit-color-slider';
+                slider.min = 0;
+                slider.max = 100;
+                slider.value = alpha;
+                slider.setAttribute('data-var', v.name);
+                slider.setAttribute('aria-label', 'Opacity');
+                colorInp.addEventListener('input', function() {
+                  textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
+                  scheduleApplyColorOverrides();
+                });
+                slider.addEventListener('input', function() {
+                  textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
+                  scheduleApplyColorOverrides();
+                });
+                textInp.addEventListener('input', function() {
+                  var h = toHex6(textInp.value);
+                  if (h) { colorInp.value = h; slider.value = getAlphaFromValue(textInp.value); }
+                  scheduleApplyColorOverrides();
+                });
+                row.appendChild(colorInp);
+                row.appendChild(textInp);
+                row.appendChild(slider);
+                wrap.appendChild(row);
+              } else {
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'dashboard-edit-input';
+                input.placeholder = v.name;
+                input.setAttribute('data-var', v.name);
+                input.value = val;
+                input.addEventListener('input', scheduleApplyColorOverrides);
+                wrap.appendChild(input);
+              }
+              colorFieldsEl.appendChild(wrap);
+            });
+            colorForm.classList.remove('hidden');
+          });
+          colorSectionsEl.appendChild(btn);
+        });
+      }
+
+      function getIframeRootVar(varName) {
+        try {
+          var doc = iframe.contentDocument;
+          if (!doc || !doc.documentElement) return '';
+          var val = doc.defaultView.getComputedStyle(doc.documentElement).getPropertyValue(varName).trim();
+          return val || '';
+        } catch (e) { return ''; }
+      }
+
+      function isColorVar(varName, value) {
+        if (!value || value === 'none' || /^url\(|^linear-gradient|^var\(/.test(value)) return false;
+        if (/^#([0-9a-fA-F]{3}){1,2}$|^#([0-9a-fA-F]{4}){1,2}$/.test(value)) return true;
+        if (/^rgba?\(/.test(value)) return true;
+        var n = (varName || '').toLowerCase();
+        return n.indexOf('color') !== -1 || n.indexOf('bordercolor') !== -1;
+      }
+
+      function toHex6(val) {
+        if (!val) return '';
+        var m = val.match(/^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/);
+        if (m) {
+          var r = m[1] + m[1]; var g = m[2] + m[2]; var b = m[3] + m[3];
+          return '#' + r + g + b;
+        }
+        m = val.match(/^#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?$/);
+        if (m) return '#' + m[1];
+        m = val.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+        if (m) {
+          var r = parseInt(m[1], 10).toString(16); if (r.length === 1) r = '0' + r;
+          var g = parseInt(m[2], 10).toString(16); if (g.length === 1) g = '0' + g;
+          var b = parseInt(m[3], 10).toString(16); if (b.length === 1) b = '0' + b;
+          return '#' + r + g + b;
+        }
+        return '';
+      }
+
+      function getAlphaFromValue(val) {
+        if (!val) return 100;
+        var m = val.match(/#[0-9a-fA-F]{6}([0-9a-fA-F]{2})$/);
+        if (m) return Math.round(parseInt(m[1], 16) / 255 * 100);
+        m = val.match(/rgba?\([^)]*,\s*([\d.]+)\)/);
+        if (m) return Math.round(parseFloat(m[1]) * 100);
+        return 100;
+      }
+
+      function hexWithAlpha(hex6, alphaPercent) {
+        if (!hex6 || !/^#[0-9a-fA-F]{6}$/.test(hex6)) return hex6 || '';
+        var a = Math.round((alphaPercent / 100) * 255);
+        var aa = (a < 16 ? '0' : '') + a.toString(16);
+        return hex6 + aa;
+      }
+
+      var _applyColorTimer = null;
+      var COLOR_OVERRIDE_VALUES = {};
+      function scheduleApplyColorOverrides() {
+        if (_applyColorTimer) clearTimeout(_applyColorTimer);
+        _applyColorTimer = setTimeout(function() {
+          _applyColorTimer = null;
+          applyColorOverrides();
+        }, 60);
+      }
+
+      function applyColorOverrides() {
+        try {
+          var doc = iframe.contentDocument;
+          if (!doc || !doc.head) return;
+          var section = COLOR_SECTIONS.find(function(s) { return s.id === selectedColorSectionId; });
+          if (!section) return;
+
+          // Update stored overrides for this section's vars
+          section.vars.forEach(function(v) {
+            var input = colorFieldsEl.querySelector('input.dashboard-edit-input[data-var="' + v.name + '"]') || colorFieldsEl.querySelector('input[data-var="' + v.name + '"]');
+            if (!input) return;
+            var val = (input.value || '').trim();
+            if (val) {
+              COLOR_OVERRIDE_VALUES[v.name] = val;
+            } else {
+              delete COLOR_OVERRIDE_VALUES[v.name];
+            }
+          });
+
+          var rules = [];
+          Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(varName) {
+            rules.push(varName + ':' + COLOR_OVERRIDE_VALUES[varName]);
+          });
+
+          var id = 'dashboard-edit-color-override';
+          var style = doc.getElementById(id);
+          if (!style) {
+            style = doc.createElement('style');
+            style.id = id;
+            doc.head.appendChild(style);
+          }
+          if (rules.length === 0) {
+            style.textContent = '';
+          } else {
+            style.textContent = ':root { ' + rules.join('; ') + ' }';
+          }
+        } catch (e) { console.warn('Apply color:', e); }
+      }
+
+      function clearSelection() {
+        if (selectedElement && selectedElement.classList) {
+          try { selectedElement.classList.remove('dashboard-edit-selected'); } catch (e) {}
+        }
+        selectedElement = null;
+        selectedInfo = null;
+        promptEl.classList.remove('hidden');
+        formEl.classList.add('hidden');
+        inputTitle.value = '';
+        inputDesc.value = '';
+        inputPrice.value = '';
+      }
+
+      function parseJsonAttr(el, attr) {
+        try {
+          var raw = el.getAttribute(attr);
+          if (raw == null || raw === '') return [];
+          return JSON.parse(raw);
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function updateMetaCounts(el) {
+        var ids = ['metaCountTitle', 'metaCountDescription', 'metaCountImages', 'metaCountPrices', 'metaCountSides', 'metaCountAdditions', 'metaCountModifications'];
+        var counts = { title: 0, description: 0, images: 0, prices: 0, sides: 0, additions: 0, modifications: 0 };
+        if (el && el.classList && el.classList.contains('menu-item-card')) {
+          counts.title = el.querySelector('.menu-item-title') ? 1 : 0;
+          counts.description = el.querySelector('.menu-item-description') && getTextContent(el.querySelector('.menu-item-description')) ? 1 : 0;
+          var imgs = el.querySelectorAll('.menu-item-image img, .menu-item-img');
+          counts.images = imgs ? imgs.length : 0;
+          if (!counts.images) {
+            var imgArr = parseJsonAttr(el, 'data-images-array');
+            counts.images = Array.isArray(imgArr) ? imgArr.length : 0;
+          }
+          var pricesArr = parseJsonAttr(el, 'data-prices-array');
+          counts.prices = Array.isArray(pricesArr) ? Math.floor(pricesArr.length / 3) : 0;
+          var sidesArr = parseJsonAttr(el, 'data-side-categories');
+          counts.sides = Array.isArray(sidesArr) ? sidesArr.length : 0;
+          var addArr = parseJsonAttr(el, 'data-additions');
+          counts.additions = Array.isArray(addArr) ? Math.floor(addArr.length / 2) : 0;
+          var modArr = parseJsonAttr(el, 'data-modifications');
+          counts.modifications = Array.isArray(modArr) ? Math.floor(modArr.length / 2) : 0;
+        } else if (el) {
+          counts.title = el.querySelector('h1, h2, .menu-item-title') || el.matches('h1, h2, .menu-item-title, .menu-item-title a') ? 1 : 0;
+          counts.description = el.querySelector('.menu-item-description, .menu-summary') || el.matches('.menu-item-description, .menu-summary') ? 1 : 0;
+          counts.prices = el.querySelector('.menu-item-price') || el.matches('.menu-item-price') ? 1 : 0;
+        }
+        document.getElementById('metaCountTitle').textContent = counts.title;
+        document.getElementById('metaCountDescription').textContent = counts.description;
+        document.getElementById('metaCountImages').textContent = counts.images;
+        document.getElementById('metaCountPrices').textContent = counts.prices;
+        document.getElementById('metaCountSides').textContent = counts.sides;
+        document.getElementById('metaCountAdditions').textContent = counts.additions;
+        document.getElementById('metaCountModifications').textContent = counts.modifications;
+      }
+
+      function showEditForm(info) {
+        selectedInfo = info;
+        selectedElement = info.element;
+        promptEl.classList.add('hidden');
+        formEl.classList.remove('hidden');
+        selectedTypeEl.textContent = 'Editing: ' + info.type;
+        updateMetaCounts(info.element);
+        inputTitle.value = info.title != null ? info.title : getTextContent(info.element.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || info.element);
+        inputDesc.value = info.description != null ? info.description : getTextContent(info.element.querySelector('.menu-item-description, .menu-summary') || info.element);
+        inputPrice.value = info.price != null ? info.price : (info.element.querySelector('.menu-item-price') ? getPriceFromElement(info.element.querySelector('.menu-item-price')) : '');
+      }
+
+      function setupIframeEditMode(on) {
+        function runWhenReady() {
+          try {
+            var doc = iframe.contentDocument;
+            var win = iframe.contentWindow;
+            if (!doc || !doc.body) return;
+            if (on) {
+              var style = doc.getElementById('dashboard-edit-injected-style');
+              if (!style) {
+                style = doc.createElement('style');
+                style.id = 'dashboard-edit-injected-style';
+                style.textContent = [
+                  '.dashboard-edit-selected { outline: 2px solid #667eea !important; outline-offset: 2px !important; }',
+                  '.menu-item-card.dashboard-edit-card-wrap { position: relative !important; }',
+                  '.menu-item-card .dashboard-edit-card-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
+                  '.menu-header.dashboard-edit-header-wrap { position: relative !important; }',
+                  '.menu-header .dashboard-edit-header-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
+                  'section.ads.menu-ad.dashboard-edit-ad-wrap { position: relative !important; }',
+                  'section.ads.menu-ad .dashboard-edit-ad-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
+                  '.client-tour-slideshow.dashboard-edit-slideshow-wrap { position: relative !important; }',
+                  '.client-tour-slideshow .dashboard-edit-slideshow-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
+                  '.location-item.dashboard-edit-location-wrap { position: relative !important; }',
+                  '.location-item .dashboard-edit-location-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
+                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn, .dashboard-edit-header-btn-wrap .dashboard-edit-btn, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn, .dashboard-edit-location-btn-wrap .dashboard-edit-btn { width: 36px; height: 36px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: #667eea9c; backdrop-filter: blur(10px); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: auto; }',
+                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover { background: #764ba2; }'
+                ].join('\n');
+                doc.head.appendChild(style);
+              }
+              function injectEditButtons() {
+                try {
+                  var cardWrapClass = 'dashboard-edit-card-btn-wrap';
+                  doc.querySelectorAll('.menu-item-card').forEach(function(card) {
+                    if (card.querySelector('.' + cardWrapClass)) return;
+                    card.classList.add('dashboard-edit-card-wrap');
+                    var div = doc.createElement('div');
+                    div.className = cardWrapClass;
+                    div.setAttribute('data-dashboard-edit', '1');
+                    var editBtn = doc.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'dashboard-edit-btn';
+                    editBtn.setAttribute('aria-label', 'Edit');
+                    editBtn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                    div.appendChild(editBtn);
+                    card.insertBefore(div, card.firstChild);
+                  });
+                  var headerWrapClass = 'dashboard-edit-header-btn-wrap';
+                  doc.querySelectorAll('.menu-header').forEach(function(header) {
+                    if (header.querySelector('.' + headerWrapClass)) return;
+                    header.classList.add('dashboard-edit-header-wrap');
+                    var div = doc.createElement('div');
+                    div.className = headerWrapClass;
+                    div.setAttribute('data-dashboard-edit', '1');
+                    var editBtn = doc.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'dashboard-edit-btn';
+                    editBtn.setAttribute('aria-label', 'Edit section');
+                    editBtn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                    div.appendChild(editBtn);
+                    header.insertBefore(div, header.firstChild);
+                  });
+                  var adWrapClass = 'dashboard-edit-ad-btn-wrap';
+                  doc.querySelectorAll('section.ads.menu-ad').forEach(function(section) {
+                    if (section.querySelector('.' + adWrapClass)) return;
+                    section.classList.add('dashboard-edit-ad-wrap');
+                    var div = doc.createElement('div');
+                    div.className = adWrapClass;
+                    div.setAttribute('data-dashboard-edit', '1');
+                    var editBtn = doc.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'dashboard-edit-btn';
+                    editBtn.setAttribute('aria-label', 'Edit promotion');
+                    editBtn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                    div.appendChild(editBtn);
+                    section.insertBefore(div, section.firstChild);
+                  });
+                  var slideshowWrapClass = 'dashboard-edit-slideshow-btn-wrap';
+                  doc.querySelectorAll('.client-tour-slideshow').forEach(function(slideshow) {
+                    if (slideshow.querySelector('.' + slideshowWrapClass)) return;
+                    slideshow.classList.add('dashboard-edit-slideshow-wrap');
+                    var div = doc.createElement('div');
+                    div.className = slideshowWrapClass;
+                    div.setAttribute('data-dashboard-edit', '1');
+                    var editBtn = doc.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'dashboard-edit-btn';
+                    editBtn.setAttribute('aria-label', 'Edit slideshow');
+                    editBtn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                    div.appendChild(editBtn);
+                    slideshow.insertBefore(div, slideshow.firstChild);
+                  });
+                  var locationWrapClass = 'dashboard-edit-location-btn-wrap';
+                  doc.querySelectorAll('.location-item').forEach(function(loc) {
+                    if (loc.querySelector('.' + locationWrapClass)) return;
+                    loc.classList.add('dashboard-edit-location-wrap');
+                    var div = doc.createElement('div');
+                    div.className = locationWrapClass;
+                    div.setAttribute('data-dashboard-edit', '1');
+                    var editBtn = doc.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'dashboard-edit-btn';
+                    editBtn.setAttribute('aria-label', 'Edit location');
+                    editBtn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                    div.appendChild(editBtn);
+                    loc.insertBefore(div, loc.firstChild);
+                  });
+                } catch (err) { console.warn('injectEditButtons', err); }
+              }
+              function removeEditButtons() {
+                try {
+                  doc.querySelectorAll('.dashboard-edit-card-btn-wrap').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.menu-item-card.dashboard-edit-card-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-card-wrap'); });
+                  doc.querySelectorAll('.dashboard-edit-header-btn-wrap').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.menu-header.dashboard-edit-header-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-header-wrap'); });
+                  doc.querySelectorAll('.dashboard-edit-ad-btn-wrap').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('section.ads.menu-ad.dashboard-edit-ad-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-ad-wrap'); });
+                  doc.querySelectorAll('.dashboard-edit-slideshow-btn-wrap').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.client-tour-slideshow.dashboard-edit-slideshow-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-slideshow-wrap'); });
+                  doc.querySelectorAll('.dashboard-edit-location-btn-wrap').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.location-item.dashboard-edit-location-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-location-wrap'); });
+                } catch (e) {}
+              }
+              function expandEditPanel() {
+                asideEl.classList.remove('dashboard-edit-options-collapsed');
+                btnTogglePanel.setAttribute('aria-expanded', 'true');
+                btnTogglePanel.setAttribute('aria-label', 'Collapse edit panel');
+                var icon = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-icon');
+                var text = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-text');
+                if (icon) icon.textContent = '\u25C0';
+                if (text) text.textContent = 'Collapse';
+              }
+              win._dashboardInjectEditButtons = injectEditButtons;
+              win._dashboardRemoveEditButtons = removeEditButtons;
+              setTimeout(injectEditButtons, 100);
+              win._dashboardEditClick = function(e) {
+                var editBtn = e.target.closest('.dashboard-edit-btn');
+                if (editBtn) {
+                  var card = e.target.closest('.menu-item-card');
+                  var header = e.target.closest('.menu-header');
+                  if (card) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var expanded = card.classList.contains('expanded') || card.getAttribute('data-item-expanded') === 'true';
+                    if (!expanded && typeof win.toggleItemExpansion === 'function') {
+                      var url = card.getAttribute('data-item-url') || (card.querySelector('a[href]') && card.querySelector('a[href]').getAttribute('href')) || '';
+                      win.toggleItemExpansion(card, url, e);
+                      if (win._dashboardInjectEditButtons) setTimeout(win._dashboardInjectEditButtons, 300);
+                    }
+                    expandEditPanel();
+                    if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+                    card.classList.add('dashboard-edit-selected');
+                    selectedElement = card;
+                    var title = getTextContent(card.querySelector('.menu-item-title, .menu-item-title a') || card);
+                    var desc = getTextContent(card.querySelector('.menu-item-description') || card);
+                    var priceEl = card.querySelector('.menu-item-price');
+                    var price = priceEl ? getPriceFromElement(priceEl) : '';
+                    showEditForm({ element: card, type: 'Menu item', title: title, description: desc, price: price });
+                    return;
+                  }
+                  if (header) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    expandEditPanel();
+                    if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+                    header.classList.add('dashboard-edit-selected');
+                    selectedElement = header;
+                    var titleEl = header.querySelector('h2 a, h2');
+                    var title = titleEl ? getTextContent(titleEl) : '';
+                    var desc = getTextContent(header.querySelector('.menu-summary') || header);
+                    showEditForm({ element: header, type: 'Section header', title: title, description: desc, price: '' });
+                    return;
+                  }
+                  var adSection = e.target.closest('section.ads.menu-ad');
+                  if (adSection) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    expandEditPanel();
+                    if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+                    adSection.classList.add('dashboard-edit-selected');
+                    selectedElement = adSection;
+                    var titleEl = adSection.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
+                    var title = titleEl ? getTextContent(titleEl) : '';
+                    showEditForm({ element: adSection, type: 'Promotion / Ad', title: title, description: '', price: '' });
+                    return;
+                  }
+                  var slideshow = e.target.closest('.client-tour-slideshow');
+                  if (slideshow) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    expandEditPanel();
+                    if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+                    slideshow.classList.add('dashboard-edit-selected');
+                    selectedElement = slideshow;
+                    showEditForm({ element: slideshow, type: 'Slideshow', title: '', description: '', price: '' });
+                    return;
+                  }
+                  var locationItem = e.target.closest('.location-item');
+                  if (locationItem) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    expandEditPanel();
+                    if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+                    locationItem.classList.add('dashboard-edit-selected');
+                    selectedElement = locationItem;
+                    var locLink = locationItem.querySelector('a.locbtn');
+                    var address = locLink ? getTextContent(locLink) : '';
+                    showEditForm({ element: locationItem, type: 'Location', title: address, description: '', price: '' });
+                    return;
+                  }
+                }
+                var found = getEditableAncestor(e.target);
+                if (!found) return;
+                if (found.element.classList && found.element.classList.contains('menu-item-card')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (selectedElement) selectedElement.classList.remove('dashboard-edit-selected');
+                found.element.classList.add('dashboard-edit-selected');
+                selectedElement = found.element;
+                var el = found.element;
+                var title = getTextContent(el.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || el);
+                var desc = getTextContent(el.querySelector('.menu-item-description, .menu-summary') || el);
+                var priceEl = el.querySelector('.menu-item-price');
+                var price = priceEl ? getPriceFromElement(priceEl) : '';
+                expandEditPanel();
+                showEditForm({ element: el, type: found.type, title: title, description: desc, price: price });
+              };
+              doc.body.addEventListener('click', win._dashboardEditClick, true);
+            } else {
+              if (win._dashboardEditClick) {
+                doc.body.removeEventListener('click', win._dashboardEditClick, true);
+                win._dashboardEditClick = null;
+              }
+              if (win._dashboardRemoveEditButtons) win._dashboardRemoveEditButtons();
+              var sty = doc.getElementById('dashboard-edit-injected-style');
+              if (sty) sty.remove();
+              if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+            }
+          } catch (err) {
+            console.warn('Dashboard edit: iframe not ready or cross-origin', err);
+          }
+        }
+        if (iframe.contentDocument && iframe.contentDocument.body) {
+          runWhenReady();
+        } else {
+          iframe.addEventListener('load', runWhenReady);
+        }
+      }
+
+      btnPreview.addEventListener('click', function() { setEditMode(false); });
+      btnEdit.addEventListener('click', function() { setEditMode(true); });
+      if (btnSubmodeContent) btnSubmodeContent.addEventListener('click', function() { setEditSubmode('content'); });
+      if (btnSubmodeColor) btnSubmodeColor.addEventListener('click', function() { setEditSubmode('color'); });
+      if (btnApplyColor) btnApplyColor.addEventListener('click', applyColorOverrides);
+      if (btnBackColorSections) btnBackColorSections.addEventListener('click', function() {
+        colorForm.classList.add('hidden');
+        colorPrompt.classList.remove('hidden');
+        showColorSectionList();
+      });
+      btnClear.addEventListener('click', clearSelection);
+      btnApply.addEventListener('click', function() {
+        if (!selectedInfo || !selectedElement) return;
+        var doc = iframe.contentDocument;
+        if (!doc) return;
+        try {
+          if (selectedElement.classList && selectedElement.classList.contains('location-item')) {
+            var locLink = selectedElement.querySelector('a.locbtn');
+            if (locLink && inputTitle.value !== undefined && inputTitle.value !== '') locLink.textContent = inputTitle.value;
+            return;
+          }
+          var titleEl = selectedElement.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
+          if (titleEl && inputTitle.value !== undefined && inputTitle.value !== '') {
+            var innerLink = titleEl.querySelector('a');
+            if (innerLink) innerLink.textContent = inputTitle.value;
+            else titleEl.textContent = inputTitle.value;
+          }
+          var descEl = selectedElement.querySelector('.menu-item-description, .menu-summary');
+          if (descEl && inputDesc.value !== undefined) descEl.textContent = inputDesc.value;
+          var priceEl = selectedElement.querySelector('.menu-item-price');
+          if (priceEl && inputPrice.value) priceEl.textContent = '$' + inputPrice.value.replace(/^\$/, '').trim();
+        } catch (e) {
+          console.warn('Apply edit:', e);
+        }
+      });
+
+      iframe.addEventListener('load', function() {
+        if (editMode) setupIframeEditMode(true);
+      });
+
+      if (asideEl && btnTogglePanel) {
+        btnTogglePanel.addEventListener('click', function() {
+          var isCollapsed = asideEl.classList.toggle('dashboard-edit-options-collapsed');
+          btnTogglePanel.setAttribute('aria-expanded', !isCollapsed);
+          btnTogglePanel.setAttribute('aria-label', isCollapsed ? 'Expand edit panel' : 'Collapse edit panel');
+          var icon = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-icon');
+          var text = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-text');
+          if (icon) icon.textContent = isCollapsed ? '▶' : '◀';
+          if (text) text.textContent = isCollapsed ? 'Expand' : 'Collapse';
+        });
+      }
+      if (colorAsideEl && btnToggleColorPanel) {
+        btnToggleColorPanel.addEventListener('click', function() {
+          var isCollapsed = colorAsideEl.classList.toggle('dashboard-edit-color-aside-collapsed');
+          if (isCollapsed) {
+            showColorSectionList();
+            colorForm.classList.add('hidden');
+            colorPrompt.classList.remove('hidden');
+          }
+          btnToggleColorPanel.setAttribute('aria-expanded', !isCollapsed);
+          btnToggleColorPanel.setAttribute('aria-label', isCollapsed ? 'Expand color panel' : 'Collapse color panel');
+          var icon = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-icon');
+          var text = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-text');
+          if (icon) icon.textContent = isCollapsed ? '▶' : '◀';
+          if (text) text.textContent = isCollapsed ? 'Expand' : 'Collapse';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

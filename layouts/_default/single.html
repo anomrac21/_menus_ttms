@@ -4,7 +4,7 @@
   <!--{{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
   {{ $dateHuman := .Date | time.Format ":date_long" }}
   <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time-->
-  {{if not (eq .Section ("promotions")) }}
+  {{if not (eq .Section ("weekly-promotions")) }}
     <div class="main-content">
       <div class="single-page-item-card">
         {{ $category :=  .Section  }}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/auth.css">
+  <link rel="stylesheet" href="{{ site.BaseURL }}css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-control-room" id="dashboardControlRoom">
+    <div class="dashboard-header">
+      <div class="dashboard-header-brand">
+        <div class="dashboard-header-container">
+          <a href="/" class="dashboard-logo-link"><img class="dashboard-logo" src="{{ site.BaseURL }}branding/favicon192.webp" alt="{{ site.Title }} logo" width="48" height="48"></a>
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnLogout">Sign out</button>
+        </div>
+        <div class="dashboard-header-user dashboard-header-user-wrap" id="dashboardUserInfo" data-business-name="{{ site.Title }}">
+          <span class="dashboard-header-user-business">{{ site.Title | default "—" }}</span>
+          <span class="dashboard-header-user-name">—</span>
+        </div>
+        <h3 class="dashboard-title">Menu control room</h3>
+        <p class="dashboard-subtitle">Manage your digital menu and content</p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <h3>Edit menu</h3>
+        <p>Preview your menu and change items, categories, prices, and images.</p>
+        <a href="/edit-menu/" class="btn-dash btn-dash-primary" id="cardEditMenu">Open editor</a>
+        <a href="/menu-settings/" class="btn-dash btn-dash-secondary">Menu settings →</a>
+      </div>
+      <div class="card">
+        <h3>Notifications</h3>
+        <p>Manage push notifications and alerts for your menu.</p>
+        <a href="/notifications/" class="btn-dash btn-dash-secondary">Notifications →</a>
+      </div>
+      <div class="card">
+        <h3>Analytics</h3>
+        <p>View traffic, engagement, and menu performance.</p>
+        <a href="/analytics/" class="btn-dash btn-dash-secondary">Analytics →</a>
+      </div>
+      <div class="card">
+        <h3>Ads</h3>
+        <p>Configure advertisements and promotions.</p>
+        <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Ads →</a>
+      </div>
+      <div class="card">
+        <h3>Auth</h3>
+        <p>Manage login, users, and access for this client.</p>
+        <a href="{{ site.Params.authServiceUrl | default "https://auth.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Auth →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Only clients with access can see this page
+      if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+        return;
+      }
+      var user = AuthClient.getCurrentUser();
+      var userEl = document.getElementById('dashboardUserInfo');
+      if (userEl && user) {
+        var businessEl = userEl.querySelector('.dashboard-header-user-business');
+        var nameEl = userEl.querySelector('.dashboard-header-user-name');
+        var businessName = userEl.getAttribute('data-business-name') || document.title || '';
+        var username = user.username || (user.first_name && user.last_name ? user.first_name + ' ' + user.last_name : null) || user.email || '';
+        if (businessEl) businessEl.textContent = businessName || '—';
+        if (nameEl) nameEl.textContent = username || '—';
+      }
+      document.getElementById('btnLogout').addEventListener('click', function() {
+        AuthClient.logout().then(function() { window.location.href = '/'; });
+      });
+    });
+  </script>
+</body>
+</html>

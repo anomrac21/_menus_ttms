@@ -74,7 +74,35 @@ const AuthClientAccess = {
       return hasAccess;
     }
 
-    // Regular users don't have admin access anyway
+    // Only admins/superadmins with client assignment can access dashboard; regular users cannot
+    return false;
+  },
+
+  /**
+   * Protect client dashboard/control room - only authenticated users with access to this client
+   */
+  protectClientPage(options = {}) {
+    const {
+      redirectUrl = '/login/',
+      noAccessRedirect = '/',
+      showError = true,
+    } = options;
+
+    if (!AuthClient.isAuthenticated()) {
+      sessionStorage.setItem('ttmenus_redirect_after_login', window.location.pathname);
+      window.location.href = redirectUrl;
+      return false;
+    }
+
+    if (!this.hasClientAccess()) {
+      if (showError) {
+        const currentClientID = this.getCurrentClientID();
+        alert(`Access denied. You don't have permission to access this menu for ${currentClientID || 'this site'}.`);
+      }
+      window.location.href = noAccessRedirect;
+      return false;
+    }
+
     return true;
   },
 

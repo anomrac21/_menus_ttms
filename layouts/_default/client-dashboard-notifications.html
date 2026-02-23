@@ -1,0 +1,38 @@
+{{ define "main" }}
+<div class="dashboard-analytics-page" id="dashboardNotificationsPage">
+  <div class="dashboard-edit-header">
+    <div class="dashboard-edit-header-inner">
+      <a href="/dashboard/" class="btn-dash btn-dash-secondary">← Dashboard</a>
+      <h1 class="dashboard-edit-title">Notifications</h1>
+    </div>
+  </div>
+
+  <main class="dashboard-analytics-main">
+    <section class="dashboard-analytics-period" aria-labelledby="notifications-heading">
+      <h2 id="notifications-heading" class="dashboard-analytics-heading">Push notifications &amp; alerts</h2>
+      <p class="dashboard-analytics-subtitle">Manage push notifications and alerts for your menu. Send updates, offers, and reminders to your customers.</p>
+
+      <div class="dashboard-analytics-metrics" id="dashboardNotificationsPlaceholder">
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Notifications</span>
+          <span class="dashboard-analytics-card-value">—</span>
+        </div>
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Subscribers</span>
+          <span class="dashboard-analytics-card-value">—</span>
+        </div>
+      </div>
+
+      <p class="dashboard-analytics-note">Notification delivery and subscriber management can be wired to your notification service when ready.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+      return;
+    }
+  });
+</script>
+{{ end }}

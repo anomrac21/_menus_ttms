@@ -859,6 +859,7 @@
 }
 #appleMessage .msg-content {
     display: flex;
+    gap: 1em;
 }
 .appleInstallHide {
     display: none !important;
@@ -1042,8 +1043,6 @@
     }
 
     #appleMessage .msg .appleMsgBtnLeft {
-        left: 50%;
-        transform: translateX(-120%);
     }
 
     #appleMessage .msg .appleMsgBtnRight {

@@ -1,0 +1,55 @@
+{{ define "main" }}
+<div class="dashboard-analytics-page" id="dashboardAnalyticsPage">
+  <div class="dashboard-edit-header">
+    <div class="dashboard-edit-header-inner">
+      <a href="/dashboard/" class="btn-dash btn-dash-secondary">← Dashboard</a>
+      <h1 class="dashboard-edit-title">Analytics</h1>
+      <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Open in Matomo</a>
+    </div>
+  </div>
+
+  <main class="dashboard-analytics-main">
+    <section class="dashboard-analytics-period" aria-labelledby="analytics-last-month-heading">
+      <h2 id="analytics-last-month-heading" class="dashboard-analytics-heading">Last 30 days</h2>
+      <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site.</p>
+
+      <div class="dashboard-analytics-metrics" id="dashboardAnalyticsMetrics">
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Page views</span>
+          <span class="dashboard-analytics-card-value" id="metricPageViews">—</span>
+        </div>
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Visits</span>
+          <span class="dashboard-analytics-card-value" id="metricVisits">—</span>
+        </div>
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Unique visitors</span>
+          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors">—</span>
+        </div>
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Menu item views</span>
+          <span class="dashboard-analytics-card-value" id="metricMenuItemViews">—</span>
+        </div>
+        <div class="dashboard-analytics-card">
+          <span class="dashboard-analytics-card-label">Add to cart</span>
+          <span class="dashboard-analytics-card-value" id="metricAddToCart">—</span>
+        </div>
+      </div>
+
+      <p class="dashboard-analytics-note">Full reports and segments are available in <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a>. Connect a reporting API to this page to show live numbers here.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+      return;
+    }
+
+    document.querySelectorAll('.dashboard-analytics-card-value').forEach(function(el) {
+      if (el.textContent === '—') el.setAttribute('aria-label', 'Data not yet loaded');
+    });
+  });
+</script>
+{{ end }}

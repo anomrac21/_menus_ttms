@@ -3,6 +3,10 @@
 let number = '{{ site.Params.orderingsystem.whatsapp }}'; // Fallback number
 const name = '{{ site.Params.title }}'
 const hastables = {{ default false site.Params.orderingsystem.hastables }};
+const orderingEnabled = {{ default true site.Params.orderingsystem.enabled }};
+const orderingDisabledMessage = {{ (site.Params.orderingsystem.orderingDisabledMessage | default "Ordering is currently unavailable.") | jsonify }};
+const usephonecall = {{ site.Params.orderingsystem.usephonecall }};
+const orderPhone = '{{ site.Params.orderingsystem.phone }}';
 
 // Location storage key
 const LOCATION_STORAGE_KEY = 'ttms_selected_location';
@@ -1934,7 +1938,23 @@ function serviceCalc(){
 }
 
 
+function placeOrderClick(){
+	if (!orderingEnabled) {
+		alert(orderingDisabledMessage);
+		return;
+	}
+	if (usephonecall) {
+		window.location.href = 'tel:' + orderPhone;
+		return;
+	}
+	advanceOrder();
+}
+
 function advanceOrder(){
+	if (!orderingEnabled) {
+		alert(orderingDisabledMessage);
+		return;
+	}
 	if (hastables) {
 	
 		// Get the currently selected location from dropdown
@@ -2734,6 +2754,7 @@ document.addEventListener("DOMContentLoaded", function() {
 window.setTableNumber = setTableNumber;
 window.confirm = confirm;
 window.advanceOrder = advanceOrder;
+window.placeOrderClick = placeOrderClick;
 window.openTableModalWithLocation = openTableModalWithLocation;
 window.getLocationDataFromElement = getLocationDataFromElement;
 window.updateCartLocationDisplay = updateCartLocationDisplay;
@@ -2835,34 +2856,6 @@ window.testTableSelection = function() {
 //    lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
 // }, false);
 
-
-function toggleTTMS(){
-    var ttms = document.getElementById("ttmenusModal");
-    var footerBtns = document.getElementById("footerBtns");
-    if(ttms.classList.contains('cart-hidden')){
-      ttms.classList.remove('cart-hidden');
-      footerBtns.classList.add('bigfont');
-      footerBtns.classList.remove('smallfont');
-      footerBtns.classList.add('grad1');
-      footerBtns.classList.remove('grad2');
-    }else{
-      ttms.classList.add('cart-hidden');
-      footerBtns.classList.add('grad2');
-      footerBtns.classList.remove('grad1');
-      footerBtns.classList.remove('bigfont');
-      footerBtns.classList.add('smallfont');
-      
-    }
-  }
-  function closeTTMS(){
-    var ttms = document.getElementById("ttmenusModal");
-    var footerBtns = document.getElementById("footerBtns");
-    ttms.classList.add('cart-hidden');
-    footerBtns.classList.add('grad2');
-    footerBtns.classList.remove('grad1');
-    footerBtns.classList.remove('bigfont');
-    footerBtns.classList.add('smallfont');
-	}
 
 // FOOTER SETTINGS/ACCESSIBILITY TOGGLE
 function toggleFooterAccessibility(){
