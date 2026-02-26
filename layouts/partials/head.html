@@ -160,10 +160,11 @@
 
 {{- if site.Params.notifications.enabled -}}
 <script>
-    // Register service worker for background notifications
+    // Register service worker from site root (avoids 404 when page is under /login/ etc.)
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('{{ "sw.js" | absURL }}')
+            var swUrl = new URL('/sw.js', window.location.origin).href;
+            navigator.serviceWorker.register(swUrl)
                 .then(function(registration) {
                     console.log('✅ Service Worker registered with scope:', registration.scope);
                 })

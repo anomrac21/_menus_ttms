@@ -74,8 +74,13 @@
     </div>
   </div>
 
-  <!-- Login Page Script: load auth-client first so AuthClient is defined -->
-  <script src="{{ "js/auth-client.js" | absURL }}"></script>
+  <!-- Login Page Script: ensure AUTH_CONFIG, load auth-client from site root, then run -->
+  {{- if site.Params.auth.enabled -}}
+  <script>
+    window.AUTH_CONFIG = window.AUTH_CONFIG || { apiUrl: "{{ site.Params.auth.apiUrl }}" };
+    window.SITE_CLIENT_ID = window.SITE_CLIENT_ID || "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
+  </script>
+  {{- end -}}
   <script>
     (function() {
       function runLoginPage() {
@@ -83,7 +88,7 @@
           console.error('AuthClient is not loaded. Check that auth is enabled and js/auth-client.js is available.');
           return;
         }
-        const form = document.getElementById('loginForm');
+        var form = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const loginBtn = document.getElementById('loginBtn');
@@ -291,10 +296,25 @@
       }
       }
 
+      function start() {
+        if (window.AuthClient) {
+          runLoginPage();
+          return;
+        }
+        var script = document.createElement('script');
+        script.src = new URL('/js/auth-client.js', window.location.origin).href;
+        script.onload = runLoginPage;
+        script.onerror = function() {
+          console.error('Failed to load auth-client.js from ' + script.src);
+          runLoginPage();
+        };
+        document.head.appendChild(script);
+      }
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', runLoginPage);
+        document.addEventListener('DOMContentLoaded', start);
       } else {
-        runLoginPage();
+        start();
       }
     })();
   </script>
