@@ -97,27 +97,27 @@
 <!-- APP THEME COLOR -->
 <meta name="theme-color" content="#000000"/>
 
-<!-- MAIN APP STYLE - Critical CSS loaded synchronously -->
-<link rel="stylesheet" href="{{ site.BaseURL}}css/colors.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}css/custom.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}css/header.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}css/cart.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}css/contact.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}css/hero.css"/>
-<link rel="stylesheet" href="{{ site.BaseURL}}css/slideshow.css"/>
+<!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
+<link rel="stylesheet" href="/css/colors.css"/>
+<link rel="stylesheet" href="/css/custom.css"/>
+<link rel="stylesheet" href="/css/header.css"/>
+<link rel="stylesheet" href="/css/cart.css"/>
+<link rel="stylesheet" href="/css/contact.css"/>
+<link rel="stylesheet" href="/css/hero.css"/>
+<link rel="stylesheet" href="/css/slideshow.css"/>
 {{ if .Site.Params.notifications.enabled }}
-<link rel="stylesheet" href="{{ site.BaseURL}}css/notifications.css"/>
+<link rel="stylesheet" href="/css/notifications.css"/>
 {{ end }}
 <link rel="stylesheet" href="https://cdn.ttmenus.com/css/loader.css"/>
 
 <!-- Non-critical CSS loaded with low priority -->
-<link rel="stylesheet" href="{{ site.BaseURL}}css/adsbase.css"/>
+<link rel="stylesheet" href="/css/adsbase.css"/>
 
-<link rel="preload" href="{{ site.BaseURL}}css/apple.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="{{ site.BaseURL}}css/apple.css"/></noscript>
+<link rel="preload" href="/css/apple.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="/css/apple.css"/></noscript>
 
-<link rel="preload" href="{{ site.BaseURL}}css/ordering-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="{{ site.BaseURL}}css/ordering-system.css"/></noscript>
+<link rel="preload" href="/css/ordering-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="/css/ordering-system.css"/></noscript>
 
 <link rel="preload" href="https://cdn.ttmenus.com/css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/animations.css"/></noscript>
@@ -218,7 +218,7 @@
 <!-- End Matomo Code -->
 
 <!-- TTMS Analytics Tracking - Deferred -->
-<script src="{{ site.BaseURL}}js/analytics-tracking.js" defer></script>
+<script src="/js/analytics-tracking.js" defer></script>
 
 {{- if site.Params.posintegration.enabled -}}
 <script>
@@ -246,10 +246,10 @@ window.AUTH_CONFIG = {
 // Set current site's client ID for access control (contentManagement or ads clientId)
 window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
 </script>
-<script src="{{ site.BaseURL }}js/auth-client.js"></script>
-<script src="{{ site.BaseURL }}js/auth-client-access.js"></script>
-<script src="{{ site.BaseURL }}js/auth-middleware.js"></script>
-<script src="{{ site.BaseURL }}js/admin-users.js"></script>
+<script src="/js/auth-client.js"></script>
+<script src="/js/auth-client-access.js"></script>
+<script src="/js/auth-middleware.js"></script>
+<script src="/js/admin-users.js"></script>
 {{- end -}}
 
 {{- if site.Params.notifications.enabled -}}
@@ -267,5 +267,5 @@ window.NOTIFY_CONFIG = {
 window.SiteConfig = window.SiteConfig || {};
 window.SiteConfig.notifyServiceUrl = "{{ site.Params.notifications.serviceUrl }}";
 </script>
-<script src="{{ site.BaseURL }}js/notifications.js" defer></script>
+<script src="/js/notifications.js" defer></script>
 {{- end -}}

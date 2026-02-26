@@ -4,8 +4,8 @@
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
 <head>
   {{ partial "head.html" . }}
-  <link rel="stylesheet" href="{{ site.BaseURL }}css/auth.css">
-  <link rel="stylesheet" href="{{ site.BaseURL }}css/dashboard.css">
+  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 <body>
   {{ block "main" . }}{{ end }}
@@ -48,14 +48,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@barba/core" defer></script>
   
   <!-- Loader script - High priority, loads after Barba -->
-  <script src="{{ site.BaseURL}}js/loader.js" defer></script>
+  <script src="/js/loader.js" defer></script>
   
   <!-- Client Ad Manager - Load before other scripts that depend on it -->
-  <script src="{{ site.BaseURL}}js/client-ad-manager.js" defer></script>
+  <script src="/js/client-ad-manager.js" defer></script>
   
   <!-- Core app functionality - deferred -->
-  <script src="{{ site.BaseURL}}js/app.js" defer></script>
-  <script src="{{ site.BaseURL}}js/custom.js" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/custom.js" defer></script>
   
   <!-- IMPORTANT DEPENDENCIES - jQuery and core features -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
@@ -72,7 +72,7 @@
   <!-- SECONDARY FEATURES - Load after core functionality -->
   
   <!-- NON-CRITICAL - Async load for performance -->
-  <script src="{{ site.BaseURL}}js/analytics-integrations.js" defer></script>
+  <script src="/js/analytics-integrations.js" defer></script>
   
   {{ partial "features/whatsapp_ordering_system.html" . }}
   {{ partial "features/notifications.html" . }}
