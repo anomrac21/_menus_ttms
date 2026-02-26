@@ -25,10 +25,12 @@
         <span data-aos="zoom-out-right">Promotion</span>
         <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
           {{ range .Params.images }}
+            {{ $img := .image }}
+            {{ if and $img (not (hasPrefix $img "/")) (not (hasPrefix $img "http")) }}{{ $img = printf "/%s" $img }}{{ end }}
             <li class="ad-panel" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
               <a href="{{ $finalurl }}" class="content-panel">
-                <img src="{{ site.BaseURL }}{{ .image }}" class="ad-portrait-bg">
-                <img src="{{ site.BaseURL }}{{ .image }}" class="ad-portrait">
+                <img src="{{ $img }}" class="ad-portrait-bg">
+                <img src="{{ $img }}" class="ad-portrait">
                 <div class="adbottomspacer"></div>
               </a>
             </li>

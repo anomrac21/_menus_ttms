@@ -55,13 +55,14 @@ class ClientAdManager {
     
     const imagesHTML = (ad.images || []).map(img => {
       // Handle both object format {image: "path"} and string format
-      const imagePath = typeof img === 'string' ? img : (img.image || img);
+      let imagePath = typeof img === 'string' ? img : (img.image || img);
       if (!imagePath) return '';
+      if (!/^\//.test(imagePath) && !/^https?:\/\//i.test(imagePath)) imagePath = '/' + imagePath;
       return `
       <li class="ad-panel">
           <a href="${finalUrl}" class="content-panel">
-          <img src="/${imagePath}" class="ad-portrait-bg">
-          <img src="/${imagePath}" class="ad-portrait">
+          <img src="${imagePath}" class="ad-portrait-bg">
+          <img src="${imagePath}" class="ad-portrait">
             <div class="adbottomspacer"></div>
           </a>
         </li>

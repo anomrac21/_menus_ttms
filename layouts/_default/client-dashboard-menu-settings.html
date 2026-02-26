@@ -8,12 +8,147 @@
   </div>
 
   <main class="dashboard-analytics-main">
-    <section class="dashboard-analytics-period" aria-labelledby="menu-settings-heading">
-      <h2 id="menu-settings-heading" class="dashboard-analytics-heading">Menu options</h2>
-      <p class="dashboard-analytics-subtitle">Configure display options and settings for your digital menu.</p>
+    <p class="dashboard-analytics-subtitle" style="margin-bottom: 1.5rem;">Current configuration from <code>hugo.toml</code>. Edit the config file to change these values.</p>
 
-      <p class="dashboard-analytics-note">Menu settings can be wired to your backend or CMS when ready.</p>
+    {{ with .Site.Params.orderingsystem }}
+    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-orderingsystem-heading">
+      <h2 id="settings-orderingsystem-heading" class="dashboard-analytics-heading">Ordering system</h2>
+      <p class="dashboard-analytics-subtitle">Cart, checkout, and ordering behaviour.</p>
+      <div class="dashboard-settings-grid">
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Enabled</span>
+          <span class="dashboard-settings-value">{{ if .enabled }}Yes{{ else }}No{{ end }}</span>
+        </div>
+        {{ with .orderingDisabledMessage }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Disabled message</span>
+          <span class="dashboard-settings-value">{{ . }}</span>
+        </div>
+        {{ end }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">VAT %</span>
+          <span class="dashboard-settings-value">{{ default 0 .vat }}</span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Service charge</span>
+          <span class="dashboard-settings-value">{{ default 0 .servicecharge }}</span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Has tables</span>
+          <span class="dashboard-settings-value">{{ if .hastables }}Yes{{ else }}No{{ end }}</span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Use phone call</span>
+          <span class="dashboard-settings-value">{{ if .usephonecall }}Yes{{ else }}No{{ end }}</span>
+        </div>
+        {{ with .whatsapp }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">WhatsApp</span>
+          <span class="dashboard-settings-value">{{ . }}</span>
+        </div>
+        {{ end }}
+        {{ with .phone }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Phone</span>
+          <span class="dashboard-settings-value">{{ . }}</span>
+        </div>
+        {{ end }}
+      </div>
     </section>
+    {{ end }}
+
+    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-site-heading">
+      <h2 id="settings-site-heading" class="dashboard-analytics-heading">Site</h2>
+      <div class="dashboard-settings-grid">
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Title</span>
+          <span class="dashboard-settings-value">{{ .Site.Title }}</span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Base URL</span>
+          <span class="dashboard-settings-value">{{ .Site.BaseURL }}</span>
+        </div>
+      </div>
+    </section>
+
+    {{ with .Site.Params.features }}
+    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-features-heading">
+      <h2 id="settings-features-heading" class="dashboard-analytics-heading">Features</h2>
+      <div class="dashboard-settings-grid">
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Payments</span>
+          <span class="dashboard-settings-value">{{ if .payments }}On{{ else }}Off{{ end }}</span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Delivery</span>
+          <span class="dashboard-settings-value">{{ if .delivery }}On{{ else }}Off{{ end }}</span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Notifications</span>
+          <span class="dashboard-settings-value">{{ if .notifications }}On{{ else }}Off{{ end }}</span>
+        </div>
+      </div>
+    </section>
+    {{ end }}
+
+    {{ with .Site.Params.services }}
+    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-services-heading">
+      <h2 id="settings-services-heading" class="dashboard-analytics-heading">Services</h2>
+      <div class="dashboard-settings-grid">
+        {{ with .analyticsid }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Analytics ID</span>
+          <span class="dashboard-settings-value">{{ . }}</span>
+        </div>
+        {{ end }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Notifications</span>
+          <span class="dashboard-settings-value">{{ if .notifications }}On{{ else }}Off{{ end }}</span>
+        </div>
+        {{ with .onesignalid }}
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">OneSignal ID</span>
+          <span class="dashboard-settings-value">{{ . }}</span>
+        </div>
+        {{ end }}
+      </div>
+    </section>
+    {{ end }}
+
+    {{ with .Site.Params.social }}
+    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-social-heading">
+      <h2 id="settings-social-heading" class="dashboard-analytics-heading">Social & contact</h2>
+      <div class="dashboard-settings-grid">
+        {{ with .phone }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Phone</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
+        {{ with .email }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Email</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
+        {{ with .facebook }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Facebook</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
+        {{ with .instagram }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Instagram</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
+        {{ with .youtube }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">YouTube</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
+        {{ with .tiktok }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">TikTok</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
+      </div>
+    </section>
+    {{ end }}
+
+    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-branding-heading">
+      <h2 id="settings-branding-heading" class="dashboard-analytics-heading">Branding images</h2>
+      <p class="dashboard-analytics-subtitle">Assets in <code>static/branding/</code> used across the site.</p>
+      <div class="dashboard-settings-grid dashboard-settings-branding">
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Logo / app icon</span>
+          <span class="dashboard-settings-value"><img src="/branding/favicon192.webp" alt="Logo" class="dashboard-settings-thumb" width="48" height="48"> <code>/branding/favicon192.webp</code></span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Large logo</span>
+          <span class="dashboard-settings-value"><img src="/branding/favicon512.webp" alt="Logo large" class="dashboard-settings-thumb" width="48" height="48"> <code>/branding/favicon512.webp</code></span>
+        </div>
+        <div class="dashboard-settings-row">
+          <span class="dashboard-settings-label">Card / OG image</span>
+          <span class="dashboard-settings-value"><code>/branding/favicon-400x200.webp</code></span>
+        </div>
+      </div>
+    </section>
+
+    <p class="dashboard-analytics-note">To change these settings, edit <code>hugo.toml</code> in your project root and rebuild. Replace files in <code>static/branding/</code> to update logos and favicons.</p>
   </main>
 </div>
 
