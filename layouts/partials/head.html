@@ -163,7 +163,7 @@
     // Register service worker for background notifications
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('{{ site.BaseURL }}sw.js')
+            navigator.serviceWorker.register('{{ "sw.js" | absURL }}')
                 .then(function(registration) {
                     console.log('✅ Service Worker registered with scope:', registration.scope);
                 })

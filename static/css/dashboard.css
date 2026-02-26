@@ -342,6 +342,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   min-width: 0;
+  max-width: 444PX;
   max-height: calc(100vh - 4em);
   display: flex;
   flex-direction: column;
@@ -389,7 +390,7 @@
 
 .dashboard-edit-options-collapsed {
   background: none;
-  width: 0;
+  max-width: 0;
 }
 
 .dashboard-edit-options-collapsed .dashboard-edit-options-toggle-text {
@@ -592,13 +593,12 @@
 }
 
 .dashboard-edit-color-fields .dashboard-edit-input {
-  width: 100%;
   padding: 0.4rem 0.6rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 0.875rem;
+  font-size: x-small;
 }
 
 .dashboard-edit-color-field-row {
@@ -606,6 +606,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  flex-direction: row;
 }
 
 .dashboard-edit-color-picker {
@@ -624,7 +625,7 @@
 
 .dashboard-edit-color-field-row .dashboard-edit-input {
   flex: 1;
-  min-width: 6rem;
+  min-width: 3em;
 }
 
 .dashboard-edit-color-slider {
@@ -709,7 +710,6 @@
 
 .dashboard-edit-input,
 .dashboard-edit-textarea {
-  width: 100%;
   padding: 0.5rem 0.75rem;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);

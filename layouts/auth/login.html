@@ -74,18 +74,23 @@
     </div>
   </div>
 
-  <!-- Login Page Script -->
+  <!-- Login Page Script: load auth-client first so AuthClient is defined -->
+  <script src="{{ "js/auth-client.js" | absURL }}"></script>
   <script>
-    // Wait for AuthClient to be loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('loginForm');
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      const loginBtn = document.getElementById('loginBtn');
-      const alertContainer = document.getElementById('alertContainer');
+    (function() {
+      function runLoginPage() {
+        if (!window.AuthClient) {
+          console.error('AuthClient is not loaded. Check that auth is enabled and js/auth-client.js is available.');
+          return;
+        }
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const alertContainer = document.getElementById('alertContainer');
 
-      // Check if already logged in
-      if (AuthClient.isAuthenticated()) {
+        // Check if already logged in
+        if (AuthClient.isAuthenticated()) {
         if (window.AuthClientAccess && !AuthClientAccess.hasClientAccess()) {
           showAlert('error', 'You don\'t have permission to access this menu. Contact your administrator.');
           return;
@@ -284,7 +289,14 @@
           window.location.href = `https://cms.ttmenus.com/login-redirect?client_id=${encodeURIComponent(clientId)}&token=${encodeURIComponent(token)}`;
         }
       }
-    });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runLoginPage);
+      } else {
+        runLoginPage();
+      }
+    })();
   </script>
 </body>
 </html>

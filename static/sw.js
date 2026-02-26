@@ -152,8 +152,8 @@ self.addEventListener('message', (event) => {
     const { notification } = event.data;
     self.registration.showNotification(notification.title || 'TTMenus', {
       body: notification.message || notification.body || '',
-      icon: notification.icon || notification.image || 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
-      badge: notification.badge || 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
+      icon: notification.icon || notification.image || 'https://ct.ttmenus.com/branding/ttmenus/ttmenu.gif',
+      badge: notification.badge || 'https://ct.ttmenus.com/branding/ttmenus/ttmenu.gif',
       image: notification.image,
       tag: notification.tag || notification.id,
       data: {
@@ -171,15 +171,6 @@ self.addEventListener('message', (event) => {
         event.ports[0].postMessage({ success: true });
       }
     });
-  }
-
-  // Handle GET_SUBSCRIPTION request
-  if (event.data && event.data.type === 'GET_SUBSCRIPTION') {
-    // Get subscription from client's storage
-    const subscription = event.data.subscription || null;
-    if (event.ports && event.ports[0]) {
-      event.ports[0].postMessage(subscription);
-    }
   }
 });
 
