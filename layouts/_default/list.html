@@ -5,13 +5,13 @@
   {{ else }}
     <div class="main-content">
       
-      {{ if .Params.image }}
-        <img class="food item listpageimage" src="/{{ .Params.image }}">
+      {{ if .Params.images.top }}
+        <img class="food item listpageimage" src="/{{ .Params.images.top }}">
       {{ end }}
       <div class="headerstyle item">
         <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
-        {{ if .Params.slidein }}
-          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-{{ .Params.slidein.direction }}" src="/{{ .Params.slidein.slideinimage }}">
+        {{ if .Params.images.bottom }}
+          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="/{{ .Params.images.bottom }}">
         {{ end }}
       </div>
       <h4 class="menu-summary item">{{ .Content }}</h4>
@@ -129,6 +129,11 @@
                     data-modifications="{{ $modifications | jsonify }}"
                     data-additions="{{ $additions | jsonify }}"
                     data-images-array="{{ $imagesArray | jsonify }}"
+                    data-tags="{{ (.Params.tags | default (slice)) | jsonify }}"
+                    data-ingredients="{{ (.Params.ingredients | default (slice)) | jsonify }}"
+                    data-cookingmethods="{{ (.Params.cookingmethods | default (slice)) | jsonify }}"
+                    data-types="{{ (.Params.types | default (slice)) | jsonify }}"
+                    data-events="{{ (.Params.events | default (slice)) | jsonify }}"
                     onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
                     <div class="menu-item-row-top">
                       {{ if .Params.images }}

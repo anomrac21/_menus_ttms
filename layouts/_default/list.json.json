@@ -74,12 +74,14 @@
 {{- $json := dict "items" $items -}}
 
 {{- /* Add section's own frontmatter data (for category landing pages) */ -}}
+{{- $top := default .Params.image (index .Params.images "top") -}}
+{{- $bottom := default "" (index .Params.images "bottom") -}}
+{{- $images := dict "top" $top "bottom" $bottom -}}
 {{- $json = merge $json (dict
     "title" .Title
     "icon" (.Params.icon | default "")
-    "image" (.Params.image | default "")
+    "images" $images
     "weight" (.Params.weight | default 0)
-    "slidein" (.Params.slidein | default dict)
     "body" (.Content | default "")
 ) -}}
 

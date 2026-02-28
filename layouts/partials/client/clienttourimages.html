@@ -1,7 +1,7 @@
-{{ if .Params.clienttourimages }}
+{{ if .Params.slideshow }}
 <div class="client-tour-slideshow">
   <div class="slideshow-container">
-    {{ range $index, $image := .Params.clienttourimages }}
+    {{ range $index, $image := .Params.slideshow }}
     <div class="slide {{ if eq $index 0 }}active{{ end }}" data-slide="{{ $index }}">
       <img src="{{ $image.image }}" alt="Client Tour Image {{ add $index 1 }}" loading="lazy">
     </div>
@@ -13,7 +13,7 @@
     
     <!-- Dots indicator -->
     <div class="slideshow-dots">
-      {{ range $index, $image := .Params.clienttourimages }}
+      {{ range $index, $image := .Params.slideshow }}
       <span class="dot {{ if eq $index 0 }}active{{ end }}" onclick="currentSlide({{ add $index 1 }})"></span>
       {{ end }}
     </div>

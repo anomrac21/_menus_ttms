@@ -49,48 +49,172 @@
 
           <div id="dashboardEditForm" class="dashboard-edit-form hidden">
             <p class="dashboard-edit-selected-type" id="dashboardEditSelectedType"></p>
-            <div class="dashboard-edit-meta" id="dashboardEditMeta" aria-label="Menu item elements summary">
-              <div class="dashboard-edit-meta-item" data-key="title" title="Title">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-heading" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountTitle">0</span>
+            <p class="dashboard-edit-content-source" id="dashboardEditContentSource" aria-live="polite"></p>
+            <div class="dashboard-edit-form-fields" id="dashboardEditFormFields">
+              <div class="dashboard-edit-field-group" id="dashboardEditFieldsGeneric" data-for="menu-item,section-header">
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditTitle">Title / Name</label>
+                  <input type="text" id="dashboardEditTitle" class="dashboard-edit-input" placeholder="Item or section name">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditDescription">Description / Summary</label>
+                  <textarea id="dashboardEditDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Description or section summary" rows="3"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionOnlyFields">
+                  <label for="dashboardEditSectionWeight">Weight</label>
+                  <input type="number" id="dashboardEditSectionWeight" class="dashboard-edit-input" placeholder="e.g. 12" min="0" step="1">
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionIconWrap">
+                  <label for="dashboardEditSectionIcon">Icon URL</label>
+                  <input type="url" id="dashboardEditSectionIcon" class="dashboard-edit-input" placeholder="https://ct.ttmenus.com/icons/white/icon-sushi.webp">
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionImageTopWrap">
+                  <label for="dashboardEditSectionImageTop">Image (top)</label>
+                  <input type="text" id="dashboardEditSectionImageTop" class="dashboard-edit-input" placeholder="e.g. images/California.webp">
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionImageBottomWrap">
+                  <label for="dashboardEditSectionImageBottom">Image (bottom)</label>
+                  <input type="text" id="dashboardEditSectionImageBottom" class="dashboard-edit-input" placeholder="e.g. images/OMG_Characters-5.webp">
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemImages">Images (one path per line)</label>
+                  <textarea id="dashboardEditMenuItemImages" class="dashboard-edit-input dashboard-edit-textarea" placeholder="images/item1.webp&#10;images/item2.webp" rows="3"></textarea>
+                  <div class="dashboard-edit-slideshow-view" id="dashboardEditMenuItemImagesView" aria-label="Menu item images preview"></div>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemPrices">Prices (one per line: size | flavour | price)</label>
+                  <textarea id="dashboardEditMenuItemPrices" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Any 2 Rolls | - | 108" rows="3"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemSideCategories">Side categories</label>
+                  <textarea id="dashboardEditMenuItemSideCategories" class="dashboard-edit-input dashboard-edit-textarea" placeholder="rolls | Choose Your Rolls | min=2 | max=2&#10;California | 0&#10;Spicy Tuna | 0" rows="5"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemModifications">Modifications (one per line: name | price)</label>
+                  <textarea id="dashboardEditMenuItemModifications" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Extra sauce | 5" rows="3"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemAdditions">Additions (one per line: name | price)</label>
+                  <textarea id="dashboardEditMenuItemAdditions" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Add fries | 10" rows="3"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemTags">Tags (one per line)</label>
+                  <textarea id="dashboardEditMenuItemTags" class="dashboard-edit-input dashboard-edit-textarea" placeholder="special&#10;combo" rows="2"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemIngredients">Ingredients (one per line)</label>
+                  <textarea id="dashboardEditMenuItemIngredients" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Chicken&#10;Shrimp" rows="3"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemCookingmethods">Cooking methods (one per line)</label>
+                  <textarea id="dashboardEditMenuItemCookingmethods" class="dashboard-edit-input dashboard-edit-textarea" placeholder="fried" rows="2"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemTypes">Types (one per line)</label>
+                  <textarea id="dashboardEditMenuItemTypes" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Lunch" rows="2"></textarea>
+                </div>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
+                  <label for="dashboardEditMenuItemEvents">Events (one per line)</label>
+                  <textarea id="dashboardEditMenuItemEvents" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Wonderful Wednesday" rows="2"></textarea>
+                </div>
               </div>
-              <div class="dashboard-edit-meta-item" data-key="description" title="Description">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-align-left" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountDescription">0</span>
+              <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsLocation" data-for="location">
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationAddress">Address</label>
+                  <input type="text" id="dashboardEditLocationAddress" class="dashboard-edit-input" placeholder="e.g. Rodney Rd, Endeavour">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationCity">City</label>
+                  <input type="text" id="dashboardEditLocationCity" class="dashboard-edit-input" placeholder="e.g. Chaguanas">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationIsland">Island</label>
+                  <input type="text" id="dashboardEditLocationIsland" class="dashboard-edit-input" placeholder="e.g. Trinidad">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationSubcategories">Subcategories (comma-separated)</label>
+                  <input type="text" id="dashboardEditLocationSubcategories" class="dashboard-edit-input" placeholder="e.g. Restaurant, Bar">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationLat">Latitude</label>
+                  <input type="text" id="dashboardEditLocationLat" class="dashboard-edit-input" placeholder="e.g. 10.5258">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationLng">Longitude</label>
+                  <input type="text" id="dashboardEditLocationLng" class="dashboard-edit-input" placeholder="e.g. -61.403">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationPhone">Phone</label>
+                  <input type="text" id="dashboardEditLocationPhone" class="dashboard-edit-input" placeholder="e.g. 18687060349">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationWhatsapp">WhatsApp</label>
+                  <input type="text" id="dashboardEditLocationWhatsapp" class="dashboard-edit-input" placeholder="e.g. 18687060349">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationOrderingtables">Ordering tables (comma-separated)</label>
+                  <input type="text" id="dashboardEditLocationOrderingtables" class="dashboard-edit-input" placeholder="e.g. Takeway Only">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditLocationFooddrop">Delivery FoodDrop URL</label>
+                  <input type="url" id="dashboardEditLocationFooddrop" class="dashboard-edit-input" placeholder="https://fooddropcaribbean.com/...">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label>Opening hours (single timeline; click a day to zoom and edit)</label>
+                  <div id="dashboardEditOpeningHoursEditor" class="hours-editor hours-editor-week">
+                    <div id="hoursWeekView" class="hours-view hours-week-view">
+                      <div class="hours-week-day-labels">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                      </div>
+                      <div id="hoursWeekTimeline" class="hours-week-timeline" aria-label="Week opening hours. Click a day to zoom.">
+                        <!-- 7 day segments filled by JS as one continuous strip -->
+                      </div>
+                    </div>
+                    <div id="hoursDayView" class="hours-view hours-day-view hidden">
+                      <div class="hours-day-view-header">
+                        <button type="button" class="hours-back-btn" id="hoursBackToWeek" aria-label="Back to week">← Week</button>
+                        <span class="hours-day-view-title" id="hoursDayViewTitle">Monday</span>
+                        <button type="button" class="hours-delete-day-btn" id="hoursDeleteDayBtn" aria-label="Close this day">Delete day</button>
+                      </div>
+                      <div class="hours-day-week-labels">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                      </div>
+                      <div class="hours-day-track-wrap" id="hoursDayTrackWrap">
+                        <div class="hours-timeline-track" id="hoursDayTrack"><div class="hours-timeline-fill" id="hoursDayFill"></div></div>
+                        <input type="hidden" id="hoursDayOpen" value="0">
+                        <input type="hidden" id="hoursDayClose" value="336">
+                      </div>
+                      <div class="hours-day-handles">
+                        <button type="button" class="hours-day-handle-btn" id="hoursDayHandleOpen" aria-pressed="false" aria-label="Open time – click to select, then drag on track">
+                          <span class="hours-day-handle-label">Open</span>
+                          <span class="hours-day-handle-time" id="hoursDayHandleOpenTime">Sun 09:30</span>
+                        </button>
+                        <button type="button" class="hours-day-handle-btn hours-day-handle-selected" id="hoursDayHandleClose" aria-pressed="true" aria-label="Close time – click to select, then drag on track">
+                          <span class="hours-day-handle-label">Close</span>
+                          <span class="hours-day-handle-time" id="hoursDayHandleCloseTime">Mon 02:30</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <textarea id="dashboardEditLocationOpeningHours" class="hidden" aria-label="Opening hours JSON" rows="1" style="height:0;overflow:hidden;position:absolute;clip:rect(0,0,0,0);"></textarea>
+                </div>
               </div>
-              <div class="dashboard-edit-meta-item" data-key="images" title="Images">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-image" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountImages">0</span>
+              <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsPromotion" data-for="promotion">
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditPromoTitle">Title</label>
+                  <input type="text" id="dashboardEditPromoTitle" class="dashboard-edit-input" placeholder="Promotion title">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditPromoLink">Link URL</label>
+                  <input type="text" id="dashboardEditPromoLink" class="dashboard-edit-input" placeholder="/specials/... or full URL">
+                </div>
               </div>
-              <div class="dashboard-edit-meta-item" data-key="prices" title="Prices">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-dollar" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountPrices">0</span>
-              </div>
-              <div class="dashboard-edit-meta-item" data-key="sides" title="Sides">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-list-alt" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountSides">0</span>
-              </div>
-              <div class="dashboard-edit-meta-item" data-key="additions" title="Additions">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-plus-circle" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountAdditions">0</span>
-              </div>
-              <div class="dashboard-edit-meta-item" data-key="modifications" title="Modifications">
-                <span class="dashboard-edit-meta-icon"><i class="fa fa-wrench" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-meta-count" id="metaCountModifications">0</span>
-              </div>
-            </div>
-            <div class="dashboard-edit-form-fields">
-              <div class="dashboard-edit-field">
-                <label for="dashboardEditTitle">Title / Name</label>
-                <input type="text" id="dashboardEditTitle" class="dashboard-edit-input" placeholder="Item or section name">
-              </div>
-              <div class="dashboard-edit-field">
-                <label for="dashboardEditDescription">Description</label>
-                <textarea id="dashboardEditDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Description" rows="3"></textarea>
-              </div>
-              <div class="dashboard-edit-field">
-                <label for="dashboardEditPrice">Price</label>
-                <input type="text" id="dashboardEditPrice" class="dashboard-edit-input" placeholder="e.g. 12.00 or 10 | 12">
+              <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsSlideshow" data-for="slideshow">
+                <div class="dashboard-edit-field">
+                  <label id="dashboardEditSlideshowLabel">View slides</label>
+                  <div class="dashboard-edit-slideshow-view" id="dashboardEditSlideshowView" aria-labelledby="dashboardEditSlideshowLabel"></div>
+                  <textarea id="dashboardEditSlideshowImages" class="hidden" aria-hidden="true" rows="1" style="height:0;overflow:hidden;position:absolute;clip:rect(0,0,0,0);"></textarea>
+                </div>
               </div>
             </div>
             <div class="dashboard-edit-form-actions">
@@ -139,9 +263,72 @@
       var selectedTypeEl = document.getElementById('dashboardEditSelectedType');
       var inputTitle = document.getElementById('dashboardEditTitle');
       var inputDesc = document.getElementById('dashboardEditDescription');
-      var inputPrice = document.getElementById('dashboardEditPrice');
+      var inputSectionWeight = document.getElementById('dashboardEditSectionWeight');
+      var inputSectionIcon = document.getElementById('dashboardEditSectionIcon');
+      var inputSectionImageTop = document.getElementById('dashboardEditSectionImageTop');
+      var inputSectionImageBottom = document.getElementById('dashboardEditSectionImageBottom');
+      var inputMenuItemImages = document.getElementById('dashboardEditMenuItemImages');
+      var menuItemImagesViewEl = document.getElementById('dashboardEditMenuItemImagesView');
+      var inputMenuItemPrices = document.getElementById('dashboardEditMenuItemPrices');
+      var inputMenuItemSideCategories = document.getElementById('dashboardEditMenuItemSideCategories');
+      var inputMenuItemModifications = document.getElementById('dashboardEditMenuItemModifications');
+      var inputMenuItemAdditions = document.getElementById('dashboardEditMenuItemAdditions');
+      var inputMenuItemTags = document.getElementById('dashboardEditMenuItemTags');
+      var inputMenuItemIngredients = document.getElementById('dashboardEditMenuItemIngredients');
+      var inputMenuItemCookingmethods = document.getElementById('dashboardEditMenuItemCookingmethods');
+      var inputMenuItemTypes = document.getElementById('dashboardEditMenuItemTypes');
+      var inputMenuItemEvents = document.getElementById('dashboardEditMenuItemEvents');
       var btnApply = document.getElementById('btnApplyEdit');
       var btnClear = document.getElementById('btnClearSelection');
+      var contentSourceEl = document.getElementById('dashboardEditContentSource');
+      var fieldsGeneric = document.getElementById('dashboardEditFieldsGeneric');
+      var fieldsLocation = document.getElementById('dashboardEditFieldsLocation');
+      var fieldsPromotion = document.getElementById('dashboardEditFieldsPromotion');
+      var fieldsSlideshow = document.getElementById('dashboardEditFieldsSlideshow');
+      var inputLocationAddress = document.getElementById('dashboardEditLocationAddress');
+      var inputLocationCity = document.getElementById('dashboardEditLocationCity');
+      var inputLocationIsland = document.getElementById('dashboardEditLocationIsland');
+      var inputLocationSubcategories = document.getElementById('dashboardEditLocationSubcategories');
+      var inputLocationLat = document.getElementById('dashboardEditLocationLat');
+      var inputLocationLng = document.getElementById('dashboardEditLocationLng');
+      var inputLocationPhone = document.getElementById('dashboardEditLocationPhone');
+      var inputLocationWhatsapp = document.getElementById('dashboardEditLocationWhatsapp');
+      var inputLocationOrderingtables = document.getElementById('dashboardEditLocationOrderingtables');
+      var inputLocationFooddrop = document.getElementById('dashboardEditLocationFooddrop');
+      var inputLocationOpeningHours = document.getElementById('dashboardEditLocationOpeningHours');
+      var hoursWeekView = document.getElementById('hoursWeekView');
+      var hoursDayView = document.getElementById('hoursDayView');
+      var hoursWeekTimeline = document.getElementById('hoursWeekTimeline');
+      var hoursBackToWeek = document.getElementById('hoursBackToWeek');
+      var hoursDayViewTitle = document.getElementById('hoursDayViewTitle');
+      var hoursDeleteDayBtn = document.getElementById('hoursDeleteDayBtn');
+      var hoursDayFill = document.getElementById('hoursDayFill');
+      var hoursDayOpen = document.getElementById('hoursDayOpen');
+      var hoursDayClose = document.getElementById('hoursDayClose');
+      var hoursDayHandleOpen = document.getElementById('hoursDayHandleOpen');
+      var hoursDayHandleClose = document.getElementById('hoursDayHandleClose');
+      var hoursDayHandleOpenTime = document.getElementById('hoursDayHandleOpenTime');
+      var hoursDayHandleCloseTime = document.getElementById('hoursDayHandleCloseTime');
+      var hoursDayTrackWrap = document.getElementById('hoursDayTrackWrap');
+      var hoursDayTrack = document.getElementById('hoursDayTrack');
+      var hoursDaySelectedHandle = null;
+      var HOURS_DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+      var HOURS_DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      var HOURS_SLOTS_PER_DAY = 48;
+      var HOURS_WEEK_SLOTS = 336;
+      var hoursPerDayData = {};
+      var hoursZoomedDayIndex = null;
+      var hoursDayOpenSlot = 0;
+      var hoursDayCloseSlot = 336;
+      var inputPromoTitle = document.getElementById('dashboardEditPromoTitle');
+      var inputPromoLink = document.getElementById('dashboardEditPromoLink');
+      var slideshowViewEl = document.getElementById('dashboardEditSlideshowView');
+      var inputSlideshowImages = document.getElementById('dashboardEditSlideshowImages');
+      if (inputMenuItemImages) {
+        inputMenuItemImages.addEventListener('input', function() {
+          if (menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, hoursParseStringList(inputMenuItemImages.value));
+        });
+      }
       var asideEl = document.getElementById('dashboardEditAside');
       var btnTogglePanel = document.getElementById('btnToggleEditPanel');
       var colorAsideEl = document.getElementById('dashboardEditColorAside');
@@ -162,6 +349,8 @@
       var selectedElement = null;
       var selectedInfo = null;
       var selectedColorSectionId = null;
+
+      initOpeningHoursEditor();
 
       // Maps to static/css/colors.css – section id -> { label, vars: [ { name, label } ] }
       var COLOR_SECTIONS = [
@@ -228,14 +417,6 @@
 
       function getTextContent(elt) {
         return elt ? (elt.textContent || '').trim() : '';
-      }
-
-      function getPriceFromElement(elt) {
-        var text = getTextContent(elt);
-        var match = text.match(/\$?([\d.]+)\s*\|\s*\$?([\d.]+)/);
-        if (match) return match[1] + ' | ' + match[2];
-        match = text.match(/\$?([\d.]+)/);
-        return match ? match[1] : text;
       }
 
       function setEditMode(on) {
@@ -491,7 +672,36 @@
         formEl.classList.add('hidden');
         inputTitle.value = '';
         inputDesc.value = '';
-        inputPrice.value = '';
+        if (inputLocationAddress) inputLocationAddress.value = '';
+        if (inputLocationCity) inputLocationCity.value = '';
+        if (inputLocationIsland) inputLocationIsland.value = '';
+        if (inputLocationSubcategories) inputLocationSubcategories.value = '';
+        if (inputLocationLat) inputLocationLat.value = '';
+        if (inputLocationLng) inputLocationLng.value = '';
+        if (inputLocationPhone) inputLocationPhone.value = '';
+        if (inputLocationWhatsapp) inputLocationWhatsapp.value = '';
+        if (inputLocationOrderingtables) inputLocationOrderingtables.value = '';
+        if (inputLocationFooddrop) inputLocationFooddrop.value = '';
+        if (inputLocationOpeningHours) inputLocationOpeningHours.value = '';
+        if (inputPromoTitle) inputPromoTitle.value = '';
+        if (inputPromoLink) inputPromoLink.value = '';
+        if (inputSectionWeight) inputSectionWeight.value = '';
+        if (inputSectionIcon) inputSectionIcon.value = '';
+        if (inputSectionImageTop) inputSectionImageTop.value = '';
+        if (inputSectionImageBottom) inputSectionImageBottom.value = '';
+        if (inputMenuItemImages) inputMenuItemImages.value = '';
+        if (menuItemImagesViewEl) menuItemImagesViewEl.innerHTML = '';
+        if (inputMenuItemPrices) inputMenuItemPrices.value = '';
+        if (inputMenuItemSideCategories) inputMenuItemSideCategories.value = '';
+        if (inputMenuItemModifications) inputMenuItemModifications.value = '';
+        if (inputMenuItemAdditions) inputMenuItemAdditions.value = '';
+        if (inputMenuItemTags) inputMenuItemTags.value = '';
+        if (inputMenuItemIngredients) inputMenuItemIngredients.value = '';
+        if (inputMenuItemCookingmethods) inputMenuItemCookingmethods.value = '';
+        if (inputMenuItemTypes) inputMenuItemTypes.value = '';
+        if (inputMenuItemEvents) inputMenuItemEvents.value = '';
+        if (inputSlideshowImages) inputSlideshowImages.value = '';
+        if (slideshowViewEl) slideshowViewEl.innerHTML = '';
       }
 
       function parseJsonAttr(el, attr) {
@@ -504,38 +714,493 @@
         }
       }
 
-      function updateMetaCounts(el) {
-        var ids = ['metaCountTitle', 'metaCountDescription', 'metaCountImages', 'metaCountPrices', 'metaCountSides', 'metaCountAdditions', 'metaCountModifications'];
-        var counts = { title: 0, description: 0, images: 0, prices: 0, sides: 0, additions: 0, modifications: 0 };
-        if (el && el.classList && el.classList.contains('menu-item-card')) {
-          counts.title = el.querySelector('.menu-item-title') ? 1 : 0;
-          counts.description = el.querySelector('.menu-item-description') && getTextContent(el.querySelector('.menu-item-description')) ? 1 : 0;
-          var imgs = el.querySelectorAll('.menu-item-image img, .menu-item-img');
-          counts.images = imgs ? imgs.length : 0;
-          if (!counts.images) {
-            var imgArr = parseJsonAttr(el, 'data-images-array');
-            counts.images = Array.isArray(imgArr) ? imgArr.length : 0;
-          }
-          var pricesArr = parseJsonAttr(el, 'data-prices-array');
-          counts.prices = Array.isArray(pricesArr) ? Math.floor(pricesArr.length / 3) : 0;
-          var sidesArr = parseJsonAttr(el, 'data-side-categories');
-          counts.sides = Array.isArray(sidesArr) ? sidesArr.length : 0;
-          var addArr = parseJsonAttr(el, 'data-additions');
-          counts.additions = Array.isArray(addArr) ? Math.floor(addArr.length / 2) : 0;
-          var modArr = parseJsonAttr(el, 'data-modifications');
-          counts.modifications = Array.isArray(modArr) ? Math.floor(modArr.length / 2) : 0;
-        } else if (el) {
-          counts.title = el.querySelector('h1, h2, .menu-item-title') || el.matches('h1, h2, .menu-item-title, .menu-item-title a') ? 1 : 0;
-          counts.description = el.querySelector('.menu-item-description, .menu-summary') || el.matches('.menu-item-description, .menu-summary') ? 1 : 0;
-          counts.prices = el.querySelector('.menu-item-price') || el.matches('.menu-item-price') ? 1 : 0;
+      function hoursParseStringList(text) {
+        return (text || '').split('\n').map(function(s) { return (s || '').trim(); }).filter(Boolean);
+      }
+      function hoursFormatStringList(arr) {
+        if (!Array.isArray(arr)) return '';
+        return arr.map(function(s) { return (s == null ? '' : String(s)).trim(); }).filter(Boolean).join('\n');
+      }
+      function hoursFormatPricesArray(pricesArr) {
+        if (!Array.isArray(pricesArr) || pricesArr.length === 0) return '';
+        var out = [];
+        for (var i = 0; i < pricesArr.length; i += 3) {
+          var size = pricesArr[i] != null ? String(pricesArr[i]).trim() : '-';
+          var flavour = pricesArr[i + 1] != null ? String(pricesArr[i + 1]).trim() : '-';
+          var price = pricesArr[i + 2] != null ? String(pricesArr[i + 2]).trim() : '';
+          if (!size && !flavour && !price) continue;
+          out.push(size + ' | ' + (flavour || '-') + ' | ' + price);
         }
-        document.getElementById('metaCountTitle').textContent = counts.title;
-        document.getElementById('metaCountDescription').textContent = counts.description;
-        document.getElementById('metaCountImages').textContent = counts.images;
-        document.getElementById('metaCountPrices').textContent = counts.prices;
-        document.getElementById('metaCountSides').textContent = counts.sides;
-        document.getElementById('metaCountAdditions').textContent = counts.additions;
-        document.getElementById('metaCountModifications').textContent = counts.modifications;
+        return out.join('\n');
+      }
+      function hoursParsePricesText(text) {
+        var lines = hoursParseStringList(text);
+        var out = [];
+        lines.forEach(function(line) {
+          var parts = line.split('|').map(function(s) { return s.trim(); });
+          if (parts.length < 2) return;
+          var size = parts[0] || '-';
+          var flavour = (parts[1] != null && parts[1] !== '') ? parts[1] : '-';
+          var price = parts.length >= 3 ? parts[2] : '';
+          if (!size || price === '') return;
+          out.push(size, flavour, isNaN(parseFloat(price)) ? price : parseFloat(price));
+        });
+        return out;
+      }
+      function hoursFormatPairsArray(flatArr) {
+        if (!Array.isArray(flatArr) || flatArr.length === 0) return '';
+        var out = [];
+        for (var i = 0; i < flatArr.length; i += 2) {
+          var name = flatArr[i] != null ? String(flatArr[i]).trim() : '';
+          var price = flatArr[i + 1] != null ? String(flatArr[i + 1]).trim() : '';
+          if (!name) continue;
+          out.push(name + ' | ' + (price || '0'));
+        }
+        return out.join('\n');
+      }
+      function hoursParsePairsText(text) {
+        var lines = hoursParseStringList(text);
+        var out = [];
+        lines.forEach(function(line) {
+          var parts = line.split('|').map(function(s) { return s.trim(); });
+          if (!parts[0]) return;
+          var price = parts[1] != null ? parts[1] : '0';
+          out.push(parts[0], isNaN(parseFloat(price)) ? price : parseFloat(price));
+        });
+        return out;
+      }
+      function hoursFormatSideCategories(cats) {
+        if (!Array.isArray(cats) || cats.length === 0) return '';
+        var blocks = [];
+        cats.forEach(function(cat) {
+          if (!cat || !cat.category_name) return;
+          var min = cat.config && cat.config.minimum != null ? cat.config.minimum : 0;
+          var max = cat.config && cat.config.maximum != null ? cat.config.maximum : 99;
+          var header = String(cat.category_name) + ' | ' + String(cat.display_name || cat.category_name) + ' | min=' + min + ' | max=' + max;
+          var lines = [header];
+          (cat.items || []).forEach(function(it) {
+            if (!it) return;
+            if (Array.isArray(it)) return;
+            var name = it.name != null ? String(it.name).trim() : '';
+            if (!name) return;
+            var price = it.price != null ? it.price : 0;
+            var extra = '';
+            var t = it.type != null ? String(it.type).trim() : '';
+            if (t && t !== 'Regular') extra += ' | ' + t;
+            var img = it.image != null ? String(it.image).trim() : '';
+            if (img) extra += ' | ' + img;
+            lines.push(name + ' | ' + price + extra);
+          });
+          blocks.push(lines.join('\n'));
+        });
+        return blocks.join('\n\n');
+      }
+      function hoursParseSideCategoriesText(text) {
+        var blocks = (text || '').split(/\n\s*\n/).map(function(b) { return b.trim(); }).filter(Boolean);
+        var out = [];
+        blocks.forEach(function(block) {
+          var lines = block.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+          if (lines.length === 0) return;
+          var headParts = lines[0].split('|').map(function(s) { return s.trim(); }).filter(Boolean);
+          if (headParts.length === 0) return;
+          var category_name = headParts[0];
+          var display_name = headParts.length > 1 ? headParts[1] : category_name;
+          var min = 0, max = 99;
+          headParts.slice(2).forEach(function(p) {
+            var m = p.match(/^min\s*=\s*(\d+)/i); if (m) min = parseInt(m[1], 10);
+            m = p.match(/^max\s*=\s*(\d+)/i); if (m) max = parseInt(m[1], 10);
+          });
+          var items = [];
+          lines.slice(1).forEach(function(line) {
+            var parts = line.replace(/^\-\s*/, '').split('|').map(function(s) { return s.trim(); });
+            if (!parts[0]) return;
+            var price = parts[1] != null && parts[1] !== '' ? parts[1] : 0;
+            var type = parts[2] != null && parts[2] !== '' ? parts[2] : 'Regular';
+            var image = parts[3] != null && parts[3] !== '' ? parts[3] : '';
+            var itemObj = { name: parts[0], type: type, price: isNaN(parseFloat(price)) ? price : parseFloat(price) };
+            if (image) itemObj.image = image;
+            items.push(itemObj);
+          });
+          out.push({ category_name: category_name, display_name: display_name, items: items, config: { minimum: min, maximum: max } });
+        });
+        return out;
+      }
+      function hoursRenderImagesPreview(container, paths) {
+        if (!container) return;
+        container.innerHTML = '';
+        (paths || []).forEach(function(path, i) {
+          var p = (path || '').trim();
+          if (!p) return;
+          var slide = document.createElement('div');
+          slide.className = 'dashboard-edit-slide-item';
+          var img = document.createElement('img');
+          img.src = p.indexOf('/') === 0 ? p : '/' + p;
+          img.alt = 'Image ' + (i + 1);
+          img.loading = 'lazy';
+          img.onerror = function() { this.style.display = 'none'; };
+          var cap = document.createElement('span');
+          cap.className = 'dashboard-edit-slide-cap';
+          cap.textContent = (i + 1) + '. ' + p;
+          slide.appendChild(img);
+          slide.appendChild(cap);
+          container.appendChild(slide);
+        });
+      }
+
+      function hoursSlotToTime(slot) {
+        var s = Math.max(0, Math.min(47, Math.floor(slot)));
+        var h = Math.floor(s / 2);
+        var m = (s % 2) ? 30 : 0;
+        return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+      }
+      function hoursTimeToSlot(timeStr) {
+        if (!timeStr || typeof timeStr !== 'string') return 22;
+        var parts = timeStr.trim().split(/[:\s]/);
+        var h = parseInt(parts[0], 10) || 0;
+        var m = parseInt(parts[1], 10) || 0;
+        if (h >= 24) return 48;
+        h = Math.max(0, Math.min(23, h));
+        m = m >= 30 ? 30 : 0;
+        return h * 2 + (m >= 30 ? 1 : 0);
+      }
+      function hoursWeekSlotToDayAndTime(weekSlot) {
+        weekSlot = Math.max(0, Math.min(HOURS_WEEK_SLOTS, Math.floor(weekSlot)));
+        if (weekSlot >= HOURS_WEEK_SLOTS) return { dayLabel: HOURS_DAY_LABELS[6], time: '24:00' };
+        if (weekSlot > 0 && weekSlot % HOURS_SLOTS_PER_DAY === 0)
+          return { dayLabel: HOURS_DAY_LABELS[weekSlot / HOURS_SLOTS_PER_DAY], time: '00:00' };
+        var dayIdx = Math.floor(weekSlot / HOURS_SLOTS_PER_DAY);
+        var daySlot = weekSlot % HOURS_SLOTS_PER_DAY;
+        if (daySlot === 0) return { dayLabel: HOURS_DAY_LABELS[dayIdx], time: '00:00' };
+        return { dayLabel: HOURS_DAY_LABELS[dayIdx], time: hoursSlotToTime(daySlot) };
+      }
+      function hoursGetDayIntervals(day) {
+        var raw = hoursPerDayData[day];
+        if (Array.isArray(raw)) return raw.filter(function(r) { return r.open < r.close; });
+        if (raw && typeof raw.open === 'number' && typeof raw.close === 'number' && raw.open < raw.close)
+          return [ { open: raw.open, close: raw.close } ];
+        return [];
+      }
+      function hoursMergeSegmentIntoDay(dayKey, openSlot, closeSlot) {
+        var dayIdx = HOURS_DAY_KEYS.indexOf(dayKey);
+        if (dayIdx < 0) return;
+        var dayStart = dayIdx * HOURS_SLOTS_PER_DAY;
+        var dayEnd = dayStart + HOURS_SLOTS_PER_DAY;
+        var segStart = Math.max(dayStart, openSlot);
+        var segEnd = Math.min(dayEnd, closeSlot);
+        if (segStart >= segEnd) return;
+        var o = segStart - dayStart;
+        var c = segEnd >= dayEnd ? 48 : (segEnd - dayStart);
+        var intervals = hoursGetDayIntervals(dayKey).slice();
+        intervals = intervals.filter(function(iv) {
+          if (iv.close <= o || iv.open >= c) return true;
+          return false;
+        });
+        intervals.push({ open: o, close: c });
+        intervals.sort(function(a, b) { return a.open - b.open; });
+        hoursPerDayData[dayKey] = intervals;
+      }
+      function hoursSegmentToPerDay(openSlot, closeSlot) {
+        openSlot = Math.max(0, Math.min(HOURS_WEEK_SLOTS, openSlot));
+        closeSlot = Math.max(0, Math.min(HOURS_WEEK_SLOTS, closeSlot));
+        if (openSlot >= closeSlot) return;
+        for (var d = 0; d < 7; d++) {
+          var dayStart = d * HOURS_SLOTS_PER_DAY;
+          var dayEnd = dayStart + HOURS_SLOTS_PER_DAY;
+          var segStart = Math.max(dayStart, openSlot);
+          var segEnd = Math.min(dayEnd, closeSlot);
+          var dayKey = HOURS_DAY_KEYS[d];
+          if (segStart < segEnd) hoursMergeSegmentIntoDay(dayKey, openSlot, closeSlot);
+        }
+        if (closeSlot > 0 && closeSlot < HOURS_WEEK_SLOTS && closeSlot % HOURS_SLOTS_PER_DAY === 0) {
+          var nextDayIdx = closeSlot / HOURS_SLOTS_PER_DAY;
+          hoursPerDayData[HOURS_DAY_KEYS[nextDayIdx]] = [];
+        }
+      }
+      function hoursPerDayToSegment(dayIndex) {
+        var weekSegments = [];
+        for (var d = 0; d < 7; d++) {
+          var dayKey = HOURS_DAY_KEYS[d];
+          var dayStart = d * HOURS_SLOTS_PER_DAY;
+          hoursGetDayIntervals(dayKey).forEach(function(iv) {
+            var c = iv.close >= 48 ? 48 : iv.close;
+            weekSegments.push({ open: dayStart + iv.open, close: dayStart + c });
+          });
+        }
+        weekSegments.sort(function(a, b) { return a.open - b.open; });
+        if (dayIndex != null) {
+          var dayStart = dayIndex * HOURS_SLOTS_PER_DAY;
+          var dayEnd = dayStart + HOURS_SLOTS_PER_DAY;
+          for (var i = 0; i < weekSegments.length; i++) {
+            var s = weekSegments[i];
+            if (s.close > dayStart && s.open < dayEnd) return { open: s.open, close: s.close };
+          }
+          return { open: 0, close: 0 };
+        }
+        if (weekSegments.length === 0) return { open: 0, close: 0 };
+        return { open: weekSegments[0].open, close: weekSegments[0].close };
+      }
+      function hoursBuildJsonFromPerDay() {
+        var out = { mode: 'Auto' };
+        HOURS_DAY_KEYS.forEach(function(day) {
+          var intervals = hoursGetDayIntervals(day);
+          if (intervals.length === 0) {
+            out[day] = [ { type: 'Open', time: '00:00' }, { type: 'Close', time: '00:00' } ];
+          } else {
+            var list = [];
+            intervals.forEach(function(iv) {
+              list.push({ type: 'Open', time: hoursSlotToTime(iv.open) });
+              list.push({ type: 'Close', time: iv.close >= 48 ? '24:00' : hoursSlotToTime(iv.close) });
+            });
+            out[day] = list;
+          }
+        });
+        return JSON.stringify(out);
+      }
+      function hoursSyncTextarea() {
+        if (inputLocationOpeningHours) inputLocationOpeningHours.value = hoursBuildJsonFromPerDay();
+      }
+      function hoursParseJsonToPerDay(ohStr) {
+        var data = {};
+        try {
+          if (ohStr && ohStr.trim()) {
+            var parsed = JSON.parse(ohStr);
+            HOURS_DAY_KEYS.forEach(function(day) {
+              var arr = parsed[day];
+              if (!Array.isArray(arr) || arr.length < 2) {
+                data[day] = [];
+                return;
+              }
+              var list = [];
+              for (var i = 0; i < arr.length; i++) {
+                var item = arr[i];
+                if (!item || typeof item.type !== 'string' || !item.time) continue;
+                var slot = hoursTimeToSlot(item.time);
+                if (slot >= 48) slot = 48;
+                if (item.type === 'Open') list.push({ open: slot, close: null });
+                else if (item.type === 'Close') {
+                  if (list.length > 0 && list[list.length - 1].close === null)
+                    list[list.length - 1].close = slot;
+                  else
+                    list.push({ open: 0, close: slot });
+                }
+              }
+              data[day] = list.filter(function(p) { return p.close != null && p.open < p.close; }).map(function(p) { return { open: p.open, close: p.close }; });
+            });
+          }
+        } catch (e) {}
+        HOURS_DAY_KEYS.forEach(function(day) {
+          if (!data[day] || data[day].length === 0) data[day] = [ { open: 22, close: 44 } ];
+        });
+        return data;
+      }
+      function hoursRenderWeekView() {
+        if (!hoursWeekTimeline) return;
+        hoursWeekTimeline.innerHTML = '';
+        HOURS_DAY_KEYS.forEach(function(day, i) {
+          var intervals = hoursGetDayIntervals(day);
+          var closed = intervals.length === 0;
+          var seg = document.createElement('div');
+          seg.className = 'hours-week-segment';
+          seg.setAttribute('data-day-index', i);
+          seg.setAttribute('data-day-key', day);
+          seg.setAttribute('aria-label', HOURS_DAY_LABELS[i] + (closed ? ', closed. Click to add hours' : '. Click to edit'));
+          var track = document.createElement('div');
+          track.className = 'hours-week-segment-track';
+          intervals.forEach(function(iv) {
+            var left = (iv.open / 48) * 100;
+            var width = ((Math.min(iv.close, 48) - iv.open) / 48) * 100;
+            if (width <= 0) return;
+            var fill = document.createElement('div');
+            fill.className = 'hours-week-segment-fill';
+            fill.style.left = left + '%';
+            fill.style.width = width + '%';
+            track.appendChild(fill);
+          });
+          seg.appendChild(track);
+          seg.addEventListener('click', function() {
+            var idx = parseInt(seg.getAttribute('data-day-index'), 10);
+            if (closed) {
+              hoursPerDayData[day] = [ { open: 18, close: 34 } ];
+              hoursRenderWeekView();
+              hoursSyncTextarea();
+            }
+            hoursZoomedDayIndex = idx;
+            hoursShowDayView(idx);
+          });
+          hoursWeekTimeline.appendChild(seg);
+        });
+      }
+      function hoursNextDayIndex(dayIndex) {
+        return (dayIndex + 1) % 7;
+      }
+      function hoursPrevDayIndex(dayIndex) {
+        return (dayIndex + 6) % 7;
+      }
+      function hoursShowDayView(dayIndex) {
+        hoursZoomedDayIndex = dayIndex;
+        if (hoursWeekView) hoursWeekView.classList.add('hidden');
+        if (hoursDayView) hoursDayView.classList.remove('hidden');
+        if (hoursDayViewTitle) hoursDayViewTitle.textContent = HOURS_DAY_LABELS[dayIndex];
+        var seg = hoursPerDayToSegment(dayIndex);
+        var openSlot = seg.open;
+        var closeSlot = seg.close;
+        if (openSlot >= closeSlot) {
+          var dayStart = dayIndex * HOURS_SLOTS_PER_DAY;
+          openSlot = dayStart + 22;
+          closeSlot = dayStart + 44;
+          hoursSegmentToPerDay(openSlot, closeSlot);
+        }
+        if (hoursDayOpen) hoursDayOpen.value = openSlot;
+        if (hoursDayClose) hoursDayClose.value = closeSlot;
+        hoursDaySelectedHandle = null;
+        if (hoursDayHandleOpen) { hoursDayHandleOpen.classList.remove('hours-day-handle-selected'); hoursDayHandleOpen.setAttribute('aria-pressed', 'false'); }
+        if (hoursDayHandleClose) { hoursDayHandleClose.classList.remove('hours-day-handle-selected'); hoursDayHandleClose.setAttribute('aria-pressed', 'false'); }
+        hoursUpdateDayViewUi();
+      }
+      function hoursShowWeekView() {
+        hoursZoomedDayIndex = null;
+        if (hoursDayView) hoursDayView.classList.add('hidden');
+        if (hoursWeekView) hoursWeekView.classList.remove('hidden');
+        hoursRenderWeekView();
+      }
+      function hoursUpdateDayViewUi() {
+        if (hoursZoomedDayIndex == null) return;
+        var openSlot = hoursDayOpen ? parseInt(hoursDayOpen.value, 10) : 0;
+        var closeSlot = hoursDayClose ? parseInt(hoursDayClose.value, 10) : HOURS_WEEK_SLOTS;
+        if (openSlot > closeSlot) { closeSlot = openSlot; if (hoursDayClose) hoursDayClose.value = closeSlot; }
+        if (closeSlot < openSlot) { openSlot = closeSlot; if (hoursDayOpen) hoursDayOpen.value = openSlot; }
+        openSlot = Math.max(0, Math.min(HOURS_WEEK_SLOTS, openSlot));
+        closeSlot = Math.max(0, Math.min(HOURS_WEEK_SLOTS, closeSlot));
+        if (openSlot >= closeSlot) closeSlot = Math.min(HOURS_WEEK_SLOTS, openSlot + HOURS_SLOTS_PER_DAY);
+        if (hoursDayOpen) hoursDayOpen.value = openSlot;
+        if (hoursDayClose) hoursDayClose.value = closeSlot;
+        hoursSegmentToPerDay(openSlot, closeSlot);
+        if (hoursDayFill) {
+          hoursDayFill.style.left = (openSlot / HOURS_WEEK_SLOTS * 100) + '%';
+          hoursDayFill.style.width = ((closeSlot - openSlot) / HOURS_WEEK_SLOTS * 100) + '%';
+        }
+        var openInfo = hoursWeekSlotToDayAndTime(openSlot);
+        var closeInfo = hoursWeekSlotToDayAndTime(closeSlot);
+        if (hoursDayHandleOpenTime) hoursDayHandleOpenTime.textContent = openInfo.dayLabel + ' ' + openInfo.time;
+        if (hoursDayHandleCloseTime) hoursDayHandleCloseTime.textContent = closeInfo.dayLabel + ' ' + closeInfo.time;
+        hoursSyncTextarea();
+      }
+      function initOpeningHoursFromJson(ohStr) {
+        hoursPerDayData = hoursParseJsonToPerDay(ohStr || '');
+        hoursZoomedDayIndex = null;
+        hoursRenderWeekView();
+        if (hoursWeekView) hoursWeekView.classList.remove('hidden');
+        if (hoursDayView) hoursDayView.classList.add('hidden');
+        hoursSyncTextarea();
+      }
+      function initOpeningHoursEditor() {
+        if (hoursBackToWeek) {
+          hoursBackToWeek.onclick = function() { hoursShowWeekView(); };
+        }
+        if (hoursDeleteDayBtn) {
+          hoursDeleteDayBtn.onclick = function() {
+            if (hoursZoomedDayIndex == null) return;
+            var label = HOURS_DAY_LABELS[hoursZoomedDayIndex];
+            if (window.confirm('Close ' + label + '? This day will have no opening hours.')) {
+              hoursPerDayData[HOURS_DAY_KEYS[hoursZoomedDayIndex]] = [];
+              hoursShowWeekView();
+            }
+          };
+        }
+        function hoursSetSelectedHandle(which) {
+          hoursDaySelectedHandle = which;
+          if (hoursDayHandleOpen) {
+            hoursDayHandleOpen.classList.toggle('hours-day-handle-selected', which === 'open');
+            hoursDayHandleOpen.setAttribute('aria-pressed', which === 'open' ? 'true' : 'false');
+          }
+          if (hoursDayHandleClose) {
+            hoursDayHandleClose.classList.toggle('hours-day-handle-selected', which === 'close');
+            hoursDayHandleClose.setAttribute('aria-pressed', which === 'close' ? 'true' : 'false');
+          }
+        }
+        if (hoursDayHandleOpen) {
+          hoursDayHandleOpen.addEventListener('click', function() {
+            hoursSetSelectedHandle(hoursDaySelectedHandle === 'open' ? null : 'open');
+          });
+        }
+        if (hoursDayHandleClose) {
+          hoursDayHandleClose.addEventListener('click', function() {
+            hoursSetSelectedHandle(hoursDaySelectedHandle === 'close' ? null : 'close');
+          });
+        }
+        (function() {
+          var dragTarget = hoursDayTrackWrap || hoursDayTrack;
+          if (!dragTarget) return;
+          var dragging = false;
+          function slotFromEvent(e) {
+            var el = dragTarget;
+            if (!el) return 0;
+            var r = el.getBoundingClientRect();
+            var clientX = e.clientX != null ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+            var x = clientX - r.left;
+            var pct = r.width > 0 ? Math.max(0, Math.min(1, x / r.width)) : 0;
+            return Math.round(pct * HOURS_WEEK_SLOTS);
+          }
+          function applySlot(slot) {
+            if (hoursZoomedDayIndex == null) return;
+            slot = Math.max(0, Math.min(HOURS_WEEK_SLOTS, slot));
+            var openSlot = hoursDayOpen ? parseInt(hoursDayOpen.value, 10) : 0;
+            var closeSlot = hoursDayClose ? parseInt(hoursDayClose.value, 10) : HOURS_WEEK_SLOTS;
+            if (hoursDaySelectedHandle === 'open') {
+              openSlot = slot;
+              if (openSlot >= closeSlot) closeSlot = Math.min(HOURS_WEEK_SLOTS, openSlot + 1);
+              if (hoursDayOpen) hoursDayOpen.value = openSlot;
+              if (hoursDayClose) hoursDayClose.value = closeSlot;
+            } else if (hoursDaySelectedHandle === 'close') {
+              closeSlot = slot;
+              if (closeSlot <= openSlot) openSlot = Math.max(0, closeSlot - 1);
+              if (hoursDayOpen) hoursDayOpen.value = openSlot;
+              if (hoursDayClose) hoursDayClose.value = closeSlot;
+            }
+            hoursUpdateDayViewUi();
+          }
+          function onDragStart(e) {
+            e.preventDefault();
+            if (hoursDaySelectedHandle !== 'open' && hoursDaySelectedHandle !== 'close') {
+              var slot = slotFromEvent(e);
+              var openVal = hoursDayOpen ? parseInt(hoursDayOpen.value, 10) : 0;
+              var closeVal = hoursDayClose ? parseInt(hoursDayClose.value, 10) : HOURS_WEEK_SLOTS;
+              var mid = (openVal + closeVal) / 2;
+              hoursSetSelectedHandle(slot < mid ? 'open' : 'close');
+            }
+            dragging = true;
+            applySlot(slotFromEvent(e));
+          }
+          function onDragMove(e) {
+            if (!dragging) return;
+            e.preventDefault();
+            applySlot(slotFromEvent(e));
+          }
+          function onDragEnd() {
+            dragging = false;
+          }
+          dragTarget.addEventListener('mousedown', onDragStart);
+          document.addEventListener('mousemove', onDragMove);
+          document.addEventListener('mouseup', onDragEnd);
+          dragTarget.addEventListener('touchstart', onDragStart, { passive: false });
+          document.addEventListener('touchmove', onDragMove, { passive: false });
+          document.addEventListener('touchend', onDragEnd);
+        })();
+      }
+
+      function showFieldGroup(contentType) {
+        var forAttr = function(g) { return g && g.getAttribute && g.getAttribute('data-for'); };
+        [fieldsGeneric, fieldsLocation, fieldsPromotion, fieldsSlideshow].forEach(function(g) {
+          if (!g) return;
+          var allowed = forAttr(g);
+          var list = allowed ? allowed.split(',').map(function(s) { return s.trim(); }) : [];
+          var show = list.indexOf(contentType) !== -1;
+          g.classList.toggle('hidden', !show);
+        });
+        var sectionFields = document.querySelectorAll('.dashboard-edit-section-fields');
+        sectionFields.forEach(function(el) { el.classList.toggle('hidden', contentType !== 'section-header'); });
+        var menuItemFields = document.querySelectorAll('.dashboard-edit-menuitem-fields');
+        menuItemFields.forEach(function(el) { el.classList.toggle('hidden', contentType !== 'menu-item'); });
       }
 
       function showEditForm(info) {
@@ -544,10 +1209,82 @@
         promptEl.classList.add('hidden');
         formEl.classList.remove('hidden');
         selectedTypeEl.textContent = 'Editing: ' + info.type;
-        updateMetaCounts(info.element);
-        inputTitle.value = info.title != null ? info.title : getTextContent(info.element.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || info.element);
-        inputDesc.value = info.description != null ? info.description : getTextContent(info.element.querySelector('.menu-item-description, .menu-summary') || info.element);
-        inputPrice.value = info.price != null ? info.price : (info.element.querySelector('.menu-item-price') ? getPriceFromElement(info.element.querySelector('.menu-item-price')) : '');
+        if (contentSourceEl) contentSourceEl.textContent = info.contentPath ? 'Source: ' + info.contentPath : '';
+        var contentType = info.contentType || 'menu-item';
+        showFieldGroup(contentType);
+        if (contentType === 'menu-item' || contentType === 'section-header') {
+          inputTitle.value = info.title != null ? info.title : getTextContent(info.element.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || info.element);
+          inputDesc.value = info.description != null ? info.description : getTextContent(info.element.querySelector('.menu-item-description, .menu-summary') || info.element);
+        }
+        if (contentType === 'section-header') {
+          var headerEl = info.element;
+          if (inputSectionWeight) inputSectionWeight.value = headerEl.getAttribute('data-weight') || '';
+          if (inputSectionIcon) inputSectionIcon.value = headerEl.getAttribute('data-icon') || '';
+          var topImg = headerEl.querySelector('a img.food, img.food.item, .food.item');
+          if (inputSectionImageTop) inputSectionImageTop.value = topImg ? (topImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-top') || '');
+          var bottomImg = headerEl.querySelector('.slideinimg');
+          if (inputSectionImageBottom) inputSectionImageBottom.value = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-bottom') || '');
+        } else if (contentType === 'menu-item') {
+          var cardEl = info.element;
+          if (inputMenuItemPrices) inputMenuItemPrices.value = hoursFormatPricesArray(parseJsonAttr(cardEl, 'data-prices-array'));
+          if (inputMenuItemImages) inputMenuItemImages.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-images-array'));
+          if (menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, hoursParseStringList(inputMenuItemImages ? inputMenuItemImages.value : ''));
+          if (inputMenuItemSideCategories) inputMenuItemSideCategories.value = hoursFormatSideCategories(parseJsonAttr(cardEl, 'data-side-categories'));
+          if (inputMenuItemModifications) inputMenuItemModifications.value = hoursFormatPairsArray(parseJsonAttr(cardEl, 'data-modifications'));
+          if (inputMenuItemAdditions) inputMenuItemAdditions.value = hoursFormatPairsArray(parseJsonAttr(cardEl, 'data-additions'));
+          if (inputMenuItemTags) inputMenuItemTags.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-tags'));
+          if (inputMenuItemIngredients) inputMenuItemIngredients.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-ingredients'));
+          if (inputMenuItemCookingmethods) inputMenuItemCookingmethods.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-cookingmethods'));
+          if (inputMenuItemTypes) inputMenuItemTypes.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-types'));
+          if (inputMenuItemEvents) inputMenuItemEvents.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-events'));
+        } else if (contentType === 'location') {
+          var locLink = info.element.querySelector('a.locbtn');
+          var telLink = info.element.querySelector('a[href^="tel:"]');
+          var waLink = info.element.querySelector('a[href*="wa.me"]');
+          var el = info.element;
+          if (inputLocationAddress) inputLocationAddress.value = (el.getAttribute('data-address') || (locLink ? getTextContent(locLink) : '')) || '';
+          if (inputLocationCity) inputLocationCity.value = el.getAttribute('data-city') || '';
+          if (inputLocationIsland) inputLocationIsland.value = el.getAttribute('data-island') || '';
+          if (inputLocationSubcategories) inputLocationSubcategories.value = (el.getAttribute('data-subcategories') || '').replace(/,/g, ', ') || '';
+          if (inputLocationLat) inputLocationLat.value = (locLink ? locLink.getAttribute('data-lat') : '') || '';
+          if (inputLocationLng) inputLocationLng.value = (locLink ? locLink.getAttribute('data-lng') : '') || '';
+          if (inputLocationPhone) inputLocationPhone.value = telLink ? (telLink.getAttribute('href') || '').replace(/^tel:/, '') : (el.getAttribute('data-phone') || '');
+          if (inputLocationWhatsapp) inputLocationWhatsapp.value = el.getAttribute('data-whatsapp') || (waLink ? (waLink.getAttribute('href') || '').replace(/.*wa\.me\/?/, '') : '');
+          if (inputLocationOrderingtables) inputLocationOrderingtables.value = (locLink ? locLink.getAttribute('data-orderingtables') : '') || el.getAttribute('data-orderingtables') || '';
+          if (inputLocationFooddrop) inputLocationFooddrop.value = el.getAttribute('data-delivery-fooddrop') || '';
+          var oh = el.getAttribute('data-opening-hours');
+          if (inputLocationOpeningHours) inputLocationOpeningHours.value = oh ? (typeof oh === 'string' ? oh : JSON.stringify(oh)) : '';
+          initOpeningHoursEditor();
+          initOpeningHoursFromJson(inputLocationOpeningHours ? inputLocationOpeningHours.value : '');
+        } else if (contentType === 'promotion') {
+          var adTitleEl = info.element.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
+          var adLinkEl = info.element.querySelector('a[href]');
+          if (inputPromoTitle) inputPromoTitle.value = adTitleEl ? getTextContent(adTitleEl) : '';
+          if (inputPromoLink) inputPromoLink.value = adLinkEl ? (adLinkEl.getAttribute('href') || '') : '';
+        } else if (contentType === 'slideshow') {
+          var slides = info.element.querySelectorAll('.client-tour-slideshow .slide img');
+          var paths = [];
+          slides.forEach(function(img) { var s = (img.getAttribute('src') || '').replace(/^\//, ''); if (s) paths.push(s); });
+          if (inputSlideshowImages) inputSlideshowImages.value = paths.join('\n');
+          if (slideshowViewEl) {
+            slideshowViewEl.innerHTML = '';
+            paths.forEach(function(path, i) {
+              var slide = document.createElement('div');
+              slide.className = 'dashboard-edit-slide-item';
+              var img = document.createElement('img');
+              img.src = path.indexOf('/') === 0 ? path : '/' + path;
+              img.alt = 'Slide ' + (i + 1);
+              img.loading = 'lazy';
+              img.onerror = function() { this.style.display = 'none'; };
+              var cap = document.createElement('span');
+              cap.className = 'dashboard-edit-slide-cap';
+              cap.textContent = (i + 1) + '. ' + path;
+              slide.appendChild(img);
+              slide.appendChild(cap);
+              slideshowViewEl.appendChild(slide);
+            });
+          }
+        }
       }
 
       function setupIframeEditMode(on) {
@@ -703,9 +1440,9 @@
                     selectedElement = card;
                     var title = getTextContent(card.querySelector('.menu-item-title, .menu-item-title a') || card);
                     var desc = getTextContent(card.querySelector('.menu-item-description') || card);
-                    var priceEl = card.querySelector('.menu-item-price');
-                    var price = priceEl ? getPriceFromElement(priceEl) : '';
-                    showEditForm({ element: card, type: 'Menu item', title: title, description: desc, price: price });
+                    var itemUrl = card.getAttribute('data-item-url') || (card.querySelector('a[href]') && card.querySelector('a[href]').getAttribute('href')) || '';
+                    var contentPath = itemUrl ? 'content' + itemUrl.replace(/\/$/, '') + '.md' : 'content/.../item.md';
+                    showEditForm({ element: card, type: 'Menu item', contentType: 'menu-item', contentPath: contentPath, title: title, description: desc });
                     return;
                   }
                   if (header) {
@@ -717,8 +1454,19 @@
                     selectedElement = header;
                     var titleEl = header.querySelector('h2 a, h2');
                     var title = titleEl ? getTextContent(titleEl) : '';
-                    var desc = getTextContent(header.querySelector('.menu-summary') || header);
-                    showEditForm({ element: header, type: 'Section header', title: title, description: desc, price: '' });
+                    var descEl = header.querySelector('.menu-summary');
+                    var desc = descEl ? getTextContent(descEl) : '';
+                    var sectionSlug = header.getAttribute('data-section-slug') || '';
+                    if (!sectionSlug) {
+                      var sectionLink = header.querySelector('h2 a[href], .menu-header a[href]');
+                      if (sectionLink) {
+                        var href = (sectionLink.getAttribute('href') || '').replace(/^#/, '');
+                        var segs = href.split('/').filter(Boolean);
+                        if (segs.length) sectionSlug = segs[0];
+                      }
+                    }
+                    var contentPath = sectionSlug ? 'content/' + sectionSlug + '/_index.md' : 'content/.../_index.md';
+                    showEditForm({ element: header, type: 'Section header', contentType: 'section-header', contentPath: contentPath, title: title, description: desc });
                     return;
                   }
                   var adSection = e.target.closest('section.ads.menu-ad');
@@ -731,7 +1479,10 @@
                     selectedElement = adSection;
                     var titleEl = adSection.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
                     var title = titleEl ? getTextContent(titleEl) : '';
-                    showEditForm({ element: adSection, type: 'Promotion / Ad', title: title, description: '', price: '' });
+                    var adTitle = adSection.getAttribute('data-ad-title') || title;
+                    var slug = adTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    var contentPath = slug ? 'content/promotions/' + slug + '.md' : 'content/promotions/....md';
+                    showEditForm({ element: adSection, type: 'Promotion / Ad', contentType: 'promotion', contentPath: contentPath, title: title, description: '' });
                     return;
                   }
                   var slideshow = e.target.closest('.client-tour-slideshow');
@@ -742,7 +1493,7 @@
                     if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
                     slideshow.classList.add('dashboard-edit-selected');
                     selectedElement = slideshow;
-                    showEditForm({ element: slideshow, type: 'Slideshow', title: '', description: '', price: '' });
+                    showEditForm({ element: slideshow, type: 'Slideshow', contentType: 'slideshow', contentPath: 'content/_index.md (slideshow)', title: '', description: '' });
                     return;
                   }
                   var locationItem = e.target.closest('.location-item');
@@ -755,7 +1506,9 @@
                     selectedElement = locationItem;
                     var locLink = locationItem.querySelector('a.locbtn');
                     var address = locLink ? getTextContent(locLink) : '';
-                    showEditForm({ element: locationItem, type: 'Location', title: address, description: '', price: '' });
+                    var locIdx = locationItem.getAttribute('data-location-index');
+                    var contentPath = 'data/locations.yaml' + (locIdx !== null && locIdx !== '' ? ' (index ' + locIdx + ')' : '');
+                    showEditForm({ element: locationItem, type: 'Location', contentType: 'location', contentPath: contentPath, title: address, description: '' });
                     return;
                   }
                 }
@@ -765,15 +1518,34 @@
                 e.preventDefault();
                 e.stopPropagation();
                 if (selectedElement) selectedElement.classList.remove('dashboard-edit-selected');
-                found.element.classList.add('dashboard-edit-selected');
-                selectedElement = found.element;
                 var el = found.element;
-                var title = getTextContent(el.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || el);
-                var desc = getTextContent(el.querySelector('.menu-item-description, .menu-summary') || el);
-                var priceEl = el.querySelector('.menu-item-price');
-                var price = priceEl ? getPriceFromElement(priceEl) : '';
+                var contentType = 'menu-item';
+                if (found.type.indexOf('Section') !== -1) contentType = 'section-header';
+                var headerWrap = contentType === 'section-header' ? el.closest('.menu-header') : null;
+                var elementToSelect = headerWrap || el;
+                elementToSelect.classList.add('dashboard-edit-selected');
+                selectedElement = elementToSelect;
+                var title = getTextContent(headerWrap ? headerWrap.querySelector('h2 a, h2') : null) || getTextContent(el.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || el);
+                var desc = getTextContent((headerWrap || el).querySelector('.menu-item-description, .menu-summary')) || '';
                 expandEditPanel();
-                showEditForm({ element: el, type: found.type, title: title, description: desc, price: price });
+                var contentPath = '';
+                if (contentType === 'section-header') {
+                  var sectionRoot = headerWrap || el;
+                  var slug = sectionRoot.getAttribute('data-section-slug') || '';
+                  if (!slug) {
+                    var sectionLink = sectionRoot.querySelector('h2 a[href], a[href]');
+                    if (sectionLink) {
+                      var href = (sectionLink.getAttribute('href') || '').replace(/^#/, '');
+                      var segs = href.split('/').filter(Boolean);
+                      if (segs.length) slug = segs[0];
+                    }
+                  }
+                  contentPath = slug ? 'content/' + slug + '/_index.md' : 'content/.../_index.md';
+                } else {
+                  var itemUrl = el.getAttribute('data-item-url') || (el.querySelector('a[href]') && el.querySelector('a[href]').getAttribute('href'));
+                  if (itemUrl) contentPath = 'content' + itemUrl.replace(/\/$/, '') + '.md';
+                }
+                showEditForm({ element: headerWrap || el, type: found.type, contentType: contentType, contentPath: contentPath, title: title, description: desc });
               };
               doc.body.addEventListener('click', win._dashboardEditClick, true);
             } else {
@@ -812,22 +1584,176 @@
         if (!selectedInfo || !selectedElement) return;
         var doc = iframe.contentDocument;
         if (!doc) return;
+        var contentType = selectedInfo.contentType || 'menu-item';
         try {
-          if (selectedElement.classList && selectedElement.classList.contains('location-item')) {
+          if (contentType === 'location') {
             var locLink = selectedElement.querySelector('a.locbtn');
-            if (locLink && inputTitle.value !== undefined && inputTitle.value !== '') locLink.textContent = inputTitle.value;
+            var address = inputLocationAddress ? inputLocationAddress.value.trim() : '';
+            var lat = inputLocationLat ? inputLocationLat.value.trim() : '';
+            var lng = inputLocationLng ? inputLocationLng.value.trim() : '';
+            var orderingtablesStr = inputLocationOrderingtables ? inputLocationOrderingtables.value.trim() : '';
+            if (locLink) {
+              if (address !== undefined) locLink.textContent = address;
+              if (lat && lng) {
+                var mapBase = 'https://www.ttmenus.com/map/';
+                var href = locLink.getAttribute('href') || '';
+                var clientMatch = href.match(/[?&]client=([^&]*)/);
+                var client = clientMatch ? clientMatch[1] : '';
+                locLink.setAttribute('href', mapBase + '?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&zoom=19' + (client ? '&client=' + encodeURIComponent(client) : ''));
+              }
+              if (orderingtablesStr !== undefined) locLink.setAttribute('data-orderingtables', orderingtablesStr);
+              if (lat !== undefined) locLink.setAttribute('data-lat', lat);
+              if (lng !== undefined) locLink.setAttribute('data-lng', lng);
+            }
+            if (inputLocationAddress) selectedElement.setAttribute('data-address', address);
+            if (inputLocationCity) selectedElement.setAttribute('data-city', (inputLocationCity.value || '').trim());
+            if (inputLocationIsland) selectedElement.setAttribute('data-island', (inputLocationIsland.value || '').trim());
+            if (inputLocationSubcategories) selectedElement.setAttribute('data-subcategories', (inputLocationSubcategories.value || '').trim().replace(/\s*,\s*/g, ','));
+            if (inputLocationPhone) selectedElement.setAttribute('data-phone', (inputLocationPhone.value || '').trim());
+            if (inputLocationWhatsapp) {
+              var wa = (inputLocationWhatsapp.value || '').replace(/\D/g, '');
+              selectedElement.setAttribute('data-whatsapp', wa);
+              var waLink = selectedElement.querySelector('a[href*="wa.me"]');
+              if (waLink && wa) waLink.setAttribute('href', 'https://wa.me/' + wa);
+            }
+            var telLink = selectedElement.querySelector('a[href^="tel:"]');
+            if (telLink && inputLocationPhone && inputLocationPhone.value) telLink.setAttribute('href', 'tel:' + inputLocationPhone.value.trim());
+            if (inputLocationOrderingtables) selectedElement.setAttribute('data-orderingtables', orderingtablesStr);
+            if (inputLocationFooddrop) selectedElement.setAttribute('data-delivery-fooddrop', (inputLocationFooddrop.value || '').trim());
+            var fooddropLink = selectedElement.querySelector('a[href*="fooddrop"], .delivery-options a[href]');
+            if (fooddropLink && inputLocationFooddrop && inputLocationFooddrop.value.trim()) fooddropLink.setAttribute('href', inputLocationFooddrop.value.trim());
+            if (inputLocationOpeningHours) {
+              var oh = inputLocationOpeningHours.value.trim();
+              if (oh) {
+                try { JSON.parse(oh); selectedElement.setAttribute('data-opening-hours', oh); } catch (e) { /* leave unchanged if invalid */ }
+              }
+            }
             return;
           }
-          var titleEl = selectedElement.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
-          if (titleEl && inputTitle.value !== undefined && inputTitle.value !== '') {
-            var innerLink = titleEl.querySelector('a');
-            if (innerLink) innerLink.textContent = inputTitle.value;
-            else titleEl.textContent = inputTitle.value;
+          if (contentType === 'promotion') {
+            var adTitleEl = selectedElement.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
+            if (adTitleEl && inputPromoTitle && inputPromoTitle.value !== undefined) {
+              var inner = adTitleEl.querySelector('a');
+              if (inner) inner.textContent = inputPromoTitle.value;
+              else adTitleEl.textContent = inputPromoTitle.value;
+            }
+            var adLinkEl = selectedElement.querySelector('a[href]');
+            if (adLinkEl && inputPromoLink && inputPromoLink.value) adLinkEl.setAttribute('href', inputPromoLink.value);
+            return;
           }
-          var descEl = selectedElement.querySelector('.menu-item-description, .menu-summary');
-          if (descEl && inputDesc.value !== undefined) descEl.textContent = inputDesc.value;
-          var priceEl = selectedElement.querySelector('.menu-item-price');
-          if (priceEl && inputPrice.value) priceEl.textContent = '$' + inputPrice.value.replace(/^\$/, '').trim();
+          if (contentType === 'slideshow' && inputSlideshowImages) {
+            var slides = selectedElement.querySelectorAll('.client-tour-slideshow .slide img');
+            var lines = inputSlideshowImages.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+            slides.forEach(function(img, i) {
+              if (lines[i]) img.setAttribute('src', lines[i].indexOf('/') === 0 ? lines[i] : '/' + lines[i]);
+            });
+            return;
+          }
+          if (contentType === 'section-header' || contentType === 'menu-item') {
+            var titleEl = selectedElement.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
+            if (titleEl && inputTitle.value !== undefined && inputTitle.value !== '') {
+              var innerLink = titleEl.querySelector('a');
+              if (innerLink) innerLink.textContent = inputTitle.value;
+              else titleEl.textContent = inputTitle.value;
+            }
+            var descEl = selectedElement.querySelector('.menu-item-description, .menu-summary');
+            if (descEl && inputDesc.value !== undefined) descEl.textContent = inputDesc.value;
+            if (contentType === 'section-header') {
+              if (inputSectionWeight) selectedElement.setAttribute('data-weight', inputSectionWeight.value.trim());
+              if (inputSectionIcon) selectedElement.setAttribute('data-icon', inputSectionIcon.value.trim());
+              selectedElement.setAttribute('data-images-top', (inputSectionImageTop && inputSectionImageTop.value) ? inputSectionImageTop.value.trim() : '');
+              selectedElement.setAttribute('data-images-bottom', (inputSectionImageBottom && inputSectionImageBottom.value) ? inputSectionImageBottom.value.trim() : '');
+              var topImg = selectedElement.querySelector('a img.food, img.food.item');
+              var topSrc = inputSectionImageTop && inputSectionImageTop.value.trim();
+              if (topSrc) {
+                topSrc = topSrc.indexOf('/') === 0 ? topSrc : '/' + topSrc;
+                if (topImg) topImg.setAttribute('src', topSrc);
+                else {
+                  var wrap = selectedElement.querySelector('a[href]:not(.menu-anchor)');
+                  if (!wrap) {
+                    var sectionLink = selectedElement.querySelector('h2 a');
+                    var href = sectionLink ? sectionLink.getAttribute('href') : '#';
+                    wrap = selectedElement.ownerDocument.createElement('a');
+                    wrap.setAttribute('href', href);
+                    var anchor = selectedElement.querySelector('.menu-anchor');
+                    selectedElement.insertBefore(wrap, anchor ? anchor.nextSibling : selectedElement.firstChild);
+                  }
+                  var img = selectedElement.ownerDocument.createElement('img');
+                  img.className = 'food item aos-init aos-animate';
+                  img.setAttribute('data-aos', 'zoom-out');
+                  img.src = topSrc;
+                  img.alt = inputTitle ? inputTitle.value : '';
+                  img.loading = 'lazy';
+                  wrap.appendChild(img);
+                }
+              } else if (topImg) topImg.remove();
+              var bottomImg = selectedElement.querySelector('.slideinimg');
+              var bottomSrc = inputSectionImageBottom && inputSectionImageBottom.value.trim();
+              if (bottomSrc) {
+                bottomSrc = bottomSrc.indexOf('/') === 0 ? bottomSrc : '/' + bottomSrc;
+                var h2 = selectedElement.querySelector('h2');
+                if (bottomImg) bottomImg.setAttribute('src', bottomSrc);
+                else if (h2) {
+                  var slideImg = selectedElement.ownerDocument.createElement('img');
+                  slideImg.className = 'slideinimg aos-init aos-animate';
+                  slideImg.setAttribute('data-aos', 'zoom-out-right');
+                  slideImg.src = bottomSrc;
+                  slideImg.alt = (inputTitle ? inputTitle.value : '') + ' decoration';
+                  slideImg.loading = 'lazy';
+                  h2.appendChild(slideImg);
+                }
+              } else if (bottomImg) bottomImg.remove();
+            }
+            if (contentType === 'menu-item') {
+              var pricesArr = hoursParsePricesText(inputMenuItemPrices ? inputMenuItemPrices.value : '');
+              var imagesArr = hoursParseStringList(inputMenuItemImages ? inputMenuItemImages.value : '');
+              var sideCats = hoursParseSideCategoriesText(inputMenuItemSideCategories ? inputMenuItemSideCategories.value : '');
+              var modsArr = hoursParsePairsText(inputMenuItemModifications ? inputMenuItemModifications.value : '');
+              var addsArr = hoursParsePairsText(inputMenuItemAdditions ? inputMenuItemAdditions.value : '');
+              var tagsArr = hoursParseStringList(inputMenuItemTags ? inputMenuItemTags.value : '');
+              var ingArr = hoursParseStringList(inputMenuItemIngredients ? inputMenuItemIngredients.value : '');
+              var cookArr = hoursParseStringList(inputMenuItemCookingmethods ? inputMenuItemCookingmethods.value : '');
+              var typesArr = hoursParseStringList(inputMenuItemTypes ? inputMenuItemTypes.value : '');
+              var eventsArr = hoursParseStringList(inputMenuItemEvents ? inputMenuItemEvents.value : '');
+
+              selectedElement.setAttribute('data-prices-array', JSON.stringify(pricesArr));
+              selectedElement.setAttribute('data-images-array', JSON.stringify(imagesArr));
+              selectedElement.setAttribute('data-side-categories', JSON.stringify(sideCats));
+              selectedElement.setAttribute('data-modifications', JSON.stringify(modsArr));
+              selectedElement.setAttribute('data-additions', JSON.stringify(addsArr));
+              selectedElement.setAttribute('data-tags', JSON.stringify(tagsArr));
+              selectedElement.setAttribute('data-ingredients', JSON.stringify(ingArr));
+              selectedElement.setAttribute('data-cookingmethods', JSON.stringify(cookArr));
+              selectedElement.setAttribute('data-types', JSON.stringify(typesArr));
+              selectedElement.setAttribute('data-events', JSON.stringify(eventsArr));
+
+              if (imagesArr.length && menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, imagesArr);
+              var imgEl = selectedElement.querySelector('img.menu-item-img');
+              if (imgEl) {
+                if (imagesArr.length) imgEl.setAttribute('src', imagesArr[0].indexOf('/') === 0 ? imagesArr[0] : '/' + imagesArr[0]);
+              }
+
+              var priceEl = selectedElement.querySelector('.menu-item-price');
+              if (priceEl) {
+                var nums = [];
+                for (var i = 2; i < pricesArr.length; i += 3) {
+                  var n = parseFloat(pricesArr[i]);
+                  if (!isNaN(n)) nums.push(n);
+                }
+                nums.sort(function(a, b) { return a - b; });
+                if (nums.length) {
+                  var fmt = function(v) { var s = v.toFixed(2); return s.replace(/\.00$/, ''); };
+                  if (nums[0] === nums[nums.length - 1]) priceEl.textContent = '$' + fmt(nums[0]);
+                  else priceEl.textContent = '$' + fmt(nums[0]) + ' | $' + fmt(nums[nums.length - 1]);
+                }
+              }
+
+              if (pricesArr.length >= 3) {
+                selectedElement.setAttribute('data-selected-size', String(pricesArr[0] || '-'));
+                selectedElement.setAttribute('data-selected-flavour', String(pricesArr[1] || '-'));
+              }
+            }
+          }
         } catch (e) {
           console.warn('Apply edit:', e);
         }

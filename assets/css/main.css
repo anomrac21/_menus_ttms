@@ -11,7 +11,7 @@ html,body {
 
 [data-barba=wrapper],[data-barba=container] {
     margin: 0;
-    padding: 0
+    padding: 0;
 }
 
 body {
@@ -56,7 +56,8 @@ main {
     margin-top: 0!important;
     background: var(--main-bg,#000);
     background-size: auto;
-    background-position: 50% 0
+    background-position: 50% 0;
+    padding-block-end: 5em;
 }
 
 main img {

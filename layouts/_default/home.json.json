@@ -6,9 +6,9 @@
     {{- $images = $images | append (dict "image" .image) -}}
   {{- end }}
 
-  {{- $clientTourImages := slice -}}
-  {{- range .Params.clienttourimages }}
-    {{- $clientTourImages = $clientTourImages | append (dict "image" .image) -}}
+  {{- $slideshowImages := slice -}}
+  {{- range .Params.slideshow }}
+    {{- $slideshowImages = $slideshowImages | append (dict "image" .image) -}}
   {{- end }}
 
   {{- $locations := slice -}}
@@ -47,7 +47,8 @@
       "title" .Title
       "hero_background_image" (.Params.image | default "")
       "featured_images" $images
-      "client_tour_images" $clientTourImages
+      "slideshow" $slideshowImages
+      "client_tour_images" $slideshowImages
       "locations" $locations
       "social_links" $social
       "features" $features

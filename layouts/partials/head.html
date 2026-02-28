@@ -75,10 +75,15 @@
 {{ partialCached "head/css.html" . }}
 {{ partialCached "head/js.html" . }}
 <meta property="og:title" content="{{ .Title }} | {{ site.Title }}"/>
-{{$images := slice}}
-{{range .Params.images }}
-  {{$images = $images | append .image}}
-{{end}}
+{{ $images := slice }}
+{{ if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") }}
+  {{ with index .Params.images "top" }}{{ $images = $images | append . }}{{ end }}
+  {{ with index .Params.images "bottom" }}{{ $images = $images | append . }}{{ end }}
+{{ else if .Params.images }}
+  {{ range .Params.images }}
+    {{ if .image }}{{ $images = $images | append .image }}{{ end }}
+  {{ end }}
+{{ end }}
 {{ if gt (len $images) 0 }}
   {{$firstImage := index $images 0}}
   <meta property="og:image" content="/{{ $firstImage }}"/>
