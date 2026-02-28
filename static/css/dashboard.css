@@ -712,13 +712,12 @@
 .dashboard-edit-input,
 .dashboard-edit-textarea {
   padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(255 255 255);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   width: -webkit-fill-available;
-  color: #fff;
+  color: #000000;
   font-size: 0.9rem;
-  box-sizing: border-box;
 }
 
 .dashboard-edit-input:focus,
@@ -729,8 +728,7 @@
 }
 
 .dashboard-edit-textarea {
-  min-height: 4rem;
-  resize: vertical;
+  min-height: 10em;
 }
 
 /* ========== Opening hours – week + zoomable day ========== */
