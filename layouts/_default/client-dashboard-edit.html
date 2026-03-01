@@ -82,40 +82,50 @@
                   <div class="dashboard-edit-slideshow-view" id="dashboardEditMenuItemImagesView" aria-label="Menu item images preview"></div>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemPrices">Prices (one per line: size | flavour | price)</label>
-                  <textarea id="dashboardEditMenuItemPrices" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Any 2 Rolls | - | 108" rows="3"></textarea>
+                  <label>Prices (size | flavour | price)</label>
+                  <div id="dashboardEditPricesContainer" class="dashboard-prices-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddPrice">Add price</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemSideCategories">Side categories</label>
-                  <textarea id="dashboardEditMenuItemSideCategories" class="dashboard-edit-input dashboard-edit-textarea" placeholder="rolls | Choose Your Rolls | min=2 | max=2&#10;California | 0&#10;Spicy Tuna | 0" rows="5"></textarea>
+                  <label>Side categories</label>
+                  <div id="dashboardEditSideCategoriesContainer" class="dashboard-side-categories-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary dashboard-btn-add-cat" id="btnAddSideCategory">Add category</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemModifications">Modifications (one per line: name | price)</label>
-                  <textarea id="dashboardEditMenuItemModifications" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Extra sauce | 5" rows="3"></textarea>
+                  <label>Modifications (name | price)</label>
+                  <div id="dashboardEditModificationsContainer" class="dashboard-pairs-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddModification">Add modification</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemAdditions">Additions (one per line: name | price)</label>
-                  <textarea id="dashboardEditMenuItemAdditions" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Add fries | 10" rows="3"></textarea>
+                  <label>Additions (name | price)</label>
+                  <div id="dashboardEditAdditionsContainer" class="dashboard-pairs-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddAddition">Add addition</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemTags">Tags (one per line)</label>
-                  <textarea id="dashboardEditMenuItemTags" class="dashboard-edit-input dashboard-edit-textarea" placeholder="special&#10;combo" rows="2"></textarea>
+                  <p class="dashboard-edit-field-note" id="dashboardEditTagsNote">All tags below contribute to search on the TTMenus platform.</p>
+                  <label>Tags</label>
+                  <div id="dashboardEditTagsContainer" class="dashboard-list-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddTag">Add tag</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemIngredients">Ingredients (one per line)</label>
-                  <textarea id="dashboardEditMenuItemIngredients" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Chicken&#10;Shrimp" rows="3"></textarea>
+                  <label>Ingredients</label>
+                  <div id="dashboardEditIngredientsContainer" class="dashboard-list-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddIngredient">Add ingredient</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemCookingmethods">Cooking methods (one per line)</label>
-                  <textarea id="dashboardEditMenuItemCookingmethods" class="dashboard-edit-input dashboard-edit-textarea" placeholder="fried" rows="2"></textarea>
+                  <label>Cooking methods</label>
+                  <div id="dashboardEditCookingmethodsContainer" class="dashboard-list-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddCookingmethod">Add cooking method</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemTypes">Types (one per line)</label>
-                  <textarea id="dashboardEditMenuItemTypes" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Lunch" rows="2"></textarea>
+                  <label>Types</label>
+                  <div id="dashboardEditTypesContainer" class="dashboard-list-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddType">Add type</button>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemEvents">Events (one per line)</label>
-                  <textarea id="dashboardEditMenuItemEvents" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Wonderful Wednesday" rows="2"></textarea>
+                  <label>Events</label>
+                  <div id="dashboardEditEventsContainer" class="dashboard-list-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddEvent">Add event</button>
                 </div>
               </div>
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsLocation" data-for="location">
@@ -269,15 +279,24 @@
       var inputSectionImageBottom = document.getElementById('dashboardEditSectionImageBottom');
       var inputMenuItemImages = document.getElementById('dashboardEditMenuItemImages');
       var menuItemImagesViewEl = document.getElementById('dashboardEditMenuItemImagesView');
-      var inputMenuItemPrices = document.getElementById('dashboardEditMenuItemPrices');
-      var inputMenuItemSideCategories = document.getElementById('dashboardEditMenuItemSideCategories');
-      var inputMenuItemModifications = document.getElementById('dashboardEditMenuItemModifications');
-      var inputMenuItemAdditions = document.getElementById('dashboardEditMenuItemAdditions');
-      var inputMenuItemTags = document.getElementById('dashboardEditMenuItemTags');
-      var inputMenuItemIngredients = document.getElementById('dashboardEditMenuItemIngredients');
-      var inputMenuItemCookingmethods = document.getElementById('dashboardEditMenuItemCookingmethods');
-      var inputMenuItemTypes = document.getElementById('dashboardEditMenuItemTypes');
-      var inputMenuItemEvents = document.getElementById('dashboardEditMenuItemEvents');
+      var pricesContainer = document.getElementById('dashboardEditPricesContainer');
+      var btnAddPrice = document.getElementById('btnAddPrice');
+      var sideCategoriesContainer = document.getElementById('dashboardEditSideCategoriesContainer');
+      var btnAddSideCategory = document.getElementById('btnAddSideCategory');
+      var modificationsContainer = document.getElementById('dashboardEditModificationsContainer');
+      var btnAddModification = document.getElementById('btnAddModification');
+      var additionsContainer = document.getElementById('dashboardEditAdditionsContainer');
+      var btnAddAddition = document.getElementById('btnAddAddition');
+      var tagsContainer = document.getElementById('dashboardEditTagsContainer');
+      var btnAddTag = document.getElementById('btnAddTag');
+      var ingredientsContainer = document.getElementById('dashboardEditIngredientsContainer');
+      var btnAddIngredient = document.getElementById('btnAddIngredient');
+      var cookingmethodsContainer = document.getElementById('dashboardEditCookingmethodsContainer');
+      var btnAddCookingmethod = document.getElementById('btnAddCookingmethod');
+      var typesContainer = document.getElementById('dashboardEditTypesContainer');
+      var btnAddType = document.getElementById('btnAddType');
+      var eventsContainer = document.getElementById('dashboardEditEventsContainer');
+      var btnAddEvent = document.getElementById('btnAddEvent');
       var btnApply = document.getElementById('btnApplyEdit');
       var btnClear = document.getElementById('btnClearSelection');
       var contentSourceEl = document.getElementById('dashboardEditContentSource');
@@ -691,15 +710,15 @@
         if (inputSectionImageBottom) inputSectionImageBottom.value = '';
         if (inputMenuItemImages) inputMenuItemImages.value = '';
         if (menuItemImagesViewEl) menuItemImagesViewEl.innerHTML = '';
-        if (inputMenuItemPrices) inputMenuItemPrices.value = '';
-        if (inputMenuItemSideCategories) inputMenuItemSideCategories.value = '';
-        if (inputMenuItemModifications) inputMenuItemModifications.value = '';
-        if (inputMenuItemAdditions) inputMenuItemAdditions.value = '';
-        if (inputMenuItemTags) inputMenuItemTags.value = '';
-        if (inputMenuItemIngredients) inputMenuItemIngredients.value = '';
-        if (inputMenuItemCookingmethods) inputMenuItemCookingmethods.value = '';
-        if (inputMenuItemTypes) inputMenuItemTypes.value = '';
-        if (inputMenuItemEvents) inputMenuItemEvents.value = '';
+        if (pricesContainer) renderPricesUI(pricesContainer, []);
+        if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, []);
+        if (modificationsContainer) renderPairsUI(modificationsContainer, []);
+        if (additionsContainer) renderPairsUI(additionsContainer, []);
+        if (tagsContainer) renderStringListUI(tagsContainer, []);
+        if (ingredientsContainer) renderStringListUI(ingredientsContainer, []);
+        if (cookingmethodsContainer) renderStringListUI(cookingmethodsContainer, []);
+        if (typesContainer) renderStringListUI(typesContainer, []);
+        if (eventsContainer) renderStringListUI(eventsContainer, []);
         if (inputSlideshowImages) inputSlideshowImages.value = '';
         if (slideshowViewEl) slideshowViewEl.innerHTML = '';
       }
@@ -769,6 +788,104 @@
         });
         return out;
       }
+      function escapeAttr(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+      }
+      function createPriceRow(size, flavour, price) {
+        var row = document.createElement('div');
+        row.className = 'dashboard-price-row';
+        row.innerHTML = '<input type="text" class="dashboard-edit-input price-size" placeholder="size" value="' + escapeAttr(size) + '">' +
+          '<input type="text" class="dashboard-edit-input price-flavour" placeholder="flavour" value="' + escapeAttr(flavour) + '">' +
+          '<input type="number" class="dashboard-edit-input price-price" placeholder="price" step="0.01" min="0" value="' + (typeof price === 'number' && !isNaN(price) ? price : (price !== '' && price != null ? escapeAttr(price) : '')) + '">' +
+          '<button type="button" class="dashboard-btn dashboard-btn-remove-row" aria-label="Remove"><i class="fa fa-trash-o" aria-hidden="true"></i></button>';
+        row.querySelector('.dashboard-btn-remove-row').addEventListener('click', function() { row.remove(); });
+        return row;
+      }
+      function createPairRow(name, price) {
+        var row = document.createElement('div');
+        row.className = 'dashboard-pair-row';
+        row.innerHTML = '<input type="text" class="dashboard-edit-input pair-name" placeholder="name" value="' + escapeAttr(name) + '">' +
+          '<input type="number" class="dashboard-edit-input pair-price" placeholder="price" step="0.01" min="0" value="' + (typeof price === 'number' && !isNaN(price) ? price : (price !== '' && price != null ? escapeAttr(price) : '0')) + '">' +
+          '<button type="button" class="dashboard-btn dashboard-btn-remove-row" aria-label="Remove"><i class="fa fa-trash-o" aria-hidden="true"></i></button>';
+        row.querySelector('.dashboard-btn-remove-row').addEventListener('click', function() { row.remove(); });
+        return row;
+      }
+      function createListRow(value) {
+        var row = document.createElement('div');
+        row.className = 'dashboard-list-row';
+        row.innerHTML = '<input type="text" class="dashboard-edit-input list-value" placeholder="value" value="' + escapeAttr(value) + '">' +
+          '<button type="button" class="dashboard-btn dashboard-btn-remove-row" aria-label="Remove"><i class="fa fa-trash-o" aria-hidden="true"></i></button>';
+        row.querySelector('.dashboard-btn-remove-row').addEventListener('click', function() { row.remove(); });
+        return row;
+      }
+      function renderPricesUI(container, pricesArr) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (!Array.isArray(pricesArr)) pricesArr = [];
+        for (var i = 0; i < pricesArr.length; i += 3) {
+          var size = pricesArr[i] != null ? String(pricesArr[i]) : '';
+          var flavour = pricesArr[i + 1] != null ? String(pricesArr[i + 1]) : '-';
+          var price = pricesArr[i + 2];
+          container.appendChild(createPriceRow(size, flavour, price));
+        }
+      }
+      function getPricesFromUI(container) {
+        if (!container) return [];
+        var out = [];
+        container.querySelectorAll('.dashboard-price-row').forEach(function(row) {
+          var sizeInp = row.querySelector('.price-size');
+          var flavourInp = row.querySelector('.price-flavour');
+          var priceInp = row.querySelector('.price-price');
+          var size = sizeInp ? (sizeInp.value || '').trim() : '';
+          if (!size) return;
+          var flavour = flavourInp ? (flavourInp.value || '').trim() : '-';
+          var priceVal = priceInp && priceInp.value !== '' ? priceInp.value : '';
+          var price = priceVal !== '' && !isNaN(parseFloat(priceVal)) ? parseFloat(priceVal) : priceVal;
+          out.push(size, flavour, price);
+        });
+        return out;
+      }
+      function renderPairsUI(container, flatArr) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (!Array.isArray(flatArr)) flatArr = [];
+        for (var i = 0; i < flatArr.length; i += 2) {
+          var name = flatArr[i] != null ? String(flatArr[i]) : '';
+          var price = flatArr[i + 1];
+          container.appendChild(createPairRow(name, price));
+        }
+      }
+      function getPairsFromUI(container) {
+        if (!container) return [];
+        var out = [];
+        container.querySelectorAll('.dashboard-pair-row').forEach(function(row) {
+          var nameInp = row.querySelector('.pair-name');
+          var priceInp = row.querySelector('.pair-price');
+          var name = nameInp ? (nameInp.value || '').trim() : '';
+          if (!name) return;
+          var priceVal = priceInp && priceInp.value !== '' ? priceInp.value : '0';
+          var price = !isNaN(parseFloat(priceVal)) ? parseFloat(priceVal) : priceVal;
+          out.push(name, price);
+        });
+        return out;
+      }
+      function renderStringListUI(container, arr) {
+        if (!container) return;
+        container.innerHTML = '';
+        (arr || []).forEach(function(val) {
+          container.appendChild(createListRow(val == null ? '' : String(val)));
+        });
+      }
+      function getStringListFromUI(container) {
+        if (!container) return [];
+        var out = [];
+        container.querySelectorAll('.dashboard-list-row').forEach(function(row) {
+          var inp = row.querySelector('.list-value');
+          var val = inp ? (inp.value || '').trim() : '';
+          if (val) out.push(val);
+        });
+        return out;
+      }
       function hoursFormatSideCategories(cats) {
         if (!Array.isArray(cats) || cats.length === 0) return '';
         var blocks = [];
@@ -820,6 +937,82 @@
             var itemObj = { name: parts[0], type: type, price: isNaN(parseFloat(price)) ? price : parseFloat(price) };
             if (image) itemObj.image = image;
             items.push(itemObj);
+          });
+          out.push({ category_name: category_name, display_name: display_name, items: items, config: { minimum: min, maximum: max } });
+        });
+        return out;
+      }
+      function createSideCatItemRow(item) {
+        var name = (item && item.name != null) ? String(item.name) : '';
+        var price = (item && item.price != null) ? item.price : 0;
+        var row = document.createElement('div');
+        row.className = 'side-cat-item';
+        row.innerHTML = '<input type="text" class="dashboard-edit-input side-item-name" placeholder="name" value="' + (name.replace(/"/g, '&quot;')) + '">' +
+          '<input type="number" class="dashboard-edit-input side-item-price" placeholder="price" step="0.01" min="0" value="' + (typeof price === 'number' ? price : '') + '">' +
+          '<button type="button" class="dashboard-btn dashboard-btn-remove-item" aria-label="Remove"><i class="fa fa-trash-o" aria-hidden="true"></i></button>';
+        row.querySelector('.dashboard-btn-remove-item').addEventListener('click', function() { row.remove(); });
+        return row;
+      }
+      function createSideCatBlock(cat, index) {
+        var catName = (cat && cat.category_name != null) ? String(cat.category_name) : '';
+        var displayName = (cat && cat.display_name != null) ? String(cat.display_name) : '';
+        var min = (cat && cat.config && cat.config.minimum != null) ? cat.config.minimum : 0;
+        var max = (cat && cat.config && cat.config.maximum != null) ? cat.config.maximum : 99;
+        var items = (cat && Array.isArray(cat.items)) ? cat.items : [];
+        var block = document.createElement('div');
+        block.className = 'side-cat-block';
+        block.setAttribute('data-cat-index', String(index));
+        var header = '<div class="side-cat-header">' +
+          '<input type="text" class="dashboard-edit-input side-cat-name" placeholder="category_name (e.g. rolls)" value="' + (catName.replace(/"/g, '&quot;')) + '">' +
+          '<input type="text" class="dashboard-edit-input side-cat-display-name" placeholder="display_name (e.g. Choose Your Rolls)" value="' + (displayName.replace(/"/g, '&quot;')) + '">' +
+          '<div class="side-cat-min-max-group">' +
+          '<span class="side-cat-min-max-wrap"><label class="side-cat-min-max-label">Min</label><input type="number" class="dashboard-edit-input side-cat-min" placeholder="min" min="0" value="' + (min !== '' ? min : '') + '"></span>' +
+          '<span class="side-cat-min-max-wrap"><label class="side-cat-min-max-label">Max</label><input type="number" class="dashboard-edit-input side-cat-max" placeholder="max" min="0" value="' + (max !== '' ? max : '') + '"></span>' +
+          '</div>' +
+          '<button type="button" class="dashboard-btn dashboard-btn-remove-cat" aria-label="Remove category"><i class="fa fa-trash-o" aria-hidden="true"></i></button></div>' +
+          '<div class="side-cat-items"></div>' +
+          '<button type="button" class="dashboard-btn dashboard-btn-secondary dashboard-btn-add-item">Add item</button>';
+        block.innerHTML = header;
+        var itemsEl = block.querySelector('.side-cat-items');
+        items.forEach(function(it) { itemsEl.appendChild(createSideCatItemRow(it)); });
+        block.querySelector('.dashboard-btn-remove-cat').addEventListener('click', function() { block.remove(); });
+        block.querySelector('.dashboard-btn-add-item').addEventListener('click', function() {
+          itemsEl.appendChild(createSideCatItemRow({ name: '', price: 0 }));
+        });
+        return block;
+      }
+      function renderSideCategoriesUI(container, cats) {
+        if (!container) return;
+        container.innerHTML = '';
+        (cats || []).forEach(function(cat, i) {
+          container.appendChild(createSideCatBlock(cat, i));
+        });
+      }
+      function getSideCategoriesFromUI(container) {
+        if (!container) return [];
+        var blocks = container.querySelectorAll('.side-cat-block');
+        var out = [];
+        blocks.forEach(function(block) {
+          var nameInp = block.querySelector('.side-cat-name');
+          var displayInp = block.querySelector('.side-cat-display-name');
+          var minInp = block.querySelector('.side-cat-min');
+          var maxInp = block.querySelector('.side-cat-max');
+          var category_name = nameInp ? (nameInp.value || '').trim() : '';
+          if (!category_name) return;
+          var display_name = displayInp ? (displayInp.value || '').trim() : category_name;
+          var min = minInp && minInp.value !== '' ? parseInt(minInp.value, 10) : 0;
+          var max = maxInp && maxInp.value !== '' ? parseInt(maxInp.value, 10) : 99;
+          if (isNaN(min)) min = 0;
+          if (isNaN(max)) max = 99;
+          var items = [];
+          block.querySelectorAll('.side-cat-item').forEach(function(row) {
+            var nInp = row.querySelector('.side-item-name');
+            var pInp = row.querySelector('.side-item-price');
+            var name = nInp ? (nInp.value || '').trim() : '';
+            if (!name) return;
+            var price = pInp && pInp.value !== '' ? parseFloat(pInp.value) : 0;
+            if (isNaN(price)) price = 0;
+            items.push({ name: name, price: price });
           });
           out.push({ category_name: category_name, display_name: display_name, items: items, config: { minimum: min, maximum: max } });
         });
@@ -1226,17 +1419,17 @@
           if (inputSectionImageBottom) inputSectionImageBottom.value = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-bottom') || '');
         } else if (contentType === 'menu-item') {
           var cardEl = info.element;
-          if (inputMenuItemPrices) inputMenuItemPrices.value = hoursFormatPricesArray(parseJsonAttr(cardEl, 'data-prices-array'));
+          if (pricesContainer) renderPricesUI(pricesContainer, parseJsonAttr(cardEl, 'data-prices-array'));
           if (inputMenuItemImages) inputMenuItemImages.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-images-array'));
           if (menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, hoursParseStringList(inputMenuItemImages ? inputMenuItemImages.value : ''));
-          if (inputMenuItemSideCategories) inputMenuItemSideCategories.value = hoursFormatSideCategories(parseJsonAttr(cardEl, 'data-side-categories'));
-          if (inputMenuItemModifications) inputMenuItemModifications.value = hoursFormatPairsArray(parseJsonAttr(cardEl, 'data-modifications'));
-          if (inputMenuItemAdditions) inputMenuItemAdditions.value = hoursFormatPairsArray(parseJsonAttr(cardEl, 'data-additions'));
-          if (inputMenuItemTags) inputMenuItemTags.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-tags'));
-          if (inputMenuItemIngredients) inputMenuItemIngredients.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-ingredients'));
-          if (inputMenuItemCookingmethods) inputMenuItemCookingmethods.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-cookingmethods'));
-          if (inputMenuItemTypes) inputMenuItemTypes.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-types'));
-          if (inputMenuItemEvents) inputMenuItemEvents.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-events'));
+          if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, parseJsonAttr(cardEl, 'data-side-categories'));
+          if (modificationsContainer) renderPairsUI(modificationsContainer, parseJsonAttr(cardEl, 'data-modifications'));
+          if (additionsContainer) renderPairsUI(additionsContainer, parseJsonAttr(cardEl, 'data-additions'));
+          if (tagsContainer) renderStringListUI(tagsContainer, parseJsonAttr(cardEl, 'data-tags'));
+          if (ingredientsContainer) renderStringListUI(ingredientsContainer, parseJsonAttr(cardEl, 'data-ingredients'));
+          if (cookingmethodsContainer) renderStringListUI(cookingmethodsContainer, parseJsonAttr(cardEl, 'data-cookingmethods'));
+          if (typesContainer) renderStringListUI(typesContainer, parseJsonAttr(cardEl, 'data-types'));
+          if (eventsContainer) renderStringListUI(eventsContainer, parseJsonAttr(cardEl, 'data-events'));
         } else if (contentType === 'location') {
           var locLink = info.element.querySelector('a.locbtn');
           var telLink = info.element.querySelector('a[href^="tel:"]');
@@ -1580,6 +1773,52 @@
         showColorSectionList();
       });
       btnClear.addEventListener('click', clearSelection);
+      if (btnAddSideCategory && sideCategoriesContainer) {
+        btnAddSideCategory.addEventListener('click', function() {
+          var idx = sideCategoriesContainer.querySelectorAll('.side-cat-block').length;
+          sideCategoriesContainer.appendChild(createSideCatBlock({ category_name: '', display_name: '', items: [], config: { minimum: 0, maximum: 99 } }, idx));
+        });
+      }
+      if (btnAddPrice && pricesContainer) {
+        btnAddPrice.addEventListener('click', function() {
+          pricesContainer.appendChild(createPriceRow('', '-', 0));
+        });
+      }
+      if (btnAddModification && modificationsContainer) {
+        btnAddModification.addEventListener('click', function() {
+          modificationsContainer.appendChild(createPairRow('', 0));
+        });
+      }
+      if (btnAddAddition && additionsContainer) {
+        btnAddAddition.addEventListener('click', function() {
+          additionsContainer.appendChild(createPairRow('', 0));
+        });
+      }
+      if (btnAddTag && tagsContainer) {
+        btnAddTag.addEventListener('click', function() {
+          tagsContainer.appendChild(createListRow(''));
+        });
+      }
+      if (btnAddIngredient && ingredientsContainer) {
+        btnAddIngredient.addEventListener('click', function() {
+          ingredientsContainer.appendChild(createListRow(''));
+        });
+      }
+      if (btnAddCookingmethod && cookingmethodsContainer) {
+        btnAddCookingmethod.addEventListener('click', function() {
+          cookingmethodsContainer.appendChild(createListRow(''));
+        });
+      }
+      if (btnAddType && typesContainer) {
+        btnAddType.addEventListener('click', function() {
+          typesContainer.appendChild(createListRow(''));
+        });
+      }
+      if (btnAddEvent && eventsContainer) {
+        btnAddEvent.addEventListener('click', function() {
+          eventsContainer.appendChild(createListRow(''));
+        });
+      }
       btnApply.addEventListener('click', function() {
         if (!selectedInfo || !selectedElement) return;
         var doc = iframe.contentDocument;
@@ -1705,16 +1944,16 @@
               } else if (bottomImg) bottomImg.remove();
             }
             if (contentType === 'menu-item') {
-              var pricesArr = hoursParsePricesText(inputMenuItemPrices ? inputMenuItemPrices.value : '');
+              var pricesArr = getPricesFromUI(pricesContainer);
               var imagesArr = hoursParseStringList(inputMenuItemImages ? inputMenuItemImages.value : '');
-              var sideCats = hoursParseSideCategoriesText(inputMenuItemSideCategories ? inputMenuItemSideCategories.value : '');
-              var modsArr = hoursParsePairsText(inputMenuItemModifications ? inputMenuItemModifications.value : '');
-              var addsArr = hoursParsePairsText(inputMenuItemAdditions ? inputMenuItemAdditions.value : '');
-              var tagsArr = hoursParseStringList(inputMenuItemTags ? inputMenuItemTags.value : '');
-              var ingArr = hoursParseStringList(inputMenuItemIngredients ? inputMenuItemIngredients.value : '');
-              var cookArr = hoursParseStringList(inputMenuItemCookingmethods ? inputMenuItemCookingmethods.value : '');
-              var typesArr = hoursParseStringList(inputMenuItemTypes ? inputMenuItemTypes.value : '');
-              var eventsArr = hoursParseStringList(inputMenuItemEvents ? inputMenuItemEvents.value : '');
+              var sideCats = getSideCategoriesFromUI(sideCategoriesContainer);
+              var modsArr = getPairsFromUI(modificationsContainer);
+              var addsArr = getPairsFromUI(additionsContainer);
+              var tagsArr = getStringListFromUI(tagsContainer);
+              var ingArr = getStringListFromUI(ingredientsContainer);
+              var cookArr = getStringListFromUI(cookingmethodsContainer);
+              var typesArr = getStringListFromUI(typesContainer);
+              var eventsArr = getStringListFromUI(eventsContainer);
 
               selectedElement.setAttribute('data-prices-array', JSON.stringify(pricesArr));
               selectedElement.setAttribute('data-images-array', JSON.stringify(imagesArr));
