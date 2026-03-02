@@ -229,7 +229,7 @@
             </div>
             <div class="dashboard-edit-form-actions">
               <button type="button" class="btn-dash btn-dash-primary" id="btnApplyEdit">Apply</button>
-              <button type="button" class="btn-dash btn-dash-secondary" id="btnClearSelection">Clear selection</button>
+              <button type="button" class="btn-dash btn-dash-danger" id="btnClearSelection" aria-label="Clear selection"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear selection</button>
             </div>
             <p class="dashboard-edit-option-note">Saving to your backend can be wired when ready.</p>
           </div>
@@ -1493,9 +1493,11 @@
                 style.id = 'dashboard-edit-injected-style';
                 style.textContent = [
                   '.dashboard-edit-selected { outline: 2px solid #667eea !important; outline-offset: 2px !important; }',
-                  '.menu-item-card.dashboard-edit-card-wrap { position: relative !important; }',
+                  '.menu-item-card.dashboard-edit-card-wrap { position: relative !important; pointer-events: none; }',
+                  '.menu-item-card.dashboard-edit-card-wrap > * { pointer-events: auto; }',
                   '.menu-item-card .dashboard-edit-card-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
-                  '.menu-header.dashboard-edit-header-wrap { position: relative !important; }',
+                  '.menu-header.dashboard-edit-header-wrap { position: relative !important; pointer-events: none; }',
+                  '.menu-header.dashboard-edit-header-wrap > * { pointer-events: auto; }',
                   '.menu-header .dashboard-edit-header-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
                   'section.ads.menu-ad.dashboard-edit-ad-wrap { position: relative !important; }',
                   'section.ads.menu-ad .dashboard-edit-ad-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
@@ -1504,9 +1506,80 @@
                   '.location-item.dashboard-edit-location-wrap { position: relative !important; }',
                   '.location-item .dashboard-edit-location-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
                   '.dashboard-edit-card-btn-wrap .dashboard-edit-btn, .dashboard-edit-header-btn-wrap .dashboard-edit-btn, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn, .dashboard-edit-location-btn-wrap .dashboard-edit-btn { width: 36px; height: 36px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: #667eea9c; backdrop-filter: blur(10px); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: auto; }',
-                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover { background: #764ba2; }'
+                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover { background: #764ba2; }',
+                  '.dashboard-edit-add-section-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: rgba(102, 126, 234, 0.15); border: 1px dashed rgba(102, 126, 234, 0.5); border-radius: 8px; }',
+                  '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.25); color: #fff; cursor: pointer; }',
+                  '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn:hover { background: rgba(102, 126, 234, 0.4); }',
+                  '.dashboard-edit-add-item-bar { margin: 0.5rem 0; padding: 0.4rem; text-align: center; background: rgba(102, 126, 234, 0.12); border: 1px dashed rgba(102, 126, 234, 0.4); border-radius: 6px; }',
+                  '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.45); background: rgba(102, 126, 234, 0.2); color: #fff; cursor: pointer; }',
+                  '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn:hover { background: rgba(102, 126, 234, 0.35); }',
+                  '.dashboard-edit-drag-handle { cursor: grab; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 36px; margin-right: 2px; border: none; border-radius: 4px; background: rgba(102, 126, 234, 0.5); color: #fff; font-size: 12px; pointer-events: auto; -webkit-user-drag: element; user-select: none; }',
+                  '.dashboard-edit-drag-handle:hover { background: rgba(102, 126, 234, 0.75); }',
+                  '.dashboard-edit-drag-handle:active { cursor: grabbing; }',
+                  '.main-menu-bg.dashboard-edit-drag-over { outline: 2px dashed #667eea; outline-offset: 4px; }',
+                  '.menu-item-card.dashboard-edit-drag-over { outline: 2px dashed #667eea; outline-offset: 2px; }'
                 ].join('\n');
                 doc.head.appendChild(style);
+              }
+              function sectionDragOver(e) {
+                if (!win._dashboardDragSection) return;
+                var targetSection = e.target.closest('.main-menu-bg');
+                if (!targetSection || targetSection === win._dashboardDragSection.section) return;
+                e.preventDefault();
+                try { e.dataTransfer.dropEffect = 'move'; } catch (err) {}
+                doc.querySelectorAll('.main-menu-bg.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
+                targetSection.classList.add('dashboard-edit-drag-over');
+              }
+              function sectionDrop(e) {
+                var d = win._dashboardDragSection;
+                if (!d) return;
+                var targetSection = e.target.closest('.main-menu-bg');
+                if (!targetSection || targetSection === d.section) { win._dashboardDragSection = null; return; }
+                e.preventDefault();
+                doc.querySelectorAll('.main-menu-bg.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
+                var parent = d.section.parentNode;
+                if (parent) {
+                  parent.insertBefore(d.bar, targetSection);
+                  parent.insertBefore(d.section, targetSection);
+                }
+                win._dashboardDragSection = null;
+              }
+              function itemDragOver(e) {
+                if (!win._dashboardDragItem) return;
+                var container = e.currentTarget;
+                if (!container.classList.contains('menu-items-container')) return;
+                var targetCard = e.target.closest('.menu-item-card');
+                if (targetCard && targetCard.closest('.menu-items-container') === container && targetCard !== win._dashboardDragItem.card) {
+                  e.preventDefault();
+                  try { e.dataTransfer.dropEffect = 'move'; } catch (err) {}
+                  container.querySelectorAll('.menu-item-card.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
+                  targetCard.classList.add('dashboard-edit-drag-over');
+                } else if (e.target.closest('.menu-items-container') === container) {
+                  e.preventDefault();
+                  try { e.dataTransfer.dropEffect = 'move'; } catch (err) {}
+                  container.querySelectorAll('.menu-item-card.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
+                }
+              }
+              function itemDrop(e) {
+                var d = win._dashboardDragItem;
+                if (!d) return;
+                var container = e.currentTarget;
+                if (!container.classList.contains('menu-items-container')) return;
+                e.preventDefault();
+                container.querySelectorAll('.menu-item-card.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
+                var targetCard = e.target.closest('.menu-item-card');
+                var addBar = container.querySelector('.dashboard-edit-add-item-bar');
+                if (targetCard && targetCard !== d.card && targetCard.parentNode === container) {
+                  container.insertBefore(d.card, targetCard);
+                } else if (addBar && d.card.parentNode === container) {
+                  container.insertBefore(d.card, addBar.nextElementSibling);
+                }
+                win._dashboardDragItem = null;
+              }
+              function dashboardDragEnd() {
+                win._dashboardDragSection = null;
+                win._dashboardDragItem = null;
+                doc.querySelectorAll('.main-menu-bg.dashboard-edit-drag-over, .menu-item-card.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
               }
               function injectEditButtons() {
                 try {
@@ -1517,6 +1590,17 @@
                     var div = doc.createElement('div');
                     div.className = cardWrapClass;
                     div.setAttribute('data-dashboard-edit', '1');
+                    var grip = doc.createElement('span');
+                    grip.className = 'dashboard-edit-drag-handle';
+                    grip.setAttribute('draggable', 'true');
+                    grip.setAttribute('aria-label', 'Drag to reorder item');
+                    grip.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+                    grip.addEventListener('dragstart', function(e) {
+                      e.stopPropagation();
+                      win._dashboardDragItem = { card: card };
+                      try { e.dataTransfer.setData('text/plain', ''); e.dataTransfer.effectAllowed = 'move'; } catch (err) {}
+                    });
+                    div.appendChild(grip);
                     var editBtn = doc.createElement('button');
                     editBtn.type = 'button';
                     editBtn.className = 'dashboard-edit-btn';
@@ -1532,6 +1616,19 @@
                     var div = doc.createElement('div');
                     div.className = headerWrapClass;
                     div.setAttribute('data-dashboard-edit', '1');
+                    var grip = doc.createElement('span');
+                    grip.className = 'dashboard-edit-drag-handle dashboard-edit-drag-handle-section';
+                    grip.setAttribute('draggable', 'true');
+                    grip.setAttribute('aria-label', 'Drag to reorder section');
+                    grip.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+                    grip.addEventListener('dragstart', function(e) {
+                      e.stopPropagation();
+                      var sec = header.closest('.main-menu-bg');
+                      var b = sec && sec.previousElementSibling;
+                      win._dashboardDragSection = { bar: b, section: sec };
+                      try { e.dataTransfer.setData('text/plain', ''); e.dataTransfer.effectAllowed = 'move'; } catch (err) {}
+                    });
+                    div.appendChild(grip);
                     var editBtn = doc.createElement('button');
                     editBtn.type = 'button';
                     editBtn.className = 'dashboard-edit-btn';
@@ -1585,10 +1682,121 @@
                     div.appendChild(editBtn);
                     loc.insertBefore(div, loc.firstChild);
                   });
+                  var packery = doc.getElementById('packery-container');
+                  if (packery) {
+                    doc.querySelectorAll('.main-menu-bg').forEach(function(section) {
+                      var prev = section.previousElementSibling;
+                      if (prev && prev.classList && prev.classList.contains('dashboard-edit-add-section-bar')) return;
+                      var bar = doc.createElement('div');
+                      bar.className = 'dashboard-edit-add-section-bar';
+                      bar.setAttribute('data-dashboard-edit', '1');
+                      var btn = doc.createElement('button');
+                      btn.type = 'button';
+                      btn.className = 'dashboard-edit-add-section-btn';
+                      btn.setAttribute('aria-label', 'Add section');
+                      btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add section';
+                      bar.appendChild(btn);
+                      packery.insertBefore(bar, section);
+                    });
+                    if (!packery.hasAttribute('data-dashboard-section-drag')) {
+                      packery.setAttribute('data-dashboard-section-drag', '1');
+                      packery.addEventListener('dragover', sectionDragOver);
+                      packery.addEventListener('drop', sectionDrop);
+                      doc.addEventListener('dragend', dashboardDragEnd);
+                    }
+                  }
+                  doc.querySelectorAll('.menu-items-container').forEach(function(container) {
+                    var first = container.firstElementChild;
+                    if (first && first.classList && first.classList.contains('dashboard-edit-add-item-bar')) return;
+                    var bar = doc.createElement('div');
+                    bar.className = 'dashboard-edit-add-item-bar';
+                    bar.setAttribute('data-dashboard-edit', '1');
+                    var btn = doc.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'dashboard-edit-add-item-btn';
+                    btn.setAttribute('aria-label', 'Add item');
+                    btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add item';
+                    bar.appendChild(btn);
+                    container.insertBefore(bar, container.firstChild);
+                  });
+                  doc.querySelectorAll('.menu-items-container').forEach(function(container) {
+                    if (container.hasAttribute('data-dashboard-item-drag')) return;
+                    container.setAttribute('data-dashboard-item-drag', '1');
+                    container.addEventListener('dragover', itemDragOver);
+                    container.addEventListener('drop', itemDrop);
+                  });
                 } catch (err) { console.warn('injectEditButtons', err); }
+              }
+              function createNewMenuItemCard(doc) {
+                var card = doc.createElement('div');
+                card.className = 'menu-item-card';
+                card.setAttribute('data-dashboard-edit-new-item', '1');
+                card.setAttribute('data-item-url', '/new-item/');
+                card.setAttribute('data-item-expanded', 'false');
+                card.setAttribute('data-prices-array', '["-","-",0]');
+                card.setAttribute('data-selected-size', '-');
+                card.setAttribute('data-selected-flavour', '-');
+                card.setAttribute('data-side-categories', '[]');
+                card.setAttribute('data-modifications', '[]');
+                card.setAttribute('data-additions', '[]');
+                card.setAttribute('data-images-array', '[]');
+                card.setAttribute('data-tags', '[]');
+                card.setAttribute('data-ingredients', '[]');
+                card.setAttribute('data-cookingmethods', '[]');
+                card.setAttribute('data-types', '[]');
+                card.setAttribute('data-events', '[]');
+                card.innerHTML = '<div class="menu-item-row-top">' +
+                  '<div class="menu-item-header-content">' +
+                  '<h3 class="menu-item-title"><a href="/new-item/">New item</a></h3>' +
+                  '<div class="menu-item-row-middle">' +
+                  '<div class="menu-item-description"><p></p></div>' +
+                  '<div class="menu-item-price">$0</div>' +
+                  '</div>' +
+                  '<div class="menu-item-options"><ul class="sizes"></ul><ul class="flavours"></ul></div>' +
+                  '</div></div>' +
+                  '<div class="menu-item-expanded-content" style="display: none;">' +
+                  '<div class="menu-item-expanded-loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>' +
+                  '<div class="menu-item-expanded-data" style="display: none;"></div></div>';
+                return card;
+              }
+              function createNewSectionElement(doc, title, slug) {
+                title = title || 'New Section';
+                slug = slug || 'new-section';
+                var safeTitle = (title || '').replace(/"/g, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                var outer = doc.createElement('div');
+                outer.className = 'main-menu-bg ' + safeTitle.replace(/\s+/g, ' ');
+                outer.setAttribute('data-dashboard-edit-new-section', '1');
+                var safeSlug = (slug || 'new-section').replace(/[^a-z0-9-]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'new-section';
+                var html = '<div class="main-menu ' + safeTitle.replace(/\s+/g, ' ') + ' item">' +
+                  '<div class="menu-header" data-section-slug="' + safeSlug + '" data-weight="0" data-icon="" data-images-top="" data-images-bottom="">' +
+                  '<a class="menu-anchor" id="' + safeSlug + '"></a>' +
+                  '<div class="headerstyle item"><h2 class="center title"><a href="/' + safeSlug + '/">' + safeTitle + '</a></h2></div>' +
+                  '<div class="menu-summary item"></div>' +
+                  '</div>' +
+                  '<div class="menu-items-container"></div>' +
+                  '</div>';
+                outer.innerHTML = html;
+                return outer;
               }
               function removeEditButtons() {
                 try {
+                  win._dashboardDragSection = null;
+                  win._dashboardDragItem = null;
+                  doc.querySelectorAll('.main-menu-bg.dashboard-edit-drag-over, .menu-item-card.dashboard-edit-drag-over').forEach(function(el) { el.classList.remove('dashboard-edit-drag-over'); });
+                  var packery = doc.getElementById('packery-container');
+                  doc.removeEventListener('dragend', dashboardDragEnd);
+                  if (packery && packery.hasAttribute('data-dashboard-section-drag')) {
+                    packery.removeAttribute('data-dashboard-section-drag');
+                    packery.removeEventListener('dragover', sectionDragOver);
+                    packery.removeEventListener('drop', sectionDrop);
+                  }
+                  doc.querySelectorAll('.menu-items-container[data-dashboard-item-drag]').forEach(function(container) {
+                    container.removeAttribute('data-dashboard-item-drag');
+                    container.removeEventListener('dragover', itemDragOver);
+                    container.removeEventListener('drop', itemDrop);
+                  });
+                  doc.querySelectorAll('.dashboard-edit-add-item-bar').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.dashboard-edit-add-section-bar').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.dashboard-edit-card-btn-wrap').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.menu-item-card.dashboard-edit-card-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-card-wrap'); });
                   doc.querySelectorAll('.dashboard-edit-header-btn-wrap').forEach(function(el) { el.remove(); });
@@ -1614,6 +1822,39 @@
               win._dashboardRemoveEditButtons = removeEditButtons;
               setTimeout(injectEditButtons, 100);
               win._dashboardEditClick = function(e) {
+                if (e.target.closest('.dashboard-edit-drag-handle')) {
+                  e.stopPropagation();
+                  return;
+                }
+                var addItemBtn = e.target.closest('.dashboard-edit-add-item-btn');
+                if (addItemBtn) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var bar = addItemBtn.closest('.dashboard-edit-add-item-bar');
+                  var container = bar && bar.parentNode;
+                  if (container && container.classList && container.classList.contains('menu-items-container')) {
+                    var newCard = createNewMenuItemCard(doc);
+                    container.insertBefore(newCard, bar.nextElementSibling);
+                    if (win._dashboardInjectEditButtons) setTimeout(win._dashboardInjectEditButtons, 50);
+                  }
+                  return;
+                }
+                var addSectionBtn = e.target.closest('.dashboard-edit-add-section-btn');
+                if (addSectionBtn) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var bar = addSectionBtn.closest('.dashboard-edit-add-section-bar');
+                  if (bar && bar.nextElementSibling) {
+                    win._dashboardNewSectionCount = (win._dashboardNewSectionCount || 0) + 1;
+                    var n = win._dashboardNewSectionCount;
+                    var title = 'New Section ' + n;
+                    var slug = 'new-section-' + n;
+                    var newSection = createNewSectionElement(doc, title, slug);
+                    bar.parentNode.insertBefore(newSection, bar.nextElementSibling);
+                    if (win._dashboardInjectEditButtons) setTimeout(win._dashboardInjectEditButtons, 50);
+                  }
+                  return;
+                }
                 var editBtn = e.target.closest('.dashboard-edit-btn');
                 if (editBtn) {
                   var card = e.target.closest('.menu-item-card');
@@ -1772,7 +2013,10 @@
         colorPrompt.classList.remove('hidden');
         showColorSectionList();
       });
-      btnClear.addEventListener('click', clearSelection);
+      btnClear.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to clear the selection? Unsaved changes will be discarded.')) return;
+        clearSelection();
+      });
       if (btnAddSideCategory && sideCategoriesContainer) {
         btnAddSideCategory.addEventListener('click', function() {
           var idx = sideCategoriesContainer.querySelectorAll('.side-cat-block').length;

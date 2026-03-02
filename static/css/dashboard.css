@@ -217,6 +217,19 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+.btn-dash-danger {
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+}
+.btn-dash-danger:hover {
+  background: rgba(185, 28, 28, 0.95);
+  border-color: rgba(220, 38, 38, 0.8);
+}
+.btn-dash-danger .fa {
+  margin-right: 0.35rem;
+}
+
 /* ========== Edit menu page (/edit-menu/) ========== */
 
 .dashboard-edit-page {
