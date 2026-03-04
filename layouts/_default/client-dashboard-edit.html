@@ -20,6 +20,7 @@
             <button type="button" class="dashboard-edit-toggle-btn" id="btnSubmodeColor" aria-pressed="false" title="Color" aria-label="Color"><i class="fa fa-paint-brush" aria-hidden="true"></i></button>
           </div>
         </div>
+        <button type="button" class="btn-dash btn-dash-primary" id="btnPublish" title="Publish to Git" aria-label="Publish changes to Git">Publish</button>
       </div>
     </div>
 
@@ -50,6 +51,7 @@
           <div id="dashboardEditForm" class="dashboard-edit-form hidden">
             <p class="dashboard-edit-selected-type" id="dashboardEditSelectedType"></p>
             <p class="dashboard-edit-content-source" id="dashboardEditContentSource" aria-live="polite"></p>
+            <p class="dashboard-edit-status" id="dashboardEditStatus" aria-live="polite"></p>
             <div class="dashboard-edit-form-fields" id="dashboardEditFormFields">
               <div class="dashboard-edit-field-group" id="dashboardEditFieldsGeneric" data-for="menu-item,section-header">
                 <div class="dashboard-edit-field">
@@ -215,8 +217,32 @@
                   <input type="text" id="dashboardEditPromoTitle" class="dashboard-edit-input" placeholder="Promotion title">
                 </div>
                 <div class="dashboard-edit-field">
+                  <label for="dashboardEditPromoDescription">Description / Body</label>
+                  <textarea id="dashboardEditPromoDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Optional description or body text" rows="3"></textarea>
+                </div>
+                <div class="dashboard-edit-field">
                   <label for="dashboardEditPromoLink">Link URL</label>
                   <input type="text" id="dashboardEditPromoLink" class="dashboard-edit-input" placeholder="/specials/... or full URL">
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditPromoImages">Images (one path per line)</label>
+                  <textarea id="dashboardEditPromoImages" class="dashboard-edit-input dashboard-edit-textarea" placeholder="images/promo1.jpg&#10;images/promo2.webp" rows="2"></textarea>
+                  <div class="dashboard-edit-slideshow-view" id="dashboardEditPromoImagesView" aria-label="Promotion images preview"></div>
+                </div>
+                <div class="dashboard-edit-field">
+                  <label class="dashboard-edit-checkbox-wrap">
+                    <input type="checkbox" id="dashboardEditPromoRecurring" class="dashboard-edit-input">
+                    <span>Recurring</span>
+                  </label>
+                </div>
+                <div class="dashboard-edit-field">
+                  <label>Days of week</label>
+                  <div id="dashboardEditPromoDaysofweekContainer" class="dashboard-list-ui"></div>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddPromoDay">Add day</button>
+                </div>
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditPromoWeight">Weight</label>
+                  <input type="number" id="dashboardEditPromoWeight" class="dashboard-edit-input" placeholder="e.g. 1" min="0" step="1">
                 </div>
               </div>
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsSlideshow" data-for="slideshow">
@@ -264,6 +290,10 @@
         return;
       }
 
+      // CMS / content-management service configuration
+      var CMS_SERVICE_URL = window.CMS_SERVICE_URL || 'https://cms.ttmenus.com';
+      var CMS_CLIENT_ID = window.CLIENT_ID || '_ttms_menu_demo';
+
       var page = document.getElementById('dashboardEditPage');
       var iframe = document.getElementById('menuPreviewFrame');
       var btnPreview = document.getElementById('btnModePreview');
@@ -298,8 +328,10 @@
       var eventsContainer = document.getElementById('dashboardEditEventsContainer');
       var btnAddEvent = document.getElementById('btnAddEvent');
       var btnApply = document.getElementById('btnApplyEdit');
+      var btnPublish = document.getElementById('btnPublish');
       var btnClear = document.getElementById('btnClearSelection');
       var contentSourceEl = document.getElementById('dashboardEditContentSource');
+      var statusEl = document.getElementById('dashboardEditStatus');
       var fieldsGeneric = document.getElementById('dashboardEditFieldsGeneric');
       var fieldsLocation = document.getElementById('dashboardEditFieldsLocation');
       var fieldsPromotion = document.getElementById('dashboardEditFieldsPromotion');
@@ -340,12 +372,24 @@
       var hoursDayOpenSlot = 0;
       var hoursDayCloseSlot = 336;
       var inputPromoTitle = document.getElementById('dashboardEditPromoTitle');
+      var inputPromoDescription = document.getElementById('dashboardEditPromoDescription');
       var inputPromoLink = document.getElementById('dashboardEditPromoLink');
+      var inputPromoImages = document.getElementById('dashboardEditPromoImages');
+      var promoImagesViewEl = document.getElementById('dashboardEditPromoImagesView');
+      var inputPromoRecurring = document.getElementById('dashboardEditPromoRecurring');
+      var promoDaysofweekContainer = document.getElementById('dashboardEditPromoDaysofweekContainer');
+      var inputPromoWeight = document.getElementById('dashboardEditPromoWeight');
+      var btnAddPromoDay = document.getElementById('btnAddPromoDay');
       var slideshowViewEl = document.getElementById('dashboardEditSlideshowView');
       var inputSlideshowImages = document.getElementById('dashboardEditSlideshowImages');
       if (inputMenuItemImages) {
         inputMenuItemImages.addEventListener('input', function() {
           if (menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, hoursParseStringList(inputMenuItemImages.value));
+        });
+      }
+      if (inputPromoImages && promoImagesViewEl) {
+        inputPromoImages.addEventListener('input', function() {
+          hoursRenderImagesPreview(promoImagesViewEl, hoursParseStringList(inputPromoImages.value));
         });
       }
       var asideEl = document.getElementById('dashboardEditAside');
@@ -368,8 +412,32 @@
       var selectedElement = null;
       var selectedInfo = null;
       var selectedColorSectionId = null;
+      var editFormDirty = false;
+      var savedDraftPreviewId = null;
+      var loadDraftsOnLoad = (function() {
+        var p = new URLSearchParams(window.location.search);
+        var mode = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('editPreviewMode');
+        return p.get('load') === 'drafts' || mode === 'drafts';
+      })();
+      if (loadDraftsOnLoad && typeof sessionStorage !== 'undefined') sessionStorage.setItem('editPreviewMode', 'drafts');
+
+      function setEditStatus(msg) {
+        if (!statusEl) return;
+        statusEl.textContent = msg || '';
+      }
 
       initOpeningHoursEditor();
+
+      if (formEl) {
+        formEl.addEventListener('input', function() {
+          editFormDirty = true;
+          setEditStatus('Unsaved changes (not yet published)');
+        });
+        formEl.addEventListener('change', function() {
+          editFormDirty = true;
+          setEditStatus('Unsaved changes (not yet published)');
+        });
+      }
 
       // Maps to static/css/colors.css – section id -> { label, vars: [ { name, label } ] }
       var COLOR_SECTIONS = [
@@ -438,6 +506,176 @@
         return elt ? (elt.textContent || '').trim() : '';
       }
 
+      // ----- Content payload builders -----
+
+      function buildPromotionPayloadFromState() {
+        if (!selectedElement) return null;
+        var el = selectedElement;
+        var title = inputPromoTitle ? (inputPromoTitle.value || '').trim() : '';
+        var desc = inputPromoDescription ? (inputPromoDescription.value || '').trim() : '';
+        var link = inputPromoLink ? (inputPromoLink.value || '').trim() : '';
+        var imagesArr = inputPromoImages ? hoursParseStringList(inputPromoImages.value) : [];
+        var recurring = !!(inputPromoRecurring && inputPromoRecurring.checked);
+        var daysArr = promoDaysofweekContainer ? getStringListFromUI(promoDaysofweekContainer) : [];
+        var weightVal = inputPromoWeight ? inputPromoWeight.value.trim() : '';
+        var weightNum = weightVal ? parseInt(weightVal, 10) : 0;
+        if (isNaN(weightNum)) weightNum = 0;
+
+        // Derive slug/contentPath from link if possible, otherwise from title
+        var slug = '';
+        if (link) {
+          var linkPath = link.replace(/^https?:\/\/[^/]+/, '');
+          var parts = linkPath.split('/').filter(function (p) { return p; });
+          if (parts.length) slug = parts[parts.length - 1];
+        }
+        if (!slug && title) {
+          slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        }
+        if (!slug) slug = 'promotion';
+
+        return {
+          kind: 'promotion',
+          clientId: CMS_CLIENT_ID,
+          contentPath: 'content/promotions/' + slug + '.md',
+          siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
+          frontMatter: {
+            title: title,
+            link: link || '/promotions/' + slug + '/',
+            images: imagesArr.map(function (p) { return { image: p }; }),
+            recurring: recurring,
+            daysofweek: daysArr,
+            weight: weightNum
+          },
+          body: desc || ''
+        };
+      }
+
+      function buildMenuItemPayloadFromState() {
+        if (!selectedInfo || !selectedElement) return null;
+        var contentPath = (selectedInfo.contentPath || '').trim();
+        if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || contentPath.indexOf('_index.md') !== -1) return null;
+        var title = inputTitle ? (inputTitle.value || '').trim() : '';
+        var desc = inputDesc ? (inputDesc.value || '').trim() : '';
+        var imagesArr = inputMenuItemImages ? hoursParseStringList(inputMenuItemImages.value) : [];
+        var pricesFlat = pricesContainer ? getPricesFromUI(pricesContainer) : [];
+        var prices = [];
+        for (var i = 0; i < pricesFlat.length; i += 3) {
+          prices.push({
+            size: (pricesFlat[i] != null ? String(pricesFlat[i]).trim() : '') || '-',
+            flavour: (pricesFlat[i + 1] != null ? String(pricesFlat[i + 1]).trim() : '') || '-',
+            price: typeof pricesFlat[i + 2] === 'number' ? pricesFlat[i + 2] : (parseFloat(pricesFlat[i + 2]) || 0)
+          });
+        }
+        var sideCats = sideCategoriesContainer ? getSideCategoriesFromUI(sideCategoriesContainer) : [];
+        var modsFlat = modificationsContainer ? getPairsFromUI(modificationsContainer) : [];
+        var mods = [];
+        for (var j = 0; j < modsFlat.length; j += 2) { mods.push({ name: String(modsFlat[j] || ''), price: modsFlat[j + 1] != null ? (typeof modsFlat[j + 1] === 'number' ? modsFlat[j + 1] : parseFloat(modsFlat[j + 1]) || 0) : 0 }); }
+        var addsFlat = additionsContainer ? getPairsFromUI(additionsContainer) : [];
+        var adds = [];
+        for (var k = 0; k < addsFlat.length; k += 2) { adds.push({ name: String(addsFlat[k] || ''), price: addsFlat[k + 1] != null ? (typeof addsFlat[k + 1] === 'number' ? addsFlat[k + 1] : parseFloat(addsFlat[k + 1]) || 0) : 0 }); }
+        var tags = tagsContainer ? getStringListFromUI(tagsContainer) : [];
+        var ingredients = ingredientsContainer ? getStringListFromUI(ingredientsContainer) : [];
+        var cookingmethods = cookingmethodsContainer ? getStringListFromUI(cookingmethodsContainer) : [];
+        var types = typesContainer ? getStringListFromUI(typesContainer) : [];
+        var events = eventsContainer ? getStringListFromUI(eventsContainer) : [];
+        var weightVal = 1;
+        var frontMatter = {
+          title: title || 'Untitled',
+          date: new Date().toISOString(),
+          images: imagesArr.map(function (p) { return { image: p }; }),
+          prices: prices,
+          tags: tags,
+          specials: [],
+          events: events,
+          ingredients: ingredients,
+          cookingmethods: cookingmethods,
+          types: types,
+          weight: weightVal
+        };
+        if (sideCats && sideCats.length) frontMatter.side_categories = sideCats;
+        if (mods && mods.length) frontMatter.modifications = mods;
+        if (adds && adds.length) frontMatter.additions = adds;
+        return {
+          kind: 'menu-item',
+          clientId: CMS_CLIENT_ID,
+          contentPath: contentPath,
+          siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
+          frontMatter: frontMatter,
+          body: desc || ''
+        };
+      }
+
+      function buildSectionPayloadFromState() {
+        if (!selectedInfo || !selectedElement) return null;
+        var contentPath = (selectedInfo.contentPath || '').trim();
+        if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || contentPath.slice(-'_index.md'.length) !== '_index.md') return null;
+        var title = inputTitle ? (inputTitle.value || '').trim() : '';
+        var weightVal = inputSectionWeight ? parseInt((inputSectionWeight.value || '').trim(), 10) : 0;
+        if (isNaN(weightVal)) weightVal = 0;
+        var icon = inputSectionIcon ? (inputSectionIcon.value || '').trim() : '';
+        var topImg = inputSectionImageTop ? (inputSectionImageTop.value || '').trim() : '';
+        var bottomImg = inputSectionImageBottom ? (inputSectionImageBottom.value || '').trim() : '';
+        var frontMatter = {
+          title: title || 'Section',
+          weight: weightVal,
+          icon: icon || '',
+          images: { top: topImg || '', bottom: bottomImg || '' }
+        };
+        return {
+          kind: 'section',
+          clientId: CMS_CLIENT_ID,
+          contentPath: contentPath,
+          siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
+          frontMatter: frontMatter,
+          body: ''
+        };
+      }
+
+      function buildSlideshowPayloadFromState() {
+        if (!selectedInfo || !inputSlideshowImages) return null;
+        var paths = hoursParseStringList((inputSlideshowImages.value || '').trim());
+        return {
+          kind: 'slideshow',
+          clientId: CMS_CLIENT_ID,
+          contentPath: 'content/_index.md',
+          siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
+          frontMatter: { slideshow: paths.map(function (p) { return { image: p }; }) },
+          body: ''
+        };
+      }
+
+      function buildContentEditPayload() {
+        if (!selectedInfo) return null;
+        var type = selectedInfo.contentType || 'menu-item';
+        if (type === 'promotion') return buildPromotionPayloadFromState();
+        if (type === 'menu-item') return buildMenuItemPayloadFromState();
+        if (type === 'section-header') return buildSectionPayloadFromState();
+        // Slideshow would overwrite content/_index.md; not supported until backend merge.
+        if (type === 'slideshow') return null;
+        if (type === 'location') return null;
+        return null;
+      }
+
+      function postToCMS(path, payload) {
+        var url = CMS_SERVICE_URL.replace(/\/+$/, '') + path;
+        var headers = { 'Content-Type': 'application/json' };
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: headers,
+          body: JSON.stringify(payload)
+        }).then(function (res) {
+          if (!res.ok) {
+            return res.text().then(function (txt) {
+              throw new Error('CMS error ' + res.status + ': ' + txt);
+            });
+          }
+          return res.json().catch(function () { return {}; });
+        });
+      }
+
       function setEditMode(on) {
         editMode = !!on;
         page.setAttribute('data-edit-mode', editMode ? 'edit' : 'preview');
@@ -453,6 +691,8 @@
         }
         setupIframeEditMode(editMode && editSubmode === 'content');
       }
+
+      if (loadDraftsOnLoad) setEditMode(true);
 
       function setEditSubmode(mode) {
         editSubmode = mode;
@@ -721,6 +961,14 @@
         if (eventsContainer) renderStringListUI(eventsContainer, []);
         if (inputSlideshowImages) inputSlideshowImages.value = '';
         if (slideshowViewEl) slideshowViewEl.innerHTML = '';
+        if (inputPromoTitle) inputPromoTitle.value = '';
+        if (inputPromoDescription) inputPromoDescription.value = '';
+        if (inputPromoLink) inputPromoLink.value = '';
+        if (inputPromoImages) inputPromoImages.value = '';
+        if (promoImagesViewEl) promoImagesViewEl.innerHTML = '';
+        if (inputPromoRecurring) inputPromoRecurring.checked = false;
+        if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, []);
+        if (inputPromoWeight) inputPromoWeight.value = '';
       }
 
       function parseJsonAttr(el, attr) {
@@ -953,11 +1201,20 @@
         row.querySelector('.dashboard-btn-remove-item').addEventListener('click', function() { row.remove(); });
         return row;
       }
+      function getSideCatMinMax(cat) {
+        var c = cat && cat.config;
+        var minVal = (c && (c.minimum != null || c.min != null)) ? (c.minimum != null ? c.minimum : c.min) : 0;
+        var maxVal = (c && (c.maximum != null || c.max != null)) ? (c.maximum != null ? c.maximum : c.max) : 99;
+        var minNum = parseInt(minVal, 10);
+        var maxNum = parseInt(maxVal, 10);
+        return { min: isNaN(minNum) ? 0 : minNum, max: isNaN(maxNum) ? 99 : maxNum };
+      }
       function createSideCatBlock(cat, index) {
         var catName = (cat && cat.category_name != null) ? String(cat.category_name) : '';
         var displayName = (cat && cat.display_name != null) ? String(cat.display_name) : '';
-        var min = (cat && cat.config && cat.config.minimum != null) ? cat.config.minimum : 0;
-        var max = (cat && cat.config && cat.config.maximum != null) ? cat.config.maximum : 99;
+        var minMax = getSideCatMinMax(cat);
+        var min = minMax.min;
+        var max = minMax.max;
         var items = (cat && Array.isArray(cat.items)) ? cat.items : [];
         var block = document.createElement('div');
         block.className = 'side-cat-block';
@@ -966,8 +1223,8 @@
           '<input type="text" class="dashboard-edit-input side-cat-name" placeholder="category_name (e.g. rolls)" value="' + (catName.replace(/"/g, '&quot;')) + '">' +
           '<input type="text" class="dashboard-edit-input side-cat-display-name" placeholder="display_name (e.g. Choose Your Rolls)" value="' + (displayName.replace(/"/g, '&quot;')) + '">' +
           '<div class="side-cat-min-max-group">' +
-          '<span class="side-cat-min-max-wrap"><label class="side-cat-min-max-label">Min</label><input type="number" class="dashboard-edit-input side-cat-min" placeholder="min" min="0" value="' + (min !== '' ? min : '') + '"></span>' +
-          '<span class="side-cat-min-max-wrap"><label class="side-cat-min-max-label">Max</label><input type="number" class="dashboard-edit-input side-cat-max" placeholder="max" min="0" value="' + (max !== '' ? max : '') + '"></span>' +
+          '<span class="side-cat-min-max-wrap"><label class="side-cat-min-max-label">Min</label><input type="number" class="dashboard-edit-input side-cat-min" placeholder="min" min="0" value="' + String(min) + '"></span>' +
+          '<span class="side-cat-min-max-wrap"><label class="side-cat-min-max-label">Max</label><input type="number" class="dashboard-edit-input side-cat-max" placeholder="max" min="0" value="' + String(max) + '"></span>' +
           '</div>' +
           '<button type="button" class="dashboard-btn dashboard-btn-remove-cat" aria-label="Remove category"><i class="fa fa-trash-o" aria-hidden="true"></i></button></div>' +
           '<div class="side-cat-items"></div>' +
@@ -1399,6 +1656,9 @@
       function showEditForm(info) {
         selectedInfo = info;
         selectedElement = info.element;
+        editFormDirty = false;
+        savedDraftPreviewId = null;
+        setEditStatus('');
         promptEl.classList.add('hidden');
         formEl.classList.remove('hidden');
         selectedTypeEl.textContent = 'Editing: ' + info.type;
@@ -1450,10 +1710,33 @@
           initOpeningHoursEditor();
           initOpeningHoursFromJson(inputLocationOpeningHours ? inputLocationOpeningHours.value : '');
         } else if (contentType === 'promotion') {
-          var adTitleEl = info.element.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
-          var adLinkEl = info.element.querySelector('a[href]');
-          if (inputPromoTitle) inputPromoTitle.value = adTitleEl ? getTextContent(adTitleEl) : '';
-          if (inputPromoLink) inputPromoLink.value = adLinkEl ? (adLinkEl.getAttribute('href') || '') : '';
+          var el = info.element;
+          var adTitleEl = el.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
+          var adLinkEl = el.querySelector('a.content-panel[href], .ad-panel a[href], a[href]');
+          if (inputPromoTitle) inputPromoTitle.value = (el.getAttribute('data-ad-title') || (adTitleEl ? getTextContent(adTitleEl) : '')) || '';
+          if (inputPromoDescription) inputPromoDescription.value = el.getAttribute('data-ad-description') || '';
+          if (inputPromoLink) inputPromoLink.value = (adLinkEl ? (adLinkEl.getAttribute('href') || '') : '') || el.getAttribute('data-ad-link') || '';
+          var imagesArr = [];
+          try {
+            var raw = el.getAttribute('data-ad-images');
+            if (raw) imagesArr = JSON.parse(raw);
+          } catch (e) {}
+          if (!imagesArr.length) {
+            el.querySelectorAll('.ad-panel img.ad-portrait, .ad-panel img.ad-portrait-bg, .ad-panel img').forEach(function(img) {
+              var src = (img.getAttribute('src') || '').replace(/^\//, '');
+              if (src && imagesArr.indexOf(src) === -1) imagesArr.push(src);
+            });
+          }
+          if (inputPromoImages) inputPromoImages.value = Array.isArray(imagesArr) ? imagesArr.join('\n') : '';
+          if (promoImagesViewEl) hoursRenderImagesPreview(promoImagesViewEl, Array.isArray(imagesArr) ? imagesArr : []);
+          if (inputPromoRecurring) inputPromoRecurring.checked = (el.getAttribute('data-ad-recurring') || '') === 'true';
+          var daysArr = [];
+          try {
+            var rawDays = el.getAttribute('data-ad-daysofweek');
+            if (rawDays) daysArr = JSON.parse(rawDays);
+          } catch (e) {}
+          if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, Array.isArray(daysArr) ? daysArr : []);
+          if (inputPromoWeight) inputPromoWeight.value = el.getAttribute('data-ad-weight') || '';
         } else if (contentType === 'slideshow') {
           var slides = info.element.querySelectorAll('.client-tour-slideshow .slide img');
           var paths = [];
@@ -1480,13 +1763,178 @@
         }
       }
 
+      function loadAndApplyDrafts() {
+        var doc = iframe.contentDocument;
+        var win = iframe.contentWindow;
+        if (!win || !win.__dashboardApplyEdit || !doc) return;
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+        var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+        var headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch(url, { method: 'GET', credentials: 'include', headers: headers })
+          .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
+          .catch(function() { return { previews: [] }; })
+          .then(function(data) {
+            var list = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
+            var applied = 0;
+            list.forEach(function(preview) {
+              var p = preview.payload || preview.Payload || {};
+              var kind = p.kind || preview.kind;
+              var contentPath = p.contentPath || preview.content_path || p.content_path || '';
+              var fm = p.frontMatter || p.front_matter || {};
+              var title = fm.title != null ? fm.title : '';
+
+              if (kind === 'menu-item') {
+                var itemUrl = '/' + String(contentPath).replace(/^content\//, '').replace(/\.md$/, '') + '/';
+                var description = (p.body != null ? p.body : '') || '';
+                var prices = fm.prices;
+                var pricesArray = [];
+                if (Array.isArray(prices)) {
+                  prices.forEach(function(pr) {
+                    pricesArray.push(pr.size != null ? pr.size : '-', pr.flavour != null ? pr.flavour : '-', Number(pr.price));
+                  });
+                }
+                var payload = { itemUrl: itemUrl, title: title, description: description };
+                if (pricesArray.length) payload.pricesArray = pricesArray;
+                try {
+                  win.__dashboardApplyEdit(JSON.stringify(payload));
+                  applied++;
+                } catch (e) { console.warn('Apply draft failed', e); }
+                return;
+              }
+
+              if (kind === 'section-header') {
+                var sectionSlug = String(contentPath).replace(/^content\//, '').replace(/\/_index\.md$/, '').trim();
+                if (!sectionSlug) return;
+                var header = doc.querySelector('.menu-header[data-section-slug="' + sectionSlug.replace(/"/g, '\\"') + '"]');
+                if (!header) return;
+                var titleEl = header.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
+                if (titleEl) {
+                  var a = titleEl.querySelector('a');
+                  if (a) a.textContent = title; else titleEl.textContent = title;
+                }
+                if (fm.weight != null) header.setAttribute('data-weight', String(fm.weight));
+                if (fm.icon != null) header.setAttribute('data-icon', String(fm.icon));
+                var topSrc = (fm.imagesTop != null ? fm.imagesTop : fm.images_top) != null ? String(fm.imagesTop || fm.images_top).trim() : '';
+                var bottomSrc = (fm.imagesBottom != null ? fm.imagesBottom : fm.images_bottom) != null ? String(fm.imagesBottom || fm.images_bottom).trim() : '';
+                header.setAttribute('data-images-top', topSrc);
+                header.setAttribute('data-images-bottom', bottomSrc);
+                if (topSrc) {
+                  topSrc = topSrc.indexOf('/') === 0 ? topSrc : '/' + topSrc;
+                  var topImg = header.querySelector('a img.food, img.food.item');
+                  if (topImg) topImg.setAttribute('src', topSrc);
+                  else {
+                    var wrap = header.querySelector('a[href]:not(.menu-anchor)');
+                    if (wrap) {
+                      var img = doc.createElement('img');
+                      img.className = 'food item aos-init aos-animate';
+                      img.setAttribute('data-aos', 'zoom-out');
+                      img.src = topSrc;
+                      img.alt = title;
+                      img.loading = 'lazy';
+                      wrap.appendChild(img);
+                    }
+                  }
+                } else {
+                  var t = header.querySelector('a img.food, img.food.item');
+                  if (t) t.remove();
+                }
+                if (bottomSrc) {
+                  bottomSrc = bottomSrc.indexOf('/') === 0 ? bottomSrc : '/' + bottomSrc;
+                  var bottomImg = header.querySelector('.slideinimg');
+                  var h2 = header.querySelector('h2');
+                  if (bottomImg) bottomImg.setAttribute('src', bottomSrc);
+                  else if (h2) {
+                    var slideImg = doc.createElement('img');
+                    slideImg.className = 'slideinimg aos-init aos-animate';
+                    slideImg.setAttribute('data-aos', 'zoom-out-right');
+                    slideImg.src = bottomSrc;
+                    slideImg.alt = title + ' decoration';
+                    slideImg.loading = 'lazy';
+                    h2.appendChild(slideImg);
+                  }
+                } else {
+                  var b = header.querySelector('.slideinimg');
+                  if (b) b.remove();
+                }
+                applied++;
+              }
+            });
+            if (applied > 0) setEditStatus('Loaded ' + applied + ' draft(s)');
+          });
+      }
+
       function setupIframeEditMode(on) {
         function runWhenReady() {
           try {
             var doc = iframe.contentDocument;
             var win = iframe.contentWindow;
             if (!doc || !doc.body) return;
+            win.__dashboardEditMode = !!on;
             if (on) {
+              win.__dashboardApplyEdit = function(payloadStr) {
+                try {
+                  var opts = JSON.parse(payloadStr);
+                  var cards = doc.querySelectorAll('.menu-item-card');
+                  var card = null;
+                  for (var i = 0; i < cards.length; i++) {
+                    if (cards[i].getAttribute('data-item-url') === opts.itemUrl) { card = cards[i]; break; }
+                  }
+                  if (!card) return;
+                  if (opts.title != null) {
+                    var t = card.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
+                    if (t) { var a = t.querySelector('a'); if (a) a.textContent = opts.title; else t.textContent = opts.title; }
+                  }
+                  if (opts.description != null) {
+                    var d = card.querySelector('.menu-item-description, .menu-summary');
+                    if (d) { var p = d.querySelector('p'); if (p) p.textContent = opts.description; else d.textContent = opts.description; }
+                    var ep = card.querySelector('.expanded-item-description p');
+                    if (ep) ep.textContent = opts.description;
+                  }
+                  if (opts.pricesArray && Array.isArray(opts.pricesArray)) {
+                    card.setAttribute('data-prices-array', JSON.stringify(opts.pricesArray));
+                    var nums = [];
+                    for (var j = 2; j < opts.pricesArray.length; j += 3) {
+                      var n = parseFloat(opts.pricesArray[j]);
+                      if (!isNaN(n)) nums.push(n);
+                    }
+                    nums.sort(function(a, b) { return a - b; });
+                    var fmt = function(v) { var s = v.toFixed(2); return s.replace(/\.00$/, ''); };
+                    var priceText = nums.length ? (nums[0] === nums[nums.length - 1] ? '$' + fmt(nums[0]) : '$' + fmt(nums[0]) + ' | $' + fmt(nums[nums.length - 1])) : '';
+                    var priceEl = card.querySelector('.menu-item-price');
+                    if (priceEl) priceEl.textContent = priceText;
+                    var expPrice = card.querySelector('.expanded-price');
+                    if (expPrice) { expPrice.textContent = priceText; expPrice.setAttribute('data-unit-price', nums[0] || 0); }
+                    var addCart = card.querySelector('.expanded-add-cart');
+                    if (addCart) { addCart.setAttribute('data-unit-price', nums[0] || 0); var cartPrice = addCart.querySelector('.cart-button-price'); if (cartPrice) cartPrice.textContent = priceText; }
+                    var sizes = [], flavours = [];
+                    for (var si = 0; si < opts.pricesArray.length; si += 3) {
+                      var sval = String(opts.pricesArray[si] || '-').trim();
+                      var fval = String(opts.pricesArray[si + 1] != null ? opts.pricesArray[si + 1] : '-').trim();
+                      if (sval && sval !== '-' && sval !== 'None' && sizes.indexOf(sval) === -1) sizes.push(sval);
+                      if (fval && fval !== '-' && fval !== 'None' && flavours.indexOf(fval) === -1) flavours.push(fval);
+                    }
+                    if (opts.pricesArray.length >= 3) {
+                      card.setAttribute('data-selected-size', String(opts.pricesArray[0] || '-'));
+                      card.setAttribute('data-selected-flavour', String(opts.pricesArray[1] || '-'));
+                    }
+                    var url = (opts.itemUrl || '').replace(/'/g, "\\'");
+                    var esc = function(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
+                    var sizesHtml = sizes.length ? sizes.map(function(size, idx) {
+                      return '<li class="expanded-option' + (idx === 0 ? ' selected' : '') + '" data-option-type="size" data-option-value="' + esc(size) + '" onclick="selectExpandedOption(this, \'' + url + '\', event)">' + esc(size) + '</li>';
+                    }).join('') : '';
+                    var flavoursHtml = flavours.length ? flavours.map(function(flav, idx) {
+                      return '<li class="expanded-option' + (idx === 0 ? ' selected' : '') + '" data-option-type="flavour" data-option-value="' + esc(flav) + '" onclick="selectExpandedOption(this, \'' + url + '\', event)">' + esc(flav) + '</li>';
+                    }).join('') : '';
+                    card.querySelectorAll('.menu-item-options .sizes, .menu-item-options ul.sizes').forEach(function(ul) {
+                      if (sizes.length) ul.innerHTML = sizesHtml; else ul.innerHTML = '';
+                    });
+                    card.querySelectorAll('.menu-item-options .flavours, .menu-item-options ul.flavours').forEach(function(ul) {
+                      if (flavours.length) ul.innerHTML = flavoursHtml; else ul.innerHTML = '';
+                    });
+                  }
+                } catch (e) { console.warn('dashboardApplyEdit', e); }
+              };
               var style = doc.getElementById('dashboard-edit-injected-style');
               if (!style) {
                 style = doc.createElement('style');
@@ -1510,6 +1958,9 @@
                   '.dashboard-edit-add-section-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: rgba(102, 126, 234, 0.15); border: 1px dashed rgba(102, 126, 234, 0.5); border-radius: 8px; }',
                   '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.25); color: #fff; cursor: pointer; }',
                   '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn:hover { background: rgba(102, 126, 234, 0.4); }',
+                  '.dashboard-edit-add-promotion-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: rgba(102, 126, 234, 0.15); border: 1px dashed rgba(102, 126, 234, 0.5); border-radius: 8px; }',
+                  '.dashboard-edit-add-promotion-bar .dashboard-edit-add-promotion-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.25); color: #fff; cursor: pointer; }',
+                  '.dashboard-edit-add-promotion-bar .dashboard-edit-add-promotion-btn:hover { background: rgba(102, 126, 234, 0.4); }',
                   '.dashboard-edit-add-item-bar { margin: 0.5rem 0; padding: 0.4rem; text-align: center; background: rgba(102, 126, 234, 0.12); border: 1px dashed rgba(102, 126, 234, 0.4); border-radius: 6px; }',
                   '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.45); background: rgba(102, 126, 234, 0.2); color: #fff; cursor: pointer; }',
                   '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn:hover { background: rgba(102, 126, 234, 0.35); }',
@@ -1705,6 +2156,22 @@
                       doc.addEventListener('dragend', dashboardDragEnd);
                     }
                   }
+                  var adsContainer = doc.getElementById('homepage-ads-container') || doc.getElementById('frontpage-ads-container');
+                  if (adsContainer) {
+                    var prev = adsContainer.previousElementSibling;
+                    if (!prev || !prev.classList || !prev.classList.contains('dashboard-edit-add-promotion-bar')) {
+                      var promoBar = doc.createElement('div');
+                      promoBar.className = 'dashboard-edit-add-promotion-bar';
+                      promoBar.setAttribute('data-dashboard-edit', '1');
+                      var promoBtn = doc.createElement('button');
+                      promoBtn.type = 'button';
+                      promoBtn.className = 'dashboard-edit-add-promotion-btn';
+                      promoBtn.setAttribute('aria-label', 'Add promotion');
+                      promoBtn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add promotion';
+                      promoBar.appendChild(promoBtn);
+                      adsContainer.parentNode.insertBefore(promoBar, adsContainer);
+                    }
+                  }
                   doc.querySelectorAll('.menu-items-container').forEach(function(container) {
                     var first = container.firstElementChild;
                     if (first && first.classList && first.classList.contains('dashboard-edit-add-item-bar')) return;
@@ -1778,6 +2245,25 @@
                 outer.innerHTML = html;
                 return outer;
               }
+              function createNewPromotionElement(doc) {
+                win._dashboardNewPromotionCount = (win._dashboardNewPromotionCount || 0) + 1;
+                var n = win._dashboardNewPromotionCount;
+                var title = 'New Promotion ' + n;
+                var slug = 'new-promotion-' + n;
+                var section = doc.createElement('section');
+                section.className = 'ads menu-ad sticky';
+                section.setAttribute('data-dashboard-edit-new-promotion', '1');
+                section.id = 'menu-ad-' + slug;
+                section.setAttribute('data-ad-title', title);
+                section.innerHTML = '<div class="scroll-progress-bar"><div class="scroll-progress-fill"></div></div>' +
+                  '<h2 class="center title clientad-heading"><a href="/promotions/' + slug + '/">' + title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</a></h2>' +
+                  '<span data-aos="zoom-out-right">Promotion</span>' +
+                  '<ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">' +
+                  '<li class="ad-panel"><a href="/promotions/' + slug + '/" class="content-panel">' +
+                  '<img src="" class="ad-portrait-bg" alt=""><img src="" class="ad-portrait" alt="">' +
+                  '<div class="adbottomspacer"></div></a></li></ul>';
+                return section;
+              }
               function removeEditButtons() {
                 try {
                   win._dashboardDragSection = null;
@@ -1796,6 +2282,7 @@
                     container.removeEventListener('drop', itemDrop);
                   });
                   doc.querySelectorAll('.dashboard-edit-add-item-bar').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.dashboard-edit-add-promotion-bar').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.dashboard-edit-add-section-bar').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.dashboard-edit-card-btn-wrap').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.menu-item-card.dashboard-edit-card-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-card-wrap'); });
@@ -1835,6 +2322,19 @@
                   if (container && container.classList && container.classList.contains('menu-items-container')) {
                     var newCard = createNewMenuItemCard(doc);
                     container.insertBefore(newCard, bar.nextElementSibling);
+                    if (win._dashboardInjectEditButtons) setTimeout(win._dashboardInjectEditButtons, 50);
+                  }
+                  return;
+                }
+                var addPromotionBtn = e.target.closest('.dashboard-edit-add-promotion-btn');
+                if (addPromotionBtn) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var bar = addPromotionBtn.closest('.dashboard-edit-add-promotion-bar');
+                  var container = bar && (doc.getElementById('homepage-ads-container') || doc.getElementById('frontpage-ads-container'));
+                  if (container) {
+                    var newPromo = createNewPromotionElement(doc);
+                    container.insertBefore(newPromo, container.firstChild);
                     if (win._dashboardInjectEditButtons) setTimeout(win._dashboardInjectEditButtons, 50);
                   }
                   return;
@@ -1946,40 +2446,7 @@
                     return;
                   }
                 }
-                var found = getEditableAncestor(e.target);
-                if (!found) return;
-                if (found.element.classList && found.element.classList.contains('menu-item-card')) return;
-                e.preventDefault();
-                e.stopPropagation();
-                if (selectedElement) selectedElement.classList.remove('dashboard-edit-selected');
-                var el = found.element;
-                var contentType = 'menu-item';
-                if (found.type.indexOf('Section') !== -1) contentType = 'section-header';
-                var headerWrap = contentType === 'section-header' ? el.closest('.menu-header') : null;
-                var elementToSelect = headerWrap || el;
-                elementToSelect.classList.add('dashboard-edit-selected');
-                selectedElement = elementToSelect;
-                var title = getTextContent(headerWrap ? headerWrap.querySelector('h2 a, h2') : null) || getTextContent(el.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || el);
-                var desc = getTextContent((headerWrap || el).querySelector('.menu-item-description, .menu-summary')) || '';
-                expandEditPanel();
-                var contentPath = '';
-                if (contentType === 'section-header') {
-                  var sectionRoot = headerWrap || el;
-                  var slug = sectionRoot.getAttribute('data-section-slug') || '';
-                  if (!slug) {
-                    var sectionLink = sectionRoot.querySelector('h2 a[href], a[href]');
-                    if (sectionLink) {
-                      var href = (sectionLink.getAttribute('href') || '').replace(/^#/, '');
-                      var segs = href.split('/').filter(Boolean);
-                      if (segs.length) slug = segs[0];
-                    }
-                  }
-                  contentPath = slug ? 'content/' + slug + '/_index.md' : 'content/.../_index.md';
-                } else {
-                  var itemUrl = el.getAttribute('data-item-url') || (el.querySelector('a[href]') && el.querySelector('a[href]').getAttribute('href'));
-                  if (itemUrl) contentPath = 'content' + itemUrl.replace(/\/$/, '') + '.md';
-                }
-                showEditForm({ element: headerWrap || el, type: found.type, contentType: contentType, contentPath: contentPath, title: title, description: desc });
+                // Only the edit button (and add-item / add-promo / add-section) open the form; clicks on title/description/price/card do not
               };
               doc.body.addEventListener('click', win._dashboardEditClick, true);
             } else {
@@ -2063,10 +2530,53 @@
           eventsContainer.appendChild(createListRow(''));
         });
       }
-      btnApply.addEventListener('click', function() {
-        if (!selectedInfo || !selectedElement) return;
+      if (btnAddPromoDay && promoDaysofweekContainer) {
+        btnAddPromoDay.addEventListener('click', function() {
+          promoDaysofweekContainer.appendChild(createListRow(''));
+        });
+      }
+      if (btnPublish) {
+        btnPublish.addEventListener('click', function() {
+          if (!selectedInfo || !selectedElement) {
+            alert('Please select something to publish first.');
+            return;
+          }
+          var payload = buildContentEditPayload();
+          if (!payload) {
+            var type = selectedInfo && selectedInfo.contentType ? selectedInfo.contentType : 'this';
+            alert('Publish is not supported for ' + (type === 'slideshow' ? 'slideshow (homepage)' : type === 'location' ? 'locations' : type) + '. Use promotions, menu items, or section headers.');
+            return;
+          }
+          console.log('Publish payload:', payload);
+          var path = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply';
+          var body = { payload: payload };
+          if (savedDraftPreviewId) body.previewId = savedDraftPreviewId;
+          postToCMS(path, body).then(function(resp) {
+            console.log('Publish response:', resp);
+            editFormDirty = false;
+            savedDraftPreviewId = null;
+            setEditStatus('Published');
+          }).catch(function(err) {
+            console.error('Publish error:', err);
+            alert('Publish failed: ' + err.message);
+          });
+        });
+      }
+      function applyEditToPreview() {
+        if (!selectedInfo) return;
         var doc = iframe.contentDocument;
         if (!doc) return;
+        var card = selectedElement;
+        if (card && !doc.contains(card)) card = null;
+        if (!card && selectedInfo.contentPath) {
+          var path = selectedInfo.contentPath.replace(/^content\//, '').replace(/\.md$/, '').replace(/\/_index$/, '');
+          var urlAttr = '/' + path + '/';
+          card = doc.querySelector('.menu-item-card[data-item-url="' + urlAttr + '"]') ||
+                 doc.querySelector('.menu-item-card[data-item-url*="' + path.split('/').pop() + '"]');
+        }
+        if (!card) card = selectedElement;
+        if (!card) return;
+        selectedElement = card;
         var contentType = selectedInfo.contentType || 'menu-item';
         try {
           if (contentType === 'location') {
@@ -2115,13 +2625,34 @@
           }
           if (contentType === 'promotion') {
             var adTitleEl = selectedElement.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
-            if (adTitleEl && inputPromoTitle && inputPromoTitle.value !== undefined) {
+            var titleVal = inputPromoTitle ? inputPromoTitle.value.trim() : '';
+            if (adTitleEl) {
               var inner = adTitleEl.querySelector('a');
-              if (inner) inner.textContent = inputPromoTitle.value;
-              else adTitleEl.textContent = inputPromoTitle.value;
+              if (inner) inner.textContent = titleVal;
+              else adTitleEl.textContent = titleVal;
             }
-            var adLinkEl = selectedElement.querySelector('a[href]');
-            if (adLinkEl && inputPromoLink && inputPromoLink.value) adLinkEl.setAttribute('href', inputPromoLink.value);
+            selectedElement.setAttribute('data-ad-title', titleVal);
+            var descVal = inputPromoDescription ? inputPromoDescription.value.trim() : '';
+            selectedElement.setAttribute('data-ad-description', descVal);
+            var linkVal = inputPromoLink ? inputPromoLink.value.trim() : '';
+            selectedElement.querySelectorAll('a[href]').forEach(function(a) {
+              if (linkVal) a.setAttribute('href', linkVal);
+            });
+            selectedElement.setAttribute('data-ad-link', linkVal);
+            var imagesArr = inputPromoImages ? hoursParseStringList(inputPromoImages.value) : [];
+            selectedElement.setAttribute('data-ad-images', JSON.stringify(imagesArr));
+            var imgs = selectedElement.querySelectorAll('.ad-panel img.ad-portrait, .ad-panel img.ad-portrait-bg, .ad-panel img');
+            var firstPath = imagesArr[0] || '';
+            var firstSrc = firstPath ? (firstPath.indexOf('/') === 0 ? firstPath : '/' + firstPath) : '';
+            imgs.forEach(function(img, i) {
+              var path = imagesArr[i] || firstPath;
+              if (path) img.setAttribute('src', path.indexOf('/') === 0 ? path : '/' + path);
+            });
+            selectedElement.setAttribute('data-ad-recurring', (inputPromoRecurring && inputPromoRecurring.checked) ? 'true' : 'false');
+            var daysArr = promoDaysofweekContainer ? getStringListFromUI(promoDaysofweekContainer) : [];
+            selectedElement.setAttribute('data-ad-daysofweek', JSON.stringify(daysArr));
+            var weightVal = inputPromoWeight ? inputPromoWeight.value.trim() : '';
+            selectedElement.setAttribute('data-ad-weight', weightVal);
             return;
           }
           if (contentType === 'slideshow' && inputSlideshowImages) {
@@ -2133,14 +2664,41 @@
             return;
           }
           if (contentType === 'section-header' || contentType === 'menu-item') {
+            var titleVal = inputTitle && inputTitle.value !== undefined ? inputTitle.value : '';
+            var descVal = inputDesc && inputDesc.value !== undefined ? inputDesc.value : '';
+            if (contentType === 'menu-item') {
+              var win = iframe.contentWindow;
+              var itemUrl = selectedElement.getAttribute('data-item-url') || (selectedInfo.contentPath ? '/' + selectedInfo.contentPath.replace(/^content\//, '').replace(/\.md$/, '') + '/' : '');
+              var pricesArr = pricesContainer ? getPricesFromUI(pricesContainer) : [];
+              var iframePayload = { itemUrl: itemUrl, title: titleVal, description: descVal };
+              if (pricesArr.length) iframePayload.pricesArray = pricesArr;
+              if (win && win.__dashboardApplyEdit && itemUrl) {
+                try {
+                  win.__dashboardApplyEdit(JSON.stringify(iframePayload));
+                } catch (e) { console.warn('Apply via iframe failed', e); }
+              }
+            }
             var titleEl = selectedElement.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
-            if (titleEl && inputTitle.value !== undefined && inputTitle.value !== '') {
+            if (titleEl && titleVal !== '') {
               var innerLink = titleEl.querySelector('a');
-              if (innerLink) innerLink.textContent = inputTitle.value;
-              else titleEl.textContent = inputTitle.value;
+              if (innerLink) innerLink.textContent = titleVal;
+              else titleEl.textContent = titleVal;
             }
             var descEl = selectedElement.querySelector('.menu-item-description, .menu-summary');
-            if (descEl && inputDesc.value !== undefined) descEl.textContent = inputDesc.value;
+            if (descEl) {
+              var p = descEl.querySelector('p');
+              if (p) p.textContent = descVal; else descEl.textContent = descVal;
+              descEl.setAttribute('data-description', descVal);
+            }
+            var expandedDesc = selectedElement.querySelector('.expanded-item-description p');
+            if (expandedDesc) expandedDesc.textContent = descVal;
+            var expandedDescWrap = selectedElement.querySelector('.expanded-item-description');
+            if (expandedDescWrap && !expandedDesc) {
+              var newP = selectedElement.ownerDocument.createElement('p');
+              newP.textContent = descVal;
+              var link = expandedDescWrap.querySelector('a');
+              if (link) { link.innerHTML = ''; link.appendChild(newP); } else { expandedDescWrap.appendChild(newP); }
+            }
             if (contentType === 'section-header') {
               if (inputSectionWeight) selectedElement.setAttribute('data-weight', inputSectionWeight.value.trim());
               if (inputSectionIcon) selectedElement.setAttribute('data-icon', inputSectionIcon.value.trim());
@@ -2240,14 +2798,39 @@
         } catch (e) {
           console.warn('Apply edit:', e);
         }
-      });
+      }
+
+      btnApply.addEventListener('click', applyEditToPreview);
 
       iframe.addEventListener('load', function() {
         if (editMode) setupIframeEditMode(true);
+        if (loadDraftsOnLoad) {
+          var win = iframe.contentWindow;
+          if (win && win.__dashboardApplyEdit) loadAndApplyDrafts();
+          else setTimeout(function() { if (iframe.contentWindow && iframe.contentWindow.__dashboardApplyEdit) loadAndApplyDrafts(); }, 100);
+        }
       });
 
       if (asideEl && btnTogglePanel) {
         btnTogglePanel.addEventListener('click', function() {
+          var currentlyCollapsed = asideEl.classList.contains('dashboard-edit-options-collapsed');
+          if (!currentlyCollapsed) {
+            applyEditToPreview();
+            if (editFormDirty && selectedInfo && selectedElement) {
+              var draftPayload = buildContentEditPayload();
+              if (draftPayload) {
+                console.log('Auto-save draft payload:', draftPayload);
+                var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+                postToCMS(previewPath, { payload: draftPayload }).then(function(resp) {
+                  if (resp && resp.previewId) {
+                    savedDraftPreviewId = resp.previewId;
+                    editFormDirty = false;
+                    setEditStatus('Draft saved (not yet published)');
+                  }
+                }).catch(function(err) { console.warn('Auto-save draft failed:', err); });
+              }
+            }
+          }
           var isCollapsed = asideEl.classList.toggle('dashboard-edit-options-collapsed');
           btnTogglePanel.setAttribute('aria-expanded', !isCollapsed);
           btnTogglePanel.setAttribute('aria-label', isCollapsed ? 'Expand edit panel' : 'Collapse edit panel');

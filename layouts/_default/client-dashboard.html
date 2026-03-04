@@ -26,6 +26,7 @@
         <h3>Edit menu</h3>
         <p>Preview your menu and change items, categories, prices, and images.</p>
         <a href="/edit-menu/" class="btn-dash btn-dash-primary" id="cardEditMenu">Open editor</a>
+        <button type="button" class="btn-dash btn-dash-secondary hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu">Publish</button>
         <a href="/menu-settings/" class="btn-dash btn-dash-secondary">Menu settings →</a>
       </div>
       <div class="card">
@@ -70,6 +71,93 @@
       document.getElementById('btnLogout').addEventListener('click', function() {
         AuthClient.logout().then(function() { window.location.href = '/'; });
       });
+
+      var CMS_SERVICE_URL = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+      var CMS_CLIENT_ID = window.CLIENT_ID || '_ttms_menu_demo';
+      var editLink = document.getElementById('cardEditMenu');
+      var publishBtn = document.getElementById('cardPublishDrafts');
+      var cachedPreviews = [];
+
+      function getAuthHeaders() {
+        var token = (window.AuthClient && AuthClient.getAccessToken && AuthClient.getAccessToken()) || (typeof localStorage !== 'undefined' && localStorage.getItem && localStorage.getItem('ttmenus_access_token'));
+        var h = { 'Accept': 'application/json' };
+        if (token) h['Authorization'] = 'Bearer ' + token;
+        return h;
+      }
+      function fetchPreviews() {
+        var url = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+        return fetch(url, { method: 'GET', credentials: 'include', headers: getAuthHeaders() })
+          .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
+          .catch(function() { return { previews: [] }; })
+          .then(function(data) {
+            cachedPreviews = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
+            if (publishBtn) {
+              if (cachedPreviews.length > 0) {
+                publishBtn.classList.remove('hidden');
+                publishBtn.textContent = 'Publish' + (cachedPreviews.length > 1 ? ' (' + cachedPreviews.length + ')' : '');
+              } else {
+                publishBtn.classList.add('hidden');
+              }
+            }
+            return cachedPreviews;
+          });
+      }
+
+      fetchPreviews();
+
+      if (editLink) {
+        editLink.addEventListener('click', function(ev) {
+          ev.preventDefault();
+          fetchPreviews().then(function(previews) {
+            if (previews.length > 0) {
+              var loadDrafts = confirm('You have saved drafts. Load saved changes or load live menu?\n\nClick OK to load saved changes, Cancel to load live menu.');
+              sessionStorage.setItem('editPreviewMode', loadDrafts ? 'drafts' : 'live');
+              window.location.href = loadDrafts ? '/edit-menu/?load=drafts' : '/edit-menu/';
+            } else {
+              sessionStorage.setItem('editPreviewMode', 'live');
+              window.location.href = '/edit-menu/';
+            }
+          });
+        });
+      }
+
+      if (publishBtn) {
+        publishBtn.addEventListener('click', function() {
+          if (cachedPreviews.length === 0) return;
+          if (!confirm('Publish all ' + cachedPreviews.length + ' draft(s) to the live menu?')) return;
+          var applyUrl = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply';
+          var headers = getAuthHeaders();
+          headers['Content-Type'] = 'application/json';
+          var i = 0;
+          function next() {
+            if (i >= cachedPreviews.length) {
+              publishBtn.classList.add('hidden');
+              cachedPreviews = [];
+              return;
+            }
+            var p = cachedPreviews[i];
+            var payload = p.payload || p.Payload || {};
+            var body = { payload: payload };
+            if (p.id) body.previewId = p.id;
+            fetch(applyUrl, {
+              method: 'POST',
+              credentials: 'include',
+              headers: headers,
+              body: JSON.stringify(body)
+            }).then(function(res) {
+              if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+              return res.json();
+            }).then(function() {
+              i++;
+              next();
+            }).catch(function(err) {
+              console.error('Publish failed', err);
+              alert('Publish failed: ' + (err.message || err));
+            });
+          }
+          next();
+        });
+      }
     });
   </script>
 </body>

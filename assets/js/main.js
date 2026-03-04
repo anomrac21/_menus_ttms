@@ -434,7 +434,8 @@
         try {
             // Use existing openItem function to get item data, but render inline
             if (typeof window.openItem === 'function' && window.openItem.length >= 2) {
-                // Try to fetch JSON data first
+                // In dashboard edit mode, use only card DOM/data so the expanded view shows current edits
+                const useCardDataOnly = !!window.__dashboardEditMode;
                 let itemData = null;
                 let sizes = [];
                 let flavours = [];
@@ -444,6 +445,7 @@
                 let additions = []; // Array of [name, price] tuples (flat format)
                 let imagesArray = []; // Array of image paths
                 
+                if (!useCardDataOnly) {
                 try {
                     // Hugo serves JSON at /path/index.json
                     let jsonResponse = await fetch(url + '/index.json');
@@ -523,8 +525,9 @@
                 } catch (jsonError) {
                     console.log('JSON fetch failed, falling back to HTML:', jsonError);
                 }
+                }
                 
-                // Fallback: Get data from card's data attributes if JSON failed
+                // Fallback: Get data from card's data attributes if JSON failed (or always in edit mode)
                 if (!itemData || Object.keys(itemData).length === 0) {
                     const pricesArrayStr = element.getAttribute('data-prices-array');
                     if (pricesArrayStr) {
@@ -591,22 +594,26 @@
                     }
                 }
                 
-                // Fetch HTML for description
-                const response = await fetch(url + '?format=json').catch(() => fetch(url));
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                // Fetch HTML for description (skip in edit mode so expanded view shows current card state)
+                let fullDescElement = null;
+                if (!useCardDataOnly) {
+                    const response = await fetch(url + '?format=json').catch(() => fetch(url));
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    fullDescElement = doc.querySelector('.single-page-description');
+                }
                 
                 // Try to get item data from the page
-                const itemName = element.querySelector('.menu-item-title')?.textContent || '';
+                const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() ||
+                                element.querySelector('.menu-item-title a')?.textContent?.trim() || '';
                 // Get description from card (summary) - try both with and without p tag
                 const itemDescCard = element.querySelector('.menu-item-description')?.textContent?.trim() || 
                                      element.querySelector('.menu-item-description p')?.textContent?.trim() || '';
                 
-                // Try to get full description from fetched page or JSON
-                const fullDescElement = doc.querySelector('.single-page-description');
-                const itemDesc = (itemData && itemData.content) ? itemData.content.trim() : 
-                                (fullDescElement ? fullDescElement.innerHTML.trim() : itemDescCard);
+                // In edit mode use only card description; otherwise use JSON/fetched page or card
+                const itemDesc = useCardDataOnly ? itemDescCard : ((itemData && itemData.content) ? itemData.content.trim() : 
+                                (fullDescElement ? fullDescElement.innerHTML.trim() : itemDescCard));
                 
                 const itemPriceText = element.querySelector('.menu-item-price')?.textContent || '';
                 

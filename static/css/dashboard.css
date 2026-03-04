@@ -2,6 +2,8 @@
  * Dashboard (control room) and Edit menu page styles
  */
 
+.hidden { display: none !important; }
+
 /* ========== Control room (/dashboard/) ========== */
 
 .dashboard-control-room {
@@ -246,7 +248,6 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   padding: 0.75rem 1rem;
   color: #fff;
-  height: 4em;
 }
 
 .dashboard-edit-header-inner {
@@ -256,8 +257,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: nowrap;
+  gap: .5rem;
+  flex-wrap: wrap;
   white-space: nowrap;
 }
 
@@ -716,7 +717,8 @@
 .dashboard-edit-field .dashboard-btn-secondary#btnAddIngredient,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddCookingmethod,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddType,
-.dashboard-edit-field .dashboard-btn-secondary#btnAddEvent {
+.dashboard-edit-field .dashboard-btn-secondary#btnAddEvent,
+.dashboard-edit-field .dashboard-btn-secondary#btnAddPromoDay {
   margin-top: 0.5rem;
   font-size: 0.85rem;
   padding: 0.4rem 0.75rem;
@@ -732,9 +734,20 @@
 .dashboard-edit-field .dashboard-btn-secondary#btnAddCookingmethod:hover,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddType:hover,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddEvent:hover,
-.dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-cat:hover {
+.dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-cat:hover,
+.dashboard-edit-field .dashboard-btn-secondary#btnAddPromoDay:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.5);
+}
+.dashboard-edit-checkbox-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dashboard-edit-checkbox-wrap input[type="checkbox"] {
+  margin: 0;
+  width: 1.1em;
+  height: 1.1em;
 }
 
 .dashboard-side-categories-ui {
