@@ -52,6 +52,31 @@
     </div>
   </div>
 
+  <div id="dashboardDraftModal" class="dashboard-draft-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardDraftModalTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop"></div>
+    <div class="dashboard-draft-modal-dialog">
+      <h2 id="dashboardDraftModalTitle" class="dashboard-draft-modal-title">You have saved drafts</h2>
+      <p class="dashboard-draft-modal-text">Load saved changes or load live menu?</p>
+      <div class="dashboard-draft-modal-actions">
+        <button type="button" class="btn-dash btn-dash-primary" id="dashboardDraftModalLoad">Load</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardDraftModalRevert">Revert</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboardPublishSummaryModal" class="dashboard-draft-modal dashboard-publish-summary-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardPublishSummaryTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop"></div>
+    <div class="dashboard-draft-modal-dialog dashboard-publish-summary-dialog">
+      <h2 id="dashboardPublishSummaryTitle" class="dashboard-draft-modal-title">Review changes to publish</h2>
+      <p id="dashboardPublishSummaryCount" class="dashboard-draft-modal-text">0 change(s) will be published.</p>
+      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="List of changes"></ul>
+      <div class="dashboard-draft-modal-actions dashboard-publish-summary-actions">
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPublishSummaryCancel">Cancel</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="dashboardPublishSummaryConfirm">Publish</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Only clients with access can see this page
@@ -105,14 +130,29 @@
 
       fetchPreviews();
 
+      var draftModal = document.getElementById('dashboardDraftModal');
+      var draftModalLoadBtn = document.getElementById('dashboardDraftModalLoad');
+      var draftModalRevertBtn = document.getElementById('dashboardDraftModalRevert');
+
       if (editLink) {
         editLink.addEventListener('click', function(ev) {
           ev.preventDefault();
           fetchPreviews().then(function(previews) {
-            if (previews.length > 0) {
-              var loadDrafts = confirm('You have saved drafts. Load saved changes or load live menu?\n\nClick OK to load saved changes, Cancel to load live menu.');
-              sessionStorage.setItem('editPreviewMode', loadDrafts ? 'drafts' : 'live');
-              window.location.href = loadDrafts ? '/edit-menu/?load=drafts' : '/edit-menu/';
+            if (previews.length > 0 && draftModal && draftModalLoadBtn && draftModalRevertBtn) {
+              draftModal.classList.remove('hidden');
+              draftModal.setAttribute('aria-hidden', 'false');
+              draftModalLoadBtn.onclick = function() {
+                draftModal.classList.add('hidden');
+                draftModal.setAttribute('aria-hidden', 'true');
+                sessionStorage.setItem('editPreviewMode', 'drafts');
+                window.location.href = '/edit-menu/?load=drafts';
+              };
+              draftModalRevertBtn.onclick = function() {
+                draftModal.classList.add('hidden');
+                draftModal.setAttribute('aria-hidden', 'true');
+                sessionStorage.setItem('editPreviewMode', 'live');
+                window.location.href = '/edit-menu/';
+              };
             } else {
               sessionStorage.setItem('editPreviewMode', 'live');
               window.location.href = '/edit-menu/';
@@ -121,41 +161,123 @@
         });
       }
 
+      function previewSummaryLabel(p) {
+        var payload = p.payload || p.Payload || {};
+        var kind = payload.kind || p.kind || 'content';
+        var path = payload.contentPath || p.content_path || '';
+        var fm = payload.frontMatter || payload.front_matter || {};
+        var title = (fm.title != null && fm.title !== '') ? String(fm.title) : (path ? path.replace(/^content\//, '').replace(/\.md$/, '') : '');
+        var kindLabel = kind === 'menu-item' ? 'Menu item' : kind === 'section-header' ? 'Section' : kind === 'promotion' ? 'Promotion' : kind;
+        return title ? kindLabel + ': ' + title + ' (' + path + ')' : kindLabel + ': ' + path;
+      }
+
+      var publishSummaryModal = document.getElementById('dashboardPublishSummaryModal');
+      var publishSummaryList = document.getElementById('dashboardPublishSummaryList');
+      var publishSummaryCount = document.getElementById('dashboardPublishSummaryCount');
+      var publishSummaryCancel = document.getElementById('dashboardPublishSummaryCancel');
+      var publishSummaryConfirm = document.getElementById('dashboardPublishSummaryConfirm');
+
       if (publishBtn) {
         publishBtn.addEventListener('click', function() {
           if (cachedPreviews.length === 0) return;
-          if (!confirm('Publish all ' + cachedPreviews.length + ' draft(s) to the live menu?')) return;
-          var applyUrl = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply';
-          var headers = getAuthHeaders();
-          headers['Content-Type'] = 'application/json';
-          var i = 0;
-          function next() {
-            if (i >= cachedPreviews.length) {
-              publishBtn.classList.add('hidden');
-              cachedPreviews = [];
-              return;
+          var pending = cachedPreviews.slice();
+          function renderSummary() {
+            if (!publishSummaryList || !publishSummaryCount) return;
+            publishSummaryList.innerHTML = '';
+            publishSummaryCount.textContent = pending.length + ' change(s) will be published.';
+            if (publishSummaryConfirm) {
+              publishSummaryConfirm.disabled = pending.length === 0;
+              publishSummaryConfirm.textContent = pending.length === 0 ? 'Nothing to publish' : 'Publish';
             }
-            var p = cachedPreviews[i];
-            var payload = p.payload || p.Payload || {};
-            var body = { payload: payload };
-            if (p.id) body.previewId = p.id;
-            fetch(applyUrl, {
-              method: 'POST',
-              credentials: 'include',
-              headers: headers,
-              body: JSON.stringify(body)
-            }).then(function(res) {
-              if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
-              return res.json();
-            }).then(function() {
-              i++;
-              next();
-            }).catch(function(err) {
-              console.error('Publish failed', err);
-              alert('Publish failed: ' + (err.message || err));
+            pending.forEach(function(p) {
+              var id = p.id || (p.payload && p.payload.contentPath) || '';
+              var li = document.createElement('li');
+              li.className = 'dashboard-publish-summary-item';
+              var label = document.createElement('span');
+              label.className = 'dashboard-publish-summary-label';
+              label.textContent = previewSummaryLabel(p);
+              var removeBtn = document.createElement('button');
+              removeBtn.type = 'button';
+              removeBtn.className = 'btn-dash btn-dash-secondary dashboard-publish-summary-revert';
+              removeBtn.textContent = '×';
+              removeBtn.setAttribute('aria-label', 'Delete saved change');
+              removeBtn.addEventListener('click', function() {
+                var idx = pending.findIndex(function(x) { return (x.id || '') === id; });
+                if (idx === -1) return;
+                var previewId = pending[idx].id;
+                function removeFromList() {
+                  pending.splice(idx, 1);
+                  renderSummary();
+                  fetchPreviews();
+                  if (pending.length === 0 && publishSummaryModal) {
+                    publishSummaryModal.classList.add('hidden');
+                    publishSummaryModal.setAttribute('aria-hidden', 'true');
+                  }
+                }
+                if (previewId) {
+                  var delUrl = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews/' + encodeURIComponent(previewId);
+                  fetch(delUrl, { method: 'DELETE', credentials: 'include', headers: getAuthHeaders() })
+                    .then(function(res) {
+                      if (!res.ok && res.status !== 204) return res.text().then(function(t) { throw new Error(t); });
+                      removeFromList();
+                    })
+                    .catch(function(err) {
+                      console.error('Delete draft failed', err);
+                      alert('Could not delete saved change: ' + (err.message || err));
+                    });
+                } else {
+                  removeFromList();
+                }
+              });
+              li.appendChild(label);
+              li.appendChild(removeBtn);
+              publishSummaryList.appendChild(li);
             });
           }
-          next();
+          renderSummary();
+          if (publishSummaryModal) {
+            publishSummaryModal.classList.remove('hidden');
+            publishSummaryModal.setAttribute('aria-hidden', 'false');
+          }
+          if (publishSummaryCancel) {
+            publishSummaryCancel.onclick = function() {
+              publishSummaryModal.classList.add('hidden');
+              publishSummaryModal.setAttribute('aria-hidden', 'true');
+            };
+          }
+          if (publishSummaryConfirm) {
+            publishSummaryConfirm.onclick = function() {
+              if (pending.length === 0) return;
+              publishSummaryConfirm.disabled = true;
+              var changes = pending.map(function(p) {
+                var o = { payload: p.payload || p.Payload || {} };
+                if (p.id) o.previewId = p.id;
+                return o;
+              });
+              var body = { changes: changes, commitMessage: 'Publish ' + pending.length + ' change(s)' };
+              var applyUrl = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply-batch';
+              var headers = getAuthHeaders();
+              headers['Content-Type'] = 'application/json';
+              fetch(applyUrl, {
+                method: 'POST',
+                credentials: 'include',
+                headers: headers,
+                body: JSON.stringify(body)
+              }).then(function(res) {
+                if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+                return res.json();
+              }).then(function() {
+                publishSummaryModal.classList.add('hidden');
+                publishSummaryModal.setAttribute('aria-hidden', 'true');
+                publishSummaryConfirm.disabled = false;
+                fetchPreviews();
+              }).catch(function(err) {
+                console.error('Publish failed', err);
+                alert('Publish failed: ' + (err.message || err));
+                publishSummaryConfirm.disabled = false;
+              });
+            };
+          }
         });
       }
     });
