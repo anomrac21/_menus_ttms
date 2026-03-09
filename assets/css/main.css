@@ -373,7 +373,7 @@ footer {
 
 .headerstyle a {
     text-decoration: none;
-    color: var(--main-text-color,#fff);
+    color: var(--menu-text-color,#fff);
     transition: color .3s ease
 }
 
@@ -1430,7 +1430,8 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 #main p {
-    margin-inline:.8em;color: var(--main-text-color,#fff)
+    margin-inline:.8em;
+    color: var(--menu-text-color,#fff);
 }
 
 #main .selected p {
