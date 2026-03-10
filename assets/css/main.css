@@ -26,7 +26,7 @@ body {
 h1,h2,h3,h4,h5,h6 {
     padding: .4em;
     margin: 0;
-    color: var(--main-text-color,#fff)
+    color: #000000 !important;
 }
 
 ul,p {
@@ -36,7 +36,7 @@ ul,p {
 }
 
 a {
-    color: var(--main-text-color,#fff)
+    color: var(--main-text-color, #fff);
 }
 
 header {
@@ -514,7 +514,7 @@ footer {
 }
 
 .menu-item-card.expanded .menu-item-title a:hover {
-    color: var(--button-text-color2,#ccc);
+    color: var(--button-text-color1,#ccc);
     text-decoration: underline
 }
 
@@ -2660,7 +2660,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     margin: .25rem 0 0;
     padding: 0;
     font-size: .875rem;
-    color: rgba(255,255,255,.7);
+    color: var(--selected-text-color1);
     font-weight: 400
 }
 
