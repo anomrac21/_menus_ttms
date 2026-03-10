@@ -255,7 +255,7 @@
             </div>
             <div class="dashboard-edit-form-actions">
               <button type="button" class="btn-dash btn-dash-primary" id="btnApplyEdit">Apply</button>
-              <button type="button" class="btn-dash btn-dash-danger" id="btnMarkForDeletion" aria-label="Mark for deletion" title="Mark for deletion (hidden in preview)"><i class="fa fa-ban" aria-hidden="true"></i> Mark for deletion</button>
+              <button type="button" class="btn-dash btn-dash-danger" id="btnClearSelection" aria-label="Clear selection"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear selection</button>
             </div>
             <p class="dashboard-edit-option-note">Saving to your backend can be wired when ready.</p>
           </div>
@@ -329,7 +329,7 @@
       var btnAddEvent = document.getElementById('btnAddEvent');
       var btnApply = document.getElementById('btnApplyEdit');
       var btnPublish = document.getElementById('btnPublish');
-      var btnMarkForDeletion = document.getElementById('btnMarkForDeletion');
+      var btnClear = document.getElementById('btnClearSelection');
       var contentSourceEl = document.getElementById('dashboardEditContentSource');
       var statusEl = document.getElementById('dashboardEditStatus');
       var fieldsGeneric = document.getElementById('dashboardEditFieldsGeneric');
@@ -414,8 +414,6 @@
       var selectedColorSectionId = null;
       var editFormDirty = false;
       var savedDraftPreviewId = null;
-      var draftContentPaths = new Set();
-      var markedForDeletionContentPaths = new Set();
       var loadDraftsOnLoad = (function() {
         var p = new URLSearchParams(window.location.search);
         var mode = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('editPreviewMode');
@@ -971,7 +969,6 @@
         if (inputPromoRecurring) inputPromoRecurring.checked = false;
         if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, []);
         if (inputPromoWeight) inputPromoWeight.value = '';
-        updateMarkForDeletionButton();
       }
 
       function parseJsonAttr(el, attr) {
@@ -1764,7 +1761,6 @@
             });
           }
         }
-        updateMarkForDeletionButton();
       }
 
       function loadAndApplyDrafts() {
@@ -1865,53 +1861,7 @@
               }
             });
             if (applied > 0) setEditStatus('Loaded ' + applied + ' draft(s)');
-            draftContentPaths.clear();
-            list.forEach(function(p) {
-              var payload = p.payload || p.Payload || {};
-              var cp = payload.contentPath || p.content_path || '';
-              if (cp) draftContentPaths.add(cp);
-            });
-            if (editMode && editSubmode === 'content') applyEditHighlights();
           });
-      }
-
-      function getContentPathForElement(doc, el) {
-        if (!doc || !el) return null;
-        if (el.classList && el.classList.contains('menu-item-card')) {
-          var itemUrl = el.getAttribute('data-item-url') || '';
-          if (!itemUrl) return null;
-          return 'content' + itemUrl.replace(/\/$/, '') + '.md';
-        }
-        if (el.classList && el.classList.contains('menu-header')) {
-          var sectionSlug = el.getAttribute('data-section-slug') || '';
-          if (!sectionSlug) return null;
-          return 'content/' + sectionSlug + '/_index.md';
-        }
-        if (el.tagName === 'SECTION' && el.classList && el.classList.contains('ads') && el.classList.contains('menu-ad')) {
-          var adTitle = el.getAttribute('data-ad-title') || '';
-          if (!adTitle) {
-            var titleEl = el.querySelector('.clientad-heading a, .clientad-heading, h2 a, h2');
-            if (titleEl) adTitle = (titleEl.textContent || '').trim();
-          }
-          var slug = adTitle ? adTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
-          return slug ? 'content/promotions/' + slug + '.md' : null;
-        }
-        return null;
-      }
-
-      function applyEditHighlights() {
-        var doc = iframe && iframe.contentDocument;
-        if (!doc || !doc.body) return;
-        var highlightClasses = ['dashboard-edit-has-change', 'dashboard-edit-new', 'dashboard-edit-marked-delete', 'dashboard-edit-hidden-for-preview'];
-        doc.querySelectorAll('.menu-item-card, .menu-header, section.ads.menu-ad').forEach(function(el) {
-          highlightClasses.forEach(function(c) { el.classList.remove(c); });
-        });
-        doc.querySelectorAll('.menu-item-card, .menu-header, section.ads.menu-ad').forEach(function(el) {
-          var path = getContentPathForElement(doc, el);
-          if (draftContentPaths.has(path)) el.classList.add('dashboard-edit-has-change');
-          if (el.hasAttribute('data-dashboard-edit-new-item') || el.hasAttribute('data-dashboard-edit-new-section') || el.hasAttribute('data-dashboard-edit-new-promotion')) el.classList.add('dashboard-edit-new');
-          if (path && markedForDeletionContentPaths.has(path)) el.classList.add('dashboard-edit-marked-delete');
-        });
       }
 
       function setupIframeEditMode(on) {
@@ -1922,8 +1872,6 @@
             if (!doc || !doc.body) return;
             win.__dashboardEditMode = !!on;
             if (on) {
-              var previewHideStyle = doc.getElementById('dashboard-edit-preview-hide-style');
-              if (previewHideStyle) previewHideStyle.remove();
               win.__dashboardApplyEdit = function(payloadStr) {
                 try {
                   var opts = JSON.parse(payloadStr);
@@ -2020,12 +1968,7 @@
                   '.dashboard-edit-drag-handle:hover { background: rgba(102, 126, 234, 0.75); }',
                   '.dashboard-edit-drag-handle:active { cursor: grabbing; }',
                   '.main-menu-bg.dashboard-edit-drag-over { outline: 2px dashed #667eea; outline-offset: 4px; }',
-                  '.menu-item-card.dashboard-edit-drag-over { outline: 2px dashed #667eea; outline-offset: 2px; }',
-                  '.dashboard-edit-has-change { outline: 2px solid #f59e0b !important; outline-offset: 2px !important; box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.4) !important; }',
-                  '.dashboard-edit-new { outline: 2px solid #10b981 !important; outline-offset: 2px !important; box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4) !important; }',
-                  '.dashboard-edit-marked-delete { opacity: 0.65 !important; outline: 2px solid #ef4444 !important; outline-offset: 2px !important; position: relative !important; }',
-                  '.dashboard-edit-marked-delete::after { content: ""; position: absolute; left: 0; top: 50%; right: 0; height: 2px; background: #ef4444; transform: translateY(-50%); pointer-events: none; }',
-                  '.dashboard-edit-hidden-for-preview { display: none !important; }'
+                  '.menu-item-card.dashboard-edit-drag-over { outline: 2px dashed #667eea; outline-offset: 2px; }'
                 ].join('\n');
                 doc.head.appendChild(style);
               }
@@ -2351,11 +2294,6 @@
                   doc.querySelectorAll('.client-tour-slideshow.dashboard-edit-slideshow-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-slideshow-wrap'); });
                   doc.querySelectorAll('.dashboard-edit-location-btn-wrap').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.location-item.dashboard-edit-location-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-location-wrap'); });
-                  doc.querySelectorAll('.menu-item-card, .menu-header, section.ads.menu-ad').forEach(function(el) {
-                    el.classList.remove('dashboard-edit-has-change', 'dashboard-edit-new', 'dashboard-edit-marked-delete');
-                    var path = getContentPathForElement(doc, el);
-                    if (path && markedForDeletionContentPaths.has(path)) el.classList.add('dashboard-edit-hidden-for-preview');
-                  });
                 } catch (e) {}
               }
               function expandEditPanel() {
@@ -2370,8 +2308,6 @@
               win._dashboardInjectEditButtons = injectEditButtons;
               win._dashboardRemoveEditButtons = removeEditButtons;
               setTimeout(injectEditButtons, 100);
-              setTimeout(applyEditHighlights, 150);
-              setTimeout(applyEditHighlights, 150);
               win._dashboardEditClick = function(e) {
                 if (e.target.closest('.dashboard-edit-drag-handle')) {
                   e.stopPropagation();
@@ -2521,13 +2457,6 @@
               if (win._dashboardRemoveEditButtons) win._dashboardRemoveEditButtons();
               var sty = doc.getElementById('dashboard-edit-injected-style');
               if (sty) sty.remove();
-              var previewHideStyle = doc.getElementById('dashboard-edit-preview-hide-style');
-              if (!previewHideStyle) {
-                previewHideStyle = doc.createElement('style');
-                previewHideStyle.id = 'dashboard-edit-preview-hide-style';
-                previewHideStyle.textContent = '.dashboard-edit-hidden-for-preview { display: none !important; }';
-                doc.head.appendChild(previewHideStyle);
-              }
               if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
             }
           } catch (err) {
@@ -2551,36 +2480,10 @@
         colorPrompt.classList.remove('hidden');
         showColorSectionList();
       });
-      function updateMarkForDeletionButton() {
-        if (!btnMarkForDeletion) return;
-        var canMark = selectedInfo && selectedInfo.contentPath && ['menu-item', 'section-header', 'promotion'].indexOf(selectedInfo.contentType || '') >= 0;
-        btnMarkForDeletion.disabled = !canMark;
-        btnMarkForDeletion.classList.remove('btn-dash-secondary', 'btn-dash-danger');
-        if (canMark && selectedInfo.contentPath && markedForDeletionContentPaths.has(selectedInfo.contentPath)) {
-          btnMarkForDeletion.classList.add('btn-dash-secondary');
-          btnMarkForDeletion.innerHTML = '<i class="fa fa-undo" aria-hidden="true"></i> Unmark deletion';
-          btnMarkForDeletion.title = 'Unmark this item from deletion';
-        } else {
-          btnMarkForDeletion.classList.add('btn-dash-danger');
-          btnMarkForDeletion.innerHTML = '<i class="fa fa-ban" aria-hidden="true"></i> Mark for deletion';
-          btnMarkForDeletion.title = 'Mark for deletion (hidden in preview)';
-        }
-      }
-      if (btnMarkForDeletion) {
-        btnMarkForDeletion.addEventListener('click', function() {
-          if (!selectedInfo || !selectedInfo.contentPath) return;
-          var path = selectedInfo.contentPath;
-          if (markedForDeletionContentPaths.has(path)) {
-            markedForDeletionContentPaths.delete(path);
-          } else {
-            if (!confirm('Mark this item for deletion? It will be hidden in preview until you publish.')) return;
-            markedForDeletionContentPaths.add(path);
-          }
-          updateMarkForDeletionButton();
-          applyEditHighlights();
-        });
-        updateMarkForDeletionButton();
-      }
+      btnClear.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to clear the selection? Unsaved changes will be discarded.')) return;
+        clearSelection();
+      });
       if (btnAddSideCategory && sideCategoriesContainer) {
         btnAddSideCategory.addEventListener('click', function() {
           var idx = sideCategoriesContainer.querySelectorAll('.side-cat-block').length;
@@ -2687,13 +2590,9 @@
                 removeBtn.addEventListener('click', function() {
                   var idx = pending.findIndex(function(x) { return (x.id || '') === id; });
                   if (idx === -1) return;
-                  var item = pending[idx];
-                  var previewId = item.id;
-                  var contentPath = (item.payload || item.Payload || {}).contentPath || item.content_path || '';
+                  var previewId = pending[idx].id;
                   function removeFromList() {
                     pending.splice(idx, 1);
-                    if (contentPath) draftContentPaths.delete(contentPath);
-                    applyEditHighlights();
                     renderSummary();
                     if (pending.length === 0 && publishSummaryModal) {
                       publishSummaryModal.classList.add('hidden');
@@ -2752,11 +2651,6 @@
                 var applyBatchPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply-batch';
                 postToCMS(applyBatchPath, body).then(function(resp) {
                   console.log('Publish response:', resp);
-                  pending.forEach(function(p) {
-                    var cp = (p.payload || p.Payload || {}).contentPath || p.content_path || '';
-                    if (cp) draftContentPaths.delete(cp);
-                  });
-                  applyEditHighlights();
                   publishSummaryModal.classList.add('hidden');
                   publishSummaryModal.setAttribute('aria-hidden', 'true');
                   publishSummaryConfirm.disabled = false;
@@ -3035,10 +2929,6 @@
                 postToCMS(previewPath, { payload: draftPayload }).then(function(resp) {
                   if (resp && resp.previewId) {
                     savedDraftPreviewId = resp.previewId;
-                    if (draftPayload && draftPayload.contentPath) {
-                      draftContentPaths.add(draftPayload.contentPath);
-                      applyEditHighlights();
-                    }
                     editFormDirty = false;
                     setEditStatus('Draft saved (not yet published)');
                   }
