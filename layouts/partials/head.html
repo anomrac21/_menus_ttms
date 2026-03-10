@@ -77,8 +77,11 @@
 {{$images := slice}}
 {{ if .Params.images }}
   {{ range .Params.images }}
-    {{ $img := .image | default . }}
-    {{ if $img }}{{ $images = $images | append $img }}{{ end }}
+    {{ if reflect.IsMap . }}
+      {{ if .image }}{{ $images = $images | append .image }}{{ end }}
+    {{ else }}
+      {{ $images = $images | append . }}
+    {{ end }}
   {{ end }}
 {{ end }}
 {{ if gt (len $images) 0 }}
