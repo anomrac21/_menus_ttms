@@ -11,7 +11,7 @@ html,body {
 
 [data-barba=wrapper],[data-barba=container] {
     margin: 0;
-    padding: 0;
+    padding: 0
 }
 
 body {
@@ -26,7 +26,7 @@ body {
 h1,h2,h3,h4,h5,h6 {
     padding: .4em;
     margin: 0;
-    color: #000000 !important;
+    color: #000!important
 }
 
 ul,p {
@@ -36,7 +36,7 @@ ul,p {
 }
 
 a {
-    color: var(--main-text-color, #fff);
+    color: var(--main-text-color,#fff)
 }
 
 header {
@@ -57,8 +57,7 @@ main {
     background: var(--main-bg,#000);
     background-size: auto;
     background-position: 50% 0;
-    padding-block-end: 5em;
-}
+    padding-block-end:5em}
 
 main img {
     max-width: 100%;
@@ -386,7 +385,7 @@ footer {
     padding: .8em 1.5em;
     background: 0 0;
     position: relative;
-    color: var(--button-text-color2,#ccc);
+    color: var(--menu-text-color,#ccc);
     font-size: .9em;
     line-height: 1.6
 }
@@ -1430,8 +1429,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 #main p {
-    margin-inline:.8em;
-    color: var(--menu-text-color,#fff);
+    margin-inline:.8em;color: var(--menu-text-color,#fff)
 }
 
 #main .selected p {
