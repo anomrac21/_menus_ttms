@@ -26,7 +26,6 @@ body {
 h1,h2,h3,h4,h5,h6 {
     padding: .4em;
     margin: 0;
-    color: #000!important
 }
 
 ul,p {
@@ -508,7 +507,7 @@ footer {
 }
 
 .menu-item-card:not(.expanded) .menu-item-title a:hover {
-    color: var(--button-text-color2,#ccc);
+    color: var(--button-text-color1);
     text-decoration: underline
 }
 
