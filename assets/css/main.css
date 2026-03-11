@@ -275,7 +275,9 @@ footer {
 .main-body {
     background: var(--main-bg,#000);
     position: relative;
-    margin-block-start:0;padding: 1em
+    margin-block-start:0;
+    padding: 1em;
+    padding-top: 6em;
 }
 
 #packery-container {
