@@ -4,19 +4,19 @@
   {{- if and (ne .Section "content") (ne .Section "weekly-promotions") (ne .Section "tags") (ne .Section "categories") (ne .Section "subcategories") (ne .Section "types") (ne .Section "events") (ne .Section "ingredients") (ne .Section "cookingmethods") (ne .Section "admins") (ne .Section "admin") -}}
     
     {{- range .Pages -}}
-      {{- /* Build sizes array */ -}}
-      {{- $sizes := slice -}}
+      {{- /* Build variable1 values array */ -}}
+      {{- $variable1Values := slice -}}
       {{- range .Params.prices -}}
-        {{- if not (in $sizes .size) -}}
-          {{- $sizes = $sizes | append .size -}}
+        {{- if not (in $variable1Values .variable1) -}}
+          {{- $variable1Values = $variable1Values | append .variable1 -}}
         {{- end -}}
       {{- end -}}
 
-      {{- /* Build flavours array */ -}}
-      {{- $flavours := slice -}}
+      {{- /* Build variable2 values array */ -}}
+      {{- $variable2Values := slice -}}
       {{- range .Params.prices -}}
-        {{- if not (in $flavours .flavour) -}}
-          {{- $flavours = $flavours | append .flavour -}}
+        {{- if not (in $variable2Values .variable2) -}}
+          {{- $variable2Values = $variable2Values | append .variable2 -}}
         {{- end -}}
       {{- end -}}
 
@@ -24,8 +24,8 @@
       {{- $prices := slice -}}
       {{- range .Params.prices -}}
         {{- $price := slice -}}
-        {{- $price = $price | append .size -}}
-        {{- $price = $price | append .flavour -}}
+        {{- $price = $price | append .variable1 -}}
+        {{- $price = $price | append .variable2 -}}
         {{- $price = $price | append .price -}}
         {{- $prices = $prices | append $price -}}
       {{- end -}}
@@ -163,8 +163,8 @@
           "category" .Parent.Title
           "categoryUrl" .Parent.RelPermalink
           "summary" .Summary
-          "sizes" $sizes
-          "flavours" (sort $flavours)
+          "variable1_values" $variable1Values
+          "variable2_values" (sort $variable2Values)
           "prices" $prices
           "side_categories" $sideCategories
           "sides" $sides

@@ -4,21 +4,54 @@
 class ClientAdManager {
   constructor() {
     this.ads = [];
-    this.currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-    this.currentDate = new Date();
+    this.currentDay = null;
+    this.currentTime = null; // { hour, minute } from WorldTimeAPI
     this.hasPopulated = false;
     console.log('ClientAdManager initialized for homepage only');
   }
 
-  // Filter ads by day of week
-  filterAdsByDay() {
-    return this.ads.filter(ad => {
-      // If no daysofweek specified, show ad
-      if (!ad.daysofweek || ad.daysofweek.length === 0) {
-        return true;
+  /** Fetch datetime from WorldTimeAPI (trusted source, not browser). */
+  async fetchDateTimeFromAPI() {
+    try {
+      const res = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const dayNum = data.day_of_week;
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const day = days[dayNum - 1] || null;
+      let hour = 0, minute = 0;
+      if (data.datetime) {
+        const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
+        if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
       }
-      // Check if current day matches
-      return ad.daysofweek.includes(this.currentDay);
+      return day ? { day, hour, minute } : null;
+    } catch (_) { return null; }
+  }
+
+  _parseTime(str) {
+    if (!str || typeof str !== 'string') return null;
+    const m = String(str).trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return h * 60 + min;
+  }
+
+  // Filter ads by day of week and optional time window
+  filterAdsByDay() {
+    const day = this.currentDay || new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    const nowMins = this.currentTime ? this.currentTime.hour * 60 + this.currentTime.minute : null;
+    return this.ads.filter(ad => {
+      if (!ad.daysofweek || ad.daysofweek.length === 0) return true;
+      if (!ad.daysofweek.includes(day)) return false;
+      if (ad.time_start != null || ad.time_finish != null) {
+        const start = this._parseTime(String(ad.time_start || '00:00'));
+        const finish = this._parseTime(String(ad.time_finish || '23:59'));
+        if (start == null || finish == null || nowMins == null) return false;
+        if (start <= finish) return nowMins >= start && nowMins <= finish;
+        return nowMins >= start || nowMins <= finish;
+      }
+      return true;
     });
   }
 
@@ -48,8 +81,18 @@ class ClientAdManager {
   }
   }
 
+  // Check if ad has at least one valid image
+  hasValidImages(ad) {
+    const imgs = ad.images || [];
+    return imgs.some(img => {
+      const path = typeof img === 'string' ? img : (img && (img.image || img));
+      return path && String(path).trim() !== '';
+    });
+  }
+
   // Generate HTML for one ad
   generateAdHTML(ad) {
+    if (!this.hasValidImages(ad)) return '';
     const finalUrl = ad.link || ad.url || `/promotions/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
     const adId = ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     
@@ -122,6 +165,19 @@ class ClientAdManager {
       }
     }
 
+    // Use WorldTimeAPI for datetime (fallback to browser if API fails)
+    if (!this.currentDay) {
+      const dt = await this.fetchDateTimeFromAPI();
+      const now = new Date();
+      if (dt) {
+        this.currentDay = dt.day;
+        this.currentTime = { hour: dt.hour, minute: dt.minute };
+      } else {
+        this.currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+        this.currentTime = { hour: now.getHours(), minute: now.getMinutes() };
+      }
+    }
+
     // Filter by current day
     let filtered = this.filterAdsByDay();
     console.log(`Current day: ${this.currentDay}, Filtered: ${filtered.length}/${this.ads.length} ads`);
@@ -132,8 +188,8 @@ class ClientAdManager {
       filtered = this.ads;
     }
 
-    // Generate and display HTML
-    const html = filtered.map(ad => this.generateAdHTML(ad)).join('') + 
+    // Generate and display HTML (skip ads with no images)
+    const html = filtered.filter(ad => this.hasValidImages(ad)).map(ad => this.generateAdHTML(ad)).filter(h => h).join('') + 
       '<section class="ads menu-ad sticky" style="height: 100vh; min-height: 0; background: none; border: none;"></section>';
     container.innerHTML = html;
     container.style.display = '';

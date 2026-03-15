@@ -84,7 +84,7 @@
                   <div class="dashboard-edit-slideshow-view" id="dashboardEditMenuItemImagesView" aria-label="Menu item images preview"></div>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Prices (size | flavour | price)</label>
+                  <label>Prices (variable1 | variable2 | price)</label>
                   <div id="dashboardEditPricesContainer" class="dashboard-prices-ui"></div>
                   <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddPrice">Add price</button>
                 </div>
@@ -563,8 +563,8 @@
         var prices = [];
         for (var i = 0; i < pricesFlat.length; i += 3) {
           prices.push({
-            size: (pricesFlat[i] != null ? String(pricesFlat[i]).trim() : '') || '-',
-            flavour: (pricesFlat[i + 1] != null ? String(pricesFlat[i + 1]).trim() : '') || '-',
+            variable1: (pricesFlat[i] != null ? String(pricesFlat[i]).trim() : '') || '-',
+            variable2: (pricesFlat[i + 1] != null ? String(pricesFlat[i + 1]).trim() : '') || '-',
             price: typeof pricesFlat[i + 2] === 'number' ? pricesFlat[i + 2] : (parseFloat(pricesFlat[i + 2]) || 0)
           });
         }
@@ -995,11 +995,11 @@
         if (!Array.isArray(pricesArr) || pricesArr.length === 0) return '';
         var out = [];
         for (var i = 0; i < pricesArr.length; i += 3) {
-          var size = pricesArr[i] != null ? String(pricesArr[i]).trim() : '-';
-          var flavour = pricesArr[i + 1] != null ? String(pricesArr[i + 1]).trim() : '-';
+          var v1 = pricesArr[i] != null ? String(pricesArr[i]).trim() : '-';
+          var v2 = pricesArr[i + 1] != null ? String(pricesArr[i + 1]).trim() : '-';
           var price = pricesArr[i + 2] != null ? String(pricesArr[i + 2]).trim() : '';
-          if (!size && !flavour && !price) continue;
-          out.push(size + ' | ' + (flavour || '-') + ' | ' + price);
+          if (!v1 && !v2 && !price) continue;
+          out.push(v1 + ' | ' + (v2 || '-') + ' | ' + price);
         }
         return out.join('\n');
       }
@@ -1009,11 +1009,11 @@
         lines.forEach(function(line) {
           var parts = line.split('|').map(function(s) { return s.trim(); });
           if (parts.length < 2) return;
-          var size = parts[0] || '-';
-          var flavour = (parts[1] != null && parts[1] !== '') ? parts[1] : '-';
+          var v1 = parts[0] || '-';
+          var v2 = (parts[1] != null && parts[1] !== '') ? parts[1] : '-';
           var price = parts.length >= 3 ? parts[2] : '';
-          if (!size || price === '') return;
-          out.push(size, flavour, isNaN(parseFloat(price)) ? price : parseFloat(price));
+          if (!v1 || price === '') return;
+          out.push(v1, v2, isNaN(parseFloat(price)) ? price : parseFloat(price));
         });
         return out;
       }
@@ -1042,11 +1042,11 @@
       function escapeAttr(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
       }
-      function createPriceRow(size, flavour, price) {
+      function createPriceRow(variable1, variable2, price) {
         var row = document.createElement('div');
         row.className = 'dashboard-price-row';
-        row.innerHTML = '<input type="text" class="dashboard-edit-input price-size" placeholder="size" value="' + escapeAttr(size) + '">' +
-          '<input type="text" class="dashboard-edit-input price-flavour" placeholder="flavour" value="' + escapeAttr(flavour) + '">' +
+        row.innerHTML = '<input type="text" class="dashboard-edit-input price-size" placeholder="variable1" value="' + escapeAttr(variable1) + '">' +
+          '<input type="text" class="dashboard-edit-input price-flavour" placeholder="variable2" value="' + escapeAttr(variable2) + '">' +
           '<input type="number" class="dashboard-edit-input price-price" placeholder="price" step="0.01" min="0" value="' + (typeof price === 'number' && !isNaN(price) ? price : (price !== '' && price != null ? escapeAttr(price) : '')) + '">' +
           '<button type="button" class="dashboard-btn dashboard-btn-remove-row" aria-label="Remove"><i class="fa fa-trash-o" aria-hidden="true"></i></button>';
         row.querySelector('.dashboard-btn-remove-row').addEventListener('click', function() { row.remove(); });
@@ -1074,10 +1074,10 @@
         container.innerHTML = '';
         if (!Array.isArray(pricesArr)) pricesArr = [];
         for (var i = 0; i < pricesArr.length; i += 3) {
-          var size = pricesArr[i] != null ? String(pricesArr[i]) : '';
-          var flavour = pricesArr[i + 1] != null ? String(pricesArr[i + 1]) : '-';
+          var v1 = pricesArr[i] != null ? String(pricesArr[i]) : '';
+          var v2 = pricesArr[i + 1] != null ? String(pricesArr[i + 1]) : '-';
           var price = pricesArr[i + 2];
-          container.appendChild(createPriceRow(size, flavour, price));
+          container.appendChild(createPriceRow(v1, v2, price));
         }
       }
       function getPricesFromUI(container) {
@@ -1795,7 +1795,7 @@
                 var pricesArray = [];
                 if (Array.isArray(prices)) {
                   prices.forEach(function(pr) {
-                    pricesArray.push(pr.size != null ? pr.size : '-', pr.flavour != null ? pr.flavour : '-', Number(pr.price));
+                    pricesArray.push(pr.variable1 != null ? pr.variable1 : '-', pr.variable2 != null ? pr.variable2 : '-', Number(pr.price));
                   });
                 }
                 var payload = { itemUrl: itemUrl, title: title, description: description };
@@ -1959,30 +1959,30 @@
                     if (expPrice) { expPrice.textContent = priceText; expPrice.setAttribute('data-unit-price', nums[0] || 0); }
                     var addCart = card.querySelector('.expanded-add-cart');
                     if (addCart) { addCart.setAttribute('data-unit-price', nums[0] || 0); var cartPrice = addCart.querySelector('.cart-button-price'); if (cartPrice) cartPrice.textContent = priceText; }
-                    var sizes = [], flavours = [];
+                    var variable1Vals = [], variable2Vals = [];
                     for (var si = 0; si < opts.pricesArray.length; si += 3) {
                       var sval = String(opts.pricesArray[si] || '-').trim();
                       var fval = String(opts.pricesArray[si + 1] != null ? opts.pricesArray[si + 1] : '-').trim();
-                      if (sval && sval !== '-' && sval !== 'None' && sizes.indexOf(sval) === -1) sizes.push(sval);
-                      if (fval && fval !== '-' && fval !== 'None' && flavours.indexOf(fval) === -1) flavours.push(fval);
+                      if (sval && sval !== '-' && sval !== 'None' && variable1Vals.indexOf(sval) === -1) variable1Vals.push(sval);
+                      if (fval && fval !== '-' && fval !== 'None' && variable2Vals.indexOf(fval) === -1) variable2Vals.push(fval);
                     }
                     if (opts.pricesArray.length >= 3) {
-                      card.setAttribute('data-selected-size', String(opts.pricesArray[0] || '-'));
-                      card.setAttribute('data-selected-flavour', String(opts.pricesArray[1] || '-'));
+                      card.setAttribute('data-selected-variable1', String(opts.pricesArray[0] || '-'));
+                      card.setAttribute('data-selected-variable2', String(opts.pricesArray[1] || '-'));
                     }
                     var url = (opts.itemUrl || '').replace(/'/g, "\\'");
                     var esc = function(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
-                    var sizesHtml = sizes.length ? sizes.map(function(size, idx) {
-                      return '<li class="expanded-option' + (idx === 0 ? ' selected' : '') + '" data-option-type="size" data-option-value="' + esc(size) + '" onclick="selectExpandedOption(this, \'' + url + '\', event)">' + esc(size) + '</li>';
+                    var sizesHtml = variable1Vals.length ? variable1Vals.map(function(v, idx) {
+                      return '<li class="expanded-option' + (idx === 0 ? ' selected' : '') + '" data-option-type="variable1" data-option-value="' + esc(v) + '" onclick="selectExpandedOption(this, \'' + url + '\', event)">' + esc(v) + '</li>';
                     }).join('') : '';
-                    var flavoursHtml = flavours.length ? flavours.map(function(flav, idx) {
-                      return '<li class="expanded-option' + (idx === 0 ? ' selected' : '') + '" data-option-type="flavour" data-option-value="' + esc(flav) + '" onclick="selectExpandedOption(this, \'' + url + '\', event)">' + esc(flav) + '</li>';
+                    var flavoursHtml = variable2Vals.length ? variable2Vals.map(function(v, idx) {
+                      return '<li class="expanded-option' + (idx === 0 ? ' selected' : '') + '" data-option-type="variable2" data-option-value="' + esc(v) + '" onclick="selectExpandedOption(this, \'' + url + '\', event)">' + esc(v) + '</li>';
                     }).join('') : '';
                     card.querySelectorAll('.menu-item-options .sizes, .menu-item-options ul.sizes').forEach(function(ul) {
-                      if (sizes.length) ul.innerHTML = sizesHtml; else ul.innerHTML = '';
+                      if (variable1Vals.length) ul.innerHTML = sizesHtml; else ul.innerHTML = '';
                     });
                     card.querySelectorAll('.menu-item-options .flavours, .menu-item-options ul.flavours').forEach(function(ul) {
-                      if (flavours.length) ul.innerHTML = flavoursHtml; else ul.innerHTML = '';
+                      if (variable2Vals.length) ul.innerHTML = flavoursHtml; else ul.innerHTML = '';
                     });
                   }
                 } catch (e) { console.warn('dashboardApplyEdit', e); }
@@ -2258,8 +2258,8 @@
                 card.setAttribute('data-item-url', '/new-item/');
                 card.setAttribute('data-item-expanded', 'false');
                 card.setAttribute('data-prices-array', '["-","-",0]');
-                card.setAttribute('data-selected-size', '-');
-                card.setAttribute('data-selected-flavour', '-');
+                card.setAttribute('data-selected-variable1', '-');
+                card.setAttribute('data-selected-variable2', '-');
                 card.setAttribute('data-side-categories', '[]');
                 card.setAttribute('data-modifications', '[]');
                 card.setAttribute('data-additions', '[]');
@@ -3001,8 +3001,8 @@
               }
 
               if (pricesArr.length >= 3) {
-                selectedElement.setAttribute('data-selected-size', String(pricesArr[0] || '-'));
-                selectedElement.setAttribute('data-selected-flavour', String(pricesArr[1] || '-'));
+                selectedElement.setAttribute('data-selected-variable1', String(pricesArr[0] || '-'));
+                selectedElement.setAttribute('data-selected-variable2', String(pricesArr[1] || '-'));
               }
             }
           }

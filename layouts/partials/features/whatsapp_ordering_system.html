@@ -18,6 +18,97 @@ let menuItemsCachePromise = null;
 // Track selections per category
 let categorySidesTracking = {};
 
+// Cached datetime from WorldTimeAPI (for cart promo recalc)
+let cartDateTimeCache = null;
+
+function fetchDateTimeForCart() {
+	return fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' })
+		.then(res => res.ok ? res.json() : null)
+		.then(data => {
+			if (!data || !data.day_of_week) return null;
+			const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+			const day = days[data.day_of_week - 1] || null;
+			let hour = 0, minute = 0;
+			if (data.datetime) {
+				const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
+				if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
+			}
+			return day ? { day, hour, minute } : null;
+		})
+		.catch(() => null);
+}
+
+function parseTimeToMinutesCart(timeStr) {
+	if (!timeStr || typeof timeStr !== 'string') return null;
+	const m = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})$/);
+	if (!m) return null;
+	const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+	if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+	return h * 60 + min;
+}
+
+function isWithinAvailabilityCart(availability, today, timeInfo) {
+	if (!availability || !today) return true;
+	let a;
+	try { a = typeof availability === 'string' ? JSON.parse(availability) : availability; } catch (_) { return true; }
+	if (a.days && Array.isArray(a.days) && a.days.length > 0) {
+		if (!a.days.includes(today)) return false;
+	}
+	if (a.time_start != null || a.time_finish != null) {
+		const start = parseTimeToMinutesCart(String(a.time_start || '00:00'));
+		const finish = parseTimeToMinutesCart(String(a.time_finish || '23:59'));
+		if (start == null || finish == null) return true;
+		const nowMins = timeInfo ? timeInfo.hour * 60 + timeInfo.minute : null;
+		if (nowMins == null) return false;
+		if (start <= finish) return nowMins >= start && nowMins <= finish;
+		return nowMins >= start || nowMins <= finish;
+	}
+	return true;
+}
+
+function getActivePromoForCart(promotionsJson, today, timeInfo) {
+	if (!promotionsJson || !today) return null;
+	let promotions;
+	try { promotions = typeof promotionsJson === 'string' ? JSON.parse(promotionsJson) : promotionsJson; } catch (_) { return null; }
+	if (!Array.isArray(promotions)) return null;
+	const nowMins = timeInfo ? timeInfo.hour * 60 + timeInfo.minute : null;
+	return promotions.find(p => {
+		if (!p.days || !Array.isArray(p.days) || !p.days.includes(today)) return false;
+		if (p.time_start != null || p.time_finish != null) {
+			const start = parseTimeToMinutesCart(String(p.time_start || '00:00'));
+			const finish = parseTimeToMinutesCart(String(p.time_finish || '23:59'));
+			if (start == null || finish == null || nowMins == null) return false;
+			if (start <= finish) return nowMins >= start && nowMins <= finish;
+			return nowMins >= start || nowMins <= finish;
+		}
+		return true;
+	}) || null;
+}
+
+function getBasePriceFromPricesArrayCart(pricesArray) {
+	if (!pricesArray) return 0;
+	const arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+	if (!Array.isArray(arr)) return 0;
+	const prices = [];
+	for (let i = 2; i < arr.length; i += 3) { const n = parseFloat(arr[i]); if (!isNaN(n) && n > 0) prices.push(n); }
+	return prices.length ? (prices.length === 1 ? prices[0] : Math.min(...prices)) : 0;
+}
+
+function applyPromosToOrder(today, timeInfo) {
+	for (let i = 0; i < order.length; i++) {
+		const o = order[i];
+		if (!o.promotions && !o.pricesArray) continue;
+		const promo = getActivePromoForCart(o.promotions, today, timeInfo);
+		const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
+		const basePrice = getBasePriceFromPricesArrayCart(o.pricesArray);
+		const sideAndAdd = (o.sideAndAddTotal != null) ? o.sideAndAddTotal : 0;
+		const amt = parseFloat(o.amt) || 1;
+		if (pct > 0 && basePrice > 0) {
+			o.cost = basePrice * (100 - pct) / 100 * amt + sideAndAdd;
+		}
+	}
+}
+
 // ============================================================================
 // UNIFIED SIDE CATEGORY MANAGER - Efficient, centralized system
 // ============================================================================
@@ -544,8 +635,8 @@ async function openItem(ele, options) {
 			url: itemData.url,
 			images: itemData.images || [],
 			desc: itemData.summary || '',
-			sizes: itemData.sizes || [],
-			flavours: itemData.flavours || [],
+			sizes: itemData.variable1_values || itemData.sizes || [],
+			flavours: itemData.variable2_values || itemData.flavours || [],
 			items: itemData.prices || [],
 			side_categories: itemData.side_categories || [],
 			sides: itemData.sides || [],
@@ -1410,6 +1501,9 @@ function toggleCart(){
     var cart = document.getElementById("cart");
     var footerBtns = document.getElementById("footerBtns");
     if(cart.classList.contains('cart-hidden')){
+      if (order.length > 0 && order.some(o => o.promotions || o.pricesArray)) {
+        refreshCartWithPromos();
+      }
       cart.classList.remove('cart-hidden');
       footerBtns.classList.add('bigfont');
       footerBtns.classList.add('cartopen');
@@ -1457,7 +1551,7 @@ function toggleCart(){
 	  }
 	}
 
-  function addItem(item,size,sides,adds,mods,amt,cost){
+  function addItem(item,size,sides,adds,mods,amt,cost,promoData){
   // Validate minimum requirements using manager
   const missingCategories = sideCategoryManager.validateAll();
   
@@ -1510,9 +1604,16 @@ function toggleCart(){
     modsArray = mods.split(',').map(s => s.trim()).filter(s => s);
   }
   
-  console.log('📦 Adding to cart:', {item, sidesData, adds: addsArray, mods: modsArray});
+  console.log('📦 Adding to cart:', {item, sidesData, adds: addsArray, mods: modsArray, promoData});
   
-  order.push({"item":item,"size":size,"sides":sidesData,"adds":addsArray, "mods":modsArray, "amt":amt,"cost":cost});
+  const orderEntry = {"item":item,"size":size,"sides":sidesData,"adds":addsArray, "mods":modsArray, "amt":amt,"cost":cost};
+  if (promoData && (promoData.promotions || promoData.pricesArray !== undefined || promoData.availability)) {
+    orderEntry.promotions = promoData.promotions;
+    orderEntry.pricesArray = promoData.pricesArray;
+    orderEntry.sideAndAddTotal = promoData.sideAndAddTotal;
+    if (promoData.availability) orderEntry.availability = promoData.availability;
+  }
+  order.push(orderEntry);
   additemtocart();
   cartadditem();
   buildOrderText();
@@ -1589,7 +1690,25 @@ function updateCart(i){
     }
 }
 
+async function refreshCartWithPromos() {
+	const dt = await fetchDateTimeForCart();
+	const now = new Date();
+	const day = dt ? dt.day : now.toLocaleDateString('en-US', { weekday: 'long' });
+	const timeInfo = dt ? { hour: dt.hour, minute: dt.minute } : { hour: now.getHours(), minute: now.getMinutes() };
+	cartDateTimeCache = { day, hour: timeInfo.hour, minute: timeInfo.minute };
+	applyPromosToOrder(day, timeInfo);
+	buildOrderTextSync();
+}
+
 function buildOrderText(){
+	if (order.length > 0 && order.some(o => o.promotions || o.pricesArray)) {
+		refreshCartWithPromos();
+		return;
+	}
+	buildOrderTextSync();
+}
+
+function buildOrderTextSync(){
 	messageBody='';
 	var itemSides='';
 	var itemAdds='';
@@ -1659,7 +1778,14 @@ function buildOrderText(){
 			}
 		}
 
-		messageBody=messageBody+'#'+(i+1)+' | '+order[i].size+' '+order[i].item+' | Qty'+order[i].amt+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayMods(i,itemMods)+printArrayAdds(i,itemAdds)+'\n\n';
+		var promoText = '';
+		var itemDt = cartDateTimeCache || (function(){ var n=new Date(); return { day: n.toLocaleDateString('en-US',{weekday:'long'}), hour: n.getHours(), minute: n.getMinutes() }; })();
+		var itemTimeInfo = { hour: itemDt.hour, minute: itemDt.minute };
+		var itemPromo = (order[i].promotions && itemDt.day) ? getActivePromoForCart(order[i].promotions, itemDt.day, itemTimeInfo) : null;
+		if (itemPromo && itemPromo.label) {
+			promoText = ' [' + itemPromo.label + ']';
+		}
+		messageBody=messageBody+'#'+(i+1)+' | '+order[i].size+' '+order[i].item+promoText+' | Qty'+order[i].amt+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayMods(i,itemMods)+printArrayAdds(i,itemAdds)+'\n\n';
 
 		//CUSTOM MESSAGE BODY
 		//messageBody='#'+messageBody+(i+1)+' | '+'Qty'+order[i].amt+' | '+order[i].size+' '+order[i].item+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayAdds(i,itemAdds)+printArrayMods(i,itemMods)+'\n';
@@ -1719,25 +1845,16 @@ function buildCartCards() {
 	// Build card HTML for each item
 	let cardsHtml = '';
 	
+	const dtCache = cartDateTimeCache || (function(){ var n=new Date(); return { day: n.toLocaleDateString('en-US',{weekday:'long'}), hour: n.getHours(), minute: n.getMinutes() }; })();
 	for (let i = 0; i < order.length; i++) {
 		const item = order[i];
+		const timeInfo = { hour: dtCache.hour, minute: dtCache.minute };
+		const promo = (item.promotions && dtCache.day) ? getActivePromoForCart(item.promotions, dtCache.day, timeInfo) : null;
+		const promoLabel = promo && promo.label ? promo.label : null;
 		let itemSides = '';
 		let itemAdds = '';
 		let itemMods = '';
-		let itemSize = '';
-		let itemFlavour = '';
 		let hasDetails = false;
-		
-		// Parse size and flavour (size can be "size flavour" or just "size" or "-")
-		if (item.size && item.size !== '-') {
-			const sizeParts = item.size.split(' ');
-			if (sizeParts.length > 1) {
-				itemSize = sizeParts[0];
-				itemFlavour = sizeParts.slice(1).join(' ');
-			} else {
-				itemSize = item.size;
-			}
-		}
 		
 		// Handle sides with category tracking (new format)
 		if (item.sides && typeof item.sides === 'object' && item.sides.categories) {
@@ -1778,17 +1895,6 @@ function buildCartCards() {
 			itemMods = `<div class="cart-item-category"><strong>Modifications:</strong> ${item.mods.join(', ')}</div>`;
 		}
 		
-		// Show size/flavour in details if they exist and are not "-"
-		let itemSizeFlavour = '';
-		if (itemSize && itemSize !== '-') {
-			itemSizeFlavour += `<div class="cart-item-category"><strong>Size:</strong> ${itemSize}</div>`;
-			hasDetails = true;
-		}
-		if (itemFlavour && itemFlavour !== '-') {
-			itemSizeFlavour += `<div class="cart-item-category"><strong>Flavour:</strong> ${itemFlavour}</div>`;
-			hasDetails = true;
-		}
-		
 		// Build the card with collapsible feature
 		cardsHtml += `
 			<div class="cart-item-card collapsed" data-item-index="${i}">
@@ -1802,13 +1908,13 @@ function buildCartCards() {
 					<div class="cart-item-main-info">
 						<div class="cart-item-name-row">
 							<div class="cart-item-name">${item.item}</div>
+							${promoLabel ? `<span class="cart-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">${promoLabel}</span></span>` : ''}
 							${hasDetails ? '<i class="fa fa-chevron-down cart-expand-icon"></i>' : ''}
 						</div>
 						${item.size && item.size !== '-' ? `<div class="cart-item-size">${item.size}</div>` : '<div class="cart-item-size">-</div>'}
 					</div>
 					${hasDetails ? `
 						<div class="cart-item-details">
-							${itemSizeFlavour}
 							${itemSides}
 							${itemAdds}
 							${itemMods}
@@ -1938,6 +2044,21 @@ function serviceCalc(){
 }
 
 
+async function checkCartForUnavailableItems() {
+	const dt = await fetchDateTimeForCart();
+	const now = new Date();
+	const day = dt ? dt.day : now.toLocaleDateString('en-US', { weekday: 'long' });
+	const timeInfo = dt ? { hour: dt.hour, minute: dt.minute } : { hour: now.getHours(), minute: now.getMinutes() };
+	const unavailable = [];
+	for (let i = 0; i < order.length; i++) {
+		const o = order[i];
+		if (o.availability && !isWithinAvailabilityCart(o.availability, day, timeInfo)) {
+			unavailable.push(o.item);
+		}
+	}
+	return unavailable;
+}
+
 function placeOrderClick(){
 	if (!orderingEnabled) {
 		alert(orderingDisabledMessage);
@@ -1945,6 +2066,16 @@ function placeOrderClick(){
 	}
 	if (usephonecall) {
 		window.location.href = 'tel:' + orderPhone;
+		return;
+	}
+	placeOrderClickAsync();
+}
+
+async function placeOrderClickAsync(){
+	const unavailable = await checkCartForUnavailableItems();
+	if (unavailable.length > 0) {
+		const list = unavailable.filter((v,i,a) => a.indexOf(v)===i).join(', ');
+		alert('The following items are not currently available and cannot be ordered:\n\n' + list + '\n\nLunch items are available Monday–Friday, 11AM–2PM. Please remove them from your cart to proceed.');
 		return;
 	}
 	advanceOrder();
@@ -2060,7 +2191,13 @@ function updateCartLocationDisplay() {
 	}
 }
 
-function confirm(){
+async function confirm(){
+	const unavailable = await checkCartForUnavailableItems();
+	if (unavailable.length > 0) {
+		const list = unavailable.filter((v,i,a) => a.indexOf(v)===i).join(', ');
+		alert('The following items are not currently available and cannot be ordered:\n\n' + list + '\n\nLunch items are available Monday–Friday, 11AM–2PM. Please remove them from your cart to proceed.');
+		return;
+	}
 	constructWAMessage();
 	confirmSendOrder();
 }
@@ -2080,6 +2217,18 @@ function constructWAMessage(){
 		label = 'Takeaway'; // Default fallback
 	}
 	
+	// Add date, time, and location
+	var now = new Date();
+	var dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+	var timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+	var metaLines = `📅 ${dateStr}\n🕐 ${timeStr}`;
+	var locationSelect = document.getElementById('locationSelect');
+	var selectedOpt = locationSelect ? locationSelect.options[locationSelect.selectedIndex] : null;
+	if (selectedOpt && selectedOpt.value && selectedOpt.dataset.address) {
+		metaLines += `\n📍 ${selectedOpt.dataset.address}`;
+	}
+	metaLines += '\n';
+	
 	if(vat>0 || service>0){
 		subTotalTxt='\nSub Total $ '+price.toFixed(2);
 		if(vat>0){
@@ -2090,7 +2239,7 @@ function constructWAMessage(){
 		}
 	}
 	
-	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+'\n'+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
+	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+'\n'+metaLines+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
 }
 
 function confirmSendOrder(){

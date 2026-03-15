@@ -70,6 +70,44 @@
   {{- $items = $items | append $item -}}
 {{- end }}
 
+{{- /* Add menu items with promotions (promo image first, else item image) - only for promotions section */ -}}
+{{- if eq .Section "promotions" }}
+  {{- range $mp := where site.RegularPages "Section" "!=" "promotions" }}
+    {{- with $mp.Params.promotions }}
+      {{- if reflect.IsSlice . }}
+        {{- range . }}
+          {{- if and .days (reflect.IsSlice .days) (gt (len .days) 0) }}
+            {{- $promoImg := .image }}
+            {{- $itemImg := "" }}
+            {{- with $mp.Params.images }}
+              {{- if reflect.IsSlice . }}
+                {{- $first := index . 0 }}
+                {{- $itemImg = cond (reflect.IsMap $first) (index $first "image" | default "") ($first | default "") }}
+              {{- end }}
+            {{- end }}
+            {{- $imgPath := $promoImg | default $itemImg }}
+            {{- $imgList := slice }}
+            {{- if $imgPath }}
+              {{- $imgList = slice (dict "image" $imgPath) }}
+            {{- end }}
+            {{- $menuAd := dict
+              "title"    $mp.Title
+              "weight"   ($mp.Params.weight | default 999)
+              "url"      $mp.RelPermalink
+              "link"     $mp.RelPermalink
+              "daysofweek" .days
+              "images"   $imgList
+            -}}
+            {{- if .time_start }}{{ $menuAd = merge $menuAd (dict "time_start" .time_start) }}{{- end }}
+            {{- if .time_finish }}{{ $menuAd = merge $menuAd (dict "time_finish" .time_finish) }}{{- end }}
+            {{- $items = $items | append $menuAd -}}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{- /* Build JSON with both items AND section frontmatter */ -}}
 {{- $json := dict "items" $items -}}
 

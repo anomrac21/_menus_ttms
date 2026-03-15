@@ -18,8 +18,277 @@
         initializeFooter();
         initializeModals();
         initializeMenu();
+        applyDayBasedPromos();
         initializeFooterVisibility();
         // Packery removed - no initialization needed
+    }
+
+    /**
+     * Fetch current weekday and time from trusted time API (not browser date).
+     * Uses WorldTimeAPI; on failure, promos are not applied.
+     * @returns {{ day: string, hour: number, minute: number }|null}
+     */
+    async function fetchDateTimeFromAPI() {
+        try {
+            const res = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
+            if (!res.ok) return null;
+            const data = await res.json();
+            const dayNum = data.day_of_week; // 1=Monday .. 7=Sunday
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const day = days[dayNum - 1] || null;
+            let hour = 0, minute = 0;
+            if (data.datetime) {
+                const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
+                if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
+            }
+            return day ? { day, hour, minute } : null;
+        } catch (_) { return null; }
+    }
+
+    /** @param {string} timeStr "HH:mm" or "H:mm" 24h - returns minutes since midnight */
+    function parseTimeToMinutes(timeStr) {
+        if (!timeStr || typeof timeStr !== 'string') return null;
+        const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return null;
+        const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+        if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+        return h * 60 + min;
+    }
+
+    function getActivePromoForDay(promotionsJson, today, timeInfo) {
+        if (!promotionsJson || !today) return null;
+        let promotions;
+        try { promotions = typeof promotionsJson === 'string' ? JSON.parse(promotionsJson) : promotionsJson; } catch (_) { return null; }
+        if (!Array.isArray(promotions)) return null;
+        const nowMins = timeInfo ? timeInfo.hour * 60 + timeInfo.minute : null;
+        return promotions.find(p => {
+            if (!p.days || !Array.isArray(p.days) || !p.days.includes(today)) return false;
+            if (p.time_start != null || p.time_finish != null) {
+                const start = parseTimeToMinutes(String(p.time_start || '00:00'));
+                const finish = parseTimeToMinutes(String(p.time_finish || '23:59'));
+                if (start == null || finish == null || nowMins == null) return false;
+                if (start <= finish) return nowMins >= start && nowMins <= finish;
+                return nowMins >= start || nowMins <= finish;
+            }
+            return true;
+        }) || null;
+    }
+
+    function getBasePriceFromPricesArray(pricesArray) {
+        if (!pricesArray) return 0;
+        const arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+        if (!Array.isArray(arr)) return 0;
+        const prices = [];
+        for (let i = 2; i < arr.length; i += 3) { const n = parseFloat(arr[i]); if (!isNaN(n) && n > 0) prices.push(n); }
+        return prices.length ? (prices.length === 1 ? prices[0] : Math.min(...prices)) : 0;
+    }
+
+    function getPriceRangeFromPricesArray(pricesArray) {
+        if (!pricesArray) return null;
+        const arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+        if (!Array.isArray(arr)) return null;
+        const prices = [];
+        for (let i = 2; i < arr.length; i += 3) { const n = parseFloat(arr[i]); if (!isNaN(n) && n > 0) prices.push(n); }
+        return prices.length >= 2 ? [Math.min(...prices), Math.max(...prices)] : prices.length === 1 ? [prices[0], prices[0]] : null;
+    }
+
+    function applyPromoToCard(card, today, timeInfo) {
+        const promotions = card.getAttribute('data-promotions');
+        const promo = getActivePromoForDay(promotions, today, timeInfo);
+        const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
+        card.setAttribute('data-active-promo-percent', String(pct));
+
+        const pricesStr = card.getAttribute('data-prices-array');
+        const basePrice = getBasePriceFromPricesArray(pricesStr);
+        const displayPrice = pct > 0 ? basePrice * (100 - pct) / 100 : basePrice;
+
+        const badge = card.querySelector('.menu-item-title .menu-item-promo-badge');
+        if (badge) {
+            if (promo && promo.label) {
+                badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
+                badge.style.display = '';
+            } else { badge.style.display = 'none'; }
+        } else if (promo && promo.label) {
+            const titleEl = card.querySelector('.menu-item-title');
+            if (titleEl) {
+                const span = document.createElement('span');
+                span.className = 'menu-item-promo-badge';
+                span.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
+                titleEl.appendChild(span);
+            }
+        }
+
+        const priceEl = card.querySelector('.menu-item-price');
+        if (priceEl) {
+            const range = getPriceRangeFromPricesArray(pricesStr);
+            const hasRange = range && range[0] !== range[1];
+            if (hasRange) {
+                const [p1, p2] = range;
+                if (pct > 0) {
+                    const d1 = p1 * (100 - pct) / 100, d2 = p2 * (100 - pct) / 100;
+                    priceEl.innerHTML = `<span class="menu-item-price-original">$${p1.toFixed(2).replace(/\.00$/, '')} | $${p2.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${d1.toFixed(2).replace(/\.00$/, '')} | $${d2.toFixed(2).replace(/\.00$/, '')}</span>`;
+                } else priceEl.innerHTML = `$${p1.toFixed(2).replace(/\.00$/, '')} | $${p2.toFixed(2).replace(/\.00$/, '')}`;
+            } else {
+                if (pct > 0) priceEl.innerHTML = `<span class="menu-item-price-original">$${basePrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
+                else priceEl.textContent = `$${basePrice.toFixed(2).replace(/\.00$/, '')}`;
+            }
+        }
+
+        /* Card keeps regular item image; promo image is not shown on the card */
+
+        const expandedPrice = card.querySelector('.expanded-price');
+        const addCartBtn = card.querySelector('.expanded-add-cart');
+        if (expandedPrice) {
+            if (pct > 0) {
+                expandedPrice.innerHTML = `<span class="menu-item-price-original">$${basePrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
+                expandedPrice.setAttribute('data-unit-price', String(displayPrice));
+                expandedPrice.setAttribute('data-original-unit-price', String(basePrice));
+                expandedPrice.setAttribute('data-promo-percent', String(pct));
+            } else {
+                expandedPrice.textContent = `$${basePrice.toFixed(2).replace(/\.00$/, '')}`;
+                expandedPrice.setAttribute('data-unit-price', String(basePrice));
+                expandedPrice.setAttribute('data-original-unit-price', String(basePrice));
+                expandedPrice.setAttribute('data-promo-percent', '0');
+            }
+        }
+        if (addCartBtn) {
+            addCartBtn.setAttribute('data-unit-price', String(displayPrice));
+            const cartPrice = addCartBtn.querySelector('.cart-button-price');
+            if (cartPrice) cartPrice.textContent = `$${displayPrice.toFixed(2).replace(/\.00$/, '')}`;
+        }
+    }
+
+    function applyPromoToSinglePage(dataEl, today, timeInfo) {
+        const promotions = dataEl.getAttribute('data-promotions');
+        const promo = getActivePromoForDay(promotions, today, timeInfo);
+        const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
+        dataEl.setAttribute('data-active-promo-percent', String(pct));
+
+        const badge = document.querySelector('.single-page-title .menu-item-promo-badge');
+        if (badge) {
+            if (promo && promo.label) {
+                badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
+                badge.style.display = '';
+            } else { badge.style.display = 'none'; }
+        } else if (promo && promo.label) {
+            const title = document.querySelector('.single-page-title');
+            if (title) {
+                const span = document.createElement('span');
+                span.className = 'menu-item-promo-badge';
+                span.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
+                title.appendChild(span);
+            }
+        }
+
+        const priceItems = document.querySelectorAll('.single-page-prices-section .prices li');
+        priceItems.forEach(li => {
+            const orig = li.querySelector('.menu-item-price-original, b');
+            if (!orig) return;
+            const match = orig.textContent.match(/\$?([\d.]+)/);
+            if (!match) return;
+            const origPrice = parseFloat(match[1]);
+            if (isNaN(origPrice) || origPrice <= 0) return;
+            const disc = pct > 0 ? origPrice * (100 - pct) / 100 : origPrice;
+            if (pct > 0) li.innerHTML = `<span class="menu-item-price-original"><b>$${origPrice.toFixed(2).replace(/\.00$/, '')}</b></span> <b class="menu-item-price-promo">$${disc.toFixed(2).replace(/\.00$/, '')}</b>`;
+            else li.innerHTML = `<b>$${origPrice.toFixed(2).replace(/\.00$/, '')}</b>`;
+        });
+
+        if (typeof updateSinglePagePriceWithOptions === 'function') updateSinglePagePriceWithOptions();
+    }
+
+    function isWithinAvailability(availability, today, timeInfo) {
+        if (!availability || !today) return true;
+        let a;
+        try { a = typeof availability === 'string' ? JSON.parse(availability) : availability; } catch (_) { return true; }
+        if (a.days && Array.isArray(a.days) && a.days.length > 0) {
+            if (!a.days.includes(today)) return false;
+        }
+        if (a.time_start != null || a.time_finish != null) {
+            const start = parseTimeToMinutes(String(a.time_start || '00:00'));
+            const finish = parseTimeToMinutes(String(a.time_finish || '23:59'));
+            if (start == null || finish == null) return true;
+            const nowMins = timeInfo ? timeInfo.hour * 60 + timeInfo.minute : null;
+            if (nowMins == null) return false;
+            if (start <= finish) return nowMins >= start && nowMins <= finish;
+            return nowMins >= start || nowMins <= finish;
+        }
+        return true;
+    }
+
+    function applyAvailabilityToCard(card, today, timeInfo) {
+        const avail = card.getAttribute('data-availability');
+        if (!avail) return;
+        const available = isWithinAvailability(avail, today, timeInfo);
+        card.classList.toggle('menu-item-unavailable', !available);
+        card.setAttribute('data-availability-active', available ? 'true' : 'false');
+        const overlay = card.querySelector('.menu-item-unavailable-overlay');
+        if (overlay) overlay.style.display = available ? 'none' : 'flex';
+        else if (!available) {
+            let msg = 'Available Mon–Fri 11AM–2PM';
+            try {
+                const a = typeof avail === 'string' ? JSON.parse(avail) : avail;
+                if (a.days && a.time_start && a.time_finish) {
+                    const daysStr = a.days.length === 5 && a.days.includes('Monday') && a.days.includes('Friday') ? 'Mon–Fri' : a.days.join(', ');
+                    const fmt = t => { const [h, m] = t.split(':'); const hh = parseInt(h); return (hh > 12 ? hh - 12 : hh) + (m !== '00' ? ':' + m : '') + (hh >= 12 ? 'PM' : 'AM'); };
+                    msg = `Available ${daysStr} ${fmt(a.time_start)}–${fmt(a.time_finish)}`;
+                }
+            } catch (_) {}
+            const div = document.createElement('div');
+            div.className = 'menu-item-unavailable-overlay';
+            div.innerHTML = `<span>${msg}</span>`;
+            card.style.position = 'relative';
+            card.appendChild(div);
+        }
+    }
+
+    function applyAvailabilityToSinglePage(dataEl, today, timeInfo) {
+        const avail = dataEl.getAttribute('data-availability');
+        if (!avail) return;
+        const available = isWithinAvailability(avail, today, timeInfo);
+        document.body.classList.toggle('single-page-unavailable', !available);
+        let msg = 'Lunch available Monday–Friday, 11AM–2PM.';
+        try {
+            const a = typeof avail === 'string' ? JSON.parse(avail) : avail;
+            if (a.days && a.time_start && a.time_finish) {
+                const daysStr = a.days.length === 5 ? 'Mon–Fri' : (a.days || []).join(', ');
+                const fmt = t => { const [h, m] = String(t).split(':'); const hh = parseInt(h, 10); return (hh > 12 ? hh - 12 : hh) + (m !== '00' ? ':' + m : '') + (hh >= 12 ? 'PM' : 'AM'); };
+                msg = `Available ${daysStr} ${fmt(a.time_start)}–${fmt(a.time_finish)}.`;
+            }
+        } catch (_) {}
+        const addCartSection = document.querySelector('.single-page-add-cart');
+        if (addCartSection) {
+            let notice = addCartSection.querySelector('.single-page-unavailable-notice');
+            if (!available) {
+                if (!notice) {
+                    notice = document.createElement('p');
+                    notice.className = 'single-page-unavailable-notice';
+                    notice.style.cssText = 'margin:0 0 .5em;color:#e65100;font-size:.95em;';
+                    addCartSection.insertBefore(notice, addCartSection.firstChild);
+                }
+                notice.textContent = msg;
+                notice.style.display = '';
+            } else if (notice) notice.style.display = 'none';
+        }
+        const addBtn = document.querySelector('.single-page-add-cart-btn');
+        if (addBtn) addBtn.disabled = !available;
+    }
+
+    function applyPromosWithDay(dateTime) {
+        if (!dateTime) return;
+        const { day: today, hour, minute } = dateTime;
+        const timeInfo = { hour, minute };
+        document.querySelectorAll('.menu-item-card').forEach(card => applyPromoToCard(card, today, timeInfo));
+        document.querySelectorAll('.menu-item-card[data-availability]').forEach(card => applyAvailabilityToCard(card, today, timeInfo));
+        const singleData = document.getElementById('single-page-item-data');
+        if (singleData) {
+            applyPromoToSinglePage(singleData, today, timeInfo);
+            applyAvailabilityToSinglePage(singleData, today, timeInfo);
+        }
+    }
+
+    async function applyDayBasedPromos() {
+        const dateTime = await fetchDateTimeFromAPI();
+        if (dateTime) applyPromosWithDay(dateTime);
     }
 
     /**
@@ -325,6 +594,8 @@
             console.warn('Invalid element for toggleItemExpansion');
             return;
         }
+        const card = element.classList?.contains('menu-item-card') ? element : element.closest?.('.menu-item-card');
+        if (card && card.classList.contains('menu-item-unavailable')) return;
 
         const isExpanded = element.classList.contains('expanded') || element.getAttribute('data-item-expanded') === 'true';
 
@@ -437,9 +708,9 @@
                 // In dashboard edit mode, use only card DOM/data so the expanded view shows current edits
                 const useCardDataOnly = !!window.__dashboardEditMode;
                 let itemData = null;
-                let sizes = [];
-                let flavours = [];
-                let pricesArray = []; // Array of [size, flavour, price] tuples
+                let variable1Values = [];
+                let variable2Values = [];
+                let pricesArray = []; // Array of [variable1, variable2, price] tuples
                 let sideCategories = []; // Array of side category objects
                 let modifications = []; // Array of [name, price] tuples (flat format)
                 let additions = []; // Array of [name, price] tuples (flat format)
@@ -456,15 +727,15 @@
                     if (jsonResponse.ok) {
                         itemData = await jsonResponse.json();
                         console.log('📊 Full itemData loaded:', itemData);
-                        if (itemData.sizes) {
-                            sizes = itemData.sizes.filter(s => s && s !== '-' && s !== 'None');
+                        if (itemData.variable1_values) {
+                            variable1Values = itemData.variable1_values.filter(s => s && s !== '-' && s !== 'None');
                         }
-                        if (itemData.flavours) {
-                            flavours = itemData.flavours.filter(f => f && f !== '-' && f !== 'None');
+                        if (itemData.variable2_values) {
+                            variable2Values = itemData.variable2_values.filter(f => f && f !== '-' && f !== 'None');
                         }
-                        // Build prices array from items (format: [size, flavour, price, size, flavour, price, ...])
+                        // Build prices array from items (format: [variable1, variable2, price, ...])
                         if (itemData.items && Array.isArray(itemData.items)) {
-                            pricesArray = itemData.items;
+                            pricesArray = Array.isArray(itemData.items[0]) ? itemData.items.flat() : itemData.items;
                             console.log('📊 Loaded prices array from JSON:', pricesArray);
                         }
                         // Get side categories
@@ -580,17 +851,17 @@
                     }
                 }
                 
-                // If JSON didn't provide sizes/flavours, try extracting from card element
-                if (sizes.length === 0 && flavours.length === 0) {
-                    const sizesList = element.querySelector('.menu-item-options .sizes');
-                    const flavoursList = element.querySelector('.menu-item-options .flavours');
+                // If JSON didn't provide variable1/variable2 values, try extracting from card element
+                if (variable1Values.length === 0 && variable2Values.length === 0) {
+                    const variable1List = element.querySelector('.menu-item-options .sizes');
+                    const variable2List = element.querySelector('.menu-item-options .flavours');
                     
-                    if (sizesList && sizesList.children.length > 0) {
-                        sizes = Array.from(sizesList.querySelectorAll('li')).map(li => li.textContent.trim()).filter(s => s && s !== '-' && s !== 'None');
+                    if (variable1List && variable1List.children.length > 0) {
+                        variable1Values = Array.from(variable1List.querySelectorAll('li')).map(li => li.textContent.trim()).filter(s => s && s !== '-' && s !== 'None');
                     }
                     
-                    if (flavoursList && flavoursList.children.length > 0) {
-                        flavours = Array.from(flavoursList.querySelectorAll('li')).map(li => li.textContent.trim()).filter(f => f && f !== '-' && f !== 'None');
+                    if (variable2List && variable2List.children.length > 0) {
+                        variable2Values = Array.from(variable2List.querySelectorAll('li')).map(li => li.textContent.trim()).filter(f => f && f !== '-' && f !== 'None');
                     }
                 }
                 
@@ -621,29 +892,28 @@
                 const priceMatch = itemPriceText.match(/\$?([\d.]+)/);
                 const basePrice = priceMatch ? parseFloat(priceMatch[1]) : 0;
                 
-                // If prices array is empty but we have flavours, build prices array
-                // Each flavour gets the same base price with size "-"
-                if (pricesArray.length === 0 && flavours.length > 0 && basePrice > 0) {
-                    flavours.forEach(flavour => {
-                        pricesArray.push('-', flavour, basePrice);
+                // If prices array is empty but we have variable2 values, build prices array
+                if (pricesArray.length === 0 && variable2Values.length > 0 && basePrice > 0) {
+                    variable2Values.forEach(v => {
+                        pricesArray.push('-', v, basePrice);
                     });
-                    console.log('📊 Built prices array from flavours:', pricesArray);
+                    console.log('📊 Built prices array from variable2:', pricesArray);
                 }
-                // If we have sizes but no flavours, build prices array
-                if (pricesArray.length === 0 && sizes.length > 0 && basePrice > 0) {
-                    sizes.forEach(size => {
-                        pricesArray.push(size, '-', basePrice);
+                // If we have variable1 values but no variable2, build prices array
+                if (pricesArray.length === 0 && variable1Values.length > 0 && basePrice > 0) {
+                    variable1Values.forEach(v => {
+                        pricesArray.push(v, '-', basePrice);
                     });
-                    console.log('📊 Built prices array from sizes:', pricesArray);
+                    console.log('📊 Built prices array from variable1:', pricesArray);
                 }
-                // If we have both sizes and flavours but no prices array, build it
-                if (pricesArray.length === 0 && sizes.length > 0 && flavours.length > 0 && basePrice > 0) {
-                    sizes.forEach(size => {
-                        flavours.forEach(flavour => {
-                            pricesArray.push(size, flavour, basePrice);
+                // If we have both variable1 and variable2 but no prices array, build it
+                if (pricesArray.length === 0 && variable1Values.length > 0 && variable2Values.length > 0 && basePrice > 0) {
+                    variable1Values.forEach(v1 => {
+                        variable2Values.forEach(v2 => {
+                            pricesArray.push(v1, v2, basePrice);
                         });
                     });
-                    console.log('📊 Built prices array from sizes and flavours:', pricesArray);
+                    console.log('📊 Built prices array from variable1 and variable2:', pricesArray);
                 }
                 // If still empty but we have a base price, add a default entry
                 if (pricesArray.length === 0 && basePrice > 0) {
@@ -667,38 +937,45 @@
                     unitPrice = basePrice;
                 }
                 
+                // Apply promotion discount if active
+                const promoPercent = parseInt(element.getAttribute('data-active-promo-percent')) || 0;
+                let displayUnitPrice = unitPrice;
+                if (promoPercent > 0) {
+                    displayUnitPrice = unitPrice * (100 - promoPercent) / 100;
+                }
+                
                 const initialQuantity = 1;
-                const initialTotal = unitPrice * initialQuantity;
+                const initialTotal = displayUnitPrice * initialQuantity;
                 
-                // Determine default selected size and flavour
-                const defaultSize = sizes.length > 0 ? sizes[0] : '-';
-                const defaultFlavour = flavours.length > 0 ? flavours[0] : '-';
+                // Determine default selected variable1 and variable2
+                const defaultVariable1 = variable1Values.length > 0 ? variable1Values[0] : '-';
+                const defaultVariable2 = variable2Values.length > 0 ? variable2Values[0] : '-';
                 
-                // Build sizes and flavours HTML with click handlers
+                // Build variable1 and variable2 option HTML with click handlers
                 let sizesHTML = '';
                 let flavoursHTML = '';
                 
-                if (sizes.length > 0) {
+                if (variable1Values.length > 0) {
                     sizesHTML = `
                         <ul class="sizes">
-                            ${sizes.map((size, index) => `
+                            ${variable1Values.map((v, index) => `
                                 <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
-                                    data-option-type="size" 
-                                    data-option-value="${size}"
-                                    onclick="selectExpandedOption(this, '${url}', event)">${size}</li>
+                                    data-option-type="variable1" 
+                                    data-option-value="${v}"
+                                    onclick="selectExpandedOption(this, '${url}', event)">${v}</li>
                             `).join('')}
                         </ul>
                     `;
                 }
                 
-                if (flavours.length > 0) {
+                if (variable2Values.length > 0) {
                     flavoursHTML = `
                         <ul class="flavours">
-                            ${flavours.map((flavour, index) => `
+                            ${variable2Values.map((v, index) => `
                                 <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
-                                    data-option-type="flavour" 
-                                    data-option-value="${flavour}"
-                                    onclick="selectExpandedOption(this, '${url}', event)">${flavour}</li>
+                                    data-option-type="variable2" 
+                                    data-option-value="${v}"
+                                    onclick="selectExpandedOption(this, '${url}', event)">${v}</li>
                             `).join('')}
                         </ul>
                     `;
@@ -846,8 +1123,8 @@
                 
                 // Store prices array, side categories, modifications, additions, and default selections in data attributes
                 element.setAttribute('data-prices-array', JSON.stringify(pricesArray));
-                element.setAttribute('data-selected-size', defaultSize);
-                element.setAttribute('data-selected-flavour', defaultFlavour);
+                element.setAttribute('data-selected-variable1', defaultVariable1);
+                element.setAttribute('data-selected-variable2', defaultVariable2);
                 element.setAttribute('data-side-categories', JSON.stringify(sideCategories));
                 element.setAttribute('data-modifications', JSON.stringify(modifications));
                 element.setAttribute('data-additions', JSON.stringify(additions));
@@ -930,9 +1207,9 @@
                                 <button class="btn-quantity" onclick="adjustExpandedQuantity(this, 1)">
                                     <i class="fa fa-chevron-up"></i>
                                 </button>
-                                <span class="expanded-price" data-unit-price="${unitPrice}">${itemPriceText}</span>
+                                <span class="expanded-price" data-unit-price="${displayUnitPrice}" data-original-unit-price="${unitPrice}" data-promo-percent="${promoPercent}">${promoPercent > 0 ? `<span class="menu-item-price-original">$${unitPrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayUnitPrice.toFixed(2).replace(/\.00$/, '')}</span>` : itemPriceText}</span>
                             </div>
-                            <button class="expanded-add-cart" onclick="addExpandedItemToCart(this, '${url}')" data-unit-price="${unitPrice}" data-item-url="${url}">
+                            <button class="expanded-add-cart" onclick="addExpandedItemToCart(this, '${url}')" data-unit-price="${displayUnitPrice}" data-item-url="${url}">
                                 <i class="fa fa-cart-plus"></i>
                                 <span class="cart-button-text">Add to Cart</span>
                                 <span class="cart-button-price">$${initialTotal.toFixed(2).replace(/\.00$/, '')}</span>
@@ -1067,10 +1344,10 @@
         optionElement.classList.add('selected');
         
         // Update stored selection
-        if (optionType === 'size') {
-            card.setAttribute('data-selected-size', optionValue);
-        } else if (optionType === 'flavour') {
-            card.setAttribute('data-selected-flavour', optionValue);
+        if (optionType === 'variable1') {
+            card.setAttribute('data-selected-variable1', optionValue);
+        } else if (optionType === 'variable2') {
+            card.setAttribute('data-selected-variable2', optionValue);
         }
         
         // Update price based on selection (including sides)
@@ -1300,35 +1577,35 @@
         if (!pricesArrayStr) return;
         
         const pricesArray = JSON.parse(pricesArrayStr);
-        const selectedSize = card.getAttribute('data-selected-size') || '-';
-        const selectedFlavour = card.getAttribute('data-selected-flavour') || '-';
+        const selectedVariable1 = card.getAttribute('data-selected-variable1') || '-';
+        const selectedVariable2 = card.getAttribute('data-selected-variable2') || '-';
         
-        // Find matching price in prices array (format: [size, flavour, price, ...])
+        // Find matching price in prices array (format: [variable1, variable2, price, ...])
         let unitPrice = 0;
         
         // First try exact match
         for (let i = 0; i < pricesArray.length; i += 3) {
             if (i + 2 < pricesArray.length) {
-                const size = pricesArray[i];
-                const flavour = pricesArray[i + 1];
+                const v1 = pricesArray[i];
+                const v2 = pricesArray[i + 1];
                 const price = parseFloat(pricesArray[i + 2]);
                 
-                if (size === selectedSize && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                if (v1 === selectedVariable1 && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
                     unitPrice = price;
                     break;
                 }
             }
         }
         
-        // If no exact match, try matching just flavour (when size is "-")
-        if (unitPrice === 0 && selectedSize === '-') {
+        // If no exact match, try matching just variable2 (when variable1 is "-")
+        if (unitPrice === 0 && selectedVariable1 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const size = pricesArray[i];
-                    const flavour = pricesArray[i + 1];
+                    const v1 = pricesArray[i];
+                    const v2 = pricesArray[i + 1];
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (size === '-' && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                    if (v1 === '-' && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
                         unitPrice = price;
                         break;
                     }
@@ -1336,15 +1613,15 @@
             }
         }
         
-        // If still no match, try matching just size (when flavour is "-")
-        if (unitPrice === 0 && selectedFlavour === '-') {
+        // If still no match, try matching just variable1 (when variable2 is "-")
+        if (unitPrice === 0 && selectedVariable2 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const size = pricesArray[i];
-                    const flavour = pricesArray[i + 1];
+                    const v1 = pricesArray[i];
+                    const v2 = pricesArray[i + 1];
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (size === selectedSize && flavour === '-' && !isNaN(price) && price > 0) {
+                    if (v1 === selectedVariable1 && v2 === '-' && !isNaN(price) && price > 0) {
                         unitPrice = price;
                         break;
                     }
@@ -1363,6 +1640,13 @@
             }
         }
         
+        // Apply promotion discount if active
+        const promoPercent = parseInt(card.getAttribute('data-active-promo-percent')) || 0;
+        let displayUnitPrice = unitPrice;
+        if (promoPercent > 0) {
+            displayUnitPrice = unitPrice * (100 - promoPercent) / 100;
+        }
+        
         // Update price display
         const quantitySpan = card.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
@@ -1375,19 +1659,25 @@
             sidePrice += price;
         });
         
-        const totalPrice = (unitPrice + sidePrice) * quantity;
+        const totalPrice = (displayUnitPrice + sidePrice) * quantity;
         
         const priceElement = card.querySelector('.expanded-price');
         const addCartButton = card.querySelector('.expanded-add-cart');
         const priceButton = addCartButton?.querySelector('.cart-button-price');
         
         if (priceElement) {
-            priceElement.textContent = `$${unitPrice.toFixed(2).replace(/\.00$/, '')}`;
-            priceElement.setAttribute('data-unit-price', unitPrice.toString());
+            if (promoPercent > 0) {
+                priceElement.innerHTML = `<span class="menu-item-price-original">$${unitPrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayUnitPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
+            } else {
+                priceElement.textContent = `$${unitPrice.toFixed(2).replace(/\.00$/, '')}`;
+            }
+            priceElement.setAttribute('data-unit-price', displayUnitPrice.toString());
+            priceElement.setAttribute('data-original-unit-price', unitPrice.toString());
+            priceElement.setAttribute('data-promo-percent', promoPercent.toString());
         }
         
         if (addCartButton) {
-            addCartButton.setAttribute('data-unit-price', unitPrice.toString());
+            addCartButton.setAttribute('data-unit-price', displayUnitPrice.toString());
         }
         
         if (priceButton) {
@@ -1405,6 +1695,10 @@
         const card = button.closest('.menu-item-card');
         if (!card) {
             console.warn('Card not found for add to cart');
+            return;
+        }
+        if (card.classList.contains('menu-item-unavailable')) {
+            alert('This item is not currently available. Lunch items are available Monday–Friday, 11AM–2PM.');
             return;
         }
 
@@ -1461,9 +1755,9 @@
         const titleElement = card.querySelector('.menu-item-title a') || card.querySelector('.menu-item-title');
         const itemName = titleElement?.textContent?.trim() || '';
         
-        // Get selected size and flavour
-        const selectedSize = card.getAttribute('data-selected-size') || '-';
-        const selectedFlavour = card.getAttribute('data-selected-flavour') || '-';
+        // Get selected variable1 and variable2
+        const selectedVariable1 = card.getAttribute('data-selected-variable1') || '-';
+        const selectedVariable2 = card.getAttribute('data-selected-variable2') || '-';
         
         // Get price - try expanded price first, then regular price
         const priceElement = card.querySelector('.expanded-price') || card.querySelector('.menu-item-price');
@@ -1486,10 +1780,10 @@
         // Call existing addItem function if available
         if (typeof addItem === 'function') {
             // addItem(item, size, sides, adds, mods, amt, cost)
-            // Combine size and flavour for the size parameter (format: "size flavour")
-            const size = selectedSize !== '-' && selectedFlavour !== '-' 
-                ? `${selectedSize} ${selectedFlavour}`.trim()
-                : selectedSize !== '-' ? selectedSize : '-';
+            // Combine variable1 and variable2 for the size parameter (format: "variable1 variable2")
+            const size = selectedVariable1 !== '-' && selectedVariable2 !== '-' 
+                ? `${selectedVariable1} ${selectedVariable2}`.trim()
+                : selectedVariable1 !== '-' ? selectedVariable1 : (selectedVariable2 !== '-' ? selectedVariable2 : '-');
             
             // Get selected sides
             const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
@@ -1551,6 +1845,11 @@
             });
             
             const finalTotalCost = (unitPrice + sidePrice + additionPrice) * quantity;
+            const sideAndAddTotal = (sidePrice + additionPrice) * quantity;
+            const promotionsAttr = card.getAttribute('data-promotions');
+            const pricesArrayAttr = card.getAttribute('data-prices-array');
+            const availabilityAttr = card.getAttribute('data-availability');
+            const promoData = (promotionsAttr || pricesArrayAttr || availabilityAttr) ? { promotions: promotionsAttr, pricesArray: pricesArrayAttr, sideAndAddTotal, availability: availabilityAttr } : undefined;
             
             console.log('📦 Adding to cart:', { 
                 item: itemName, 
@@ -1565,7 +1864,7 @@
                 url 
             });
             
-            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost);
+            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost, promoData);
             
             // Show visual feedback
             button.classList.add('adding');
@@ -2035,6 +2334,10 @@
      * @param {string} url - Item URL
      */
     function addSinglePageItemToCart(button, url) {
+        if (document.body.classList.contains('single-page-unavailable')) {
+            alert('This item is not currently available. Lunch items are available Monday–Friday, 11AM–2PM.');
+            return;
+        }
         const quantitySpan = document.querySelector('.single-page-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
@@ -2119,25 +2422,20 @@
 
         // Call existing addItem function if available
         if (typeof addItem === 'function') {
-            // Get selected size and flavour
-            const selectedSizeOption = document.querySelector('.single-page-option[data-option-type="size"].selected');
-            const selectedFlavourOption = document.querySelector('.single-page-option[data-option-type="flavour"].selected');
-            const selectedSize = selectedSizeOption?.getAttribute('data-option-value') || '-';
-            const selectedFlavour = selectedFlavourOption?.getAttribute('data-option-value') || '-';
+            // Get selected variable1 and variable2
+            const selectedVariable1Option = document.querySelector('.single-page-option[data-option-type="variable1"].selected');
+            const selectedVariable2Option = document.querySelector('.single-page-option[data-option-type="variable2"].selected');
+            const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') || '-';
+            const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') || '-';
             
-            // Determine the size value to use
-            // Priority: flavour if available (since flavours often represent the actual selection like "Hard Shell" or "Soft Shell")
-            // Otherwise use size, or '-' if neither is selected
+            // Combine variable1 and variable2 for the size parameter
             let size = '-';
-            if (selectedFlavour !== '-') {
-                size = selectedFlavour;
-            } else if (selectedSize !== '-') {
-                size = selectedSize;
-            }
-            
-            // If both are selected, combine them (size first, then flavour)
-            if (selectedSize !== '-' && selectedFlavour !== '-') {
-                size = `${selectedSize} ${selectedFlavour}`.trim();
+            if (selectedVariable1 !== '-' && selectedVariable2 !== '-') {
+                size = `${selectedVariable1} ${selectedVariable2}`.trim();
+            } else if (selectedVariable1 !== '-') {
+                size = selectedVariable1;
+            } else if (selectedVariable2 !== '-') {
+                size = selectedVariable2;
             }
             
             // Get selected sides
@@ -2207,6 +2505,11 @@
             
             const totalModAndAddPrice = modificationPrice + additionPrice;
             const finalTotalCost = (unitPrice + sidePrice + totalModAndAddPrice) * quantity;
+            const sideAndAddTotal = (sidePrice + totalModAndAddPrice) * quantity;
+            const promotionsAttr = dataContainer.getAttribute('data-promotions');
+            const pricesArrayAttr = dataContainer.getAttribute('data-prices-array');
+            const availabilityAttr = dataContainer.getAttribute('data-availability');
+            const promoData = (promotionsAttr || pricesArrayAttr || availabilityAttr) ? { promotions: promotionsAttr, pricesArray: pricesArrayAttr, sideAndAddTotal, availability: availabilityAttr } : undefined;
             
             console.log('📦 Adding to cart from single page:', { 
                 item: itemName, 
@@ -2221,7 +2524,7 @@
                 url 
             });
             
-            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost);
+            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost, promoData);
             
             // Show visual feedback
             button.classList.add('adding');
@@ -2354,36 +2657,36 @@
         
         const pricesArray = JSON.parse(pricesArrayStr);
         
-        // Get selected size and flavour
-        const selectedSizeOption = document.querySelector('.single-page-option[data-option-type="size"].selected');
-        const selectedFlavourOption = document.querySelector('.single-page-option[data-option-type="flavour"].selected');
-        const selectedSize = selectedSizeOption?.getAttribute('data-option-value') || '-';
-        const selectedFlavour = selectedFlavourOption?.getAttribute('data-option-value') || '-';
+        // Get selected variable1 and variable2
+        const selectedVariable1Option = document.querySelector('.single-page-option[data-option-type="variable1"].selected');
+        const selectedVariable2Option = document.querySelector('.single-page-option[data-option-type="variable2"].selected');
+        const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') || '-';
+        const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') || '-';
         
         // Find matching price
         let unitPrice = 0;
         for (let i = 0; i < pricesArray.length; i += 3) {
             if (i + 2 < pricesArray.length) {
-                const size = pricesArray[i];
-                const flavour = pricesArray[i + 1];
+                const v1 = pricesArray[i];
+                const v2 = pricesArray[i + 1];
                 const price = parseFloat(pricesArray[i + 2]);
                 
-                if (size === selectedSize && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                if (v1 === selectedVariable1 && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
                     unitPrice = price;
                     break;
                 }
             }
         }
         
-        // If no exact match, try matching just flavour (when size is "-")
-        if (unitPrice === 0 && selectedSize === '-') {
+        // If no exact match, try matching just variable2 (when variable1 is "-")
+        if (unitPrice === 0 && selectedVariable1 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const size = pricesArray[i];
-                    const flavour = pricesArray[i + 1];
+                    const v1 = pricesArray[i];
+                    const v2 = pricesArray[i + 1];
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (size === '-' && flavour === selectedFlavour && !isNaN(price) && price > 0) {
+                    if (v1 === '-' && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
                         unitPrice = price;
                         break;
                     }
@@ -2391,15 +2694,15 @@
             }
         }
         
-        // If still no match, try matching just size (when flavour is "-")
-        if (unitPrice === 0 && selectedFlavour === '-') {
+        // If still no match, try matching just variable1 (when variable2 is "-")
+        if (unitPrice === 0 && selectedVariable2 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const size = pricesArray[i];
-                    const flavour = pricesArray[i + 1];
+                    const v1 = pricesArray[i];
+                    const v2 = pricesArray[i + 1];
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (size === selectedSize && flavour === '-' && !isNaN(price) && price > 0) {
+                    if (v1 === selectedVariable1 && v2 === '-' && !isNaN(price) && price > 0) {
                         unitPrice = price;
                         break;
                     }
@@ -2416,6 +2719,12 @@
                     break;
                 }
             }
+        }
+        
+        // Apply promotion discount if active
+        const promoPercent = parseInt(dataContainer.getAttribute('data-active-promo-percent')) || 0;
+        if (promoPercent > 0) {
+            unitPrice = unitPrice * (100 - promoPercent) / 100;
         }
         
         // Calculate side prices

@@ -1,6 +1,7 @@
 {{ define "main" }}
-  
-
+  {{ $activePromo := dict "label" "" "image" "" }}
+  {{ $variable1Values := slice }}
+  {{ $variable2Values := slice }}
   <!--{{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
   {{ $dateHuman := .Date | time.Format ":date_long" }}
   <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time-->
@@ -8,34 +9,48 @@
     <div class="main-content">
       <div class="single-page-item-card">
         {{ $category :=  .Section  }}
-        {{ $categoryurl := .Parent.Permalink }}            
-        {{$sizes := slice}}
+        {{ $categoryurl := .Parent.Permalink }}
         {{if .Params.prices}}
           {{range .Params.prices}}
-            {{if not (in $sizes .size)}}
-              {{$sizes = $sizes | append .size}}
+            {{if not (in $variable1Values .variable1)}}
+              {{$variable1Values = $variable1Values | append .variable1}}
             {{end}}
           {{end}}
         {{end}}
 
-        {{$flavours := slice}}
         {{if .Params.prices}}
           {{range .Params.prices}}
-            {{if not (in $flavours .flavour)}}
-              {{$flavours = $flavours | append .flavour}}
+            {{if not (in $variable2Values .variable2)}}
+              {{$variable2Values = $variable2Values | append .variable2}}
             {{end}}
           {{end}}
         {{end}}
         
-              {{if .Params.images }}
-          {{ $imagesArray := slice }}
+        {{/* Check for active promotion today - prepend promo image when applicable */}}
+        {{ $today := now.Weekday.String }}
+        {{ with .Params.promotions }}
+          {{ range . }}
+            {{ if in .days $today }}
+              {{ $activePromo = dict "label" (.label | default "") "image" (.image | default "") "type" (.type | default "") "value" (.value | default 0) }}
+              {{ break }}
+            {{ end }}
+          {{ end }}
+        {{ end }}
+        {{ $imagesArray := slice }}
+        {{ if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "") }}
+          {{ $imagesArray = $imagesArray | append (index $activePromo "image") }}
+        {{ end }}
+        {{ if .Params.images }}
           {{ range .Params.images }}
             {{ if .image }}
               {{ $imagesArray = $imagesArray | append .image }}
             {{ end }}
           {{ end }}
-          {{ if gt (len $imagesArray) 0 }}
-            <div class="single-page-image-carousel" data-current-image="0">
+        {{ end }}
+        {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
+        
+              {{ if gt (len $imagesArray) 0 }}
+            <div class="single-page-image-carousel" data-current-image="0" id="singlePageImageCarousel">
               <div class="single-page-image-carousel-container">
                 {{ range $index, $img := $imagesArray }}
                   <div class="single-page-image-slide {{ if eq $index 0 }}active{{ end }}" data-image-index="{{ $index }}">
@@ -59,15 +74,19 @@
               </div>
               {{ end }}
             </div>
-          {{ end }}
               {{ else }}
-          <div class="single-page-image-container">
+          <div class="single-page-image-container" id="singlePageImageCarousel">
             <img class="single-page-image" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  
           </div>
               {{ end }}  
         
-        <div class="single-page-content">
-          <h1 class="single-page-title">{{ .Title }}</h1>
+        <div class="single-page-content" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}" data-menu-item-path="{{ .RelPermalink }}">
+          <h1 class="single-page-title">{{ .Title }}{{ if and $activePromo (index $activePromo "label") }} <span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}</h1>
+          {{ if .Site.Params.menuImageService.enabled }}
+          <div class="menu-image-actions">
+            <button type="button" class="menu-image-add-btn" id="menuImageAddBtn" style="display:none;" title="Add a photo for this menu item"><i class="fa fa-camera"></i> Add photo</button>
+          </div>
+          {{ end }}
           
           <div class="single-page-description">
               {{ .Content }}
@@ -78,19 +97,25 @@
           {{ $hasSideCategories := and .Params.side_categories (gt (len .Params.side_categories) 0) }}
           {{ $hasModifications := and .Params.modifications (gt (len .Params.modifications) 0) }}
           {{ $hasAdditions := and .Params.additions (gt (len .Params.additions) 0) }}
-          {{ $hasSelectableOptions := or (gt (len $sizes) 1) (gt (len $flavours) 1) $hasSideCategories $hasModifications $hasAdditions }}
+          {{ $hasSelectableOptions := or (gt (len $variable1Values) 1) (gt (len $variable2Values) 1) $hasSideCategories $hasModifications $hasAdditions }}
           {{ if and $allprices (gt (len $allprices) 0) (not $hasSelectableOptions) }}
             <div class="single-page-prices-section">
-              {{ range $index, $currentItem := $sizes }}
+              {{ range $index, $currentItem := $variable1Values }}
                 {{ if ne $currentItem "-" }}
                   <div class="price-group">
                     <h3 class="price-group-title">{{ $currentItem }}</h3>
                     <ul class="prices">
                       {{ range $allprices }}
-                        {{ if eq $currentItem .size }}
+                        {{ if eq $currentItem .variable1 }}
                           <li>
                             {{ $price := float .price }}
-                            {{ if and .flavour (ne .flavour "-") }}{{ .flavour }} {{ end }}<b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                            {{ if $hasPromoDiscount }}
+                              {{ $discountPct := float (index $activePromo "value") }}
+                              {{ $discounted := div (mul $price (sub 100 $discountPct)) 100 }}
+                              {{ if and .variable2 (ne .variable2 "-") }}{{ .variable2 }} {{ end }}<span class="menu-item-price-original"><b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b></span> <b class="menu-item-price-promo">${{ (printf "%.2f" $discounted) | replaceRE "\\.00$" "" }}</b>
+                            {{ else }}
+                              {{ if and .variable2 (ne .variable2 "-") }}{{ .variable2 }} {{ end }}<b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                            {{ end }}
                           </li>
                         {{ end }}
                       {{ end }}
@@ -98,15 +123,21 @@
                   </div>
                 {{ end }}
               {{ end }}
-              {{/* Show single price if no sizes or all sizes are "-" */}}
-              {{ if or (eq (len $sizes) 0) (and (eq (len $sizes) 1) (eq (index $sizes 0) "-")) }}
+              {{/* Show single price if no variable1 values or all variable1 values are "-" */}}
+              {{ if or (eq (len $variable1Values) 0) (and (eq (len $variable1Values) 1) (eq (index $variable1Values 0) "-")) }}
                 {{ $firstPrice := index $allprices 0 }}
                 {{ if $firstPrice }}
                   <div class="price-group">
                     <ul class="prices">
                       <li>
                         {{ $price := float $firstPrice.price }}
-                        <b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                        {{ if $hasPromoDiscount }}
+                          {{ $discountPct := float (index $activePromo "value") }}
+                          {{ $discounted := div (mul $price (sub 100 $discountPct)) 100 }}
+                          <span class="menu-item-price-original"><b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b></span> <b class="menu-item-price-promo">${{ (printf "%.2f" $discounted) | replaceRE "\\.00$" "" }}</b>
+                        {{ else }}
+                          <b>${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</b>
+                        {{ end }}
                       </li>
                     </ul>
                   </div>
@@ -163,54 +194,58 @@
           {{ $pricesArray := slice }}
           {{ if .Params.prices }}
             {{ range .Params.prices }}
-              {{ $pricesArray = $pricesArray | append .size }}
-              {{ $pricesArray = $pricesArray | append .flavour }}
+              {{ $pricesArray = $pricesArray | append .variable1 }}
+              {{ $pricesArray = $pricesArray | append .variable2 }}
               {{ $pricesArray = $pricesArray | append .price }}
             {{ end }}
           {{ end }}
           
           {{/* Store data in data attributes for JavaScript */}}
+          {{ $avail := .Params.availability | default .CurrentSection.Params.availability }}
           <div id="single-page-item-data" 
+               {{ with $avail }}data-availability="{{ $avail | jsonify }}"{{ end }}
                data-prices-array="{{ $pricesArray | jsonify }}"
-               data-sizes="{{ $sizes | jsonify }}"
-               data-flavours="{{ $flavours | jsonify }}"
+               data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}"
+               data-variable1-values="{{ $variable1Values | jsonify }}"
+               data-variable2-values="{{ $variable2Values | jsonify }}"
                data-side-categories="{{ $sideCategories | jsonify }}"
                data-modifications="{{ $modifications | jsonify }}"
                data-additions="{{ $additions | jsonify }}"
                data-item-url="{{ .RelPermalink }}"
+               data-active-promo-percent="{{ if $hasPromoDiscount }}{{ index $activePromo "value" }}{{ else }}0{{ end }}"
                style="display: none;"></div>
           
           {{/* Options Sections */}}
-          {{ if or (gt (len $sizes) 1) (gt (len $flavours) 1) (gt (len $sideCategories) 0) (gt (len $modifications) 0) (gt (len $additions) 0) }}
+          {{ if or (gt (len $variable1Values) 1) (gt (len $variable2Values) 1) (gt (len $sideCategories) 0) (gt (len $modifications) 0) (gt (len $additions) 0) }}
             <div class="single-page-options-section">
-              {{/* Sizes */}}
-              {{ if gt (len $sizes) 1 }}
+              {{/* Variable1 options */}}
+              {{ if gt (len $variable1Values) 1 }}
                 <div class="single-page-options-group">
-                  <h4 class="single-page-options-title">Size</h4>
+                  <h4 class="single-page-options-title">Option 1</h4>
                   <ul class="single-page-options-list">
-                    {{ range $index, $size := $sizes }}
+                    {{ range $index, $val := $variable1Values }}
                       <li class="single-page-option {{ if eq $index 0 }}selected{{ end }}" 
-                          data-option-type="size" 
-                          data-option-value="{{ $size }}"
+                          data-option-type="variable1" 
+                          data-option-value="{{ $val }}"
                           onclick="selectSinglePageOption(this, event)">
-                        {{ $size }}
+                        {{ $val }}
                       </li>
                     {{ end }}
                   </ul>
                 </div>
               {{ end }}
               
-              {{/* Flavours */}}
-              {{ if gt (len $flavours) 1 }}
+              {{/* Variable2 options */}}
+              {{ if gt (len $variable2Values) 1 }}
                 <div class="single-page-options-group">
-                  <h4 class="single-page-options-title">Flavour</h4>
+                  <h4 class="single-page-options-title">Option 2</h4>
                   <ul class="single-page-options-list">
-                    {{ range $index, $flavour := $flavours }}
+                    {{ range $index, $val := $variable2Values }}
                       <li class="single-page-option {{ if eq $index 0 }}selected{{ end }}" 
-                          data-option-type="flavour" 
-                          data-option-value="{{ $flavour }}"
+                          data-option-type="variable2" 
+                          data-option-value="{{ $val }}"
                           onclick="selectSinglePageOption(this, event)">
-                        {{ $flavour }}
+                        {{ $val }}
                       </li>
                     {{ end }}
                   </ul>
@@ -309,11 +344,26 @@
                   {{$number := sort $number}}
                   {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
                     {{ $price := float (index $number (sub $counter 1)) }}
-                    ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
+                    {{ if $hasPromoDiscount }}
+                      {{ $discountPct := float (index $activePromo "value") }}
+                      {{ $discounted := div (mul $price (sub 100 $discountPct)) 100 }}
+                      <span class="menu-item-price-original">${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</span>
+                      <span class="menu-item-price-promo">${{ (printf "%.2f" $discounted) | replaceRE "\\.00$" "" }}</span>
+                    {{ else }}
+                      ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
+                    {{ end }}
                   {{else }}
                     {{ $price1 := float (index $number 0) }}
                     {{ $price2 := float (index $number (sub $counter 1)) }}
-                    ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
+                    {{ if $hasPromoDiscount }}
+                      {{ $discountPct := float (index $activePromo "value") }}
+                      {{ $disc1 := div (mul $price1 (sub 100 $discountPct)) 100 }}
+                      {{ $disc2 := div (mul $price2 (sub 100 $discountPct)) 100 }}
+                      <span class="menu-item-price-original">${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}</span>
+                      <span class="menu-item-price-promo">${{ (printf "%.2f" $disc1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $disc2) | replaceRE "\\.00$" "" }}</span>
+                    {{ else }}
+                      ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
+                    {{ end }}
                   {{ end }}
                 {{end}}
               </span>
@@ -357,4 +407,14 @@
   {{ partial "utilities/terms.html" (dict "taxonomy" "events" "page" .) }}
   
   {{ partial "socialmedia/share-button.html" . }}
+  {{ if .Site.Params.menuImageService.enabled }}
+  <script>
+    window.MENU_IMAGE_CONFIG = {
+      enabled: true,
+      apiUrl: "{{ .Site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
+      clientId: "{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
+    };
+  </script>
+  <script src="/js/menu-image-integration.js" defer></script>
+  {{ end }}
 {{ end }}

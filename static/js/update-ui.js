@@ -1227,8 +1227,8 @@ const MenuEditor = {
    * Render a menu item card (editable version)
    */
   renderMenuItemCard(item, editable = false) {
-    const sizes = [...new Set(item.prices.map(p => p.size).filter(s => s && s !== '-' && s !== 'None'))];
-    const flavours = [...new Set(item.prices.map(p => p.flavour).filter(f => f && f !== '-' && f !== 'None'))];
+    const variable1Values = [...new Set(item.prices.map(p => (p.variable1 != null ? p.variable1 : (Array.isArray(p) ? p[0] : p.size))).filter(s => s && s !== '-' && s !== 'None'))];
+    const variable2Values = [...new Set(item.prices.map(p => (p.variable2 != null ? p.variable2 : (Array.isArray(p) ? p[1] : p.flavour))).filter(f => f && f !== '-' && f !== 'None'))];
     
     // Calculate price display
     const prices = item.prices.map(p => parseFloat(p.price)).sort((a, b) => a - b);
@@ -1276,14 +1276,14 @@ const MenuEditor = {
               </div>
             </div>
             <div class="menu-item-options">
-              ${sizes.length > 0 ? `
+              ${variable1Values.length > 0 ? `
                 <ul class="sizes">
-                  ${sizes.map(size => `<li>${size}</li>`).join('')}
+                  ${variable1Values.map(v => `<li>${v}</li>`).join('')}
                 </ul>
               ` : ''}
-              ${flavours.length > 0 ? `
+              ${variable2Values.length > 0 ? `
                 <ul class="flavours">
-                  ${flavours.map(flavour => `<li>${flavour}</li>`).join('')}
+                  ${variable2Values.map(v => `<li>${v}</li>`).join('')}
                 </ul>
               ` : ''}
             </div>
@@ -1392,13 +1392,15 @@ const MenuEditor = {
         <div class="form-group">
           <label>Prices</label>
           <div id="edit-prices-${item.id}">
-            ${item.prices.map((price, idx) => `
+            ${(Array.isArray(item.prices) ? item.prices : []).map((price, idx) => {
+              const p = Array.isArray(price) ? { variable1: price[0], variable2: price[1], price: price[2] } : price;
+              return `
               <div class="price-entry">
-                <input type="text" placeholder="Size" value="${price.size || ''}" data-price-index="${idx}">
-                <input type="text" placeholder="Flavour" value="${price.flavour || ''}" data-price-index="${idx}">
-                <input type="number" step="0.01" placeholder="Price" value="${price.price || ''}" data-price-index="${idx}">
+                <input type="text" placeholder="variable1" value="${p.variable1 != null ? p.variable1 : p.size || ''}" data-price-index="${idx}">
+                <input type="text" placeholder="variable2" value="${p.variable2 != null ? p.variable2 : p.flavour || ''}" data-price-index="${idx}">
+                <input type="number" step="0.01" placeholder="Price" value="${p.price != null ? p.price : ''}" data-price-index="${idx}">
               </div>
-            `).join('')}
+            `}).join('')}
           </div>
           <button type="button" onclick="MenuEditor.addPriceEntry('${item.id}')">+ Add Price</button>
         </div>
@@ -1424,8 +1426,8 @@ const MenuEditor = {
       const inputs = entry.querySelectorAll('input');
       if (inputs.length >= 3) {
         prices.push({
-          size: inputs[0].value || '-',
-          flavour: inputs[1].value || '-',
+          variable1: inputs[0].value || '-',
+          variable2: inputs[1].value || '-',
           price: parseFloat(inputs[2].value) || 0
         });
       }
@@ -1901,9 +1903,9 @@ const MenuEditor = {
       `;
       
       categoryItems.forEach(item => {
-        // Extract sizes and flavours from prices
-        const sizes = [...new Set(item.prices.map(p => p.size).filter(s => s && s !== '-' && s !== 'None'))];
-        const flavours = [...new Set(item.prices.map(p => p.flavour).filter(f => f && f !== '-' && f !== 'None'))];
+        // Extract variable1 and variable2 values from prices
+        const variable1Values = [...new Set(item.prices.map(p => (p.variable1 != null ? p.variable1 : (Array.isArray(p) ? p[0] : p.size))).filter(s => s && s !== '-' && s !== 'None'))];
+        const variable2Values = [...new Set(item.prices.map(p => (p.variable2 != null ? p.variable2 : (Array.isArray(p) ? p[1] : p.flavour))).filter(f => f && f !== '-' && f !== 'None'))];
         
         // Calculate price display
         const prices = item.prices.map(p => parseFloat(p.price)).filter(p => !isNaN(p)).sort((a, b) => a - b);
@@ -1945,14 +1947,14 @@ const MenuEditor = {
                   </div>
                 </div>
                 <div class="menu-item-options">
-                  ${sizes.length > 0 ? `
+                  ${variable1Values.length > 0 ? `
                     <ul class="sizes">
-                      ${sizes.map(size => `<li>${size}</li>`).join('')}
+                      ${variable1Values.map(v => `<li>${v}</li>`).join('')}
                     </ul>
                   ` : ''}
-                  ${flavours.length > 0 ? `
+                  ${variable2Values.length > 0 ? `
                     <ul class="flavours">
-                      ${flavours.map(flavour => `<li>${flavour}</li>`).join('')}
+                      ${variable2Values.map(v => `<li>${v}</li>`).join('')}
                     </ul>
                   ` : ''}
                 </div>

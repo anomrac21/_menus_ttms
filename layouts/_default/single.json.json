@@ -2,25 +2,25 @@
   {{- $category := .Section -}}
   {{- $categoryurl := .Parent.Permalink -}}
   
-  {{- $sizes := slice -}}
+  {{- $variable1Values := slice -}}
   {{- range .Params.prices -}}
-    {{- if not (in $sizes .size) -}}
-      {{- $sizes = $sizes | append .size -}}
+    {{- if not (in $variable1Values .variable1) -}}
+      {{- $variable1Values = $variable1Values | append .variable1 -}}
     {{- end -}}
   {{- end -}}
 
-  {{- $flavours := slice -}}
+  {{- $variable2Values := slice -}}
   {{- range .Params.prices -}}
-    {{- if not (in $flavours .flavour) -}}
-      {{- $flavours = $flavours | append .flavour -}}
+    {{- if not (in $variable2Values .variable2) -}}
+      {{- $variable2Values = $variable2Values | append .variable2 -}}
     {{- end -}}
   {{- end -}}
 
   {{- $prices := slice -}}
   {{- range .Params.prices -}}
     {{- $price := slice -}}
-    {{- $price = $price | append .size -}}
-    {{- $price = $price | append .flavour -}}
+    {{- $price = $price | append .variable1 -}}
+    {{- $price = $price | append .variable2 -}}
     {{- $price = $price | append .price -}}
     {{- $prices = $prices | append $price -}}
   {{- end -}}
@@ -122,8 +122,8 @@
     "url" .RelPermalink
     "images" $images
     "desc" .Summary
-    "sizes" $sizes
-    "flavours" (sort $flavours)
+    "variable1_values" $variable1Values
+    "variable2_values" (sort $variable2Values)
     "items" $prices
     "sides" $sides
     "sideoptions" $sideconfig
@@ -140,6 +140,7 @@
     "ingredients" (.Params.ingredients | default slice)
     "cookingmethods" (.Params.cookingmethods | default slice)
     "daysofweek" (.Params.daysofweek | default slice)
+    "promotions" (.Params.promotions | default slice)
   -}}
 
   {{- $json | jsonify -}}
