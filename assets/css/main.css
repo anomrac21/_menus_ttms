@@ -533,7 +533,6 @@ footer {
     font-weight: 700;
     width: -webkit-fill-available;
     text-align: end;
-    box-shadow: 0 1px 3px rgba(0,0,0,.3)
 }
 .menu-item-promo-badge .menu-item-promo-value{
     display: inline-block;
