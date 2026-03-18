@@ -1122,7 +1122,8 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .menu-item-card.expanded a,.menu-item-card.expanded button {
     position: relative;
     z-index: 2;
-    pointer-events: auto
+    pointer-events: auto;
+    color: var(--selected-text-color1, #fff);
 }
 
 .menu-item-card.expanded .expanded-item-controls a,.menu-item-card.expanded .expanded-item-controls button {
@@ -1210,7 +1211,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .expanded-item-description p {
     margin: 0;
     padding: 0;
-    color: var(--button-text-color1,#fff)!important
+    color: var(--selected-text-color1,#fff)!important;
 }
 
 .expanded-item-controls {
@@ -1254,7 +1255,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .expanded-quantity {
     font-size: 1.2em;
     font-weight: 600;
-    color: var(--button-text-color1);
+    color: var(--selected-text-color1);
     min-width: 30px;
     text-align: center
 }
@@ -1262,7 +1263,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .expanded-price {
     font-size: 1.3em;
     font-weight: 700;
-    color: var(--button-text-color1,#fff);
+    color: var(--selected-text-color1,#fff);
     margin-left: auto;
     text-align: end;
 }
