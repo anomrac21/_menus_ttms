@@ -532,9 +532,10 @@ footer {
     font-size: .6em;
     font-weight: 700;
     width: -webkit-fill-available;
-    text-align: end;
+    text-align: end
 }
-.menu-item-promo-badge .menu-item-promo-value{
+
+.menu-item-promo-badge .menu-item-promo-value {
     display: inline-block;
     background: linear-gradient(135deg,#25d366,#128c7e);
     color: #fff;
@@ -546,6 +547,7 @@ footer {
     letter-spacing: .05em;
     box-shadow: 0 1px 3px rgba(0,0,0,.3)
 }
+
 .menu-item-title a {
     color: var(--button-text-color1,#fff);
     text-decoration: none;
@@ -1123,7 +1125,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
     position: relative;
     z-index: 2;
     pointer-events: auto;
-    color: var(--selected-text-color1, #fff);
+    color: var(--selected-text-color1,#fff)
 }
 
 .menu-item-card.expanded .expanded-item-controls a,.menu-item-card.expanded .expanded-item-controls button {
@@ -1211,7 +1213,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .expanded-item-description p {
     margin: 0;
     padding: 0;
-    color: var(--selected-text-color1,#fff)!important;
+    color: var(--selected-text-color1,#fff)!important
 }
 
 .expanded-item-controls {
@@ -1265,7 +1267,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
     font-weight: 700;
     color: var(--selected-text-color1,#fff);
     margin-left: auto;
-    text-align: end;
+    text-align: end
 }
 
 .expanded-add-cart {
@@ -1616,7 +1618,8 @@ footer .icon,#footer .icon,#footerBtns .icon {
     border: 1px solid rgba(255,255,255,.1);
     overflow: hidden;
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+    margin-inline: auto;margin-block-end: 2em;border-radius: 2em;
 }
 
 .single-page-image-container {
@@ -1784,7 +1787,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     padding: 2em;
     display: flex;
     flex-direction: column;
-    gap: 1.5em
+    gap: 1.5em;
 }
 
 .single-page-title {
@@ -1792,7 +1795,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     padding: 0;
     font-size: 2.5em;
     font-weight: 700;
-    color: var(--main-text-color,#fff);
+    color: var(--main-text-color,#fff)
 }
 
 .menu-image-actions {
