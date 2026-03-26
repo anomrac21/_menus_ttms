@@ -9,7 +9,7 @@
   <div class="dashboard-edit-page" id="dashboardEditPage">
     <div class="dashboard-edit-header">
       <div class="dashboard-edit-header-inner">
-        <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+        <a href="/dashboard/" class="btn-dash btn-dash-secondary" id="btnDashboardBack" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
         <div class="dashboard-edit-mode-toggle" role="group" aria-label="Preview or Edit mode">
           <button type="button" class="dashboard-edit-toggle-btn active" id="btnModePreview" aria-pressed="true" title="Preview" aria-label="Preview"><i class="fa fa-eye" aria-hidden="true"></i></button>
           <button type="button" class="dashboard-edit-toggle-btn" id="btnModeEdit" aria-pressed="false" title="Edit" aria-label="Edit"><i class="fa fa-pencil" aria-hidden="true"></i></button>
@@ -54,13 +54,15 @@
             <p class="dashboard-edit-status" id="dashboardEditStatus" aria-live="polite"></p>
             <div class="dashboard-edit-form-fields" id="dashboardEditFormFields">
               <div class="dashboard-edit-field-group" id="dashboardEditFieldsGeneric" data-for="menu-item,section-header">
-                <div class="dashboard-edit-field">
-                  <label for="dashboardEditTitle">Title / Name</label>
-                  <input type="text" id="dashboardEditTitle" class="dashboard-edit-input" placeholder="Item or section name">
-                </div>
-                <div class="dashboard-edit-field">
-                  <label for="dashboardEditDescription">Description / Summary</label>
-                  <textarea id="dashboardEditDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Description or section summary" rows="3"></textarea>
+                <div class="dashboard-edit-section-basics hidden" id="dashboardEditSectionBasics">
+                  <div class="dashboard-edit-field">
+                    <label for="dashboardEditSectionTitle">Title / Name</label>
+                    <input type="text" id="dashboardEditSectionTitle" class="dashboard-edit-input" placeholder="Section name">
+                  </div>
+                  <div class="dashboard-edit-field">
+                    <label for="dashboardEditSectionDescription">Description / Summary</label>
+                    <textarea id="dashboardEditSectionDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Section summary" rows="3"></textarea>
+                  </div>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionOnlyFields">
                   <label for="dashboardEditSectionWeight">Weight</label>
@@ -78,56 +80,99 @@
                   <label for="dashboardEditSectionImageBottom">Image (bottom)</label>
                   <input type="text" id="dashboardEditSectionImageBottom" class="dashboard-edit-input" placeholder="e.g. images/OMG_Characters-5.webp">
                 </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label for="dashboardEditMenuItemImages">Images (one path per line)</label>
-                  <textarea id="dashboardEditMenuItemImages" class="dashboard-edit-input dashboard-edit-textarea" placeholder="images/item1.webp&#10;images/item2.webp" rows="3"></textarea>
-                  <div class="dashboard-edit-slideshow-view" id="dashboardEditMenuItemImagesView" aria-label="Menu item images preview"></div>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Prices (variable1 | variable2 | price)</label>
-                  <div id="dashboardEditPricesContainer" class="dashboard-prices-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddPrice">Add price</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Side categories</label>
-                  <div id="dashboardEditSideCategoriesContainer" class="dashboard-side-categories-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary dashboard-btn-add-cat" id="btnAddSideCategory">Add category</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Modifications (name | price)</label>
-                  <div id="dashboardEditModificationsContainer" class="dashboard-pairs-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddModification">Add modification</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Additions (name | price)</label>
-                  <div id="dashboardEditAdditionsContainer" class="dashboard-pairs-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddAddition">Add addition</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <p class="dashboard-edit-field-note" id="dashboardEditTagsNote">All tags below contribute to search on the TTMenus platform.</p>
-                  <label>Tags</label>
-                  <div id="dashboardEditTagsContainer" class="dashboard-list-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddTag">Add tag</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Ingredients</label>
-                  <div id="dashboardEditIngredientsContainer" class="dashboard-list-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddIngredient">Add ingredient</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Cooking methods</label>
-                  <div id="dashboardEditCookingmethodsContainer" class="dashboard-list-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddCookingmethod">Add cooking method</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Types</label>
-                  <div id="dashboardEditTypesContainer" class="dashboard-list-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddType">Add type</button>
-                </div>
-                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden">
-                  <label>Events</label>
-                  <div id="dashboardEditEventsContainer" class="dashboard-list-ui"></div>
-                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddEvent">Add event</button>
+                <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden" id="dashboardMenuItemWizardRoot">
+                  <div class="dashboard-menu-item-wizard-nav" role="tablist" aria-label="Menu item editor steps">
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="0" role="tab" aria-selected="true" id="dashboardWizardTab0">Main item</button>
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="1" role="tab" aria-selected="false" id="dashboardWizardTab1">Sides</button>
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="2" role="tab" aria-selected="false" id="dashboardWizardTab2">Mods &amp; adds</button>
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="3" role="tab" aria-selected="false" id="dashboardWizardTab3">Tags &amp; search</button>
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="4" role="tab" aria-selected="false" id="dashboardWizardTab4">Promotions</button>
+                  </div>
+                  <p class="dashboard-menu-item-wizard-progress" id="dashboardMenuItemWizardProgress" aria-live="polite">Step 1 of 5 · Main item</p>
+                  <div class="dashboard-menu-item-wizard-panels">
+                    <div class="dashboard-menu-item-wizard-panel" data-wizard-index="0" role="tabpanel" id="dashboardWizardPanel0">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note"><code>title</code> and body text below; then <code>images</code> and <code>prices</code> in front matter.</p>
+                      <div class="dashboard-edit-field">
+                        <label for="dashboardEditTitle">Title / Name</label>
+                        <input type="text" id="dashboardEditTitle" class="dashboard-edit-input" placeholder="Item name">
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label for="dashboardEditDescription">Description / Summary</label>
+                        <textarea id="dashboardEditDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Description or item body (e.g. combo line-up)" rows="3"></textarea>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label for="dashboardEditMenuItemImages">Images (one path per line)</label>
+                        <textarea id="dashboardEditMenuItemImages" class="dashboard-edit-input dashboard-edit-textarea" placeholder="images/item1.webp&#10;images/item2.webp" rows="3"></textarea>
+                        <div class="dashboard-edit-slideshow-view" id="dashboardEditMenuItemImagesView" aria-label="Menu item images preview"></div>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label>Prices (variable1 | variable2 | price)</label>
+                        <div id="dashboardEditPricesContainer" class="dashboard-prices-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddPrice">Add price</button>
+                      </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="1" role="tabpanel" id="dashboardWizardPanel1" aria-hidden="true">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>side_categories</code> (e.g. choose rolls, min/max).</p>
+                      <div class="dashboard-edit-field">
+                        <label>Side categories</label>
+                        <div id="dashboardEditSideCategoriesContainer" class="dashboard-side-categories-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary dashboard-btn-add-cat" id="btnAddSideCategory">Add category</button>
+                      </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="2" role="tabpanel" id="dashboardWizardPanel2" aria-hidden="true">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note"><code>modifications</code> and <code>additions</code> (name and price).</p>
+                      <div class="dashboard-edit-field">
+                        <label>Modifications (name | price)</label>
+                        <div id="dashboardEditModificationsContainer" class="dashboard-pairs-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddModification">Add modification</button>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label>Additions (name | price)</label>
+                        <div id="dashboardEditAdditionsContainer" class="dashboard-pairs-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddAddition">Add addition</button>
+                      </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="3" role="tabpanel" id="dashboardWizardPanel3" aria-hidden="true">
+                      <p class="dashboard-edit-field-note" id="dashboardEditTagsNote">Tags and related lists contribute to search on the TTMenus platform.</p>
+                      <div class="dashboard-edit-field">
+                        <label>Tags</label>
+                        <div id="dashboardEditTagsContainer" class="dashboard-list-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddTag">Add tag</button>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label>Ingredients</label>
+                        <div id="dashboardEditIngredientsContainer" class="dashboard-list-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddIngredient">Add ingredient</button>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label>Cooking methods</label>
+                        <div id="dashboardEditCookingmethodsContainer" class="dashboard-list-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddCookingmethod">Add cooking method</button>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label>Types</label>
+                        <div id="dashboardEditTypesContainer" class="dashboard-list-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddType">Add type</button>
+                      </div>
+                      <div class="dashboard-edit-field">
+                        <label>Events</label>
+                        <div id="dashboardEditEventsContainer" class="dashboard-list-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddEvent">Add event</button>
+                      </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="4" role="tabpanel" id="dashboardWizardPanel4" aria-hidden="true">
+                      <p class="dashboard-edit-field-note">Matches <code>promotions</code> in front matter: <code>days</code>, <code>type</code> (<code>percent_off</code>, <code>amount_off</code>), <code>value</code>, <code>label</code>, <code>image</code>.</p>
+                      <div class="dashboard-edit-field">
+                        <label>Item promotions</label>
+                        <div id="dashboardEditMenuItemPromotionsContainer" class="dashboard-menu-item-promotions-ui"></div>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddMenuItemPromotion">Add promotion</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dashboard-menu-item-wizard-footer">
+                    <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnMenuItemWizardPrev">Back</button>
+                    <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnMenuItemWizardNext">Next</button>
+                  </div>
                 </div>
               </div>
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsLocation" data-for="location">
@@ -252,6 +297,13 @@
                   <textarea id="dashboardEditSlideshowImages" class="hidden" aria-hidden="true" rows="1" style="height:0;overflow:hidden;position:absolute;clip:rect(0,0,0,0);"></textarea>
                 </div>
               </div>
+              <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsHomeHero" data-for="home-hero">
+                <div class="dashboard-edit-field">
+                  <label for="dashboardEditHeroImage">Hero background image (<code>image</code> in front matter)</label>
+                  <input type="text" id="dashboardEditHeroImage" class="dashboard-edit-input" placeholder="e.g. images/mixedsashimi.webp">
+                </div>
+                <p class="dashboard-edit-field-note">Updates <code>content/_index.md</code>; other keys (slideshow, images, …) are preserved when you save a draft or publish.</p>
+              </div>
             </div>
             <div class="dashboard-edit-form-actions">
               <button type="button" class="btn-dash btn-dash-primary" id="btnApplyEdit">Apply</button>
@@ -303,6 +355,9 @@
       var selectedTypeEl = document.getElementById('dashboardEditSelectedType');
       var inputTitle = document.getElementById('dashboardEditTitle');
       var inputDesc = document.getElementById('dashboardEditDescription');
+      var inputSectionTitle = document.getElementById('dashboardEditSectionTitle');
+      var inputSectionDesc = document.getElementById('dashboardEditSectionDescription');
+      var dashboardEditSectionBasics = document.getElementById('dashboardEditSectionBasics');
       var inputSectionWeight = document.getElementById('dashboardEditSectionWeight');
       var inputSectionIcon = document.getElementById('dashboardEditSectionIcon');
       var inputSectionImageTop = document.getElementById('dashboardEditSectionImageTop');
@@ -327,6 +382,13 @@
       var btnAddType = document.getElementById('btnAddType');
       var eventsContainer = document.getElementById('dashboardEditEventsContainer');
       var btnAddEvent = document.getElementById('btnAddEvent');
+      var menuItemPromotionsContainer = document.getElementById('dashboardEditMenuItemPromotionsContainer');
+      var btnAddMenuItemPromotion = document.getElementById('btnAddMenuItemPromotion');
+      var btnMenuItemWizardPrev = document.getElementById('btnMenuItemWizardPrev');
+      var btnMenuItemWizardNext = document.getElementById('btnMenuItemWizardNext');
+      var dashboardMenuItemWizardProgress = document.getElementById('dashboardMenuItemWizardProgress');
+      var menuItemWizardStep = 0;
+      var MENU_ITEM_WIZARD_LABELS = ['Main item', 'Sides', 'Mods & adds', 'Tags & search', 'Promotions'];
       var btnApply = document.getElementById('btnApplyEdit');
       var btnPublish = document.getElementById('btnPublish');
       var btnMarkForDeletion = document.getElementById('btnMarkForDeletion');
@@ -336,6 +398,9 @@
       var fieldsLocation = document.getElementById('dashboardEditFieldsLocation');
       var fieldsPromotion = document.getElementById('dashboardEditFieldsPromotion');
       var fieldsSlideshow = document.getElementById('dashboardEditFieldsSlideshow');
+      var fieldsHomeHero = document.getElementById('dashboardEditFieldsHomeHero');
+      var inputHomeHeroImage = document.getElementById('dashboardEditHeroImage');
+      var homeHeroIndexCache = { frontMatter: null, body: '' };
       var inputLocationAddress = document.getElementById('dashboardEditLocationAddress');
       var inputLocationCity = document.getElementById('dashboardEditLocationCity');
       var inputLocationIsland = document.getElementById('dashboardEditLocationIsland');
@@ -421,7 +486,14 @@
         var mode = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('editPreviewMode');
         return p.get('load') === 'drafts' || mode === 'drafts';
       })();
-      if (loadDraftsOnLoad && typeof sessionStorage !== 'undefined') sessionStorage.setItem('editPreviewMode', 'drafts');
+      var menuVersionFromUrl = new URLSearchParams(window.location.search).get('menu_version');
+      if (loadDraftsOnLoad && typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem('editPreviewMode', 'drafts');
+        if (menuVersionFromUrl) sessionStorage.setItem('editMenuVersionId', menuVersionFromUrl);
+      }
+      if (!loadDraftsOnLoad && typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('editMenuVersionId');
+      }
 
       function setEditStatus(msg) {
         if (!statusEl) return;
@@ -580,6 +652,7 @@
         var cookingmethods = cookingmethodsContainer ? getStringListFromUI(cookingmethodsContainer) : [];
         var types = typesContainer ? getStringListFromUI(typesContainer) : [];
         var events = eventsContainer ? getStringListFromUI(eventsContainer) : [];
+        var menuItemPromos = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
         var weightVal = 1;
         var frontMatter = {
           title: title || 'Untitled',
@@ -589,6 +662,7 @@
           tags: tags,
           specials: [],
           events: events,
+          promotions: menuItemPromos,
           ingredients: ingredients,
           cookingmethods: cookingmethods,
           types: types,
@@ -611,7 +685,7 @@
         if (!selectedInfo || !selectedElement) return null;
         var contentPath = (selectedInfo.contentPath || '').trim();
         if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || contentPath.slice(-'_index.md'.length) !== '_index.md') return null;
-        var title = inputTitle ? (inputTitle.value || '').trim() : '';
+        var title = inputSectionTitle ? (inputSectionTitle.value || '').trim() : '';
         var weightVal = inputSectionWeight ? parseInt((inputSectionWeight.value || '').trim(), 10) : 0;
         if (isNaN(weightVal)) weightVal = 0;
         var icon = inputSectionIcon ? (inputSectionIcon.value || '').trim() : '';
@@ -646,16 +720,54 @@
         };
       }
 
+      function buildHomeHeroPayloadFromState() {
+        if (!selectedInfo || !inputHomeHeroImage) return null;
+        var fm = {};
+        if (homeHeroIndexCache && homeHeroIndexCache.frontMatter && typeof homeHeroIndexCache.frontMatter === 'object') {
+          for (var k in homeHeroIndexCache.frontMatter) {
+            if (Object.prototype.hasOwnProperty.call(homeHeroIndexCache.frontMatter, k)) {
+              fm[k] = homeHeroIndexCache.frontMatter[k];
+            }
+          }
+        }
+        fm.image = (inputHomeHeroImage.value || '').trim();
+        var body = homeHeroIndexCache && homeHeroIndexCache.body != null ? homeHeroIndexCache.body : '';
+        return {
+          kind: 'home',
+          clientId: CMS_CLIENT_ID,
+          contentPath: 'content/_index.md',
+          siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
+          frontMatter: fm,
+          body: body
+        };
+      }
+
       function buildContentEditPayload() {
         if (!selectedInfo) return null;
         var type = selectedInfo.contentType || 'menu-item';
         if (type === 'promotion') return buildPromotionPayloadFromState();
         if (type === 'menu-item') return buildMenuItemPayloadFromState();
         if (type === 'section-header') return buildSectionPayloadFromState();
+        if (type === 'home-hero') return buildHomeHeroPayloadFromState();
         // Slideshow would overwrite content/_index.md; not supported until backend merge.
         if (type === 'slideshow') return null;
         if (type === 'location') return null;
         return null;
+      }
+
+      function getFromCMS(path) {
+        var url = CMS_SERVICE_URL.replace(/\/+$/, '') + path;
+        var headers = { 'Accept': 'application/json' };
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return fetch(url, { method: 'GET', credentials: 'include', headers: headers }).then(function(res) {
+          if (!res.ok) {
+            return res.text().then(function(t) {
+              throw new Error('CMS error ' + res.status + ': ' + t);
+            });
+          }
+          return res.json();
+        });
       }
 
       function postToCMS(path, payload) {
@@ -678,6 +790,42 @@
         });
       }
 
+      /** Saves current server menu.json as a new version (POST /menu-versions). Used when leaving the editor. */
+      function saveMenuSnapshotOnLeave() {
+        var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
+        return getFromCMS(base + '/menu').then(function(menuData) {
+          var now = new Date();
+          var name = 'Editor exit · ' + now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+          var desc = 'Automatic snapshot when leaving the menu editor (back to dashboard).';
+          return postToCMS(base + '/menu-versions', {
+            name: name,
+            description: desc,
+            menu_data: menuData
+          }).then(function() { return true; });
+        }).catch(function(err) {
+          console.warn('saveMenuSnapshotOnLeave', err);
+          return false;
+        });
+      }
+
+      function fetchEditorSnapshotBootstrap() {
+        if (!loadDraftsOnLoad) return Promise.resolve(null);
+        var q = menuVersionFromUrl || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('editMenuVersionId') : null);
+        var path = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/editor-snapshot';
+        if (q) path += '?menu_version_id=' + encodeURIComponent(q) + '&include_drafts=true';
+        else path += '?include_drafts=true';
+        return getFromCMS(path).then(function(data) {
+          window.__ttmsEditorSnapshot = data;
+          var meta = data.menuVersionMeta;
+          if (meta && meta.name) setEditStatus('Loaded menu version: ' + meta.name);
+          else if (data.source === 'live') setEditStatus('Live menu with draft changes');
+          return data;
+        }).catch(function(err) {
+          console.warn('Editor snapshot bootstrap failed', err);
+          return null;
+        });
+      }
+
       function setEditMode(on) {
         editMode = !!on;
         page.setAttribute('data-edit-mode', editMode ? 'edit' : 'preview');
@@ -695,6 +843,7 @@
       }
 
       if (loadDraftsOnLoad) setEditMode(true);
+      fetchEditorSnapshotBootstrap();
 
       function setEditSubmode(mode) {
         editSubmode = mode;
@@ -931,8 +1080,10 @@
         selectedInfo = null;
         promptEl.classList.remove('hidden');
         formEl.classList.add('hidden');
-        inputTitle.value = '';
-        inputDesc.value = '';
+        if (inputTitle) inputTitle.value = '';
+        if (inputDesc) inputDesc.value = '';
+        if (inputSectionTitle) inputSectionTitle.value = '';
+        if (inputSectionDesc) inputSectionDesc.value = '';
         if (inputLocationAddress) inputLocationAddress.value = '';
         if (inputLocationCity) inputLocationCity.value = '';
         if (inputLocationIsland) inputLocationIsland.value = '';
@@ -950,6 +1101,8 @@
         if (inputSectionIcon) inputSectionIcon.value = '';
         if (inputSectionImageTop) inputSectionImageTop.value = '';
         if (inputSectionImageBottom) inputSectionImageBottom.value = '';
+        if (inputHomeHeroImage) inputHomeHeroImage.value = '';
+        homeHeroIndexCache = { frontMatter: null, body: '' };
         if (inputMenuItemImages) inputMenuItemImages.value = '';
         if (menuItemImagesViewEl) menuItemImagesViewEl.innerHTML = '';
         if (pricesContainer) renderPricesUI(pricesContainer, []);
@@ -961,6 +1114,7 @@
         if (cookingmethodsContainer) renderStringListUI(cookingmethodsContainer, []);
         if (typesContainer) renderStringListUI(typesContainer, []);
         if (eventsContainer) renderStringListUI(eventsContainer, []);
+        if (menuItemPromotionsContainer) renderMenuItemPromotionsUI(menuItemPromotionsContainer, []);
         if (inputSlideshowImages) inputSlideshowImages.value = '';
         if (slideshowViewEl) slideshowViewEl.innerHTML = '';
         if (inputPromoTitle) inputPromoTitle.value = '';
@@ -971,6 +1125,7 @@
         if (inputPromoRecurring) inputPromoRecurring.checked = false;
         if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, []);
         if (inputPromoWeight) inputPromoWeight.value = '';
+        setMenuItemWizardStep(0);
         updateMarkForDeletionButton();
       }
 
@@ -1134,6 +1289,119 @@
           var inp = row.querySelector('.list-value');
           var val = inp ? (inp.value || '').trim() : '';
           if (val) out.push(val);
+        });
+        return out;
+      }
+      function createMenuItemPromotionRow(promo) {
+        promo = promo || {};
+        var daysArr = promo.days;
+        var daysStr = '';
+        if (Array.isArray(daysArr)) daysStr = daysArr.map(function(d) { return String(d).trim(); }).filter(Boolean).join(', ');
+        else if (daysArr != null && typeof daysArr === 'string') daysStr = daysArr;
+        var typeVal = (promo.type != null && String(promo.type).trim()) ? String(promo.type).trim() : 'percent_off';
+        var valNum = promo.value != null && !isNaN(parseFloat(promo.value)) ? parseFloat(promo.value) : 0;
+        var labelStr = promo.label != null ? String(promo.label) : '';
+        var imageStr = promo.image != null ? String(promo.image) : '';
+        var row = document.createElement('div');
+        row.className = 'dashboard-menu-item-promo-row';
+        var head = document.createElement('div');
+        head.className = 'dashboard-menu-item-promo-row-head';
+        var span = document.createElement('span');
+        span.className = 'dashboard-menu-item-promo-title';
+        span.textContent = 'Promotion';
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'dashboard-btn dashboard-btn-remove-row';
+        removeBtn.setAttribute('aria-label', 'Remove promotion');
+        removeBtn.innerHTML = '<i class="fa fa-trash-o" aria-hidden="true"></i>';
+        removeBtn.addEventListener('click', function() { row.remove(); });
+        head.appendChild(span);
+        head.appendChild(removeBtn);
+        var grid = document.createElement('div');
+        grid.className = 'dashboard-menu-item-promo-grid';
+        function addField(label, node, spanFull) {
+          var wrap = document.createElement('div');
+          if (spanFull) wrap.className = 'dashboard-menu-item-promo-field-span';
+          var lbl = document.createElement('label');
+          lbl.textContent = label;
+          wrap.appendChild(lbl);
+          wrap.appendChild(node);
+          grid.appendChild(wrap);
+        }
+        var inpDays = document.createElement('input');
+        inpDays.type = 'text';
+        inpDays.className = 'dashboard-edit-input menu-item-promo-days';
+        inpDays.placeholder = 'Friday, Saturday, Sunday';
+        inpDays.value = daysStr;
+        addField('Days (comma-separated)', inpDays, true);
+        var selType = document.createElement('select');
+        selType.className = 'dashboard-edit-input menu-item-promo-type';
+        var TYPES = ['percent_off', 'amount_off'];
+        var found = false;
+        TYPES.forEach(function(t) {
+          var opt = document.createElement('option');
+          opt.value = t;
+          opt.textContent = t;
+          if (t === typeVal) { opt.selected = true; found = true; }
+          selType.appendChild(opt);
+        });
+        if (!found && typeVal) {
+          var optExtra = document.createElement('option');
+          optExtra.value = typeVal;
+          optExtra.textContent = typeVal;
+          optExtra.selected = true;
+          selType.appendChild(optExtra);
+        }
+        addField('Type', selType, false);
+        var inpVal = document.createElement('input');
+        inpVal.type = 'number';
+        inpVal.className = 'dashboard-edit-input menu-item-promo-value';
+        inpVal.step = 'any';
+        inpVal.min = '0';
+        inpVal.value = valNum !== 0 ? String(valNum) : '';
+        addField('Value', inpVal, false);
+        var inpLab = document.createElement('input');
+        inpLab.type = 'text';
+        inpLab.className = 'dashboard-edit-input menu-item-promo-label';
+        inpLab.placeholder = 'e.g. 2 for $150 All Day';
+        inpLab.value = labelStr;
+        addField('Label', inpLab, true);
+        var inpImg = document.createElement('input');
+        inpImg.type = 'text';
+        inpImg.className = 'dashboard-edit-input menu-item-promo-image';
+        inpImg.placeholder = 'images/promos/...';
+        inpImg.value = imageStr;
+        addField('Image path', inpImg, true);
+        row.appendChild(head);
+        row.appendChild(grid);
+        return row;
+      }
+      function renderMenuItemPromotionsUI(container, arr) {
+        if (!container) return;
+        container.innerHTML = '';
+        var list = Array.isArray(arr) ? arr : [];
+        list.forEach(function(p) {
+          container.appendChild(createMenuItemPromotionRow(p));
+        });
+      }
+      function getMenuItemPromotionsFromUI(container) {
+        if (!container) return [];
+        var out = [];
+        container.querySelectorAll('.dashboard-menu-item-promo-row').forEach(function(row) {
+          var daysEl = row.querySelector('.menu-item-promo-days');
+          var typeEl = row.querySelector('.menu-item-promo-type');
+          var valueEl = row.querySelector('.menu-item-promo-value');
+          var labelEl = row.querySelector('.menu-item-promo-label');
+          var imageEl = row.querySelector('.menu-item-promo-image');
+          var daysStr = daysEl ? (daysEl.value || '').trim() : '';
+          var days = daysStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+          var label = labelEl ? (labelEl.value || '').trim() : '';
+          var image = imageEl ? (imageEl.value || '').trim() : '';
+          var type = typeEl ? (typeEl.value || 'percent_off').trim() : 'percent_off';
+          var vRaw = valueEl ? (valueEl.value || '').trim() : '';
+          var valueNum = vRaw !== '' && !isNaN(parseFloat(vRaw)) ? parseFloat(vRaw) : 0;
+          if (!days.length && !label && !image && vRaw === '') return;
+          out.push({ days: days, type: type, value: valueNum, label: label, image: image });
         });
         return out;
       }
@@ -1641,9 +1909,36 @@
         })();
       }
 
+      function setMenuItemWizardStep(step) {
+        menuItemWizardStep = Math.max(0, Math.min(MENU_ITEM_WIZARD_LABELS.length - 1, step));
+        var root = document.getElementById('dashboardMenuItemWizardRoot');
+        if (!root) return;
+        var tabs = root.querySelectorAll('.dashboard-wizard-tab');
+        var panels = root.querySelectorAll('.dashboard-menu-item-wizard-panel');
+        tabs.forEach(function(tab) {
+          var idx = parseInt(tab.getAttribute('data-wizard-index'), 10);
+          if (isNaN(idx)) return;
+          var on = idx === menuItemWizardStep;
+          tab.classList.toggle('dashboard-wizard-tab-active', on);
+          tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach(function(panel) {
+          var idx = parseInt(panel.getAttribute('data-wizard-index'), 10);
+          if (isNaN(idx)) return;
+          var on = idx === menuItemWizardStep;
+          panel.classList.toggle('hidden', !on);
+          panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+        });
+        if (btnMenuItemWizardPrev) btnMenuItemWizardPrev.disabled = menuItemWizardStep === 0;
+        if (btnMenuItemWizardNext) btnMenuItemWizardNext.disabled = menuItemWizardStep >= MENU_ITEM_WIZARD_LABELS.length - 1;
+        if (dashboardMenuItemWizardProgress) {
+          dashboardMenuItemWizardProgress.textContent = 'Step ' + (menuItemWizardStep + 1) + ' of ' + MENU_ITEM_WIZARD_LABELS.length + ' · ' + MENU_ITEM_WIZARD_LABELS[menuItemWizardStep];
+        }
+      }
+
       function showFieldGroup(contentType) {
         var forAttr = function(g) { return g && g.getAttribute && g.getAttribute('data-for'); };
-        [fieldsGeneric, fieldsLocation, fieldsPromotion, fieldsSlideshow].forEach(function(g) {
+        [fieldsGeneric, fieldsLocation, fieldsPromotion, fieldsSlideshow, fieldsHomeHero].forEach(function(g) {
           if (!g) return;
           var allowed = forAttr(g);
           var list = allowed ? allowed.split(',').map(function(s) { return s.trim(); }) : [];
@@ -1652,8 +1947,10 @@
         });
         var sectionFields = document.querySelectorAll('.dashboard-edit-section-fields');
         sectionFields.forEach(function(el) { el.classList.toggle('hidden', contentType !== 'section-header'); });
+        if (dashboardEditSectionBasics) dashboardEditSectionBasics.classList.toggle('hidden', contentType !== 'section-header');
         var menuItemFields = document.querySelectorAll('.dashboard-edit-menuitem-fields');
         menuItemFields.forEach(function(el) { el.classList.toggle('hidden', contentType !== 'menu-item'); });
+        if (contentType !== 'menu-item') setMenuItemWizardStep(0);
       }
 
       function showEditForm(info) {
@@ -1668,9 +1965,17 @@
         if (contentSourceEl) contentSourceEl.textContent = info.contentPath ? 'Source: ' + info.contentPath : '';
         var contentType = info.contentType || 'menu-item';
         showFieldGroup(contentType);
+        if (contentType === 'menu-item') setMenuItemWizardStep(0);
         if (contentType === 'menu-item' || contentType === 'section-header') {
-          inputTitle.value = info.title != null ? info.title : getTextContent(info.element.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || info.element);
-          inputDesc.value = info.description != null ? info.description : getTextContent(info.element.querySelector('.menu-item-description, .menu-summary') || info.element);
+          var titleSrc = info.title != null ? info.title : getTextContent(info.element.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || info.element);
+          var descSrc = info.description != null ? info.description : getTextContent(info.element.querySelector('.menu-item-description, .menu-summary') || info.element);
+          if (contentType === 'menu-item') {
+            if (inputTitle) inputTitle.value = titleSrc;
+            if (inputDesc) inputDesc.value = descSrc;
+          } else {
+            if (inputSectionTitle) inputSectionTitle.value = titleSrc;
+            if (inputSectionDesc) inputSectionDesc.value = descSrc;
+          }
         }
         if (contentType === 'section-header') {
           var headerEl = info.element;
@@ -1693,6 +1998,8 @@
           if (cookingmethodsContainer) renderStringListUI(cookingmethodsContainer, parseJsonAttr(cardEl, 'data-cookingmethods'));
           if (typesContainer) renderStringListUI(typesContainer, parseJsonAttr(cardEl, 'data-types'));
           if (eventsContainer) renderStringListUI(eventsContainer, parseJsonAttr(cardEl, 'data-events'));
+          var promosRaw = parseJsonAttr(cardEl, 'data-promotions');
+          if (menuItemPromotionsContainer) renderMenuItemPromotionsUI(menuItemPromotionsContainer, Array.isArray(promosRaw) ? promosRaw : []);
         } else if (contentType === 'location') {
           var locLink = info.element.querySelector('a.locbtn');
           var telLink = info.element.querySelector('a[href^="tel:"]');
@@ -1740,6 +2047,8 @@
           } catch (e) {}
           if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, Array.isArray(daysArr) ? daysArr : []);
           if (inputPromoWeight) inputPromoWeight.value = el.getAttribute('data-ad-weight') || '';
+        } else if (contentType === 'home-hero') {
+          /* inputHomeHeroImage and cache are set before showEditForm from GET /content/file */
         } else if (contentType === 'slideshow') {
           var slides = info.element.querySelectorAll('.client-tour-slideshow .slide img');
           var paths = [];
@@ -1767,6 +2076,46 @@
         updateMarkForDeletionButton();
       }
 
+      function dedupePreviewsByContentPath(previews) {
+        if (!previews || !previews.length) return [];
+        var best = {};
+        previews.forEach(function(p) {
+          var payload = p.payload || p.Payload || {};
+          var path = p.content_path || payload.contentPath || '';
+          if (!path) return;
+          var cur = best[path];
+          var t = new Date(p.updated_at || p.UpdatedAt || 0).getTime();
+          if (!cur || t >= new Date(cur.updated_at || cur.UpdatedAt || 0).getTime()) {
+            best[path] = p;
+          }
+        });
+        return Object.keys(best).map(function(k) { return best[k]; });
+      }
+
+      function frontMatterModsToFlat(mods) {
+        if (!Array.isArray(mods)) return [];
+        var out = [];
+        mods.forEach(function(m) {
+          if (m && typeof m === 'object' && m.name != null) {
+            out.push(String(m.name), typeof m.price === 'number' ? m.price : parseFloat(m.price) || 0);
+          }
+        });
+        return out;
+      }
+      function pathsFromFmImages(images) {
+        if (!Array.isArray(images)) return [];
+        var paths = [];
+        images.forEach(function(x) {
+          if (!x) return;
+          if (typeof x === 'string') {
+            paths.push(x.replace(/^\//, ''));
+            return;
+          }
+          if (x.image) paths.push(String(x.image).replace(/^\//, ''));
+        });
+        return paths;
+      }
+
       function loadAndApplyDrafts() {
         var doc = iframe.contentDocument;
         var win = iframe.contentWindow;
@@ -1779,7 +2128,7 @@
           .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
           .catch(function() { return { previews: [] }; })
           .then(function(data) {
-            var list = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
+            var list = dedupePreviewsByContentPath(data && data.previews && Array.isArray(data.previews) ? data.previews : []);
             var applied = 0;
             list.forEach(function(preview) {
               var p = preview.payload || preview.Payload || {};
@@ -1800,6 +2149,17 @@
                 }
                 var payload = { itemUrl: itemUrl, title: title, description: description };
                 if (pricesArray.length) payload.pricesArray = pricesArray;
+                var sc = fm.side_categories != null ? fm.side_categories : fm.sideCategories;
+                if (sc !== undefined) payload.sideCategories = Array.isArray(sc) ? sc : [];
+                if (fm.images !== undefined) payload.imagesArray = pathsFromFmImages(fm.images);
+                if (fm.modifications !== undefined) payload.modificationsFlat = frontMatterModsToFlat(fm.modifications);
+                if (fm.additions !== undefined) payload.additionsFlat = frontMatterModsToFlat(fm.additions);
+                if (fm.tags !== undefined) payload.tags = Array.isArray(fm.tags) ? fm.tags : [];
+                if (fm.ingredients !== undefined) payload.ingredients = Array.isArray(fm.ingredients) ? fm.ingredients : [];
+                if (fm.cookingmethods !== undefined) payload.cookingmethods = Array.isArray(fm.cookingmethods) ? fm.cookingmethods : [];
+                if (fm.types !== undefined) payload.types = Array.isArray(fm.types) ? fm.types : [];
+                if (fm.events !== undefined) payload.events = Array.isArray(fm.events) ? fm.events : [];
+                if (fm.promotions !== undefined) payload.promotions = fm.promotions;
                 try {
                   win.__dashboardApplyEdit(JSON.stringify(payload));
                   applied++;
@@ -1985,6 +2345,47 @@
                       if (variable2Vals.length) ul.innerHTML = flavoursHtml; else ul.innerHTML = '';
                     });
                   }
+                  if (opts.sideCategories !== undefined) {
+                    card.setAttribute('data-side-categories', JSON.stringify(opts.sideCategories));
+                  }
+                  if (opts.imagesArray !== undefined) {
+                    card.setAttribute('data-images-array', JSON.stringify(opts.imagesArray));
+                    card.setAttribute('data-regular-images-array', JSON.stringify(opts.imagesArray));
+                    var imgEl = card.querySelector('img.menu-item-img');
+                    if (imgEl && opts.imagesArray.length) {
+                      var first = opts.imagesArray[0];
+                      var src = first.indexOf('/') === 0 ? first : '/' + first;
+                      imgEl.setAttribute('src', src);
+                    }
+                  }
+                  if (opts.modificationsFlat !== undefined) {
+                    card.setAttribute('data-modifications', JSON.stringify(opts.modificationsFlat));
+                  }
+                  if (opts.additionsFlat !== undefined) {
+                    card.setAttribute('data-additions', JSON.stringify(opts.additionsFlat));
+                  }
+                  if (opts.tags !== undefined) {
+                    card.setAttribute('data-tags', JSON.stringify(opts.tags));
+                  }
+                  if (opts.ingredients !== undefined) {
+                    card.setAttribute('data-ingredients', JSON.stringify(opts.ingredients));
+                  }
+                  if (opts.cookingmethods !== undefined) {
+                    card.setAttribute('data-cookingmethods', JSON.stringify(opts.cookingmethods));
+                  }
+                  if (opts.types !== undefined) {
+                    card.setAttribute('data-types', JSON.stringify(opts.types));
+                  }
+                  if (opts.events !== undefined) {
+                    card.setAttribute('data-events', JSON.stringify(opts.events));
+                  }
+                  if (opts.promotions !== undefined) {
+                    card.setAttribute('data-promotions', JSON.stringify(opts.promotions));
+                  }
+                  var applyUrl = card.getAttribute('data-item-url') || '';
+                  if (applyUrl && card.getAttribute('data-item-expanded') === 'true' && typeof win.expandMenuItemCard === 'function') {
+                    try { win.expandMenuItemCard(card, applyUrl); } catch (ex) { /* ignore */ }
+                  }
                 } catch (e) { console.warn('dashboardApplyEdit', e); }
               };
               var style = doc.getElementById('dashboard-edit-injected-style');
@@ -2003,10 +2404,12 @@
                   'section.ads.menu-ad .dashboard-edit-ad-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
                   '.client-tour-slideshow.dashboard-edit-slideshow-wrap { position: relative !important; }',
                   '.client-tour-slideshow .dashboard-edit-slideshow-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
+                  '.hero_logo_container.dashboard-edit-hero-wrap { position: relative !important; overflow: visible !important; }',
+                  '.hero_logo_container .dashboard-edit-hero-btn-wrap { position: absolute; top: 8px; right: 8px; z-index: 10000; pointer-events: auto; }',
                   '.location-item.dashboard-edit-location-wrap { position: relative !important; }',
                   '.location-item .dashboard-edit-location-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
-                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn, .dashboard-edit-header-btn-wrap .dashboard-edit-btn, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn, .dashboard-edit-location-btn-wrap .dashboard-edit-btn { width: 36px; height: 36px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: #667eea9c; backdrop-filter: blur(10px); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: auto; }',
-                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover { background: #764ba2; }',
+                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn, .dashboard-edit-header-btn-wrap .dashboard-edit-btn, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn, .dashboard-edit-location-btn-wrap .dashboard-edit-btn, .dashboard-edit-hero-btn-wrap .dashboard-edit-btn { width: 36px; height: 36px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: #667eea9c; backdrop-filter: blur(10px); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: auto; }',
+                  '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-hero-btn-wrap .dashboard-edit-btn:hover { background: #764ba2; }',
                   '.dashboard-edit-add-section-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: rgba(102, 126, 234, 0.15); border: 1px dashed rgba(102, 126, 234, 0.5); border-radius: 8px; }',
                   '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.25); color: #fff; cursor: pointer; }',
                   '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn:hover { background: rgba(102, 126, 234, 0.4); }',
@@ -2190,6 +2593,21 @@
                     div.appendChild(editBtn);
                     loc.insertBefore(div, loc.firstChild);
                   });
+                  var heroWrapClass = 'dashboard-edit-hero-btn-wrap';
+                  doc.querySelectorAll('.hero_logo_container[data-cms-content-path][data-cms-edit="hero-image"]').forEach(function(hero) {
+                    if (hero.querySelector('.' + heroWrapClass)) return;
+                    hero.classList.add('dashboard-edit-hero-wrap');
+                    var div = doc.createElement('div');
+                    div.className = heroWrapClass;
+                    div.setAttribute('data-dashboard-edit', '1');
+                    var editBtn = doc.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'dashboard-edit-btn';
+                    editBtn.setAttribute('aria-label', 'Edit hero background');
+                    editBtn.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+                    div.appendChild(editBtn);
+                    hero.insertBefore(div, hero.firstChild);
+                  });
                   var packery = doc.getElementById('packery-container');
                   if (packery) {
                     doc.querySelectorAll('.main-menu-bg').forEach(function(section) {
@@ -2264,11 +2682,13 @@
                 card.setAttribute('data-modifications', '[]');
                 card.setAttribute('data-additions', '[]');
                 card.setAttribute('data-images-array', '[]');
+                card.setAttribute('data-regular-images-array', '[]');
                 card.setAttribute('data-tags', '[]');
                 card.setAttribute('data-ingredients', '[]');
                 card.setAttribute('data-cookingmethods', '[]');
                 card.setAttribute('data-types', '[]');
                 card.setAttribute('data-events', '[]');
+                card.setAttribute('data-promotions', '[]');
                 card.innerHTML = '<div class="menu-item-row-top">' +
                   '<div class="menu-item-header-content">' +
                   '<h3 class="menu-item-title"><a href="/new-item/">New item</a></h3>' +
@@ -2351,6 +2771,8 @@
                   doc.querySelectorAll('.client-tour-slideshow.dashboard-edit-slideshow-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-slideshow-wrap'); });
                   doc.querySelectorAll('.dashboard-edit-location-btn-wrap').forEach(function(el) { el.remove(); });
                   doc.querySelectorAll('.location-item.dashboard-edit-location-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-location-wrap'); });
+                  doc.querySelectorAll('.dashboard-edit-hero-btn-wrap').forEach(function(el) { el.remove(); });
+                  doc.querySelectorAll('.hero_logo_container.dashboard-edit-hero-wrap').forEach(function(el) { el.classList.remove('dashboard-edit-hero-wrap'); });
                   doc.querySelectorAll('.menu-item-card, .menu-header, section.ads.menu-ad').forEach(function(el) {
                     el.classList.remove('dashboard-edit-has-change', 'dashboard-edit-new', 'dashboard-edit-marked-delete');
                     var path = getContentPathForElement(doc, el);
@@ -2421,6 +2843,32 @@
                 }
                 var editBtn = e.target.closest('.dashboard-edit-btn');
                 if (editBtn) {
+                  var heroForEdit = e.target.closest('.hero_logo_container');
+                  if (heroForEdit && heroForEdit.getAttribute('data-cms-edit') === 'hero-image' && heroForEdit.querySelector('.dashboard-edit-hero-btn-wrap')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    expandEditPanel();
+                    if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
+                    heroForEdit.classList.add('dashboard-edit-selected');
+                    selectedElement = heroForEdit;
+                    var bgImg = heroForEdit.querySelector('#bg');
+                    var srcFallback = bgImg ? (bgImg.getAttribute('src') || '').replace(/^\//, '') : '';
+                    homeHeroIndexCache = { frontMatter: {}, body: '' };
+                    var filePath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/file?path=' + encodeURIComponent('content/_index.md');
+                    getFromCMS(filePath).then(function(data) {
+                      homeHeroIndexCache.frontMatter = data.frontMatter || {};
+                      homeHeroIndexCache.body = data.body || '';
+                      var imgVal = (homeHeroIndexCache.frontMatter.image != null && String(homeHeroIndexCache.frontMatter.image).trim() !== '') ? String(homeHeroIndexCache.frontMatter.image).trim() : srcFallback;
+                      if (inputHomeHeroImage) inputHomeHeroImage.value = imgVal;
+                      showEditForm({ element: heroForEdit, type: 'Home hero', contentType: 'home-hero', contentPath: 'content/_index.md', title: '', description: '' });
+                    }).catch(function() {
+                      homeHeroIndexCache.frontMatter = { image: srcFallback };
+                      homeHeroIndexCache.body = '';
+                      if (inputHomeHeroImage) inputHomeHeroImage.value = srcFallback;
+                      showEditForm({ element: heroForEdit, type: 'Home hero', contentType: 'home-hero', contentPath: 'content/_index.md', title: '', description: '' });
+                    });
+                    return;
+                  }
                   var card = e.target.closest('.menu-item-card');
                   var header = e.target.closest('.menu-header');
                   if (card) {
@@ -2627,6 +3075,31 @@
           eventsContainer.appendChild(createListRow(''));
         });
       }
+      if (btnAddMenuItemPromotion && menuItemPromotionsContainer) {
+        btnAddMenuItemPromotion.addEventListener('click', function() {
+          menuItemPromotionsContainer.appendChild(createMenuItemPromotionRow(null));
+        });
+      }
+      (function setupMenuItemWizard() {
+        var root = document.getElementById('dashboardMenuItemWizardRoot');
+        if (!root) return;
+        root.querySelectorAll('.dashboard-wizard-tab').forEach(function(tab) {
+          tab.addEventListener('click', function() {
+            var idx = parseInt(tab.getAttribute('data-wizard-index'), 10);
+            if (!isNaN(idx)) setMenuItemWizardStep(idx);
+          });
+        });
+        if (btnMenuItemWizardPrev) {
+          btnMenuItemWizardPrev.addEventListener('click', function() {
+            setMenuItemWizardStep(menuItemWizardStep - 1);
+          });
+        }
+        if (btnMenuItemWizardNext) {
+          btnMenuItemWizardNext.addEventListener('click', function() {
+            setMenuItemWizardStep(menuItemWizardStep + 1);
+          });
+        }
+      })();
       if (btnAddPromoDay && promoDaysofweekContainer) {
         btnAddPromoDay.addEventListener('click', function() {
           promoDaysofweekContainer.appendChild(createListRow(''));
@@ -2640,7 +3113,10 @@
         return fetch(url, { method: 'GET', credentials: 'include', headers: headers })
           .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
           .catch(function() { return { previews: [] }; })
-          .then(function(data) { return data && data.previews && Array.isArray(data.previews) ? data.previews : []; });
+          .then(function(data) {
+            var raw = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
+            return dedupePreviewsByContentPath(raw);
+          });
       }
       function publishSummaryLabel(p) {
         var payload = p.payload || p.Payload || {};
@@ -2667,13 +3143,13 @@
             function renderSummary() {
               if (!publishSummaryList || !publishSummaryCount) return;
               publishSummaryList.innerHTML = '';
-              publishSummaryCount.textContent = pending.length + ' change(s) will be published.';
+              publishSummaryCount.textContent = pending.length + ' file(s) will be published (one row per content file).';
               if (publishSummaryConfirm) {
                 publishSummaryConfirm.disabled = pending.length === 0;
                 publishSummaryConfirm.textContent = pending.length === 0 ? 'Nothing to publish' : 'Publish';
               }
               pending.forEach(function(p) {
-                var id = p.id || (p.payload && p.payload.contentPath) || '';
+                var rowId = p.id || '';
                 var li = document.createElement('li');
                 li.className = 'dashboard-publish-summary-item';
                 var label = document.createElement('span');
@@ -2685,7 +3161,7 @@
                 removeBtn.textContent = '×';
                 removeBtn.setAttribute('aria-label', 'Delete saved change');
                 removeBtn.addEventListener('click', function() {
-                  var idx = pending.findIndex(function(x) { return (x.id || '') === id; });
+                  var idx = pending.findIndex(function(x) { return (x.id || '') === rowId; });
                   if (idx === -1) return;
                   var item = pending[idx];
                   var previewId = item.id;
@@ -2790,6 +3266,12 @@
         selectedElement = card;
         var contentType = selectedInfo.contentType || 'menu-item';
         try {
+          if (contentType === 'home-hero') {
+            var bgH = selectedElement.querySelector('#bg');
+            var heroPath = inputHomeHeroImage ? inputHomeHeroImage.value.trim() : '';
+            if (bgH && heroPath) bgH.setAttribute('src', heroPath.indexOf('/') === 0 ? heroPath : heroPath);
+            return;
+          }
           if (contentType === 'location') {
             var locLink = selectedElement.querySelector('a.locbtn');
             var address = inputLocationAddress ? inputLocationAddress.value.trim() : '';
@@ -2875,14 +3357,23 @@
             return;
           }
           if (contentType === 'section-header' || contentType === 'menu-item') {
-            var titleVal = inputTitle && inputTitle.value !== undefined ? inputTitle.value : '';
-            var descVal = inputDesc && inputDesc.value !== undefined ? inputDesc.value : '';
+            var titleVal = '';
+            var descVal = '';
+            if (contentType === 'menu-item') {
+              titleVal = inputTitle && inputTitle.value !== undefined ? inputTitle.value : '';
+              descVal = inputDesc && inputDesc.value !== undefined ? inputDesc.value : '';
+            } else {
+              titleVal = inputSectionTitle && inputSectionTitle.value !== undefined ? inputSectionTitle.value : '';
+              descVal = inputSectionDesc && inputSectionDesc.value !== undefined ? inputSectionDesc.value : '';
+            }
             if (contentType === 'menu-item') {
               var win = iframe.contentWindow;
               var itemUrl = selectedElement.getAttribute('data-item-url') || (selectedInfo.contentPath ? '/' + selectedInfo.contentPath.replace(/^content\//, '').replace(/\.md$/, '') + '/' : '');
               var pricesArr = pricesContainer ? getPricesFromUI(pricesContainer) : [];
               var iframePayload = { itemUrl: itemUrl, title: titleVal, description: descVal };
               if (pricesArr.length) iframePayload.pricesArray = pricesArr;
+              var menuItemPromosPreview = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
+              iframePayload.promotions = menuItemPromosPreview;
               if (win && win.__dashboardApplyEdit && itemUrl) {
                 try {
                   win.__dashboardApplyEdit(JSON.stringify(iframePayload));
@@ -2934,7 +3425,7 @@
                   img.className = 'food item aos-init aos-animate';
                   img.setAttribute('data-aos', 'zoom-out');
                   img.src = topSrc;
-                  img.alt = inputTitle ? inputTitle.value : '';
+                  img.alt = inputSectionTitle ? inputSectionTitle.value : '';
                   img.loading = 'lazy';
                   wrap.appendChild(img);
                 }
@@ -2950,7 +3441,7 @@
                   slideImg.className = 'slideinimg aos-init aos-animate';
                   slideImg.setAttribute('data-aos', 'zoom-out-right');
                   slideImg.src = bottomSrc;
-                  slideImg.alt = (inputTitle ? inputTitle.value : '') + ' decoration';
+                  slideImg.alt = (inputSectionTitle ? inputSectionTitle.value : '') + ' decoration';
                   slideImg.loading = 'lazy';
                   h2.appendChild(slideImg);
                 }
@@ -2970,6 +3461,7 @@
 
               selectedElement.setAttribute('data-prices-array', JSON.stringify(pricesArr));
               selectedElement.setAttribute('data-images-array', JSON.stringify(imagesArr));
+              selectedElement.setAttribute('data-regular-images-array', JSON.stringify(imagesArr));
               selectedElement.setAttribute('data-side-categories', JSON.stringify(sideCats));
               selectedElement.setAttribute('data-modifications', JSON.stringify(modsArr));
               selectedElement.setAttribute('data-additions', JSON.stringify(addsArr));
@@ -2978,6 +3470,8 @@
               selectedElement.setAttribute('data-cookingmethods', JSON.stringify(cookArr));
               selectedElement.setAttribute('data-types', JSON.stringify(typesArr));
               selectedElement.setAttribute('data-events', JSON.stringify(eventsArr));
+              var menuItemPromosAttr = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
+              selectedElement.setAttribute('data-promotions', JSON.stringify(menuItemPromosAttr));
 
               if (imagesArr.length && menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, imagesArr);
               var imgEl = selectedElement.querySelector('img.menu-item-img');
@@ -3004,6 +3498,38 @@
                 selectedElement.setAttribute('data-selected-variable1', String(pricesArr[0] || '-'));
                 selectedElement.setAttribute('data-selected-variable2', String(pricesArr[1] || '-'));
               }
+
+              var optsWrap = selectedElement.querySelector('.menu-item-options');
+              if (optsWrap && pricesArr.length >= 3) {
+                var v1seen = {};
+                var v2seen = {};
+                for (var pi = 0; pi + 2 < pricesArr.length; pi += 3) {
+                  var pv1 = String(pricesArr[pi] != null ? pricesArr[pi] : '').trim();
+                  var pv2 = String(pricesArr[pi + 1] != null ? pricesArr[pi + 1] : '').trim();
+                  if (pv1 && pv1 !== '-') v1seen[pv1] = true;
+                  if (pv2 && pv2 !== '-') v2seen[pv2] = true;
+                }
+                var sizesUl = optsWrap.querySelector('ul.sizes');
+                var flavUl = optsWrap.querySelector('ul.flavours');
+                if (sizesUl && Object.keys(v1seen).length) {
+                  sizesUl.innerHTML = Object.keys(v1seen).map(function(v) { return '<li>' + v + '</li>'; }).join('');
+                }
+                if (flavUl && Object.keys(v2seen).length) {
+                  flavUl.innerHTML = Object.keys(v2seen).map(function(v) { return '<li>' + v + '</li>'; }).join('');
+                }
+              }
+
+              var itemUrlRefresh = selectedElement.getAttribute('data-item-url') || '';
+              if (selectedElement.getAttribute('data-item-expanded') === 'true' && itemUrlRefresh) {
+                var winRefresh = iframe.contentWindow;
+                if (winRefresh && typeof winRefresh.expandMenuItemCard === 'function') {
+                  try {
+                    winRefresh.expandMenuItemCard(selectedElement, itemUrlRefresh);
+                  } catch (e2) {
+                    console.warn('expandMenuItemCard:', e2);
+                  }
+                }
+              }
             }
           }
         } catch (e) {
@@ -3012,6 +3538,113 @@
       }
 
       btnApply.addEventListener('click', applyEditToPreview);
+
+      function persistCurrentDraftToCMS() {
+        if (!editFormDirty || !selectedInfo || !selectedElement) {
+          return Promise.resolve(true);
+        }
+        applyEditToPreview();
+        var draftPayload = buildContentEditPayload();
+        if (!draftPayload) {
+          return Promise.resolve(false);
+        }
+        var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+        return postToCMS(previewPath, { payload: draftPayload }).then(function(resp) {
+          var pid = resp && (resp.previewId !== undefined && resp.previewId !== null && resp.previewId !== ''
+            ? resp.previewId : resp.preview_id);
+          if (pid) {
+            savedDraftPreviewId = pid;
+            if (draftPayload.contentPath) {
+              draftContentPaths.add(draftPayload.contentPath);
+              applyEditHighlights();
+            }
+            editFormDirty = false;
+            setEditStatus('Draft saved (not yet published)');
+            return true;
+          }
+          console.warn('Save draft: missing previewId in response', resp);
+          return false;
+        });
+      }
+
+      var leaveModal = document.getElementById('dashboardLeaveModal');
+      var leaveBackdrop = document.getElementById('dashboardLeaveModalBackdrop');
+      var leaveSave = document.getElementById('dashboardLeaveSave');
+      var leaveDiscard = document.getElementById('dashboardLeaveDiscard');
+      var leaveCancel = document.getElementById('dashboardLeaveCancel');
+      var leaveSnapshotNote = document.getElementById('dashboardLeaveSnapshotNote');
+
+      function goDashboard() {
+        window.location.href = '/dashboard/';
+      }
+      function showLeaveModal() {
+        if (!leaveModal) return;
+        leaveModal.classList.remove('hidden');
+        leaveModal.setAttribute('aria-hidden', 'false');
+      }
+      function hideLeaveModal() {
+        if (!leaveModal) return;
+        leaveModal.classList.add('hidden');
+        leaveModal.setAttribute('aria-hidden', 'true');
+        if (leaveSnapshotNote) leaveSnapshotNote.classList.add('hidden');
+      }
+
+      var btnDashboardBack = document.getElementById('btnDashboardBack');
+      if (btnDashboardBack) {
+        btnDashboardBack.addEventListener('click', function(ev) {
+          ev.preventDefault();
+          setEditStatus('Saving menu snapshot…');
+          saveMenuSnapshotOnLeave().then(function(snapshotOk) {
+            if (snapshotOk) {
+              setEditStatus('Menu snapshot saved. You can open it when returning to the editor with saved drafts.');
+            } else {
+              setEditStatus('Could not save a menu snapshot (check connection). You can still continue to the dashboard.');
+            }
+            if (!editFormDirty) {
+              if (leaveSnapshotNote) leaveSnapshotNote.classList.add('hidden');
+              window.setTimeout(function() { goDashboard(); }, snapshotOk ? 1200 : 800);
+              return;
+            }
+            if (leaveSnapshotNote) {
+              leaveSnapshotNote.textContent = snapshotOk
+                ? 'A snapshot of the current menu was saved automatically before this dialog.'
+                : 'Menu snapshot could not be saved. Your draft choices below are unchanged.';
+              leaveSnapshotNote.classList.remove('hidden');
+            }
+            showLeaveModal();
+          });
+        });
+      }
+      if (leaveSave) {
+        leaveSave.addEventListener('click', function() {
+          persistCurrentDraftToCMS().then(function(ok) {
+            if (ok === false) {
+              alert('This selection cannot be saved as a draft from the editor. Use Discard to leave without saving, or Cancel to keep editing.');
+              return;
+            }
+            hideLeaveModal();
+            goDashboard();
+          }).catch(function(err) {
+            alert('Could not save draft: ' + (err && err.message ? err.message : String(err)));
+          });
+        });
+      }
+      if (leaveDiscard) {
+        leaveDiscard.addEventListener('click', function() {
+          hideLeaveModal();
+          goDashboard();
+        });
+      }
+      if (leaveCancel) {
+        leaveCancel.addEventListener('click', function() {
+          hideLeaveModal();
+        });
+      }
+      if (leaveBackdrop) {
+        leaveBackdrop.addEventListener('click', function() {
+          hideLeaveModal();
+        });
+      }
 
       iframe.addEventListener('load', function() {
         if (editMode) setupIframeEditMode(true);
@@ -3026,25 +3659,7 @@
         btnTogglePanel.addEventListener('click', function() {
           var currentlyCollapsed = asideEl.classList.contains('dashboard-edit-options-collapsed');
           if (!currentlyCollapsed) {
-            applyEditToPreview();
-            if (editFormDirty && selectedInfo && selectedElement) {
-              var draftPayload = buildContentEditPayload();
-              if (draftPayload) {
-                console.log('Auto-save draft payload:', draftPayload);
-                var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
-                postToCMS(previewPath, { payload: draftPayload }).then(function(resp) {
-                  if (resp && resp.previewId) {
-                    savedDraftPreviewId = resp.previewId;
-                    if (draftPayload && draftPayload.contentPath) {
-                      draftContentPaths.add(draftPayload.contentPath);
-                      applyEditHighlights();
-                    }
-                    editFormDirty = false;
-                    setEditStatus('Draft saved (not yet published)');
-                  }
-                }).catch(function(err) { console.warn('Auto-save draft failed:', err); });
-              }
-            }
+            persistCurrentDraftToCMS().catch(function(err) { console.warn('Auto-save draft failed:', err); });
           }
           var isCollapsed = asideEl.classList.toggle('dashboard-edit-options-collapsed');
           btnTogglePanel.setAttribute('aria-expanded', !isCollapsed);
@@ -3073,12 +3688,25 @@
       }
     });
   </script>
+  <div id="dashboardLeaveModal" class="dashboard-draft-modal dashboard-leave-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardLeaveModalTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop" id="dashboardLeaveModalBackdrop"></div>
+    <div class="dashboard-draft-modal-dialog dashboard-leave-modal-dialog">
+      <h2 id="dashboardLeaveModalTitle" class="dashboard-draft-modal-title">Unsaved changes</h2>
+      <p id="dashboardLeaveSnapshotNote" class="dashboard-draft-modal-text dashboard-leave-snapshot-note hidden" role="status"></p>
+      <p class="dashboard-draft-modal-text">Save your draft to the server, discard changes and return to the dashboard, or keep editing.</p>
+      <div class="dashboard-draft-modal-actions dashboard-leave-modal-actions">
+        <button type="button" class="btn-dash btn-dash-primary" id="dashboardLeaveSave">Save draft</button>
+        <button type="button" class="btn-dash btn-dash-danger" id="dashboardLeaveDiscard">Discard</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardLeaveCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
   <div id="dashboardPublishSummaryModal" class="dashboard-draft-modal dashboard-publish-summary-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardPublishSummaryTitle" aria-hidden="true">
     <div class="dashboard-draft-modal-backdrop"></div>
     <div class="dashboard-draft-modal-dialog dashboard-publish-summary-dialog">
-      <h2 id="dashboardPublishSummaryTitle" class="dashboard-draft-modal-title">Review changes to publish</h2>
-      <p id="dashboardPublishSummaryCount" class="dashboard-draft-modal-text">0 change(s) will be published.</p>
-      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="List of changes"></ul>
+      <h2 id="dashboardPublishSummaryTitle" class="dashboard-draft-modal-title">Review files to publish</h2>
+      <p id="dashboardPublishSummaryCount" class="dashboard-draft-modal-text">0 file(s) will be published.</p>
+      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="List of content files"></ul>
       <div class="dashboard-draft-modal-actions dashboard-publish-summary-actions">
         <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPublishSummaryCancel">Cancel</button>
         <button type="button" class="btn-dash btn-dash-primary" id="dashboardPublishSummaryConfirm">Publish</button>

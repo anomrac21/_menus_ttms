@@ -64,12 +64,34 @@
     </div>
   </div>
 
+  <div id="dashboardVersionModal" class="dashboard-draft-modal dashboard-version-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardVersionModalTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop"></div>
+    <div class="dashboard-draft-modal-dialog dashboard-version-modal-dialog">
+      <h2 id="dashboardVersionModalTitle" class="dashboard-draft-modal-title">Choose a saved menu version</h2>
+      <p class="dashboard-draft-modal-text dashboard-version-modal-hint">Pick a snapshot to open with your content drafts. Showing the five most recent.</p>
+      <div id="dashboardVersionModalLoading" class="dashboard-version-modal-loading hidden" aria-live="polite">Loading versions…</div>
+      <div id="dashboardVersionModalError" class="dashboard-version-modal-error hidden" role="alert"></div>
+      <p id="dashboardVersionModalEmpty" class="dashboard-version-modal-empty hidden" role="status">No saved menu snapshots yet. You can still continue with drafts on the live menu.</p>
+      <ul id="dashboardVersionModalList" class="dashboard-version-list" aria-label="Saved menu versions"></ul>
+      <p id="dashboardVersionModalMoreWrap" class="dashboard-version-more-wrap hidden">
+        <button type="button" class="dashboard-version-more-link" id="dashboardVersionModalMore">More…</button>
+      </p>
+      <p class="dashboard-version-modal-fallback">
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardVersionModalDraftsOnly">Continue with drafts only (live menu)</button>
+      </p>
+      <div class="dashboard-draft-modal-actions dashboard-version-modal-actions">
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardVersionModalBack">Back</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardVersionModalCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="dashboardPublishSummaryModal" class="dashboard-draft-modal dashboard-publish-summary-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardPublishSummaryTitle" aria-hidden="true">
     <div class="dashboard-draft-modal-backdrop"></div>
     <div class="dashboard-draft-modal-dialog dashboard-publish-summary-dialog">
-      <h2 id="dashboardPublishSummaryTitle" class="dashboard-draft-modal-title">Review changes to publish</h2>
-      <p id="dashboardPublishSummaryCount" class="dashboard-draft-modal-text">0 change(s) will be published.</p>
-      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="List of changes"></ul>
+      <h2 id="dashboardPublishSummaryTitle" class="dashboard-draft-modal-title">Review files to publish</h2>
+      <p id="dashboardPublishSummaryCount" class="dashboard-draft-modal-text">0 file(s) will be published.</p>
+      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="List of content files"></ul>
       <div class="dashboard-draft-modal-actions dashboard-publish-summary-actions">
         <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPublishSummaryCancel">Cancel</button>
         <button type="button" class="btn-dash btn-dash-primary" id="dashboardPublishSummaryConfirm">Publish</button>
@@ -109,13 +131,30 @@
         if (token) h['Authorization'] = 'Bearer ' + token;
         return h;
       }
+      /** One row per content file — keep newest draft when API returns legacy duplicates. */
+      function dedupePreviewsByContentPath(previews) {
+        if (!previews || !previews.length) return [];
+        var best = {};
+        previews.forEach(function(p) {
+          var payload = p.payload || p.Payload || {};
+          var path = p.content_path || payload.contentPath || '';
+          if (!path) return;
+          var cur = best[path];
+          var t = new Date(p.updated_at || p.UpdatedAt || 0).getTime();
+          if (!cur || t >= new Date(cur.updated_at || cur.UpdatedAt || 0).getTime()) {
+            best[path] = p;
+          }
+        });
+        return Object.keys(best).map(function(k) { return best[k]; });
+      }
       function fetchPreviews() {
         var url = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
         return fetch(url, { method: 'GET', credentials: 'include', headers: getAuthHeaders() })
           .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
           .catch(function() { return { previews: [] }; })
           .then(function(data) {
-            cachedPreviews = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
+            var raw = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
+            cachedPreviews = dedupePreviewsByContentPath(raw);
             if (publishBtn) {
               if (cachedPreviews.length > 0) {
                 publishBtn.classList.remove('hidden');
@@ -133,6 +172,185 @@
       var draftModal = document.getElementById('dashboardDraftModal');
       var draftModalLoadBtn = document.getElementById('dashboardDraftModalLoad');
       var draftModalRevertBtn = document.getElementById('dashboardDraftModalRevert');
+      var versionModal = document.getElementById('dashboardVersionModal');
+      var versionModalList = document.getElementById('dashboardVersionModalList');
+      var versionModalLoading = document.getElementById('dashboardVersionModalLoading');
+      var versionModalError = document.getElementById('dashboardVersionModalError');
+      var versionModalMoreWrap = document.getElementById('dashboardVersionModalMoreWrap');
+      var versionModalMore = document.getElementById('dashboardVersionModalMore');
+      var versionModalBack = document.getElementById('dashboardVersionModalBack');
+      var versionModalCancel = document.getElementById('dashboardVersionModalCancel');
+      var versionModalDraftsOnly = document.getElementById('dashboardVersionModalDraftsOnly');
+      var versionModalEmpty = document.getElementById('dashboardVersionModalEmpty');
+      var versionModalSorted = [];
+      var versionModalExpanded = false;
+      var PREVIEW_VERSION_COUNT = 5;
+
+      /** API may return { versions }, a bare array, or { data / menu_versions } — normalize to an array. */
+      function normalizeVersionsPayload(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (data.versions && Array.isArray(data.versions)) return data.versions;
+        if (data.data && Array.isArray(data.data)) return data.data;
+        if (data.menu_versions && Array.isArray(data.menu_versions)) return data.menu_versions;
+        if (data.MenuVersions && Array.isArray(data.MenuVersions)) return data.MenuVersions;
+        return [];
+      }
+      /** Prefer a stable id for navigation; backends vary (id, version_id, UUID, etc.). */
+      function versionIdFromRecord(v) {
+        if (v == null || typeof v !== 'object') return '';
+        var id = v.id || v.ID || v.version_id || v.VersionId || v.menu_version_id || v.MenuVersionId || v.uuid || v.UUID || v.snapshot_id || v.SnapshotId;
+        return id != null ? String(id).trim() : '';
+      }
+      function versionNameFromRecord(v) {
+        if (v == null || typeof v !== 'object') return '';
+        var n = v.name || v.label || v.title || v.Name || v.Label;
+        return n != null ? String(n).trim() : '';
+      }
+      function versionSortKey(v) {
+        var u = v.updated_at || v.updatedAt || v.UpdatedAt;
+        var c = v.created_at || v.createdAt || v.CreatedAt;
+        var t = u || c;
+        return t ? new Date(t).getTime() : 0;
+      }
+      function formatVersionWhen(v) {
+        var t = v.updated_at || v.updatedAt || v.UpdatedAt || v.created_at || v.createdAt || v.CreatedAt;
+        if (!t) return '';
+        try {
+          return new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+        } catch (e) {
+          return String(t);
+        }
+      }
+      function navigateEditDraftsWithVersion(versionId) {
+        sessionStorage.setItem('editPreviewMode', 'drafts');
+        if (versionId) {
+          sessionStorage.setItem('editMenuVersionId', versionId);
+          window.location.href = '/edit-menu/?load=drafts&menu_version=' + encodeURIComponent(versionId);
+        } else {
+          sessionStorage.removeItem('editMenuVersionId');
+          window.location.href = '/edit-menu/?load=drafts';
+        }
+      }
+      function closeVersionModal() {
+        if (!versionModal) return;
+        versionModal.classList.add('hidden');
+        versionModal.setAttribute('aria-hidden', 'true');
+        versionModalExpanded = false;
+        if (versionModalList) versionModalList.classList.remove('dashboard-version-list-expanded');
+        if (versionModalMoreWrap) versionModalMoreWrap.classList.add('hidden');
+      }
+      function renderVersionModalList() {
+        if (!versionModalList) return;
+        versionModalList.innerHTML = '';
+        if (versionModalExpanded) versionModalList.classList.add('dashboard-version-list-expanded');
+        else versionModalList.classList.remove('dashboard-version-list-expanded');
+        var renderable = versionModalSorted.filter(function(v) { return !!versionIdFromRecord(v); });
+        var errVisible = versionModalError && !versionModalError.classList.contains('hidden');
+        if (versionModalEmpty) {
+          versionModalEmpty.classList.toggle('hidden', errVisible || renderable.length > 0);
+        }
+        renderable.forEach(function(v, idx) {
+          var id = versionIdFromRecord(v);
+          var li = document.createElement('li');
+          li.className = 'dashboard-version-item';
+          if (idx >= PREVIEW_VERSION_COUNT) li.classList.add('dashboard-version-item-extra');
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'dashboard-version-item-btn';
+          var title = versionNameFromRecord(v) || ('Version ' + id.slice(0, 8));
+          var when = formatVersionWhen(v);
+          var titleSpan = document.createElement('span');
+          titleSpan.className = 'dashboard-version-item-title';
+          titleSpan.textContent = title;
+          btn.appendChild(titleSpan);
+          if (when) {
+            var whenSpan = document.createElement('span');
+            whenSpan.className = 'dashboard-version-item-when';
+            whenSpan.textContent = when;
+            btn.appendChild(whenSpan);
+          }
+          btn.addEventListener('click', function() {
+            closeVersionModal();
+            navigateEditDraftsWithVersion(id);
+          });
+          li.appendChild(btn);
+          versionModalList.appendChild(li);
+        });
+        if (versionModalMoreWrap && versionModalMore) {
+          if (renderable.length > PREVIEW_VERSION_COUNT) {
+            versionModalMoreWrap.classList.remove('hidden');
+            versionModalMore.textContent = versionModalExpanded ? 'Show less' : 'More…';
+          } else {
+            versionModalMoreWrap.classList.add('hidden');
+          }
+        }
+      }
+      function openVersionModal() {
+        if (!versionModal || !versionModalList) {
+          navigateEditDraftsWithVersion(null);
+          return;
+        }
+        versionModalExpanded = false;
+        if (versionModalList) versionModalList.classList.remove('dashboard-version-list-expanded');
+        if (versionModalError) {
+          versionModalError.classList.add('hidden');
+          versionModalError.textContent = '';
+        }
+        if (versionModalEmpty) versionModalEmpty.classList.add('hidden');
+        if (versionModalLoading) versionModalLoading.classList.remove('hidden');
+        versionModal.classList.remove('hidden');
+        versionModal.setAttribute('aria-hidden', 'false');
+        var url = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/menu-versions';
+        fetch(url, { method: 'GET', credentials: 'include', headers: getAuthHeaders() })
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function(data) {
+            var raw = normalizeVersionsPayload(data);
+            versionModalSorted = raw.slice().sort(function(a, b) { return versionSortKey(b) - versionSortKey(a); });
+            if (versionModalLoading) versionModalLoading.classList.add('hidden');
+            renderVersionModalList();
+          })
+          .catch(function(err) {
+            if (versionModalLoading) versionModalLoading.classList.add('hidden');
+            if (versionModalError) {
+              versionModalError.classList.remove('hidden');
+              versionModalError.textContent = 'Could not load menu versions. You can still open the editor with drafts and the live menu.';
+            }
+            if (versionModalEmpty) versionModalEmpty.classList.add('hidden');
+            versionModalSorted = [];
+            renderVersionModalList();
+          });
+      }
+      if (versionModalMore) {
+        versionModalMore.addEventListener('click', function() {
+          versionModalExpanded = !versionModalExpanded;
+          if (versionModalList) versionModalList.classList.toggle('dashboard-version-list-expanded', versionModalExpanded);
+          versionModalMore.textContent = versionModalExpanded ? 'Show less' : 'More…';
+        });
+      }
+      if (versionModalBack) {
+        versionModalBack.addEventListener('click', function() {
+          closeVersionModal();
+          if (draftModal) {
+            draftModal.classList.remove('hidden');
+            draftModal.setAttribute('aria-hidden', 'false');
+          }
+        });
+      }
+      if (versionModalCancel) {
+        versionModalCancel.addEventListener('click', function() {
+          closeVersionModal();
+        });
+      }
+      if (versionModalDraftsOnly) {
+        versionModalDraftsOnly.addEventListener('click', function() {
+          closeVersionModal();
+          navigateEditDraftsWithVersion(null);
+        });
+      }
 
       if (editLink) {
         editLink.addEventListener('click', function(ev) {
@@ -144,17 +362,18 @@
               draftModalLoadBtn.onclick = function() {
                 draftModal.classList.add('hidden');
                 draftModal.setAttribute('aria-hidden', 'true');
-                sessionStorage.setItem('editPreviewMode', 'drafts');
-                window.location.href = '/edit-menu/?load=drafts';
+                openVersionModal();
               };
               draftModalRevertBtn.onclick = function() {
                 draftModal.classList.add('hidden');
                 draftModal.setAttribute('aria-hidden', 'true');
                 sessionStorage.setItem('editPreviewMode', 'live');
+                sessionStorage.removeItem('editMenuVersionId');
                 window.location.href = '/edit-menu/';
               };
             } else {
               sessionStorage.setItem('editPreviewMode', 'live');
+              sessionStorage.removeItem('editMenuVersionId');
               window.location.href = '/edit-menu/';
             }
           });
@@ -180,17 +399,17 @@
       if (publishBtn) {
         publishBtn.addEventListener('click', function() {
           if (cachedPreviews.length === 0) return;
-          var pending = cachedPreviews.slice();
+          var pending = dedupePreviewsByContentPath(cachedPreviews.slice());
           function renderSummary() {
             if (!publishSummaryList || !publishSummaryCount) return;
             publishSummaryList.innerHTML = '';
-            publishSummaryCount.textContent = pending.length + ' change(s) will be published.';
+            publishSummaryCount.textContent = pending.length + ' file(s) will be published (one row per content file).';
             if (publishSummaryConfirm) {
               publishSummaryConfirm.disabled = pending.length === 0;
               publishSummaryConfirm.textContent = pending.length === 0 ? 'Nothing to publish' : 'Publish';
             }
             pending.forEach(function(p) {
-              var id = p.id || (p.payload && p.payload.contentPath) || '';
+              var rowId = p.id || '';
               var li = document.createElement('li');
               li.className = 'dashboard-publish-summary-item';
               var label = document.createElement('span');
@@ -202,7 +421,7 @@
               removeBtn.textContent = '×';
               removeBtn.setAttribute('aria-label', 'Delete saved change');
               removeBtn.addEventListener('click', function() {
-                var idx = pending.findIndex(function(x) { return (x.id || '') === id; });
+                var idx = pending.findIndex(function(x) { return (x.id || '') === rowId; });
                 if (idx === -1) return;
                 var previewId = pending[idx].id;
                 function removeFromList() {

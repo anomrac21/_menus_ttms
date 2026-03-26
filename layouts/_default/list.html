@@ -99,6 +99,16 @@
                     {{end}}
                   {{end}}
                   
+                  {{/* Item-only images (no promo) — used by JS to fix thumbnail when build day ≠ viewer day */}}
+                  {{$regularImagesArray := slice}}
+                  {{if .Params.images}}
+                    {{range .Params.images}}
+                      {{if .image}}
+                        {{$regularImagesArray = $regularImagesArray | append .image}}
+                      {{end}}
+                    {{end}}
+                  {{end}}
+                  
                   {{/* Build images array for carousel - prepend promo image when item is on promotion today */}}
                   {{$today := now.Weekday.String}}
                   {{$activePromo := dict "label" "" "image" "" "type" "" "value" 0}}
@@ -142,6 +152,7 @@
                     data-modifications="{{ $modifications | jsonify }}"
                     data-additions="{{ $additions | jsonify }}"
                     data-images-array="{{ $imagesArray | jsonify }}"
+                    data-regular-images-array="{{ $regularImagesArray | jsonify }}"
                     data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}"
                     data-tags="{{ (.Params.tags | default (slice)) | jsonify }}"
                     data-ingredients="{{ (.Params.ingredients | default (slice)) | jsonify }}"

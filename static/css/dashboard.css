@@ -42,6 +42,113 @@
   flex-wrap: wrap;
 }
 
+.dashboard-leave-snapshot-note {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.45);
+  background: rgba(102, 126, 234, 0.12);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Choose saved menu version modal */
+.dashboard-version-modal-dialog {
+  max-width: 420px;
+}
+.dashboard-version-modal-loading,
+.dashboard-version-modal-error,
+.dashboard-version-modal-empty {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.dashboard-version-modal-error {
+  color: #fca5a5;
+}
+.dashboard-version-modal-empty {
+  opacity: 0.92;
+}
+.dashboard-version-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  max-height: min(50vh, 280px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.dashboard-version-item {
+  margin: 0;
+}
+.dashboard-version-item-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  box-sizing: border-box;
+}
+.dashboard-version-item-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(102, 126, 234, 0.55);
+}
+.dashboard-version-item-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.55);
+}
+.dashboard-version-item-title {
+  font-weight: 600;
+}
+.dashboard-version-item-when {
+  font-size: 0.72rem;
+  opacity: 0.88;
+  font-weight: 400;
+}
+.dashboard-version-item-extra {
+  display: none;
+}
+.dashboard-version-list-expanded .dashboard-version-item-extra {
+  display: block;
+}
+.dashboard-version-more-wrap {
+  margin: 0 0 0.75rem;
+  text-align: center;
+}
+.dashboard-version-more-link {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(147, 197, 253, 0.95);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dashboard-version-more-link:hover {
+  color: #fff;
+}
+.dashboard-version-modal-fallback {
+  margin: 0 0 1rem;
+}
+.dashboard-version-modal-actions {
+  margin-top: 0.25rem;
+}
+
 .dashboard-publish-summary-dialog {
   max-width: 480px;
   max-height: 85vh;
@@ -439,8 +546,9 @@
 .dashboard-edit-options {
   overflow: hidden;
   min-width: 0;
+  width: -webkit-fill-available;
   max-width: 444PX;
-  max-height: calc(100vh - 4em);
+  max-height: calc(100vh - 3.5em);
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #0000005c 0%, #0d1b2a59 100%);
@@ -499,10 +607,10 @@
 }
 
 .dashboard-edit-options-inner {
-  padding: 1.25rem;
+  padding: 0.25rem 1.25rem 1.25rem 1.25rem;
   flex: 1;
-  min-height: calc(100vh - 7em);
-  max-height: calc(100vh - 7em);
+  min-height: calc(100vh - 6em);
+  max-height: calc(100vh - 6em);
   overflow-y: auto;
 }
 
@@ -785,6 +893,116 @@
   display: none !important;
 }
 
+/* Edit panel: shared chrome for all .dashboard-btn (secondary actions, wizard footer, etc.) */
+.dashboard-edit-options-inner .dashboard-btn,
+.dashboard-edit-form .dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+.dashboard-edit-options-inner .dashboard-btn-secondary,
+.dashboard-edit-form .dashboard-btn-secondary {
+  padding: 0.45rem 0.85rem;
+  width: -webkit-fill-available;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+}
+.dashboard-edit-options-inner .dashboard-btn-secondary:hover,
+.dashboard-edit-form .dashboard-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.dashboard-edit-options-inner .dashboard-btn-secondary:focus-visible,
+.dashboard-edit-form .dashboard-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.55);
+}
+
+/* Menu item wizard: step tabs (aligned with .btn-dash-secondary / edit panel) */
+.dashboard-menu-item-wizard-nav {
+  display: flex;
+  margin-block-end: .25em;
+  gap: 0.4rem;
+  width: -webkit-fill-available;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.dashboard-wizard-tab {
+  margin: 0;
+  text-wrap-mode: nowrap;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dashboard-wizard-tab:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.dashboard-wizard-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.55);
+}
+.dashboard-wizard-tab-active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.45) 0%, rgba(118, 75, 162, 0.4) 100%);
+  border-color: rgba(102, 126, 234, 0.75);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.dashboard-wizard-tab-active:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.55) 0%, rgba(118, 75, 162, 0.48) 100%);
+  border-color: rgba(102, 126, 234, 0.9);
+}
+.dashboard-menu-item-wizard-progress {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+.dashboard-menu-item-wizard-note {
+  margin-bottom: 0.65rem;
+}
+.dashboard-menu-item-wizard-panels {
+  margin-bottom: 0.75rem;
+  padding: 1em;
+  background: rgba(102, 126, 234, 0.2);
+  border-radius: 1em;
+}
+.dashboard-menu-item-wizard-panel.hidden {
+  display: none !important;
+}
+.dashboard-menu-item-wizard-footer {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: space-between;
+}
+.dashboard-menu-item-wizard-footer .dashboard-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .dashboard-edit-field {
   margin-bottom: 0.5rem;
 }
@@ -792,8 +1010,9 @@
   margin-bottom: 0;
 }
 
-/* Add buttons (Add price, Add category, etc.) */
+/* Add buttons (Add price, Add category, etc.) — dashed outline on top of base .dashboard-btn-secondary */
 .dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-cat,
+.dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-item,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddPrice,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddModification,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddAddition,
@@ -802,11 +1021,12 @@
 .dashboard-edit-field .dashboard-btn-secondary#btnAddCookingmethod,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddType,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddEvent,
+.dashboard-edit-field .dashboard-btn-secondary#btnAddMenuItemPromotion,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddPromoDay {
   margin-top: 0.5rem;
   font-size: 0.85rem;
   padding: 0.4rem 0.75rem;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px dashed rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.06);
 }
@@ -819,6 +1039,8 @@
 .dashboard-edit-field .dashboard-btn-secondary#btnAddType:hover,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddEvent:hover,
 .dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-cat:hover,
+.dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-item:hover,
+.dashboard-edit-field .dashboard-btn-secondary#btnAddMenuItemPromotion:hover,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddPromoDay:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.5);
@@ -853,6 +1075,7 @@
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 0.6rem;
+  justify-content: center;
 }
 .side-cat-header .side-cat-name { flex: 1 1 120px; min-width: 100px; }
 .side-cat-header .side-cat-display-name { flex: 1 1 160px; min-width: 120px; }
@@ -891,17 +1114,21 @@
 }
 .side-cat-item .side-item-name { flex: 1 1 140px; min-width: 100px; }
 .side-cat-item .side-item-price { width: 5rem; }
-.dashboard-btn-remove-cat,
-.dashboard-btn-remove-item {
+.dashboard-edit-options-inner .dashboard-btn-remove-cat,
+.dashboard-edit-options-inner .dashboard-btn-remove-item,
+.dashboard-edit-form .dashboard-btn-remove-cat,
+.dashboard-edit-form .dashboard-btn-remove-item {
   font-size: 0.75rem;
   padding: 0.3rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.9);
 }
-.dashboard-btn-remove-cat:hover,
-.dashboard-btn-remove-item:hover {
+.dashboard-edit-options-inner .dashboard-btn-remove-cat:hover,
+.dashboard-edit-options-inner .dashboard-btn-remove-item:hover,
+.dashboard-edit-form .dashboard-btn-remove-cat:hover,
+.dashboard-edit-form .dashboard-btn-remove-item:hover {
   background: rgba(239, 68, 68, 0.25);
   border-color: rgba(239, 68, 68, 0.4);
 }
@@ -940,17 +1167,59 @@
 .dashboard-pair-row .pair-name { flex: 1 1 120px; min-width: 80px; }
 .dashboard-pair-row .pair-price { width: 5rem; }
 .dashboard-list-row .list-value { flex: 1 1 160px; min-width: 100px; }
-.dashboard-btn-remove-row {
+.dashboard-edit-options-inner .dashboard-btn-remove-row,
+.dashboard-edit-form .dashboard-btn-remove-row {
   font-size: 0.75rem;
   padding: 0.3rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.9);
 }
-.dashboard-btn-remove-row:hover {
+.dashboard-edit-options-inner .dashboard-btn-remove-row:hover,
+.dashboard-edit-form .dashboard-btn-remove-row:hover {
   background: rgba(239, 68, 68, 0.25);
   border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Item promotions block (wizard step 5) */
+.dashboard-menu-item-promotions-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.dashboard-menu-item-promo-row {
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.dashboard-menu-item-promo-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.dashboard-menu-item-promo-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+.dashboard-menu-item-promo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.75rem;
+  align-items: start;
+}
+.dashboard-menu-item-promo-field-span {
+  grid-column: 1 / -1;
+}
+@media (max-width: 520px) {
+  .dashboard-menu-item-promo-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .dashboard-edit-slideshow-view {
@@ -991,6 +1260,7 @@
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.4;
+  text-align: center;
 }
 
 .dashboard-edit-field label {

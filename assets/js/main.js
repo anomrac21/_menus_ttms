@@ -45,6 +45,13 @@
         } catch (_) { return null; }
     }
 
+    /** Fallback when the time API is unavailable — still apply day-based promos using local clock. */
+    function getLocalDateTime() {
+        const d = new Date();
+        const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return { day: names[d.getDay()], hour: d.getHours(), minute: d.getMinutes() };
+    }
+
     /** @param {string} timeStr "HH:mm" or "H:mm" 24h - returns minutes since midnight */
     function parseTimeToMinutes(timeStr) {
         if (!timeStr || typeof timeStr !== 'string') return null;
@@ -155,6 +162,38 @@
             addCartBtn.setAttribute('data-unit-price', String(displayPrice));
             const cartPrice = addCartBtn.querySelector('.cart-button-price');
             if (cartPrice) cartPrice.textContent = `$${displayPrice.toFixed(2).replace(/\.00$/, '')}`;
+        }
+
+        updateMenuItemCardImage(card, promo);
+    }
+
+    /**
+     * Sync list/card thumbnail with the active promo for today vs item-only images (Hugo may embed build-time promo image).
+     */
+    function updateMenuItemCardImage(card, promo) {
+        const imgLink = card.querySelector('.menu-item-image-link');
+        if (!imgLink) return;
+        const img = imgLink.querySelector('.menu-item-img');
+        if (!img) return;
+        const rawRegular = card.getAttribute('data-regular-images-array');
+        if (rawRegular === null) {
+            if (promo && promo.image) {
+                img.src = '/' + String(promo.image).replace(/^\//, '');
+                imgLink.style.display = '';
+            }
+            return;
+        }
+        let regular = [];
+        try { regular = JSON.parse(rawRegular || '[]'); } catch (_) { regular = []; }
+        if (!Array.isArray(regular)) regular = [];
+        if (promo && promo.image) {
+            img.src = '/' + String(promo.image).replace(/^\//, '');
+            imgLink.style.display = '';
+        } else if (regular.length > 0) {
+            img.src = '/' + String(regular[0]).replace(/^\//, '');
+            imgLink.style.display = '';
+        } else {
+            imgLink.style.display = 'none';
         }
     }
 
@@ -287,8 +326,8 @@
     }
 
     async function applyDayBasedPromos() {
-        const dateTime = await fetchDateTimeFromAPI();
-        if (dateTime) applyPromosWithDay(dateTime);
+        const dateTime = await fetchDateTimeFromAPI() || getLocalDateTime();
+        applyPromosWithDay(dateTime);
     }
 
     /**
@@ -920,6 +959,30 @@
                     pricesArray.push('-', '-', basePrice);
                     console.log('📊 Built default prices array:', pricesArray);
                 }
+
+                // Derive variable1 / variable2 option lists from flat prices triples (edit mode & JSON fallback)
+                if (variable1Values.length === 0 && variable2Values.length === 0 && pricesArray.length >= 3) {
+                    const v1s = [];
+                    const v2s = [];
+                    const seen1 = new Set();
+                    const seen2 = new Set();
+                    for (let i = 0; i + 2 < pricesArray.length; i += 3) {
+                        const a = pricesArray[i];
+                        const b = pricesArray[i + 1];
+                        const s1 = a != null ? String(a).trim() : '';
+                        const s2 = b != null ? String(b).trim() : '';
+                        if (s1 && s1 !== '-' && s1 !== 'None' && !seen1.has(s1)) {
+                            seen1.add(s1);
+                            v1s.push(s1);
+                        }
+                        if (s2 && s2 !== '-' && s2 !== 'None' && !seen2.has(s2)) {
+                            seen2.add(s2);
+                            v2s.push(s2);
+                        }
+                    }
+                    variable1Values = v1s;
+                    variable2Values = v2s;
+                }
                 
                 // Extract numeric price - use first available price as default
                 let unitPrice = 0;
@@ -989,16 +1052,25 @@
                         const categoryName = category.category_name || `category_${catIndex}`;
                         const displayName = category.display_name || 'Choose Options';
                         const rawItems = category.items || [];
-                        const configArray = category.config || [];
                         
                         console.log(`🔧 Processing category ${catIndex}: ${categoryName}, items:`, rawItems);
                         
-                        // Convert config array to object
-                        const config = {
-                            all_max: configArray[0] || 0,
-                            regular_max: configArray[3] || 0,
-                            premium_max: configArray[6] || 0
-                        };
+                        let config = { all_max: 0, regular_max: 0, premium_max: 0 };
+                        if (Array.isArray(category.config)) {
+                            const configArray = category.config;
+                            config = {
+                                all_max: configArray[0] || 0,
+                                regular_max: configArray[3] || 0,
+                                premium_max: configArray[6] || 0
+                            };
+                        } else if (category.config && typeof category.config === 'object') {
+                            const c = category.config;
+                            config = {
+                                all_max: c.maximum != null ? c.maximum : (c.all_max || 0),
+                                regular_max: c.regular_max || 0,
+                                premium_max: c.premium_max || 0
+                            };
+                        }
                         
                         // Build items HTML
                         let itemsHTML = '';
@@ -1057,8 +1129,9 @@
                         }
                         
                         if (itemsHTML) {
-                            // Count items (each item is 3 elements in the array)
-                            const itemCount = rawItems.length / 3;
+                            const itemCount = (rawItems.length > 0 && typeof rawItems[0] === 'object' && rawItems[0] != null && rawItems[0].name != null)
+                                ? rawItems.length
+                                : rawItems.length / 3;
                             const shouldCollapse = itemCount > 8;
                             const collapsedClass = shouldCollapse ? 'collapsed' : '';
                             const iconClass = shouldCollapse ? 'fa-chevron-down' : 'fa-chevron-up';
@@ -3301,5 +3374,7 @@
 
     // Expose function globally
     window.updateLocationStatuses = updateLocationStatuses;
+    /** Rebuild expanded menu panel from card data-* (used by dashboard edit after Apply). */
+    window.expandMenuItemCard = expandItem;
 
 })();
