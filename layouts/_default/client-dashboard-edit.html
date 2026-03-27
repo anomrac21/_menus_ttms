@@ -40,8 +40,9 @@
         <div class="dashboard-edit-options-header">
           <button type="button" class="dashboard-edit-options-toggle" id="btnToggleEditPanel" aria-expanded="false" aria-label="Expand edit panel">
             <span class="dashboard-edit-options-toggle-icon" aria-hidden="true">▶</span>
-            <span class="dashboard-edit-options-toggle-text">Expand</span>
           </button>
+          <p class="dashboard-edit-selected-type" id="dashboardEditSelectedType"></p>
+          <button type="button" class="btn-dash btn-dash-danger dashboard-edit-header-mark-btn" id="btnMarkForDeletion" aria-label="Mark for deletion" title="Mark for deletion (hidden in preview)" disabled><i class="fa fa-trash" aria-hidden="true"></i></button>
         </div>
         <div class="dashboard-edit-options-inner">
           <div id="dashboardEditPrompt" class="dashboard-edit-prompt">
@@ -49,7 +50,6 @@
           </div>
 
           <div id="dashboardEditForm" class="dashboard-edit-form hidden">
-            <p class="dashboard-edit-selected-type" id="dashboardEditSelectedType"></p>
             <p class="dashboard-edit-content-source" id="dashboardEditContentSource" aria-live="polite"></p>
             <p class="dashboard-edit-status" id="dashboardEditStatus" aria-live="polite"></p>
             <div class="dashboard-edit-form-fields" id="dashboardEditFormFields">
@@ -86,9 +86,10 @@
                     <button type="button" class="dashboard-wizard-tab" data-wizard-index="1" role="tab" aria-selected="false" id="dashboardWizardTab1">Sides</button>
                     <button type="button" class="dashboard-wizard-tab" data-wizard-index="2" role="tab" aria-selected="false" id="dashboardWizardTab2">Mods &amp; adds</button>
                     <button type="button" class="dashboard-wizard-tab" data-wizard-index="3" role="tab" aria-selected="false" id="dashboardWizardTab3">Tags &amp; search</button>
-                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="4" role="tab" aria-selected="false" id="dashboardWizardTab4">Promotions</button>
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="4" role="tab" aria-selected="false" id="dashboardWizardTab4">Availability</button>
+                    <button type="button" class="dashboard-wizard-tab" data-wizard-index="5" role="tab" aria-selected="false" id="dashboardWizardTab5">Promotions</button>
                   </div>
-                  <p class="dashboard-menu-item-wizard-progress" id="dashboardMenuItemWizardProgress" aria-live="polite">Step 1 of 5 · Main item</p>
+                  <p class="dashboard-menu-item-wizard-progress" id="dashboardMenuItemWizardProgress" aria-live="polite">Step 1 of 6 · Main item</p>
                   <div class="dashboard-menu-item-wizard-panels">
                     <div class="dashboard-menu-item-wizard-panel" data-wizard-index="0" role="tabpanel" id="dashboardWizardPanel0">
                       <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note"><code>title</code> and body text below; then <code>images</code> and <code>prices</code> in front matter.</p>
@@ -101,9 +102,13 @@
                         <textarea id="dashboardEditDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Description or item body (e.g. combo line-up)" rows="3"></textarea>
                       </div>
                       <div class="dashboard-edit-field">
-                        <label for="dashboardEditMenuItemImages">Images (one path per line)</label>
-                        <textarea id="dashboardEditMenuItemImages" class="dashboard-edit-input dashboard-edit-textarea" placeholder="images/item1.webp&#10;images/item2.webp" rows="3"></textarea>
-                        <div class="dashboard-edit-slideshow-view" id="dashboardEditMenuItemImagesView" aria-label="Menu item images preview"></div>
+                        <label id="dashboardEditMenuItemImagesLabel">Images</label>
+                        <p id="dashboardMenuItemImagesHint" class="dashboard-edit-field-note dashboard-menu-item-images-hint">Use <strong>Add image</strong> to choose a file. Drafts are stored on the CMS as <code>draft-assets/…</code> until you publish; published menus use paths under <code>images/</code> in the site. Drag <i class="fa fa-bars" aria-hidden="true"></i> to reorder.</p>
+                        <div id="dashboardEditMenuItemImagesContainer" class="dashboard-menu-item-images-ui" role="list" aria-labelledby="dashboardEditMenuItemImagesLabel"></div>
+                        <p id="dashboardMenuItemImagesUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddMenuItemImage">Add image</button>
+                        <input type="file" id="btnAddMenuItemImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+                        <textarea id="dashboardEditMenuItemImages" class="hidden" aria-hidden="true" tabindex="-1" rows="1" cols="1"></textarea>
                       </div>
                       <div class="dashboard-edit-field">
                         <label>Prices (variable1 | variable2 | price)</label>
@@ -154,14 +159,29 @@
                         <div id="dashboardEditTypesContainer" class="dashboard-list-ui"></div>
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddType">Add type</button>
                       </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="4" role="tabpanel" id="dashboardWizardPanel4" aria-hidden="true">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>availability</code> in front matter (when the item can be ordered). Weekday names must match site logic (e.g. <code>Monday</code>).</p>
+                      <div class="dashboard-edit-field">
+                        <label for="dashboardEditAvailabilityDays">Days (comma-separated)</label>
+                        <input type="text" id="dashboardEditAvailabilityDays" class="dashboard-edit-input" placeholder="Monday, Tuesday, Wednesday, Thursday, Friday">
+                      </div>
+                      <div class="dashboard-edit-field dashboard-menu-item-availability-times">
+                        <label for="dashboardEditAvailabilityTimeStart">Time start</label>
+                        <input type="time" id="dashboardEditAvailabilityTimeStart" class="dashboard-edit-input" step="60">
+                      </div>
+                      <div class="dashboard-edit-field dashboard-menu-item-availability-times">
+                        <label for="dashboardEditAvailabilityTimeFinish">Time finish</label>
+                        <input type="time" id="dashboardEditAvailabilityTimeFinish" class="dashboard-edit-input" step="60">
+                      </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="5" role="tabpanel" id="dashboardWizardPanel5" aria-hidden="true">
+                      <p class="dashboard-edit-field-note">Matches <code>promotions</code> in front matter: <code>days</code>, <code>type</code> (<code>percent_off</code>, <code>amount_off</code>), <code>value</code>, <code>label</code>, <code>image</code>.</p>
                       <div class="dashboard-edit-field">
                         <label>Events</label>
                         <div id="dashboardEditEventsContainer" class="dashboard-list-ui"></div>
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddEvent">Add event</button>
                       </div>
-                    </div>
-                    <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="4" role="tabpanel" id="dashboardWizardPanel4" aria-hidden="true">
-                      <p class="dashboard-edit-field-note">Matches <code>promotions</code> in front matter: <code>days</code>, <code>type</code> (<code>percent_off</code>, <code>amount_off</code>), <code>value</code>, <code>label</code>, <code>image</code>.</p>
                       <div class="dashboard-edit-field">
                         <label>Item promotions</label>
                         <div id="dashboardEditMenuItemPromotionsContainer" class="dashboard-menu-item-promotions-ui"></div>
@@ -292,22 +312,47 @@
               </div>
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsSlideshow" data-for="slideshow">
                 <div class="dashboard-edit-field">
-                  <label id="dashboardEditSlideshowLabel">View slides</label>
-                  <div class="dashboard-edit-slideshow-view" id="dashboardEditSlideshowView" aria-labelledby="dashboardEditSlideshowLabel"></div>
+                  <label id="dashboardEditSlideshowLabel">Slideshow images</label>
+                  <p id="dashboardSlideshowImagesHint" class="dashboard-edit-field-note dashboard-menu-item-images-hint">Use <strong>Add image</strong> to choose a file. Drafts are stored on the CMS as <code>draft-assets/…</code> until you publish; published menus use paths under <code>images/</code> in the site. Drag <i class="fa fa-bars" aria-hidden="true"></i> to reorder.</p>
+                  <div id="dashboardEditSlideshowImagesContainer" class="dashboard-menu-item-images-ui" role="list" aria-labelledby="dashboardEditSlideshowLabel"></div>
+                  <p id="dashboardSlideshowImagesUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddSlideshowImage">Add image</button>
+                  <input type="file" id="btnAddSlideshowImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
                   <textarea id="dashboardEditSlideshowImages" class="hidden" aria-hidden="true" rows="1" style="height:0;overflow:hidden;position:absolute;clip:rect(0,0,0,0);"></textarea>
+                </div>
+                <div class="dashboard-edit-field">
+                  <label id="dashboardEditSlideshowPreviewLabel">Preview</label>
+                  <div class="dashboard-edit-slideshow-view" id="dashboardEditSlideshowView" aria-labelledby="dashboardEditSlideshowPreviewLabel"></div>
                 </div>
               </div>
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsHomeHero" data-for="home-hero">
                 <div class="dashboard-edit-field">
                   <label for="dashboardEditHeroImage">Hero background image (<code>image</code> in front matter)</label>
-                  <input type="text" id="dashboardEditHeroImage" class="dashboard-edit-input" placeholder="e.g. images/mixedsashimi.webp">
+                  <p class="dashboard-edit-field-note">Use <strong>Choose image</strong> to upload a draft to the CMS as <code>draft-assets/…</code>, or enter a path under <code>images/</code> for published assets.</p>
+                  <div id="dashboardHeroImageRow" class="dashboard-hero-image-row dashboard-menu-item-image-row">
+                    <div class="dashboard-menu-item-image-thumb-wrap" id="dashboardHeroImageThumbWrap">
+                      <img id="dashboardHeroImageThumb" class="dashboard-menu-item-image-thumb" alt="">
+                      <span id="dashboardHeroImageThumbLoading" class="dashboard-menu-item-image-thumb-loading" aria-hidden="true">
+                        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i><span class="dashboard-menu-item-image-thumb-loading-label">Uploading…</span>
+                      </span>
+                    </div>
+                    <div class="dashboard-menu-item-image-path-col">
+                      <input type="text" id="dashboardEditHeroImage" class="dashboard-edit-input dashboard-hero-image-path-input" placeholder="e.g. images/mixedsashimi.webp" autocomplete="off">
+                      <p id="dashboardHeroImageDraftHint" class="dashboard-edit-field-note hidden">Draft path is stored on the CMS until you publish.</p>
+                      <div class="dashboard-menu-item-image-path-actions">
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnHeroImageReplace" aria-label="Choose image file"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose image</button>
+                        <input type="file" id="btnHeroImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnHeroImageRemove" aria-label="Remove hero image"><i class="fa fa-times" aria-hidden="true"></i> Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                  <p id="dashboardHeroImageUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
                 </div>
                 <p class="dashboard-edit-field-note">Updates <code>content/_index.md</code>; other keys (slideshow, images, …) are preserved when you save a draft or publish.</p>
               </div>
             </div>
             <div class="dashboard-edit-form-actions">
               <button type="button" class="btn-dash btn-dash-primary" id="btnApplyEdit">Apply</button>
-              <button type="button" class="btn-dash btn-dash-danger" id="btnMarkForDeletion" aria-label="Mark for deletion" title="Mark for deletion (hidden in preview)"><i class="fa fa-ban" aria-hidden="true"></i> Mark for deletion</button>
             </div>
             <p class="dashboard-edit-option-note">Saving to your backend can be wired when ready.</p>
           </div>
@@ -316,15 +361,17 @@
 
       <aside class="dashboard-edit-color-aside dashboard-edit-color-aside-collapsed hidden" id="dashboardEditColorAside" aria-label="Edit theme colors">
         <div class="dashboard-edit-color-aside-inner">
-          <div id="dashboardEditColorPrompt" class="dashboard-edit-color-prompt">
+          <div class="dashboard-edit-color-aside-header">
+            <p class="dashboard-edit-color-section-label" id="dashboardEditColorSectionLabel"></p>
             <button type="button" class="dashboard-edit-color-aside-toggle" id="btnToggleColorPanel" aria-expanded="false" aria-label="Expand color panel">
               <span class="dashboard-edit-color-aside-toggle-icon" aria-hidden="true">▶</span>
               <span class="dashboard-edit-color-aside-toggle-text">Expand</span>
             </button>
+          </div>
+          <div id="dashboardEditColorPrompt" class="dashboard-edit-color-prompt">
             <div class="dashboard-edit-color-sections" id="dashboardEditColorSections"></div>
           </div>
           <div id="dashboardEditColorForm" class="dashboard-edit-color-form hidden">
-            <p class="dashboard-edit-color-section-label" id="dashboardEditColorSectionLabel"></p>
             <div id="dashboardEditColorFields" class="dashboard-edit-color-fields"></div>
             <div class="dashboard-edit-color-actions">
               <button type="button" class="btn-dash btn-dash-primary" id="btnApplyColor">Apply</button>
@@ -345,6 +392,8 @@
       // CMS / content-management service configuration
       var CMS_SERVICE_URL = window.CMS_SERVICE_URL || 'https://cms.ttmenus.com';
       var CMS_CLIENT_ID = window.CLIENT_ID || '_ttms_menu_demo';
+      window.CMS_SERVICE_URL = CMS_SERVICE_URL;
+      window.CMS_CLIENT_ID = CMS_CLIENT_ID;
 
       var page = document.getElementById('dashboardEditPage');
       var iframe = document.getElementById('menuPreviewFrame');
@@ -363,7 +412,10 @@
       var inputSectionImageTop = document.getElementById('dashboardEditSectionImageTop');
       var inputSectionImageBottom = document.getElementById('dashboardEditSectionImageBottom');
       var inputMenuItemImages = document.getElementById('dashboardEditMenuItemImages');
-      var menuItemImagesViewEl = document.getElementById('dashboardEditMenuItemImagesView');
+      var menuItemImagesContainer = document.getElementById('dashboardEditMenuItemImagesContainer');
+      var btnAddMenuItemImage = document.getElementById('btnAddMenuItemImage');
+      var btnAddMenuItemImageFile = document.getElementById('btnAddMenuItemImageFile');
+      var menuItemImagesUploadStatusEl = document.getElementById('dashboardMenuItemImagesUploadStatus');
       var pricesContainer = document.getElementById('dashboardEditPricesContainer');
       var btnAddPrice = document.getElementById('btnAddPrice');
       var sideCategoriesContainer = document.getElementById('dashboardEditSideCategoriesContainer');
@@ -388,7 +440,10 @@
       var btnMenuItemWizardNext = document.getElementById('btnMenuItemWizardNext');
       var dashboardMenuItemWizardProgress = document.getElementById('dashboardMenuItemWizardProgress');
       var menuItemWizardStep = 0;
-      var MENU_ITEM_WIZARD_LABELS = ['Main item', 'Sides', 'Mods & adds', 'Tags & search', 'Promotions'];
+      var MENU_ITEM_WIZARD_LABELS = ['Main item', 'Sides', 'Mods & adds', 'Tags & search', 'Availability', 'Promotions'];
+      var inputAvailabilityDays = document.getElementById('dashboardEditAvailabilityDays');
+      var inputAvailabilityTimeStart = document.getElementById('dashboardEditAvailabilityTimeStart');
+      var inputAvailabilityTimeFinish = document.getElementById('dashboardEditAvailabilityTimeFinish');
       var btnApply = document.getElementById('btnApplyEdit');
       var btnPublish = document.getElementById('btnPublish');
       var btnMarkForDeletion = document.getElementById('btnMarkForDeletion');
@@ -400,7 +455,17 @@
       var fieldsSlideshow = document.getElementById('dashboardEditFieldsSlideshow');
       var fieldsHomeHero = document.getElementById('dashboardEditFieldsHomeHero');
       var inputHomeHeroImage = document.getElementById('dashboardEditHeroImage');
+      var btnHeroImageReplace = document.getElementById('btnHeroImageReplace');
+      var btnHeroImageFile = document.getElementById('btnHeroImageFile');
+      var btnHeroImageRemove = document.getElementById('btnHeroImageRemove');
+      var dashboardHeroImageRow = document.getElementById('dashboardHeroImageRow');
+      var dashboardHeroImageThumbWrap = document.getElementById('dashboardHeroImageThumbWrap');
+      var heroImageThumbImg = document.getElementById('dashboardHeroImageThumb');
+      var dashboardHeroImageDraftHint = document.getElementById('dashboardHeroImageDraftHint');
+      var heroImageUploadStatusEl = document.getElementById('dashboardHeroImageUploadStatus');
       var homeHeroIndexCache = { frontMatter: null, body: '' };
+      var heroImageThumbLoadSeq = 0;
+      var heroImageRowBlobUrl = null;
       var inputLocationAddress = document.getElementById('dashboardEditLocationAddress');
       var inputLocationCity = document.getElementById('dashboardEditLocationCity');
       var inputLocationIsland = document.getElementById('dashboardEditLocationIsland');
@@ -447,11 +512,10 @@
       var btnAddPromoDay = document.getElementById('btnAddPromoDay');
       var slideshowViewEl = document.getElementById('dashboardEditSlideshowView');
       var inputSlideshowImages = document.getElementById('dashboardEditSlideshowImages');
-      if (inputMenuItemImages) {
-        inputMenuItemImages.addEventListener('input', function() {
-          if (menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, hoursParseStringList(inputMenuItemImages.value));
-        });
-      }
+      var slideshowImagesContainer = document.getElementById('dashboardEditSlideshowImagesContainer');
+      var btnAddSlideshowImage = document.getElementById('btnAddSlideshowImage');
+      var btnAddSlideshowImageFile = document.getElementById('btnAddSlideshowImageFile');
+      var slideshowImagesUploadStatusEl = document.getElementById('dashboardSlideshowImagesUploadStatus');
       if (inputPromoImages && promoImagesViewEl) {
         inputPromoImages.addEventListener('input', function() {
           hoursRenderImagesPreview(promoImagesViewEl, hoursParseStringList(inputPromoImages.value));
@@ -627,7 +691,7 @@
       function buildMenuItemPayloadFromState() {
         if (!selectedInfo || !selectedElement) return null;
         var contentPath = (selectedInfo.contentPath || '').trim();
-        if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || contentPath.indexOf('_index.md') !== -1) return null;
+        if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || /\/_index\.md$/i.test(contentPath)) return null;
         var title = inputTitle ? (inputTitle.value || '').trim() : '';
         var desc = inputDesc ? (inputDesc.value || '').trim() : '';
         var imagesArr = inputMenuItemImages ? hoursParseStringList(inputMenuItemImages.value) : [];
@@ -653,6 +717,7 @@
         var types = typesContainer ? getStringListFromUI(typesContainer) : [];
         var events = eventsContainer ? getStringListFromUI(eventsContainer) : [];
         var menuItemPromos = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
+        var availObj = getMenuItemAvailabilityFromState();
         var weightVal = 1;
         var frontMatter = {
           title: title || 'Untitled',
@@ -671,6 +736,7 @@
         if (sideCats && sideCats.length) frontMatter.side_categories = sideCats;
         if (mods && mods.length) frontMatter.modifications = mods;
         if (adds && adds.length) frontMatter.additions = adds;
+        if (availObj) frontMatter.availability = availObj;
         return {
           kind: 'menu-item',
           clientId: CMS_CLIENT_ID,
@@ -790,10 +856,112 @@
         });
       }
 
+      /** Collect unpublished “Add item” cards so they can be stored in menu snapshot JSON (CMS menu_data). */
+      function collectDashboardNewMenuItemsFromIframe(doc) {
+        if (!doc || !doc.querySelectorAll) return [];
+        var out = [];
+        doc.querySelectorAll('.menu-item-card[data-dashboard-edit-new-item]').forEach(function(card) {
+          var url = card.getAttribute('data-item-url') || '';
+          if (url.indexOf('/__dashboard-new/') !== 0) return;
+          var bg = card.closest('.main-menu-bg');
+          var header = bg && bg.querySelector('.menu-header[data-section-slug]');
+          var slug = header ? (header.getAttribute('data-section-slug') || '').trim() : '';
+          var categoryUrl = slug ? '/' + slug + '/' : '';
+          var titleEl = card.querySelector('.menu-item-title a, .menu-item-title');
+          var title = titleEl ? (titleEl.textContent || '').trim() : 'New item';
+          var descEl = card.querySelector('.menu-item-description');
+          var summary = descEl ? (descEl.textContent || '').trim() : '';
+          var nid = card.getAttribute('data-dashboard-new-item-id') || '';
+          var catTitle = '';
+          if (header) {
+            var h2a = header.querySelector('.headerstyle h2 a, h2.center.title a, h2 a');
+            catTitle = h2a ? (h2a.textContent || '').trim() : '';
+          }
+          var normUrl = url.replace(/\/?$/, '/');
+          out.push({
+            id: 'dashboard-new-' + (nid || normUrl.replace(/[^a-zA-Z0-9_-]/g, '-')),
+            title: title,
+            url: normUrl,
+            category: catTitle,
+            categoryUrl: categoryUrl,
+            weight: 0,
+            summary: summary
+          });
+        });
+        return out;
+      }
+
+      /** Drop prior snapshot entries for dashboard placeholders, then append current iframe state. */
+      function mergeDashboardNewItemsIntoMenuData(menuData, collected) {
+        if (!menuData || typeof menuData !== 'object') return menuData;
+        if (!Array.isArray(menuData.menuItems)) menuData.menuItems = [];
+        menuData.menuItems = menuData.menuItems.filter(function(mi) {
+          return !mi || !mi.url || String(mi.url).indexOf('/__dashboard-new/') !== 0;
+        });
+        if (collected && collected.length) {
+          collected.forEach(function(item) {
+            menuData.menuItems.push(item);
+          });
+        }
+        return menuData;
+      }
+
+      /** After loading a menu version, re-insert placeholder cards that only exist in menu_data + content drafts. */
+      function hydrateDashboardNewItemsFromMenuSnapshot() {
+        var snap = window.__ttmsEditorSnapshot;
+        if (!snap || !snap.menuData || !Array.isArray(snap.menuData.menuItems)) return;
+        var doc = iframe.contentDocument;
+        var win = iframe.contentWindow;
+        if (!doc || !doc.body || !win || typeof win._dashboardCreateNewMenuItemCard !== 'function') return;
+        var newItems = snap.menuData.menuItems.filter(function(mi) {
+          return mi && mi.url && String(mi.url).indexOf('/__dashboard-new/') === 0;
+        });
+        newItems.forEach(function(mi) {
+          var rawUrl = String(mi.url || '').trim();
+          if (!rawUrl) return;
+          var normalized = rawUrl.replace(/\/?$/, '');
+          if (normalized.indexOf('/') !== 0) normalized = '/' + normalized.replace(/^\/+/, '');
+          var url = normalized + '/';
+          var esc = url.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+          if (doc.querySelector('.menu-item-card[data-item-url="' + esc + '"]')) return;
+          var m = url.match(/^\/__dashboard-new\/([^/]+)\/?$/);
+          var nid = m ? m[1] : '';
+          if (!nid) return;
+          var slug = (mi.categoryUrl || '').replace(/^\/+|\/+$/g, '').split('/').filter(Boolean)[0] || '';
+          var header = slug ? doc.querySelector('.menu-header[data-section-slug="' + slug.replace(/"/g, '\\"') + '"]') : null;
+          var bg = header && header.closest('.main-menu-bg');
+          var container = bg && bg.querySelector('.menu-items-container');
+          if (!container) return;
+          var bar = container.querySelector('.dashboard-edit-add-item-bar');
+          var card = win._dashboardCreateNewMenuItemCard(doc, {
+            nid: nid,
+            title: (mi.title != null ? String(mi.title) : '') || 'New item',
+            summary: (mi.summary != null ? String(mi.summary) : '') || ''
+          });
+          if (bar && bar.parentNode === container) {
+            container.insertBefore(card, bar.nextSibling);
+          } else {
+            container.insertBefore(card, container.firstChild);
+          }
+        });
+        if (newItems.length && win._dashboardInjectEditButtons) {
+          win._dashboardInjectEditButtons();
+        }
+      }
+
       /** Saves current server menu.json as a new version (POST /menu-versions). Used when leaving the editor. */
       function saveMenuSnapshotOnLeave() {
         var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
         return getFromCMS(base + '/menu').then(function(menuData) {
+          try {
+            var idoc = iframe && iframe.contentDocument;
+            if (idoc && idoc.body) {
+              var collected = collectDashboardNewMenuItemsFromIframe(idoc);
+              mergeDashboardNewItemsIntoMenuData(menuData, collected);
+            }
+          } catch (e) {
+            console.warn('saveMenuSnapshotOnLeave: merge new items', e);
+          }
           var now = new Date();
           var name = 'Editor exit · ' + now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
           var desc = 'Automatic snapshot when leaving the menu editor (back to dashboard).';
@@ -819,6 +987,16 @@
           var meta = data.menuVersionMeta;
           if (meta && meta.name) setEditStatus('Loaded menu version: ' + meta.name);
           else if (data.source === 'live') setEditStatus('Live menu with draft changes');
+          if (loadDraftsOnLoad && iframe && iframe.contentDocument && iframe.contentDocument.body && editMode) {
+            setTimeout(function() {
+              hydrateDashboardNewItemsFromMenuSnapshot();
+              var win = iframe.contentWindow;
+              if (win && win._dashboardInjectEditButtons) win._dashboardInjectEditButtons();
+              setTimeout(function() {
+                if (win && win.__dashboardApplyEdit) loadAndApplyDrafts();
+              }, 50);
+            }, 150);
+          }
           return data;
         }).catch(function(err) {
           console.warn('Editor snapshot bootstrap failed', err);
@@ -880,6 +1058,7 @@
 
       function showColorSectionList() {
         selectedColorSectionId = null;
+        if (colorSectionLabel) colorSectionLabel.textContent = '';
         colorSectionsEl.innerHTML = '';
         colorPrompt.classList.remove('dashboard-edit-color-prompt-section-selected');
         COLOR_SECTIONS.forEach(function(section) {
@@ -1103,8 +1282,10 @@
         if (inputSectionImageBottom) inputSectionImageBottom.value = '';
         if (inputHomeHeroImage) inputHomeHeroImage.value = '';
         homeHeroIndexCache = { frontMatter: null, body: '' };
+        updateHeroImageThumbDisplay('', null);
+        syncHeroPathInputVisibility();
         if (inputMenuItemImages) inputMenuItemImages.value = '';
-        if (menuItemImagesViewEl) menuItemImagesViewEl.innerHTML = '';
+        if (menuItemImagesContainer) renderMenuItemImagesUI([]);
         if (pricesContainer) renderPricesUI(pricesContainer, []);
         if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, []);
         if (modificationsContainer) renderPairsUI(modificationsContainer, []);
@@ -1115,7 +1296,9 @@
         if (typesContainer) renderStringListUI(typesContainer, []);
         if (eventsContainer) renderStringListUI(eventsContainer, []);
         if (menuItemPromotionsContainer) renderMenuItemPromotionsUI(menuItemPromotionsContainer, []);
+        populateMenuItemAvailabilityFromObject(null);
         if (inputSlideshowImages) inputSlideshowImages.value = '';
+        if (slideshowImagesContainer) renderSlideshowImagesUI([], true);
         if (slideshowViewEl) slideshowViewEl.innerHTML = '';
         if (inputPromoTitle) inputPromoTitle.value = '';
         if (inputPromoDescription) inputPromoDescription.value = '';
@@ -1127,6 +1310,7 @@
         if (inputPromoWeight) inputPromoWeight.value = '';
         setMenuItemWizardStep(0);
         updateMarkForDeletionButton();
+        if (selectedTypeEl) selectedTypeEl.textContent = '';
       }
 
       function parseJsonAttr(el, attr) {
@@ -1137,6 +1321,44 @@
         } catch (e) {
           return [];
         }
+      }
+
+      function parseJsonObjectAttr(el, attr) {
+        try {
+          var raw = el.getAttribute(attr);
+          if (raw == null || raw === '') return null;
+          var o = JSON.parse(raw);
+          return o && typeof o === 'object' && !Array.isArray(o) ? o : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function getMenuItemAvailabilityFromState() {
+        var daysStr = inputAvailabilityDays ? (inputAvailabilityDays.value || '').trim() : '';
+        var days = daysStr.split(',').map(function(s) { return (s || '').trim(); }).filter(Boolean);
+        var ts = inputAvailabilityTimeStart ? (inputAvailabilityTimeStart.value || '').trim() : '';
+        var tf = inputAvailabilityTimeFinish ? (inputAvailabilityTimeFinish.value || '').trim() : '';
+        if (!days.length && !ts && !tf) return null;
+        var out = {};
+        if (days.length) out.days = days;
+        if (ts) out.time_start = ts;
+        if (tf) out.time_finish = tf;
+        return out;
+      }
+
+      function populateMenuItemAvailabilityFromObject(obj) {
+        if (!inputAvailabilityDays) return;
+        if (!obj || typeof obj !== 'object') {
+          inputAvailabilityDays.value = '';
+          if (inputAvailabilityTimeStart) inputAvailabilityTimeStart.value = '';
+          if (inputAvailabilityTimeFinish) inputAvailabilityTimeFinish.value = '';
+          return;
+        }
+        var days = obj.days;
+        inputAvailabilityDays.value = Array.isArray(days) ? days.map(function(d) { return String(d).trim(); }).filter(Boolean).join(', ') : '';
+        if (inputAvailabilityTimeStart) inputAvailabilityTimeStart.value = obj.time_start != null ? String(obj.time_start).trim() : '';
+        if (inputAvailabilityTimeFinish) inputAvailabilityTimeFinish.value = obj.time_finish != null ? String(obj.time_finish).trim() : '';
       }
 
       function hoursParseStringList(text) {
@@ -1568,6 +1790,774 @@
         });
       }
 
+      function renderSlideshowAsidePreview(container, paths) {
+        if (!container) return;
+        container.innerHTML = '';
+        (paths || []).forEach(function(path, i) {
+          var p = (path || '').trim();
+          if (!p) return;
+          var slide = document.createElement('div');
+          slide.className = 'dashboard-edit-slide-item';
+          var img = document.createElement('img');
+          img.src = resolveMenuItemImageSrcForPreview(p);
+          img.alt = 'Slide ' + (i + 1);
+          img.loading = 'lazy';
+          img.onerror = function() { this.style.display = 'none'; };
+          var cap = document.createElement('span');
+          cap.className = 'dashboard-edit-slide-cap';
+          cap.textContent = (i + 1) + '. ' + p;
+          slide.appendChild(img);
+          slide.appendChild(cap);
+          container.appendChild(slide);
+        });
+      }
+
+      function gatherMenuItemImagePathsFromRows() {
+        if (!menuItemImagesContainer) return [];
+        var out = [];
+        menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-path').forEach(function(inp) {
+          out.push(inp.value);
+        });
+        return out;
+      }
+
+      function resolveMenuItemImageSrcForPreview(path) {
+        var p = (path || '').trim();
+        if (!p) return '';
+        if (p.indexOf('draft-assets/') === 0) {
+          var base = CMS_SERVICE_URL.replace(/\/+$/, '');
+          var name = p.replace(/^draft-assets\//, '');
+          return base + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/preview/draft-assets/' + encodeURIComponent(name);
+        }
+        if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) return p;
+        return p.indexOf('/') === 0 ? p : '/' + p;
+      }
+
+      function setMenuItemImagesUploadStatus(msg, isError) {
+        if (!menuItemImagesUploadStatusEl) return;
+        menuItemImagesUploadStatusEl.textContent = msg || '';
+        var has = !!msg;
+        menuItemImagesUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--active', has);
+        menuItemImagesUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--error', has && !!isError);
+      }
+
+      function setMenuItemImageUploadUiLocked(locked) {
+        if (btnAddMenuItemImage) btnAddMenuItemImage.disabled = !!locked;
+        if (btnAddMenuItemImageFile) btnAddMenuItemImageFile.disabled = !!locked;
+        if (!menuItemImagesContainer) return;
+        menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-replace, .dashboard-menu-item-image-remove').forEach(function(b) {
+          b.disabled = !!locked;
+        });
+        menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-drag').forEach(function(h) {
+          if (locked) {
+            h.setAttribute('draggable', 'false');
+            h.style.pointerEvents = 'none';
+            h.style.opacity = '0.45';
+          } else {
+            h.setAttribute('draggable', 'true');
+            h.style.pointerEvents = '';
+            h.style.opacity = '';
+          }
+        });
+      }
+
+      function setSlideshowImagesUploadStatus(msg, isError) {
+        if (!slideshowImagesUploadStatusEl) return;
+        slideshowImagesUploadStatusEl.textContent = msg || '';
+        var has = !!msg;
+        slideshowImagesUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--active', has);
+        slideshowImagesUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--error', has && !!isError);
+      }
+
+      function setSlideshowImageUploadUiLocked(locked) {
+        if (btnAddSlideshowImage) btnAddSlideshowImage.disabled = !!locked;
+        if (btnAddSlideshowImageFile) btnAddSlideshowImageFile.disabled = !!locked;
+        if (!slideshowImagesContainer) return;
+        slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-replace, .dashboard-menu-item-image-remove').forEach(function(b) {
+          b.disabled = !!locked;
+        });
+        slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-drag').forEach(function(h) {
+          if (locked) {
+            h.setAttribute('draggable', 'false');
+            h.style.pointerEvents = 'none';
+            h.style.opacity = '0.45';
+          } else {
+            h.setAttribute('draggable', 'true');
+            h.style.pointerEvents = '';
+            h.style.opacity = '';
+          }
+        });
+      }
+
+      function setHeroImageUploadStatus(msg, isError) {
+        if (!heroImageUploadStatusEl) return;
+        heroImageUploadStatusEl.textContent = msg || '';
+        var has = !!msg;
+        heroImageUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--active', has);
+        heroImageUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--error', has && !!isError);
+      }
+
+      function setHeroImageUploadUiLocked(locked) {
+        if (btnHeroImageReplace) btnHeroImageReplace.disabled = !!locked;
+        if (btnHeroImageFile) btnHeroImageFile.disabled = !!locked;
+        if (btnHeroImageRemove) btnHeroImageRemove.disabled = !!locked;
+        if (inputHomeHeroImage) inputHomeHeroImage.readOnly = !!locked;
+      }
+
+      function revokeHeroImageBlob() {
+        if (heroImageRowBlobUrl) {
+          try { URL.revokeObjectURL(heroImageRowBlobUrl); } catch (e) {}
+          heroImageRowBlobUrl = null;
+        }
+      }
+
+      function syncHeroPathInputVisibility() {
+        if (!inputHomeHeroImage) return;
+        var p = (inputHomeHeroImage.value || '').trim();
+        var isDraft = p.indexOf('draft-assets/') === 0;
+        inputHomeHeroImage.classList.toggle('hidden', isDraft);
+        if (dashboardHeroImageDraftHint) dashboardHeroImageDraftHint.classList.toggle('hidden', !isDraft);
+      }
+
+      function updateHeroImageThumbDisplay(path, previewFile) {
+        if (!heroImageThumbImg || !dashboardHeroImageThumbWrap) return;
+        var p = (path || '').trim();
+        function cmsAuthHeadersForHero() {
+          var h = {};
+          var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+          if (token) h['Authorization'] = 'Bearer ' + token;
+          return h;
+        }
+        function bindLoadHandlers() {
+          heroImageThumbImg.onload = function() {
+            heroImageThumbImg.style.opacity = '1';
+          };
+          heroImageThumbImg.onerror = function() {
+            heroImageThumbImg.style.opacity = '0.35';
+          };
+        }
+        if (!p) {
+          heroImageThumbLoadSeq++;
+          revokeHeroImageBlob();
+          heroImageThumbImg.removeAttribute('src');
+          heroImageThumbImg.style.display = 'none';
+          dashboardHeroImageThumbWrap.classList.add('dashboard-menu-item-image-thumb-wrap--empty');
+          return;
+        }
+        heroImageThumbImg.style.display = '';
+        dashboardHeroImageThumbWrap.classList.remove('dashboard-menu-item-image-thumb-wrap--empty');
+        revokeHeroImageBlob();
+        heroImageThumbLoadSeq++;
+        var seq = heroImageThumbLoadSeq;
+        if (previewFile && previewFile instanceof File) {
+          heroImageRowBlobUrl = URL.createObjectURL(previewFile);
+          bindLoadHandlers();
+          heroImageThumbImg.style.opacity = '1';
+          heroImageThumbImg.src = heroImageRowBlobUrl;
+          return;
+        }
+        if (p.indexOf('draft-assets/') === 0) {
+          var fetchUrl = resolveMenuItemImageSrcForPreview(p);
+          bindLoadHandlers();
+          fetch(fetchUrl, { credentials: 'include', headers: cmsAuthHeadersForHero() })
+            .then(function(res) {
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              return res.blob();
+            })
+            .then(function(blob) {
+              if (seq !== heroImageThumbLoadSeq) return;
+              heroImageRowBlobUrl = URL.createObjectURL(blob);
+              heroImageThumbImg.src = heroImageRowBlobUrl;
+            })
+            .catch(function() {
+              if (seq !== heroImageThumbLoadSeq) return;
+              heroImageThumbImg.src = fetchUrl;
+            });
+          return;
+        }
+        bindLoadHandlers();
+        heroImageThumbImg.style.opacity = '1';
+        heroImageThumbImg.src = resolveMenuItemImageSrcForPreview(p);
+      }
+
+      function uploadMenuItemDraftImage(file, inp, updateThumbFn, opts) {
+        opts = opts || {};
+        var rowEl = opts.rowEl || null;
+        var useHeroStatus = !!opts.useHeroStatus;
+        var useSlideshowStatus = !!opts.useSlideshowStatus;
+        var statusLabel = opts.statusLabel || 'Uploading image…';
+        var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/draft-assets';
+        var fd = new FormData();
+        fd.append('file', file);
+        var headers = {};
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        if (useHeroStatus) {
+          setHeroImageUploadStatus(statusLabel, false);
+        } else if (useSlideshowStatus) {
+          setSlideshowImagesUploadStatus(statusLabel, false);
+        } else {
+          setMenuItemImagesUploadStatus(statusLabel, false);
+        }
+        setEditStatus(statusLabel);
+        if (useHeroStatus) {
+          setHeroImageUploadUiLocked(true);
+        } else if (useSlideshowStatus) {
+          setSlideshowImageUploadUiLocked(true);
+        } else {
+          setMenuItemImageUploadUiLocked(true);
+        }
+        if (rowEl) rowEl.classList.add('dashboard-menu-item-image-row--uploading');
+        return fetch(url, { method: 'POST', credentials: 'include', headers: headers, body: fd })
+          .then(function(res) {
+            if (!res.ok) {
+              return res.text().then(function(t) { throw new Error(t || ('HTTP ' + res.status)); });
+            }
+            return res.json();
+          })
+          .then(function(data) {
+            var path = data.path != null ? data.path : data.Path;
+            if (!path) throw new Error('No path in upload response');
+            if (inp) inp.value = path;
+            if (typeof updateThumbFn === 'function') updateThumbFn(path, file);
+            if (inp && inp !== inputHomeHeroImage) {
+              if (slideshowImagesContainer && slideshowImagesContainer.contains(inp)) syncSlideshowImagesTextareaFromRows();
+              else syncMenuItemImagesTextareaFromRows();
+            }
+            if (inp === inputHomeHeroImage && typeof syncHeroPathInputVisibility === 'function') syncHeroPathInputVisibility();
+            if (useHeroStatus) {
+              setHeroImageUploadStatus('Image uploaded.', false);
+            } else if (useSlideshowStatus) {
+              setSlideshowImagesUploadStatus('Image uploaded.', false);
+            } else {
+              setMenuItemImagesUploadStatus('Image uploaded.', false);
+            }
+            setEditStatus('Unsaved changes (not yet published)');
+            editFormDirty = true;
+            setTimeout(function() {
+              if (useHeroStatus) setHeroImageUploadStatus('', false);
+              else if (useSlideshowStatus) setSlideshowImagesUploadStatus('', false);
+              else setMenuItemImagesUploadStatus('', false);
+            }, 2200);
+          })
+          .catch(function(err) {
+            console.warn('Draft image upload failed', err);
+            var errMsg = (err && err.message) ? String(err.message) : String(err);
+            if (errMsg.length > 120) errMsg = errMsg.slice(0, 117) + '…';
+            if (useHeroStatus) {
+              setHeroImageUploadStatus('Upload failed: ' + errMsg, true);
+            } else if (useSlideshowStatus) {
+              setSlideshowImagesUploadStatus('Upload failed: ' + errMsg, true);
+            } else {
+              setMenuItemImagesUploadStatus('Upload failed: ' + errMsg, true);
+            }
+            setEditStatus('Image upload failed');
+            alert('Image upload failed: ' + ((err && err.message) ? String(err.message) : String(err)));
+            setTimeout(function() {
+              if (useHeroStatus) setHeroImageUploadStatus('', false);
+              else if (useSlideshowStatus) setSlideshowImagesUploadStatus('', false);
+              else setMenuItemImagesUploadStatus('', false);
+            }, 6000);
+          })
+          .then(function() {
+            if (useHeroStatus) {
+              setHeroImageUploadUiLocked(false);
+            } else if (useSlideshowStatus) {
+              setSlideshowImageUploadUiLocked(false);
+            } else {
+              setMenuItemImageUploadUiLocked(false);
+            }
+            if (rowEl) rowEl.classList.remove('dashboard-menu-item-image-row--uploading');
+          });
+      }
+
+      function syncMenuItemImagesTextareaFromRows(silent) {
+        if (!inputMenuItemImages || !menuItemImagesContainer) return;
+        var lines = gatherMenuItemImagePathsFromRows().map(function(s) { return (s || '').trim(); });
+        inputMenuItemImages.value = lines.join('\n');
+        if (!silent) {
+          editFormDirty = true;
+          setEditStatus('Unsaved changes (not yet published)');
+        }
+      }
+
+      function reorderMenuItemImagePaths(paths, from, to) {
+        if (from === to || from < 0 || to < 0 || from >= paths.length || to >= paths.length) return paths.slice();
+        var next = paths.slice();
+        var item = next.splice(from, 1)[0];
+        next.splice(to, 0, item);
+        return next;
+      }
+
+      function renderMenuItemImagesUI(paths, silentSync, opts) {
+        opts = opts || {};
+        var lastPreviewFile = opts.lastPreviewFile;
+        if (!menuItemImagesContainer) return;
+        var list = Array.isArray(paths) ? paths.slice() : [];
+        menuItemImagesContainer.innerHTML = '';
+        if (!list.length) {
+          var empty = document.createElement('p');
+          empty.className = 'dashboard-menu-item-images-empty';
+          empty.textContent = 'No images yet. Use Add image to choose a file.';
+          menuItemImagesContainer.appendChild(empty);
+          if (inputMenuItemImages) inputMenuItemImages.value = '';
+          return;
+        }
+        list.forEach(function(path, idx) {
+          var pf = (lastPreviewFile && idx === list.length - 1) ? lastPreviewFile : undefined;
+          menuItemImagesContainer.appendChild(createMenuItemImageRow(path, pf));
+        });
+        syncMenuItemImagesTextareaFromRows(!!silentSync);
+      }
+
+      function createMenuItemImageRow(path, previewFile) {
+        var row = document.createElement('div');
+        row.className = 'dashboard-menu-item-image-row';
+        row.setAttribute('role', 'listitem');
+
+        var handle = document.createElement('span');
+        handle.className = 'dashboard-menu-item-image-drag';
+        handle.setAttribute('aria-label', 'Drag to reorder');
+        handle.setAttribute('title', 'Drag to reorder');
+        handle.setAttribute('draggable', 'true');
+        handle.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+
+        var thumbWrap = document.createElement('div');
+        thumbWrap.className = 'dashboard-menu-item-image-thumb-wrap';
+        var img = document.createElement('img');
+        img.className = 'dashboard-menu-item-image-thumb';
+        img.alt = '';
+        img.loading = 'lazy';
+        var rowBlobUrl = null;
+        var thumbLoadSeq = 0;
+        function revokeRowBlob() {
+          if (rowBlobUrl) {
+            try { URL.revokeObjectURL(rowBlobUrl); } catch (e) {}
+            rowBlobUrl = null;
+          }
+        }
+        function cmsAuthHeadersForThumb() {
+          var h = {};
+          var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+          if (token) h['Authorization'] = 'Bearer ' + token;
+          return h;
+        }
+        function updateThumbDisplay(val, previewFile) {
+          var p = (val || '').trim();
+          if (!p) {
+            thumbLoadSeq++;
+            revokeRowBlob();
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            img.style.opacity = '1';
+            thumbWrap.classList.add('dashboard-menu-item-image-thumb-wrap--empty');
+            return;
+          }
+          img.style.display = '';
+          thumbWrap.classList.remove('dashboard-menu-item-image-thumb-wrap--empty');
+          revokeRowBlob();
+          thumbLoadSeq++;
+          var seq = thumbLoadSeq;
+          function bindLoadHandlers() {
+            img.onload = function() {
+              if (seq !== thumbLoadSeq) return;
+              img.style.opacity = '1';
+            };
+            img.onerror = function() {
+              if (seq !== thumbLoadSeq) return;
+              img.style.opacity = '0.35';
+            };
+          }
+          if (previewFile && previewFile instanceof File) {
+            rowBlobUrl = URL.createObjectURL(previewFile);
+            bindLoadHandlers();
+            img.style.opacity = '1';
+            img.src = rowBlobUrl;
+            return;
+          }
+          if (p.indexOf('draft-assets/') === 0) {
+            var fetchUrl = resolveMenuItemImageSrcForPreview(p);
+            bindLoadHandlers();
+            fetch(fetchUrl, { credentials: 'include', headers: cmsAuthHeadersForThumb() })
+              .then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.blob();
+              })
+              .then(function(blob) {
+                if (seq !== thumbLoadSeq) return;
+                rowBlobUrl = URL.createObjectURL(blob);
+                img.src = rowBlobUrl;
+              })
+              .catch(function() {
+                if (seq !== thumbLoadSeq) return;
+                img.src = fetchUrl;
+              });
+            return;
+          }
+          bindLoadHandlers();
+          img.style.opacity = '1';
+          img.src = resolveMenuItemImageSrcForPreview(p);
+        }
+        thumbWrap.appendChild(img);
+        var thumbLoading = document.createElement('span');
+        thumbLoading.className = 'dashboard-menu-item-image-thumb-loading';
+        thumbLoading.setAttribute('aria-hidden', 'true');
+        thumbLoading.innerHTML = '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i><span class="dashboard-menu-item-image-thumb-loading-label">Uploading…</span>';
+        thumbWrap.appendChild(thumbLoading);
+
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'dashboard-edit-input dashboard-menu-item-image-path hidden';
+        inp.setAttribute('tabindex', '-1');
+        inp.setAttribute('aria-hidden', 'true');
+        inp.value = path || '';
+        var inputThumbTimer = null;
+        inp.addEventListener('input', function() {
+          clearTimeout(inputThumbTimer);
+          inputThumbTimer = setTimeout(function() {
+            updateThumbDisplay(inp.value, null);
+          }, 350);
+          syncMenuItemImagesTextareaFromRows();
+        });
+        updateThumbDisplay(path, previewFile);
+
+        var fileInp = document.createElement('input');
+        fileInp.type = 'file';
+        fileInp.className = 'hidden dashboard-menu-item-image-file';
+        fileInp.setAttribute('accept', 'image/jpeg,image/png,image/webp,image/gif');
+        fileInp.setAttribute('tabindex', '-1');
+        fileInp.setAttribute('aria-hidden', 'true');
+        fileInp.addEventListener('change', function() {
+          var f = fileInp.files && fileInp.files[0];
+          fileInp.value = '';
+          if (!f) return;
+          uploadMenuItemDraftImage(f, inp, function(uploadedPath, file) {
+            clearTimeout(inputThumbTimer);
+            updateThumbDisplay(uploadedPath, file);
+          });
+        });
+
+        var replaceBtn = document.createElement('button');
+        replaceBtn.type = 'button';
+        replaceBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-replace';
+        replaceBtn.setAttribute('aria-label', 'Replace with another file');
+        replaceBtn.setAttribute('title', 'Replace with another file');
+        replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
+        replaceBtn.addEventListener('click', function() { fileInp.click(); });
+
+        var pathCol = document.createElement('div');
+        pathCol.className = 'dashboard-menu-item-image-path-col';
+        var pathActions = document.createElement('div');
+        pathActions.className = 'dashboard-menu-item-image-path-actions';
+        pathActions.appendChild(replaceBtn);
+        pathActions.appendChild(fileInp);
+        pathCol.appendChild(inp);
+        pathCol.appendChild(pathActions);
+
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-remove';
+        rm.setAttribute('aria-label', 'Remove image');
+        rm.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+        rm.addEventListener('click', function() {
+          var paths = gatherMenuItemImagePathsFromRows();
+          var rows = menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
+          var i = Array.prototype.indexOf.call(rows, row);
+          if (i >= 0) paths.splice(i, 1);
+          renderMenuItemImagesUI(paths);
+        });
+
+        handle.addEventListener('dragstart', function(e) {
+          var rows = menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
+          var idx = Array.prototype.indexOf.call(rows, row);
+          e.dataTransfer.setData('text/plain', String(idx));
+          e.dataTransfer.effectAllowed = 'move';
+          row.classList.add('dashboard-menu-item-image-row--dragging');
+        });
+        handle.addEventListener('dragend', function() {
+          row.classList.remove('dashboard-menu-item-image-row--dragging');
+          menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-row').forEach(function(r) {
+            r.classList.remove('dashboard-menu-item-image-row--over');
+          });
+        });
+
+        function onDragOver(e) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          row.classList.add('dashboard-menu-item-image-row--over');
+        }
+        function onDragLeave(e) {
+          if (!row.contains(e.relatedTarget)) row.classList.remove('dashboard-menu-item-image-row--over');
+        }
+        function onDrop(e) {
+          e.preventDefault();
+          row.classList.remove('dashboard-menu-item-image-row--over');
+          var from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+          var rows = menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
+          var to = Array.prototype.indexOf.call(rows, row);
+          if (isNaN(from) || to < 0) return;
+          var paths = gatherMenuItemImagePathsFromRows();
+          var reordered = reorderMenuItemImagePaths(paths, from, to);
+          renderMenuItemImagesUI(reordered);
+        }
+        [row, handle, pathCol, inp, thumbWrap].forEach(function(el) {
+          el.addEventListener('dragover', onDragOver);
+          el.addEventListener('dragleave', onDragLeave);
+          el.addEventListener('drop', onDrop);
+        });
+
+        row.appendChild(handle);
+        row.appendChild(thumbWrap);
+        row.appendChild(pathCol);
+        row.appendChild(rm);
+        return row;
+      }
+
+      function gatherSlideshowImagePathsFromRows() {
+        if (!slideshowImagesContainer) return [];
+        var out = [];
+        slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-path').forEach(function(inp) {
+          out.push(inp.value);
+        });
+        return out;
+      }
+
+      function syncSlideshowImagesTextareaFromRows(silent) {
+        if (!inputSlideshowImages || !slideshowImagesContainer) return;
+        var lines = gatherSlideshowImagePathsFromRows().map(function(s) { return (s || '').trim(); });
+        inputSlideshowImages.value = lines.join('\n');
+        if (slideshowViewEl) renderSlideshowAsidePreview(slideshowViewEl, lines.filter(Boolean));
+        if (!silent) {
+          editFormDirty = true;
+          setEditStatus('Unsaved changes (not yet published)');
+        }
+      }
+
+      function renderSlideshowImagesUI(paths, silentSync, opts) {
+        opts = opts || {};
+        var lastPreviewFile = opts.lastPreviewFile;
+        if (!slideshowImagesContainer) return;
+        var list = Array.isArray(paths) ? paths.slice() : [];
+        slideshowImagesContainer.innerHTML = '';
+        if (!list.length) {
+          var empty = document.createElement('p');
+          empty.className = 'dashboard-menu-item-images-empty';
+          empty.textContent = 'No images yet. Use Add image to choose a file.';
+          slideshowImagesContainer.appendChild(empty);
+          if (inputSlideshowImages) inputSlideshowImages.value = '';
+          if (slideshowViewEl) renderSlideshowAsidePreview(slideshowViewEl, []);
+          return;
+        }
+        list.forEach(function(path, idx) {
+          var pf = (lastPreviewFile && idx === list.length - 1) ? lastPreviewFile : undefined;
+          slideshowImagesContainer.appendChild(createSlideshowImageRow(path, pf));
+        });
+        syncSlideshowImagesTextareaFromRows(!!silentSync);
+      }
+
+      function createSlideshowImageRow(path, previewFile) {
+        var row = document.createElement('div');
+        row.className = 'dashboard-menu-item-image-row';
+        row.setAttribute('role', 'listitem');
+
+        var handle = document.createElement('span');
+        handle.className = 'dashboard-menu-item-image-drag';
+        handle.setAttribute('aria-label', 'Drag to reorder');
+        handle.setAttribute('title', 'Drag to reorder');
+        handle.setAttribute('draggable', 'true');
+        handle.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+
+        var thumbWrap = document.createElement('div');
+        thumbWrap.className = 'dashboard-menu-item-image-thumb-wrap';
+        var img = document.createElement('img');
+        img.className = 'dashboard-menu-item-image-thumb';
+        img.alt = '';
+        img.loading = 'lazy';
+        var rowBlobUrl = null;
+        var thumbLoadSeq = 0;
+        function revokeRowBlob() {
+          if (rowBlobUrl) {
+            try { URL.revokeObjectURL(rowBlobUrl); } catch (e) {}
+            rowBlobUrl = null;
+          }
+        }
+        function cmsAuthHeadersForThumb() {
+          var h = {};
+          var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+          if (token) h['Authorization'] = 'Bearer ' + token;
+          return h;
+        }
+        function updateThumbDisplay(val, previewFile) {
+          var p = (val || '').trim();
+          if (!p) {
+            thumbLoadSeq++;
+            revokeRowBlob();
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            img.style.opacity = '1';
+            thumbWrap.classList.add('dashboard-menu-item-image-thumb-wrap--empty');
+            return;
+          }
+          img.style.display = '';
+          thumbWrap.classList.remove('dashboard-menu-item-image-thumb-wrap--empty');
+          revokeRowBlob();
+          thumbLoadSeq++;
+          var seq = thumbLoadSeq;
+          function bindLoadHandlers() {
+            img.onload = function() {
+              if (seq !== thumbLoadSeq) return;
+              img.style.opacity = '1';
+            };
+            img.onerror = function() {
+              if (seq !== thumbLoadSeq) return;
+              img.style.opacity = '0.35';
+            };
+          }
+          if (previewFile && previewFile instanceof File) {
+            rowBlobUrl = URL.createObjectURL(previewFile);
+            bindLoadHandlers();
+            img.style.opacity = '1';
+            img.src = rowBlobUrl;
+            return;
+          }
+          if (p.indexOf('draft-assets/') === 0) {
+            var fetchUrl = resolveMenuItemImageSrcForPreview(p);
+            bindLoadHandlers();
+            fetch(fetchUrl, { credentials: 'include', headers: cmsAuthHeadersForThumb() })
+              .then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.blob();
+              })
+              .then(function(blob) {
+                if (seq !== thumbLoadSeq) return;
+                rowBlobUrl = URL.createObjectURL(blob);
+                img.src = rowBlobUrl;
+              })
+              .catch(function() {
+                if (seq !== thumbLoadSeq) return;
+                img.src = fetchUrl;
+              });
+            return;
+          }
+          bindLoadHandlers();
+          img.style.opacity = '1';
+          img.src = resolveMenuItemImageSrcForPreview(p);
+        }
+        thumbWrap.appendChild(img);
+        var thumbLoading = document.createElement('span');
+        thumbLoading.className = 'dashboard-menu-item-image-thumb-loading';
+        thumbLoading.setAttribute('aria-hidden', 'true');
+        thumbLoading.innerHTML = '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i><span class="dashboard-menu-item-image-thumb-loading-label">Uploading…</span>';
+        thumbWrap.appendChild(thumbLoading);
+
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'dashboard-edit-input dashboard-menu-item-image-path hidden';
+        inp.setAttribute('tabindex', '-1');
+        inp.setAttribute('aria-hidden', 'true');
+        inp.value = path || '';
+        var inputThumbTimer = null;
+        inp.addEventListener('input', function() {
+          clearTimeout(inputThumbTimer);
+          inputThumbTimer = setTimeout(function() {
+            updateThumbDisplay(inp.value, null);
+          }, 350);
+          syncSlideshowImagesTextareaFromRows();
+        });
+        updateThumbDisplay(path, previewFile);
+
+        var fileInp = document.createElement('input');
+        fileInp.type = 'file';
+        fileInp.className = 'hidden dashboard-menu-item-image-file';
+        fileInp.setAttribute('accept', 'image/jpeg,image/png,image/webp,image/gif');
+        fileInp.setAttribute('tabindex', '-1');
+        fileInp.setAttribute('aria-hidden', 'true');
+        fileInp.addEventListener('change', function() {
+          var f = fileInp.files && fileInp.files[0];
+          fileInp.value = '';
+          if (!f) return;
+          uploadMenuItemDraftImage(f, inp, function(uploadedPath, file) {
+            clearTimeout(inputThumbTimer);
+            updateThumbDisplay(uploadedPath, file);
+          }, { useSlideshowStatus: true, statusLabel: 'Uploading image…' });
+        });
+
+        var replaceBtn = document.createElement('button');
+        replaceBtn.type = 'button';
+        replaceBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-replace';
+        replaceBtn.setAttribute('aria-label', 'Replace with another file');
+        replaceBtn.setAttribute('title', 'Replace with another file');
+        replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
+        replaceBtn.addEventListener('click', function() { fileInp.click(); });
+
+        var pathCol = document.createElement('div');
+        pathCol.className = 'dashboard-menu-item-image-path-col';
+        var pathActions = document.createElement('div');
+        pathActions.className = 'dashboard-menu-item-image-path-actions';
+        pathActions.appendChild(replaceBtn);
+        pathActions.appendChild(fileInp);
+        pathCol.appendChild(inp);
+        pathCol.appendChild(pathActions);
+
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-remove';
+        rm.setAttribute('aria-label', 'Remove image');
+        rm.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+        rm.addEventListener('click', function() {
+          var paths = gatherSlideshowImagePathsFromRows();
+          var rows = slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
+          var i = Array.prototype.indexOf.call(rows, row);
+          if (i >= 0) paths.splice(i, 1);
+          renderSlideshowImagesUI(paths);
+        });
+
+        handle.addEventListener('dragstart', function(e) {
+          var rows = slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
+          var idx = Array.prototype.indexOf.call(rows, row);
+          e.dataTransfer.setData('text/plain', String(idx));
+          e.dataTransfer.effectAllowed = 'move';
+          row.classList.add('dashboard-menu-item-image-row--dragging');
+        });
+        handle.addEventListener('dragend', function() {
+          row.classList.remove('dashboard-menu-item-image-row--dragging');
+          slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-row').forEach(function(r) {
+            r.classList.remove('dashboard-menu-item-image-row--over');
+          });
+        });
+
+        function onDragOver(e) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          row.classList.add('dashboard-menu-item-image-row--over');
+        }
+        function onDragLeave(e) {
+          if (!row.contains(e.relatedTarget)) row.classList.remove('dashboard-menu-item-image-row--over');
+        }
+        function onDrop(e) {
+          e.preventDefault();
+          row.classList.remove('dashboard-menu-item-image-row--over');
+          var from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+          var rows = slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
+          var to = Array.prototype.indexOf.call(rows, row);
+          if (isNaN(from) || to < 0) return;
+          var paths = gatherSlideshowImagePathsFromRows();
+          var reordered = reorderMenuItemImagePaths(paths, from, to);
+          renderSlideshowImagesUI(reordered);
+        }
+        [row, handle, pathCol, inp, thumbWrap].forEach(function(el) {
+          el.addEventListener('dragover', onDragOver);
+          el.addEventListener('dragleave', onDragLeave);
+          el.addEventListener('drop', onDrop);
+        });
+
+        row.appendChild(handle);
+        row.appendChild(thumbWrap);
+        row.appendChild(pathCol);
+        row.appendChild(rm);
+        return row;
+      }
+
       function hoursSlotToTime(slot) {
         var s = Math.max(0, Math.min(47, Math.floor(slot)));
         var h = Math.floor(s / 2);
@@ -1989,7 +2979,8 @@
           var cardEl = info.element;
           if (pricesContainer) renderPricesUI(pricesContainer, parseJsonAttr(cardEl, 'data-prices-array'));
           if (inputMenuItemImages) inputMenuItemImages.value = hoursFormatStringList(parseJsonAttr(cardEl, 'data-images-array'));
-          if (menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, hoursParseStringList(inputMenuItemImages ? inputMenuItemImages.value : ''));
+          renderMenuItemImagesUI(hoursParseStringList(inputMenuItemImages ? inputMenuItemImages.value : ''), true);
+          populateMenuItemAvailabilityFromObject(parseJsonObjectAttr(cardEl, 'data-availability'));
           if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, parseJsonAttr(cardEl, 'data-side-categories'));
           if (modificationsContainer) renderPairsUI(modificationsContainer, parseJsonAttr(cardEl, 'data-modifications'));
           if (additionsContainer) renderPairsUI(additionsContainer, parseJsonAttr(cardEl, 'data-additions'));
@@ -2049,28 +3040,19 @@
           if (inputPromoWeight) inputPromoWeight.value = el.getAttribute('data-ad-weight') || '';
         } else if (contentType === 'home-hero') {
           /* inputHomeHeroImage and cache are set before showEditForm from GET /content/file */
+          if (inputHomeHeroImage) {
+            updateHeroImageThumbDisplay(inputHomeHeroImage.value.trim(), null);
+            syncHeroPathInputVisibility();
+          }
         } else if (contentType === 'slideshow') {
           var slides = info.element.querySelectorAll('.client-tour-slideshow .slide img');
           var paths = [];
           slides.forEach(function(img) { var s = (img.getAttribute('src') || '').replace(/^\//, ''); if (s) paths.push(s); });
-          if (inputSlideshowImages) inputSlideshowImages.value = paths.join('\n');
-          if (slideshowViewEl) {
-            slideshowViewEl.innerHTML = '';
-            paths.forEach(function(path, i) {
-              var slide = document.createElement('div');
-              slide.className = 'dashboard-edit-slide-item';
-              var img = document.createElement('img');
-              img.src = path.indexOf('/') === 0 ? path : '/' + path;
-              img.alt = 'Slide ' + (i + 1);
-              img.loading = 'lazy';
-              img.onerror = function() { this.style.display = 'none'; };
-              var cap = document.createElement('span');
-              cap.className = 'dashboard-edit-slide-cap';
-              cap.textContent = (i + 1) + '. ' + path;
-              slide.appendChild(img);
-              slide.appendChild(cap);
-              slideshowViewEl.appendChild(slide);
-            });
+          if (slideshowImagesContainer) {
+            renderSlideshowImagesUI(paths, true);
+          } else {
+            if (inputSlideshowImages) inputSlideshowImages.value = paths.join('\n');
+            if (slideshowViewEl) renderSlideshowAsidePreview(slideshowViewEl, paths);
           }
         }
         updateMarkForDeletionButton();
@@ -2160,6 +3142,7 @@
                 if (fm.types !== undefined) payload.types = Array.isArray(fm.types) ? fm.types : [];
                 if (fm.events !== undefined) payload.events = Array.isArray(fm.events) ? fm.events : [];
                 if (fm.promotions !== undefined) payload.promotions = fm.promotions;
+                if (fm.availability !== undefined) payload.availability = fm.availability;
                 try {
                   win.__dashboardApplyEdit(JSON.stringify(payload));
                   applied++;
@@ -2240,7 +3223,12 @@
         if (el.classList && el.classList.contains('menu-item-card')) {
           var itemUrl = el.getAttribute('data-item-url') || '';
           if (!itemUrl) return null;
-          return 'content' + itemUrl.replace(/\/$/, '') + '.md';
+          var trimmed = itemUrl.replace(/\/$/, '');
+          if (trimmed.indexOf('/__dashboard-new/') === 0) {
+            var seg = trimmed.replace(/^\/__dashboard-new\//, '').replace(/\/$/, '');
+            if (seg) return 'content/__dashboard-new/' + seg + '.md';
+          }
+          return 'content' + trimmed + '.md';
         }
         if (el.classList && el.classList.contains('menu-header')) {
           var sectionSlug = el.getAttribute('data-section-slug') || '';
@@ -2270,7 +3258,7 @@
           var path = getContentPathForElement(doc, el);
           if (draftContentPaths.has(path)) el.classList.add('dashboard-edit-has-change');
           if (el.hasAttribute('data-dashboard-edit-new-item') || el.hasAttribute('data-dashboard-edit-new-section') || el.hasAttribute('data-dashboard-edit-new-promotion')) el.classList.add('dashboard-edit-new');
-          if (path && markedForDeletionContentPaths.has(path)) el.classList.add('dashboard-edit-marked-delete');
+          if (path && markedForDeletionContentPaths.has(path) && !el.hasAttribute('data-dashboard-edit-new-item')) el.classList.add('dashboard-edit-marked-delete');
         });
       }
 
@@ -2354,8 +3342,7 @@
                     var imgEl = card.querySelector('img.menu-item-img');
                     if (imgEl && opts.imagesArray.length) {
                       var first = opts.imagesArray[0];
-                      var src = first.indexOf('/') === 0 ? first : '/' + first;
-                      imgEl.setAttribute('src', src);
+                      imgEl.setAttribute('src', resolveMenuItemImageSrcForPreview(first));
                     }
                   }
                   if (opts.modificationsFlat !== undefined) {
@@ -2382,6 +3369,13 @@
                   if (opts.promotions !== undefined) {
                     card.setAttribute('data-promotions', JSON.stringify(opts.promotions));
                   }
+                  if (Object.prototype.hasOwnProperty.call(opts, 'availability')) {
+                    if (opts.availability && typeof opts.availability === 'object') {
+                      card.setAttribute('data-availability', JSON.stringify(opts.availability));
+                    } else {
+                      card.removeAttribute('data-availability');
+                    }
+                  }
                   var applyUrl = card.getAttribute('data-item-url') || '';
                   if (applyUrl && card.getAttribute('data-item-expanded') === 'true' && typeof win.expandMenuItemCard === 'function') {
                     try { win.expandMenuItemCard(card, applyUrl); } catch (ex) { /* ignore */ }
@@ -2394,6 +3388,7 @@
                 style.id = 'dashboard-edit-injected-style';
                 style.textContent = [
                   '.dashboard-edit-selected { outline: 2px solid #667eea !important; outline-offset: 2px !important; }',
+                  '.menu-item-card .dashboard-new-item-placeholder-link { cursor: default; color: inherit; text-decoration: none; }',
                   '.menu-item-card.dashboard-edit-card-wrap { position: relative !important; pointer-events: none; }',
                   '.menu-item-card.dashboard-edit-card-wrap > * { pointer-events: auto; }',
                   '.menu-item-card .dashboard-edit-card-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
@@ -2669,11 +3664,21 @@
                   });
                 } catch (err) { console.warn('injectEditButtons', err); }
               }
-              function createNewMenuItemCard(doc) {
+              function createNewMenuItemCard(doc, opts) {
+                opts = opts || {};
+                var nid = opts.nid || ('n' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
+                var itemPath = '/__dashboard-new/' + nid + '/';
+                var titleText = opts.title != null ? String(opts.title) : 'New item';
+                titleText = titleText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                var summaryRaw = opts.summary != null ? String(opts.summary) : '';
+                var summaryInner = summaryRaw
+                  ? '<p>' + summaryRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').split(/\n+/).filter(Boolean).join('</p><p>') + '</p>'
+                  : '<p></p>';
                 var card = doc.createElement('div');
                 card.className = 'menu-item-card';
                 card.setAttribute('data-dashboard-edit-new-item', '1');
-                card.setAttribute('data-item-url', '/new-item/');
+                card.setAttribute('data-dashboard-new-item-id', nid);
+                card.setAttribute('data-item-url', itemPath);
                 card.setAttribute('data-item-expanded', 'false');
                 card.setAttribute('data-prices-array', '["-","-",0]');
                 card.setAttribute('data-selected-variable1', '-');
@@ -2689,11 +3694,12 @@
                 card.setAttribute('data-types', '[]');
                 card.setAttribute('data-events', '[]');
                 card.setAttribute('data-promotions', '[]');
+                card.setAttribute('onclick', 'toggleItemExpansion(this, ' + JSON.stringify(itemPath) + ', event);');
                 card.innerHTML = '<div class="menu-item-row-top">' +
                   '<div class="menu-item-header-content">' +
-                  '<h3 class="menu-item-title"><a href="/new-item/">New item</a></h3>' +
+                  '<h3 class="menu-item-title"><a href="#" class="dashboard-new-item-placeholder-link" onclick="return false;" aria-disabled="true">' + titleText + '</a></h3>' +
                   '<div class="menu-item-row-middle">' +
-                  '<div class="menu-item-description"><p></p></div>' +
+                  '<div class="menu-item-description">' + summaryInner + '</div>' +
                   '<div class="menu-item-price">$0</div>' +
                   '</div>' +
                   '<div class="menu-item-options"><ul class="sizes"></ul><ul class="flavours"></ul></div>' +
@@ -2703,6 +3709,7 @@
                   '<div class="menu-item-expanded-data" style="display: none;"></div></div>';
                 return card;
               }
+              win._dashboardCreateNewMenuItemCard = createNewMenuItemCard;
               function createNewSectionElement(doc, title, slug) {
                 title = title || 'New Section';
                 slug = slug || 'new-section';
@@ -2776,7 +3783,7 @@
                   doc.querySelectorAll('.menu-item-card, .menu-header, section.ads.menu-ad').forEach(function(el) {
                     el.classList.remove('dashboard-edit-has-change', 'dashboard-edit-new', 'dashboard-edit-marked-delete');
                     var path = getContentPathForElement(doc, el);
-                    if (path && markedForDeletionContentPaths.has(path)) el.classList.add('dashboard-edit-hidden-for-preview');
+                    if (path && markedForDeletionContentPaths.has(path) && !el.hasAttribute('data-dashboard-edit-new-item')) el.classList.add('dashboard-edit-hidden-for-preview');
                   });
                 } catch (e) {}
               }
@@ -2785,9 +3792,7 @@
                 btnTogglePanel.setAttribute('aria-expanded', 'true');
                 btnTogglePanel.setAttribute('aria-label', 'Collapse edit panel');
                 var icon = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-icon');
-                var text = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-text');
                 if (icon) icon.textContent = '\u25C0';
-                if (text) text.textContent = 'Collapse';
               }
               win._dashboardInjectEditButtons = injectEditButtons;
               win._dashboardRemoveEditButtons = removeEditButtons;
@@ -3001,22 +4006,47 @@
       });
       function updateMarkForDeletionButton() {
         if (!btnMarkForDeletion) return;
+        var isNewUnpublishedItem = selectedElement && selectedElement.classList && selectedElement.classList.contains('menu-item-card') && selectedElement.hasAttribute('data-dashboard-edit-new-item');
+        if (isNewUnpublishedItem && selectedInfo && selectedInfo.contentType === 'menu-item') {
+          btnMarkForDeletion.disabled = false;
+          btnMarkForDeletion.classList.remove('btn-dash-secondary');
+          btnMarkForDeletion.classList.add('btn-dash-danger');
+          btnMarkForDeletion.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
+          btnMarkForDeletion.setAttribute('aria-label', 'Remove new item');
+          btnMarkForDeletion.title = 'Remove this unsaved item from the preview (not published yet)';
+          return;
+        }
         var canMark = selectedInfo && selectedInfo.contentPath && ['menu-item', 'section-header', 'promotion'].indexOf(selectedInfo.contentType || '') >= 0;
         btnMarkForDeletion.disabled = !canMark;
         btnMarkForDeletion.classList.remove('btn-dash-secondary', 'btn-dash-danger');
         if (canMark && selectedInfo.contentPath && markedForDeletionContentPaths.has(selectedInfo.contentPath)) {
           btnMarkForDeletion.classList.add('btn-dash-secondary');
-          btnMarkForDeletion.innerHTML = '<i class="fa fa-undo" aria-hidden="true"></i> Unmark deletion';
+          btnMarkForDeletion.innerHTML = '<i class="fa fa-undo" aria-hidden="true"></i>';
+          btnMarkForDeletion.setAttribute('aria-label', 'Unmark deletion');
           btnMarkForDeletion.title = 'Unmark this item from deletion';
         } else {
           btnMarkForDeletion.classList.add('btn-dash-danger');
-          btnMarkForDeletion.innerHTML = '<i class="fa fa-ban" aria-hidden="true"></i> Mark for deletion';
+          btnMarkForDeletion.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
+          btnMarkForDeletion.setAttribute('aria-label', 'Mark for deletion');
           btnMarkForDeletion.title = 'Mark for deletion (hidden in preview)';
         }
       }
       if (btnMarkForDeletion) {
         btnMarkForDeletion.addEventListener('click', function() {
           if (!selectedInfo || !selectedInfo.contentPath) return;
+          if (selectedElement && selectedElement.hasAttribute('data-dashboard-edit-new-item') && selectedInfo.contentType === 'menu-item') {
+            if (!confirm('Remove this new item? It is not saved or published yet.')) return;
+            var path = selectedInfo.contentPath;
+            if (path) {
+              markedForDeletionContentPaths.delete(path);
+              draftContentPaths.delete(path);
+            }
+            var elToRemove = selectedElement;
+            clearSelection();
+            if (elToRemove && elToRemove.parentNode) elToRemove.parentNode.removeChild(elToRemove);
+            applyEditHighlights();
+            return;
+          }
           var path = selectedInfo.contentPath;
           if (markedForDeletionContentPaths.has(path)) {
             markedForDeletionContentPaths.delete(path);
@@ -3040,6 +4070,76 @@
           pricesContainer.appendChild(createPriceRow('', '-', 0));
         });
       }
+      if (btnAddMenuItemImage && btnAddMenuItemImageFile && menuItemImagesContainer) {
+        btnAddMenuItemImage.addEventListener('click', function() {
+          btnAddMenuItemImageFile.click();
+        });
+        btnAddMenuItemImageFile.addEventListener('change', function() {
+          var f = btnAddMenuItemImageFile.files && btnAddMenuItemImageFile.files[0];
+          btnAddMenuItemImageFile.value = '';
+          if (!f) return;
+          var paths = gatherMenuItemImagePathsFromRows();
+          if (menuItemImagesContainer.querySelector('.dashboard-menu-item-images-empty')) paths = [];
+          uploadMenuItemDraftImage(f, null, function(path, file) {
+            paths.push(path);
+            renderMenuItemImagesUI(paths, true, { lastPreviewFile: file });
+          }, { statusLabel: 'Uploading new image…' });
+        });
+      }
+      if (btnAddSlideshowImage && btnAddSlideshowImageFile && slideshowImagesContainer) {
+        btnAddSlideshowImage.addEventListener('click', function() {
+          btnAddSlideshowImageFile.click();
+        });
+        btnAddSlideshowImageFile.addEventListener('change', function() {
+          var f = btnAddSlideshowImageFile.files && btnAddSlideshowImageFile.files[0];
+          btnAddSlideshowImageFile.value = '';
+          if (!f) return;
+          var paths = gatherSlideshowImagePathsFromRows();
+          if (slideshowImagesContainer.querySelector('.dashboard-menu-item-images-empty')) paths = [];
+          uploadMenuItemDraftImage(f, null, function(path, file) {
+            paths.push(path);
+            renderSlideshowImagesUI(paths, true, { lastPreviewFile: file });
+          }, { statusLabel: 'Uploading new image…', useSlideshowStatus: true });
+        });
+      }
+      (function setupHeroImageUI() {
+        var heroPathInputTimer = null;
+        if (btnHeroImageReplace && btnHeroImageFile) {
+          btnHeroImageReplace.addEventListener('click', function() { btnHeroImageFile.click(); });
+        }
+        if (btnHeroImageFile && inputHomeHeroImage) {
+          btnHeroImageFile.addEventListener('change', function() {
+            var f = btnHeroImageFile.files && btnHeroImageFile.files[0];
+            btnHeroImageFile.value = '';
+            if (!f) return;
+            uploadMenuItemDraftImage(f, inputHomeHeroImage, function(path, file) {
+              updateHeroImageThumbDisplay(path, file);
+            }, {
+              rowEl: dashboardHeroImageRow,
+              useHeroStatus: true,
+              statusLabel: 'Uploading hero image…'
+            });
+          });
+        }
+        if (btnHeroImageRemove && inputHomeHeroImage) {
+          btnHeroImageRemove.addEventListener('click', function() {
+            inputHomeHeroImage.value = '';
+            updateHeroImageThumbDisplay('', null);
+            syncHeroPathInputVisibility();
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        }
+        if (inputHomeHeroImage) {
+          inputHomeHeroImage.addEventListener('input', function() {
+            clearTimeout(heroPathInputTimer);
+            heroPathInputTimer = setTimeout(function() {
+              updateHeroImageThumbDisplay(inputHomeHeroImage.value.trim(), null);
+              syncHeroPathInputVisibility();
+            }, 350);
+          });
+        }
+      })();
       if (btnAddModification && modificationsContainer) {
         btnAddModification.addEventListener('click', function() {
           modificationsContainer.appendChild(createPairRow('', 0));
@@ -3352,8 +4452,12 @@
             var slides = selectedElement.querySelectorAll('.client-tour-slideshow .slide img');
             var lines = inputSlideshowImages.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
             slides.forEach(function(img, i) {
-              if (lines[i]) img.setAttribute('src', lines[i].indexOf('/') === 0 ? lines[i] : '/' + lines[i]);
+              if (lines[i]) {
+                var u = lines[i].indexOf('draft-assets/') === 0 ? resolveMenuItemImageSrcForPreview(lines[i]) : (lines[i].indexOf('/') === 0 ? lines[i] : '/' + lines[i]);
+                img.setAttribute('src', u);
+              }
             });
+            if (slideshowViewEl) renderSlideshowAsidePreview(slideshowViewEl, lines);
             return;
           }
           if (contentType === 'section-header' || contentType === 'menu-item') {
@@ -3374,6 +4478,7 @@
               if (pricesArr.length) iframePayload.pricesArray = pricesArr;
               var menuItemPromosPreview = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
               iframePayload.promotions = menuItemPromosPreview;
+              iframePayload.availability = getMenuItemAvailabilityFromState();
               if (win && win.__dashboardApplyEdit && itemUrl) {
                 try {
                   win.__dashboardApplyEdit(JSON.stringify(iframePayload));
@@ -3473,10 +4578,14 @@
               var menuItemPromosAttr = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
               selectedElement.setAttribute('data-promotions', JSON.stringify(menuItemPromosAttr));
 
-              if (imagesArr.length && menuItemImagesViewEl) hoursRenderImagesPreview(menuItemImagesViewEl, imagesArr);
+              var availAttr = getMenuItemAvailabilityFromState();
+              if (availAttr) selectedElement.setAttribute('data-availability', JSON.stringify(availAttr));
+              else selectedElement.removeAttribute('data-availability');
+
+              renderMenuItemImagesUI(imagesArr, true);
               var imgEl = selectedElement.querySelector('img.menu-item-img');
               if (imgEl) {
-                if (imagesArr.length) imgEl.setAttribute('src', imagesArr[0].indexOf('/') === 0 ? imagesArr[0] : '/' + imagesArr[0]);
+                if (imagesArr.length) imgEl.setAttribute('src', resolveMenuItemImageSrcForPreview(imagesArr[0]));
               }
 
               var priceEl = selectedElement.querySelector('.menu-item-price');
@@ -3649,9 +4758,16 @@
       iframe.addEventListener('load', function() {
         if (editMode) setupIframeEditMode(true);
         if (loadDraftsOnLoad) {
-          var win = iframe.contentWindow;
-          if (win && win.__dashboardApplyEdit) loadAndApplyDrafts();
-          else setTimeout(function() { if (iframe.contentWindow && iframe.contentWindow.__dashboardApplyEdit) loadAndApplyDrafts(); }, 100);
+          setTimeout(function() {
+            hydrateDashboardNewItemsFromMenuSnapshot();
+            var win = iframe.contentWindow;
+            if (win && win._dashboardInjectEditButtons) win._dashboardInjectEditButtons();
+            setTimeout(function() {
+              var w = iframe.contentWindow;
+              if (w && w.__dashboardApplyEdit) loadAndApplyDrafts();
+              else if (iframe.contentWindow && iframe.contentWindow.__dashboardApplyEdit) loadAndApplyDrafts();
+            }, 50);
+          }, 150);
         }
       });
 
@@ -3665,9 +4781,7 @@
           btnTogglePanel.setAttribute('aria-expanded', !isCollapsed);
           btnTogglePanel.setAttribute('aria-label', isCollapsed ? 'Expand edit panel' : 'Collapse edit panel');
           var icon = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-icon');
-          var text = btnTogglePanel.querySelector('.dashboard-edit-options-toggle-text');
           if (icon) icon.textContent = isCollapsed ? '▶' : '◀';
-          if (text) text.textContent = isCollapsed ? 'Expand' : 'Collapse';
         });
       }
       if (colorAsideEl && btnToggleColorPanel) {

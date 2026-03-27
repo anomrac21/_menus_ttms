@@ -588,6 +588,31 @@
     }
 
     /**
+     * Normalize one entry from images[] (string path or { image: "path" }).
+     */
+    function normalizeMenuItemImagePath(entry) {
+        if (entry == null) return '';
+        if (typeof entry === 'object' && entry.image != null) return String(entry.image).trim();
+        return String(entry).trim();
+    }
+
+    /**
+     * In dashboard edit preview, draft-assets/* must load from CMS preview API; plain /draft-assets/* may 404 locally.
+     */
+    function resolveExpandedImageSrcForPreview(path) {
+        const p = (path || '').trim().replace(/^\/+/, '');
+        if (!p) return '';
+        if (typeof window !== 'undefined' && window.__dashboardEditMode && p.indexOf('draft-assets/') === 0) {
+            const base = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+            const cid = window.CMS_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+            const name = p.replace(/^draft-assets\//, '');
+            return base + '/api/clients/' + encodeURIComponent(cid) + '/preview/draft-assets/' + encodeURIComponent(name);
+        }
+        if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) return p;
+        return '/' + p;
+    }
+
+    /**
      * Track menu item card click
      * @param {HTMLElement} element - The menu item card element
      * @param {string} url - Item URL
@@ -733,6 +758,9 @@
         const dataDiv = expandedContent.querySelector('.menu-item-expanded-data');
         
         if (!expandedContent || !loadingDiv || !dataDiv) return;
+
+        const isDashboardNewPlaceholderUrl = typeof window !== 'undefined' && window.__dashboardEditMode &&
+            typeof url === 'string' && url.indexOf('/__dashboard-new/') === 0;
 
         // Show loading state
         expandedContent.style.display = 'block';
@@ -1212,11 +1240,14 @@
                     imageCarouselHTML = `
                         <div class="expanded-image-carousel" data-current-image="0">
                             <div class="expanded-image-carousel-container">
-                                ${imagesArray.map((img, index) => `
+                                ${imagesArray.map((img, index) => {
+                                    const pathStr = normalizeMenuItemImagePath(img);
+                                    const src = resolveExpandedImageSrcForPreview(pathStr);
+                                    return `
                                     <div class="expanded-image-slide ${index === 0 ? 'active' : ''}" data-image-index="${index}">
-                                        <img src="/${img}" alt="${itemName} - Image ${index + 1}" loading="lazy" class="expanded-image-carousel-img">
-                                    </div>
-                                `).join('')}
+                                        <img src="${src}" alt="${itemName} - Image ${index + 1}" loading="lazy" class="expanded-image-carousel-img">
+                                    </div>`;
+                                }).join('')}
                             </div>
                             ${showNavButtons ? `
                             <div class="expanded-image-nav-buttons">
@@ -1240,12 +1271,15 @@
                 }
                 
                 // Create expanded content HTML
+                const descLinkHref = isDashboardNewPlaceholderUrl ? '#' : url;
+                const descLinkClass = isDashboardNewPlaceholderUrl ? ' class="dashboard-new-item-placeholder-link"' : '';
+                const descLinkOnclick = isDashboardNewPlaceholderUrl ? ' onclick="return false;"' : '';
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
                         ${imageCarouselHTML}
                         ${itemDesc ? `
                         <div class="expanded-item-description">
-                            <a href="${url}" style="color: inherit; text-decoration: none;">
+                            <a href="${descLinkHref}"${descLinkClass}${descLinkOnclick} style="color: inherit; text-decoration: none;">
                                 ${fullDescElement ? itemDesc : `<p>${itemDesc}</p>`}
                             </a>
                         </div>
@@ -1292,13 +1326,14 @@
                 `;
             } else {
                 // Fallback: simple expansion
+                const fallbackNav = isDashboardNewPlaceholderUrl ? 'return false;' : ('window.location.href=' + JSON.stringify(url) + ';');
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
                         <div class="expanded-item-description">
                             <p>Click to view full details</p>
                         </div>
                         <div class="expanded-item-controls">
-                            <button class="expanded-add-cart" onclick="window.location.href='${url}'">
+                            <button type="button" class="expanded-add-cart" onclick="${fallbackNav}">
                                 <i class="fa fa-cart-plus"></i>
                                 <span>View Details</span>
                             </button>
@@ -3030,6 +3065,9 @@
         window.scrollLocations = scrollLocations;
     }, 100);
 
+    /** Rebuild expanded menu panel from card data-* (used by dashboard edit after Apply). */
+    window.expandMenuItemCard = expandItem;
+
 })();
 
 // ========================================
@@ -3374,7 +3412,5 @@
 
     // Expose function globally
     window.updateLocationStatuses = updateLocationStatuses;
-    /** Rebuild expanded menu panel from card data-* (used by dashboard edit after Apply). */
-    window.expandMenuItemCard = expandItem;
 
 })();

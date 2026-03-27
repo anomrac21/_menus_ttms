@@ -420,7 +420,6 @@
   border-color: rgba(220, 38, 38, 0.8);
 }
 .btn-dash-danger .fa {
-  margin-right: 0.35rem;
 }
 
 /* ========== Edit menu page (/edit-menu/) ========== */
@@ -560,15 +559,51 @@
 
 .dashboard-edit-options-header {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-edit-options-header .dashboard-edit-selected-type {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-edit-options-header .dashboard-edit-selected-type:empty {
+  display: none;
+}
+
+.dashboard-edit-options-header .dashboard-edit-header-mark-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.dashboard-edit-options-header .dashboard-edit-header-mark-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .dashboard-edit-options-toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  width: 100%;
+  flex-shrink: 0;
+  width: auto;
+  max-width: 100%;
+  margin-left: 0;
   justify-content: center;
   padding: 0.5rem 0.75rem;
   background: linear-gradient(180deg, #16213e 0%, #1a1a2e 100%);
@@ -604,6 +639,10 @@
 
 .dashboard-edit-options-collapsed .dashboard-edit-options-header {
   padding: 0.5rem;
+}
+
+.dashboard-edit-options-collapsed .dashboard-edit-header-mark-btn {
+  display: none;
 }
 
 .dashboard-edit-options-inner {
@@ -642,7 +681,6 @@
 }
 .dashboard-edit-selected-type {
   display: inline-block;
-  margin: 0 0 0.35rem;
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -654,7 +692,7 @@
 }
 .dashboard-edit-content-source {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.7rem;
+  font-size: xx-small;
   padding: 0.25rem 0.5rem;
   margin: 0 0 1rem;
   color: rgba(255, 255, 255, 0.7);
@@ -758,16 +796,36 @@
   overflow-y: auto;
 }
 
-.dashboard-edit-color-prompt {
-  margin-bottom: 1rem;
+.dashboard-edit-color-aside-header {
   display: flex;
-  width: -webkit-fill-available;
-  gap: .5em;
   align-items: center;
-  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.dashboard-edit-color-prompt .dashboard-edit-color-aside-toggle {
+.dashboard-edit-color-aside-header .dashboard-edit-color-section-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-edit-color-aside-header .dashboard-edit-color-section-label:empty {
+  display: none;
+}
+
+.dashboard-edit-color-aside-header .dashboard-edit-color-aside-toggle {
+  margin-left: auto;
+}
+
+.dashboard-edit-color-prompt {
+  margin-bottom: 1rem;
+  width: -webkit-fill-available;
 }
 
 .dashboard-edit-color-intro {
@@ -802,7 +860,6 @@
 }
 
 .dashboard-edit-color-section-label {
-  margin: 0 0 0.75rem;
   font-size: 0.95rem;
   font-weight: 600;
   color: #93c5fd;
@@ -979,6 +1036,17 @@
 }
 .dashboard-menu-item-wizard-note {
   margin-bottom: 0.65rem;
+}
+#dashboardWizardPanel4 .dashboard-edit-field.dashboard-menu-item-availability-times {
+  display: inline-block;
+  width: calc(50% - 0.35rem);
+  vertical-align: top;
+  box-sizing: border-box;
+}
+@media (max-width: 480px) {
+  #dashboardWizardPanel4 .dashboard-edit-field.dashboard-menu-item-availability-times {
+    width: 100%;
+  }
 }
 .dashboard-menu-item-wizard-panels {
   margin-bottom: 0.75rem;
@@ -1219,6 +1287,201 @@
 @media (max-width: 520px) {
   .dashboard-menu-item-promo-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-menu-item-images-hint {
+  margin: 0 0 0.5rem !important;
+  font-size: 0.72rem !important;
+  text-align: left !important;
+}
+
+.dashboard-menu-item-images-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-menu-item-images-upload-status {
+  display: none;
+  margin: 0 0 0.45rem;
+  min-height: 1.15em;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: rgba(147, 197, 253, 0.95);
+}
+
+.dashboard-menu-item-images-upload-status--active {
+  display: block;
+}
+
+.dashboard-menu-item-images-upload-status--error {
+  color: rgba(252, 165, 165, 0.95);
+}
+
+.dashboard-menu-item-images-empty {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-menu-item-image-row {
+  display: grid;
+  grid-template-columns: auto 4.25rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Home hero: single image row (no drag handle column) */
+.dashboard-hero-image-row.dashboard-menu-item-image-row {
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.dashboard-hero-image-row .dashboard-menu-item-image-path-actions {
+  flex-wrap: wrap;
+}
+
+.dashboard-edit-input.dashboard-hero-image-path-input.hidden {
+  display: none !important;
+}
+
+.dashboard-menu-item-image-row--over {
+  border-color: rgba(102, 126, 234, 0.65);
+  box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.3);
+}
+
+.dashboard-menu-item-image-row--dragging {
+  opacity: 0.8;
+}
+
+.dashboard-menu-item-image-drag {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 0.35rem 0.2rem;
+  color: rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  line-height: 1;
+  align-self: center;
+}
+
+.dashboard-menu-item-image-drag:active {
+  cursor: grabbing;
+}
+
+.dashboard-menu-item-image-thumb-wrap {
+  position: relative;
+  width: 4.25rem;
+  height: 3.5rem;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.dashboard-menu-item-image-thumb-loading {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.dashboard-menu-item-image-thumb-loading .fa-spinner {
+  font-size: 0.95rem;
+  opacity: 0.95;
+}
+
+.dashboard-menu-item-image-thumb-loading-label {
+  display: block;
+}
+
+.dashboard-menu-item-image-row--uploading .dashboard-menu-item-image-thumb-loading {
+  display: flex;
+}
+
+.dashboard-menu-item-image-thumb-wrap--empty {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.04) 6px,
+    rgba(255, 255, 255, 0.09) 6px,
+    rgba(255, 255, 255, 0.09) 12px
+  );
+}
+
+.dashboard-menu-item-image-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dashboard-menu-item-image-path-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dashboard-menu-item-image-path-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dashboard-menu-item-image-replace {
+  font-size: 0.75rem !important;
+  padding: 0.28rem 0.45rem !important;
+  align-self: flex-start;
+  min-width: auto;
+}
+
+.dashboard-menu-item-image-path.dashboard-edit-input {
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.dashboard-menu-item-image-remove {
+  padding: 0.35rem 0.5rem;
+  min-width: 2rem;
+}
+
+@media (max-width: 520px) {
+  .dashboard-menu-item-image-row {
+    grid-template-columns: auto 3.5rem minmax(0, 1fr) auto;
+  }
+  .dashboard-hero-image-row.dashboard-menu-item-image-row {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+  }
+  .dashboard-menu-item-image-thumb-wrap {
+    width: 3.5rem;
+    height: 3rem;
   }
 }
 
