@@ -2,161 +2,410 @@
 <div class="dashboard-analytics-page" id="dashboardMenuSettingsPage">
   <div class="dashboard-edit-header">
     <div class="dashboard-edit-header-inner">
-      <a href="/dashboard/" class="btn-dash btn-dash-secondary">← Dashboard</a>
+      <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
       <h1 class="dashboard-edit-title">Menu settings</h1>
     </div>
   </div>
 
   <main class="dashboard-analytics-main">
-    <p class="dashboard-analytics-subtitle" style="margin-bottom: 1.5rem;">Current configuration from <code>hugo.toml</code>. Edit the config file to change these values.</p>
-
-    {{ with .Site.Params.orderingsystem }}
-    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-orderingsystem-heading">
+    {{- $os := .Site.Params.orderingsystem | default dict -}}
+    <section class="dashboard-settings-section dashboard-settings-panel" aria-labelledby="settings-orderingsystem-heading">
       <h2 id="settings-orderingsystem-heading" class="dashboard-analytics-heading">Ordering system</h2>
       <p class="dashboard-analytics-subtitle">Cart, checkout, and ordering behaviour.</p>
-      <div class="dashboard-settings-grid">
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Enabled</span>
-          <span class="dashboard-settings-value">{{ if .enabled }}Yes{{ else }}No{{ end }}</span>
+      <form id="orderingSystemForm" class="dashboard-settings-form" autocomplete="off">
+        <div class="dashboard-settings-grid">
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-enabled">Enabled</label>
+            <div class="dashboard-settings-value">
+              <select id="os-enabled" name="enabled" class="dashboard-settings-input" data-os-key="enabled">
+                <option value="true" {{ if default true $os.enabled }}selected{{ end }}>Yes</option>
+                <option value="false" {{ if not (default true $os.enabled) }}selected{{ end }}>No</option>
+              </select>
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-disabled-msg">Disabled message</label>
+            <div class="dashboard-settings-value">
+              <textarea id="os-disabled-msg" name="orderingDisabledMessage" class="dashboard-settings-input dashboard-settings-textarea" rows="2" data-os-key="orderingDisabledMessage">{{ default "Ordering is not available for this menu at this time." $os.orderingDisabledMessage }}</textarea>
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-vat">VAT %</label>
+            <div class="dashboard-settings-value">
+              <input type="number" id="os-vat" name="vat" class="dashboard-settings-input" min="0" step="0.01" data-os-key="vat" value="{{ default 0 $os.vat }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-service">Service charge</label>
+            <div class="dashboard-settings-value">
+              <input type="number" id="os-service" name="servicecharge" class="dashboard-settings-input" min="0" step="0.01" data-os-key="servicecharge" value="{{ default 0 $os.servicecharge }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-tables">Has tables</label>
+            <div class="dashboard-settings-value">
+              <select id="os-tables" name="hastables" class="dashboard-settings-input" data-os-key="hastables">
+                <option value="true" {{ if default true $os.hastables }}selected{{ end }}>Yes</option>
+                <option value="false" {{ if not (default true $os.hastables) }}selected{{ end }}>No</option>
+              </select>
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-phonecall">Use phone call</label>
+            <div class="dashboard-settings-value">
+              <select id="os-phonecall" name="usephonecall" class="dashboard-settings-input" data-os-key="usephonecall">
+                <option value="false" {{ if not (default false $os.usephonecall) }}selected{{ end }}>No</option>
+                <option value="true" {{ if default false $os.usephonecall }}selected{{ end }}>Yes</option>
+              </select>
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-whatsapp">WhatsApp</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="os-whatsapp" name="whatsapp" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" data-os-key="whatsapp" value="{{ default "" $os.whatsapp }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="os-phone">Phone</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="os-phone" name="phone" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" data-os-key="phone" value="{{ default "" $os.phone }}">
+            </div>
+          </div>
         </div>
-        {{ with .orderingDisabledMessage }}
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Disabled message</span>
-          <span class="dashboard-settings-value">{{ . }}</span>
+        <div class="dashboard-settings-form-actions">
+          <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveOrderingSystem">Save ordering settings</button>
+          <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
         </div>
-        {{ end }}
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">VAT %</span>
-          <span class="dashboard-settings-value">{{ default 0 .vat }}</span>
-        </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Service charge</span>
-          <span class="dashboard-settings-value">{{ default 0 .servicecharge }}</span>
-        </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Has tables</span>
-          <span class="dashboard-settings-value">{{ if .hastables }}Yes{{ else }}No{{ end }}</span>
-        </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Use phone call</span>
-          <span class="dashboard-settings-value">{{ if .usephonecall }}Yes{{ else }}No{{ end }}</span>
-        </div>
-        {{ with .whatsapp }}
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">WhatsApp</span>
-          <span class="dashboard-settings-value">{{ . }}</span>
-        </div>
-        {{ end }}
-        {{ with .phone }}
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Phone</span>
-          <span class="dashboard-settings-value">{{ . }}</span>
-        </div>
-        {{ end }}
-      </div>
+      </form>
     </section>
-    {{ end }}
-
-    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-site-heading">
-      <h2 id="settings-site-heading" class="dashboard-analytics-heading">Site</h2>
-      <div class="dashboard-settings-grid">
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Title</span>
-          <span class="dashboard-settings-value">{{ .Site.Title }}</span>
-        </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Base URL</span>
-          <span class="dashboard-settings-value">{{ .Site.BaseURL }}</span>
-        </div>
-      </div>
-    </section>
-
-    {{ with .Site.Params.features }}
-    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-features-heading">
-      <h2 id="settings-features-heading" class="dashboard-analytics-heading">Features</h2>
-      <div class="dashboard-settings-grid">
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Payments</span>
-          <span class="dashboard-settings-value">{{ if .payments }}On{{ else }}Off{{ end }}</span>
-        </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Delivery</span>
-          <span class="dashboard-settings-value">{{ if .delivery }}On{{ else }}Off{{ end }}</span>
-        </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Notifications</span>
-          <span class="dashboard-settings-value">{{ if .notifications }}On{{ else }}Off{{ end }}</span>
-        </div>
-      </div>
-    </section>
-    {{ end }}
 
     {{ with .Site.Params.services }}
-    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-services-heading">
+    <section class="dashboard-settings-section dashboard-settings-panel" aria-labelledby="settings-services-heading">
       <h2 id="settings-services-heading" class="dashboard-analytics-heading">Services</h2>
+      <p class="dashboard-analytics-subtitle dashboard-settings-readonly-hint">Read-only — from <code>[params.services]</code> in <code>hugo.toml</code>.</p>
       <div class="dashboard-settings-grid">
         {{ with .analyticsid }}
         <div class="dashboard-settings-row">
           <span class="dashboard-settings-label">Analytics ID</span>
-          <span class="dashboard-settings-value">{{ . }}</span>
+          <div class="dashboard-settings-value"><span class="dashboard-settings-mono">{{ . }}</span></div>
         </div>
         {{ end }}
         <div class="dashboard-settings-row">
           <span class="dashboard-settings-label">Notifications</span>
-          <span class="dashboard-settings-value">{{ if .notifications }}On{{ else }}Off{{ end }}</span>
+          <div class="dashboard-settings-value">
+            {{ if .notifications }}<span class="dashboard-settings-pill dashboard-settings-pill--on">On</span>{{ else }}<span class="dashboard-settings-pill dashboard-settings-pill--off">Off</span>{{ end }}
+          </div>
         </div>
         {{ with .onesignalid }}
         <div class="dashboard-settings-row">
           <span class="dashboard-settings-label">OneSignal ID</span>
-          <span class="dashboard-settings-value">{{ . }}</span>
+          <div class="dashboard-settings-value"><span class="dashboard-settings-mono">{{ . }}</span></div>
         </div>
         {{ end }}
       </div>
     </section>
     {{ end }}
 
-    {{ with .Site.Params.social }}
-    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-social-heading">
-      <h2 id="settings-social-heading" class="dashboard-analytics-heading">Social & contact</h2>
-      <div class="dashboard-settings-grid">
-        {{ with .phone }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Phone</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
-        {{ with .email }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Email</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
-        {{ with .facebook }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Facebook</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
-        {{ with .instagram }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">Instagram</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
-        {{ with .youtube }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">YouTube</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
-        {{ with .tiktok }}<div class="dashboard-settings-row"><span class="dashboard-settings-label">TikTok</span><span class="dashboard-settings-value">{{ . }}</span></div>{{ end }}
-      </div>
+    {{- $soc := .Site.Params.social | default dict -}}
+    <section class="dashboard-settings-section dashboard-settings-panel" aria-labelledby="settings-social-heading">
+      <h2 id="settings-social-heading" class="dashboard-analytics-heading">Social &amp; contact</h2>
+      <p class="dashboard-analytics-subtitle">Maps to <code>[params.social]</code> in <code>hugo.toml</code> and saves to your site repository.</p>
+      <form id="socialForm" class="dashboard-settings-form" autocomplete="off">
+        <div class="dashboard-settings-grid">
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="social-phone">Phone</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="social-phone" name="phone" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ with $soc.phone }}{{ printf "%v" . }}{{ end }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="social-email">Email</label>
+            <div class="dashboard-settings-value">
+              <input type="email" id="social-email" name="email" class="dashboard-settings-input" autocomplete="email" placeholder="contact@example.com" value="{{ default "" $soc.email }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="social-facebook">Facebook</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="social-facebook" name="facebook" class="dashboard-settings-input" inputmode="url" placeholder="https://…" value="{{ default "" $soc.facebook }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="social-instagram">Instagram</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="social-instagram" name="instagram" class="dashboard-settings-input" placeholder="URL or @handle" value="{{ default "" $soc.instagram }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="social-youtube">YouTube</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="social-youtube" name="youtube" class="dashboard-settings-input" inputmode="url" placeholder="https://…" value="{{ default "" $soc.youtube }}">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="social-tiktok">TikTok</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="social-tiktok" name="tiktok" class="dashboard-settings-input" placeholder="URL or @handle" value="{{ default "" $soc.tiktok }}">
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-settings-form-actions">
+          <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveSocial">Save social &amp; contact</button>
+          <span id="socialSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
     </section>
-    {{ end }}
 
-    <section class="dashboard-analytics-period dashboard-settings-section" aria-labelledby="settings-branding-heading">
+    {{- $brandingDir := "static/branding" -}}
+    {{- $brandingLabels := dict
+      "favicon192.webp" "Logo / app icon"
+      "favicon512.webp" "Large logo"
+      "favicon-400x200.webp" "Card / OG image"
+    -}}
+    {{- $brandingScratch := newScratch -}}
+    {{- $brandingScratch.Set "n" 0 -}}
+    <section class="dashboard-settings-section dashboard-settings-panel" aria-labelledby="settings-branding-heading">
       <h2 id="settings-branding-heading" class="dashboard-analytics-heading">Branding images</h2>
-      <p class="dashboard-analytics-subtitle">Assets in <code>static/branding/</code> used across the site.</p>
-      <div class="dashboard-settings-grid dashboard-settings-branding">
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Logo / app icon</span>
-          <span class="dashboard-settings-value"><img src="/branding/favicon192.webp" alt="Logo" class="dashboard-settings-thumb" width="48" height="48"> <code>/branding/favicon192.webp</code></span>
+      <div class="dashboard-settings-grid dashboard-settings-branding dashboard-settings-branding-grid">
+        {{- if fileExists $brandingDir -}}
+          {{- range sort (readDir $brandingDir) "Name" -}}
+            {{- if and (not .IsDir) (findRE `(?i)\.(webp|png|jpe?g|gif)$` .Name) (ne (lower .Name) "ttmenus.gif") -}}
+              {{- $brandingScratch.Set "n" (add ($brandingScratch.Get "n") 1) -}}
+              {{- $fn := .Name -}}
+              {{- $label := default $fn (index $brandingLabels $fn) -}}
+              {{- $imgW := 48 -}}{{- $imgH := 48 -}}
+              {{- if findRE `(?i)400x200` $fn -}}
+                {{- $imgW = 96 -}}{{- $imgH = 48 -}}
+              {{- end -}}
+        <div class="dashboard-settings-row dashboard-settings-branding-row">
+          <span class="dashboard-settings-label">{{ $label }}</span>
+          <div class="dashboard-settings-value dashboard-settings-branding-upload">
+            <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $label }}" class="dashboard-settings-thumb dashboard-branding-preview{{ if findRE `(?i)400x200` $fn }} dashboard-branding-preview--wide{{ end }}" data-branding-preview="{{ $fn }}" width="{{ $imgW }}" height="{{ $imgH }}">
+            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose file</label>
+            <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
+          </div>
         </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Large logo</span>
-          <span class="dashboard-settings-value"><img src="/branding/favicon512.webp" alt="Logo large" class="dashboard-settings-thumb" width="48" height="48"> <code>/branding/favicon512.webp</code></span>
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+        {{- if eq ($brandingScratch.Get "n") 0 -}}
+          {{- range slice "favicon192.webp" "favicon512.webp" "favicon-400x200.webp" -}}
+            {{- $fn := . -}}
+            {{- $label := default $fn (index $brandingLabels $fn) -}}
+            {{- $imgW := 48 -}}{{- $imgH := 48 -}}
+            {{- if findRE `(?i)400x200` $fn -}}
+              {{- $imgW = 96 -}}{{- $imgH = 48 -}}
+            {{- end -}}
+        <div class="dashboard-settings-row dashboard-settings-branding-row">
+          <span class="dashboard-settings-label">{{ $label }}</span>
+          <div class="dashboard-settings-value dashboard-settings-branding-upload">
+            <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $label }}" class="dashboard-settings-thumb dashboard-branding-preview{{ if findRE `(?i)400x200` $fn }} dashboard-branding-preview--wide{{ end }}" data-branding-preview="{{ $fn }}" width="{{ $imgW }}" height="{{ $imgH }}">
+            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose file</label>
+            <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
+          </div>
         </div>
-        <div class="dashboard-settings-row">
-          <span class="dashboard-settings-label">Card / OG image</span>
-          <span class="dashboard-settings-value"><code>/branding/favicon-400x200.webp</code></span>
-        </div>
+          {{- end -}}
+        {{- end -}}
       </div>
     </section>
 
-    <p class="dashboard-analytics-note">To change these settings, edit <code>hugo.toml</code> in your project root and rebuild. Replace files in <code>static/branding/</code> to update logos and favicons.</p>
+    <p class="dashboard-analytics-note">Sections other than ordering, social &amp; contact, and branding upload are still read-only here; edit <code>hugo.toml</code> for those or rebuild after Git changes.</p>
   </main>
 </div>
 
 <script>
+  {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
+  {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
+  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+  // Do not use jsonify here — inside <script> it is escaped and breaks strings (e.g. \"_ttms_menu_demo\").
+  // Prefer values from head (auth): SITE_CLIENT_ID, CLIENT_ID, CMS_SERVICE_URL, CMS_API_URL; reinforce from hugo.toml.
+  window.CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || "{{ $dashClient }}";
+  window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
+  window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
+  /** Root URL for /api/clients/... (single /api segment; use apiUrl from hugo.toml). */
+  function cmsApiBase() {
+    var a = (window.CMS_API_URL || '').replace(/\/+$/, '');
+    if (a) return a;
+    var s = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+    if (/\/api$/i.test(s)) return s;
+    return s + '/api';
+  }
+  /** Parse fetch Response: JSON API body, or a clear error if the server returned HTML (404 page, proxy, login). */
+  function parseCmsApiResponse(res) {
+    var ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (ct.indexOf('application/json') !== -1) {
+      return res.json().then(function(data) {
+        if (!res.ok) {
+          throw new Error((data && (data.error || data.message)) || res.statusText || String(res.status));
+        }
+        return data;
+      });
+    }
+    return res.text().then(function(text) {
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error(
+            '404 Not found — no config endpoint on this CMS. Deploy the latest content-management-service (PUT/POST /api/clients/:id/config/hugo-orderingsystem), ' +
+            'or for local dev set [params.contentManagement] apiUrl and serviceUrl to http://localhost:8084/api and http://localhost:8084, restart Hugo, and run the CMS on 8084. ' +
+            '(Requested: ' + (res.url || '') + ')'
+          );
+        }
+        var t = (text || '').replace(/\s+/g, ' ').trim();
+        var head = t.slice(0, 160);
+        if (head.charAt(0) === '<') {
+          throw new Error(
+            'API returned HTML instead of JSON (' + res.status + '). ' +
+            'Confirm [params.contentManagement].serviceUrl / apiUrl in hugo.toml point at the content-management-service (e.g. http://localhost:8084 when running CMS locally), ' +
+            'and that the CMS is deployed with the dashboard config endpoints (e.g. hugo-orderingsystem, hugo-social).'
+          );
+        }
+        throw new Error((res.status ? res.status + ' ' : '') + (head || res.statusText));
+      }
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('Expected JSON from CMS; got: ' + (text || '').slice(0, 100));
+      }
+    });
+  }
   document.addEventListener('DOMContentLoaded', function() {
     if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
       return;
     }
+    var form = document.getElementById('orderingSystemForm');
+    var statusEl = document.getElementById('orderingSystemSaveStatus');
+    var btn = document.getElementById('btnSaveOrderingSystem');
+    if (form) {
+      form.addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) {
+          alert('Sign in required.');
+          return;
+        }
+        var payload = {
+          enabled: document.getElementById('os-enabled').value === 'true',
+          orderingDisabledMessage: (document.getElementById('os-disabled-msg').value || '').trim(),
+          vat: parseFloat(document.getElementById('os-vat').value) || 0,
+          servicecharge: parseFloat(document.getElementById('os-service').value) || 0,
+          hastables: document.getElementById('os-tables').value === 'true',
+          usephonecall: document.getElementById('os-phonecall').value === 'true',
+          whatsapp: String(document.getElementById('os-whatsapp').value || '').replace(/\D/g, ''),
+          phone: String(document.getElementById('os-phone').value || '').replace(/\D/g, '')
+        };
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/hugo-orderingsystem';
+        if (btn) btn.disabled = true;
+        if (statusEl) statusEl.textContent = 'Saving…';
+        fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        }).then(parseCmsApiResponse).then(function(data) {
+          if (statusEl) {
+            var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
+            statusEl.textContent = h ? 'Saved · commit ' + h : 'Saved.';
+          }
+        }).catch(function(err) {
+          alert('Could not save: ' + (err.message || err));
+          if (statusEl) statusEl.textContent = '';
+        }).finally(function() {
+          if (btn) btn.disabled = false;
+        });
+      });
+    }
+
+    var socialForm = document.getElementById('socialForm');
+    var socialStatusEl = document.getElementById('socialSaveStatus');
+    var socialBtn = document.getElementById('btnSaveSocial');
+    if (socialForm) {
+      socialForm.addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) {
+          alert('Sign in required.');
+          return;
+        }
+        var payload = {
+          youtube: String(document.getElementById('social-youtube').value || '').trim(),
+          email: String(document.getElementById('social-email').value || '').trim(),
+          phone: String(document.getElementById('social-phone').value || '').replace(/\D/g, ''),
+          facebook: String(document.getElementById('social-facebook').value || '').trim(),
+          instagram: String(document.getElementById('social-instagram').value || '').trim(),
+          tiktok: String(document.getElementById('social-tiktok').value || '').trim()
+        };
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/hugo-social';
+        if (socialBtn) socialBtn.disabled = true;
+        if (socialStatusEl) socialStatusEl.textContent = 'Saving…';
+        fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        }).then(parseCmsApiResponse).then(function(data) {
+          if (socialStatusEl) {
+            var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
+            socialStatusEl.textContent = h ? 'Saved · commit ' + h : 'Saved.';
+          }
+        }).catch(function(err) {
+          alert('Could not save: ' + (err.message || err));
+          if (socialStatusEl) socialStatusEl.textContent = '';
+        }).finally(function() {
+          if (socialBtn) socialBtn.disabled = false;
+        });
+      });
+    }
+
+    document.querySelectorAll('.dashboard-branding-file-input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        var name = input.getAttribute('data-branding-file');
+        if (!name) return;
+        var wrap = input.closest('.dashboard-settings-branding-upload');
+        var statusBr = wrap ? wrap.querySelector('.dashboard-branding-upload-status') : null;
+        var img = wrap ? wrap.querySelector('.dashboard-branding-preview') : null;
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) {
+          alert('Sign in required.');
+          input.value = '';
+          return;
+        }
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/branding/' + encodeURIComponent(name);
+        var fd = new FormData();
+        fd.append('file', file);
+        if (statusBr) statusBr.textContent = 'Uploading…';
+        fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
+          body: fd
+        }).then(parseCmsApiResponse).then(function(data) {
+          if (statusBr) {
+            var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
+            statusBr.textContent = h ? 'Uploaded · ' + h : 'Uploaded.';
+          }
+          if (img) {
+            img.src = '/branding/' + name + '?t=' + Date.now();
+          }
+          input.value = '';
+        }).catch(function(err) {
+          alert('Upload failed: ' + (err.message || err));
+          if (statusBr) statusBr.textContent = '';
+        });
+      });
+    });
   });
 </script>
 {{ end }}

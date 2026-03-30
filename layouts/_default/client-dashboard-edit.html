@@ -20,7 +20,7 @@
             <button type="button" class="dashboard-edit-toggle-btn" id="btnSubmodeColor" aria-pressed="false" title="Color" aria-label="Color"><i class="fa fa-paint-brush" aria-hidden="true"></i></button>
           </div>
         </div>
-        <button type="button" class="btn-dash btn-dash-primary" id="btnPublish" title="Publish to Git" aria-label="Publish changes to Git">Publish</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="btnSave" title="Save snapshot or publish" aria-label="Save menu snapshot or publish changes to Git">Save</button>
       </div>
     </div>
 
@@ -74,11 +74,17 @@
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionImageTopWrap">
                   <label for="dashboardEditSectionImageTop">Image (top)</label>
-                  <input type="text" id="dashboardEditSectionImageTop" class="dashboard-edit-input" placeholder="e.g. images/California.webp">
+                  <div class="dashboard-section-image-path-row">
+                    <input type="text" id="dashboardEditSectionImageTop" class="dashboard-edit-input dashboard-section-image-path-input" placeholder="e.g. images/California.webp">
+                    <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageTopBrowse" aria-label="Browse site images" title="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i></button>
+                  </div>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-section-fields hidden" id="dashboardEditSectionImageBottomWrap">
                   <label for="dashboardEditSectionImageBottom">Image (bottom)</label>
-                  <input type="text" id="dashboardEditSectionImageBottom" class="dashboard-edit-input" placeholder="e.g. images/OMG_Characters-5.webp">
+                  <div class="dashboard-section-image-path-row">
+                    <input type="text" id="dashboardEditSectionImageBottom" class="dashboard-edit-input dashboard-section-image-path-input" placeholder="e.g. images/OMG_Characters-5.webp">
+                    <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageBottomBrowse" aria-label="Browse site images" title="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i></button>
+                  </div>
                 </div>
                 <div class="dashboard-edit-field dashboard-edit-menuitem-fields hidden" id="dashboardMenuItemWizardRoot">
                   <div class="dashboard-menu-item-wizard-nav" role="tablist" aria-label="Menu item editor steps">
@@ -103,10 +109,13 @@
                       </div>
                       <div class="dashboard-edit-field">
                         <label id="dashboardEditMenuItemImagesLabel">Images</label>
-                        <p id="dashboardMenuItemImagesHint" class="dashboard-edit-field-note dashboard-menu-item-images-hint">Use <strong>Add image</strong> to choose a file. Drafts are stored on the CMS as <code>draft-assets/…</code> until you publish; published menus use paths under <code>images/</code> in the site. Drag <i class="fa fa-bars" aria-hidden="true"></i> to reorder.</p>
+                        <p id="dashboardMenuItemImagesHint" class="dashboard-edit-field-note dashboard-menu-item-images-hint">Use <strong>Add image</strong> to upload, <strong>Browse site images</strong> for repo <code>static/images</code>, or type a path. Drafts use <code>draft-assets/…</code> until publish. Drag <i class="fa fa-bars" aria-hidden="true"></i> to reorder.</p>
                         <div id="dashboardEditMenuItemImagesContainer" class="dashboard-menu-item-images-ui" role="list" aria-labelledby="dashboardEditMenuItemImagesLabel"></div>
                         <p id="dashboardMenuItemImagesUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <div class="dashboard-image-add-actions">
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddMenuItemImage">Add image</button>
+                          <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnBrowseSiteMenuItemImages" aria-label="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse site images</button>
+                        </div>
                         <input type="file" id="btnAddMenuItemImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
                         <textarea id="dashboardEditMenuItemImages" class="hidden" aria-hidden="true" tabindex="-1" rows="1" cols="1"></textarea>
                       </div>
@@ -292,6 +301,7 @@
                 <div class="dashboard-edit-field">
                   <label for="dashboardEditPromoImages">Images (one path per line)</label>
                   <textarea id="dashboardEditPromoImages" class="dashboard-edit-input dashboard-edit-textarea" placeholder="images/promo1.jpg&#10;images/promo2.webp" rows="2"></textarea>
+                  <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnPromoBrowseSiteImages" aria-label="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse site images</button>
                   <div class="dashboard-edit-slideshow-view" id="dashboardEditPromoImagesView" aria-label="Promotion images preview"></div>
                 </div>
                 <div class="dashboard-edit-field">
@@ -313,10 +323,13 @@
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsSlideshow" data-for="slideshow">
                 <div class="dashboard-edit-field">
                   <label id="dashboardEditSlideshowLabel">Slideshow images</label>
-                  <p id="dashboardSlideshowImagesHint" class="dashboard-edit-field-note dashboard-menu-item-images-hint">Use <strong>Add image</strong> to choose a file. Drafts are stored on the CMS as <code>draft-assets/…</code> until you publish; published menus use paths under <code>images/</code> in the site. Drag <i class="fa fa-bars" aria-hidden="true"></i> to reorder.</p>
+                  <p id="dashboardSlideshowImagesHint" class="dashboard-edit-field-note dashboard-menu-item-images-hint">Use <strong>Add image</strong> to upload, <strong>Browse site images</strong> for repo <code>static/images</code>, or type paths. Drag <i class="fa fa-bars" aria-hidden="true"></i> to reorder.</p>
                   <div id="dashboardEditSlideshowImagesContainer" class="dashboard-menu-item-images-ui" role="list" aria-labelledby="dashboardEditSlideshowLabel"></div>
                   <p id="dashboardSlideshowImagesUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                  <div class="dashboard-image-add-actions">
                   <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddSlideshowImage">Add image</button>
+                    <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnBrowseSiteSlideshowImages" aria-label="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse site images</button>
+                  </div>
                   <input type="file" id="btnAddSlideshowImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
                   <textarea id="dashboardEditSlideshowImages" class="hidden" aria-hidden="true" rows="1" style="height:0;overflow:hidden;position:absolute;clip:rect(0,0,0,0);"></textarea>
                 </div>
@@ -328,7 +341,7 @@
               <div class="dashboard-edit-field-group hidden" id="dashboardEditFieldsHomeHero" data-for="home-hero">
                 <div class="dashboard-edit-field">
                   <label for="dashboardEditHeroImage">Hero background image (<code>image</code> in front matter)</label>
-                  <p class="dashboard-edit-field-note">Use <strong>Choose image</strong> to upload a draft to the CMS as <code>draft-assets/…</code>, or enter a path under <code>images/</code> for published assets.</p>
+                  <p class="dashboard-edit-field-note">Use <strong>Choose image</strong> to upload a draft to the CMS as <code>draft-assets/…</code>, <strong>Browse site images</strong> to pick from <code>static/images</code> in the repo, or type a path (e.g. <code>images/…</code>).</p>
                   <div id="dashboardHeroImageRow" class="dashboard-hero-image-row dashboard-menu-item-image-row">
                     <div class="dashboard-menu-item-image-thumb-wrap" id="dashboardHeroImageThumbWrap">
                       <img id="dashboardHeroImageThumb" class="dashboard-menu-item-image-thumb" alt="">
@@ -342,6 +355,7 @@
                       <div class="dashboard-menu-item-image-path-actions">
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnHeroImageReplace" aria-label="Choose image file"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose image</button>
                         <input type="file" id="btnHeroImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnHeroImageBrowseSite" aria-label="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse site images</button>
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnHeroImageRemove" aria-label="Remove hero image"><i class="fa fa-times" aria-hidden="true"></i> Remove</button>
                       </div>
                     </div>
@@ -362,11 +376,11 @@
       <aside class="dashboard-edit-color-aside dashboard-edit-color-aside-collapsed hidden" id="dashboardEditColorAside" aria-label="Edit theme colors">
         <div class="dashboard-edit-color-aside-inner">
           <div class="dashboard-edit-color-aside-header">
-            <p class="dashboard-edit-color-section-label" id="dashboardEditColorSectionLabel"></p>
             <button type="button" class="dashboard-edit-color-aside-toggle" id="btnToggleColorPanel" aria-expanded="false" aria-label="Expand color panel">
               <span class="dashboard-edit-color-aside-toggle-icon" aria-hidden="true">▶</span>
               <span class="dashboard-edit-color-aside-toggle-text">Expand</span>
             </button>
+            <p class="dashboard-edit-color-section-label" id="dashboardEditColorSectionLabel"></p>
           </div>
           <div id="dashboardEditColorPrompt" class="dashboard-edit-color-prompt">
             <div class="dashboard-edit-color-sections" id="dashboardEditColorSections"></div>
@@ -391,7 +405,7 @@
 
       // CMS / content-management service configuration
       var CMS_SERVICE_URL = window.CMS_SERVICE_URL || 'https://cms.ttmenus.com';
-      var CMS_CLIENT_ID = window.CLIENT_ID || '_ttms_menu_demo';
+      var CMS_CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
       window.CMS_SERVICE_URL = CMS_SERVICE_URL;
       window.CMS_CLIENT_ID = CMS_CLIENT_ID;
 
@@ -414,6 +428,7 @@
       var inputMenuItemImages = document.getElementById('dashboardEditMenuItemImages');
       var menuItemImagesContainer = document.getElementById('dashboardEditMenuItemImagesContainer');
       var btnAddMenuItemImage = document.getElementById('btnAddMenuItemImage');
+      var btnBrowseSiteMenuItemImages = document.getElementById('btnBrowseSiteMenuItemImages');
       var btnAddMenuItemImageFile = document.getElementById('btnAddMenuItemImageFile');
       var menuItemImagesUploadStatusEl = document.getElementById('dashboardMenuItemImagesUploadStatus');
       var pricesContainer = document.getElementById('dashboardEditPricesContainer');
@@ -445,7 +460,7 @@
       var inputAvailabilityTimeStart = document.getElementById('dashboardEditAvailabilityTimeStart');
       var inputAvailabilityTimeFinish = document.getElementById('dashboardEditAvailabilityTimeFinish');
       var btnApply = document.getElementById('btnApplyEdit');
-      var btnPublish = document.getElementById('btnPublish');
+      var btnSave = document.getElementById('btnSave');
       var btnMarkForDeletion = document.getElementById('btnMarkForDeletion');
       var contentSourceEl = document.getElementById('dashboardEditContentSource');
       var statusEl = document.getElementById('dashboardEditStatus');
@@ -458,6 +473,17 @@
       var btnHeroImageReplace = document.getElementById('btnHeroImageReplace');
       var btnHeroImageFile = document.getElementById('btnHeroImageFile');
       var btnHeroImageRemove = document.getElementById('btnHeroImageRemove');
+      var btnHeroImageBrowseSite = document.getElementById('btnHeroImageBrowseSite');
+      var heroSiteImageModal = document.getElementById('dashboardHeroSiteImageModal');
+      var heroSiteImageModalBackdrop = document.getElementById('dashboardHeroSiteImageModalBackdrop');
+      var heroSiteImageModalClose = document.getElementById('dashboardHeroSiteImageModalClose');
+      var heroSiteImageGrid = document.getElementById('dashboardHeroSiteImageGrid');
+      var heroSiteImageLoading = document.getElementById('dashboardHeroSiteImageLoading');
+      var heroSiteImageError = document.getElementById('dashboardHeroSiteImageError');
+      var heroSiteImageEmpty = document.getElementById('dashboardHeroSiteImageEmpty');
+      var siteImagesListCache = null;
+      /** Set when opening site-image modal; invoked with relative path (e.g. images/foo.webp). Cleared on close. */
+      var siteImagePickerOnPick = null;
       var dashboardHeroImageRow = document.getElementById('dashboardHeroImageRow');
       var dashboardHeroImageThumbWrap = document.getElementById('dashboardHeroImageThumbWrap');
       var heroImageThumbImg = document.getElementById('dashboardHeroImageThumb');
@@ -514,7 +540,11 @@
       var inputSlideshowImages = document.getElementById('dashboardEditSlideshowImages');
       var slideshowImagesContainer = document.getElementById('dashboardEditSlideshowImagesContainer');
       var btnAddSlideshowImage = document.getElementById('btnAddSlideshowImage');
+      var btnBrowseSiteSlideshowImages = document.getElementById('btnBrowseSiteSlideshowImages');
       var btnAddSlideshowImageFile = document.getElementById('btnAddSlideshowImageFile');
+      var btnSectionImageTopBrowse = document.getElementById('btnSectionImageTopBrowse');
+      var btnSectionImageBottomBrowse = document.getElementById('btnSectionImageBottomBrowse');
+      var btnPromoBrowseSiteImages = document.getElementById('btnPromoBrowseSiteImages');
       var slideshowImagesUploadStatusEl = document.getElementById('dashboardSlideshowImagesUploadStatus');
       if (inputPromoImages && promoImagesViewEl) {
         inputPromoImages.addEventListener('input', function() {
@@ -551,6 +581,12 @@
         return p.get('load') === 'drafts' || mode === 'drafts';
       })();
       var menuVersionFromUrl = new URLSearchParams(window.location.search).get('menu_version');
+      /** Set from editor-snapshot when source is saved_version; updated after save-only. */
+      var editorSnapshotVersionId = null;
+      /** Git path for theme CSS (must match CMS allowlist and static/css file). */
+      var THEME_OVERRIDES_CONTENT_PATH = 'static/css/theme-overrides.css';
+      /** When > 0, applyColorOverrides does not queue a CMS theme draft (hydration load). */
+      var themeColorSuppressPersist = 0;
       if (loadDraftsOnLoad && typeof sessionStorage !== 'undefined') {
         sessionStorage.setItem('editPreviewMode', 'drafts');
         if (menuVersionFromUrl) sessionStorage.setItem('editMenuVersionId', menuVersionFromUrl);
@@ -574,6 +610,18 @@
         formEl.addEventListener('change', function() {
           editFormDirty = true;
           setEditStatus('Unsaved changes (not yet published)');
+        });
+      }
+      if (inputTitle) {
+        inputTitle.addEventListener('input', function() {
+          scheduleSyncNewMenuItemPathFromTitle();
+        });
+        inputTitle.addEventListener('blur', function() {
+          if (titlePathSyncTimer) {
+            clearTimeout(titlePathSyncTimer);
+            titlePathSyncTimer = null;
+          }
+          syncNewMenuItemPathFromTitle();
         });
       }
 
@@ -821,23 +869,51 @@
         return null;
       }
 
+      /** Pretty-print CMS JSON in the browser console (filter DevTools by `[TTMS CMS]`). */
+      function cmsLogJson(phase, pathOrUrl, detail) {
+        if (typeof console === 'undefined' || !console.log) return;
+        var tag = '[TTMS CMS]';
+        if (detail === undefined) {
+          console.log(tag, phase, pathOrUrl);
+          return;
+        }
+        var s;
+        try {
+          s = typeof detail === 'string' ? detail : JSON.stringify(detail, null, 2);
+        } catch (e) {
+          console.log(tag, phase, pathOrUrl, detail);
+          return;
+        }
+        var max = 14000;
+        if (s.length > max) {
+          s = s.slice(0, max) + '\n… [truncated; expand in Network tab if needed]';
+        }
+        console.log(tag, phase, pathOrUrl, '\n', s);
+      }
+
       function getFromCMS(path) {
         var url = CMS_SERVICE_URL.replace(/\/+$/, '') + path;
+        cmsLogJson('GET →', path, { url: url });
         var headers = { 'Accept': 'application/json' };
         var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
         if (token) headers['Authorization'] = 'Bearer ' + token;
         return fetch(url, { method: 'GET', credentials: 'include', headers: headers }).then(function(res) {
           if (!res.ok) {
             return res.text().then(function(t) {
+              cmsLogJson('GET ✗', path, { status: res.status, body: t && t.length > 2000 ? t.slice(0, 2000) + '…' : t });
               throw new Error('CMS error ' + res.status + ': ' + t);
             });
           }
           return res.json();
+        }).then(function(data) {
+          cmsLogJson('GET ←', path, data);
+          return data;
         });
       }
 
       function postToCMS(path, payload) {
         var url = CMS_SERVICE_URL.replace(/\/+$/, '') + path;
+        cmsLogJson('POST →', path, payload);
         var headers = { 'Content-Type': 'application/json' };
         var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
         if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -849,11 +925,140 @@
         }).then(function (res) {
           if (!res.ok) {
             return res.text().then(function (txt) {
+              cmsLogJson('POST ✗', path, { status: res.status, body: txt && txt.length > 4000 ? txt.slice(0, 4000) + '…' : txt });
               throw new Error('CMS error ' + res.status + ': ' + txt);
             });
           }
           return res.json().catch(function () { return {}; });
+        }).then(function (json) {
+          cmsLogJson('POST ←', path, json);
+          return json;
         });
+      }
+
+      function deleteFromCMS(path) {
+        var url = CMS_SERVICE_URL.replace(/\/+$/, '') + path;
+        cmsLogJson('DELETE →', path, { url: url });
+        var headers = { 'Accept': 'application/json' };
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return fetch(url, { method: 'DELETE', credentials: 'include', headers: headers }).then(function(res) {
+          if (!res.ok && res.status !== 204) {
+            return res.text().then(function(t) {
+              cmsLogJson('DELETE ✗', path, { status: res.status, body: t });
+              throw new Error('CMS error ' + res.status + ': ' + t);
+            });
+          }
+          cmsLogJson('DELETE ←', path, { status: res.status });
+          return res.json().catch(function() { return {}; });
+        });
+      }
+
+      /** Slug for content/<section>/<slug>.md (same style as bacon-jalapeno-cheese-fries.md). */
+      function slugifyMenuItemTitle(str) {
+        if (!str || typeof str !== 'string') return 'new-item';
+        var s = str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        return s || 'new-item';
+      }
+
+      /**
+       * Avoid duplicate item slugs in the same section (iframe DOM).
+       * @param {Element|null} excludeCardEl when renaming, omit this card from occupancy (so its current slug is free to change).
+       */
+      function uniqueMenuItemSlugInSection(doc, sectionSlug, baseSlug, excludeCardEl) {
+        var used = {};
+        if (doc && doc.querySelectorAll && sectionSlug) {
+          doc.querySelectorAll('.menu-item-card[data-item-url]').forEach(function(card) {
+            if (excludeCardEl && card === excludeCardEl) return;
+            var u = (card.getAttribute('data-item-url') || '').replace(/\/?$/, '');
+            var m = u.match(/^\/([^/]+)\/([^/]+)$/);
+            if (!m || m[1] !== sectionSlug) return;
+            used[m[2]] = true;
+          });
+        }
+        var candidate = baseSlug;
+        var n = 2;
+        while (used[candidate]) {
+          candidate = baseSlug + '-' + n;
+          n++;
+        }
+        return candidate;
+      }
+
+      var titlePathSyncTimer = null;
+
+      /** For unpublished “Add item” cards: keep content/<section>/<slug>.md in sync with the title field. */
+      function syncNewMenuItemPathFromTitle() {
+        if (!selectedElement || !selectedInfo || selectedInfo.contentType !== 'menu-item') return;
+        if (!selectedElement.hasAttribute('data-dashboard-edit-new-item')) return;
+        if (!inputTitle || !iframe || !iframe.contentDocument) return;
+        var doc = iframe.contentDocument;
+        var titleVal = (inputTitle.value || '').trim();
+        var baseSlug = slugifyMenuItemTitle(titleVal);
+        var bg = selectedElement.closest('.main-menu-bg');
+        var header = bg && bg.querySelector('.menu-header[data-section-slug]');
+        var sectionSlug = header ? (header.getAttribute('data-section-slug') || '').trim() : '';
+        if (!sectionSlug) {
+          var um = (selectedElement.getAttribute('data-item-url') || '').match(/^\/([^/]+)\//);
+          if (um) sectionSlug = um[1];
+        }
+        if (!sectionSlug) return;
+        var newSlug = uniqueMenuItemSlugInSection(doc, sectionSlug, baseSlug, selectedElement);
+        var oldSlug = selectedElement.getAttribute('data-dashboard-new-item-id') || '';
+        var oldPath = (selectedInfo.contentPath || '').trim();
+        var newPath = 'content/' + sectionSlug + '/' + newSlug + '.md';
+        var newItemUrl = '/' + sectionSlug + '/' + newSlug + '/';
+        if (oldPath === newPath && oldSlug === newSlug) return;
+
+        if (oldPath && draftContentPaths.has(oldPath)) {
+          draftContentPaths.delete(oldPath);
+          draftContentPaths.add(newPath);
+        }
+        if (oldPath && markedForDeletionContentPaths.has(oldPath)) {
+          markedForDeletionContentPaths.delete(oldPath);
+          markedForDeletionContentPaths.add(newPath);
+        }
+
+        if (savedDraftPreviewId && oldPath && oldPath !== newPath) {
+          var pid = savedDraftPreviewId;
+          savedDraftPreviewId = null;
+          deleteFromCMS('/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews/' + encodeURIComponent(pid)).catch(function() {});
+        }
+
+        selectedInfo.contentPath = newPath;
+        if (contentSourceEl) contentSourceEl.textContent = 'Source: ' + newPath;
+
+        selectedElement.setAttribute('data-item-url', newItemUrl);
+        selectedElement.setAttribute('data-dashboard-new-item-id', newSlug);
+        selectedElement.setAttribute('onclick', 'toggleItemExpansion(this, ' + JSON.stringify(newItemUrl) + ', event);');
+
+        applyEditHighlights();
+        updateMarkForDeletionButton();
+        editFormDirty = true;
+        setEditStatus('Unsaved changes (not yet published)');
+
+        if (selectedElement.getAttribute('data-item-expanded') === 'true') {
+          var winI = iframe.contentWindow;
+          if (winI && typeof winI.expandMenuItemCard === 'function') {
+            try { winI.expandMenuItemCard(selectedElement, newItemUrl); } catch (ex) {}
+          }
+        }
+      }
+
+      function scheduleSyncNewMenuItemPathFromTitle() {
+        if (titlePathSyncTimer) clearTimeout(titlePathSyncTimer);
+        titlePathSyncTimer = setTimeout(function() {
+          titlePathSyncTimer = null;
+          syncNewMenuItemPathFromTitle();
+        }, 320);
+      }
+
+      /** Menu snapshot rows for unpublished “Add item” cards (/<section>/<slug>/ URLs; legacy /<section>/n…/). */
+      function isDashboardNewMenuItemRecord(mi) {
+        if (!mi || !mi.url) return false;
+        if (mi.id && String(mi.id).indexOf('dashboard-new-') === 0) return true;
+        var u = String(mi.url).replace(/\/?$/, '/');
+        return /^\/[^/]+\/n\d+[^/]*\/$/.test(u);
       }
 
       /** Collect unpublished “Add item” cards so they can be stored in menu snapshot JSON (CMS menu_data). */
@@ -862,7 +1067,7 @@
         var out = [];
         doc.querySelectorAll('.menu-item-card[data-dashboard-edit-new-item]').forEach(function(card) {
           var url = card.getAttribute('data-item-url') || '';
-          if (url.indexOf('/__dashboard-new/') !== 0) return;
+          if (!url) return;
           var bg = card.closest('.main-menu-bg');
           var header = bg && bg.querySelector('.menu-header[data-section-slug]');
           var slug = header ? (header.getAttribute('data-section-slug') || '').trim() : '';
@@ -896,7 +1101,7 @@
         if (!menuData || typeof menuData !== 'object') return menuData;
         if (!Array.isArray(menuData.menuItems)) menuData.menuItems = [];
         menuData.menuItems = menuData.menuItems.filter(function(mi) {
-          return !mi || !mi.url || String(mi.url).indexOf('/__dashboard-new/') !== 0;
+          return !mi || !mi.url || !isDashboardNewMenuItemRecord(mi);
         });
         if (collected && collected.length) {
           collected.forEach(function(item) {
@@ -904,6 +1109,88 @@
           });
         }
         return menuData;
+      }
+
+      /** True when CMS GET /menu returned no structure (common when data/menu.json is missing on the server). */
+      function isMenuDataEmpty(menuData) {
+        if (!menuData || typeof menuData !== 'object') return true;
+        var c = menuData.categories;
+        var m = menuData.menuItems;
+        var hasCat = Array.isArray(c) && c.length > 0;
+        var hasItems = Array.isArray(m) && m.length > 0;
+        return !hasCat && !hasItems;
+      }
+
+      /**
+       * Build categories + menuItems from the live Hugo preview DOM so editor-exit snapshots are not empty
+       * when the CMS has no menu.json yet (GET /menu returns empty arrays).
+       */
+      function collectMenuStructureFromIframe(doc) {
+        var categories = [];
+        var menuItems = [];
+        if (!doc || !doc.querySelectorAll) return { categories: categories, menuItems: menuItems };
+        var seenSlugs = {};
+        doc.querySelectorAll('.menu-header[data-section-slug]').forEach(function(header) {
+          var slug = (header.getAttribute('data-section-slug') || '').trim();
+          if (!slug || seenSlugs[slug]) return;
+          seenSlugs[slug] = true;
+          var h2a = header.querySelector('.headerstyle h2 a, h2.center.title a, h2 a');
+          var catTitle = h2a ? (h2a.textContent || '').trim() : slug;
+          var catUrl = h2a ? (h2a.getAttribute('href') || '').trim() : '';
+          if (!catUrl && slug) catUrl = '/' + slug + '/';
+          var w = parseInt(header.getAttribute('data-weight') || '0', 10) || 0;
+          var sumEl = header.querySelector('.menu-summary');
+          var catSummary = sumEl ? (sumEl.textContent || '').trim() : '';
+          var topImg = (header.getAttribute('data-images-top') || '').trim();
+          categories.push({
+            title: catTitle,
+            url: catUrl,
+            weight: w,
+            image: topImg || '',
+            summary: catSummary
+          });
+          var scope = header.closest('.main-menu-bg') || header.parentElement;
+          var container = scope && scope.querySelector('.menu-items-container');
+          if (!container) return;
+          container.querySelectorAll('.menu-item-card').forEach(function(card, idx) {
+            var url = (card.getAttribute('data-item-url') || '').trim();
+            if (!url) return;
+            var titleEl = card.querySelector('.menu-item-title a, .menu-item-title');
+            var title = titleEl ? (titleEl.textContent || '').trim() : '';
+            var descEl = card.querySelector('.menu-item-description');
+            var summary = descEl ? (descEl.textContent || '').trim() : '';
+            var id = String(url).replace(/[^a-zA-Z0-9_-]/g, '-');
+            var item = {
+              id: id,
+              title: title,
+              url: url,
+              category: catTitle,
+              categoryUrl: catUrl,
+              weight: idx,
+              summary: summary
+            };
+            var pa = card.getAttribute('data-prices-array');
+            if (pa) {
+              try {
+                var arr = JSON.parse(pa);
+                if (Array.isArray(arr) && arr.length >= 3) {
+                  var prices = [];
+                  for (var i = 0; i + 2 < arr.length; i += 3) {
+                    prices.push({
+                      size: String(arr[i] != null ? arr[i] : ''),
+                      flavour: String(arr[i + 1] != null ? arr[i + 1] : ''),
+                      price: Number(arr[i + 2]) || 0
+                    });
+                  }
+                  if (prices.length) item.prices = prices;
+                }
+              } catch (e) {}
+            }
+            menuItems.push(item);
+          });
+        });
+        categories.sort(function(a, b) { return (a.weight || 0) - (b.weight || 0); });
+        return { categories: categories, menuItems: menuItems };
       }
 
       /** After loading a menu version, re-insert placeholder cards that only exist in menu_data + content drafts. */
@@ -914,7 +1201,7 @@
         var win = iframe.contentWindow;
         if (!doc || !doc.body || !win || typeof win._dashboardCreateNewMenuItemCard !== 'function') return;
         var newItems = snap.menuData.menuItems.filter(function(mi) {
-          return mi && mi.url && String(mi.url).indexOf('/__dashboard-new/') === 0;
+          return mi && mi.url && isDashboardNewMenuItemRecord(mi);
         });
         newItems.forEach(function(mi) {
           var rawUrl = String(mi.url || '').trim();
@@ -924,44 +1211,100 @@
           var url = normalized + '/';
           var esc = url.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
           if (doc.querySelector('.menu-item-card[data-item-url="' + esc + '"]')) return;
-          var m = url.match(/^\/__dashboard-new\/([^/]+)\/?$/);
-          var nid = m ? m[1] : '';
-          if (!nid) return;
+          var mSec = url.match(/^\/([^/]+)\/([^/]+)\/?$/);
+          if (!mSec) return;
+          var cardOpts = {
+            title: (mi.title != null ? String(mi.title) : '') || 'New item',
+            summary: (mi.summary != null ? String(mi.summary) : '') || '',
+            sectionSlug: mSec[1],
+            nid: mSec[2]
+          };
           var slug = (mi.categoryUrl || '').replace(/^\/+|\/+$/g, '').split('/').filter(Boolean)[0] || '';
           var header = slug ? doc.querySelector('.menu-header[data-section-slug="' + slug.replace(/"/g, '\\"') + '"]') : null;
           var bg = header && header.closest('.main-menu-bg');
           var container = bg && bg.querySelector('.menu-items-container');
+          if (!container) {
+            var pack = doc.getElementById('packery-container') || doc.body;
+            container = pack.querySelector('.menu-items-container') || doc.querySelector('.main-menu-bg .menu-items-container');
+          }
           if (!container) return;
           var bar = container.querySelector('.dashboard-edit-add-item-bar');
-          var card = win._dashboardCreateNewMenuItemCard(doc, {
-            nid: nid,
-            title: (mi.title != null ? String(mi.title) : '') || 'New item',
-            summary: (mi.summary != null ? String(mi.summary) : '') || ''
-          });
+          var card = win._dashboardCreateNewMenuItemCard(doc, cardOpts);
           if (bar && bar.parentNode === container) {
             container.insertBefore(card, bar.nextSibling);
           } else {
             container.insertBefore(card, container.firstChild);
           }
         });
+        if (Array.isArray(snap.contentEdits)) {
+          snap.contentEdits.forEach(function(ce) {
+            var pay = ce && ce.payload;
+            if (!pay || pay.kind !== 'menu-item') return;
+            var cp = pay.contentPath || '';
+            if (!cp || cp.indexOf('content/') !== 0) return;
+            var itemUrl = '/' + String(cp).replace(/^content\//, '').replace(/\.md$/, '') + '/';
+            ensureMenuItemPlaceholderCardFromPreview(doc, win, itemUrl, cp, pay.frontMatter || {}, pay.body);
+          });
+        }
         if (newItems.length && win._dashboardInjectEditButtons) {
           win._dashboardInjectEditButtons();
         }
       }
 
-      /** Saves current server menu.json as a new version (POST /menu-versions). Used when leaving the editor. */
-      function saveMenuSnapshotOnLeave() {
+      /** Merge iframe state into server menu JSON for POST /menu-versions. */
+      function buildMenuDataForSnapshot() {
         var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
         return getFromCMS(base + '/menu').then(function(menuData) {
           try {
             var idoc = iframe && iframe.contentDocument;
             if (idoc && idoc.body) {
               var collected = collectDashboardNewMenuItemsFromIframe(idoc);
+              if (isMenuDataEmpty(menuData)) {
+                var domSnap = collectMenuStructureFromIframe(idoc);
+                menuData.categories = domSnap.categories;
+                menuData.menuItems = domSnap.menuItems;
+              }
               mergeDashboardNewItemsIntoMenuData(menuData, collected);
+              if (!menuData.version) menuData.version = '1.0.0';
+              if (!menuData.exportDate) menuData.exportDate = new Date().toISOString();
+              if (!menuData.metadata || typeof menuData.metadata !== 'object') {
+                menuData.metadata = { siteTitle: '', baseURL: '' };
+              }
             }
           } catch (e) {
-            console.warn('saveMenuSnapshotOnLeave: merge new items', e);
+            console.warn('buildMenuDataForSnapshot: merge new items', e);
           }
+          mergeThemeColorOverridesIntoMenuData(menuData);
+          return menuData;
+        });
+      }
+
+      /**
+       * POST /menu-versions. updateLiveMenu false = snapshot JSON only on CMS (.menu-versions), no data/menu.json.
+       */
+      function saveMenuSnapshotToCMS(opts) {
+        opts = opts || {};
+        var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
+        return buildMenuDataForSnapshot().then(function(menuData) {
+          var now = new Date();
+          var name = opts.name || ('Editor · ' + now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }));
+          var desc = opts.description || 'Menu snapshot from editor';
+          var body = {
+            name: name,
+            description: desc,
+            menu_data: menuData
+          };
+          if (opts.updateLiveMenu === false) {
+            body.update_live_menu = false;
+          }
+          return postToCMS(base + '/menu-versions', body);
+        });
+      }
+
+      /** Saves current server menu.json as a new version (POST /menu-versions). Used when leaving the editor. */
+      function saveMenuSnapshotOnLeave() {
+        var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
+        return buildMenuDataForSnapshot().then(function(menuData) {
           var now = new Date();
           var name = 'Editor exit · ' + now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
           var desc = 'Automatic snapshot when leaving the menu editor (back to dashboard).';
@@ -984,11 +1327,13 @@
         else path += '?include_drafts=true';
         return getFromCMS(path).then(function(data) {
           window.__ttmsEditorSnapshot = data;
+          editorSnapshotVersionId = (data.source === 'saved_version' && data.menuVersionId) ? data.menuVersionId : null;
           var meta = data.menuVersionMeta;
           if (meta && meta.name) setEditStatus('Loaded menu version: ' + meta.name);
           else if (data.source === 'live') setEditStatus('Live menu with draft changes');
           if (loadDraftsOnLoad && iframe && iframe.contentDocument && iframe.contentDocument.body && editMode) {
             setTimeout(function() {
+              hydrateThemeColorsFromMenuSnapshot();
               hydrateDashboardNewItemsFromMenuSnapshot();
               var win = iframe.contentWindow;
               if (win && win._dashboardInjectEditButtons) win._dashboardInjectEditButtons();
@@ -1217,19 +1562,18 @@
           var doc = iframe.contentDocument;
           if (!doc || !doc.head) return;
           var section = COLOR_SECTIONS.find(function(s) { return s.id === selectedColorSectionId; });
-          if (!section) return;
-
-          // Update stored overrides for this section's vars
-          section.vars.forEach(function(v) {
-            var input = colorFieldsEl.querySelector('input.dashboard-edit-input[data-var="' + v.name + '"]') || colorFieldsEl.querySelector('input[data-var="' + v.name + '"]');
-            if (!input) return;
-            var val = (input.value || '').trim();
-            if (val) {
-              COLOR_OVERRIDE_VALUES[v.name] = val;
-            } else {
-              delete COLOR_OVERRIDE_VALUES[v.name];
-            }
-          });
+          if (section) {
+            section.vars.forEach(function(v) {
+              var input = colorFieldsEl.querySelector('input.dashboard-edit-input[data-var="' + v.name + '"]') || colorFieldsEl.querySelector('input[data-var="' + v.name + '"]');
+              if (!input) return;
+              var val = (input.value || '').trim();
+              if (val) {
+                COLOR_OVERRIDE_VALUES[v.name] = val;
+              } else {
+                delete COLOR_OVERRIDE_VALUES[v.name];
+              }
+            });
+          }
 
           var rules = [];
           Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(varName) {
@@ -1248,7 +1592,92 @@
           } else {
             style.textContent = ':root { ' + rules.join('; ') + ' }';
           }
+          if (themeColorSuppressPersist === 0) {
+            schedulePersistThemeDraft();
+          }
         } catch (e) { console.warn('Apply color:', e); }
+      }
+
+      function mergeThemeColorOverridesIntoMenuData(menuData) {
+        if (!menuData || typeof menuData !== 'object') return;
+        var keys = Object.keys(COLOR_OVERRIDE_VALUES);
+        if (keys.length === 0) {
+          delete menuData.themeColorOverrides;
+          return;
+        }
+        menuData.themeColorOverrides = {};
+        keys.forEach(function(k) { menuData.themeColorOverrides[k] = COLOR_OVERRIDE_VALUES[k]; });
+      }
+
+      function buildThemeCssDraftBody() {
+        var keys = Object.keys(COLOR_OVERRIDE_VALUES);
+        if (keys.length === 0) {
+          return '/* theme overrides (dashboard) */\n:root {\n}\n';
+        }
+        var rules = keys.map(function(k) { return '  ' + k + ': ' + COLOR_OVERRIDE_VALUES[k]; }).join(';\n');
+        return '/* theme overrides (dashboard) */\n:root {\n' + rules + '\n}\n';
+      }
+
+      function parseThemeOverridesFromCss(css) {
+        var out = {};
+        if (!css || typeof css !== 'string') return out;
+        var m = css.match(/:root\s*\{([^}]*)\}/);
+        if (!m) return out;
+        m[1].split(';').forEach(function(part) {
+          var idx = part.indexOf(':');
+          if (idx < 0) return;
+          var prop = part.slice(0, idx).trim();
+          var val = part.slice(idx + 1).trim();
+          if (prop && val) out[prop] = val;
+        });
+        return out;
+      }
+
+      var _themePersistTimer = null;
+      function schedulePersistThemeDraft() {
+        if (themeColorSuppressPersist) return;
+        if (_themePersistTimer) clearTimeout(_themePersistTimer);
+        _themePersistTimer = setTimeout(function() {
+          _themePersistTimer = null;
+          persistThemeDraftToCMS();
+        }, 1000);
+      }
+
+      function persistThemeDraftToCMS() {
+        var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+        var payload = {
+          kind: 'theme-css',
+          clientId: CMS_CLIENT_ID,
+          contentPath: THEME_OVERRIDES_CONTENT_PATH,
+          frontMatter: {},
+          body: buildThemeCssDraftBody()
+        };
+        return postToCMS(previewPath, { payload: payload }).then(function(resp) {
+          var pid = resp && (resp.previewId !== undefined && resp.previewId !== null && resp.previewId !== ''
+            ? resp.previewId : resp.preview_id);
+          if (pid) {
+            draftContentPaths.add(THEME_OVERRIDES_CONTENT_PATH);
+          }
+          return true;
+        }).catch(function(err) {
+          console.warn('persistThemeDraftToCMS', err);
+          return false;
+        });
+      }
+
+      function hydrateThemeColorsFromMenuSnapshot() {
+        var snap = window.__ttmsEditorSnapshot;
+        if (!snap || !snap.menuData) return;
+        var o = snap.menuData.themeColorOverrides;
+        if (!o || typeof o !== 'object') return;
+        themeColorSuppressPersist++;
+        try {
+          Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(k) { delete COLOR_OVERRIDE_VALUES[k]; });
+          Object.keys(o).forEach(function(k) { COLOR_OVERRIDE_VALUES[k] = o[k]; });
+          applyColorOverrides();
+        } finally {
+          themeColorSuppressPersist--;
+        }
       }
 
       function clearSelection() {
@@ -1593,7 +2022,24 @@
         inpImg.className = 'dashboard-edit-input menu-item-promo-image';
         inpImg.placeholder = 'images/promos/...';
         inpImg.value = imageStr;
-        addField('Image path', inpImg, true);
+        var promoImgRow = document.createElement('div');
+        promoImgRow.className = 'dashboard-menu-item-promo-image-path-row';
+        promoImgRow.appendChild(inpImg);
+        var browsePromoImg = document.createElement('button');
+        browsePromoImg.type = 'button';
+        browsePromoImg.className = 'dashboard-btn dashboard-btn-secondary';
+        browsePromoImg.setAttribute('aria-label', 'Browse site images');
+        browsePromoImg.setAttribute('title', 'Browse site images');
+        browsePromoImg.innerHTML = '<i class="fa fa-folder-open" aria-hidden="true"></i>';
+        browsePromoImg.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            inpImg.value = rel;
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+        promoImgRow.appendChild(browsePromoImg);
+        addField('Image path', promoImgRow, true);
         row.appendChild(head);
         row.appendChild(grid);
         return row;
@@ -1843,9 +2289,10 @@
 
       function setMenuItemImageUploadUiLocked(locked) {
         if (btnAddMenuItemImage) btnAddMenuItemImage.disabled = !!locked;
+        if (btnBrowseSiteMenuItemImages) btnBrowseSiteMenuItemImages.disabled = !!locked;
         if (btnAddMenuItemImageFile) btnAddMenuItemImageFile.disabled = !!locked;
         if (!menuItemImagesContainer) return;
-        menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-replace, .dashboard-menu-item-image-remove').forEach(function(b) {
+        menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-replace, .dashboard-menu-item-image-remove, .dashboard-menu-item-image-browse-site').forEach(function(b) {
           b.disabled = !!locked;
         });
         menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-drag').forEach(function(h) {
@@ -1871,9 +2318,10 @@
 
       function setSlideshowImageUploadUiLocked(locked) {
         if (btnAddSlideshowImage) btnAddSlideshowImage.disabled = !!locked;
+        if (btnBrowseSiteSlideshowImages) btnBrowseSiteSlideshowImages.disabled = !!locked;
         if (btnAddSlideshowImageFile) btnAddSlideshowImageFile.disabled = !!locked;
         if (!slideshowImagesContainer) return;
-        slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-replace, .dashboard-menu-item-image-remove').forEach(function(b) {
+        slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-replace, .dashboard-menu-item-image-remove, .dashboard-menu-item-image-browse-site').forEach(function(b) {
           b.disabled = !!locked;
         });
         slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-drag').forEach(function(h) {
@@ -1900,6 +2348,7 @@
       function setHeroImageUploadUiLocked(locked) {
         if (btnHeroImageReplace) btnHeroImageReplace.disabled = !!locked;
         if (btnHeroImageFile) btnHeroImageFile.disabled = !!locked;
+        if (btnHeroImageBrowseSite) btnHeroImageBrowseSite.disabled = !!locked;
         if (btnHeroImageRemove) btnHeroImageRemove.disabled = !!locked;
         if (inputHomeHeroImage) inputHomeHeroImage.readOnly = !!locked;
       }
@@ -2008,14 +2457,19 @@
           setMenuItemImageUploadUiLocked(true);
         }
         if (rowEl) rowEl.classList.add('dashboard-menu-item-image-row--uploading');
+        cmsLogJson('draft-assets POST →', url, { fileName: file && file.name, size: file && file.size, type: file && file.type });
         return fetch(url, { method: 'POST', credentials: 'include', headers: headers, body: fd })
           .then(function(res) {
             if (!res.ok) {
-              return res.text().then(function(t) { throw new Error(t || ('HTTP ' + res.status)); });
+              return res.text().then(function(t) {
+                cmsLogJson('draft-assets POST ✗', url, { status: res.status, body: t && t.length > 2000 ? t.slice(0, 2000) + '…' : t });
+                throw new Error(t || ('HTTP ' + res.status));
+              });
             }
             return res.json();
           })
           .then(function(data) {
+            cmsLogJson('draft-assets POST ←', url, data);
             var path = data.path != null ? data.path : data.Path;
             if (!path) throw new Error('No path in upload response');
             if (inp) inp.value = path;
@@ -2245,11 +2699,29 @@
         replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
         replaceBtn.addEventListener('click', function() { fileInp.click(); });
 
+        var browseSiteBtn = document.createElement('button');
+        browseSiteBtn.type = 'button';
+        browseSiteBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-browse-site';
+        browseSiteBtn.setAttribute('aria-label', 'Browse site images');
+        browseSiteBtn.setAttribute('title', 'Browse site images');
+        browseSiteBtn.innerHTML = '<i class="fa fa-folder-open" aria-hidden="true"></i>';
+        browseSiteBtn.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            inp.value = rel;
+            clearTimeout(inputThumbTimer);
+            updateThumbDisplay(rel, null);
+            syncMenuItemImagesTextareaFromRows();
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+
         var pathCol = document.createElement('div');
         pathCol.className = 'dashboard-menu-item-image-path-col';
         var pathActions = document.createElement('div');
         pathActions.className = 'dashboard-menu-item-image-path-actions';
         pathActions.appendChild(replaceBtn);
+        pathActions.appendChild(browseSiteBtn);
         pathActions.appendChild(fileInp);
         pathCol.appendChild(inp);
         pathCol.appendChild(pathActions);
@@ -2490,11 +2962,29 @@
         replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
         replaceBtn.addEventListener('click', function() { fileInp.click(); });
 
+        var browseSlideshowBtn = document.createElement('button');
+        browseSlideshowBtn.type = 'button';
+        browseSlideshowBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-browse-site';
+        browseSlideshowBtn.setAttribute('aria-label', 'Browse site images');
+        browseSlideshowBtn.setAttribute('title', 'Browse site images');
+        browseSlideshowBtn.innerHTML = '<i class="fa fa-folder-open" aria-hidden="true"></i>';
+        browseSlideshowBtn.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            inp.value = rel;
+            clearTimeout(inputThumbTimer);
+            updateThumbDisplay(rel, null);
+            syncSlideshowImagesTextareaFromRows();
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+
         var pathCol = document.createElement('div');
         pathCol.className = 'dashboard-menu-item-image-path-col';
         var pathActions = document.createElement('div');
         pathActions.className = 'dashboard-menu-item-image-path-actions';
         pathActions.appendChild(replaceBtn);
+        pathActions.appendChild(browseSlideshowBtn);
         pathActions.appendChild(fileInp);
         pathCol.appendChild(inp);
         pathCol.appendChild(pathActions);
@@ -3098,18 +3588,68 @@
         return paths;
       }
 
+      var _loadDraftsInFlight = null;
+
+      function normalizeItemUrlForMatch(u) {
+        if (!u || typeof u !== 'string') return '';
+        return u.replace(/\/+$/, '') + '/';
+      }
+
+      function findMenuItemsContainerForSectionSlug(doc, sectionSlug) {
+        if (!doc) return null;
+        if (sectionSlug) {
+          var header = doc.querySelector('.menu-header[data-section-slug="' + String(sectionSlug).replace(/"/g, '\\"') + '"]');
+          var bg = header && header.closest('.main-menu-bg');
+          var c = bg && bg.querySelector('.menu-items-container');
+          if (c) return c;
+        }
+        var pack = doc.getElementById('packery-container') || doc.body;
+        return pack.querySelector('.menu-items-container') || doc.querySelector('.main-menu-bg .menu-items-container');
+      }
+
+      /**
+       * If a CMS preview has no matching card yet, insert a placeholder (content/<section>/<slug>.md).
+       */
+      function ensureMenuItemPlaceholderCardFromPreview(doc, win, itemUrl, contentPath, fm, body) {
+        if (!doc || !win || typeof win._dashboardCreateNewMenuItemCard !== 'function') return;
+        var cp = String(contentPath || '');
+        if (!cp || cp.indexOf('content/') !== 0) return;
+        var norm = normalizeItemUrlForMatch(itemUrl);
+        var esc = norm.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        if (doc.querySelector('.menu-item-card[data-item-url="' + esc + '"]')) return;
+
+        var title = fm && fm.title != null ? String(fm.title) : 'New item';
+        var summary = body != null && body !== '' ? String(body) : '';
+        var mp = cp.match(/^content\/([^/]+)\/([^/]+)\.md$/);
+        if (!mp) return;
+        var cardOpts = { title: title, summary: summary, sectionSlug: mp[1], nid: mp[2] };
+        var sectionForContainer = mp[1];
+
+        var card = win._dashboardCreateNewMenuItemCard(doc, cardOpts);
+        var container = findMenuItemsContainerForSectionSlug(doc, sectionForContainer);
+        if (!container) return;
+        var bar = container.querySelector('.dashboard-edit-add-item-bar');
+        if (bar && bar.parentNode === container) container.insertBefore(card, bar.nextSibling);
+        else container.insertBefore(card, container.firstChild);
+        if (win._dashboardInjectEditButtons) win._dashboardInjectEditButtons();
+      }
+
+      /** Loads CMS content previews into the iframe. Coalesces concurrent calls (snapshot bootstrap + iframe load both trigger this). */
       function loadAndApplyDrafts() {
         var doc = iframe.contentDocument;
         var win = iframe.contentWindow;
         if (!win || !win.__dashboardApplyEdit || !doc) return;
+        if (_loadDraftsInFlight) return _loadDraftsInFlight;
         var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
         var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
         var headers = { 'Accept': 'application/json' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
-        fetch(url, { method: 'GET', credentials: 'include', headers: headers })
+        cmsLogJson('GET content/previews (loadAndApplyDrafts) →', url, {});
+        _loadDraftsInFlight = fetch(url, { method: 'GET', credentials: 'include', headers: headers })
           .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
           .catch(function() { return { previews: [] }; })
           .then(function(data) {
+            cmsLogJson('GET content/previews (loadAndApplyDrafts) ←', url, data);
             var list = dedupePreviewsByContentPath(data && data.previews && Array.isArray(data.previews) ? data.previews : []);
             var applied = 0;
             list.forEach(function(preview) {
@@ -3118,6 +3658,20 @@
               var contentPath = p.contentPath || preview.content_path || p.content_path || '';
               var fm = p.frontMatter || p.front_matter || {};
               var title = fm.title != null ? fm.title : '';
+
+              if (kind === 'theme-css' || contentPath === THEME_OVERRIDES_CONTENT_PATH) {
+                themeColorSuppressPersist++;
+                try {
+                  var parsed = parseThemeOverridesFromCss(p.body || '');
+                  Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(k) { delete COLOR_OVERRIDE_VALUES[k]; });
+                  Object.keys(parsed).forEach(function(k) { COLOR_OVERRIDE_VALUES[k] = parsed[k]; });
+                  applyColorOverrides();
+                } finally {
+                  themeColorSuppressPersist--;
+                }
+                applied++;
+                return;
+              }
 
               if (kind === 'menu-item') {
                 var itemUrl = '/' + String(contentPath).replace(/^content\//, '').replace(/\.md$/, '') + '/';
@@ -3144,6 +3698,7 @@
                 if (fm.promotions !== undefined) payload.promotions = fm.promotions;
                 if (fm.availability !== undefined) payload.availability = fm.availability;
                 try {
+                  ensureMenuItemPlaceholderCardFromPreview(doc, win, itemUrl, contentPath, fm, p.body);
                   win.__dashboardApplyEdit(JSON.stringify(payload));
                   applied++;
                 } catch (e) { console.warn('Apply draft failed', e); }
@@ -3215,7 +3770,9 @@
               if (cp) draftContentPaths.add(cp);
             });
             if (editMode && editSubmode === 'content') applyEditHighlights();
-          });
+          })
+          .finally(function() { _loadDraftsInFlight = null; });
+        return _loadDraftsInFlight;
       }
 
       function getContentPathForElement(doc, el) {
@@ -3224,10 +3781,6 @@
           var itemUrl = el.getAttribute('data-item-url') || '';
           if (!itemUrl) return null;
           var trimmed = itemUrl.replace(/\/$/, '');
-          if (trimmed.indexOf('/__dashboard-new/') === 0) {
-            var seg = trimmed.replace(/^\/__dashboard-new\//, '').replace(/\/$/, '');
-            if (seg) return 'content/__dashboard-new/' + seg + '.md';
-          }
           return 'content' + trimmed + '.md';
         }
         if (el.classList && el.classList.contains('menu-header')) {
@@ -3277,8 +3830,10 @@
                   var opts = JSON.parse(payloadStr);
                   var cards = doc.querySelectorAll('.menu-item-card');
                   var card = null;
+                  var targetNorm = normalizeItemUrlForMatch(opts.itemUrl);
                   for (var i = 0; i < cards.length; i++) {
-                    if (cards[i].getAttribute('data-item-url') === opts.itemUrl) { card = cards[i]; break; }
+                    var du = cards[i].getAttribute('data-item-url') || '';
+                    if (normalizeItemUrlForMatch(du) === targetNorm) { card = cards[i]; break; }
                   }
                   if (!card) return;
                   if (opts.title != null) {
@@ -3666,9 +4221,15 @@
               }
               function createNewMenuItemCard(doc, opts) {
                 opts = opts || {};
-                var nid = opts.nid || ('n' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
-                var itemPath = '/__dashboard-new/' + nid + '/';
+                var rawSec = opts.sectionSlug != null ? String(opts.sectionSlug) : 'menu-items';
+                rawSec = rawSec.replace(/^\/+|\/+$/g, '').replace(/[^a-zA-Z0-9_-]/g, '-') || 'menu-items';
                 var titleText = opts.title != null ? String(opts.title) : 'New item';
+                var nid = opts.nid;
+                if (nid == null || nid === '') {
+                  var baseSlug = slugifyMenuItemTitle(titleText);
+                  nid = uniqueMenuItemSlugInSection(doc, rawSec, baseSlug, null);
+                }
+                var itemPath = '/' + rawSec + '/' + nid + '/';
                 titleText = titleText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
                 var summaryRaw = opts.summary != null ? String(opts.summary) : '';
                 var summaryInner = summaryRaw
@@ -3799,6 +4360,11 @@
               setTimeout(injectEditButtons, 100);
               setTimeout(applyEditHighlights, 150);
               setTimeout(applyEditHighlights, 150);
+              if (win._dashboardEditClick) {
+                try {
+                  doc.body.removeEventListener('click', win._dashboardEditClick, true);
+                } catch (remErr) { /* ignore */ }
+              }
               win._dashboardEditClick = function(e) {
                 if (e.target.closest('.dashboard-edit-drag-handle')) {
                   e.stopPropagation();
@@ -3811,7 +4377,10 @@
                   var bar = addItemBtn.closest('.dashboard-edit-add-item-bar');
                   var container = bar && bar.parentNode;
                   if (container && container.classList && container.classList.contains('menu-items-container')) {
-                    var newCard = createNewMenuItemCard(doc);
+                    var bg = container.closest('.main-menu-bg');
+                    var hdr = bg && bg.querySelector('.menu-header[data-section-slug]');
+                    var sectionSlug = (hdr && hdr.getAttribute('data-section-slug') || '').trim() || 'menu-items';
+                    var newCard = createNewMenuItemCard(doc, { sectionSlug: sectionSlug });
                     container.insertBefore(newCard, bar.nextElementSibling);
                     if (win._dashboardInjectEditButtons) setTimeout(win._dashboardInjectEditButtons, 50);
                   }
@@ -4086,6 +4655,18 @@
           }, { statusLabel: 'Uploading new image…' });
         });
       }
+      if (btnBrowseSiteMenuItemImages && menuItemImagesContainer) {
+        btnBrowseSiteMenuItemImages.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            var paths = gatherMenuItemImagePathsFromRows();
+            if (menuItemImagesContainer.querySelector('.dashboard-menu-item-images-empty')) paths = [];
+            paths.push(rel);
+            renderMenuItemImagesUI(paths, true);
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+      }
       if (btnAddSlideshowImage && btnAddSlideshowImageFile && slideshowImagesContainer) {
         btnAddSlideshowImage.addEventListener('click', function() {
           btnAddSlideshowImageFile.click();
@@ -4102,10 +4683,146 @@
           }, { statusLabel: 'Uploading new image…', useSlideshowStatus: true });
         });
       }
+      if (btnBrowseSiteSlideshowImages && slideshowImagesContainer) {
+        btnBrowseSiteSlideshowImages.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            var paths = gatherSlideshowImagePathsFromRows();
+            if (slideshowImagesContainer.querySelector('.dashboard-menu-item-images-empty')) paths = [];
+            paths.push(rel);
+            renderSlideshowImagesUI(paths, true);
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+      }
+      if (btnSectionImageTopBrowse && inputSectionImageTop) {
+        btnSectionImageTopBrowse.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            inputSectionImageTop.value = rel;
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+      }
+      if (btnSectionImageBottomBrowse && inputSectionImageBottom) {
+        btnSectionImageBottomBrowse.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            inputSectionImageBottom.value = rel;
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+      }
+      if (btnPromoBrowseSiteImages && inputPromoImages && promoImagesViewEl) {
+        btnPromoBrowseSiteImages.addEventListener('click', function() {
+          openSiteImagePickerModal(function(rel) {
+            var lines = hoursParseStringList(inputPromoImages.value);
+            var norm = (rel || '').trim();
+            if (norm && lines.indexOf(norm) === -1) lines.push(norm);
+            inputPromoImages.value = lines.join('\n');
+            hoursRenderImagesPreview(promoImagesViewEl, lines);
+            editFormDirty = true;
+            setEditStatus('Unsaved changes (not yet published)');
+          });
+        });
+      }
+      function closeSiteImagePickerModal() {
+        siteImagePickerOnPick = null;
+        if (!heroSiteImageModal) return;
+        heroSiteImageModal.classList.add('hidden');
+        heroSiteImageModal.setAttribute('aria-hidden', 'true');
+      }
+      /**
+       * Open site images modal. Pass onPick(rel) to set path; omit for hero image default behavior.
+       */
+      function openSiteImagePickerModal(onPick) {
+        siteImagePickerOnPick = (typeof onPick === 'function') ? onPick : function(rel) {
+          if (!inputHomeHeroImage) return;
+          inputHomeHeroImage.value = rel;
+          updateHeroImageThumbDisplay(rel, null);
+          syncHeroPathInputVisibility();
+          editFormDirty = true;
+          setEditStatus('Unsaved changes (not yet published)');
+        };
+        if (!heroSiteImageModal) return;
+        heroSiteImageModal.classList.remove('hidden');
+        heroSiteImageModal.setAttribute('aria-hidden', 'false');
+        if (heroSiteImageError) { heroSiteImageError.classList.add('hidden'); heroSiteImageError.textContent = ''; }
+        if (heroSiteImageEmpty) heroSiteImageEmpty.classList.add('hidden');
+        if (heroSiteImageGrid) heroSiteImageGrid.innerHTML = '';
+        if (siteImagesListCache && siteImagesListCache.length) {
+          if (heroSiteImageLoading) heroSiteImageLoading.classList.add('hidden');
+          renderHeroSiteImageGrid(siteImagesListCache);
+          return;
+        }
+        if (heroSiteImageLoading) heroSiteImageLoading.classList.remove('hidden');
+        var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/site-images';
+        var headers = { 'Accept': 'application/json' };
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch(url, { method: 'GET', credentials: 'include', headers: headers })
+          .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status)); })
+          .then(function(data) {
+            if (heroSiteImageLoading) heroSiteImageLoading.classList.add('hidden');
+            var paths = (data && data.paths && Array.isArray(data.paths)) ? data.paths : [];
+            siteImagesListCache = paths;
+            if (!paths.length) {
+              if (heroSiteImageEmpty) heroSiteImageEmpty.classList.remove('hidden');
+              return;
+            }
+            renderHeroSiteImageGrid(paths);
+          })
+          .catch(function(err) {
+            if (heroSiteImageLoading) heroSiteImageLoading.classList.add('hidden');
+            if (heroSiteImageError) {
+              heroSiteImageError.classList.remove('hidden');
+              heroSiteImageError.textContent = 'Could not load site images. ' + (err && err.message ? err.message : 'Check your connection or try again.');
+            }
+          });
+      }
+      function renderHeroSiteImageGrid(paths) {
+        if (!heroSiteImageGrid) return;
+        heroSiteImageGrid.innerHTML = '';
+        paths.forEach(function(rel) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'dashboard-site-image-pick-btn';
+          var thumb = document.createElement('div');
+          thumb.className = 'dashboard-site-image-pick-thumb';
+          var img = document.createElement('img');
+          img.alt = '';
+          img.loading = 'lazy';
+          img.src = resolveMenuItemImageSrcForPreview(rel);
+          img.onerror = function() { thumb.classList.add('dashboard-site-image-pick-thumb--broken'); };
+          thumb.appendChild(img);
+          var cap = document.createElement('span');
+          cap.className = 'dashboard-site-image-pick-label';
+          cap.textContent = rel;
+          btn.appendChild(thumb);
+          btn.appendChild(cap);
+          btn.addEventListener('click', function() {
+            var fn = siteImagePickerOnPick;
+            if (fn) {
+              try { fn(rel); } catch (e) { console.warn('Site image pick', e); }
+            }
+            closeSiteImagePickerModal();
+          });
+          heroSiteImageGrid.appendChild(btn);
+        });
+      }
       (function setupHeroImageUI() {
         var heroPathInputTimer = null;
         if (btnHeroImageReplace && btnHeroImageFile) {
           btnHeroImageReplace.addEventListener('click', function() { btnHeroImageFile.click(); });
+        }
+        if (btnHeroImageBrowseSite) {
+          btnHeroImageBrowseSite.addEventListener('click', function() { openSiteImagePickerModal(); });
+        }
+        if (heroSiteImageModalBackdrop) {
+          heroSiteImageModalBackdrop.addEventListener('click', closeSiteImagePickerModal);
+        }
+        if (heroSiteImageModalClose) {
+          heroSiteImageModalClose.addEventListener('click', closeSiteImagePickerModal);
         }
         if (btnHeroImageFile && inputHomeHeroImage) {
           btnHeroImageFile.addEventListener('change', function() {
@@ -4224,14 +4941,14 @@
         var path = payload.contentPath || p.content_path || '';
         var fm = payload.frontMatter || payload.front_matter || {};
         var title = (fm.title != null && fm.title !== '') ? String(fm.title) : (path ? path.replace(/^content\//, '').replace(/\.md$/, '') : '');
-        var kindLabel = kind === 'menu-item' ? 'Menu item' : kind === 'section-header' ? 'Section' : kind === 'promotion' ? 'Promotion' : kind;
+        var kindLabel = kind === 'menu-item' ? 'Menu item' : kind === 'section-header' ? 'Section' : kind === 'promotion' ? 'Promotion' : kind === 'theme-css' ? 'Theme colors' : kind;
         return title ? kindLabel + ': ' + title + ' (' + path + ')' : kindLabel + ': ' + path;
       }
-      if (btnPublish) {
-        btnPublish.addEventListener('click', function() {
-          fetchPreviewsForPublish().then(function(previews) {
-            if (previews.length === 0) {
-              alert('No saved drafts to publish. Save drafts first (e.g. collapse the edit panel after making changes), then publish.');
+
+      /** Opens the Git publish review modal (content apply-batch). */
+      function openPublishSummaryModal(previews) {
+        if (!previews || previews.length === 0) {
+          alert('No saved drafts to publish. Save content drafts in the edit panel first.');
               return;
             }
             var pending = previews.slice();
@@ -4282,12 +4999,15 @@
                     var headers = { 'Accept': 'application/json' };
                     var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
                     if (token) headers['Authorization'] = 'Bearer ' + token;
+                    cmsLogJson('DELETE preview →', delPath, { previewId: previewId });
                     fetch(delUrl, { method: 'DELETE', credentials: 'include', headers: headers })
                       .then(function(res) {
                         if (!res.ok && res.status !== 204) return res.text().then(function(t) { throw new Error(t); });
+                        cmsLogJson('DELETE preview ←', delPath, { status: res.status });
                         removeFromList();
                       })
                       .catch(function(err) {
+                        cmsLogJson('DELETE preview ✗', delPath, { error: String(err && err.message ? err.message : err) });
                         console.error('Delete draft failed', err);
                         alert('Could not delete saved change: ' + (err.message || err));
                       });
@@ -4328,6 +5048,17 @@
                 var applyBatchPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply-batch';
                 postToCMS(applyBatchPath, body).then(function(resp) {
                   console.log('Publish response:', resp);
+              try {
+                var hash = (resp && resp.commit && resp.commit.hash) ? String(resp.commit.hash) : '';
+                var labels = pending.map(function(p) { return publishSummaryLabel(p); });
+                localStorage.setItem('ttmenus_last_publish_' + CMS_CLIENT_ID, JSON.stringify({
+                  at: new Date().toISOString(),
+                  ok: true,
+                  count: pending.length,
+                  commitHash: hash,
+                  fileLabels: labels.slice(0, 24)
+                }));
+              } catch (e) {}
                   pending.forEach(function(p) {
                     var cp = (p.payload || p.Payload || {}).contentPath || p.content_path || '';
                     if (cp) draftContentPaths.delete(cp);
@@ -4346,9 +5077,107 @@
                 });
               };
             }
+      }
+
+      function saveOptionsModalSyncDiscardState() {
+        var discardBtn = document.getElementById('dashboardSaveOptionsDiscard');
+        if (discardBtn) {
+          var can = !!editorSnapshotVersionId;
+          discardBtn.disabled = !can;
+          discardBtn.title = can ? 'Permanently delete the saved menu snapshot on the CMS' : 'No saved menu snapshot to discard (open from a saved version, or save a snapshot first).';
+        }
+      }
+
+      function openSaveOptionsModal() {
+        var m = document.getElementById('dashboardSaveOptionsModal');
+        if (m) {
+          saveOptionsModalSyncDiscardState();
+          m.classList.remove('hidden');
+          m.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      function closeSaveOptionsModal() {
+        var m = document.getElementById('dashboardSaveOptionsModal');
+        if (m) {
+          m.classList.add('hidden');
+          m.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      if (btnSave) {
+        btnSave.addEventListener('click', function() {
+          openSaveOptionsModal();
+        });
+      }
+
+      (function wireSaveOptionsModal() {
+        var backdrop = document.getElementById('dashboardSaveOptionsModalBackdrop');
+        var cancel = document.getElementById('dashboardSaveOptionsCancel');
+        var saveOnly = document.getElementById('dashboardSaveSnapshotOnly');
+        var savePub = document.getElementById('dashboardSaveAndPublish');
+        var discard = document.getElementById('dashboardSaveOptionsDiscard');
+        if (backdrop) backdrop.addEventListener('click', closeSaveOptionsModal);
+        if (cancel) cancel.addEventListener('click', closeSaveOptionsModal);
+        if (saveOnly) {
+          saveOnly.addEventListener('click', function() {
+            closeSaveOptionsModal();
+            if (btnSave) btnSave.disabled = true;
+            saveMenuSnapshotToCMS({ updateLiveMenu: false }).then(function(resp) {
+              if (resp && resp.version_id) editorSnapshotVersionId = resp.version_id;
+              saveOptionsModalSyncDiscardState();
+              setEditStatus('Snapshot saved (CMS only, not published to Git)');
+            }).catch(function(err) {
+              alert('Save failed: ' + (err.message || err));
+            }).then(function() {
+              if (btnSave) btnSave.disabled = false;
           });
         });
       }
+        if (savePub) {
+          savePub.addEventListener('click', function() {
+            closeSaveOptionsModal();
+            if (btnSave) btnSave.disabled = true;
+            saveMenuSnapshotToCMS({ updateLiveMenu: true }).then(function() {
+              return persistThemeDraftToCMS();
+            }).then(function() {
+              return fetchPreviewsForPublish();
+            }).then(function(previews) {
+              if (btnSave) btnSave.disabled = false;
+              if (!previews || previews.length === 0) {
+                setEditStatus('Menu snapshot saved. No content drafts to publish to Git.');
+                alert('Menu snapshot saved on the CMS. There are no content drafts to publish to Git.');
+                return;
+              }
+              openPublishSummaryModal(previews);
+            }).catch(function(err) {
+              alert('Save failed: ' + (err.message || err));
+              if (btnSave) btnSave.disabled = false;
+            });
+          });
+        }
+        if (discard) {
+          discard.addEventListener('click', function() {
+            if (!editorSnapshotVersionId) return;
+            if (!confirm('Permanently delete this menu snapshot from the CMS? This cannot be undone.')) return;
+            var vid = editorSnapshotVersionId;
+            closeSaveOptionsModal();
+            if (btnSave) btnSave.disabled = true;
+            deleteFromCMS('/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/menu-versions/' + encodeURIComponent(vid)).then(function() {
+              if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('editMenuVersionId') === vid) {
+                sessionStorage.removeItem('editMenuVersionId');
+              }
+              editorSnapshotVersionId = null;
+              setEditStatus('Snapshot discarded');
+              window.location.href = window.location.pathname + (window.location.hash || '');
+            }).catch(function(err) {
+              alert('Could not delete snapshot: ' + (err.message || err));
+            }).then(function() {
+              if (btnSave) btnSave.disabled = false;
+            });
+          });
+        }
+      })();
       function applyEditToPreview() {
         if (!selectedInfo) return;
         var doc = iframe.contentDocument;
@@ -4655,6 +5484,7 @@
         applyEditToPreview();
         var draftPayload = buildContentEditPayload();
         if (!draftPayload) {
+          cmsLogJson('save draft skipped', 'persistCurrentDraftToCMS', { reason: 'buildContentEditPayload returned null (e.g. slideshow/location or unsupported type)' });
           return Promise.resolve(false);
         }
         var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
@@ -4812,6 +5642,37 @@
         <button type="button" class="btn-dash btn-dash-primary" id="dashboardLeaveSave">Save draft</button>
         <button type="button" class="btn-dash btn-dash-danger" id="dashboardLeaveDiscard">Discard</button>
         <button type="button" class="btn-dash btn-dash-secondary" id="dashboardLeaveCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="dashboardHeroSiteImageModal" class="dashboard-draft-modal dashboard-site-image-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardHeroSiteImageModalTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop" id="dashboardHeroSiteImageModalBackdrop"></div>
+    <div class="dashboard-draft-modal-dialog dashboard-site-image-modal-dialog">
+      <div class="dashboard-site-image-modal-head">
+        <h2 id="dashboardHeroSiteImageModalTitle" class="dashboard-draft-modal-title">Site images</h2>
+        <button type="button" class="dashboard-site-image-modal-close" id="dashboardHeroSiteImageModalClose" aria-label="Close">×</button>
+      </div>
+      <p class="dashboard-draft-modal-text dashboard-site-image-modal-hint">Images under <code>static/images</code> in your site repository (and theme <code>static/images</code>).</p>
+      <div id="dashboardHeroSiteImageLoading" class="dashboard-site-image-modal-loading" aria-live="polite">Loading from repository…</div>
+      <p id="dashboardHeroSiteImageError" class="dashboard-site-image-modal-error hidden" role="alert"></p>
+      <p id="dashboardHeroSiteImageEmpty" class="dashboard-site-image-modal-empty hidden" role="status">No images found. Add files under <code>static/images</code> in the repo, or use <strong>Choose image</strong> to upload a draft.</p>
+      <div id="dashboardHeroSiteImageGrid" class="dashboard-site-image-grid" role="listbox" aria-label="Site images"></div>
+    </div>
+  </div>
+  <div id="dashboardSaveOptionsModal" class="dashboard-draft-modal dashboard-save-options-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardSaveOptionsTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop" id="dashboardSaveOptionsModalBackdrop"></div>
+    <div class="dashboard-draft-modal-dialog dashboard-save-options-dialog">
+      <h2 id="dashboardSaveOptionsTitle" class="dashboard-draft-modal-title">Save or publish</h2>
+      <ul class="dashboard-save-options-list">
+        <li><strong>Save snapshot (CMS only)</strong> — stores menu JSON under saved versions on the CMS. Does not update the live preview copy or publish to Git.</li>
+        <li><strong>Save &amp; publish</strong> — updates the live menu copy on the CMS, saves a snapshot, then opens the list of content drafts to commit to Git.</li>
+        <li><strong>Discard snapshot</strong> — permanently deletes the saved menu version you are editing (if any). Content drafts are not removed.</li>
+      </ul>
+      <div class="dashboard-draft-modal-actions dashboard-save-options-actions">
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardSaveSnapshotOnly">Save snapshot (CMS only)</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="dashboardSaveAndPublish">Save &amp; publish to Git</button>
+        <button type="button" class="btn-dash btn-dash-danger" id="dashboardSaveOptionsDiscard" disabled>Discard snapshot</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardSaveOptionsCancel">Cancel</button>
       </div>
     </div>
   </div>

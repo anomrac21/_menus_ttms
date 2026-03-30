@@ -104,6 +104,7 @@
 
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
 <link rel="stylesheet" href="/css/colors.css"/>
+<link rel="stylesheet" href="/css/theme-overrides.css"/>
 <link rel="stylesheet" href="/css/custom.css"/>
 <link rel="stylesheet" href="/css/header.css"/>
 <link rel="stylesheet" href="/css/cart.css"/>
@@ -250,6 +251,14 @@ window.AUTH_CONFIG = {
 };
 // Set current site's client ID for access control (contentManagement or ads clientId)
 window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
+{{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
+{{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+// CMS base URL + client id for dashboard editor, menu settings, and other API calls (same as payload flows)
+window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
+// API root must end with /api (use apiUrl from hugo.toml — avoids double /api when building paths)
+window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
+window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 </script>
 <script src="/js/auth-client.js"></script>
 <script src="/js/auth-client-access.js"></script>

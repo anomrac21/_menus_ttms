@@ -10,32 +10,43 @@ class TTMSAnalytics {
     this.pageLoadTime = Date.now();
     this.trackedAdImpressions = new Set();
     this.trackedAdClicks = new Set();
-    
+    this.matomoInitAttempts = 0;
+    this.maxMatomoInitAttempts = 5;
+    this.adImpressionRetries = 0;
+    this.maxAdImpressionRetries = 4;
+
     this.init();
+  }
+
+  /** Local / preview hosts: avoid noisy retries when Matomo snippet is absent. */
+  isDevHost() {
+    const h = typeof location !== 'undefined' && location.hostname ? location.hostname : '';
+    return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local');
   }
 
   /**
    * Initialize analytics tracking
    */
   init() {
-    // Wait for Matomo to be ready
     if (typeof _paq !== 'undefined') {
       this.enabled = true;
       console.log('🎯 TTMS Analytics initialized');
-      
-      // Set custom dimensions
+
       this.setCustomDimensions();
-      
-      // Track page engagement
       this.trackPageEngagement();
-      
-      // Set up observers
       this.observeAdImpressions();
       this.setupScrollTracking();
-      
-    } else {
-      console.warn('⚠️ Matomo not available, retrying...');
+      return;
+    }
+
+    this.matomoInitAttempts++;
+    if (this.matomoInitAttempts < this.maxMatomoInitAttempts) {
+      if (!this.isDevHost()) {
+        console.warn('⚠️ Matomo not available, retrying...');
+      }
       setTimeout(() => this.init(), 1000);
+    } else if (!this.isDevHost()) {
+      console.warn('⚠️ Matomo not available after retries; analytics disabled');
     }
   }
 
@@ -256,17 +267,21 @@ class TTMSAnalytics {
    * Observe ad impressions using Intersection Observer
    */
   observeAdImpressions() {
-    // Wait a bit for ads to be populated
+    if (!this.enabled) return;
     setTimeout(() => {
       const adElements = document.querySelectorAll('.ad-panel, .ads, section[id*="ad"]');
-      
+
       if (adElements.length === 0) {
-        console.log('No ads found to track, retrying...');
-        // Retry after ads might be loaded
-        setTimeout(() => this.observeAdImpressions(), 2000);
+        if (this.isDevHost()) return;
+        this.adImpressionRetries++;
+        if (this.adImpressionRetries < this.maxAdImpressionRetries) {
+          setTimeout(() => this.observeAdImpressions(), 2000);
+        }
         return;
       }
-      
+
+      this.adImpressionRetries = 0;
+
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting && entry.intersectionRatio > 0.5) {

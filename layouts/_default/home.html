@@ -44,7 +44,7 @@
           {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods") (in $titleurl "admins") (in $titleurl "admin")) }}
               <div class="main-menu-bg {{ .LinkTitle }}">
                 <div class="main-menu {{ .LinkTitle }} item">
-                  <div class="menu-header" data-section-slug="{{ path.Base .File.Dir | default .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
+                  <div class="menu-header" data-section-slug="{{ .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     {{ if .Params.images.top }}
                       <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ .Params.images.top }}" alt="{{ .LinkTitle }}" loading="lazy"></a>

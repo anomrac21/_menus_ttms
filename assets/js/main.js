@@ -760,7 +760,7 @@
         if (!expandedContent || !loadingDiv || !dataDiv) return;
 
         const isDashboardNewPlaceholderUrl = typeof window !== 'undefined' && window.__dashboardEditMode &&
-            typeof url === 'string' && url.indexOf('/__dashboard-new/') === 0;
+            element && element.hasAttribute('data-dashboard-edit-new-item');
 
         // Show loading state
         expandedContent.style.display = 'block';
