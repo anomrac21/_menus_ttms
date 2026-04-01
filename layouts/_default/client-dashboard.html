@@ -65,6 +65,18 @@
       <div class="card">
         <h3>Analytics</h3>
         <p>View traffic, engagement, and menu performance.</p>
+        <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
+          <div class="dashboard-card-notify-snapshot-grid">
+            <div class="dashboard-card-notify-snapshot-cell">
+              <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
+              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews">—</span>
+            </div>
+            <div class="dashboard-card-notify-snapshot-cell">
+              <span class="dashboard-card-notify-snapshot-label">Visits</span>
+              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits">—</span>
+            </div>
+          </div>
+        </div>
         <a href="/analytics/" class="btn-dash btn-dash-secondary">Analytics →</a>
       </div>
       <div class="card">
@@ -655,6 +667,35 @@
           }
         });
       }
+
+      function formatAnalyticsCount(n) {
+        if (n == null || n === '') return '—';
+        try {
+          return new Intl.NumberFormat(undefined).format(Number(n));
+        } catch (e) {
+          return String(n);
+        }
+      }
+      (function() {
+        var pv = document.getElementById('dashboardCardAnalyticsPageViews');
+        var vs = document.getElementById('dashboardCardAnalyticsVisits');
+        if (!pv || !vs) return;
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) return;
+        var cms = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+        var cid = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var url = cms + '/api/clients/' + encodeURIComponent(cid) + '/analytics/summary?days=30';
+        fetch(url, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token } })
+          .then(function(res) {
+            return res.json().then(function(data) { return { ok: res.ok, data: data }; });
+          })
+          .then(function(x) {
+            if (!x.ok || !x.data) return;
+            if (x.data.pageViews != null) pv.textContent = formatAnalyticsCount(x.data.pageViews);
+            if (x.data.visits != null) vs.textContent = formatAnalyticsCount(x.data.visits);
+          })
+          .catch(function() { /* keep dashes */ });
+      })();
 
       {{- if site.Params.notifications.enabled }}
       if (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.apiUrl) {

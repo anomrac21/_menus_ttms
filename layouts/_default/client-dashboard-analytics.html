@@ -11,32 +11,32 @@
   <main class="dashboard-analytics-main">
     <section class="dashboard-analytics-period" aria-labelledby="analytics-last-month-heading">
       <h2 id="analytics-last-month-heading" class="dashboard-analytics-heading">Last 30 days</h2>
-      <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site.</p>
+      <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site. Unique visitors may use Matomo’s daily sum when exact range uniques aren’t computed.</p>
 
       <div class="dashboard-analytics-metrics" id="dashboardAnalyticsMetrics">
         <div class="dashboard-analytics-card">
           <span class="dashboard-analytics-card-label">Page views</span>
-          <span class="dashboard-analytics-card-value" id="metricPageViews">—</span>
+          <span class="dashboard-analytics-card-value" id="metricPageViews" aria-label="Data not yet loaded">—</span>
         </div>
         <div class="dashboard-analytics-card">
           <span class="dashboard-analytics-card-label">Visits</span>
-          <span class="dashboard-analytics-card-value" id="metricVisits">—</span>
+          <span class="dashboard-analytics-card-value" id="metricVisits" aria-label="Data not yet loaded">—</span>
         </div>
         <div class="dashboard-analytics-card">
           <span class="dashboard-analytics-card-label">Unique visitors</span>
-          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors">—</span>
+          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors" aria-label="Data not yet loaded">—</span>
         </div>
         <div class="dashboard-analytics-card">
           <span class="dashboard-analytics-card-label">Menu item views</span>
-          <span class="dashboard-analytics-card-value" id="metricMenuItemViews">—</span>
+          <span class="dashboard-analytics-card-value" id="metricMenuItemViews" aria-label="Data not yet loaded">—</span>
         </div>
         <div class="dashboard-analytics-card">
           <span class="dashboard-analytics-card-label">Add to cart</span>
-          <span class="dashboard-analytics-card-value" id="metricAddToCart">—</span>
+          <span class="dashboard-analytics-card-value" id="metricAddToCart" aria-label="Data not yet loaded">—</span>
         </div>
       </div>
 
-      <p class="dashboard-analytics-note">Full reports and segments are available in <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a>. Connect a reporting API to this page to show live numbers here.</p>
+      <p class="dashboard-analytics-note" id="dashboardAnalyticsNote">Numbers come from Matomo for this site. Open <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a> for full reports and segments.</p>
     </section>
   </main>
 </div>
@@ -47,9 +47,78 @@
       return;
     }
 
-    document.querySelectorAll('.dashboard-analytics-card-value').forEach(function(el) {
-      if (el.textContent === '—') el.setAttribute('aria-label', 'Data not yet loaded');
-    });
+    function fmt(n) {
+      if (n == null || n === '') return '—';
+      try {
+        return new Intl.NumberFormat(undefined).format(Number(n));
+      } catch (e) {
+        return String(n);
+      }
+    }
+
+    function setLoadingAria() {
+      document.querySelectorAll('.dashboard-analytics-card-value').forEach(function(el) {
+        if (el.textContent === '—') el.setAttribute('aria-label', 'Data not yet loaded');
+      });
+    }
+
+    function setMetric(id, value, name) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (value == null || value === '') {
+        el.textContent = '—';
+        el.setAttribute('aria-label', name + ', data not available');
+        return;
+      }
+      var t = fmt(value);
+      el.textContent = t;
+      el.setAttribute('aria-label', name + ': ' + t);
+    }
+
+    setLoadingAria();
+
+    var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+    var noteEl = document.getElementById('dashboardAnalyticsNote');
+    if (!token) {
+      if (noteEl) noteEl.textContent = 'Sign in to load analytics. Open Matomo for full reports.';
+      return;
+    }
+
+    var cms = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+    var cid = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+    var url = cms + '/api/clients/' + encodeURIComponent(cid) + '/analytics/summary?days=30';
+
+    fetch(url, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token } })
+      .then(function(res) {
+        return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; });
+      })
+      .then(function(x) {
+        if (!x.ok) {
+          var err = (x.data && (x.data.error || x.data.message)) || String(x.status);
+          if (noteEl) {
+            if (x.status === 503) {
+              noteEl.textContent = 'Live analytics is not configured on the server yet. Open Matomo for full reports.';
+            } else if (x.status === 404) {
+              noteEl.textContent = 'No Matomo site id found in hugo.toml (params.services.analyticsid). Open Matomo after your site is linked.';
+            } else {
+              noteEl.textContent = 'Could not load analytics (' + err + '). Open Matomo for full reports.';
+            }
+          }
+          return;
+        }
+        var d = x.data || {};
+        setMetric('metricPageViews', d.pageViews, 'Page views');
+        setMetric('metricVisits', d.visits, 'Visits');
+        setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
+        setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
+        setMetric('metricAddToCart', d.addToCart, 'Add to cart');
+        if (noteEl) {
+          noteEl.innerHTML = 'Numbers come from Matomo for this site. Open <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a> for full reports and segments.';
+        }
+      })
+      .catch(function() {
+        if (noteEl) noteEl.textContent = 'Could not load analytics. Try again later or open Matomo for full reports.';
+      });
   });
 </script>
 {{ end }}
