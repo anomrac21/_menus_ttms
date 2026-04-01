@@ -43,9 +43,23 @@
           <button type="button" class="btn-dash btn-dash-secondary hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu">Publish</button>
         </div>
       </div>
-      <div class="card">
+      <div class="card card-dashboard-notify">
         <h3>Notifications</h3>
         <p>Manage push notifications and alerts for your menu.</p>
+        {{- if site.Params.notifications.enabled }}
+        <div class="dashboard-card-notify-snapshot" id="dashboardCardNotifySnapshot" aria-label="Notification snapshot, last 30 days">
+          <div class="dashboard-card-notify-snapshot-grid">
+            <div class="dashboard-card-notify-snapshot-cell">
+              <span class="dashboard-card-notify-snapshot-label">Subscribers</span>
+              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySubs">—</span>
+            </div>
+            <div class="dashboard-card-notify-snapshot-cell">
+              <span class="dashboard-card-notify-snapshot-label">Sent (30d)</span>
+              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySent">—</span>
+            </div>
+          </div>
+        </div>
+        {{- end }}
         <a href="/notifications/" class="btn-dash btn-dash-secondary">Notifications →</a>
       </div>
       <div class="card">
@@ -641,6 +655,40 @@
           }
         });
       }
+
+      {{- if site.Params.notifications.enabled }}
+      if (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.apiUrl) {
+        (function() {
+          var base = String(window.NOTIFY_CONFIG.apiUrl).replace(/\/+$/, '');
+          var domain = window.NOTIFY_CONFIG.clientDomain || window.location.hostname;
+          var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+          var subsEl = document.getElementById('dashboardCardNotifySubs');
+          var sentEl = document.getElementById('dashboardCardNotifySent');
+          if (!token || !subsEl || !sentEl) return;
+          var url = base + '/analytics/overview?client_domain=' + encodeURIComponent(domain) + '&days=30';
+          fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+          }).then(function(res) {
+            return res.text().then(function(text) {
+              var data = null;
+              try { data = text ? JSON.parse(text) : null; } catch (e) {}
+              if (!res.ok) throw new Error((data && (data.error || data.message)) || text || String(res.status));
+              return data;
+            });
+          }).then(function(data) {
+            var ov = (data && data.overview) || {};
+            var sub = ov.subscriptions || {};
+            var notif = ov.notifications || {};
+            if (subsEl) subsEl.textContent = sub.active != null ? String(sub.active) : '—';
+            if (sentEl) sentEl.textContent = notif.in_period != null ? String(notif.in_period) : '—';
+          }).catch(function() {
+            /* keep em dashes */
+          });
+        })();
+      }
+      {{- end }}
     });
   </script>
 </body>

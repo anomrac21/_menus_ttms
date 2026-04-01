@@ -1,19 +1,8 @@
 {{ if .Site.Params.notifications.enabled }}
-<!-- Notification Service Configuration -->
-<script>
-  window.NOTIFY_CONFIG = {
-    apiUrl: '{{ .Site.Params.notifications.apiUrl | default "http://localhost:8080/api/v1" }}',
-    websocketUrl: '{{ .Site.Params.notifications.websocketUrl | default "ws://localhost:8080/api/v1/ws/connect" }}',
-    clientDomain: '{{ .Site.BaseURL | replaceRE "^https?://" "" | replaceRE "/$" "" }}',
-    enabled: {{ .Site.Params.notifications.enabled | default false }}
-  };
-</script>
-
-<!-- Notification Client Script -->
-<script src="{{ "js/notify-client.js" | relURL }}"></script>
-
-<!-- Notification Container -->
+{{/* NOTIFY_CONFIG is defined in partial head.html (apiUrl, websocketUrl, serviceUrl, clientDomain from hostname).
+     Do not redefine here — a second block overwrote serviceUrl and used a static BaseURL for domain. */}}
 <div id="notification-container"></div>
+<script src="{{ "js/notify-client.js" | relURL }}" defer></script>
 {{ end }}
 
 

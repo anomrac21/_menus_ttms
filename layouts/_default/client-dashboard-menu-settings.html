@@ -79,6 +79,33 @@
       </form>
     </section>
 
+    {{- if site.Params.notifications.enabled -}}
+    <section class="dashboard-settings-section dashboard-settings-panel" aria-labelledby="settings-notify-welcome-heading">
+      <h2 id="settings-notify-welcome-heading" class="dashboard-analytics-heading">Push welcome message</h2>
+      <p class="dashboard-analytics-subtitle">First message customers see when they subscribe to notifications for this menu. Stored per site in the notification service (unique to each domain).</p>
+      <form id="notifyWelcomeForm" class="dashboard-settings-form" autocomplete="off">
+        <div class="dashboard-settings-grid">
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="notify-welcome-title">Welcome title</label>
+            <div class="dashboard-settings-value">
+              <input type="text" id="notify-welcome-title" name="welcome_title" class="dashboard-settings-input" maxlength="200" placeholder="e.g. Thanks for subscribing!">
+            </div>
+          </div>
+          <div class="dashboard-settings-row">
+            <label class="dashboard-settings-label" for="notify-welcome-message">Welcome message</label>
+            <div class="dashboard-settings-value">
+              <textarea id="notify-welcome-message" name="welcome_message" class="dashboard-settings-input dashboard-settings-textarea" rows="4" maxlength="2000" placeholder="Short message for new subscribers. Leave blank to use the default text."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-settings-form-actions">
+          <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveNotifyWelcome">Save welcome message</button>
+          <span id="notifyWelcomeSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+    {{- end -}}
+
     {{ with .Site.Params.services }}
     <section class="dashboard-settings-section dashboard-settings-panel" aria-labelledby="settings-services-heading">
       <h2 id="settings-services-heading" class="dashboard-analytics-heading">Services</h2>
@@ -209,7 +236,7 @@
       </div>
     </section>
 
-    <p class="dashboard-analytics-note">Sections other than ordering, social &amp; contact, and branding upload are still read-only here; edit <code>hugo.toml</code> for those or rebuild after Git changes.</p>
+    <p class="dashboard-analytics-note">Sections other than ordering, social &amp; contact, branding upload{{ if site.Params.notifications.enabled }}, and push welcome message{{ end }} are still read-only here; edit <code>hugo.toml</code> for those or rebuild after Git changes.</p>
   </main>
 </div>
 
@@ -406,6 +433,98 @@
         });
       });
     });
+
+    {{- if site.Params.notifications.enabled }}
+    (function() {
+      var welcomeForm = document.getElementById('notifyWelcomeForm');
+      if (!welcomeForm || !window.NOTIFY_CONFIG || !window.NOTIFY_CONFIG.apiUrl) return;
+
+      function notifyApiBase() {
+        return String(window.NOTIFY_CONFIG.apiUrl || '').replace(/\/+$/, '');
+      }
+      function notifyAuthHeaders() {
+        var h = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (token) h['Authorization'] = 'Bearer ' + token;
+        return h;
+      }
+      function notifyFetch(path, opts) {
+        var base = notifyApiBase();
+        if (!base) return Promise.reject(new Error('Notifications API not configured'));
+        return fetch(base + path, Object.assign({ credentials: 'include' }, opts)).then(function(res) {
+          return res.text().then(function(text) {
+            var data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (e) {}
+            if (res.status === 401) {
+              if (typeof AuthClient !== 'undefined' && AuthClient.logout) {
+                AuthClient.logout().catch(function() {});
+              }
+              window.location.href = '/login/';
+              throw new Error('Session expired');
+            }
+            if (!res.ok) {
+              throw new Error((data && (data.error || data.message)) || text || String(res.status));
+            }
+            return data;
+          });
+        });
+      }
+      function clientDomainForNotify() {
+        return (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.clientDomain) || window.location.hostname;
+      }
+
+      var titleInput = document.getElementById('notify-welcome-title');
+      var msgInput = document.getElementById('notify-welcome-message');
+      var welcomeStatus = document.getElementById('notifyWelcomeSaveStatus');
+      var welcomeBtn = document.getElementById('btnSaveNotifyWelcome');
+
+      notifyFetch('/clients/' + encodeURIComponent(clientDomainForNotify()) + '/settings', { method: 'GET', headers: notifyAuthHeaders() })
+        .then(function(data) {
+          var s = (data && data.settings) || {};
+          if (titleInput) titleInput.value = s.welcome_title || '';
+          if (msgInput) msgInput.value = s.welcome_message || '';
+        })
+        .catch(function(err) {
+          if (welcomeStatus) {
+            welcomeStatus.textContent = 'Could not load: ' + (err.message || err);
+            welcomeStatus.classList.add('dashboard-notify-status-error');
+          }
+        });
+
+      welcomeForm.addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) {
+          alert('Sign in required.');
+          return;
+        }
+        var payload = {
+          welcome_title: titleInput ? String(titleInput.value || '').trim() : '',
+          welcome_message: msgInput ? String(msgInput.value || '').trim() : ''
+        };
+        if (welcomeBtn) welcomeBtn.disabled = true;
+        if (welcomeStatus) {
+          welcomeStatus.classList.remove('dashboard-notify-status-error');
+          welcomeStatus.textContent = 'Saving…';
+        }
+        notifyFetch('/clients/' + encodeURIComponent(clientDomainForNotify()) + '/settings', {
+          method: 'PATCH',
+          headers: notifyAuthHeaders(),
+          body: JSON.stringify(payload)
+        }).then(function() {
+          if (welcomeStatus) welcomeStatus.textContent = 'Saved.';
+        }).catch(function(err) {
+          alert('Could not save welcome message: ' + (err.message || err));
+          if (welcomeStatus) {
+            welcomeStatus.textContent = '';
+            welcomeStatus.classList.add('dashboard-notify-status-error');
+          }
+        }).finally(function() {
+          if (welcomeBtn) welcomeBtn.disabled = false;
+        });
+      });
+    })();
+    {{- end }}
   });
 </script>
 {{ end }}

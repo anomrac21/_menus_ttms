@@ -4,34 +4,173 @@
     <div class="dashboard-edit-header-inner">
       <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
       <h1 class="dashboard-edit-title">Notifications</h1>
+      <a href="{{ site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" }}/dashboard" class="btn-dash btn-dash-secondary" id="dashboardNotifyFullDashboardLink" target="_blank" rel="noopener">Open notify dashboard</a>
     </div>
   </div>
 
   <main class="dashboard-analytics-main">
-    <section class="dashboard-analytics-period" aria-labelledby="notifications-heading">
-      <h2 id="notifications-heading" class="dashboard-analytics-heading">Push notifications &amp; alerts</h2>
-      <p class="dashboard-analytics-subtitle">Manage push notifications and alerts for your menu. Send updates, offers, and reminders to your customers.</p>
+    <p id="dashboardNotifyConfigError" class="dashboard-notify-banner" hidden>
+      Notification API is not configured. Enable <code class="dashboard-notify-code">params.notifications</code> in your site config and set <code class="dashboard-notify-code">apiUrl</code>.
+    </p>
+    <p id="dashboardNotifyLoadError" class="dashboard-notify-banner dashboard-notify-banner-warn" hidden role="alert"></p>
 
-      <div class="dashboard-analytics-metrics" id="dashboardNotificationsPlaceholder">
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Notifications</span>
-          <span class="dashboard-analytics-card-value">—</span>
-        </div>
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Subscribers</span>
-          <span class="dashboard-analytics-card-value">—</span>
-        </div>
+    <div class="dashboard-notify-tabs" id="dashboardNotifyTabs">
+      <div class="dashboard-notify-tablist" role="tablist" aria-label="Notification sections">
+        <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabOverview" aria-controls="notifyPanelOverview" aria-selected="true" tabindex="0">Overview</button>
+        <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabWelcome" aria-controls="notifyPanelWelcome" aria-selected="false" tabindex="-1">Welcome</button>
+        <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabSend" aria-controls="notifyPanelSend" aria-selected="false" tabindex="-1">Send</button>
+        <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabHistory" aria-controls="notifyPanelHistory" aria-selected="false" tabindex="-1">History</button>
       </div>
 
-      <p class="dashboard-analytics-note">Notification delivery and subscriber management can be wired to your notification service when ready.</p>
-    </section>
+      <div class="dashboard-notify-tab-panels">
+        <div class="dashboard-notify-tab-panel" id="notifyPanelOverview" role="tabpanel" aria-labelledby="notifyTabOverview">
+          <section class="dashboard-analytics-period dashboard-notify-tab-section" aria-labelledby="notifications-heading">
+            <h2 id="notifications-heading" class="dashboard-analytics-heading">Push notifications &amp; alerts</h2>
+            <p class="dashboard-analytics-subtitle">Send updates, offers, and reminders to subscribers. Numbers below use the last 30 days where noted.</p>
+
+            <div class="dashboard-analytics-metrics" id="dashboardNotificationsMetrics">
+              <div class="dashboard-analytics-card">
+                <span class="dashboard-analytics-card-label">Sent (30d)</span>
+                <span class="dashboard-analytics-card-value" id="metricNotifySent30d">—</span>
+              </div>
+              <div class="dashboard-analytics-card">
+                <span class="dashboard-analytics-card-label">Active subscribers</span>
+                <span class="dashboard-analytics-card-value" id="metricNotifySubscribers">—</span>
+              </div>
+              <div class="dashboard-analytics-card">
+                <span class="dashboard-analytics-card-label">Delivered (30d)</span>
+                <span class="dashboard-analytics-card-value" id="metricNotifyDelivered30d">—</span>
+              </div>
+              <div class="dashboard-analytics-card">
+                <span class="dashboard-analytics-card-label">Click-through (30d)</span>
+                <span class="dashboard-analytics-card-value" id="metricNotifyCtr">—</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="dashboard-notify-tab-panel" id="notifyPanelWelcome" role="tabpanel" aria-labelledby="notifyTabWelcome" hidden>
+          <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-tab-section" aria-labelledby="notify-welcome-heading">
+            <h2 id="notify-welcome-heading" class="dashboard-analytics-heading">Welcome message</h2>
+            <p class="dashboard-analytics-subtitle">First push subscribers see when they opt in. Unique to this site. Leave blank to use the default text.</p>
+            <form id="dashboardNotifyWelcomeForm" class="dashboard-settings-form" autocomplete="off">
+              <div class="dashboard-settings-grid">
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyWelcomeTitle">Welcome title</label>
+                  <div class="dashboard-settings-value">
+                    <input type="text" id="notifyWelcomeTitle" name="welcome_title" class="dashboard-settings-input" maxlength="200" placeholder="e.g. Thanks for subscribing!">
+                  </div>
+                </div>
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyWelcomeMessage">Welcome message</label>
+                  <div class="dashboard-settings-value">
+                    <textarea id="notifyWelcomeMessage" name="welcome_message" class="dashboard-settings-input dashboard-settings-textarea" rows="4" maxlength="2000" placeholder="Short message for new subscribers"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="dashboard-settings-form-actions">
+                <button type="submit" class="btn-dash btn-dash-primary" id="btnNotifyWelcomeSave">Save welcome message</button>
+                <span id="notifyWelcomeSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <div class="dashboard-notify-tab-panel" id="notifyPanelSend" role="tabpanel" aria-labelledby="notifyTabSend" hidden>
+          <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-tab-section" aria-labelledby="notify-send-heading">
+            <h2 id="notify-send-heading" class="dashboard-analytics-heading">Send a notification</h2>
+            <p class="dashboard-analytics-subtitle">Deliver to all active subscribers for this site (<span id="dashboardNotifyDomainLabel">this domain</span>).</p>
+            <form id="dashboardNotifySendForm" class="dashboard-settings-form" autocomplete="off">
+              <div class="dashboard-settings-grid">
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyTitle">Title</label>
+                  <div class="dashboard-settings-value">
+                    <input type="text" id="notifyTitle" name="title" class="dashboard-settings-input" required maxlength="200" placeholder="e.g. Weekend special">
+                  </div>
+                </div>
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyMessage">Message</label>
+                  <div class="dashboard-settings-value">
+                    <textarea id="notifyMessage" name="message" class="dashboard-settings-input dashboard-settings-textarea" rows="3" required maxlength="2000" placeholder="Short message for customers"></textarea>
+                  </div>
+                </div>
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyType">Type</label>
+                  <div class="dashboard-settings-value">
+                    <select id="notifyType" name="type" class="dashboard-settings-input">
+                      <option value="general">General</option>
+                      <option value="menu_update">Menu update</option>
+                      <option value="promotion">Promotion</option>
+                      <option value="order">Order</option>
+                      <option value="system">System</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyPriority">Priority</label>
+                  <div class="dashboard-settings-value">
+                    <select id="notifyPriority" name="priority" class="dashboard-settings-input">
+                      <option value="low">Low</option>
+                      <option value="normal" selected>Normal</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="dashboard-settings-row">
+                  <label class="dashboard-settings-label" for="notifyLink">Link (optional)</label>
+                  <div class="dashboard-settings-value">
+                    <input type="text" id="notifyLink" name="link" class="dashboard-settings-input" placeholder="/menu/ or https://…">
+                  </div>
+                </div>
+              </div>
+              <div class="dashboard-settings-form-actions">
+                <button type="submit" class="btn-dash btn-dash-primary" id="dashboardNotifySendSubmit">Send notification</button>
+                <span id="dashboardNotifySendStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <div class="dashboard-notify-tab-panel" id="notifyPanelHistory" role="tabpanel" aria-labelledby="notifyTabHistory" hidden>
+          <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-tab-section" aria-labelledby="notify-reports-heading">
+            <h2 id="notify-reports-heading" class="dashboard-analytics-heading">Reports &amp; history</h2>
+            <p class="dashboard-analytics-subtitle">Recent sends for this client. Detailed analytics and subscriber lists live in the notify service.</p>
+            <ul id="dashboardNotifyRecentList" class="dashboard-notify-history-list" aria-label="Recent notifications"></ul>
+            <p id="dashboardNotifyRecentEmpty" class="dashboard-analytics-note" hidden>No notifications recorded yet.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <p class="dashboard-analytics-note dashboard-notify-tabs-footer">
+      Full reports, demographics, and subscriber management:
+      <a id="dashboardNotifyFullDashboardLinkBottom" href="{{ site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" }}/dashboard" target="_blank" rel="noopener">notify dashboard</a>
+      · API: <code class="dashboard-notify-code">{{ site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" }}</code>
+    </p>
   </main>
 </div>
 
+<script src="/js/dashboard-notifications.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
       return;
+    }
+    var label = document.getElementById('dashboardNotifyDomainLabel');
+    if (label) {
+      label.textContent = window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.clientDomain
+        ? window.NOTIFY_CONFIG.clientDomain
+        : window.location.hostname;
+    }
+    var bottom = document.getElementById('dashboardNotifyFullDashboardLinkBottom');
+    var top = document.getElementById('dashboardNotifyFullDashboardLink');
+    var svc = (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.serviceUrl) || '{{ site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" }}';
+    svc = String(svc).replace(/\/+$/, '');
+    if (bottom) bottom.href = svc + '/dashboard';
+    if (top) top.href = svc + '/dashboard';
+    if (window.DashboardNotifications && DashboardNotifications.init) {
+      DashboardNotifications.init();
     }
   });
 </script>

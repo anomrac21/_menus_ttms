@@ -422,6 +422,40 @@
   width: -webkit-fill-available;
 }
 
+.dashboard-card-notify-snapshot {
+  margin: 0.75rem 0 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-card-notify-snapshot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+
+.dashboard-card-notify-snapshot-cell {
+  min-width: 0;
+}
+
+.dashboard-card-notify-snapshot-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.78;
+  margin-bottom: 0.15rem;
+}
+
+.dashboard-card-notify-snapshot-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
 .dashboard-card-edit-menu-top {
   display: flex;
   flex-direction: column;
@@ -2181,6 +2215,126 @@
 
 .dashboard-analytics-note a:hover {
   text-decoration: underline;
+}
+
+/* ========== Notifications dashboard (/notifications/) ========== */
+
+.dashboard-notify-banner {
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+  margin: 0 0 1rem;
+}
+
+.dashboard-notify-banner-warn {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fde68a;
+}
+
+.dashboard-notify-code {
+  font-size: 0.88em;
+  word-break: break-all;
+  opacity: 0.95;
+}
+
+.dashboard-notify-status-error {
+  color: #fca5a5 !important;
+}
+
+.dashboard-notify-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-notify-history-item {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dashboard-notify-history-item:last-child {
+  border-bottom: none;
+}
+
+.dashboard-notify-history-title {
+  font-weight: 600;
+  color: #fff;
+}
+
+.dashboard-notify-history-meta {
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+/* Notifications dashboard — tabs */
+.dashboard-notify-tabs {
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-notify-tablist {
+  display: flex;
+  overflow: auto;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-notify-tab {
+  appearance: none;
+  font-size: xx-small;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  margin: 0 0 -1px;
+  border: 1px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dashboard-notify-tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-notify-tab:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 2px;
+}
+
+.dashboard-notify-tab[aria-selected="true"] {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  border-bottom-color: #1a1a2e;
+  font-weight: 600;
+}
+
+.dashboard-notify-tab-panels {
+  min-height: 12rem;
+}
+
+.dashboard-notify-tab-panel[hidden] {
+  display: none !important;
+}
+
+.dashboard-notify-tab-section.dashboard-settings-panel {
+  margin-bottom: 0;
+}
+
+.dashboard-analytics-note.dashboard-notify-tabs-footer {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ========== Menu settings page – key/value rows ========== */

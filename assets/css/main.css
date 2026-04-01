@@ -53,10 +53,11 @@ header {
 main {
     min-height: calc(100vh - 5em);
     margin-top: 0!important;
-    background: var(--main-bg,#000);
+    background: #000;
     background-size: auto;
     background-position: 50% 0;
-    padding-block-end:5em}
+    padding-block-end:5em
+    }
 
 main img {
     max-width: 100%;
