@@ -24,6 +24,7 @@
     // API endpoints
     endpoints: {
       listIcons: '/api/list-icons/index.json',  // Explicit index.json for Hugo compatibility
+      // CDN static/icons: ui/, socialmedia/, food/, drink/, business/, … — use getIconUrl(category, filename)
       icons: '/icons/',
       css: '/css/',
       js: '/js/',

@@ -32,7 +32,7 @@
           {{ if .latlon }}
             <a href="https://www.ttmenus.com/map/?lat={{ index .latlon 0 }}&lng={{ index .latlon 1 }}&zoom=19&client={{ $.Title | urlize }}" 
                class="btn location-btn" target="_blank">
-              <img class="icon" src="https://cdn.ttmenus.com/icons/utilities/location.svg" alt="Location">
+              <img class="icon" src="https://cdn.ttmenus.com/icons/ui/location.svg" alt="Location">
               <span>View on Map</span>
             </a>
           {{ end }}
@@ -44,7 +44,7 @@
           {{ end }}
           {{ if .phone }}
             <a href="tel:{{ .phone }}" class="btn location-btn">
-              <img class="icon" src="https://cdn.ttmenus.com/icons/utilities/phone.svg" alt="Phone">
+              <img class="icon" src="https://cdn.ttmenus.com/icons/ui/phone.svg" alt="Phone">
               <span>Call</span>
             </a>
           {{ end }}
