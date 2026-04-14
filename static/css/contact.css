@@ -595,7 +595,7 @@
     gap: .6em;
     padding: .8em 1.2em;
     background: linear-gradient(135deg, rgba(255, 255, 255, 10%), rgba(255, 255, 255, 5%));
-    border: 2px solid rgba(255, 255, 255, .15);
+    border: 2px solid rgb(123 123 123 / 15%);
     border-radius: 14px;
     color: var(--hero-text-color, #fff);
     text-decoration: none;
