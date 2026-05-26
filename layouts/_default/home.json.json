@@ -43,6 +43,8 @@
     {{- with .notifications }}{{ $features = merge $features (dict "notifications" .) }}{{ end }}
   {{- end }}
 
+  {{- $mappin := site.Data.mappin | default dict -}}
+
   {{- $json := dict
       "title" .Title
       "hero_background_image" (.Params.image | default "")
@@ -56,6 +58,7 @@
       "tags" (.Params.tags | default slice)
       "type" (.Params.type | default slice)
       "content" (.Content | default "")
+      "mappin" $mappin
   -}}
 
   {{ $json | jsonify }}
