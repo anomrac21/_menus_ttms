@@ -290,20 +290,12 @@ window.MENU_IMAGE_CONFIG = {
 <script src="/js/header-menublock-scroll.js" defer></script>
 
 {{- if site.Params.notifications.enabled -}}
-<script>
-// Notification Service Configuration
 {{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
-window.NOTIFY_CONFIG = {
-    enabled: {{ site.Params.notifications.enabled }},
-    apiUrl: "{{ site.Params.notifications.apiUrl }}",
-    websocketUrl: "{{ site.Params.notifications.websocketUrl }}",
-    serviceUrl: "{{ site.Params.notifications.serviceUrl }}",
-    clientDomain: "{{ $notifyClientDomain }}" || window.location.hostname
-};
-
-// Site Config (for compatibility with existing notification code)
+<script type="application/json" id="notify-config-json">{{ dict "enabled" site.Params.notifications.enabled "apiUrl" site.Params.notifications.apiUrl "websocketUrl" site.Params.notifications.websocketUrl "serviceUrl" site.Params.notifications.serviceUrl "clientDomain" $notifyClientDomain | jsonify }}</script>
+<script>
+window.NOTIFY_CONFIG = JSON.parse(document.getElementById('notify-config-json').textContent);
 window.SiteConfig = window.SiteConfig || {};
-window.SiteConfig.notifyServiceUrl = "{{ site.Params.notifications.serviceUrl }}";
+window.SiteConfig.notifyServiceUrl = window.NOTIFY_CONFIG.serviceUrl;
 </script>
 <script src="/js/notifications.js" defer></script>
 {{- end -}}
