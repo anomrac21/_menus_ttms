@@ -29,31 +29,14 @@
     return !!getToken();
   }
 
-  function init() {
-    const container = document.querySelector('.single-page-content[data-menu-image-client-id][data-menu-item-path]');
-    if (!container) return;
-
-    const clientId = container.getAttribute('data-menu-image-client-id') || CONFIG.clientId;
-    const menuItemPath = container.getAttribute('data-menu-item-path') || window.location.pathname;
-
-    // Normalize path (ensure no trailing slash for API)
-    const pathForApi = menuItemPath.replace(/\/$/, '') || '/';
-
-    // Fetch approved images and inject into carousel
-    fetchApprovedImages(clientId, pathForApi).then(images => {
-      if (images.length > 0) {
-        injectApprovedImages(images);
-      }
-    }).catch(err => console.warn('Menu image fetch:', err));
-
-    // Show Add photo button when logged in
-    const addBtn = document.getElementById('menuImageAddBtn');
-    if (addBtn) {
-      if (isLoggedIn()) {
-        addBtn.style.display = 'inline-flex';
-        addBtn.onclick = () => openUploadModal(clientId, pathForApi);
-      }
+  function findMenuImageHosts(root) {
+    const scope = root && root.querySelectorAll ? root : document;
+    if (root && root.matches && root.matches('[data-menu-item-path][data-menu-image-client-id]')) {
+      return [root];
     }
+    return Array.from(
+      scope.querySelectorAll('[data-menu-item-path][data-menu-image-client-id]')
+    );
   }
 
   async function fetchApprovedImages(clientId, menuItemPath) {
@@ -64,64 +47,152 @@
     return (json.data || []).map(img => img.thumbor_url || img.thumborURL || img.url);
   }
 
-  function injectApprovedImages(thumborUrls) {
-    let carousel = document.getElementById('singlePageImageCarousel');
-    if (!carousel) return;
+  function ensureExpandedCarouselNav(carousel, slideCount) {
+    if (!carousel || slideCount <= 1) return;
 
-    // If it's the placeholder (single image container), convert to carousel
-    if (carousel.classList.contains('single-page-image-container')) {
-      const img = carousel.querySelector('img');
-      const parent = carousel.parentNode;
-      const newCarousel = document.createElement('div');
-      newCarousel.className = 'single-page-image-carousel';
-      newCarousel.id = 'singlePageImageCarousel';
-      newCarousel.setAttribute('data-current-image', '0');
-      newCarousel.innerHTML = `
-        <div class="single-page-image-carousel-container">
-          ${thumborUrls.map((url, i) => `
-            <div class="single-page-image-slide ${i === 0 ? 'active' : ''}" data-image-index="${i}">
-              <img src="${url}" alt="User photo" loading="lazy" class="single-page-image-carousel-img">
-            </div>
-          `).join('')}
-        </div>
-        ${thumborUrls.length > 1 ? `
-        <div class="single-page-image-nav-buttons">
-          <button class="single-page-image-nav single-page-image-nav-prev" onclick="navigateSinglePageImage(this, -1, event)" aria-label="Previous image"><i class="fa fa-chevron-left"></i></button>
-          <button class="single-page-image-nav single-page-image-nav-next" onclick="navigateSinglePageImage(this, 1, event)" aria-label="Next image"><i class="fa fa-chevron-right"></i></button>
-        </div>
-        <div class="single-page-image-indicators">
-          ${thumborUrls.map((_, i) => `<span class="single-page-image-indicator ${i === 0 ? 'active' : ''}" data-indicator-index="${i}" onclick="goToSinglePageImage(this, ${i}, event)"></span>`).join('')}
-        </div>
-        ` : ''}
-      `;
-      parent.replaceChild(newCarousel, carousel);
-      return;
+    let view = carousel.querySelector('.expanded-image-carousel-view');
+    if (!view) {
+      view = document.createElement('div');
+      view.className = 'expanded-image-carousel-view';
+      const container = carousel.querySelector('.expanded-image-carousel-container');
+      if (container) {
+        view.appendChild(container);
+        carousel.insertBefore(view, carousel.firstChild);
+      }
     }
 
-    // Existing carousel - append slides
-    const container = carousel.querySelector('.single-page-image-carousel-container');
+    if (!carousel.querySelector('.expanded-image-nav-buttons')) {
+      const navWrap = document.createElement('div');
+      navWrap.className = 'expanded-image-nav-buttons';
+      navWrap.innerHTML = `
+        <button type="button" class="expanded-image-nav expanded-image-nav-prev" onclick="navigateExpandedImage(this, -1, '', event)" aria-label="Previous image"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+        <button type="button" class="expanded-image-nav expanded-image-nav-next" onclick="navigateExpandedImage(this, 1, '', event)" aria-label="Next image"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+      `;
+      view.appendChild(navWrap);
+    }
+
+    let indicators = carousel.querySelector('.expanded-image-indicators');
+    if (!indicators) {
+      indicators = document.createElement('div');
+      indicators.className = 'expanded-image-indicators';
+      indicators.setAttribute('role', 'tablist');
+      indicators.setAttribute('aria-label', 'Item images');
+      carousel.appendChild(indicators);
+    }
+
+    const needed = slideCount - indicators.querySelectorAll('.expanded-image-indicator').length;
+    const start = indicators.querySelectorAll('.expanded-image-indicator').length;
+    for (let i = 0; i < needed; i++) {
+      const idx = start + i;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'expanded-image-indicator';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-label', 'Image ' + (idx + 1));
+      btn.setAttribute('data-indicator-index', String(idx));
+      btn.setAttribute('aria-selected', 'false');
+      btn.onclick = function (event) {
+        if (typeof goToExpandedImage === 'function') goToExpandedImage(this, idx, '', event);
+      };
+      indicators.appendChild(btn);
+    }
+  }
+
+  function injectApprovedImages(carousel, thumborUrls) {
+    if (!carousel || !thumborUrls.length) return;
+
+    const container = carousel.querySelector(
+      '.menu-item-slideshow-track, .expanded-image-carousel-container, .single-page-image-carousel-container'
+    );
     if (!container) return;
 
-    const baseIndex = container.querySelectorAll('.single-page-image-slide').length;
+    const baseIndex = container.querySelectorAll('.expanded-image-slide, .single-page-image-slide').length;
     thumborUrls.forEach((url, i) => {
       const slide = document.createElement('div');
-      slide.className = 'single-page-image-slide' + (baseIndex === 0 && i === 0 ? ' active' : '');
-      slide.setAttribute('data-image-index', baseIndex + i);
-      slide.innerHTML = `<img src="${url}" alt="User photo" loading="lazy" class="single-page-image-carousel-img">`;
+      const isFirst = baseIndex === 0 && i === 0;
+      slide.className =
+        'expanded-image-slide menu-item-slideshow-slide' + (isFirst ? ' active' : '');
+      slide.setAttribute('data-image-index', String(baseIndex + i));
+      slide.setAttribute('data-user-photo', '1');
+      const safeUrl = String(url).replace(/'/g, '%27');
+      slide.innerHTML =
+        '<div class="content-panel" style="--ad-image: url(\'' +
+        safeUrl +
+        '\')">' +
+        '<img src="' +
+        safeUrl.replace(/"/g, '%22') +
+        '" alt="User photo" loading="lazy" decoding="async" class="ad-portrait expanded-image-carousel-img">' +
+        '</div>';
       container.appendChild(slide);
     });
 
-    // Update indicators if they exist
-    const indicators = carousel.querySelector('.single-page-image-indicators');
-    if (indicators && thumborUrls.length > 0) {
-      thumborUrls.forEach((_, i) => {
-        const span = document.createElement('span');
-        span.className = 'single-page-image-indicator';
-        span.setAttribute('data-indicator-index', baseIndex + i);
-        span.onclick = function () { if (typeof goToSinglePageImage === 'function') goToSinglePageImage(this, baseIndex + i, event); };
-        indicators.appendChild(span);
-      });
+    ensureExpandedCarouselNav(carousel, baseIndex + thumborUrls.length);
+
+    if (typeof bindExpandedCarouselImages === 'function') {
+      bindExpandedCarouselImages(carousel);
     }
+  }
+
+  function bindAddPhotoButton(host, clientId, pathForApi) {
+    const addBtn = host.querySelector('.menu-image-add-btn');
+    if (!addBtn) return;
+
+    if (isLoggedIn()) {
+      addBtn.style.display = 'inline-flex';
+      if (addBtn._menuImageClickHandler) {
+        addBtn.removeEventListener('click', addBtn._menuImageClickHandler);
+      }
+      addBtn._menuImageClickHandler = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openUploadModal(clientId, pathForApi);
+      };
+      addBtn.addEventListener('click', addBtn._menuImageClickHandler);
+    } else {
+      addBtn.style.display = 'none';
+    }
+  }
+
+  function initMenuImageHost(host) {
+    if (!host || host.dataset.menuImageBound === '1') return;
+
+    const clientId = host.getAttribute('data-menu-image-client-id') || CONFIG.clientId;
+    const menuItemPath = host.getAttribute('data-menu-item-path') || '';
+    if (!menuItemPath) return;
+
+    host.dataset.menuImageBound = '1';
+    const pathForApi = menuItemPath.replace(/\/$/, '') || '/';
+
+    const carousel =
+      host.querySelector('#singlePageImageCarousel') ||
+      host.querySelector('.expanded-image-carousel');
+
+    if (carousel) {
+      const container = carousel.querySelector(
+        '.menu-item-slideshow-track, .expanded-image-carousel-container'
+      );
+      if (container) {
+        container.querySelectorAll('[data-user-photo]').forEach(function (slide) {
+          slide.remove();
+        });
+      }
+
+      fetchApprovedImages(clientId, pathForApi)
+        .then(function (images) {
+          if (images.length > 0) {
+            injectApprovedImages(carousel, images);
+          }
+        })
+        .catch(function (err) {
+          console.warn('Menu image fetch:', err);
+        });
+    }
+
+    bindAddPhotoButton(host, clientId, pathForApi);
+  }
+
+  function init(root) {
+    findMenuImageHosts(root || document).forEach(initMenuImageHost);
   }
 
   function openUploadModal(clientId, menuItemPath) {
@@ -202,9 +273,32 @@
     }
   }
 
+  window.initMenuImageIntegration = init;
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () { init(); });
   } else {
     init();
   }
+
+  function registerBarbaMenuImages() {
+    if (window.TTMSBarba) {
+      window.TTMSBarba.register(function () { init(); });
+    }
+  }
+
+  if (window.TTMSBarba) {
+    registerBarbaMenuImages();
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerBarbaMenuImages);
+  } else {
+    registerBarbaMenuImages();
+  }
+
+  document.addEventListener('auth:login', function () {
+    document.querySelectorAll('[data-menu-item-path][data-menu-image-client-id]').forEach(function (host) {
+      delete host.dataset.menuImageBound;
+      initMenuImageHost(host);
+    });
+  });
 })();

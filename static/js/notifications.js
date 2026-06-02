@@ -5,7 +5,15 @@
 
 const NotificationService = {
   notifyServiceUrl: window.NOTIFY_CONFIG?.serviceUrl || window.SiteConfig?.notifyServiceUrl || 'https://notify.ttmenus.com',
-  clientDomain: window.NOTIFY_CONFIG?.clientDomain || window.location.hostname,
+
+  /** Domain registered in notify-service (not necessarily window.location.hostname on localhost). */
+  getClientDomain() {
+    const configured = (window.NOTIFY_CONFIG?.clientDomain || '').trim();
+    if (configured) {
+      return configured.replace(/^www\./i, '');
+    }
+    return (window.location.hostname || '').replace(/^www\./i, '');
+  },
   subscriptionId: null,
   wsConnection: null,
   serviceWorkerRegistration: null,
@@ -150,47 +158,53 @@ const NotificationService = {
    * Ensure client is registered in notify-service
    */
   async ensureClientRegistered(clientDomain) {
-    try {
-      // Try to get client API key (this will fail if client doesn't exist)
-      const checkUrl = `${this.notifyServiceUrl}/api/v1/clients/${clientDomain}/api-key`;
-      const checkResponse = await fetch(checkUrl);
-      
-      if (checkResponse.ok) {
-        console.log('Client already registered:', clientDomain);
-        return; // Client exists
-      }
+    const checkUrl = `${this.notifyServiceUrl}/api/v1/clients/${encodeURIComponent(clientDomain)}/api-key`;
 
-      // Client doesn't exist, try to register it
-      console.log('Client not found, attempting to register:', clientDomain);
-      const registerUrl = `${this.notifyServiceUrl}/api/v1/clients/register`;
-      
-      const registerResponse = await fetch(registerUrl, {
+    let checkResponse;
+    try {
+      checkResponse = await fetch(checkUrl);
+    } catch (error) {
+      const msg = error && error.message ? error.message : String(error);
+      throw new Error(
+        'Cannot reach notify service (' + msg + '). Check network or CORS from ' + window.location.origin
+      );
+    }
+
+    if (checkResponse.ok) {
+      console.log('✅ Notify client registered:', clientDomain);
+      return;
+    }
+
+    if (checkResponse.status !== 404) {
+      const body = await checkResponse.text().catch(() => '');
+      throw new Error('Notify client check failed (HTTP ' + checkResponse.status + '): ' + body);
+    }
+
+    console.log('Registering notify client:', clientDomain);
+    const registerUrl = `${this.notifyServiceUrl}/api/v1/clients/register`;
+    let registerResponse;
+    try {
+      registerResponse = await fetch(registerUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           domain: clientDomain,
-          client_name: document.title || 'TTMenus',
+          client_name: document.title || clientDomain,
           service_group: 'ttmenus',
         }),
       });
-
-      if (registerResponse.ok) {
-        const result = await registerResponse.json();
-        console.log('Client registered successfully:', result);
-      } else if (registerResponse.status === 409) {
-        // Client already exists (race condition)
-        console.log('Client already exists (409 conflict)');
-      } else {
-        const error = await registerResponse.json().catch(() => ({ error: 'Unknown error' }));
-        console.warn('Failed to register client (subscription may still work):', error);
-        // Don't throw - subscription might still work if client was just created
-      }
     } catch (error) {
-      console.warn('Error checking/registering client:', error);
-      // Don't throw - subscription might still work
+      const msg = error && error.message ? error.message : String(error);
+      throw new Error('Client registration request failed: ' + msg);
     }
+
+    if (registerResponse.ok || registerResponse.status === 409) {
+      console.log('✅ Notify client ready:', clientDomain);
+      return;
+    }
+
+    const error = await registerResponse.json().catch(() => ({ error: registerResponse.statusText }));
+    throw new Error(error.error || error.details || 'Failed to register client in notify-service');
   },
 
   /**
@@ -372,61 +386,58 @@ const NotificationService = {
       // Collect demographic information
       const demographics = this.collectDemographics();
       
-      // Use the main domain (remove www. prefix if present)
-      const clientDomain = this.clientDomain.replace('www.', '');
+      const clientDomain = this.getClientDomain();
 
-      // First, ensure the client is registered
       await this.ensureClientRegistered(clientDomain);
 
-      // Get VAPID public key from server
       const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
       let vapidPublicKey = null;
-      
+
       try {
-        const keyResponse = await fetch(`${apiUrl}/clients/${clientDomain}/vapid-key`);
+        const keyResponse = await fetch(`${apiUrl}/clients/${encodeURIComponent(clientDomain)}/vapid-key`);
         if (keyResponse.ok) {
           const keyData = await keyResponse.json();
           vapidPublicKey = keyData.publicKey || keyData.vapid_public_key;
           console.log('✅ VAPID public key retrieved');
+        } else if (keyResponse.status === 503) {
+          console.warn('⚠️ Web Push (VAPID) not configured on notify-service — alerts work while this tab is open only');
+        } else {
+          console.warn('⚠️ VAPID key request failed:', keyResponse.status, await keyResponse.text().catch(() => ''));
         }
       } catch (e) {
-        console.warn('⚠️ Could not fetch VAPID key, will try to create push subscription without it:', e);
+        const msg = e && e.message ? e.message : String(e);
+        console.warn('⚠️ Could not fetch VAPID key:', msg);
       }
 
-      // Create Push API subscription for background notifications
       let pushSubscription = null;
       let deviceToken = this.getWebSocketConnectionID();
-      
+
       try {
-        if (this.serviceWorkerRegistration.pushManager) {
-          // Check if already subscribed
+        if (this.serviceWorkerRegistration.pushManager && vapidPublicKey) {
           let existingSubscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
-          
+
           if (!existingSubscription) {
-            // Create new push subscription
-            const applicationServerKey = vapidPublicKey ? this.urlBase64ToUint8Array(vapidPublicKey) : null;
-            
             pushSubscription = await this.serviceWorkerRegistration.pushManager.subscribe({
               userVisibleOnly: true,
-              applicationServerKey: applicationServerKey,
+              applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
             });
-            
             console.log('✅ Push API subscription created:', pushSubscription.endpoint.substring(0, 50) + '...');
           } else {
             pushSubscription = existingSubscription;
             console.log('✅ Using existing Push API subscription');
           }
-          
-          // Use push subscription endpoint as device token for push notifications
+
           if (pushSubscription) {
             deviceToken = pushSubscription.endpoint;
           }
+        } else if (this.serviceWorkerRegistration.pushManager && !vapidPublicKey) {
+          console.warn('⚠️ Skipping Push API subscribe until VAPID is configured on notify-service');
         } else {
           console.warn('⚠️ PushManager not available, using WebSocket only');
         }
       } catch (pushError) {
-        console.warn('⚠️ Failed to create Push API subscription, will use WebSocket only:', pushError);
-        // Continue with WebSocket subscription
+        const msg = pushError && pushError.message ? pushError.message : String(pushError);
+        console.warn('⚠️ Push API subscription failed, using WebSocket only:', msg);
       }
 
       console.log('Subscribing to notifications:', {
@@ -439,6 +450,8 @@ const NotificationService = {
         demographics: demographics
       });
 
+      const wsConnectionId = this.getWebSocketConnectionID();
+
       // Prepare subscription data
       const subscriptionData = {
         client_domain: clientDomain,
@@ -446,6 +459,7 @@ const NotificationService = {
         device_token: deviceToken,
         platform: platform,
         demographics: demographics,
+        ws_connection_id: wsConnectionId,
       };
 
       // Add push subscription details if available
@@ -491,6 +505,7 @@ const NotificationService = {
       // Store subscription with push subscription details
       const subscriptionToStore = {
         ...subscription,
+        ws_connection_id: wsConnectionId,
         pushSubscription: pushSubscription ? {
           endpoint: pushSubscription.endpoint,
           keys: {
@@ -508,9 +523,10 @@ const NotificationService = {
       this.showMessage('Successfully subscribed to notifications! You will receive notifications even when the site is closed.', 'success');
     } catch (error) {
       console.error('Subscription error:', error);
-      let errorMessage = error.message;
-      if (error.message === 'Failed to fetch') {
-        errorMessage = 'Unable to connect to notification service. The service may be unavailable or the client domain may not be registered.';
+      let errorMessage = (error && error.message) ? error.message : String(error);
+      if (!errorMessage || errorMessage === 'Failed to fetch') {
+        errorMessage =
+          'Unable to connect to notify.ttmenus.com. Check that clientDomain is set (e.g. menudemo.ttmenus.com in hugo.toml), not localhost.';
       }
       this.showMessage('Failed to subscribe: ' + errorMessage, 'error');
     }
@@ -613,15 +629,19 @@ const NotificationService = {
     try {
       const wsUrl = window.NOTIFY_CONFIG?.websocketUrl || this.notifyServiceUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/v1/ws/connect';
       // WebSocket handler requires client_domain query parameter
-      const clientDomain = this.clientDomain.replace('www.', '');
-      
-      // Get the connection ID (DeviceToken) from subscription or generate one
+      const clientDomain = this.getClientDomain();
+
       let connectionId = this.getWebSocketConnectionID();
       const stored = localStorage.getItem('ttmenus_notification_subscription');
       if (stored) {
         try {
           const subscription = JSON.parse(stored);
-          if (subscription.device_token) {
+          if (subscription.ws_connection_id) {
+            connectionId = subscription.ws_connection_id;
+          } else if (
+            subscription.device_token &&
+            !String(subscription.device_token).startsWith('https://')
+          ) {
             connectionId = subscription.device_token;
           }
         } catch (e) {
@@ -871,31 +891,36 @@ const NotificationService = {
   updateSubscribeButton(isSubscribed) {
     const btn = document.getElementById('subBtn');
     const btnText = document.getElementById('subBtnText');
+    const btnHint = document.getElementById('subBtnHint');
     const btnHero = document.getElementById('subBtnHero');
     const btnHeroText = document.getElementById('subBtnHeroText');
-    
+    const btnHeroHint = document.getElementById('subBtnHeroHint');
+
     if (btn && btnText) {
       if (isSubscribed) {
         btn.classList.add('subscribed');
-        btnText.textContent = 'Subscribed';
-        btn.title = 'Unsubscribe from notifications';
+        btn.setAttribute('aria-pressed', 'true');
+        btnText.textContent = 'Alerts on';
+        if (btnHint) btnHint.textContent = 'Tap to turn off';
+        btn.title = 'You receive menu alerts — tap to turn off';
       } else {
         btn.classList.remove('subscribed');
-        btnText.textContent = 'Subscribe';
-        btn.title = 'Subscribe to notifications';
+        btn.setAttribute('aria-pressed', 'false');
+        btnText.textContent = 'Get menu alerts';
+        if (btnHint) btnHint.textContent = 'Free · specials & hours';
+        btn.title = 'Get alerts for specials, hours, and menu updates';
       }
     }
-    
+
     // Update hero subscribe button (if exists)
     if (btnHero && btnHeroText) {
       if (isSubscribed) {
-        // Hide hero button when subscribed
         btnHero.classList.add('hide');
       } else {
-        // Show hero button when not subscribed
         btnHero.classList.remove('hide');
-        btnHeroText.textContent = 'Subscribe';
-        btnHero.title = 'Subscribe to notifications';
+        btnHeroText.textContent = 'Get menu alerts';
+        if (btnHeroHint) btnHeroHint.textContent = 'Free · specials & hours';
+        btnHero.title = 'Get alerts for specials, hours, and menu updates';
       }
     }
   },

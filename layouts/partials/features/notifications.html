@@ -1,8 +1,4 @@
 {{ if .Site.Params.notifications.enabled }}
-{{/* NOTIFY_CONFIG is defined in partial head.html (apiUrl, websocketUrl, serviceUrl, clientDomain from hostname).
-     Do not redefine here — a second block overwrote serviceUrl and used a static BaseURL for domain. */}}
+{{/* NOTIFY_CONFIG is in head.html; notifications.js handles subscribe UI, Web Push, and WebSocket. */}}
 <div id="notification-container"></div>
-<script src="{{ "js/notify-client.js" | relURL }}" defer></script>
 {{ end }}
-
-

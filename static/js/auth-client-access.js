@@ -81,12 +81,16 @@ const AuthClientAccess = {
   /**
    * Protect client dashboard/control room - only authenticated users with access to this client
    */
-  protectClientPage(options = {}) {
+  async protectClientPage(options = {}) {
     const {
       redirectUrl = '/login/',
       noAccessRedirect = '/',
       showError = true,
     } = options;
+
+    if (typeof AuthClient.whenReady === 'function') {
+      await AuthClient.whenReady();
+    }
 
     if (!AuthClient.isAuthenticated()) {
       sessionStorage.setItem('ttmenus_redirect_after_login', window.location.pathname);
@@ -109,13 +113,16 @@ const AuthClientAccess = {
   /**
    * Protect admin page with client access check
    */
-  protectAdminPage(options = {}) {
+  async protectAdminPage(options = {}) {
     const {
       redirectUrl = '/',
       showError = true,
     } = options;
 
-    // First check if user is authenticated and is admin
+    if (typeof AuthClient.whenReady === 'function') {
+      await AuthClient.whenReady();
+    }
+
     if (!AuthClient.isAuthenticated()) {
       window.location.href = '/login/';
       return false;

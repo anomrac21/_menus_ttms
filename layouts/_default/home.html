@@ -1,12 +1,13 @@
 {{ define "main" }}
   <div class="hero_logo_container item" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
+  {{ $siteName := partial "site-name.html" . }}
   {{ if .Params.image }}
-    <img id="bg" src="{{ .Params.image }}" alt="{{ site.Title }} background" fetchpriority="high">
+    <img id="bg" src="{{ .Params.image }}" alt="{{ $siteName }} background" fetchpriority="high">
   {{ else }}
-    <img id="bg" src="/main/bg.webp" alt="{{ site.Title }} background" fetchpriority="high">
+    <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
   {{ end }}
   <div class="logo_container">
-    <a href="/locations/"><img id="logo" src="/branding/favicon512.webp" alt="{{ site.Title }} logo" width="512" height="512"></a>
+    <a href="/locations/"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="512" height="512"></a>
   </div>
   </div> 
   {{ partial "components/contact_info.html" . }}
@@ -33,7 +34,6 @@
       {{ end }}
     {{ end }}
   {{ end }}
-  {{ partial "ads/frontpageads.html" . }}
   <div class="main-body" id="packery-container">
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
@@ -188,9 +188,12 @@
                         {{end}}
      
                         {{ $avail := .Params.availability | default $section.Params.availability }}
-                        <div class="menu-item-card" 
+                        <div class="menu-item-card{{ if gt (len $imagesArray) 0 }} menu-item-card--has-image{{ end }}" 
                             {{ with $avail }}data-availability="{{ $avail | jsonify }}"{{ end }}
                             data-item-url="{{ .RelPermalink }}"
+                            role="button"
+                            tabindex="0"
+                            aria-expanded="false"
                             data-item-expanded="false"
                             data-prices-array="{{ $pricesArray | jsonify }}"
                             data-active-promo-percent="{{ if and $activePromo (eq (index $activePromo "type") "percent_off") }}{{ index $activePromo "value" }}{{ else }}0{{ end }}"
@@ -208,6 +211,7 @@
                             data-types="{{ (.Params.types | default (slice)) | jsonify }}"
                             data-events="{{ (.Params.events | default (slice)) | jsonify }}"
                             onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
+                            {{ partial "components/menu-favorite-btn.html" . }}
                             <div class="menu-item-row-top">
                               {{ if gt (len $imagesArray) 0 }}
                                 {{ $firstImage := index $imagesArray 0 }}

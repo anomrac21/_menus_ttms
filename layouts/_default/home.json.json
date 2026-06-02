@@ -36,17 +36,49 @@
   {{- with .Params.youtube }}{{ $social = merge $social (dict "youtube" .) }}{{ end }}
   {{- with .Params.tiktok }}{{ $social = merge $social (dict "tiktok" .) }}{{ end }}
   
-  {{- $features := dict -}}
-  {{- with site.Params.features }}
-    {{- with .payments }}{{ $features = merge $features (dict "payments" .) }}{{ end }}
-    {{- with .delivery }}{{ $features = merge $features (dict "delivery" .) }}{{ end }}
-    {{- with .notifications }}{{ $features = merge $features (dict "notifications" .) }}{{ end }}
-  {{- end }}
+  {{- $f := site.Params.features | default dict -}}
+  {{- $payments := default false $f.payments -}}
+  {{- $delivery := default false $f.delivery -}}
+  {{- $notifications := default false $f.notifications -}}
+  {{- $pos := false -}}
+  {{- $posProvider := "" -}}
+  {{- with site.Params.posintegration -}}
+    {{- if .enabled -}}
+      {{- $pos = true -}}
+      {{- with .provider -}}{{- $posProvider = . -}}{{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $analytics := or (default false $f.analytics_access) (default false $f.analytics) -}}
+  {{- with site.Params.services -}}
+    {{- if gt (int (default 0 .analyticsid)) 0 -}}{{- $analytics = true -}}{{- end -}}
+  {{- end -}}
+  {{- $exclusiveAds := default false $f.exclusive_ads -}}
+  {{- if not $exclusiveAds -}}{{- $exclusiveAds = default false $f.no_competitor_ads -}}{{- end -}}
+  {{- $features := dict
+      "payments" $payments
+      "delivery" $delivery
+      "notifications" $notifications
+      "pos" $pos
+      "analytics" $analytics
+      "exclusive_ads" $exclusiveAds
+      "featured" (default false $f.featured)
+      "no_competitor_ads" (default false $f.no_competitor_ads)
+      "unmetered_traffic" (default false $f.unmetered_traffic)
+  -}}
+  {{- if and $pos (ne (strings.TrimSpace $posProvider) "") -}}
+    {{- $features = merge $features (dict "pos_provider" (lower (strings.TrimSpace $posProvider))) -}}
+  {{- end -}}
+
+  {{- $tier := default "free" site.Params.tier -}}
+  {{- $freeMenu := eq $tier "free" -}}
 
   {{- $mappin := site.Data.mappin | default dict -}}
 
   {{- $json := dict
       "title" .Title
+      "tier" $tier
+      "free_menu" $freeMenu
+      "paid_menu" (not $freeMenu)
       "hero_background_image" (.Params.image | default "")
       "featured_images" $images
       "slideshow" $slideshowImages

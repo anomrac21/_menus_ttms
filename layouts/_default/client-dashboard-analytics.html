@@ -42,8 +42,11 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+  document.addEventListener('DOMContentLoaded', async function() {
+    if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+      await AuthClient.whenReady();
+    }
+    if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
       return;
     }
 

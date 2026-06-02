@@ -153,8 +153,11 @@
 
 <script src="/js/dashboard-notifications.js" defer></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+  document.addEventListener('DOMContentLoaded', async function() {
+    if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+      await AuthClient.whenReady();
+    }
+    if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
       return;
     }
     var label = document.getElementById('dashboardNotifyDomainLabel');

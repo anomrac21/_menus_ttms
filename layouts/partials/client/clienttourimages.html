@@ -6,15 +6,17 @@
       <img src="{{ $image.image }}" alt="Client Tour Image {{ add $index 1 }}" loading="lazy">
     </div>
     {{ end }}
-    
-    <!-- Navigation arrows -->
-    <button class="slideshow-nav prev" onclick="changeSlide(-1)">&#10094;</button>
-    <button class="slideshow-nav next" onclick="changeSlide(1)">&#10095;</button>
-    
-    <!-- Dots indicator -->
-    <div class="slideshow-dots">
+
+    <button type="button" class="slideshow-nav prev contact-cta contact-cta--nav" onclick="changeSlide(-1)" aria-label="Previous slide" title="Previous slide">
+      <span class="contact-cta__icon" aria-hidden="true"><svg width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M604.7 759.2l61.8-61.8L481.1 512l185.4-185.4-61.8-61.8L357.5 512z"></path></svg></span>
+    </button>
+    <button type="button" class="slideshow-nav next contact-cta contact-cta--nav" onclick="changeSlide(1)" aria-label="Next slide" title="Next slide">
+      <span class="contact-cta__icon" aria-hidden="true"><svg width="64px" height="64px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M419.3 264.8l-61.8 61.8L542.9 512 357.5 697.4l61.8 61.8L666.5 512z"></path></svg></span>
+    </button>
+
+    <div class="slideshow-dots" role="tablist" aria-label="Slideshow slides">
       {{ range $index, $image := .Params.slideshow }}
-      <span class="dot {{ if eq $index 0 }}active{{ end }}" onclick="currentSlide({{ add $index 1 }})"></span>
+      <button type="button" class="dot {{ if eq $index 0 }}active{{ end }}" role="tab" aria-label="Go to slide {{ add $index 1 }}" aria-selected="{{ if eq $index 0 }}true{{ else }}false{{ end }}" onclick="currentSlide({{ add $index 1 }})"></button>
       {{ end }}
     </div>
   </div>

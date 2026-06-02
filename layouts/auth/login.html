@@ -83,10 +83,13 @@
   {{- end -}}
   <script>
     (function() {
-      function runLoginPage() {
+      async function runLoginPage() {
         if (!window.AuthClient) {
           console.error('AuthClient is not loaded. Check that auth is enabled and js/auth-client.js is available.');
           return;
+        }
+        if (typeof AuthClient.whenReady === 'function') {
+          await AuthClient.whenReady();
         }
         var form = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
@@ -94,15 +97,14 @@
         const loginBtn = document.getElementById('loginBtn');
         const alertContainer = document.getElementById('alertContainer');
 
-        // Check if already logged in
         if (AuthClient.isAuthenticated()) {
-        if (window.AuthClientAccess && !AuthClientAccess.hasClientAccess()) {
-          showAlert('error', 'You don\'t have permission to access this menu. Contact your administrator.');
+          if (window.AuthClientAccess && AuthClientAccess.hasClientAccess()) {
+            window.location.href = '/dashboard/';
+          } else {
+            window.location.href = '/';
+          }
           return;
         }
-        window.location.href = '/dashboard/';
-        return;
-      }
 
       function getClientIdForRedirect(user) {
         let clientId = user?.client_id;

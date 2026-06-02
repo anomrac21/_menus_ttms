@@ -2126,7 +2126,7 @@ function advanceOrder(){
 	}else{
 		// Close the cart first
 		closeCart();
-		confirm();
+		confirmWhatsAppOrder();
 	}
 }
 
@@ -2191,7 +2191,7 @@ function updateCartLocationDisplay() {
 	}
 }
 
-async function confirm(){
+async function confirmWhatsAppOrder(){
 	const unavailable = await checkCartForUnavailableItems();
 	if (unavailable.length > 0) {
 		const list = unavailable.filter((v,i,a) => a.indexOf(v)===i).join(', ');
@@ -2383,7 +2383,7 @@ function openTableModal(state){
 		document.getElementById("askforservermodal").classList.remove('hide');
 		//executeModeOnTableModal();
 	}else if (currentMode=='takeaway'){
-		confirm();
+		confirmWhatsAppOrder();
 		return;
 	}else{
 		document.getElementById("tableNumberModal").classList.remove('hide');
@@ -2508,7 +2508,7 @@ function confirmTable(state){
 		if (state=='askforserver'){
 			askforserver();
 		}else{
-			confirm();
+			confirmWhatsAppOrder();
 		}
 		
 	}
@@ -2901,7 +2901,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Make functions globally available for table modal integration
 window.setTableNumber = setTableNumber;
-window.confirm = confirm;
+window.confirmWhatsAppOrder = confirmWhatsAppOrder;
 window.advanceOrder = advanceOrder;
 window.placeOrderClick = placeOrderClick;
 window.openTableModalWithLocation = openTableModalWithLocation;
@@ -2918,7 +2918,7 @@ window.testTableModalIntegration = function() {
 	console.log('📦 Cart items:', order.length);
 	console.log('🌐 Global functions available:', {
 		setTableNumber: typeof window.setTableNumber,
-		confirm: typeof window.confirm,
+		confirmWhatsAppOrder: typeof window.confirmWhatsAppOrder,
 		advanceOrder: typeof window.advanceOrder,
 		openTableModal: typeof window.openTableModal
 	});
@@ -2982,7 +2982,7 @@ window.testTableSelection = function() {
 };
 
 // WhatsApp ordering system loaded with table modal integration
-// Available global functions: setTableNumber, confirm, advanceOrder
+// Available global functions: setTableNumber, confirmWhatsAppOrder, advanceOrder
 // Testing functions: testTableModalIntegration, testTableSelection, testLocationDataAttributes
 
 // var lastScrollTop = 0;
@@ -3330,10 +3330,10 @@ window.testTablePopulation = function() {
         closeTableModal();
         
         // Trigger the order confirmation in the WhatsApp ordering system
-        if (typeof window.confirm === 'function') {
-            window.confirm();
+        if (typeof window.confirmWhatsAppOrder === 'function') {
+            window.confirmWhatsAppOrder();
         } else {
-            console.error('❌ Confirm function not found');
+            console.error('❌ confirmWhatsAppOrder function not found');
         }
     }
 
@@ -3348,7 +3348,7 @@ window.testTablePopulation = function() {
     	console.log('🛒 Current order mode:', currentMode);
     	console.log('🌐 Global functions available:', {
     		setTableNumber: typeof window.setTableNumber,
-    		confirm: typeof window.confirm,
+    		confirmWhatsAppOrder: typeof window.confirmWhatsAppOrder,
     		advanceOrder: typeof window.advanceOrder
     	});
     	

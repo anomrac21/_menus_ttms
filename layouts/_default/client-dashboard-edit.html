@@ -398,8 +398,11 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      if (!window.AuthClientAccess || !AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' })) {
+    document.addEventListener('DOMContentLoaded', async function() {
+      if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+        await AuthClient.whenReady();
+      }
+      if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
         return;
       }
 
@@ -4300,8 +4303,7 @@
                 section.setAttribute('data-dashboard-edit-new-promotion', '1');
                 section.id = 'menu-ad-' + slug;
                 section.setAttribute('data-ad-title', title);
-                section.innerHTML = '<div class="scroll-progress-bar"><div class="scroll-progress-fill"></div></div>' +
-                  '<h2 class="center title clientad-heading"><a href="/promotions/' + slug + '/">' + title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</a></h2>' +
+                section.innerHTML = '<h2 class="center title clientad-heading"><a href="/promotions/' + slug + '/">' + title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</a></h2>' +
                   '<span data-aos="zoom-out-right">Promotion</span>' +
                   '<ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">' +
                   '<li class="ad-panel"><a href="/promotions/' + slug + '/" class="content-panel">' +

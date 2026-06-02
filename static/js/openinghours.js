@@ -334,16 +334,29 @@ function getOpenSigns() {
   }
 
   console.log('Starting updateStatus and interval');
-  updateStatus();                // Initial run
-  setInterval(updateStatus, 60000);  // Update every minute
+  updateStatus();
+  if (window._ttmsOpenSignsInterval) {
+    clearInterval(window._ttmsOpenSignsInterval);
+  }
+  window._ttmsOpenSignsInterval = setInterval(updateStatus, 60000);
 }
 
-// ========================================
-// INITIALIZATION
-// ========================================
+function reinitOpeningHours() {
+  initOpeninghoursDisplay();
+  getOpenSigns();
+}
 
-// Note: Opening hours are now initialized by the loader script
-// to prevent duplicate initialization and ensure proper timing
+window.reinitOpeningHours = reinitOpeningHours;
+
+if (window.TTMSBarba) {
+  window.TTMSBarba.register(reinitOpeningHours);
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.TTMSBarba) {
+      window.TTMSBarba.register(reinitOpeningHours);
+    }
+  });
+}
 
 // ========================================
 // DEBUGGING FUNCTIONS

@@ -104,13 +104,17 @@
 
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
 <link rel="stylesheet" href="/css/colors.css"/>
+<link rel="stylesheet" href="/css/typography.css"/>
 <link rel="stylesheet" href="/css/theme-overrides.css"/>
 <link rel="stylesheet" href="/css/custom.css"/>
 <link rel="stylesheet" href="/css/header.css"/>
+<link rel="stylesheet" href="/css/account-dashboard.css"/>
 <link rel="stylesheet" href="/css/cart.css"/>
 <link rel="stylesheet" href="/css/contact.css"/>
 <link rel="stylesheet" href="/css/hero.css"/>
+<link rel="stylesheet" href="/css/hero-cta.css"/>
 <link rel="stylesheet" href="/css/slideshow.css"/>
+<link rel="stylesheet" href="/css/expanded-carousel.css"/>
 {{ if .Site.Params.notifications.enabled }}
 <link rel="stylesheet" href="/css/notifications.css"/>
 {{ end }}
@@ -157,12 +161,10 @@
   }
 </style>
 
-<!-- FONTS FOR THE MENU -->
-<!-- <link rel="preconnect" href="https://fonts.googleapis.com">
+<!-- Menu UI font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200anddisplay=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Black+Ops+Oneanddisplay=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700anddisplay=swap" rel="stylesheet"> -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
 
 {{- if site.Params.notifications.enabled -}}
 <script>
@@ -252,6 +254,7 @@ window.POS_CONFIG = {
 window.AUTH_CONFIG = {
     apiUrl: "{{ site.Params.auth.apiUrl }}"
 };
+window.AUTH_SERVICE_URL = window.AUTH_SERVICE_URL || "{{ site.Params.auth.apiUrl }}";
 // Set current site's client ID for access control (contentManagement or ads clientId)
 window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
 {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
@@ -267,17 +270,35 @@ window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 <script src="/js/auth-client-access.js"></script>
 <script src="/js/auth-middleware.js"></script>
 <script src="/js/admin-users.js"></script>
+<link rel="stylesheet" href="/css/menu-favorites.css">
+<link rel="stylesheet" href="/css/menu-cards.css">
+<script src="/js/menu-favorites.js" defer></script>
 {{- end -}}
+{{- if site.Params.menuImageService.enabled -}}
+<script>
+window.MENU_IMAGE_CONFIG = {
+  enabled: true,
+  apiUrl: "{{ site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
+  clientId: "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
+};
+</script>
+<script src="/js/menu-image-integration.js" defer></script>
+{{- end -}}
+<script src="/js/share-buttons.js" defer></script>
+<script src="/js/single-page-init.js" defer></script>
+<script src="/js/menu-account-dashboard.js" defer></script>
+<script src="/js/header-menublock-scroll.js" defer></script>
 
 {{- if site.Params.notifications.enabled -}}
 <script>
 // Notification Service Configuration
+{{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
 window.NOTIFY_CONFIG = {
     enabled: {{ site.Params.notifications.enabled }},
     apiUrl: "{{ site.Params.notifications.apiUrl }}",
     websocketUrl: "{{ site.Params.notifications.websocketUrl }}",
     serviceUrl: "{{ site.Params.notifications.serviceUrl }}",
-    clientDomain: window.location.hostname
+    clientDomain: "{{ $notifyClientDomain }}" || window.location.hostname
 };
 
 // Site Config (for compatibility with existing notification code)

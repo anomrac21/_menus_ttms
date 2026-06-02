@@ -402,9 +402,37 @@ class TTMSAnalytics {
     });
     
     // Track heartbeat every 30 seconds (user is still engaged)
-    setInterval(() => {
-      _paq.push(['ping']);
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+    this.heartbeatInterval = setInterval(() => {
+      if (typeof _paq !== 'undefined') {
+        _paq.push(['ping']);
+      }
     }, 30000);
+  }
+
+  /**
+   * Re-run observers and track a virtual page view after Barba navigation.
+   */
+  onPageEnter() {
+    this.pageLoadTime = Date.now();
+    this.adImpressionRetries = 0;
+    this.trackedAdImpressions.clear();
+    this.trackedAdClicks.clear();
+
+    if (typeof _paq !== 'undefined') {
+      _paq.push(['setDocumentTitle', document.domain + '/' + document.title]);
+      _paq.push(['setCustomUrl', window.location.href]);
+      _paq.push(['trackPageView']);
+    }
+
+    if (this.enabled) {
+      this.observeAdImpressions();
+      this.trackPageEngagement();
+    } else {
+      this.init();
+    }
   }
 
   /**
@@ -452,11 +480,25 @@ function initTTMSAnalytics() {
   }
 }
 
+function registerBarbaAnalytics() {
+  if (window.TTMSBarba) {
+    window.TTMSBarba.register(function () {
+      if (window.ttmsAnalytics && typeof window.ttmsAnalytics.onPageEnter === 'function') {
+        window.ttmsAnalytics.onPageEnter();
+      }
+    });
+  }
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initTTMSAnalytics);
+  document.addEventListener('DOMContentLoaded', function () {
+    initTTMSAnalytics();
+    registerBarbaAnalytics();
+  });
 } else {
   initTTMSAnalytics();
+  registerBarbaAnalytics();
 }
 
 // Global error tracking

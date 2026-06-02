@@ -130,8 +130,10 @@
     const usersPerPage = 10;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Protect this page - require admin access with client validation
-      const hasAccess = AuthClientAccess.protectAdminPage({
+      if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+        await AuthClient.whenReady();
+      }
+      const hasAccess = await AuthClientAccess.protectAdminPage({
         redirectUrl: '/',
         showError: true,
       });

@@ -1,37 +1,78 @@
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll("section").forEach(section => {
-    const ul = section.querySelector(".inner");
-    if (!ul) return; // Skip if no .inner element
-    
-    const items = ul.querySelectorAll("li");
-    if (items.length === 0) return; // Skip if no items
-    
-    const leftBtn = section.querySelector(".l-btn");
-    const rightBtn = section.querySelector(".r-btn");
-    if (!leftBtn || !rightBtn) return; // Skip if no navigation buttons
-    
-    let currentIndex = 0;
+(function () {
+  'use strict';
 
-    if (items.length <= 1) {
-      leftBtn.style.display = "none";
-      rightBtn.style.display = "none";
-    }
+  var sectionHandlers = [];
 
-    function updateScroll() {
-      ul.scrollTo({
-        left: items[currentIndex].offsetLeft,
-        behavior: 'smooth'
-      });
-    }
-
-    leftBtn.addEventListener("click", () => {
-      currentIndex = (currentIndex - 1 + items.length) % items.length;
-      updateScroll();
+  function initSectionScroll() {
+    sectionHandlers.forEach(function (entry) {
+      if (entry.leftBtn) {
+        entry.leftBtn.removeEventListener('click', entry.onLeft);
+      }
+      if (entry.rightBtn) {
+        entry.rightBtn.removeEventListener('click', entry.onRight);
+      }
     });
+    sectionHandlers = [];
 
-    rightBtn.addEventListener("click", () => {
-      currentIndex = (currentIndex + 1) % items.length;
-      updateScroll();
+    document.querySelectorAll('section').forEach(function (section) {
+      var ul = section.querySelector('.inner');
+      if (!ul) return;
+
+      var items = ul.querySelectorAll('li');
+      if (!items.length) return;
+
+      var leftBtn = section.querySelector('.l-btn');
+      var rightBtn = section.querySelector('.r-btn');
+      if (!leftBtn || !rightBtn) return;
+
+      var currentIndex = 0;
+
+      if (items.length <= 1) {
+        leftBtn.style.display = 'none';
+        rightBtn.style.display = 'none';
+      } else {
+        leftBtn.style.display = '';
+        rightBtn.style.display = '';
+      }
+
+      function updateScroll() {
+        ul.scrollTo({
+          left: items[currentIndex].offsetLeft,
+          behavior: 'smooth',
+        });
+      }
+
+      function onLeft() {
+        currentIndex = (currentIndex - 1 + items.length) % items.length;
+        updateScroll();
+      }
+
+      function onRight() {
+        currentIndex = (currentIndex + 1) % items.length;
+        updateScroll();
+      }
+
+      leftBtn.addEventListener('click', onLeft);
+      rightBtn.addEventListener('click', onRight);
+      sectionHandlers.push({ leftBtn: leftBtn, rightBtn: rightBtn, onLeft: onLeft, onRight: onRight });
     });
-  });
-});
+  }
+
+  window.initSectionScroll = initSectionScroll;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSectionScroll);
+  } else {
+    initSectionScroll();
+  }
+
+  if (window.TTMSBarba) {
+    window.TTMSBarba.register(initSectionScroll);
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.TTMSBarba) {
+        window.TTMSBarba.register(initSectionScroll);
+      }
+    });
+  }
+})();

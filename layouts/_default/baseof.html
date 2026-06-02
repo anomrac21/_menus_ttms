@@ -27,6 +27,7 @@
         {{ partial "layout/header.html" . }}
       </header>
       {{ partialCached "ttms-dashboard/dashboard.html" . }}
+      {{ partialCached "ttms-account-dashboard/dashboard.html" . }}
       {{ partial "components/search.html" . }}
       <main id="main">
         {{ block "main" . }}{{ end }}
@@ -45,11 +46,15 @@
   <!-- CRITICAL SCRIPTS - Load first with defer (in order) -->
   <!-- Barba.js must load early as loader.js depends on it -->
   <script src="https://cdn.jsdelivr.net/npm/@barba/core" defer></script>
+  <script src="/js/barba-lifecycle.js" defer></script>
   
   <!-- Loader script - High priority, loads after Barba -->
   <script src="/js/loader.js" defer></script>
+  <script src="/js/openinghours.js" defer></script>
+  <script src="/js/section-scroll.js" defer></script>
   
-  <!-- Client Ad Manager - Load before other scripts that depend on it -->
+  <!-- Ads client (Instagram-style reels) + homepage ad manager -->
+  <script src="/js/ads-client.js" defer></script>
   <script src="/js/client-ad-manager.js" defer></script>
   
   <!-- Core app functionality - deferred -->

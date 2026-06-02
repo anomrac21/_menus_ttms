@@ -399,21 +399,12 @@
   }
   
   // Re-initialize after Barba.js transitions
-  if (typeof window.barba !== 'undefined') {
-    document.addEventListener('barba:after', function() {
-      setTimeout(() => {
-        updateTodayHours();
-        updateLocationStatusesPage();
-      }, 100);
-    });
-    
-    document.addEventListener('barba:afterEnter', function() {
-      setTimeout(() => {
-        updateTodayHours();
-        updateLocationStatusesPage();
-      }, 100);
-    });
-  }
+  document.addEventListener('ttms:page-enter', function() {
+    setTimeout(function() {
+      updateTodayHours();
+      updateLocationStatusesPage();
+    }, 100);
+  });
   
   // Expose functions globally
   window.refreshLocationStatusPage = refreshLocationStatusPage;

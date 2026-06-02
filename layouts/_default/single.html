@@ -7,7 +7,15 @@
   <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time-->
   {{if not (eq .Section ("weekly-promotions")) }}
     <div class="main-content">
-      <div class="single-page-item-card">
+      {{ $pricesArrayForCard := slice }}
+      {{ if .Params.prices }}
+        {{ range .Params.prices }}
+          {{ $pricesArrayForCard = $pricesArrayForCard | append .variable1 }}
+          {{ $pricesArrayForCard = $pricesArrayForCard | append .variable2 }}
+          {{ $pricesArrayForCard = $pricesArrayForCard | append .price }}
+        {{ end }}
+      {{ end }}
+      <div class="menu-item-card expanded menu-item-card--has-image single-page-item-card" data-item-url="{{ .RelPermalink }}" data-item-expanded="true" aria-expanded="true" data-prices-array="{{ $pricesArrayForCard | jsonify }}" data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}">
         {{ $category :=  .Section  }}
         {{ $categoryurl := .Parent.Permalink }}
         {{if .Params.prices}}
@@ -48,47 +56,35 @@
           {{ end }}
         {{ end }}
         {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
-        
-              {{ if gt (len $imagesArray) 0 }}
-            <div class="single-page-image-carousel" data-current-image="0" id="singlePageImageCarousel">
-              <div class="single-page-image-carousel-container">
-                {{ range $index, $img := $imagesArray }}
-                  <div class="single-page-image-slide {{ if eq $index 0 }}active{{ end }}" data-image-index="{{ $index }}">
-                    <img src="/{{ $img }}" alt="{{ $.Title }} - Image {{ add $index 1 }}" loading="lazy" class="single-page-image-carousel-img">
-                  </div>
-                {{ end }}
-              </div>
-              {{ if gt (len $imagesArray) 1 }}
-              <div class="single-page-image-nav-buttons">
-                <button class="single-page-image-nav single-page-image-nav-prev" onclick="navigateSinglePageImage(this, -1, event)" aria-label="Previous image">
-                  <i class="fa fa-chevron-left"></i>
-                </button>
-                <button class="single-page-image-nav single-page-image-nav-next" onclick="navigateSinglePageImage(this, 1, event)" aria-label="Next image">
-                  <i class="fa fa-chevron-right"></i>
-                </button>
-              </div>
-              <div class="single-page-image-indicators">
-                {{ range $index, $img := $imagesArray }}
-                  <span class="single-page-image-indicator {{ if eq $index 0 }}active{{ end }}" data-indicator-index="{{ $index }}" onclick="goToSinglePageImage(this, {{ $index }}, event)"></span>
-                {{ end }}
-              </div>
-              {{ end }}
-            </div>
-              {{ else }}
-          <div class="single-page-image-container" id="singlePageImageCarousel">
-            <img class="single-page-image" src="/branding/favicon-400x200.webp" alt="{{ .Title }}" loading="lazy">  
-          </div>
-              {{ end }}  
-        
-        <div class="single-page-content" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}" data-menu-item-path="{{ .RelPermalink }}">
-          <h1 class="single-page-title">{{ .Title }}{{ if and $activePromo (index $activePromo "label") }} <span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}</h1>
-          {{ if .Site.Params.menuImageService.enabled }}
+
+        <div class="menu-item-expanded-content" style="display: block;">
+          {{ $hasSinglePageCarousel := gt (len $imagesArray) 0 }}
+          <div class="expanded-item-details single-page-content{{ if and (not $hasSinglePageCarousel) .Site.Params.menuImageService.enabled }} expanded-item-details--no-carousel{{ end }}" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}" data-menu-item-path="{{ .RelPermalink }}">
+            {{ $promoCarouselLabel := "" }}
+            {{ if and $activePromo (index $activePromo "label") }}{{ $promoCarouselLabel = "Promotion" }}{{ end }}
+            {{ partial "components/expanded-image-carousel.html" (dict "images" $imagesArray "title" .Title "id" "singlePageImageCarousel" "promoLabel" $promoCarouselLabel) }}
+            {{ if .Site.Params.menuImageService.enabled }}
+              {{ if $hasSinglePageCarousel }}
           <div class="menu-image-actions">
-            <button type="button" class="menu-image-add-btn" id="menuImageAddBtn" style="display:none;" title="Add a photo for this menu item"><i class="fa fa-camera"></i> Add photo</button>
+            <button type="button" class="menu-image-add-btn" id="menuImageAddBtn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>
           </div>
-          {{ end }}
-          
-          <div class="single-page-description">
+              {{ else }}
+          <div class="expanded-media-placeholder" role="region" aria-label="Item photo">
+            <div class="menu-image-actions menu-image-actions--standalone">
+              <button type="button" class="menu-image-add-btn" id="menuImageAddBtn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>
+            </div>
+            <p class="expanded-media-placeholder__hint">No photo yet — be the first to add one</p>
+          </div>
+              {{ end }}
+            {{ end }}
+            {{ partial "components/menu-favorite-btn.html" . }}
+
+            <div class="menu-item-header-content">
+              <h3 class="menu-item-title single-page-title">
+                <span class="menu-item-title-text">{{ .Title }}</span>{{ if and $activePromo (index $activePromo "label") }} <span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}
+              </h3>
+            </div>
+          <div class="expanded-item-description single-page-description">
               {{ .Content }}
           </div>
           
@@ -320,16 +316,16 @@
           {{ end }}
           
           <!-- Add to Cart Section -->
-          <div class="single-page-add-cart">
-            <div class="single-page-quantity-control">
-              <button class="btn-quantity" onclick="adjustSinglePageQuantity(this, -1)">
+          <div class="expanded-item-controls single-page-add-cart">
+            <div class="expanded-quantity-control single-page-quantity-control">
+              <button type="button" class="btn-quantity" onclick="adjustSinglePageQuantity(this, -1)">
                 <i class="fa fa-chevron-down"></i>
               </button>
-              <span class="single-page-quantity" data-item-url="{{ .RelPermalink }}">1</span>
-              <button class="btn-quantity" onclick="adjustSinglePageQuantity(this, 1)">
+              <span class="expanded-quantity single-page-quantity" data-item-url="{{ .RelPermalink }}">1</span>
+              <button type="button" class="btn-quantity" onclick="adjustSinglePageQuantity(this, 1)">
                 <i class="fa fa-chevron-up"></i>
               </button>
-              <span class="single-page-price">
+              <span class="expanded-price single-page-price">
                 {{$counter := 0}}
                 {{$number := slice}}
                 {{$total := 0}}
@@ -368,11 +364,12 @@
                 {{end}}
               </span>
             </div>
-            <button class="single-page-add-cart-btn" onclick="addSinglePageItemToCart(this, '{{ .RelPermalink }}')">
+            <button type="button" class="expanded-add-cart single-page-add-cart-btn" onclick="addSinglePageItemToCart(this, '{{ .RelPermalink }}')">
               <i class="fa fa-cart-plus"></i>
               <span class="cart-button-text">Add to Cart</span>
               <span class="cart-button-price"></span>
             </button>
+          </div>
           </div>
         </div>
       </div>
@@ -407,14 +404,4 @@
   {{ partial "utilities/terms.html" (dict "taxonomy" "events" "page" .) }}
   
   {{ partial "socialmedia/share-button.html" . }}
-  {{ if .Site.Params.menuImageService.enabled }}
-  <script>
-    window.MENU_IMAGE_CONFIG = {
-      enabled: true,
-      apiUrl: "{{ .Site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
-      clientId: "{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
-    };
-  </script>
-  <script src="/js/menu-image-integration.js" defer></script>
-  {{ end }}
 {{ end }}

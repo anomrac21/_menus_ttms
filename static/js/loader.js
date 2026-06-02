@@ -39,7 +39,7 @@ function ensureAdsLoaded() {
             console.log('AdManager found! Checking if ads need refreshing...');
             try {
                 // Check if ads are actually visible in containers
-                const adContainers = document.querySelectorAll('#homepage-ads-container, #frontpage-ads-container');
+                const adContainers = document.querySelectorAll('#homepage-ads-container, #pageadscontainer');
                 let needsRefresh = false;
                 
                 adContainers.forEach(container => {
@@ -75,7 +75,7 @@ function ensureAdsLoaded() {
             console.log('Final check - window.adManager:', window.adManager);
             
             // Fallback: try to refresh any existing ads manually
-            const adContainers = document.querySelectorAll('#homepage-ads-container, #frontpage-ads-container');
+            const adContainers = document.querySelectorAll('#homepage-ads-container, #pageadscontainer');
             adContainers.forEach(container => {
                 if (container.innerHTML.includes('Loading ads...')) {
                     container.innerHTML = '<p>Ads loading...</p>';
@@ -155,8 +155,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         randomAnim = animations[Math.floor(Math.random() * animations.length)];
         loader.classList.add(randomAnim);
-        // AOS removed - no longer needed
-        document.getElementById("footerBtns").classList.add("visible");
+        const footerBtns = document.getElementById("footerBtns");
+        if (footerBtns) {
+            footerBtns.classList.add("visible");
+        }
         
         // Note: Ad loading is now handled by barba transitions for better control
         // Removed ensureAdsLoaded() call to prevent race conditions
@@ -180,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Force a refresh of any ad containers
-        const adContainers = document.querySelectorAll('#homepage-ads-container, #frontpage-ads-container');
+        const adContainers = document.querySelectorAll('#homepage-ads-container, #pageadscontainer');
         adContainers.forEach(container => {
             if (container.innerHTML.includes('Loading ads...') || container.innerHTML.includes('Ads loading...')) {
                 console.log(`Container ${container.id} still shows loading text, triggering refresh...`);
@@ -200,8 +202,15 @@ document.addEventListener('DOMContentLoaded', function() {
         transitions: [{
             name: 'fade',
             async leave(data) {
-                localStorage.setItem("headerScroll", document.getElementById("menublock").scrollLeft);
-                
+                const menublock = document.getElementById("menublock");
+                if (menublock) {
+                    localStorage.setItem("headerScroll", menublock.scrollLeft);
+                }
+
+                if (window.APP && APP.slideshow && typeof APP.slideshow.destroy === 'function') {
+                    APP.slideshow.destroy();
+                }
+
                 showLoader();
                 await new Promise(resolve => setTimeout(resolve, 366));
             },
@@ -211,9 +220,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.documentElement.scrollTop = 0;
                 document.body.scrollTop = 0;
                 
-                document.getElementById('menublock').scrollTo(12, 0);
-                closeCart();
-                closeShop();
+                const menublockEl = document.getElementById('menublock');
+                if (menublockEl) {
+                    menublockEl.scrollTo(0, 0);
+                }
+                if (typeof window.bindMenublockScroll === 'function') {
+                    window.bindMenublockScroll();
+                }
+                if (typeof window.updateHeaderMenublockScroll === 'function') {
+                    window.updateHeaderMenublockScroll();
+                }
+                if (typeof closeCart === 'function') {
+                    closeCart();
+                }
+                if (typeof closeShop === 'function') {
+                    closeShop();
+                }
                 await new Promise(resolve => setTimeout(resolve, 366));
                 hideLoader();
                 
@@ -234,9 +256,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const savedScroll = localStorage.getItem("headerScroll");
                 if (savedScroll !== null) {
-                    requestAnimationFrame(() => { // Ensures DOM is ready before applying scroll
-                        document.getElementById("menublock").scrollLeft = savedScroll;
+                    requestAnimationFrame(() => {
+                        const menublock = document.getElementById("menublock");
+                        if (menublock) {
+                            menublock.scrollLeft = savedScroll;
+                        }
+                        if (typeof window.bindMenublockScroll === 'function') {
+                            window.bindMenublockScroll();
+                        }
+                        if (typeof window.updateHeaderMenublockScroll === 'function') {
+                            window.updateHeaderMenublockScroll();
+                        }
                     });
+                } else if (typeof window.bindMenublockScroll === 'function') {
+                    window.bindMenublockScroll();
                 }
 
                 // Wait for DOM to settle, then load ads
@@ -244,77 +277,70 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('=== Barba enter: Post-navigation setup ===');
                     
                     // Check if ad containers exist
-                    const containers = ['homepage-ads-container', 'frontpage-ads-container'];
+                    const containers = ['homepage-ads-container', 'pageadscontainer'];
                     const foundContainers = containers.filter(id => document.getElementById(id));
                     console.log('Ad containers found:', foundContainers);
-                    
-                    // AOS removed - no longer needed
-                    
-                    // Force ad reload after barba navigation with fresh state
-                    console.log('Barba enter: Forcing ad reload');
-                    console.log('window.adManager exists:', !!window.adManager);
-                    
-                    // Re-initialize ad manager (will handle container check and re-population)
-                    if (typeof initAdManager === 'function') {
-                        console.log('Re-initializing AdManager...');
-                        initAdManager();
+
+                    // Reels frontpage ads (pageadscontainer) — same as ttms_app
+                    setTimeout(() => {
+                        if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
+                            window.AdsClient.loadAds();
+                        } else if (typeof window.loadClientPageAds === 'function' && document.getElementById('pageadscontainer')) {
+                            window.loadClientPageAds();
+                        }
+                    }, 500);
+
+                    // Homepage ad manager (only when pageadscontainer is absent)
+                    if (!document.getElementById('pageadscontainer')) {
+                        if (typeof initAdManager === 'function') {
+                            initAdManager();
+                        }
+                        if (window.adManager && typeof window.adManager.populateAds === 'function') {
+                            window.adManager.populateAds(true);
+                        }
                     }
-                    
-                    // Also try with existing instance if available
-                    if (window.adManager) {
-                        console.log('Calling populateAds with forceRepopulate=true');
-                        // Directly call populateAds with force flag
-                        window.adManager.populateAds(true);
-                        
-                        // Also try again after a delay in case DOM wasn't fully ready
-                        setTimeout(() => {
-                            console.log('Secondary ad population attempt...');
-                            if (window.adManager) {
-                                window.adManager.populateAds(true);
-                            }
-                            
-                            // Refresh scroll progress bars
-                            setTimeout(() => {
-                                if (window.adScrollProgressManager) {
-                                    window.adScrollProgressManager.refresh();
-                                }
-                            }, 500);
-                        }, 500);
-                    } else {
-                        console.log('AdManager not yet available, will be initialized by barba:after event');
+
+                    if (window.TTMSBarba && typeof window.TTMSBarba.runNow === 'function') {
+                        window.TTMSBarba.runNow('barba-enter');
                     }
                 }, 300);
-                
-                // Reload opening hours functionality after page transition
-                setTimeout(() => {
-                    if (typeof initOpeninghoursDisplay === 'function') {
-                        initOpeninghoursDisplay();
-                    }
-                    if (typeof getOpenSigns === 'function') {
-                        getOpenSigns();
-                    }
-                    if (typeof reloadAppJS === 'function') {
-                        reloadAppJS();
-                    }
-                }, 400);
             },
             async once(data) {
+                // Load reels ads early (init also runs, debounced in AdsClient)
+                setTimeout(() => {
+                    if (document.getElementById('pageadscontainer')) {
+                        if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
+                            window.AdsClient.loadAds();
+                        }
+                    }
+                }, 300);
+
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 hideLoader();
                 
-                // Ensure ads are loaded after initial page load
-                setTimeout(() => ensureAdsLoaded(), 500);
+                setTimeout(() => {
+                    if (!document.getElementById('pageadscontainer')) {
+                        ensureAdsLoaded();
+                    }
+                }, 500);
                 
                 // Reload opening hours functionality after initial page load
                 setTimeout(() => {
-                    if (typeof initOpeninghoursDisplay === 'function') {
-                        initOpeninghoursDisplay();
-                    }
-                    if (typeof getOpenSigns === 'function') {
-                        getOpenSigns();
-                    }
                     if (typeof reloadAppJS === 'function') {
                         reloadAppJS();
+                    }
+                    if (typeof reinitOpeningHours === 'function') {
+                        reinitOpeningHours();
+                    } else {
+                        if (typeof initOpeninghoursDisplay === 'function') {
+                            initOpeninghoursDisplay();
+                        }
+                        if (typeof getOpenSigns === 'function') {
+                            getOpenSigns();
+                        }
+                    }
+                    if (window.TTMSBarba && typeof window.TTMSBarba.runNow === 'function') {
+                        window.TTMSBarba.runNow('barba-once');
                     }
                 }, 600);
             }
@@ -338,10 +364,12 @@ function lazyLoadContent(container) {
     });
 }
 
-const header = document.querySelector(".header"); // Adjust selector as needed
+const header = document.querySelector(".header") || document.getElementById("menublock");
 
 window.addEventListener("beforeunload", () => {
-    localStorage.setItem("headerScroll", header.scrollLeft);
+    if (header) {
+        localStorage.setItem("headerScroll", header.scrollLeft);
+    }
 });
 
 // Listen for page refresh/reload events

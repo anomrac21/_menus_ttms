@@ -300,10 +300,9 @@
   } else {
     init();
   }
-  if (typeof window.barba !== 'undefined') {
-    document.addEventListener('barba:after', function() { setTimeout(function() { updateTodayHours(); updateLocationStatusesPage(); }, 100); });
-    document.addEventListener('barba:afterEnter', function() { setTimeout(function() { updateTodayHours(); updateLocationStatusesPage(); }, 100); });
-  }
+  document.addEventListener('ttms:page-enter', function() {
+    setTimeout(function() { updateTodayHours(); updateLocationStatusesPage(); }, 100);
+  });
   window.refreshLocationStatusPage = refreshLocationStatusPage;
   window.updateLocationStatusesPage = updateLocationStatusesPage;
   window.updateTodayHours = updateTodayHours;

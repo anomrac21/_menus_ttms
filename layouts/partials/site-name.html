@@ -1,0 +1,4 @@
+{{- $name := site.Title -}}
+{{- if not $name }}{{- $name = site.Params.displayName -}}{{- end -}}
+{{- if not $name }}{{- $name = "Menu" -}}{{- end -}}
+{{- $name -}}

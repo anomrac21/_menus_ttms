@@ -17,9 +17,12 @@
         hideAllPanels();
         initializeFooter();
         initializeModals();
-        initializeMenu();
+        bindMenuInteractions();
         applyDayBasedPromos();
         initializeFooterVisibility();
+        if (typeof window.initSinglePageFeatures === 'function') {
+            window.initSinglePageFeatures();
+        }
         // Packery removed - no initialization needed
     }
 
@@ -203,14 +206,14 @@
         const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
         dataEl.setAttribute('data-active-promo-percent', String(pct));
 
-        const badge = document.querySelector('.single-page-title .menu-item-promo-badge');
+        const badge = document.querySelector('.single-page-title .menu-item-promo-badge, h3.menu-item-title.single-page-title .menu-item-promo-badge');
         if (badge) {
             if (promo && promo.label) {
                 badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
                 badge.style.display = '';
             } else { badge.style.display = 'none'; }
         } else if (promo && promo.label) {
-            const title = document.querySelector('.single-page-title');
+            const title = document.querySelector('.single-page-title, h3.menu-item-title.single-page-title');
             if (title) {
                 const span = document.createElement('span');
                 span.className = 'menu-item-promo-badge';
@@ -294,7 +297,7 @@
                 msg = `Available ${daysStr} ${fmt(a.time_start)}–${fmt(a.time_finish)}.`;
             }
         } catch (_) {}
-        const addCartSection = document.querySelector('.single-page-add-cart');
+        const addCartSection = document.querySelector('.single-page-add-cart, .single-page-item-card .expanded-item-controls');
         if (addCartSection) {
             let notice = addCartSection.querySelector('.single-page-unavailable-notice');
             if (!available) {
@@ -308,15 +311,74 @@
                 notice.style.display = '';
             } else if (notice) notice.style.display = 'none';
         }
-        const addBtn = document.querySelector('.single-page-add-cart-btn');
+        const addBtn = document.querySelector('.single-page-add-cart-btn, .single-page-item-card .expanded-add-cart');
         if (addBtn) addBtn.disabled = !available;
+    }
+
+    /**
+     * Images for expanded carousel: API/images attr, then promo, regular, card thumbnail.
+     * @param {HTMLElement} card
+     * @param {string[]} imagesFromApi
+     * @returns {string[]}
+     */
+    function resolveExpandedImagesForCarousel(card, imagesFromApi) {
+        const seen = new Set();
+        const out = [];
+        function add(path) {
+            if (!path) return;
+            const p = String(path).replace(/^\//, '');
+            if (!p || seen.has(p)) return;
+            seen.add(p);
+            out.push(p);
+        }
+
+        if (Array.isArray(imagesFromApi)) {
+            imagesFromApi.forEach(add);
+        }
+        if (out.length) return out;
+
+        const cardAttr = card.getAttribute('data-images-array');
+        if (cardAttr) {
+            try {
+                JSON.parse(cardAttr).forEach(add);
+            } catch (_) { /* ignore */ }
+        }
+        if (out.length) return out;
+
+        const dt = window.__ttmsDateTime || getLocalDateTime();
+        const promo = getActivePromoForDay(
+            card.getAttribute('data-promotions'),
+            dt.day,
+            { hour: dt.hour, minute: dt.minute }
+        );
+        if (promo && promo.image) add(promo.image);
+
+        const regularAttr = card.getAttribute('data-regular-images-array');
+        if (regularAttr) {
+            try {
+                JSON.parse(regularAttr).forEach(add);
+            } catch (_) { /* ignore */ }
+        }
+
+        const thumb = card.querySelector('.menu-item-img');
+        if (thumb && thumb.src) {
+            try {
+                const u = new URL(thumb.src, window.location.origin);
+                if (u.pathname && u.pathname !== '/') {
+                    add(u.pathname);
+                }
+            } catch (_) { /* ignore */ }
+        }
+
+        return out;
     }
 
     function applyPromosWithDay(dateTime) {
         if (!dateTime) return;
+        window.__ttmsDateTime = dateTime;
         const { day: today, hour, minute } = dateTime;
         const timeInfo = { hour, minute };
-        document.querySelectorAll('.menu-item-card').forEach(card => applyPromoToCard(card, today, timeInfo));
+        document.querySelectorAll('.menu-item-card:not(.single-page-item-card)').forEach(card => applyPromoToCard(card, today, timeInfo));
         document.querySelectorAll('.menu-item-card[data-availability]').forEach(card => applyAvailabilityToCard(card, today, timeInfo));
         const singleData = document.getElementById('single-page-item-data');
         if (singleData) {
@@ -463,10 +525,17 @@
         }
     }
 
+    let footerVisibilityCleanup = null;
+
     /**
      * Hide footer when promotions/ads are visible in viewport
      */
     function initializeFooterVisibility() {
+        if (footerVisibilityCleanup) {
+            footerVisibilityCleanup();
+            footerVisibilityCleanup = null;
+        }
+
         const footer = document.getElementById('footer');
         if (!footer) return;
 
@@ -475,21 +544,19 @@
         let isAdVisible = false;
 
         function checkAdVisibility() {
-            // Selectors for all promotion/ad containers
             const adSelectors = [
                 '#homepage-ads-container',
                 '#client-ads-container',
+                '#pageadscontainer',
                 '#frontpage-ads-container',
                 '.frontpageads'
             ];
 
-            // Collect all ad/promotion elements
             const adElements = [];
             adSelectors.forEach(selector => {
                 const elements = document.querySelectorAll(selector);
                 elements.forEach(el => {
-                    // Only include if element has visible content (not empty or loading)
-                    const hasContent = el.children.length > 0 && 
+                    const hasContent = el.children.length > 0 &&
                                      !el.textContent.includes('Loading') &&
                                      !el.textContent.includes('Loading promotions') &&
                                      el.offsetHeight > 0 &&
@@ -500,7 +567,6 @@
                 });
             });
 
-            // Check if any ad is visible in viewport
             let hasVisibleAd = false;
             adElements.forEach(el => {
                 const rect = el.getBoundingClientRect();
@@ -510,17 +576,11 @@
                 }
             });
 
-            // Update footer visibility
             if (hasVisibleAd !== isAdVisible) {
                 isAdVisible = hasVisibleAd;
-                if (isAdVisible) {
-                    footer.style.display = 'none';
-                } else {
-                    footer.style.display = '';
-                }
+                footer.style.display = isAdVisible ? 'none' : '';
             }
 
-            // Re-setup observer if elements changed
             if (observer && adElements.length > 0) {
                 adElements.forEach(el => {
                     try {
@@ -532,33 +592,40 @@
             }
         }
 
-        // Create Intersection Observer to detect when ads are in viewport
         const observerOptions = {
-            root: null, // viewport
+            root: null,
             rootMargin: '0px',
-            threshold: 0.1 // Trigger when 10% of element is visible
+            threshold: 0.1
         };
 
-        observer = new IntersectionObserver((entries) => {
+        observer = new IntersectionObserver(() => {
             checkAdVisibility();
         }, observerOptions);
 
-        // Initial check
-        checkAdVisibility();
-
-        // Check on scroll for better performance
-        window.addEventListener('scroll', () => {
+        function onScroll() {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(checkAdVisibility, 100);
-        }, { passive: true });
+        }
 
-        // Re-check when ads are loaded dynamically
-        window.addEventListener('adsPopulated', () => {
+        function onAdsPopulated() {
             setTimeout(checkAdVisibility, 500);
-        });
+        }
 
-        // Re-check periodically for dynamically loaded content
-        setInterval(checkAdVisibility, 2000);
+        checkAdVisibility();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('adsPopulated', onAdsPopulated);
+
+        const intervalId = setInterval(checkAdVisibility, 2000);
+
+        footerVisibilityCleanup = function () {
+            if (observer) {
+                observer.disconnect();
+            }
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('adsPopulated', onAdsPopulated);
+            clearTimeout(scrollTimeout);
+            clearInterval(intervalId);
+        };
     }
 
     // ============================================
@@ -660,6 +727,7 @@
         }
         const card = element.classList?.contains('menu-item-card') ? element : element.closest?.('.menu-item-card');
         if (card && card.classList.contains('menu-item-unavailable')) return;
+        if (card && card.classList.contains('single-page-item-card')) return;
 
         const isExpanded = element.classList.contains('expanded') || element.getAttribute('data-item-expanded') === 'true';
 
@@ -669,7 +737,11 @@
             const isDragHandle = target.closest('.drag-handle');
             const isImageLink = target.closest('.menu-item-image-link');
             const isTitleLink = target.closest('.menu-item-title a');
-            const isExpandedInteractive = target.closest('.expanded-item-controls a, .expanded-item-controls button, .btn-quantity, .expanded-add-cart');
+            const isExpandedInteractive = target.closest(
+                '.expanded-item-controls a, .expanded-item-controls button, .btn-quantity, .expanded-add-cart, ' +
+                '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
+                '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow'
+            );
             const isSideCategoryTitle = target.closest('.expanded-side-category-title');
             const isSideOption = target.closest('.expanded-side-option');
             
@@ -767,6 +839,7 @@
         loadingDiv.style.display = 'block';
         dataDiv.style.display = 'none';
         element.setAttribute('data-item-expanded', 'true');
+        element.setAttribute('aria-expanded', 'true');
         element.classList.add('expanded');
 
         try {
@@ -1229,40 +1302,49 @@
                 element.setAttribute('data-side-categories', JSON.stringify(sideCategories));
                 element.setAttribute('data-modifications', JSON.stringify(modifications));
                 element.setAttribute('data-additions', JSON.stringify(additions));
+                imagesArray = resolveExpandedImagesForCarousel(element, imagesArray);
                 element.setAttribute('data-images-array', JSON.stringify(imagesArray));
                 
                 // Build image carousel HTML if images exist (even for single image)
                 let imageCarouselHTML = '';
-                if (imagesArray && imagesArray.length > 0) {
+                const hasExpandedCarousel = imagesArray && imagesArray.length > 0;
+                if (hasExpandedCarousel) {
                     const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
                     const showNavButtons = imagesArray.length > 1;
                     const showIndicators = imagesArray.length > 1;
                     imageCarouselHTML = `
-                        <div class="expanded-image-carousel" data-current-image="0">
-                            <div class="expanded-image-carousel-container">
-                                ${imagesArray.map((img, index) => {
+                        <div class="expanded-image-carousel menu-item-slideshow" data-current-image="0">
+                            <div class="expanded-image-carousel-view">
+                                <div class="expanded-image-carousel-container menu-item-slideshow-track" role="region" aria-label="${itemName} images" tabindex="0">
+                                    ${imagesArray.map((img, index) => {
                                     const pathStr = normalizeMenuItemImagePath(img);
                                     const src = resolveExpandedImageSrcForPreview(pathStr);
+                                    const loadingAttr = index === 0 ? 'eager' : 'lazy';
+                                    const fetchAttr = index === 0 ? ' fetchpriority="high"' : '';
+                                    const cssUrl = cssImageVarForPath(src);
                                     return `
-                                    <div class="expanded-image-slide ${index === 0 ? 'active' : ''}" data-image-index="${index}">
-                                        <img src="${src}" alt="${itemName} - Image ${index + 1}" loading="lazy" class="expanded-image-carousel-img">
+                                    <div class="expanded-image-slide menu-item-slideshow-slide ${index === 0 ? 'active' : ''}" data-image-index="${index}">
+                                        <div class="content-panel" style="--ad-image: ${cssUrl}">
+                                            <img src="${src}" alt="${itemName} - Image ${index + 1}" loading="${loadingAttr}" decoding="async"${fetchAttr} class="ad-portrait expanded-image-carousel-img">
+                                        </div>
                                     </div>`;
                                 }).join('')}
+                                </div>
+                                ${showNavButtons ? `
+                                <div class="expanded-image-nav-buttons">
+                                    <button type="button" class="expanded-image-nav expanded-image-nav-prev" onclick="navigateExpandedImage(this, -1, '${url}', event)" aria-label="Previous image">
+                                        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="expanded-image-nav expanded-image-nav-next" onclick="navigateExpandedImage(this, 1, '${url}', event)" aria-label="Next image">
+                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
                             </div>
-                            ${showNavButtons ? `
-                            <div class="expanded-image-nav-buttons">
-                                <button class="expanded-image-nav expanded-image-nav-prev" onclick="navigateExpandedImage(this, -1, '${url}', event)" aria-label="Previous image">
-                                    <i class="fa fa-chevron-left"></i>
-                                </button>
-                                <button class="expanded-image-nav expanded-image-nav-next" onclick="navigateExpandedImage(this, 1, '${url}', event)" aria-label="Next image">
-                                    <i class="fa fa-chevron-right"></i>
-                                </button>
-                            </div>
-                            ` : ''}
                             ${showIndicators ? `
-                            <div class="expanded-image-indicators">
+                            <div class="expanded-image-indicators" role="tablist" aria-label="Item images">
                                 ${imagesArray.map((img, index) => `
-                                    <span class="expanded-image-indicator ${index === 0 ? 'active' : ''}" data-indicator-index="${index}" onclick="goToExpandedImage(this, ${index}, '${url}', event)"></span>
+                                    <button type="button" class="expanded-image-indicator ${index === 0 ? 'active' : ''}" role="tab" aria-label="Image ${index + 1}" aria-selected="${index === 0 ? 'true' : 'false'}" data-indicator-index="${index}" onclick="goToExpandedImage(this, ${index}, '${url}', event)"></button>
                                 `).join('')}
                             </div>
                             ` : ''}
@@ -1274,9 +1356,41 @@
                 const descLinkHref = isDashboardNewPlaceholderUrl ? '#' : url;
                 const descLinkClass = isDashboardNewPlaceholderUrl ? ' class="dashboard-new-item-placeholder-link"' : '';
                 const descLinkOnclick = isDashboardNewPlaceholderUrl ? ' onclick="return false;"' : '';
+                const menuImageCfg = typeof window !== 'undefined' && window.MENU_IMAGE_CONFIG;
+                const menuImageEnabled = menuImageCfg && menuImageCfg.enabled;
+                const menuImageClientId = (menuImageCfg && menuImageCfg.clientId) ||
+                    (typeof window.SITE_CLIENT_ID !== 'undefined' && window.SITE_CLIENT_ID) ||
+                    '_ttms_menu_demo';
+                const menuImagePathAttr = String(url || '').replace(/"/g, '&quot;');
+                const menuImageDataAttrs = menuImageEnabled
+                    ? ` data-menu-image-client-id="${menuImageClientId}" data-menu-item-path="${menuImagePathAttr}"`
+                    : '';
+                const menuImageNoCarouselClass = menuImageEnabled && !hasExpandedCarousel
+                    ? ' expanded-item-details--no-carousel'
+                    : '';
+                const menuImageAddBtnHTML = `
+                            <button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>`;
+                let menuImageActionsHTML = '';
+                if (menuImageEnabled) {
+                    if (hasExpandedCarousel) {
+                        menuImageActionsHTML = `
+                        <div class="menu-image-actions">
+                            ${menuImageAddBtnHTML}
+                        </div>`;
+                    } else {
+                        menuImageActionsHTML = `
+                        <div class="expanded-media-placeholder" role="region" aria-label="Item photo">
+                            <div class="menu-image-actions menu-image-actions--standalone">
+                                ${menuImageAddBtnHTML}
+                            </div>
+                            <p class="expanded-media-placeholder__hint">No photo yet — be the first to add one</p>
+                        </div>`;
+                    }
+                }
                 dataDiv.innerHTML = `
-                    <div class="expanded-item-details">
+                    <div class="expanded-item-details${menuImageNoCarouselClass}"${menuImageDataAttrs}>
                         ${imageCarouselHTML}
+                        ${menuImageActionsHTML}
                         ${itemDesc ? `
                         <div class="expanded-item-description">
                             <a href="${descLinkHref}"${descLinkClass}${descLinkOnclick} style="color: inherit; text-decoration: none;">
@@ -1345,6 +1459,13 @@
             // Hide loading, show data
             loadingDiv.style.display = 'none';
             dataDiv.style.display = 'block';
+
+            dataDiv.querySelectorAll('.expanded-image-carousel').forEach(bindExpandedCarouselImages);
+
+            const menuImageHost = dataDiv.querySelector('.expanded-item-details[data-menu-item-path]');
+            if (menuImageHost && typeof window.initMenuImageIntegration === 'function') {
+                window.initMenuImageIntegration(menuImageHost);
+            }
             
             // Initialize category counters
             const categoryContainers = dataDiv.querySelectorAll('.expanded-side-category');
@@ -1391,6 +1512,7 @@
 
         expandedContent.style.display = 'none';
         element.setAttribute('data-item-expanded', 'false');
+        element.setAttribute('aria-expanded', 'false');
         element.classList.remove('expanded');
     }
 
@@ -2001,6 +2123,9 @@
      * @param {string} url - Item URL (if element is not provided)
      */
     function openItem(element, url) {
+        if (element && element.classList && element.classList.contains('single-page-item-card')) {
+            return;
+        }
         // If it's a menu item card, use expansion instead
         if (element && element.classList && element.classList.contains('menu-item-card')) {
             toggleItemExpansion(element, url);
@@ -2060,39 +2185,58 @@
     // ============================================
 
     /**
-     * Initialize menu interactions
+     * Bind menu interactions once via delegation (Barba-safe).
      */
-    function initializeMenu() {
-        // Smooth scroll for menu anchors
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                const href = this.getAttribute('href');
-                if (href === '#') return;
-                
-                const target = document.querySelector(href);
-                if (target) {
-                    e.preventDefault();
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    
-                    // Close cart when navigating
-                    closeCart();
+    function bindMenuInteractions() {
+        if (document.documentElement.dataset.ttmsMenuBound === '1') {
+            return;
+        }
+        document.documentElement.dataset.ttmsMenuBound = '1';
+
+        document.addEventListener('click', function (e) {
+            const anchor = e.target.closest('a[href^="#"]');
+            if (anchor) {
+                const href = anchor.getAttribute('href');
+                if (href && href !== '#') {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        closeCart();
+                    }
                 }
-            });
+            }
+
+            if (e.target.closest(
+                '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
+                '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow'
+            )) {
+                return;
+            }
+
+            const item = e.target.closest('[data-item-url]');
+            if (item && !item.onclick) {
+                const url = item.dataset.itemUrl;
+                if (url) {
+                    openItem(item, url);
+                }
+            }
         });
 
-        // Add click handlers for menu items with data-item-url
-        document.querySelectorAll('[data-item-url]').forEach(item => {
-            if (!item.onclick) {
-                item.addEventListener('click', function(e) {
-                    const url = this.dataset.itemUrl;
-                    if (url) {
-                        openItem(this, url);
-                    }
-                });
-            }
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const card = e.target.closest('.menu-item-card[role="button"]');
+            if (!card || card.classList.contains('menu-item-unavailable')) return;
+            if (e.target.closest(
+                '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
+                '.expanded-item-controls, .btn-quantity, .expanded-image-nav, .expanded-image-indicator'
+            )) return;
+            e.preventDefault();
+            const url = card.dataset.itemUrl;
+            if (url) toggleItemExpansion(card, url, e);
         });
     }
 
@@ -2232,6 +2376,16 @@
     window.selectExpandedAddition = selectExpandedAddition;
     
     /**
+     * Safe CSS url() for --ad-image (single-quoted — avoids breaking style="...").
+     * @param {string} src
+     * @returns {string}
+     */
+    function cssImageVarForPath(src) {
+        const safe = String(src || '').replace(/\\/g, '/').replace(/'/g, '%27');
+        return `url('${safe}')`;
+    }
+
+    /**
      * Navigate to previous/next image in expanded carousel
      * @global
      * @param {HTMLElement} button - The navigation button
@@ -2292,33 +2446,158 @@
     function goToExpandedImageIndex(carousel, index) {
         const slides = carousel.querySelectorAll('.expanded-image-slide');
         const indicators = carousel.querySelectorAll('.expanded-image-indicator');
-        
+        const track = carousel.querySelector('.menu-item-slideshow-track');
+
         if (index < 0 || index >= slides.length) return;
-        
-        // Update slides
+
         slides.forEach((slide, i) => {
-            if (i === index) {
-                slide.classList.add('active');
-            } else {
-                slide.classList.remove('active');
-            }
+            slide.classList.toggle('active', i === index);
         });
-        
-        // Update indicators
+
+        if (track) {
+            const slide = slides[index];
+            if (slide) {
+                track.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' });
+            }
+        }
+
         indicators.forEach((indicator, i) => {
-            if (i === index) {
-                indicator.classList.add('active');
-            } else {
-                indicator.classList.remove('active');
-            }
+            const isActive = i === index;
+            indicator.classList.toggle('active', isActive);
+            indicator.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
-        
-        // Update current index
+
         carousel.setAttribute('data-current-image', index.toString());
+        refreshExpandedCarousel(carousel);
+    }
+
+    /**
+     * Size carousel to the active image (slideshow track + fade mode).
+     * @param {HTMLElement} carousel
+     */
+    function refreshExpandedCarousel(carousel) {
+        if (!carousel) return;
+
+        const track = carousel.querySelector('.menu-item-slideshow-track');
+        const view = carousel.querySelector('.expanded-image-carousel-view');
+        const slides = carousel.querySelectorAll('.expanded-image-slide');
+        const slideIndex = parseInt(carousel.getAttribute('data-current-image'), 10) || 0;
+        const activeSlide =
+            slides[slideIndex] ||
+            carousel.querySelector('.expanded-image-slide.active') ||
+            slides[0];
+        const activeImg = activeSlide && activeSlide.querySelector('.expanded-image-carousel-img');
+        const container = carousel.querySelector('.expanded-image-carousel-container');
+
+        if (!activeImg) {
+            return;
+        }
+
+        const applyHeight = function () {
+            if (!activeImg.naturalWidth || !activeImg.naturalHeight) {
+                return;
+            }
+
+            const maxHeight = Math.min(
+                window.innerHeight * 0.72,
+                window.innerHeight - 80
+            );
+            const minHeight = 200;
+            const width = track ? track.clientWidth : carousel.clientWidth;
+            if (!width) {
+                return;
+            }
+
+            let height = Math.round((activeImg.naturalHeight / activeImg.naturalWidth) * width);
+            height = Math.max(minHeight, Math.min(height, maxHeight));
+
+            carousel.classList.add('is-height-synced');
+            if (track) {
+                track.style.setProperty('height', height + 'px', 'important');
+            }
+            if (view) {
+                view.style.setProperty('min-height', height + 'px', 'important');
+            }
+            if (container && !track) {
+                container.style.setProperty('height', height + 'px', 'important');
+                container.style.setProperty('min-height', height + 'px', 'important');
+            }
+        };
+
+        if (activeImg.complete && activeImg.naturalHeight > 0) {
+            requestAnimationFrame(applyHeight);
+        } else {
+            activeImg.addEventListener(
+                'load',
+                function () {
+                    requestAnimationFrame(applyHeight);
+                },
+                { once: true }
+            );
+        }
+    }
+
+    function bindScrollSnapCarousel(carousel) {
+        const track = carousel && carousel.querySelector('.menu-item-slideshow-track');
+        if (!track || track.dataset.scrollSnapBound) return;
+        track.dataset.scrollSnapBound = '1';
+        let scrollTimeout;
+        track.addEventListener('scroll', function () {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(function () {
+                const slides = carousel.querySelectorAll('.expanded-image-slide');
+                const scrollLeft = track.scrollLeft;
+                let bestIndex = 0;
+                let minDistance = Infinity;
+                slides.forEach(function (slide, i) {
+                    const distance = Math.abs(slide.offsetLeft - scrollLeft);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        bestIndex = i;
+                    }
+                });
+                const current = parseInt(carousel.getAttribute('data-current-image'), 10) || 0;
+                if (current === bestIndex) return;
+                carousel.setAttribute('data-current-image', String(bestIndex));
+                slides.forEach(function (slide, i) {
+                    slide.classList.toggle('active', i === bestIndex);
+                });
+                carousel.querySelectorAll('.expanded-image-indicator').forEach(function (indicator, i) {
+                    const isActive = i === bestIndex;
+                    indicator.classList.toggle('active', isActive);
+                    indicator.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                refreshExpandedCarousel(carousel);
+            }, 80);
+        }, { passive: true });
+
+        window.addEventListener(
+            'resize',
+            function () {
+                refreshExpandedCarousel(carousel);
+            },
+            { passive: true }
+        );
+    }
+
+    function bindExpandedCarouselImages(carousel) {
+        if (!carousel) return;
+        bindScrollSnapCarousel(carousel);
+        carousel.querySelectorAll('.expanded-image-carousel-img').forEach(function (img) {
+            if (img.dataset.carouselImgBound) return;
+            img.dataset.carouselImgBound = '1';
+            img.addEventListener('load', function () {
+                if (img.closest('.expanded-image-slide.active')) {
+                    refreshExpandedCarousel(carousel);
+                }
+            });
+        });
+        refreshExpandedCarousel(carousel);
     }
     
     window.navigateExpandedImage = navigateExpandedImage;
     window.goToExpandedImage = goToExpandedImage;
+    window.bindExpandedCarouselImages = bindExpandedCarouselImages;
     
     /**
      * Navigate to previous/next image in single page carousel
@@ -2328,6 +2607,9 @@
      * @param {Event} event - The click event
      */
     function navigateSinglePageImage(button, direction, event) {
+        if (button && button.closest('.expanded-image-carousel')) {
+            return navigateExpandedImage(button, direction, '', event);
+        }
         if (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -2360,6 +2642,9 @@
      * @param {Event} event - The click event
      */
     function goToSinglePageImage(indicator, index, event) {
+        if (indicator && indicator.closest('.expanded-image-carousel')) {
+            return goToExpandedImage(indicator, index, '', event);
+        }
         if (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -2379,28 +2664,25 @@
     function goToSinglePageImageIndex(carousel, index) {
         const slides = carousel.querySelectorAll('.single-page-image-slide');
         const indicators = carousel.querySelectorAll('.single-page-image-indicator');
-        
+        const track = carousel.querySelector('.single-page-image-carousel-container');
+
         if (index < 0 || index >= slides.length) return;
-        
-        // Update slides
-        slides.forEach((slide, i) => {
-            if (i === index) {
-                slide.classList.add('active');
-            } else {
-                slide.classList.remove('active');
+
+        if (track) {
+            const slide = slides[index];
+            if (slide) {
+                track.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' });
             }
-        });
-        
-        // Update indicators
+        } else {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+        }
+
         indicators.forEach((indicator, i) => {
-            if (i === index) {
-                indicator.classList.add('active');
-            } else {
-                indicator.classList.remove('active');
-            }
+            indicator.classList.toggle('active', i === index);
         });
-        
-        // Update current index
+
         carousel.setAttribute('data-current-image', index.toString());
     }
     
@@ -2414,7 +2696,7 @@
      * @param {number} change - Amount to change (-1 or 1)
      */
     function adjustSinglePageQuantity(button, change) {
-        const quantitySpan = document.querySelector('.single-page-quantity');
+        const quantitySpan = document.querySelector('.single-page-quantity, .single-page-item-card .expanded-quantity');
         if (!quantitySpan) return;
 
         let currentQty = parseInt(quantitySpan.textContent) || 1;
@@ -2446,12 +2728,12 @@
             alert('This item is not currently available. Lunch items are available Monday–Friday, 11AM–2PM.');
             return;
         }
-        const quantitySpan = document.querySelector('.single-page-quantity');
+        const quantitySpan = document.querySelector('.single-page-quantity, .single-page-item-card .expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
-        // Get item name from the single page title (prioritize .single-page-title to avoid selecting wrong h1)
-        const titleElement = document.querySelector('h1.single-page-title') || document.querySelector('.single-page-title') || document.querySelector('.single-page-content h1') || document.querySelector('h1');
-        const itemName = titleElement?.textContent?.trim() || '';
+        const titleTextEl = document.querySelector('h3.menu-item-title.single-page-title .menu-item-title-text');
+        const titleElement = titleTextEl || document.querySelector('h3.menu-item-title.single-page-title') || document.querySelector('.single-page-title');
+        const itemName = (titleTextEl ? titleTextEl.textContent : titleElement?.textContent)?.trim() || '';
         
         // Debug log to help identify issues
         if (!itemName || itemName === 'Results') {
@@ -2754,7 +3036,7 @@
      * Update price on single page including all selected options
      */
     function updateSinglePagePriceWithOptions() {
-        const quantitySpan = document.querySelector('.single-page-quantity');
+        const quantitySpan = document.querySelector('.single-page-quantity, .single-page-item-card .expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
         const dataContainer = document.getElementById('single-page-item-data');
@@ -2860,34 +3142,52 @@
         
         const totalModAndAddPrice = modificationPrice + additionPrice;
         const totalPrice = (unitPrice + sidePrice + totalModAndAddPrice) * quantity;
-        
-        // Update price display
-        const addCartButton = document.querySelector('.single-page-add-cart-btn');
+        const displayUnit = unitPrice + sidePrice + totalModAndAddPrice;
+        const origUnit = promoPercent > 0 && unitPrice > 0
+            ? unitPrice / ((100 - promoPercent) / 100)
+            : unitPrice;
+
+        const addCartButton = document.querySelector('.single-page-add-cart-btn, .single-page-item-card .expanded-add-cart');
         const priceButton = addCartButton?.querySelector('.cart-button-price');
-        
+        const expandedPrice = document.querySelector('.single-page-item-card .expanded-price, .single-page-price');
+
         if (priceButton) {
             priceButton.textContent = `$${totalPrice.toFixed(2).replace(/\.00$/, '')}`;
         }
-        
-        return unitPrice; // Return unit price for use in addSinglePageItemToCart
+        if (addCartButton) {
+            addCartButton.setAttribute('data-unit-price', String(displayUnit));
+        }
+        if (expandedPrice) {
+            if (promoPercent > 0 && origUnit > 0) {
+                expandedPrice.innerHTML =
+                    `<span class="menu-item-price-original">$${origUnit.toFixed(2).replace(/\.00$/, '')}</span> ` +
+                    `<span class="menu-item-price-promo">$${displayUnit.toFixed(2).replace(/\.00$/, '')}</span>`;
+                expandedPrice.setAttribute('data-unit-price', String(displayUnit));
+                expandedPrice.setAttribute('data-original-unit-price', String(origUnit));
+            } else {
+                expandedPrice.textContent = `$${displayUnit.toFixed(2).replace(/\.00$/, '')}`;
+                expandedPrice.setAttribute('data-unit-price', String(displayUnit));
+                expandedPrice.setAttribute('data-original-unit-price', String(displayUnit));
+            }
+            expandedPrice.setAttribute('data-promo-percent', String(promoPercent));
+        }
+
+        return unitPrice;
     }
     
-    // Initialize single page price on load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            const quantitySpan = document.querySelector('.single-page-quantity');
-            if (quantitySpan) {
-                const quantity = parseInt(quantitySpan.textContent) || 1;
-                updateSinglePagePriceWithOptions();
-            }
-        });
-    } else {
-        const quantitySpan = document.querySelector('.single-page-quantity');
+    function initSinglePageCarousel() {
+        document.querySelectorAll('.single-page-item-card .expanded-image-carousel, .single-page-item-card .single-page-image-carousel').forEach(bindExpandedCarouselImages);
+    }
+    
+    function reinitSinglePagePrice() {
+        initSinglePageCarousel();
+        const quantitySpan = document.querySelector('.single-page-quantity, .single-page-item-card .expanded-quantity');
         if (quantitySpan) {
-            const quantity = parseInt(quantitySpan.textContent) || 1;
             updateSinglePagePriceWithOptions();
         }
     }
+
+    window.reinitSinglePagePrice = reinitSinglePagePrice;
 
     window.adjustSinglePageQuantity = adjustSinglePageQuantity;
     window.addSinglePageItemToCart = addSinglePageItemToCart;
@@ -3008,41 +3308,51 @@
         }
     }
 
+    let locationNavState = null;
+
     /**
      * Initialize location navigation
      */
     function initializeLocationNavigation() {
+        if (locationNavState) {
+            if (locationNavState.scrollableElement && locationNavState.onScroll) {
+                locationNavState.scrollableElement.removeEventListener('scroll', locationNavState.onScroll);
+            }
+            if (locationNavState.onResize) {
+                window.removeEventListener('resize', locationNavState.onResize);
+            }
+            locationNavState = null;
+        }
+
         const locationsWrapper = document.querySelector('.locations-wrapper');
         if (!locationsWrapper) return;
 
         const locations = locationsWrapper.querySelector('.locations');
         if (!locations) return;
 
-        // Get the scrollable element
         const scrollableElement = locations.scrollWidth > locations.clientWidth ? locations : locationsWrapper;
-        
+
         const updateButtons = () => {
             const maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
             updateLocationNavButtons(scrollableElement, maxScroll);
         };
 
-        // Initial button state
-        setTimeout(updateButtons, 100); // Wait for layout
+        setTimeout(updateButtons, 100);
 
-        // Update buttons on scroll
-        scrollableElement.addEventListener('scroll', () => {
+        function onScroll() {
             const maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
             updateLocationNavButtons(scrollableElement, maxScroll);
-        });
+        }
 
-        // Update buttons on resize
         let resizeTimer;
-        window.addEventListener('resize', () => {
+        function onResize() {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                updateButtons();
-            }, 250);
-        });
+            resizeTimer = setTimeout(updateButtons, 250);
+        }
+
+        scrollableElement.addEventListener('scroll', onScroll);
+        window.addEventListener('resize', onResize);
+        locationNavState = { scrollableElement: scrollableElement, onScroll: onScroll, onResize: onResize };
     }
 
     // Initialize location navigation on page load
@@ -3051,11 +3361,6 @@
     } else {
         initializeLocationNavigation();
     }
-
-    // Reinitialize after Barba.js transitions
-    document.addEventListener('barba:after', function() {
-        setTimeout(initializeLocationNavigation, 100);
-    });
 
     // Expose globally - ensure it overrides any placeholder functions
     window.scrollLocations = scrollLocations;
@@ -3386,12 +3691,36 @@
     window.refreshLocationStatus = refreshLocationStatus;
 
     /**
+     * Reinitialize page-specific features after Barba transitions.
+     */
+    function reinitTTMSPageFeatures() {
+        applyDayBasedPromos();
+        initializeFooterVisibility();
+        if (typeof window.initSinglePageFeatures === 'function') {
+            window.initSinglePageFeatures();
+        }
+        updateLocationStatuses();
+        if (typeof window.bindMenublockScroll === 'function') {
+            window.bindMenublockScroll();
+        }
+        if (typeof window.updateHeaderMenublockScroll === 'function') {
+            window.updateHeaderMenublockScroll();
+        }
+    }
+
+    window.reinitTTMSPageFeatures = reinitTTMSPageFeatures;
+
+    /**
      * Initialize location status display
      */
+    let locationStatusInterval = null;
+
     function initLocationStatuses() {
         updateLocationStatuses();
-        // Update every minute
-        setInterval(updateLocationStatuses, 60000);
+        if (locationStatusInterval) {
+            clearInterval(locationStatusInterval);
+        }
+        locationStatusInterval = setInterval(updateLocationStatuses, 60000);
     }
 
     // Initialize on page load
@@ -3403,11 +3732,22 @@
         setTimeout(initLocationStatuses, 500);
     }
 
-    // Re-initialize after Barba.js transitions
-    if (typeof window.barba !== 'undefined') {
-        document.addEventListener('barba:after', () => {
-            setTimeout(initLocationStatuses, 500);
+    function registerBarbaReinit() {
+        if (!window.TTMSBarba) return;
+        window.TTMSBarba.register(function () {
+            setTimeout(initializeLocationNavigation, 100);
         });
+        window.TTMSBarba.register(function () {
+            setTimeout(reinitTTMSPageFeatures, 50);
+        });
+    }
+
+    if (window.TTMSBarba) {
+        registerBarbaReinit();
+    } else if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', registerBarbaReinit);
+    } else {
+        registerBarbaReinit();
     }
 
     // Expose function globally

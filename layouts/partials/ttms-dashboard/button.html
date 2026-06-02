@@ -1,3 +1,6 @@
-<a id="dashboardBtn" onclick="toggleDashboard();">
-	<img style="height: 3.2em;" src="https://cdn.ttmenus.com/branding/ttmenus/ttmenus-loop-logo.gif">
-</a>
+<span class="dashboard-menu-btn-wrap">
+	<a id="dashboardBtn" onclick="toggleDashboard();">
+		<img style="height: 3.2em;" src="https://cdn.ttmenus.com/branding/ttmenus/ttmenus-loop-logo.gif" alt="Open menu">
+	</a>
+	{{ partialCached "ttms-account-dashboard/badge.html" (dict "class" "") "account-badge-dashboard" }}
+</span>

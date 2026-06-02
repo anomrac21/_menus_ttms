@@ -1,47 +1,79 @@
-// ClientAdManager - Only handles homepage-ads-container
-// clientads.html is pure Hugo template (no JS needed)
+// ClientAdManager — homepage-ads-container + frontpage-ads-container
+// Loads from ads.ttmenus.com API when available, else /promotions/index.json (Hugo content)
 
 class ClientAdManager {
   constructor() {
     this.ads = [];
     this.currentDay = null;
-    this.currentTime = null; // { hour, minute } from WorldTimeAPI
-    this.hasPopulated = false;
-    console.log('ClientAdManager initialized for homepage only');
+    this.currentTime = null;
+    this.hasPopulatedHome = false;
+    this.hasPopulatedFront = false;
+    this.sessionId = this.getSessionId();
+    console.log('ClientAdManager initialized');
   }
 
-  /** Fetch datetime from WorldTimeAPI (trusted source, not browser). */
+  getSessionId() {
+    try {
+      let id = sessionStorage.getItem('ttmenus_session_id');
+      if (!id) {
+        id = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
+        sessionStorage.setItem('ttmenus_session_id', id);
+      }
+      return id;
+    } catch (_) {
+      return 'sess_anon';
+    }
+  }
+
   async fetchDateTimeFromAPI() {
     try {
       const res = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
       if (!res.ok) return null;
       const data = await res.json();
-      const dayNum = data.day_of_week;
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      const day = days[dayNum - 1] || null;
-      let hour = 0, minute = 0;
+      const day = days[(data.day_of_week || 1) - 1] || null;
+      let hour = 0;
+      let minute = 0;
       if (data.datetime) {
         const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
-        if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
+        if (m) {
+          hour = parseInt(m[1], 10);
+          minute = parseInt(m[2], 10);
+        }
       }
       return day ? { day, hour, minute } : null;
-    } catch (_) { return null; }
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async ensureDateTime() {
+    if (this.currentDay) return;
+    const dt = await this.fetchDateTimeFromAPI();
+    const now = new Date();
+    if (dt) {
+      this.currentDay = dt.day;
+      this.currentTime = { hour: dt.hour, minute: dt.minute };
+    } else {
+      this.currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+      this.currentTime = { hour: now.getHours(), minute: now.getMinutes() };
+    }
   }
 
   _parseTime(str) {
     if (!str || typeof str !== 'string') return null;
     const m = String(str).trim().match(/^(\d{1,2}):(\d{2})$/);
     if (!m) return null;
-    const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+    const h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
     if (h < 0 || h > 23 || min < 0 || min > 59) return null;
     return h * 60 + min;
   }
 
-  // Filter ads by day of week and optional time window
-  filterAdsByDay() {
+  filterAdsByDay(ads) {
     const day = this.currentDay || new Date().toLocaleDateString('en-US', { weekday: 'long' });
     const nowMins = this.currentTime ? this.currentTime.hour * 60 + this.currentTime.minute : null;
-    return this.ads.filter(ad => {
+    return ads.filter((ad) => {
       if (!ad.daysofweek || ad.daysofweek.length === 0) return true;
       if (!ad.daysofweek.includes(day)) return false;
       if (ad.time_start != null || ad.time_finish != null) {
@@ -55,202 +87,335 @@ class ClientAdManager {
     });
   }
 
-  // Load ads from JSON
-  async loadAds() {
+  async loadPromotionsJson() {
     try {
       const url = `/promotions/index.json?t=${Date.now()}`;
-      console.log('Loading ads from:', url);
-      
       const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (data && data.items) {
         this.ads = data.items;
-        console.log('Loaded ads:', this.ads.length);
-        console.log('Sample ad:', this.ads[0]);
         return true;
       }
-      console.warn('No items in promotions data:', data);
       return false;
     } catch (error) {
-      console.error('Failed to load ads:', error);
-    return false;
-  }
+      console.error('Failed to load promotions JSON:', error);
+      return false;
+    }
   }
 
-  // Check if ad has at least one valid image
   hasValidImages(ad) {
     const imgs = ad.images || [];
-    return imgs.some(img => {
-      const path = typeof img === 'string' ? img : (img && (img.image || img));
+    return imgs.some((img) => {
+      const path = this.resolveImageUrl(img);
       return path && String(path).trim() !== '';
     });
   }
 
-  // Generate HTML for one ad
-  generateAdHTML(ad) {
+  resolveImageUrl(img) {
+    if (!img) return '';
+    if (typeof img === 'string') return img;
+    return img.image_url || img.imageUrl || img.url || img.src || img.image || '';
+  }
+
+  normalizeImagePath(path) {
+    if (!path) return '';
+    if (/^\//.test(path) || /^https?:\/\//i.test(path)) return path;
+    return '/' + path;
+  }
+
+  cssImageVar(path) {
+    const safe = String(path).replace(/\\/g, '/').replace(/"/g, '%22');
+    return `url("${safe}")`;
+  }
+
+  async fetchActiveAdsFromService(container) {
+    if (!container) return [];
+    const apiUrl = container.getAttribute('data-ads-api');
+    const clientId = container.getAttribute('data-client-id');
+    if (!apiUrl || !clientId) return [];
+
+    try {
+      await this.ensureDateTime();
+      const day = encodeURIComponent(this.currentDay);
+      const url = `${apiUrl.replace(/\/$/, '')}/active-ads?client_id=${encodeURIComponent(clientId)}&day=${day}`;
+      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        console.log('Ads API returned', result.data.length, 'ads');
+        return result.data;
+      }
+    } catch (error) {
+      console.warn('Ads API unavailable, using promotions fallback:', error);
+    }
+    return [];
+  }
+
+  async getAdsForDisplay(frontpageContainer) {
+    await this.ensureDateTime();
+
+    const apiAds = await this.fetchActiveAdsFromService(frontpageContainer);
+    if (apiAds.length > 0) {
+      return {
+        ads: apiAds.filter((ad) => this.hasValidImages(ad)),
+        fromApi: true,
+      };
+    }
+
+    if (this.ads.length === 0) {
+      await this.loadPromotionsJson();
+    }
+    if (this.ads.length === 0) return { ads: [], fromApi: false };
+
+    let filtered = this.filterAdsByDay(this.ads);
+    if (filtered.length === 0) filtered = this.ads;
+    return {
+      ads: filtered.filter((ad) => this.hasValidImages(ad)),
+      fromApi: false,
+    };
+  }
+
+  trackImpression(ad, container) {
+    const apiUrl = container && container.getAttribute('data-ads-api');
+    const clientId = container && container.getAttribute('data-client-id');
+    if (!apiUrl || !ad.id) return;
+    fetch(`${apiUrl.replace(/\/$/, '')}/tracking/impression`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ad_id: ad.id,
+        client_id: clientId,
+        session_id: this.sessionId,
+        device_type: this.getDeviceType(),
+        viewed_at: new Date().toISOString(),
+      }),
+    }).catch(() => {});
+  }
+
+  trackClick(ad, container) {
+    const apiUrl = container && container.getAttribute('data-ads-api');
+    if (!apiUrl || !ad.id) return;
+    fetch(`${apiUrl.replace(/\/$/, '')}/tracking/click`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ad_id: ad.id,
+        clicked_at: new Date().toISOString(),
+        device_type: this.getDeviceType(),
+        referrer: window.location.href,
+      }),
+    }).catch(() => {});
+  }
+
+  getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/mobile/i.test(ua)) return 'mobile';
+    if (/tablet/i.test(ua)) return 'tablet';
+    return 'desktop';
+  }
+
+  createFrontpageAdPanel(ad, container, fromApi) {
+    const li = document.createElement('li');
+    li.className = 'ad-panel';
+    if (ad.id) li.dataset.adId = ad.id;
+
+    const linkUrl = fromApi
+      ? ad.link_url
+      : ad.link || ad.url || (ad.title ? `/promotions/${String(ad.title).toLowerCase().replace(/[^a-z0-9]+/g, '-')}/` : '');
+
+    if (linkUrl) {
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return;
+        if (fromApi && ad.id) this.trackClick(ad, container);
+        window.open(linkUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+
+    const sponsored = document.createElement('span');
+    sponsored.className = 'menu-ad-promo-label';
+    sponsored.textContent = 'Sponsored';
+    li.appendChild(sponsored);
+
+    let hasMedia = false;
+    (ad.images || []).forEach((img) => {
+      const imageUrl = this.normalizeImagePath(this.resolveImageUrl(img));
+      if (!imageUrl) return;
+      const alt = (typeof img === 'object' && (img.alt_text || img.alt)) || ad.title || 'Sponsored advertisement';
+
+      if (/\.(mp4|webm|ogg)$/i.test(imageUrl)) {
+        const video = document.createElement('video');
+        video.className = 'ad-portrait ad-video';
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        const source = document.createElement('source');
+        source.src = imageUrl;
+        source.type = 'video/mp4';
+        video.appendChild(source);
+        li.appendChild(video);
+        hasMedia = true;
+      } else {
+        const fgImg = document.createElement('img');
+        fgImg.src = imageUrl;
+        fgImg.className = 'ad-portrait';
+        fgImg.alt = alt;
+        fgImg.loading = 'lazy';
+        fgImg.decoding = 'async';
+        li.appendChild(fgImg);
+        hasMedia = true;
+      }
+    });
+
+    return hasMedia ? li : null;
+  }
+
+  generateHomepageAdHTML(ad, adIndex) {
     if (!this.hasValidImages(ad)) return '';
     const finalUrl = ad.link || ad.url || `/promotions/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
     const adId = ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    
-    const imagesHTML = (ad.images || []).map(img => {
-      // Handle both object format {image: "path"} and string format
-      let imagePath = typeof img === 'string' ? img : (img.image || img);
-      if (!imagePath) return '';
-      if (!/^\//.test(imagePath) && !/^https?:\/\//i.test(imagePath)) imagePath = '/' + imagePath;
-      return `
+    const eager = adIndex < 2;
+
+    const imagesHTML = (ad.images || [])
+      .map((img) => {
+        const imagePath = this.normalizeImagePath(this.resolveImageUrl(img));
+        if (!imagePath) return '';
+        const loading = eager ? 'eager' : 'lazy';
+        const fetchAttr = eager ? ' fetchpriority="high"' : '';
+        return `
       <li class="ad-panel">
-          <a href="${finalUrl}" class="content-panel">
-          <img src="${imagePath}" class="ad-portrait-bg">
-          <img src="${imagePath}" class="ad-portrait">
+          <a href="${finalUrl}" class="content-panel" style="--ad-image:${this.cssImageVar(imagePath)}">
+          <img src="${imagePath}" class="ad-portrait" alt="" loading="${loading}" decoding="async"${fetchAttr}>
             <div class="adbottomspacer"></div>
           </a>
-        </li>
-    `;
-    }).filter(html => html).join('');
+        </li>`;
+      })
+      .filter(Boolean)
+      .join('');
 
     return `
       <section id="menu-ad-${adId}" class="ads menu-ad sticky">
-        <div class="scroll-progress-bar">
-          <div class="scroll-progress-fill"></div>
-        </div>
         <h2 class="center title clientad-heading">
           <a href="${finalUrl}">${ad.title}</a>
         </h2>
-        <span data-aos="zoom-out-right">Promotion</span>
-        <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
+        <span class="menu-ad-promo-label">Promotion</span>
+        <ul class="inner">
           ${imagesHTML}
         </ul>
-      </section>
-    `;
+      </section>`;
   }
 
-  // Populate homepage container only
+  refreshAfterAdsPopulated() {
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent('adsPopulated'));
+    });
+  }
+
+  hideContainer(container) {
+    if (container) container.style.display = 'none';
+  }
+
+  async populateFrontpage(force = false) {
+    // Frontpage ads handled by ads-client.js (reels preview + fullscreen viewer)
+    if (document.getElementById('pageadscontainer')) return;
+
+    const container = document.getElementById('frontpage-ads-container');
+    if (!container) return;
+
+    if (this.hasPopulatedFront && !force) return;
+
+    const ul = container.querySelector('#frontpage-ad-sponsored ul.inner, section.ads ul.inner');
+    if (!ul) {
+      console.warn('frontpage-ads-container: missing ul.inner');
+      return;
+    }
+
+    const { ads, fromApi } = await this.getAdsForDisplay(container);
+    if (!ads.length) {
+      console.log('No ads for frontpage — hiding container');
+      this.hideContainer(container);
+      this.hasPopulatedFront = true;
+      return;
+    }
+
+    ul.innerHTML = '';
+    ads.forEach((ad, index) => {
+      const panel = this.createFrontpageAdPanel(ad, container, fromApi);
+      if (panel) {
+        ul.appendChild(panel);
+        if (fromApi && ad.id) {
+          setTimeout(() => this.trackImpression(ad, container), 500 + index * 100);
+        }
+      }
+    });
+
+    if (!ul.children.length) {
+      this.hideContainer(container);
+    } else {
+      container.style.display = '';
+      container.style.visibility = 'visible';
+    }
+
+    this.hasPopulatedFront = true;
+    console.log('Frontpage ads populated:', ul.children.length);
+    this.refreshAfterAdsPopulated();
+  }
+
   async populateHomepage(force = false) {
     const container = document.getElementById('homepage-ads-container');
-    if (!container) {
-      console.log('No homepage-ads-container found');
-          return;
-    }
+    if (!container) return;
 
-    // Skip if already populated (unless forcing)
-    if (this.hasPopulated && !force) {
-      console.log('Homepage ads already populated, skipping...');
-          return;
-    }
+    if (this.hasPopulatedHome && !force) return;
 
-    console.log('Found homepage-ads-container, populating...');
-
-    // Remove loading indicator
     const loading = container.querySelector('.ads-loading');
-    if (loading) {
-      loading.remove();
+    if (loading) loading.remove();
+
+    const { ads } = await this.getAdsForDisplay(null);
+    if (ads.length === 0) {
+      container.innerHTML = '<p style="text-align: center; padding: 2em;">No promotions available</p>';
+      this.hasPopulatedHome = true;
+      return;
     }
 
-    // Load ads if not already loaded
-    if (this.ads.length === 0) {
-      const loaded = await this.loadAds();
-      if (!loaded) {
-        console.error('Failed to load promotions');
-        container.innerHTML = '<p style="text-align: center; padding: 2em; color: red;">Failed to load promotions. Please refresh the page.</p>';
-        return;
-      }
-      if (this.ads.length === 0) {
-        console.warn('No promotions found in data');
-        container.innerHTML = '<p style="text-align: center; padding: 2em;">No promotions available</p>';
-        return;
-      }
-    }
+    const html =
+      ads.map((ad, index) => this.generateHomepageAdHTML(ad, index)).filter(Boolean).join('') +
+      '<section class="ads menu-ad sticky menu-ad-scroll-end" aria-hidden="true"></section>';
 
-    // Use WorldTimeAPI for datetime (fallback to browser if API fails)
-    if (!this.currentDay) {
-      const dt = await this.fetchDateTimeFromAPI();
-      const now = new Date();
-      if (dt) {
-        this.currentDay = dt.day;
-        this.currentTime = { hour: dt.hour, minute: dt.minute };
-      } else {
-        this.currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
-        this.currentTime = { hour: now.getHours(), minute: now.getMinutes() };
-      }
-    }
-
-    // Filter by current day
-    let filtered = this.filterAdsByDay();
-    console.log(`Current day: ${this.currentDay}, Filtered: ${filtered.length}/${this.ads.length} ads`);
-
-    // Fallback: show all ads if none match
-    if (filtered.length === 0) {
-      console.log('No ads match today, showing all as fallback');
-      filtered = this.ads;
-    }
-
-    // Generate and display HTML (skip ads with no images)
-    const html = filtered.filter(ad => this.hasValidImages(ad)).map(ad => this.generateAdHTML(ad)).filter(h => h).join('') + 
-      '<section class="ads menu-ad sticky" style="height: 100vh; min-height: 0; background: none; border: none;"></section>';
     container.innerHTML = html;
     container.style.display = '';
     container.style.visibility = 'visible';
-
-    console.log('Homepage ads populated!');
-    this.hasPopulated = true;
-
-    // Force layout reflow before updating progress bars
-    void container.offsetHeight;
-
-    // Refresh scroll progress bars immediately
-    if (window.adScrollProgressManager) {
-      console.log('Refreshing scroll progress bars for new ads...');
-      window.adScrollProgressManager.refresh();
-    }
-
-    // AOS removed - no longer needed
-    setTimeout(() => {
-      // Remove any remaining AOS classes if present
-      const aosElements = container.querySelectorAll('[data-aos]');
-      aosElements.forEach(el => {
-        el.classList.remove('aos-init', 'aos-animate');
-      });
-      
-      // Refresh scroll progress again after animations settle
-      if (window.adScrollProgressManager) {
-        window.adScrollProgressManager.refresh();
-      }
-      
-      // Trigger custom event for other scripts
-      window.dispatchEvent(new CustomEvent('adsPopulated'));
-    }, 150);
+    this.hasPopulatedHome = true;
+    console.log('Homepage ads populated');
+    this.refreshAfterAdsPopulated();
   }
 
-  // Public API for barba.js compatibility
   async populateAds(forceRepopulate = false) {
-    console.log('populateAds called, forceRepopulate:', forceRepopulate);
-    
-    // Reset state if forcing repopulate
     if (forceRepopulate) {
-      this.hasPopulated = false;
+      this.hasPopulatedHome = false;
+      this.hasPopulatedFront = false;
+      this.ads = [];
+      this.currentDay = null;
     }
-    
-    await this.populateHomepage(forceRepopulate);
+    await Promise.all([this.populateHomepage(forceRepopulate), this.populateFrontpage(forceRepopulate)]);
   }
 
-  // Public API
   async init() {
-    await this.populateHomepage();
+    await this.populateAds(false);
+    window.dispatchEvent(
+      new CustomEvent('adManagerReady', { detail: { populateAds: (f) => this.populateAds(f) } })
+    );
   }
 }
 
-// Initialize on page load
 let adManagerInstance = null;
 
 function initAdManager() {
-  // Only initialize if homepage-ads-container exists
-  if (!document.getElementById('homepage-ads-container')) {
-    console.log('No homepage-ads-container, skipping ClientAdManager');
-    // Clear instance if container doesn't exist (e.g., navigated away from homepage)
+  const hasHome = !!document.getElementById('homepage-ads-container');
+  const hasFront = !!document.getElementById('frontpage-ads-container') && !document.getElementById('pageadscontainer');
+
+  if (!hasHome && !hasFront) {
     if (adManagerInstance) {
       adManagerInstance = null;
       window.adManager = null;
@@ -258,38 +423,40 @@ function initAdManager() {
     return;
   }
 
-  // If instance exists, just re-populate (for Barba transitions)
   if (adManagerInstance) {
-    console.log('AdManager exists, re-populating for Barba transition...');
-    // Reset hasPopulated flag to allow re-population
-    adManagerInstance.hasPopulated = false;
+    adManagerInstance.hasPopulatedHome = false;
+    adManagerInstance.hasPopulatedFront = false;
+    adManagerInstance.ads = [];
+    adManagerInstance.currentDay = null;
     adManagerInstance.init();
     return;
   }
 
-  console.log('Initializing ClientAdManager...');
   adManagerInstance = new ClientAdManager();
-  adManagerInstance.init();
   window.adManager = adManagerInstance;
+  adManagerInstance.init();
 }
 
-// Run on DOM ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initAdManager);
 } else {
   initAdManager();
 }
 
-// Expose initAdManager globally for Barba.js integration
 window.initAdManager = initAdManager;
 
-// Re-initialize on Barba transitions
-if (typeof window.barba !== 'undefined') {
-  document.addEventListener('barba:after', function() {
-    console.log('Barba transition complete, checking for ad container...');
-    // Small delay to ensure DOM is ready
-    setTimeout(() => {
-      initAdManager();
-    }, 100);
-  });
+function registerBarbaAdManager() {
+  if (window.TTMSBarba) {
+    window.TTMSBarba.register(function () {
+      setTimeout(initAdManager, 100);
+    });
+  }
+}
+
+if (window.TTMSBarba) {
+  registerBarbaAdManager();
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', registerBarbaAdManager);
+} else {
+  registerBarbaAdManager();
 }

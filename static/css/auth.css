@@ -442,6 +442,10 @@
   display: none;
 }
 
+.menu-favorite-btn[data-auth="required"] {
+  display: flex;
+}
+
 [data-auth="admin"] {
   display: none;
 }

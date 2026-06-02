@@ -1,0 +1,44 @@
+{{- $images := .images | default slice -}}
+{{- $title := .title | default "" -}}
+{{- $id := .id | default "expandedImageCarousel" -}}
+{{- $promoLabel := .promoLabel | default "" -}}
+{{- $count := len $images -}}
+{{- if gt $count 0 -}}
+<div class="expanded-image-carousel menu-item-slideshow" id="{{ $id }}" data-current-image="0">
+  <div class="expanded-image-carousel-view">
+    {{- if $promoLabel -}}
+    <span class="menu-ad-promo-label menu-item-slideshow-promo">{{ $promoLabel }}</span>
+    {{- end -}}
+    <div class="expanded-image-carousel-container menu-item-slideshow-track" role="region" aria-label="{{ $title }} images" tabindex="0">
+      {{- range $i, $img := $images -}}
+        {{- $path := $img -}}
+        {{- if and $path (not (hasPrefix $path "/")) (not (findRE "^https?://" $path)) -}}
+          {{- $path = printf "/%s" $path -}}
+        {{- end -}}
+        <div class="expanded-image-slide menu-item-slideshow-slide{{ if eq $i 0 }} active{{ end }}" data-image-index="{{ $i }}">
+          <div class="content-panel" style="--ad-image: url('{{ $path }}')">
+            <img src="{{ $path }}" class="ad-portrait expanded-image-carousel-img" alt="{{ $title }} - Image {{ add $i 1 }}" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if eq $i 0 }} fetchpriority="high"{{ end }}>
+          </div>
+        </div>
+      {{- end -}}
+    </div>
+    {{- if gt $count 1 -}}
+    <div class="expanded-image-nav-buttons">
+      <button type="button" class="expanded-image-nav expanded-image-nav-prev" onclick="navigateSinglePageImage(this, -1, event)" aria-label="Previous image">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="expanded-image-nav expanded-image-nav-next" onclick="navigateSinglePageImage(this, 1, event)" aria-label="Next image">
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+    {{- end -}}
+  </div>
+  {{- if gt $count 1 -}}
+  <div class="expanded-image-indicators" role="tablist" aria-label="Item images">
+    {{- range $i, $_ := $images -}}
+    <button type="button" class="expanded-image-indicator{{ if eq $i 0 }} active{{ end }}" role="tab" aria-label="Image {{ add $i 1 }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" data-indicator-index="{{ $i }}" onclick="goToSinglePageImage(this, {{ $i }}, event)"></button>
+    {{- end -}}
+  </div>
+  {{- end -}}
+</div>
+{{- end -}}

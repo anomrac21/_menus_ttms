@@ -1,5 +1,48 @@
 const APP = {
 deferredInstall: null,
+
+  isStandalonePWA() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+  },
+
+  isIOSInstallContext() {
+    const uaIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return uaIOS || ('standalone' in window.navigator);
+  },
+
+  setInstallButtonVisible(btn, visible) {
+    if (!btn) return;
+    btn.classList.toggle('hide', !visible);
+    btn.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    btn.tabIndex = visible ? 0 : -1;
+  },
+
+  updateInstallButtons() {
+    const installBtn = document.getElementById('btn_install1');
+    const subInfoBtn = document.getElementById('btn_SubInfo');
+    const row = document.querySelector('.subscribe--install');
+    if (!installBtn || !subInfoBtn) return;
+
+    if (APP.isStandalonePWA()) {
+      APP.setInstallButtonVisible(installBtn, false);
+      APP.setInstallButtonVisible(subInfoBtn, false);
+      if (row) row.classList.add('hide');
+      return;
+    }
+
+    const showNativeInstall = !!APP.deferredInstall;
+    const showIOSInstructions = !showNativeInstall && APP.isIOSInstallContext();
+
+    APP.setInstallButtonVisible(installBtn, showNativeInstall);
+    APP.setInstallButtonVisible(subInfoBtn, showIOSInstructions);
+
+    if (row) {
+      row.classList.toggle('hide', !(showNativeInstall || showIOSInstructions));
+    }
+  },
+
   init() {
 
     
@@ -7,42 +50,18 @@ deferredInstall: null,
     
       //listen for `beforeinstallprompt` event
       window.addEventListener('beforeinstallprompt', (ev) => {
-        // Prevent the mini-infobar from appearing on mobile
         ev.preventDefault();
-        // Stash the event so it can be triggered later.
         APP.deferredInstall = ev;
-
-        //Apple Styles HIDE BUTTON IF INSTALLED
-        //document.getElementById("appleMessage").classList.remove('appleInstallHide');
-        if (window.location.pathname === "/") {
-          document.getElementById('btn_install1').classList.remove('hide');
-        // Your homepage-specific code here
-        }
-        
-        //IOS SUB BTN INFO
-        const iOSCanInstall = 'standalone' in window.navigator;
-        const iOSIsInstalled = window.navigator.standalone === true;
-        if(iOSIsInstalled){
-          document.getElementById('btn_SubInfo').classList.add('hide');
-        }else if(iOSCanInstall){
-          document.getElementById('btn_SubInfo').classList.remove('hide');
-        }
-        // Update UI notify the user they can install the PWA
-        // if you want here...
-        
+        APP.updateInstallButtons();
       });
 
-      //EVENT LISTENER FOR INSTALL BTN
-      if (window.location.pathname === "/") {
-          document.getElementById('btn_install1').addEventListener('click', APP.startChromeInstall);
-        // Your homepage-specific code here
+      const installBtn = document.getElementById('btn_install1');
+      if (installBtn) {
+        installBtn.addEventListener('click', APP.startChromeInstall);
       }
-      
-      
-
-      
-      
     }//END SERVICE WORKER CHECK
+
+    APP.updateInstallButtons();
     
     // Initialize slideshow if it exists on the page
     APP.initSlideshow();
@@ -53,11 +72,8 @@ deferredInstall: null,
       APP.deferredInstall.prompt();
       APP.deferredInstall.userChoice.then((choice) => {
         if (choice.outcome == 'accepted') {
-          //they installed
-          document.getElementById("btn_install1").classList.add('hide');
-          //document.getElementById("btn_install2").classList.add('hide');
-          //document.getElementById("btn_install3").classList.add('hide');
-        } else {
+          APP.deferredInstall = null;
+          APP.updateInstallButtons();
         }
       });
     }
@@ -67,26 +83,65 @@ deferredInstall: null,
   slideshow: {
     currentSlideIndex: 0,
     slideInterval: null,
-    
+    _container: null,
+    _onMouseEnter: null,
+    _onMouseLeave: null,
+
+    destroy() {
+      this.pauseAutoPlay();
+      if (this._container) {
+        if (this._onMouseEnter) {
+          this._container.removeEventListener('mouseenter', this._onMouseEnter);
+        }
+        if (this._onMouseLeave) {
+          this._container.removeEventListener('mouseleave', this._onMouseLeave);
+        }
+      }
+      this._container = null;
+      this._onMouseEnter = null;
+      this._onMouseLeave = null;
+      this.currentSlideIndex = 0;
+    },
+
     init() {
+      this.destroy();
+
       const slideshowContainer = document.querySelector('.slideshow-container');
       if (!slideshowContainer) {
         return;
       }
-      
-      // Start auto-play
+
+      const slides = slideshowContainer.querySelectorAll('.slide');
+      if (!slides.length) {
+        return;
+      }
+
+      this._container = slideshowContainer;
+      this.currentSlideIndex = 0;
+      this.showSlide(0);
+
+      this._onMouseEnter = () => this.pauseAutoPlay();
+      this._onMouseLeave = () => this.startAutoPlay();
+      slideshowContainer.addEventListener('mouseenter', this._onMouseEnter);
+      slideshowContainer.addEventListener('mouseleave', this._onMouseLeave);
+
       this.startAutoPlay();
-      
-      // Add event listeners for hover pause/resume
-      slideshowContainer.addEventListener('mouseenter', () => this.pauseAutoPlay());
-      slideshowContainer.addEventListener('mouseleave', () => this.startAutoPlay());
     },
-    
+
     showSlide(index) {
-      const slides = document.querySelectorAll('.slide');
-      const dots = document.querySelectorAll('.dot');
-      
-      // Handle looping logic
+      const container = this._container;
+      if (!container || !container.isConnected) {
+        this.pauseAutoPlay();
+        return;
+      }
+
+      const slides = container.querySelectorAll('.slide');
+      const dots = container.querySelectorAll('.dot');
+      if (!slides.length) {
+        this.pauseAutoPlay();
+        return;
+      }
+
       if (index >= slides.length) {
         this.currentSlideIndex = 0;
       } else if (index < 0) {
@@ -94,48 +149,69 @@ deferredInstall: null,
       } else {
         this.currentSlideIndex = index;
       }
-      
-      // Hide all slides and remove active class from dots
-      slides.forEach(slide => slide.classList.remove('active'));
-      dots.forEach(dot => dot.classList.remove('active'));
-      
-      // Show current slide and activate current dot
-      slides[this.currentSlideIndex].classList.add('active');
-      dots[this.currentSlideIndex].classList.add('active');
-      
+
+      slides.forEach(function (slide) {
+        slide.classList.remove('active');
+      });
+      dots.forEach(function (dot) {
+        dot.classList.remove('active');
+      });
+
+      var activeSlide = slides[this.currentSlideIndex];
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+      }
+      var activeDot = dots[this.currentSlideIndex];
+      if (activeDot) {
+        activeDot.classList.add('active');
+      }
     },
-    
+
     changeSlide(direction) {
-      const newIndex = this.currentSlideIndex + direction;
+      if (!this._container || !this._container.isConnected) {
+        this.pauseAutoPlay();
+        return;
+      }
+      var newIndex = this.currentSlideIndex + direction;
       this.showSlide(newIndex);
       this.resetInterval();
     },
-    
+
     currentSlide(index) {
       this.currentSlideIndex = index - 1;
       this.showSlide(this.currentSlideIndex);
       this.resetInterval();
     },
-    
+
     resetInterval() {
-      clearInterval(this.slideInterval);
+      this.pauseAutoPlay();
       this.startAutoPlay();
     },
-    
+
     startAutoPlay() {
-      this.slideInterval = setInterval(() => {
-        this.changeSlide(1);
-      }, 5000); // Change slide every 5 seconds
+      this.pauseAutoPlay();
+      if (!this._container || !this._container.isConnected) {
+        return;
+      }
+      if (!this._container.querySelectorAll('.slide').length) {
+        return;
+      }
+      var self = this;
+      this.slideInterval = setInterval(function () {
+        self.changeSlide(1);
+      }, 5000);
     },
-    
+
     pauseAutoPlay() {
-      clearInterval(this.slideInterval);
+      if (this.slideInterval) {
+        clearInterval(this.slideInterval);
+        this.slideInterval = null;
+      }
     },
-    
   },
-  
+
   initSlideshow() {
-    // Initialize slideshow if it exists
+    this.slideshow.destroy();
     const slideshowContainer = document.querySelector('.slideshow-container');
     if (slideshowContainer) {
       this.slideshow.init();
@@ -240,42 +316,32 @@ function showAppleMsg(x) {
   function reloadAppJS() {
     console.log('reloadAppJS called');
     
-    // Re-check PWA install capability
-    if ('serviceWorker' in navigator) {
-      // Check if install button should be shown/hidden
-      if (window.location.pathname === "/") {
-        const installBtn = document.getElementById('btn_install1');
-        const subInfoBtn = document.getElementById('btn_SubInfo');
-        
-        if (installBtn) {
-          // Hide install button if PWA is already installed
-          if (window.matchMedia('(display-mode: standalone)').matches || 
-              window.navigator.standalone === true) {
-            installBtn.classList.add('hide');
-          } else {
-            installBtn.classList.remove('hide');
-          }
-        }
-        
-        if (subInfoBtn) {
-          // Handle iOS install button visibility
-          const iOSCanInstall = 'standalone' in window.navigator;
-          const iOSIsInstalled = window.navigator.standalone === true;
-          if (iOSIsInstalled) {
-            subInfoBtn.classList.add('hide');
-          } else if (iOSCanInstall) {
-            subInfoBtn.classList.remove('hide');
-          }
-        }
-      }
+    if (typeof APP !== 'undefined' && typeof APP.updateInstallButtons === 'function') {
+      APP.updateInstallButtons();
     }
     
-    // Re-initialize slideshow if it exists
+    // Tear down slideshow from previous page, then init on the new page if present
     if (APP.slideshow) {
+      APP.slideshow.destroy();
       const slideshowContainer = document.querySelector('.slideshow-container');
-      if (slideshowContainer && !slideshowContainer.hasAttribute('data-slideshow-initialized')) {
-        slideshowContainer.setAttribute('data-slideshow-initialized', 'true');
+      if (slideshowContainer) {
         APP.slideshow.init();
       }
     }
+  }
+
+  window.reloadAppJS = reloadAppJS;
+
+  function registerBarbaReinit() {
+    if (window.TTMSBarba) {
+      window.TTMSBarba.register(reloadAppJS);
+    }
+  }
+
+  if (window.TTMSBarba) {
+    registerBarbaReinit();
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerBarbaReinit);
+  } else {
+    registerBarbaReinit();
   }

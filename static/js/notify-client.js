@@ -50,16 +50,35 @@ const NotifyClient = {
    * Check authentication and subscribe user
    */
   async checkAuthAndSubscribe() {
-    // Check if auth client is available
-    if (window.AuthClient && window.AuthClient.isAuthenticated()) {
-      const user = window.AuthClient.getUser();
-      if (user && user.id) {
-        this.state.userId = user.id.toString();
+    if (!window.AuthClient) {
+      return;
+    }
+    try {
+      if (typeof AuthClient.whenReady === 'function') {
+        await AuthClient.whenReady();
+      }
+      if (!AuthClient.isAuthenticated()) {
+        return;
+      }
+      var user =
+        typeof AuthClient.getCurrentUser === 'function'
+          ? AuthClient.getCurrentUser()
+          : null;
+      if (!user || user.id == null) {
+        var profile = await AuthClient.getProfile();
+        if (profile.success && profile.user) {
+          user = profile.user;
+        }
+      }
+      if (user && user.id != null) {
+        this.state.userId = String(user.id);
         await this.subscribe({
           userId: this.state.userId,
           platform: this.state.platform,
         });
       }
+    } catch (err) {
+      console.warn('Notification subscribe skipped:', err);
     }
   },
 

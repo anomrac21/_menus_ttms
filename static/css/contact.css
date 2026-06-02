@@ -29,11 +29,140 @@
     display: flex;
     flex-direction: column;
     margin: 0;
+    gap: 0.65em;
+}
+
+/* Shared CTA design (matches subbtn--notify) */
+.contactinfo {
+    --contact-cta-radius: 16px;
+    --contact-cta-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+    --contact-cta-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --contact-cta-accent-a: color-mix(in srgb, var(--selected-button-color2, #b56024) 88%, #fff);
+    --contact-cta-accent-b: color-mix(in srgb, var(--selected-button-color3, #fcd000) 75%, #fff);
+    --contact-cta-accent-border: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
+    --contact-cta-ink: #1a1208;
+    --contact-cta-ink-muted: rgba(26, 18, 8, 0.82);
+}
+
+.contactinfo .contact-cta,
+.contactinfo a.contact-cta,
+.contactinfo button.contact-cta {
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65em;
+    border-radius: var(--contact-cta-radius);
+    border: 2px solid var(--contact-cta-accent-border);
+    background: linear-gradient(135deg, var(--contact-cta-accent-a) 0%, var(--contact-cta-accent-b) 100%);
+    color: var(--contact-cta-ink);
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: var(--contact-cta-shadow), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.contactinfo .contact-cta:hover,
+.contactinfo .contact-cta:focus-visible {
+    transform: translateY(-2px) scale(1.02);
+    border-color: #fff;
+    box-shadow: var(--contact-cta-shadow-hover), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    outline: none;
+}
+
+.contactinfo .contact-cta:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.contactinfo .contact-cta__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    color: var(--contact-cta-ink);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.contactinfo .contact-cta__icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.contactinfo .contact-cta__icon svg path {
+    fill: currentColor;
+}
+
+.contactinfo .contact-cta__copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1em;
+    min-width: 0;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.contactinfo .contact-cta__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.contactinfo .contact-cta__hint {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--contact-cta-ink-muted);
+}
+
+/* Icon-only chip */
+.contactinfo .contact-cta--icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    min-width: 3.25rem;
+    padding: 0;
+    justify-content: center;
+    border-radius: 14px;
+}
+
+.contactinfo .contact-cta--icon .contact-cta__icon {
+    width: 2.15rem;
+    height: 2.15rem;
+}
+
+.contactinfo .contact-cta--icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Row layout helpers */
+.contactinfo .contact-cta-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.55em;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 0.15em 0;
 }
 
 /* ============================================
    LOCATION NAVIGATION
    ============================================ */
+
+.contactinfo li.locations-nav {
+    width: 100%;
+    list-style: none;
+    padding: 0;
+}
+
+.contactinfo li.locations-nav .location-navigation-container {
+    width: 100%;
+}
 
 .location-navigation-container {
     display: flex;
@@ -104,43 +233,30 @@
     transform: scale(1.02);
 }
 
-/* Location Button */
-.locbtn {
-    display: flex;
-    align-items: center;
+/* Location address button — accent CTA */
+.contactinfo .locbtn.contact-cta--location {
+    width: 100%;
+    padding: 0.65em 1em 0.65em 0.75em;
+    font-size: 0.82rem;
+    font-weight: 700;
     text-wrap-mode: wrap;
-    gap: .8em;
-    padding: .8em 1em;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 8%), rgba(255, 255, 255, 4%));
-    border: 2px solid rgba(255, 255, 255, .15);
-    border-radius: 12px;
-    color: var(--hero-text-color, #fff);
-    text-decoration: none;
-    transition: all .3s ease;
-    font-weight: 500;
-    font-size: xx-small;
-    width: -webkit-fill-available;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
 }
 
-.locbtn:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 12%), rgba(255, 255, 255, 8%));
-    border-color: rgba(255, 255, 255, .3);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+.contactinfo .locbtn.contact-cta--location .contact-cta__title {
+    font-size: 0.82rem;
 }
 
-.locbtn img {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
+.location-item.active-location .locbtn.contact-cta--location {
+    background: linear-gradient(135deg, #4caf50, #388e3c);
+    border-color: color-mix(in srgb, #81c784 70%, #fff);
+    color: #fff;
+    --contact-cta-ink: #fff;
+    --contact-cta-ink-muted: rgba(255, 255, 255, 0.85);
 }
 
-.location-item.active-location .locbtn {
-    background: linear-gradient(135deg, #4caf50, #45a049);
-    border-color: #4caf50;
-    color: var(--hero-text-color, #fff);
-    font-weight: 600;
+.location-item.active-location .locbtn.contact-cta--location .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
 }
 
 /* Location Info (Call, Status & Delivery) */
@@ -150,76 +266,35 @@
     align-items: center;
     gap: .8em;
     justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
 }
 
-.location-call-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, .2), rgba(118, 75, 162, .15));
-    border: 1.5px solid rgba(102, 126, 234, .4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
-    transition: all .3s ease;
-    text-decoration: none;
-    flex-shrink: 0;
+.contactinfo .location-call-btn.contact-cta--icon,
+.contactinfo .location-whatsapp-btn.contact-cta--icon {
+    width: 3rem;
+    height: 3rem;
+    min-width: 3rem;
 }
 
-.location-call-btn:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, .3), rgba(118, 75, 162, .25));
-    border-color: rgba(102, 126, 234, .6);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, .4);
+.contactinfo .location-call-btn.contact-cta--icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: color-mix(in srgb, #667eea 50%, #fff);
+    color: #fff;
 }
 
-.location-call-btn:active {
-    transform: translateY(0) scale(1);
+.contactinfo .location-whatsapp-btn.contact-cta--icon {
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    border-color: color-mix(in srgb, #25d366 50%, #fff);
+    color: #fff;
 }
 
-.location-call-btn img {
-    width: 20px;
-    height: 20px;
-    filter: brightness(1.2);
-}
-
-.location-whatsapp-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, rgba(37, 211, 102, .2), rgba(18, 140, 126, .15));
-    border: 1.5px solid rgba(37, 211, 102, .4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
-    transition: all .3s ease;
-    text-decoration: none;
-    flex-shrink: 0;
-}
-
-.location-whatsapp-btn:hover {
-    background: linear-gradient(135deg, rgba(37, 211, 102, .3), rgba(18, 140, 126, .25));
-    border-color: rgba(37, 211, 102, .6);
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(37, 211, 102, .4);
-}
-
-.location-whatsapp-btn:active {
-    transform: translateY(0) scale(1);
-}
-
-.location-whatsapp-btn img {
-    width: 20px;
-    height: 20px;
-    filter: brightness(1.2);
+.contactinfo .location-call-btn.contact-cta--icon .contact-cta__icon,
+.contactinfo .location-whatsapp-btn.contact-cta--icon .contact-cta__icon {
+    width: 2rem;
+    height: 2rem;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
 }
 
 .location-status {
@@ -240,10 +315,10 @@
     letter-spacing: .8px;
     transition: all .3s ease;
     min-width: 80px;
+    min-height: 3rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    height: -webkit-fill-available;
     position: relative;
     overflow: hidden;
     /* Button-specific styles */
@@ -353,33 +428,27 @@
     transform: translateY(-1px);
 }
 
-/* Delivery Toggle Button */
-.delivery-toggle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: .5em;
-    padding: .6em 1em;
-    background: linear-gradient(135deg, rgba(255, 107, 53, .2), rgba(247, 147, 30, .15));
-    border: 2px solid rgba(255, 107, 53, .3);
-    border-radius: 10px;
-    color: var(--hero-text-color, #fff);
-    text-decoration: none;
-    transition: all .3s ease;
-    font-size: xx-small;
-    font-weight: 500;
-    cursor: pointer;
+/* Delivery toggle */
+.contactinfo .delivery-toggle-btn.contact-cta--delivery {
+    padding: 0.55em 0.85em;
+    min-height: 3rem;
+    font-size: 0.75rem;
+    background: linear-gradient(135deg, #ff7043, #f57c00);
+    border-color: color-mix(in srgb, #ffab91 55%, #fff);
+    color: #fff;
+    --contact-cta-ink: #fff;
 }
 
-.delivery-toggle-btn:hover {
-    background: linear-gradient(135deg, rgba(255, 107, 53, .3), rgba(247, 147, 30, .25));
-    border-color: rgba(255, 107, 53, .5);
-    transform: translateY(-1px);
+.contactinfo .delivery-toggle-btn.contact-cta--delivery .contact-cta__icon {
+    width: 2rem;
+    height: 2rem;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
 }
 
-.delivery-toggle-btn svg {
-    width: 24px;
-    height: 24px;
+.contactinfo .delivery-toggle-btn.contact-cta--delivery svg {
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 /* Delivery Options */
@@ -417,163 +486,156 @@
 }
 
 .delivery-option-btn img {
-    max-width: 80px;
+    max-width: 4em;
     max-height: 32px;
     object-fit: contain;
 }
 
-/* Navigation Buttons */
-.btn-nav-location {
-    background: rgba(255, 255, 255, 10%);
-    border: 2px solid rgba(255, 255, 255, .2);
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    cursor: pointer;
-    transition: all .3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.delivery-option-btn--fooddrop {
     padding: 0;
-    flex-shrink: 0;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    position: relative;
-    z-index: 10;
-    pointer-events: auto;
-    opacity: 1;
+    width: 8em;
+    background: #7881be;
 }
 
-.btn-nav-location:hover {
-    background: rgba(255, 255, 255, 20%);
-    border-color: rgba(255, 255, 255, .4);
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+.delivery-option-btn--nm {
+    padding: 0;
+    width: 8em;
+    background: #e8cc45;
 }
 
-.btn-nav-location:active {
-    transform: scale(.95);
+/* Location carousel nav */
+.contactinfo .btn-nav-location.contact-cta--nav {
+    width: 3rem;
+    height: 3rem;
+    min-width: 3rem;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    color: var(--contact-cta-ink);
 }
 
-.btn-nav-location:disabled,
-.btn-nav-location[disabled] {
-    opacity: 0.3;
+.contactinfo .btn-nav-location.contact-cta--nav .contact-cta__icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.contactinfo .btn-nav-location.contact-cta--nav svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.contactinfo .btn-nav-location.contact-cta--nav svg path {
+    fill: currentColor;
+}
+
+.contactinfo .btn-nav-location.contact-cta--nav:disabled,
+.contactinfo .btn-nav-location.contact-cta--nav[disabled] {
+    opacity: 0.35;
     cursor: not-allowed;
     pointer-events: none;
-}
-
-.btn-nav-location svg {
-    width: 28px;
-    height: 28px;
-    height: 24px;
-}
-
-/* All SVG icons use hero text color */
-.btn-nav-location svg path,
-.contactinfo svg path {
-    fill: var(--hero-text-color, #000);
+    transform: none;
+    box-shadow: none;
 }
 
 /* ============================================
    SOCIAL MEDIA SECTION
    ============================================ */
 
-.socialmedia {
-    display: flex;
-    justify-content: center;
-    gap: .6em;
-    flex-wrap: wrap;
+.socialmedia.contact-cta-row {
+    padding: 0.2em 0;
+}
+
+.contactinfo .socialmedia .contact-cta--social,
+.contactinfo .socialmedia a.social.btn {
+    width: 3.25rem;
+    height: 3.25rem;
+    min-width: 3.25rem;
     padding: 0;
-}
-
-.socialmedia .btn {
-    width: 56px;
-    height: 56px;
-    min-width: 56px;
-    min-height: 56px;
-    padding: 0;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 8%);
-    border: 2px solid rgba(255, 255, 255, .15);
-    border-radius: 16px;
-    transition: all .3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    border-radius: 14px;
+    color: var(--contact-cta-ink);
 }
 
-.socialmedia .btn:hover {
-    background: rgba(255, 255, 255, 15%);
-    border-color: rgba(255, 255, 255, .3);
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, .3);
+.contactinfo .socialmedia .contact-cta--social .contact-cta__icon,
+.contactinfo .socialmedia a.social.btn svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
-.socialmedia .btn img {
-    width: 28px;
-    height: 28px;
-    max-width: 28px;
-    max-height: 28px;
+.contactinfo .socialmedia .contact-cta--social svg,
+.contactinfo .socialmedia a.social.btn svg {
+    width: 1.45rem;
+    height: 1.45rem;
+}
+
+.contactinfo .socialmedia .contact-cta--social svg path,
+.contactinfo .socialmedia a.social.btn svg path {
+    fill: currentColor;
+}
+
+.contactinfo .subscribe--install {
+    width: 100%;
+    justify-content: center;
+}
+
+.contactinfo .contact-cta--install {
+    min-width: min(100%, 17.5rem);
+    padding: 0.65em 1.1em 0.65em 0.85em;
+    background: linear-gradient(135deg, #5c6bc0, #3949ab);
+    border-color: color-mix(in srgb, #7986cb 55%, #fff);
+    color: #fff;
+    --contact-cta-ink: #fff;
+    --contact-cta-ink-muted: rgba(255, 255, 255, 0.85);
+}
+
+.contactinfo .contact-cta--install .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+/* Notify button uses shared CTA + subscribed state */
+.subscribe .subbtn--notify.contact-cta {
+    min-width: min(100%, 17.5rem);
+    max-width: 100%;
+    padding: 0.7em 1.15em 0.7em 0.85em;
 }
 
 /* ============================================
    CONTACT BUTTONS (WhatsApp & Phone)
    ============================================ */
 
-.contact {
-    display: none;
-    justify-content: center;
-    gap: 1em;
-    flex-wrap: wrap;
-    padding: 1em 0;
-}
-
-.contact .btn {
+.contact.contact-cta-row {
     display: flex;
-    align-items: center;
-    gap: .8em;
-    padding: .9em 1.5em;
+    padding: 0.2em 0;
+}
+
+.contact .contact-cta--whatsapp {
     background: linear-gradient(135deg, #25d366, #128c7e);
-    border: 2px solid rgba(255, 255, 255, .2);
-    border-radius: 16px;
-    color: var(--hero-text-color, #fff);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1em;
-    transition: all .3s ease;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, .3);
-    min-width: 160px;
-    justify-content: center;
+    border-color: color-mix(in srgb, #25d366 55%, #fff);
+    color: #fff;
+    min-width: min(100%, 10.5rem);
+    padding: 0.6em 1em;
 }
 
-.contact .btn:hover {
-    background: linear-gradient(135deg, #128c7e, #075e54);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 211, 102, .4);
-    border-color: rgba(255, 255, 255, .3);
+.contact .contact-cta--whatsapp .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
 }
 
-.contact .btn:active {
-    transform: translateY(0);
-}
-
-.contact .btn img {
-    width: 24px;
-    height: 24px;
-    max-width: 24px;
-    max-height: 24px;
-}
-
-/* Phone button - different color */
-.contact .btn[href^="tel:"] {
+.contact .contact-cta--phone {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, .3);
+    border-color: color-mix(in srgb, #667eea 55%, #fff);
+    color: #fff;
+    min-width: min(100%, 10.5rem);
+    padding: 0.6em 1em;
 }
 
-.contact .btn[href^="tel:"]:hover {
-    background: linear-gradient(135deg, #764ba2, #667eea);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, .4);
+.contact .contact-cta--phone .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
 }
 
 /* ============================================
@@ -588,8 +650,117 @@
     padding: .5em 0;
 }
 
+/* Notification subscribe — above locations row */
+.contactinfo .subscribe--notifications {
+    padding-top: 0.35em;
+    padding-bottom: 0.5em;
+    margin-top: 0;
+    margin-bottom: 0.15em;
+    width: 100%;
+}
+
+/* Primary notification CTA */
+.subscribe .subbtn--notify {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.7em 1.15em 0.7em 0.85em;
+    min-width: min(100%, 17.5rem);
+    max-width: 100%;
+    border-radius: 16px;
+    border: 2px solid color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--selected-button-color2, #b56024) 88%, #fff) 0%,
+        color-mix(in srgb, var(--selected-button-color3, #fcd000) 75%, #fff) 100%
+    );
+    color: #1a1208;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.subscribe .subbtn--notify:hover,
+.subscribe .subbtn--notify:focus-visible {
+    transform: translateY(-2px) scale(1.02);
+    border-color: #fff;
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    outline: none;
+}
+
+.subscribe .subbtn--notify:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.subscribe .subbtn--notify .contact-cta__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    color: #1a1208;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.subscribe .subbtn--notify .contact-cta__icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.subscribe .subbtn--notify .contact-cta__copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1em;
+    min-width: 0;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.subscribe .subbtn--notify .contact-cta__title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.subscribe .subbtn--notify .contact-cta__hint {
+    font-size: 0.78rem;
+    font-weight: 500;
+    opacity: 0.82;
+}
+
+.subscribe .subbtn--notify.subscribed {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, #22c55e 35%, rgba(255, 255, 255, 0.12)) 0%,
+        color-mix(in srgb, #16a34a 25%, rgba(255, 255, 255, 0.08)) 100%
+    );
+    border-color: color-mix(in srgb, #4ade80 70%, transparent);
+    color: var(--hero-text-color, #fff);
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.22);
+}
+
+.subscribe .subbtn--notify.subscribed .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--hero-text-color, #fff);
+}
+
+.subscribe .subbtn--notify.subscribed .contact-cta__hint {
+    opacity: 0.75;
+}
+
 .subscribe .btn,
-.subscribe .subbtn {
+.subscribe .subbtn:not(.subbtn--notify) {
     display: flex;
     align-items: center;
     gap: .6em;
@@ -609,14 +780,14 @@
 }
 
 .subscribe .btn:hover,
-.subscribe .subbtn:hover {
+.subscribe .subbtn:not(.subbtn--notify):hover {
     background: linear-gradient(135deg, rgba(255, 255, 255, 15%), rgba(255, 255, 255, 10%));
     border-color: rgba(255, 255, 255, .3);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, .3);
 }
 
-.subscribe .subbtn {
+.subscribe .subbtn:not(.subbtn--notify) {
     min-width: 160px;
 }
 
@@ -628,12 +799,13 @@
     max-height: 24px;
 }
 
-.installBtn {
-    display: none;
+/* Install row: only one CTA visible; row hidden when neither applies */
+.contactinfo .subscribe--install.hide {
+    display: none !important;
 }
 
-.installBtn:not(.hide) {
-    display: flex;
+.contactinfo .subscribe--install .contact-cta.hide {
+    display: none !important;
 }
 
 /* ============================================
@@ -922,10 +1094,19 @@
     }
 
     .subscribe .btn,
-    .subscribe .subbtn {
+    .subscribe .subbtn:not(.subbtn--notify) {
         min-width: 120px;
         padding: .7em 1em;
         font-size: .85em;
+    }
+
+    .subscribe .subbtn--notify {
+        min-width: min(100%, 15.5rem);
+        padding: 0.65em 1em 0.65em 0.75em;
+    }
+
+    .subscribe .subbtn--notify .contact-cta__title {
+        font-size: 0.95rem;
     }
 
     .btn-nav-location {

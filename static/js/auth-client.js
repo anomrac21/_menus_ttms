@@ -3,31 +3,77 @@
  * Handles all authentication operations with the auth-service backend
  */
 
+function ttmsNormalizeAuthApiV1Base(raw) {
+  var s = String(raw == null ? '' : raw)
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .replace(/\/+$/, '');
+  if (!s || !/^https?:\/\//i.test(s)) {
+    return '';
+  }
+  if (/\/api\/v1$/i.test(s)) {
+    return s;
+  }
+  return s + '/api/v1';
+}
+
 const AuthClient = {
-  // Configuration
+  /** True when session is valid via hub .ttmenus.com HttpOnly cookie (no local JWT). */
+  _sessionFromCookie: false,
+  _readyPromise: null,
+
+  // Configuration (hub uses auth_token; menu CMS uses ttmenus_* — read both)
   config: {
-    apiUrl: window.AUTH_CONFIG?.apiUrl || 'http://localhost:8080/api/v1',
-    tokenKey: 'ttmenus_access_token',
-    refreshKey: 'ttmenus_refresh_token',
-    userKey: 'ttmenus_user',
+    tokenKeys: ['auth_token', 'ttmenus_access_token'],
+    refreshKeys: ['refresh_token', 'ttmenus_refresh_token'],
+    userKeys: ['user_data', 'ttmenus_user'],
+    get apiUrl() {
+      if (typeof window !== 'undefined') {
+        var fromApp = ttmsNormalizeAuthApiV1Base(
+          window.APP_CONFIG && window.APP_CONFIG.authServiceUrl
+        );
+        if (fromApp) {
+          return fromApp;
+        }
+        var fromAuth = ttmsNormalizeAuthApiV1Base(window.AUTH_CONFIG && window.AUTH_CONFIG.apiUrl);
+        if (fromAuth) {
+          return fromAuth;
+        }
+        var fromSvc = ttmsNormalizeAuthApiV1Base(window.AUTH_SERVICE_URL);
+        if (fromSvc) {
+          return fromSvc;
+        }
+      }
+      return 'http://localhost:8080/api/v1';
+    },
   },
 
   /**
-   * Initialize auth client and check authentication status
+   * Initialize auth client and resolve hub cookie or local token session.
    */
   init() {
     console.log('Auth Client initialized');
-    this.checkAuthStatus();
+    this._readyPromise = this.checkAuthStatus();
+    return this._readyPromise;
   },
 
-  /**
-   * Check if user is currently authenticated
-   */
-  isAuthenticated() {
-    const token = this.getAccessToken();
-    if (!token) return false;
-    
-    // Check if token is expired
+  whenReady() {
+    if (!this._readyPromise) {
+      this._readyPromise = this.checkAuthStatus();
+    }
+    return this._readyPromise;
+  },
+
+  _notifyAuthReady() {
+    try {
+      window.dispatchEvent(new CustomEvent('ttms:auth-ready'));
+    } catch (e) {}
+  },
+
+  _tokenLooksValid(token) {
+    if (!token) {
+      return false;
+    }
     try {
       const payload = this.parseJWT(token);
       const now = Math.floor(Date.now() / 1000);
@@ -35,6 +81,17 @@ const AuthClient = {
     } catch (e) {
       return false;
     }
+  },
+
+  /**
+   * Check if user is currently authenticated (local JWT or hub cookie session).
+   */
+  isAuthenticated() {
+    const token = this.getAccessToken();
+    if (this._tokenLooksValid(token)) {
+      return true;
+    }
+    return !!this._sessionFromCookie;
   },
 
   /**
@@ -54,48 +111,165 @@ const AuthClient = {
     }
   },
 
-  /**
-   * Get access token from localStorage
-   */
+  _readStorageKey(keys) {
+    var i;
+    var v;
+    for (i = 0; i < keys.length; i++) {
+      v = sessionStorage.getItem(keys[i]);
+      if (v && String(v).trim()) {
+        return v;
+      }
+    }
+    for (i = 0; i < keys.length; i++) {
+      v = localStorage.getItem(keys[i]);
+      if (v && String(v).trim()) {
+        return v;
+      }
+    }
+    return null;
+  },
+
+  _writeStorageKey(keys, value, storages) {
+    var s;
+    var k;
+    storages = storages || [localStorage, sessionStorage];
+    storages.forEach(function (storage) {
+      keys.forEach(function (key) {
+        storage.setItem(key, value);
+      });
+    });
+  },
+
+  _removeStorageKeys(keys) {
+    var i;
+    keys.forEach(function (key) {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+  },
+
   getAccessToken() {
-    return localStorage.getItem(this.config.tokenKey);
+    return this._readStorageKey(this.config.tokenKeys);
   },
 
-  /**
-   * Get refresh token from localStorage
-   */
   getRefreshToken() {
-    return localStorage.getItem(this.config.refreshKey);
+    return this._readStorageKey(this.config.refreshKeys);
   },
 
-  /**
-   * Get current user from localStorage
-   */
   getCurrentUser() {
-    const userStr = localStorage.getItem(this.config.userKey);
+    var userStr = this._readStorageKey(this.config.userKeys);
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  /**
-   * Store authentication tokens and user info
-   */
   storeAuth(accessToken, refreshToken, user) {
-    localStorage.setItem(this.config.tokenKey, accessToken);
+    this._writeStorageKey(this.config.tokenKeys, accessToken);
     if (refreshToken) {
-      localStorage.setItem(this.config.refreshKey, refreshToken);
+      this._writeStorageKey(this.config.refreshKeys, refreshToken);
     }
     if (user) {
-      localStorage.setItem(this.config.userKey, JSON.stringify(user));
+      var serialized = JSON.stringify(user);
+      this._writeStorageKey(this.config.userKeys, serialized);
+    }
+  },
+
+  clearAuth() {
+    this._sessionFromCookie = false;
+    this._removeStorageKeys(this.config.tokenKeys);
+    this._removeStorageKeys(this.config.refreshKeys);
+    this._removeStorageKeys(this.config.userKeys);
+  },
+
+  _purgeExpiredLocalTokens() {
+    const token = this.getAccessToken();
+    if (token && !this._tokenLooksValid(token)) {
+      this._removeStorageKeys(this.config.tokenKeys);
     }
   },
 
   /**
-   * Clear authentication data
+   * GET /me using a valid Bearer token and/or hub .ttmenus.com HttpOnly cookie.
+   * @param {{cookieOnly?: boolean}} opts
    */
-  clearAuth() {
-    localStorage.removeItem(this.config.tokenKey);
-    localStorage.removeItem(this.config.refreshKey);
-    localStorage.removeItem(this.config.userKey);
+  async _fetchMe(opts) {
+    const cookieOnly = !!(opts && opts.cookieOnly);
+    const headers = { Accept: 'application/json' };
+    if (!cookieOnly) {
+      const token = this.getAccessToken();
+      if (this._tokenLooksValid(token)) {
+        headers.Authorization = 'Bearer ' + token;
+      }
+    }
+    const response = await fetch(this.config.apiUrl + '/me', {
+      method: 'GET',
+      credentials: 'include',
+      headers: headers,
+    });
+    const text = await response.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (parseErr) {
+      data = {};
+    }
+    return { response: response, data: data };
+  },
+
+  /**
+   * Resolve session from hub login cookie on .ttmenus.com (cross-subdomain).
+   */
+  async syncHubSession() {
+    return this._resolveSessionFromServer();
+  },
+
+  /**
+   * Resolve session from auth-service /me (Bearer and/or hub cookie).
+   */
+  async _resolveSessionFromServer() {
+    this._purgeExpiredLocalTokens();
+
+    try {
+      let result = await this._fetchMe();
+
+      if (result.response.status === 401) {
+        const refreshResult = await this.refreshToken();
+        if (refreshResult.success) {
+          result = await this._fetchMe();
+        } else {
+          result = await this._fetchMe({ cookieOnly: true });
+        }
+      }
+
+      if (result.response.ok && result.data) {
+        this._sessionFromCookie = true;
+        const userPayload = result.data.user || result.data;
+        if (result.data.access_token) {
+          this.storeAuth(
+            result.data.access_token,
+            result.data.refresh_token || this.getRefreshToken(),
+            userPayload
+          );
+        } else {
+          this._writeStorageKey(this.config.userKeys, JSON.stringify(userPayload));
+        }
+        return { success: true, user: userPayload };
+      }
+
+      this._sessionFromCookie = false;
+      if (!this._tokenLooksValid(this.getAccessToken())) {
+        this.clearAuth();
+      }
+      return {
+        success: false,
+        error: (result.data && result.data.error) || 'Not authenticated',
+      };
+    } catch (error) {
+      console.error('Session resolve failed:', error);
+      this._sessionFromCookie = false;
+      if (!this._tokenLooksValid(this.getAccessToken())) {
+        this.clearAuth();
+      }
+      return { success: false, error: error.message };
+    }
   },
 
   /**
@@ -105,6 +279,7 @@ const AuthClient = {
     try {
       const response = await fetch(`${this.config.apiUrl}/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -117,8 +292,8 @@ const AuthClient = {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Store tokens and user info
       this.storeAuth(data.access_token, data.refresh_token, data.user);
+      this._sessionFromCookie = true;
 
       return {
         success: true,
@@ -172,17 +347,18 @@ const AuthClient = {
   async logout() {
     const token = this.getAccessToken();
     
-    if (token) {
-      try {
-        await fetch(`${this.config.apiUrl}/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-      } catch (error) {
-        console.error('Logout error:', error);
+    try {
+      const headers = {};
+      if (token) {
+        headers.Authorization = 'Bearer ' + token;
       }
+      await fetch(`${this.config.apiUrl}/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: headers,
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
     }
 
     this.clearAuth();
@@ -194,18 +370,16 @@ const AuthClient = {
    */
   async refreshToken() {
     const refreshToken = this.getRefreshToken();
-    
-    if (!refreshToken) {
-      return { success: false, error: 'No refresh token' };
-    }
+    const body = refreshToken ? { refresh_token: refreshToken } : {};
 
     try {
       const response = await fetch(`${this.config.apiUrl}/refresh`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -214,8 +388,10 @@ const AuthClient = {
         throw new Error(data.error || 'Token refresh failed');
       }
 
-      // Update access token
-      localStorage.setItem(this.config.tokenKey, data.access_token);
+      if (data.access_token) {
+        this._writeStorageKey(this.config.tokenKeys, data.access_token);
+      }
+      this._sessionFromCookie = true;
 
       return {
         success: true,
@@ -223,7 +399,6 @@ const AuthClient = {
       };
     } catch (error) {
       console.error('Token refresh error:', error);
-      this.clearAuth();
       return {
         success: false,
         error: error.message,
@@ -236,17 +411,16 @@ const AuthClient = {
    */
   async getProfile() {
     const token = this.getAccessToken();
-    
-    if (!token) {
-      return { success: false, error: 'Not authenticated' };
+    const headers = {};
+    if (this._tokenLooksValid(token)) {
+      headers.Authorization = 'Bearer ' + token;
     }
 
     try {
       const response = await fetch(`${this.config.apiUrl}/me`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
+        headers: headers,
       });
 
       const data = await response.json();
@@ -263,8 +437,8 @@ const AuthClient = {
         throw new Error(data.error || 'Failed to get profile');
       }
 
-      // Update stored user info
-      localStorage.setItem(this.config.userKey, JSON.stringify(data));
+      this._sessionFromCookie = true;
+      this._writeStorageKey(this.config.userKeys, JSON.stringify(data));
 
       return {
         success: true,
@@ -272,10 +446,7 @@ const AuthClient = {
       };
     } catch (error) {
       console.error('Get profile error:', error);
-      return {
-        success: false,
-        error: error.message,
-      };
+      return { success: false, error: error.message };
     }
   },
 
@@ -464,17 +635,34 @@ const AuthClient = {
   },
 
   /**
-   * Check authentication status on page load
+   * Check authentication on first load (local token, refresh, or hub cookie).
    */
-  checkAuthStatus() {
-    if (this.isAuthenticated()) {
-      console.log('User is authenticated');
-      // Optionally refresh user profile
-      this.getProfile().catch(err => console.error('Failed to refresh profile:', err));
-    } else {
-      console.log('User is not authenticated');
-      this.clearAuth();
+  async checkAuthStatus() {
+    await this._resolveSessionFromServer();
+    this._notifyAuthReady();
+  },
+
+  /**
+   * Re-check session after in-site navigation or bfcache restore.
+   */
+  async refreshMenuSession() {
+    await this._resolveSessionFromServer();
+    this._notifyAuthReady();
+  },
+
+  _normalizeRoles(roles) {
+    if (!roles) {
+      return [];
     }
+    if (Array.isArray(roles)) {
+      return roles;
+    }
+    if (typeof roles === 'string') {
+      return roles.split(',').map(function (r) {
+        return r.trim();
+      }).filter(Boolean);
+    }
+    return [];
   },
 
   /**
@@ -482,7 +670,7 @@ const AuthClient = {
    */
   hasRole(role) {
     const user = this.getCurrentUser();
-    return user && user.roles && user.roles.includes(role);
+    return user && this._normalizeRoles(user.roles).includes(role);
   },
 
   /**
@@ -502,49 +690,92 @@ const AuthClient = {
   /**
    * Make authenticated API request
    */
-  async authenticatedRequest(url, options = {}) {
-    const token = this.getAccessToken();
-    
-    if (!token) {
-      return { success: false, error: 'Not authenticated' };
+  async authenticatedRequest(url, options = {}, _retried) {
+    if (!this.isAuthenticated()) {
+      const synced = await this.syncHubSession();
+      if (!synced.success) {
+        return { success: false, error: 'Not authenticated' };
+      }
     }
 
-    const headers = {
-      ...options.headers,
-      'Authorization': `Bearer ${token}`,
-    };
+    const token = this.getAccessToken();
+    const headers = { ...(options.headers || {}) };
+    if (this._tokenLooksValid(token)) {
+      headers.Authorization = 'Bearer ' + token;
+    }
 
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include',
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Try to refresh token if unauthorized
-        if (response.status === 401) {
-          const refreshResult = await this.refreshToken();
-          if (refreshResult.success) {
-            // Retry with new token
-            return this.authenticatedRequest(url, options);
-          }
-        }
-        throw new Error(data.error || 'Request failed');
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        data = {};
       }
 
-      return {
-        success: true,
-        data,
-      };
+      if (!response.ok) {
+        if (response.status === 401 && !_retried) {
+          const refreshResult = await this.refreshToken();
+          if (refreshResult.success) {
+            return this.authenticatedRequest(url, options, true);
+          }
+          const synced = await this.syncHubSession();
+          if (synced.success) {
+            return this.authenticatedRequest(url, options, true);
+          }
+        }
+        var errMsg = data.error || data.message || 'Request failed';
+        if (response.status) {
+          errMsg = errMsg + ' (HTTP ' + response.status + ')';
+        }
+        throw new Error(errMsg);
+      }
+
+      return { success: true, data };
     } catch (error) {
       console.error('Authenticated request error:', error);
-      return {
-        success: false,
-        error: error.message,
-      };
+      return { success: false, error: error.message };
     }
+  },
+
+  /** Favorites (venues, locations, dishes, recipes) — auth-service, shared with ttms_app hub. */
+  async getFavorites(kind) {
+    const q = kind ? '?kind=' + encodeURIComponent(kind) : '';
+    return this.authenticatedRequest(this.config.apiUrl + '/me/favorites' + q, { method: 'GET' });
+  },
+
+  async addFavorite(payload) {
+    return this.authenticatedRequest(this.config.apiUrl + '/me/favorites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {}),
+    });
+  },
+
+  async removeFavorite(kind, itemKey) {
+    var params = new URLSearchParams();
+    params.set('kind', kind || '');
+    params.set('item_key', itemKey || '');
+    return this.authenticatedRequest(
+      this.config.apiUrl + '/me/favorites?' + params.toString(),
+      { method: 'DELETE' }
+    );
+  },
+
+  async addFavoriteVenue(menuId, menuName, menuUrl, imageUrl) {
+    return this.addFavorite({
+      kind: 'venue',
+      item_key: menuId,
+      title: menuName || menuId,
+      url: menuUrl || '',
+      image_url: imageUrl || '',
+    });
   },
 };
 

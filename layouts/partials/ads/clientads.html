@@ -16,21 +16,17 @@
       {{ $adId := lower .LinkTitle | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" }}
       
       <section id="menu-ad-{{ $adId }}" class="ads menu-ad sticky" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
-        <div class="scroll-progress-bar">
-          <div class="scroll-progress-fill"></div>
-        </div>
         <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
           <a href="{{ $finalurl }}">{{ $adstitle }}</a>
         </h2>
-        <span data-aos="zoom-out-right">Promotion</span>
-        <ul class="inner" data-aos="zoom-out-up" data-aos-duration="10" data-aos-offset="0" data-aos-easing="ease-in-sine">
+        <span class="menu-ad-promo-label">Promotion</span>
+        <ul class="inner">
           {{ range .Params.images }}
             {{ $img := .image }}
             {{ if and $img (not (hasPrefix $img "/")) (not (hasPrefix $img "http")) }}{{ $img = printf "/%s" $img }}{{ end }}
             <li class="ad-panel" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
-              <a href="{{ $finalurl }}" class="content-panel">
-                <img src="{{ $img }}" class="ad-portrait-bg">
-                <img src="{{ $img }}" class="ad-portrait">
+              <a href="{{ $finalurl }}" class="content-panel" style="--ad-image:url('{{ $img }}')">
+                <img src="{{ $img }}" class="ad-portrait" alt="" loading="lazy" decoding="async">
                 <div class="adbottomspacer"></div>
               </a>
             </li>
@@ -39,7 +35,7 @@
       </section>
     {{ end }}
   {{ end }}
-  <section class="ads menu-ad sticky" style="height: 100vh; min-height: 0; background: none; border: none;"></section>
+  <section class="ads menu-ad sticky menu-ad-scroll-end" aria-hidden="true"></section>
 </div>
 
 
