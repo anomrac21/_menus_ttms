@@ -208,10 +208,14 @@
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
 
-    /* Add second tracker: wingit.ttmenus.com (Site ID 6) */
-    _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ site.Params.services.analyticsid }}']);
+    {{- $analyticsId := site.Params.services.analyticsid | default 0 -}}
+    {{- $analyticsIdStr := printf "%v" $analyticsId -}}
+    {{- if and $analyticsId (ne $analyticsIdStr "0") (ne $analyticsIdStr "") -}}
+    /* Client site tracker (params.services.analyticsid) */
+    _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ $analyticsId }}']);
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
+    {{- end -}}
 
     (function() {
       var u="//analytics.ttmenus.com/";

@@ -1,41 +1,45 @@
 <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
-<div id="client-ads-container" class="frontpageads item">
+<div id="client-ads-container" class="frontpageads item client-ads-reels">
   {{ $advertisements := site.GetPage "Promotions" }}
   {{ if $advertisements }}
-    {{ range $advertisements.RegularPages.ByWeight }}
+    {{ range $catalogIndex, $page := $advertisements.RegularPages.ByWeight }}
       {{ $adstitle := .LinkTitle }}
-      {{ $adurl := .RelPermalink }}   
-      {{ $adlink := .Params.link }}   
+      {{ $adurl := .RelPermalink }}
+      {{ $adlink := .Params.link }}
       {{ $finalurl := "" }}
       {{ if $adlink }}
         {{ $finalurl = $adlink }}
       {{ else }}
         {{ $finalurl = $adurl }}
       {{ end }}
-      
+
       {{ $adId := lower .LinkTitle | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" }}
-      
-      <section id="menu-ad-{{ $adId }}" class="ads menu-ad sticky" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
-        <h2 class="center title clientad-heading" data-aos="zoom-out" data-aos-offset="10">
-          <a href="{{ $finalurl }}">{{ $adstitle }}</a>
-        </h2>
-        <span class="menu-ad-promo-label">Promotion</span>
-        <ul class="inner">
-          {{ range .Params.images }}
-            {{ $img := .image }}
-            {{ if and $img (not (hasPrefix $img "/")) (not (hasPrefix $img "http")) }}{{ $img = printf "/%s" $img }}{{ end }}
-            <li class="ad-panel" data-ad-title="{{ $adstitle }}" data-ad-url="{{ $finalurl }}">
-              <a href="{{ $finalurl }}" class="content-panel" style="--ad-image:url('{{ $img }}')">
-                <img src="{{ $img }}" class="ad-portrait" alt="" loading="lazy" decoding="async">
-                <div class="adbottomspacer"></div>
-              </a>
-            </li>
+      {{ $slideIndex := 0 }}
+      {{ range .Params.images }}
+        {{ $img := .image }}
+        {{ if and $img (not (hasPrefix $img "/")) (not (hasPrefix $img "http")) }}{{ $img = printf "/%s" $img }}{{ end }}
+        {{ if $img }}
+          {{ $slideId := $adId }}
+          {{ if gt (len $page.Params.images) 1 }}
+            {{ $slideId = printf "%s-%d" $adId $slideIndex }}
           {{ end }}
-        </ul>
-      </section>
+          <article
+            id="menu-ad-{{ $slideId }}"
+            class="ads-reels-slide sticky"
+            data-ad-id="menu-ad-{{ $slideId }}"
+            data-ad-title="{{ $adstitle }}"
+            data-ad-url="{{ $finalurl }}"
+            data-catalog-index="{{ $catalogIndex }}"
+          >
+            <span>Sponsored</span>
+            <img src="{{ $img }}" class="ad-portrait-bg" alt="{{ $adstitle }}" loading="lazy" decoding="async">
+            <img src="{{ $img }}" class="ad-portrait" alt="{{ $adstitle }}" loading="lazy" decoding="async">
+          </article>
+          {{ $slideIndex = add $slideIndex 1 }}
+        {{ end }}
+      {{ end }}
     {{ end }}
   {{ end }}
-  <section class="ads menu-ad sticky menu-ad-scroll-end" aria-hidden="true"></section>
+  <section class="ads-reels-slide sticky menu-ad-scroll-end" aria-hidden="true"></section>
 </div>
-
 

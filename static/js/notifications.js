@@ -89,6 +89,7 @@ const NotificationService = {
         });
         this.serviceWorkerRegistration = registration;
         console.log('✅ Service Worker registered:', registration.scope);
+        this.configureServiceWorkerNotifyUrl(registration);
         
         // Check for updates
         registration.addEventListener('updatefound', () => {
@@ -105,6 +106,29 @@ const NotificationService = {
     } else {
       console.warn('⚠️ Service Workers are not supported in this browser');
     }
+  },
+
+  /**
+   * Pass notify-service URL to the service worker (supports local dev overrides).
+   */
+  configureServiceWorkerNotifyUrl(registration) {
+    const serviceUrl =
+      window.NOTIFY_CONFIG?.serviceUrl ||
+      window.SiteConfig?.notifyServiceUrl ||
+      'https://notify.ttmenus.com';
+    const payload = { type: 'SET_NOTIFY_CONFIG', serviceUrl };
+
+    const send = (worker) => {
+      if (worker) worker.postMessage(payload);
+    };
+
+    send(registration.active);
+    send(registration.waiting);
+    send(registration.installing);
+
+    navigator.serviceWorker.ready
+      .then((reg) => send(reg.active))
+      .catch(() => {});
   },
 
   /**

@@ -77,6 +77,114 @@
     if (el) el.textContent = text;
   }
 
+  function formatCount(n) {
+    if (n == null || n === '') return '—';
+    try {
+      return new Intl.NumberFormat(undefined).format(Number(n));
+    } catch (e) {
+      return String(n);
+    }
+  }
+
+  function cardErrorMessage(status, data) {
+    var err = (data && (data.error || data.message)) || String(status);
+    if (status === 401) return 'Sign in to load notification stats.';
+    if (status === 403) return 'You do not have access to notification stats for this site.';
+    if (status === 404) {
+      return 'Site not registered with notify service (check params.notifications.clientDomain).';
+    }
+    return 'Could not load notification stats (' + err + ').';
+  }
+
+  function fetchOverview(days) {
+    days = days || 30;
+    var domain = getClientDomain();
+    var url =
+      getApiBase() +
+      '/analytics/overview?client_domain=' +
+      encodeURIComponent(domain) +
+      '&days=' +
+      encodeURIComponent(String(days));
+    return fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: authHeaders(),
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (e) {}
+        return { ok: res.ok, status: res.status, data: data };
+      });
+    });
+  }
+
+  /**
+   * Dashboard control-room card: subscribers + sent (30d).
+   */
+  function loadDashboardCard(options) {
+    options = options || {};
+    var days = options.days || 30;
+    var subsEl = document.getElementById('dashboardCardNotifySubs');
+    var sentEl = document.getElementById('dashboardCardNotifySent');
+    var hint = document.getElementById('dashboardCardNotifyHint');
+    var snap = document.getElementById('dashboardCardNotifySnapshot');
+    if (!subsEl || !sentEl) return Promise.resolve();
+
+    if (!getApiBase()) {
+      if (hint) {
+        hint.textContent = 'Notification API is not configured.';
+        hint.classList.remove('hidden');
+      }
+      return Promise.resolve();
+    }
+
+    if (!authHeaders().Authorization) {
+      if (hint) {
+        hint.textContent = 'Sign in to load notification stats.';
+        hint.classList.remove('hidden');
+      }
+      return Promise.resolve();
+    }
+
+    return fetchOverview(days)
+      .then(function (x) {
+        if (!x.ok) {
+          if (hint) {
+            hint.textContent = cardErrorMessage(x.status, x.data);
+            hint.classList.remove('hidden');
+          }
+          if (snap) snap.setAttribute('aria-label', 'Notification snapshot unavailable');
+          return;
+        }
+        var ov = (x.data && x.data.overview) || {};
+        var sub = ov.subscriptions || {};
+        var notif = ov.notifications || {};
+        subsEl.textContent = formatCount(sub.active);
+        sentEl.textContent = formatCount(notif.in_period);
+        if (hint) hint.classList.add('hidden');
+        if (snap) {
+          snap.setAttribute(
+            'aria-label',
+            'Notification snapshot, last ' +
+              days +
+              ' days: ' +
+              formatCount(sub.active) +
+              ' subscribers, ' +
+              formatCount(notif.in_period) +
+              ' sent'
+          );
+        }
+      })
+      .catch(function () {
+        if (hint) {
+          hint.textContent = 'Could not load notification stats. Try again later.';
+          hint.classList.remove('hidden');
+        }
+      });
+  }
+
   function setStatus(el, msg, isError) {
     if (!el) return;
     el.textContent = msg || '';
@@ -350,5 +458,9 @@
     });
   }
 
-  window.DashboardNotifications = { init: init };
+  window.DashboardNotifications = {
+    init: init,
+    loadDashboardCard: loadDashboardCard,
+    fetchOverview: fetchOverview,
+  };
 })();

@@ -73,23 +73,55 @@
     position: relative;
     pointer-events: none;
 }
-#pageadscontainer span,
-#homepage-ads-container span,
-#client-ads-container span,
-#frontpage-ads-container span,
-.menu-ad-promo-label{
-    right: .8em;
+.menu-ad-promo-label {
+    right: 0.8em;
     position: absolute;
     top: 1.2em;
-    background: linear-gradient(#000000, #222222aa);
-    border: .2em solid #fefefe55;
-    color: #fff;
-    padding-inline:.4em;
-    padding-block-end: .2em;
+    background: linear-gradient(
+        135deg,
+        var(--selected-button-color3, #fcd000),
+        var(--selected-button-color2, #b56024)
+    );
+    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #dfeed4) 50%, transparent);
+    color: var(--selected-text-color3, #85181c);
+    padding-inline: 0.55em;
+    padding-block: 0.2em 0.25em;
     border-radius: 3em;
     font-size: xx-small;
     font-weight: 700;
-    z-index: 2;
+    z-index: 4;
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1, #5c1014) 40%, transparent);
+    text-shadow: none;
+}
+
+.menu-ad .clientad-heading,
+#client-ads-container .clientad-heading,
+#homepage-ads-container .clientad-heading,
+#pageadscontainer .clientad-heading,
+#frontpage-ads-container .clientad-heading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    margin: 0;
+    padding: 0.55em 1em;
+    background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--main-bg, #000) 75%, transparent),
+        transparent
+    );
+    color: var(--main-text-color, #fefefe);
+    pointer-events: none;
+}
+
+.menu-ad .clientad-heading a,
+#client-ads-container .clientad-heading a,
+#homepage-ads-container .clientad-heading a,
+#pageadscontainer .clientad-heading a,
+#frontpage-ads-container .clientad-heading a {
+    color: inherit;
+    pointer-events: all;
 }
 #pageadscontainer h1,
 #homepage-ads-container h1,
@@ -135,7 +167,7 @@
 #frontpage-ads-container section,
 .menu-ad {
     position: relative;
-    min-height: calc(100vh);
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
     height: auto;
     color: white;
     text-align: center;
@@ -151,7 +183,9 @@
 #homepage-ads-container section.sticky,
 #client-ads-container section.sticky,
 #frontpage-ads-container section.sticky,
-.menu-ad.sticky {
+.menu-ad.sticky,
+#client-ads-container .ads-reels-slide.sticky,
+#homepage-ads-container .ads-reels-slide.sticky {
     position: -webkit-sticky !important;
     position: sticky !important;
     z-index: 2;
@@ -159,9 +193,16 @@
     contain: layout style;
 }
 
+#client-ads-container .menu-ad-scroll-end,
+#homepage-ads-container .menu-ad-scroll-end {
+    z-index: 1 !important;
+    pointer-events: none;
+    contain: none;
+}
+
 /* Scroll runway after last ad (sticky stack release) */
 .menu-ad-scroll-end {
-    height: 100vh;
+    height: calc(100dvh - var(--ttms-header-height, 5em));
     min-height: 0;
     background: none !important;
     border: none !important;
@@ -185,7 +226,7 @@
     width: -webkit-fill-available !important;
     min-width: -webkit-fill-available !important;
     max-width: -webkit-fill-available !important;
-    min-height: calc(100dvh);
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
     transition: opacity 0.25s ease;
     background-repeat: no-repeat !important;
     background-position: top center !important;
@@ -239,7 +280,7 @@
 #client-ads-container section .inner .ad-panel,
 #frontpage-ads-container section .inner .ad-panel{
     width: 100dvw;
-    height: calc(100vh - 5em);
+    height: calc(100dvh - var(--ttms-header-height, 5em));
     left: 0px;
     position: relative;
     top: 0;
@@ -298,7 +339,6 @@
 #frontpage-ads-container .inner .ad-panel button{
     position: relative;
     z-index: 1;
-    top: 0;
     left: 0;
     color: #fefefe;
     border: none;
@@ -313,7 +353,6 @@
     position: relative;
     z-index: 1;
     padding: 2em;
-    top: 0;
     left: 0;
     margin: .4em;
     color: #fefefe;
@@ -398,7 +437,6 @@
     position: absolute;
     bottom: 1em;
     left: 1em;
-    z-index: 10;
     background: rgba(0, 0, 0, 0.6);
     border: 2px solid rgba(255, 250, 245, 0.9);
     border-radius: 50%;
@@ -643,6 +681,60 @@ body.ads-reels-open {
     box-sizing: border-box;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
     background: #000;
+    overflow: hidden;
+}
+
+.ads-reels-slide > span {
+    position: absolute;
+    top: 1.2em;
+    left: 1em;
+    z-index: 4;
+    background: linear-gradient(
+        135deg,
+        var(--selected-button-color3, #fcd000),
+        var(--selected-button-color2, #b56024)
+    );
+    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #dfeed4) 50%, transparent);
+    color: var(--selected-text-color3, #85181c);
+    padding-inline: 0.55em;
+    padding-block: 0.2em 0.25em;
+    border-radius: 3em;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1, #5c1014) 40%, transparent);
+    text-shadow: none;
+    pointer-events: none;
+}
+
+/* Promotions page + homepage promos — reels visuals with document sticky stack */
+#client-ads-container.client-ads-reels,
+#homepage-ads-container.client-ads-reels {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 11;
+}
+
+#client-ads-container.client-ads-reels .ads-reels-slide,
+#homepage-ads-container.client-ads-reels .ads-reels-slide {
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    height: calc(100dvh - var(--ttms-header-height, 5em));
+    width: 100%;
+    border: 1px solid var(--main-bg);
+    cursor: pointer;
+    pointer-events: all;
+    color: white;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+#client-ads-container.client-ads-reels .ads-reels-slide .ad-portrait,
+#homepage-ads-container.client-ads-reels .ads-reels-slide .ad-portrait {
+    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 5.5rem - env(safe-area-inset-bottom));
 }
 
 .ads-reels-slide .ad-portrait-bg {

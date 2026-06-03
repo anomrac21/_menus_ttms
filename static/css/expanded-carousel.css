@@ -47,6 +47,21 @@
     scrollbar-width: none;
 }
 
+/* Avoid a black box when the carousel has no slides (failed/stale inject) */
+.menu-item-slideshow-track:empty,
+.expanded-image-carousel-container.menu-item-slideshow-track:empty {
+    display: none;
+    min-height: 0;
+    height: 0;
+    max-height: 0;
+}
+
+.menu-item-slideshow:has(.menu-item-slideshow-track:empty) .expanded-image-carousel-view,
+.menu-item-slideshow:has(.expanded-image-carousel-container:empty) .expanded-image-carousel-view {
+    display: none;
+    min-height: 0;
+}
+
 .menu-item-slideshow-track::-webkit-scrollbar {
     display: none;
 }

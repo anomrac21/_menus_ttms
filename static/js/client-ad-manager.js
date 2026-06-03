@@ -234,7 +234,6 @@ class ClientAdManager {
     }
 
     const sponsored = document.createElement('span');
-    sponsored.className = 'menu-ad-promo-label';
     sponsored.textContent = 'Sponsored';
     li.appendChild(sponsored);
 
@@ -258,6 +257,14 @@ class ClientAdManager {
         li.appendChild(video);
         hasMedia = true;
       } else {
+        const bgImg = document.createElement('img');
+        bgImg.src = imageUrl;
+        bgImg.className = 'ad-portrait-bg';
+        bgImg.alt = alt;
+        bgImg.loading = 'lazy';
+        bgImg.decoding = 'async';
+        li.appendChild(bgImg);
+
         const fgImg = document.createElement('img');
         fgImg.src = imageUrl;
         fgImg.className = 'ad-portrait';
@@ -277,34 +284,37 @@ class ClientAdManager {
     const finalUrl = ad.link || ad.url || `/promotions/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
     const adId = ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const eager = adIndex < 2;
+    const safeTitle = String(ad.title || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
 
-    const imagesHTML = (ad.images || [])
-      .map((img) => {
+    const slides = (ad.images || [])
+      .map((img, imageIndex) => {
         const imagePath = this.normalizeImagePath(this.resolveImageUrl(img));
         if (!imagePath) return '';
-        const loading = eager ? 'eager' : 'lazy';
-        const fetchAttr = eager ? ' fetchpriority="high"' : '';
+        const loading = eager && imageIndex === 0 ? 'eager' : 'lazy';
+        const fetchAttr = eager && imageIndex === 0 ? ' fetchpriority="high"' : '';
+        const slideId = (ad.images || []).length > 1 ? `${adId}-${imageIndex}` : adId;
         return `
-      <li class="ad-panel">
-          <a href="${finalUrl}" class="content-panel" style="--ad-image:${this.cssImageVar(imagePath)}">
-          <img src="${imagePath}" class="ad-portrait" alt="" loading="${loading}" decoding="async"${fetchAttr}>
-            <div class="adbottomspacer"></div>
-          </a>
-        </li>`;
+      <article
+        id="menu-ad-${slideId}"
+        class="ads-reels-slide sticky"
+        data-ad-id="menu-ad-${slideId}"
+        data-ad-title="${safeTitle}"
+        data-ad-url="${finalUrl}"
+        data-catalog-index="${adIndex}"
+      >
+        <span>Sponsored</span>
+        <img src="${imagePath}" class="ad-portrait-bg" alt="${safeTitle}" loading="${loading}" decoding="async"${fetchAttr}>
+        <img src="${imagePath}" class="ad-portrait" alt="${safeTitle}" loading="${loading}" decoding="async"${fetchAttr}>
+      </article>`;
       })
       .filter(Boolean)
       .join('');
 
-    return `
-      <section id="menu-ad-${adId}" class="ads menu-ad sticky">
-        <h2 class="center title clientad-heading">
-          <a href="${finalUrl}">${ad.title}</a>
-        </h2>
-        <span class="menu-ad-promo-label">Promotion</span>
-        <ul class="inner">
-          ${imagesHTML}
-        </ul>
-      </section>`;
+    return slides;
   }
 
   refreshAfterAdsPopulated() {
@@ -379,16 +389,45 @@ class ClientAdManager {
       return;
     }
 
-    const html =
+    container.classList.add('client-ads-reels');
+    container.innerHTML =
       ads.map((ad, index) => this.generateHomepageAdHTML(ad, index)).filter(Boolean).join('') +
-      '<section class="ads menu-ad sticky menu-ad-scroll-end" aria-hidden="true"></section>';
-
-    container.innerHTML = html;
+      '<section class="ads-reels-slide sticky menu-ad-scroll-end" aria-hidden="true"></section>';
     container.style.display = '';
     container.style.visibility = 'visible';
     this.hasPopulatedHome = true;
     console.log('Homepage ads populated');
+    this.bindClientAdsReelsSlides(container);
     this.refreshAfterAdsPopulated();
+  }
+
+  bindClientAdsReelsSlides(root = document) {
+    const containers = root.querySelectorAll
+      ? root.querySelectorAll('#client-ads-container, #homepage-ads-container')
+      : [];
+    const scope = root.id === 'client-ads-container' || root.id === 'homepage-ads-container' ? [root] : Array.from(containers);
+
+    scope.forEach((container) => {
+      if (!container) return;
+      container.classList.add('client-ads-reels');
+      container.querySelectorAll('.ads-reels-slide').forEach((slide, index) => {
+        if (slide.dataset.catalogIndex == null) slide.dataset.catalogIndex = String(index);
+        const url = slide.dataset.adUrl;
+        if (!url || slide.dataset.reelsClickBound === '1') return;
+        slide.dataset.reelsClickBound = '1';
+        slide.addEventListener('click', (e) => {
+          if (e.target.closest('.ad-unmute-btn')) return;
+          const t = e.target;
+          const onMedia =
+            (t.tagName === 'IMG' &&
+              (t.classList.contains('ad-portrait') || t.classList.contains('ad-portrait-bg'))) ||
+            t.matches?.('video.ad-video');
+          if (!onMedia) return;
+          e.preventDefault();
+          window.location.assign(url);
+        });
+      });
+    });
   }
 
   async populateAds(forceRepopulate = false) {
@@ -437,10 +476,41 @@ function initAdManager() {
   adManagerInstance.init();
 }
 
+function initClientAdsReelsSlides() {
+  if (window.adManager && typeof window.adManager.bindClientAdsReelsSlides === 'function') {
+    window.adManager.bindClientAdsReelsSlides(document);
+    return;
+  }
+  const container = document.getElementById('client-ads-container');
+  if (!container) return;
+  container.classList.add('client-ads-reels');
+  container.querySelectorAll('.ads-reels-slide').forEach((slide, index) => {
+    if (slide.dataset.catalogIndex == null) slide.dataset.catalogIndex = String(index);
+    const url = slide.dataset.adUrl;
+    if (!url || slide.dataset.reelsClickBound === '1') return;
+    slide.dataset.reelsClickBound = '1';
+    slide.addEventListener('click', (e) => {
+      if (e.target.closest('.ad-unmute-btn')) return;
+      const t = e.target;
+      const onMedia =
+        (t.tagName === 'IMG' &&
+          (t.classList.contains('ad-portrait') || t.classList.contains('ad-portrait-bg'))) ||
+        t.matches?.('video.ad-video');
+      if (!onMedia) return;
+      e.preventDefault();
+      window.location.assign(url);
+    });
+  });
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAdManager);
+  document.addEventListener('DOMContentLoaded', () => {
+    initAdManager();
+    initClientAdsReelsSlides();
+  });
 } else {
   initAdManager();
+  initClientAdsReelsSlides();
 }
 
 window.initAdManager = initAdManager;
@@ -448,7 +518,10 @@ window.initAdManager = initAdManager;
 function registerBarbaAdManager() {
   if (window.TTMSBarba) {
     window.TTMSBarba.register(function () {
-      setTimeout(initAdManager, 100);
+      setTimeout(() => {
+        initAdManager();
+        initClientAdsReelsSlides();
+      }, 100);
     });
   }
 }

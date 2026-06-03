@@ -6,6 +6,7 @@
   {{ partial "head.html" . }}
   <link rel="stylesheet" href="/css/auth.css">
   <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="/js/dashboard-analytics-snapshot.js" defer></script>
 </head>
 <body>
   {{ block "main" . }}{{ end }}
@@ -29,7 +30,7 @@
       {{ partialCached "ttms-dashboard/dashboard.html" . }}
       {{ partialCached "ttms-account-dashboard/dashboard.html" . }}
       {{ partial "components/search.html" . }}
-      <main id="main">
+      <main id="main" class="{{ if .IsHome }}main--home{{ else }}main--offset{{ end }}">
         {{ block "main" . }}{{ end }}
         
       </main>

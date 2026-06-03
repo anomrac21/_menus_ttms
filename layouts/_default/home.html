@@ -25,7 +25,8 @@
       {{ if not (or (in $titleurl "admins") (in $titleurl "admin")) }}
         {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
           {{/* Only render the first "Promotions" section found to avoid duplicates */}}
-          <h2 id="{{ $title }}" class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
+          <a class="menu-anchor" id="{{ $title }}"></a>
+          <h2 class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
             <a href="{{ $titleurl }}">{{ $title }}</a>
           </h2>
           {{ partial "ads/homepageclientads.html" . }} 

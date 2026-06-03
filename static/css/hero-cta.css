@@ -110,7 +110,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-block-end: 1rem;
+    padding-block: 1rem;
 }
 
 .social-share-btn-container .contact-cta--share {

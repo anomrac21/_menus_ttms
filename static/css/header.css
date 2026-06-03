@@ -3,6 +3,10 @@
  * Beautiful, user-friendly header with glass-morphism effects
  */
 
+:root {
+    --ttms-header-height: 5em;
+}
+
 /* ============================================
    MAIN HEADER CONTAINER
    ============================================ */

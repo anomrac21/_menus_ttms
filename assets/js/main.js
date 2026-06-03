@@ -1463,8 +1463,13 @@
             dataDiv.querySelectorAll('.expanded-image-carousel').forEach(bindExpandedCarouselImages);
 
             const menuImageHost = dataDiv.querySelector('.expanded-item-details[data-menu-item-path]');
-            if (menuImageHost && typeof window.initMenuImageIntegration === 'function') {
-                window.initMenuImageIntegration(menuImageHost);
+            if (menuImageHost) {
+                if (typeof window.initMenuImageIntegration === 'function') {
+                    window.initMenuImageIntegration(menuImageHost);
+                }
+                if (typeof window.scheduleMenuImageLoadForHost === 'function') {
+                    window.scheduleMenuImageLoadForHost(menuImageHost);
+                }
             }
             
             // Initialize category counters
@@ -2184,6 +2189,26 @@
     // MENU INTERACTIONS
     // ============================================
 
+    /** Fixed header clearance for in-page hash links (e.g. #Promotions on home). */
+    function getHeaderScrollOffset() {
+        const raw = (getComputedStyle(document.documentElement).getPropertyValue('--ttms-header-height') || '5em').trim();
+        const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const emMatch = raw.match(/^([\d.]+)em$/);
+        if (emMatch) return parseFloat(emMatch[1]) * rootPx;
+        const pxMatch = raw.match(/^([\d.]+)px$/);
+        if (pxMatch) return parseFloat(pxMatch[1]);
+        return rootPx * 5;
+    }
+
+    function scrollToHashTarget(target, behavior) {
+        const offset = getHeaderScrollOffset();
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({
+            top: Math.max(0, top),
+            behavior: behavior || 'smooth',
+        });
+    }
+
     /**
      * Bind menu interactions once via delegation (Barba-safe).
      */
@@ -2201,10 +2226,12 @@
                     const target = document.querySelector(href);
                     if (target) {
                         e.preventDefault();
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
+                        scrollToHashTarget(target, 'smooth');
+                        if (history.replaceState) {
+                            history.replaceState(null, '', href);
+                        } else {
+                            window.location.hash = href.slice(1);
+                        }
                         closeCart();
                     }
                 }
@@ -3373,6 +3400,11 @@
     /** Rebuild expanded menu panel from card data-* (used by dashboard edit after Apply). */
     window.expandMenuItemCard = expandItem;
 
+    // Expose for Barba / second IIFE reinit (must not call across closure boundaries)
+    window.applyDayBasedPromos = applyDayBasedPromos;
+    window.initializeFooterVisibility = initializeFooterVisibility;
+    window.initializeLocationNavigation = initializeLocationNavigation;
+
 })();
 
 // ========================================
@@ -3694,8 +3726,12 @@
      * Reinitialize page-specific features after Barba transitions.
      */
     function reinitTTMSPageFeatures() {
-        applyDayBasedPromos();
-        initializeFooterVisibility();
+        if (typeof window.applyDayBasedPromos === 'function') {
+            window.applyDayBasedPromos();
+        }
+        if (typeof window.initializeFooterVisibility === 'function') {
+            window.initializeFooterVisibility();
+        }
         if (typeof window.initSinglePageFeatures === 'function') {
             window.initSinglePageFeatures();
         }
@@ -3735,7 +3771,9 @@
     function registerBarbaReinit() {
         if (!window.TTMSBarba) return;
         window.TTMSBarba.register(function () {
-            setTimeout(initializeLocationNavigation, 100);
+            if (typeof window.initializeLocationNavigation === 'function') {
+                setTimeout(window.initializeLocationNavigation, 100);
+            }
         });
         window.TTMSBarba.register(function () {
             setTimeout(reinitTTMSPageFeatures, 50);

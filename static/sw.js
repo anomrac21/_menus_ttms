@@ -4,7 +4,12 @@
  */
 
 const CACHE_NAME = 'ttmenus-notifications-v1';
-const NOTIFY_SERVICE_URL = 'https://notify.ttmenus.com';
+let NOTIFY_SERVICE_URL = 'https://notify.ttmenus.com';
+
+function getNotifyApiBase() {
+  const base = String(NOTIFY_SERVICE_URL || 'https://notify.ttmenus.com').replace(/\/+$/, '');
+  return base + '/api/v1';
+}
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -146,6 +151,12 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+
+  if (event.data && event.data.type === 'SET_NOTIFY_CONFIG') {
+    if (event.data.serviceUrl) {
+      NOTIFY_SERVICE_URL = event.data.serviceUrl;
+    }
+  }
   
   // Handle notification display requests from main thread
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
@@ -184,7 +195,7 @@ async function trackNotificationConfirmation(notificationId) {
     }
 
     const response = await fetch(
-      `${NOTIFY_SERVICE_URL}/api/v1/notifications/${notificationId}/confirm?subscription_id=${subscription.id}`,
+      `${getNotifyApiBase()}/notifications/${notificationId}/confirm?subscription_id=${subscription.id}`,
       {
         method: 'POST',
         headers: {
@@ -213,7 +224,7 @@ async function trackNotificationClick(notificationId) {
     }
 
     const response = await fetch(
-      `${NOTIFY_SERVICE_URL}/api/v1/notifications/${notificationId}/click?subscription_id=${subscription.id}`,
+      `${getNotifyApiBase()}/notifications/${notificationId}/click?subscription_id=${subscription.id}`,
       {
         method: 'POST',
         headers: {

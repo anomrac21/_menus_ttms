@@ -4,6 +4,21 @@
   {{ partial "head.html" . }}
   <link rel="stylesheet" href="/css/auth.css">
   <link rel="stylesheet" href="/css/dashboard.css">
+  {{- if site.Params.menuImageService.enabled }}
+  <script>
+  window.MENU_IMAGE_CONFIG = {
+    enabled: true,
+    apiUrl: "{{ site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
+    clientId: "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
+  };
+  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}";
+  </script>
+  <script src="/js/dashboard-menu-images.js" defer></script>
+  {{- end }}
+  <script src="/js/dashboard-analytics-snapshot.js" defer></script>
+  {{- if site.Params.notifications.enabled }}
+  <script src="/js/dashboard-notifications.js" defer></script>
+  {{- end }}
 </head>
 <body>
   <div class="dashboard-control-room" id="dashboardControlRoom">
@@ -43,6 +58,58 @@
           <button type="button" class="btn-dash btn-dash-secondary hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu">Publish</button>
         </div>
       </div>
+      {{- if site.Params.menuImageService.enabled }}
+      <div class="card card-dashboard-menu-images" id="dashboardCardMenuImages">
+        <h3>Menu photo reel</h3>
+        <p class="dashboard-menu-images-tagline">Swipe or tap — <strong>Approve</strong> adds it to the menu, <strong>Decline</strong> skips it.</p>
+        <div class="dashboard-menu-images-reel-stats" aria-live="polite">
+          <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending">—</span> in queue</span>
+          <span class="dashboard-menu-images-reel-stat dashboard-menu-images-reel-stat--muted" id="dashboardMenuImagesReelProgress"></span>
+        </div>
+        <p id="dashboardMenuImagesLoading" class="dashboard-menu-images-loading">Loading reel…</p>
+        <p id="dashboardMenuImagesError" class="dashboard-menu-images-error hidden" role="alert"></p>
+        <p id="dashboardMenuImagesEmpty" class="dashboard-menu-images-empty hidden">You&apos;re all caught up — no photos waiting for review.</p>
+        <div id="dashboardMenuImagesReel" class="dashboard-menu-images-reel hidden" aria-label="Photo approval reel">
+          <div class="dashboard-menu-images-reel__stack" id="dashboardMenuImagesReelStack"></div>
+          <div class="dashboard-menu-images-reel__actions" id="dashboardMenuImagesReelActions">
+            <button type="button" class="dashboard-menu-images-reel-btn dashboard-menu-images-reel-btn--decline" id="dashboardMenuImagesDeclineBtn" aria-label="Decline photo">
+              <span class="dashboard-menu-images-reel-btn__icon" aria-hidden="true">✕</span>
+              <span class="dashboard-menu-images-reel-btn__label">Decline</span>
+            </button>
+            <button type="button" class="dashboard-menu-images-reel-btn dashboard-menu-images-reel-btn--approve" id="dashboardMenuImagesApproveBtn" aria-label="Approve photo">
+              <span class="dashboard-menu-images-reel-btn__icon" aria-hidden="true">✓</span>
+              <span class="dashboard-menu-images-reel-btn__label">Approve</span>
+            </button>
+          </div>
+        </div>
+        <div class="dashboard-card-menu-images-actions">
+          <button type="button" class="btn-dash btn-dash-secondary" id="dashboardMenuImagesRefresh">Reload queue</button>
+        </div>
+      </div>
+      {{- end }}
+      <div class="card card-dashboard-ads">
+        <h3>Ads</h3>
+        <p>Configure advertisements and promotions.</p>
+        <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Ads →</a>
+      </div>
+      <div class="card card-dashboard-analytics">
+        <h3>Analytics</h3>
+        <p>View traffic, engagement, and menu performance.</p>
+        <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
+          <div class="dashboard-card-notify-snapshot-grid">
+            <div class="dashboard-card-notify-snapshot-cell">
+              <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
+              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews">—</span>
+            </div>
+            <div class="dashboard-card-notify-snapshot-cell">
+              <span class="dashboard-card-notify-snapshot-label">Visits (30d)</span>
+              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits">—</span>
+            </div>
+          </div>
+        </div>
+        <p id="dashboardCardAnalyticsHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
+        <a href="/analytics/" class="btn-dash btn-dash-secondary">Analytics →</a>
+      </div>
       <div class="card card-dashboard-notify">
         <h3>Notifications</h3>
         <p>Manage push notifications and alerts for your menu.</p>
@@ -59,32 +126,11 @@
             </div>
           </div>
         </div>
+        <p id="dashboardCardNotifyHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
         {{- end }}
         <a href="/notifications/" class="btn-dash btn-dash-secondary">Notifications →</a>
       </div>
-      <div class="card">
-        <h3>Analytics</h3>
-        <p>View traffic, engagement, and menu performance.</p>
-        <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
-          <div class="dashboard-card-notify-snapshot-grid">
-            <div class="dashboard-card-notify-snapshot-cell">
-              <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
-              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews">—</span>
-            </div>
-            <div class="dashboard-card-notify-snapshot-cell">
-              <span class="dashboard-card-notify-snapshot-label">Visits</span>
-              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits">—</span>
-            </div>
-          </div>
-        </div>
-        <a href="/analytics/" class="btn-dash btn-dash-secondary">Analytics →</a>
-      </div>
-      <div class="card">
-        <h3>Ads</h3>
-        <p>Configure advertisements and promotions.</p>
-        <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Ads →</a>
-      </div>
-      <div class="card">
+      <div class="card card-dashboard-auth">
         <h3>Auth</h3>
         <p>Manage login, users, and access for this client.</p>
         <a href="{{ site.Params.authServiceUrl | default "https://auth.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Auth →</a>
@@ -670,66 +716,13 @@
         });
       }
 
-      function formatAnalyticsCount(n) {
-        if (n == null || n === '') return '—';
-        try {
-          return new Intl.NumberFormat(undefined).format(Number(n));
-        } catch (e) {
-          return String(n);
-        }
+      if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadDashboardCard) {
+        DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 });
       }
-      (function() {
-        var pv = document.getElementById('dashboardCardAnalyticsPageViews');
-        var vs = document.getElementById('dashboardCardAnalyticsVisits');
-        if (!pv || !vs) return;
-        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
-        if (!token) return;
-        var cms = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
-        var cid = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
-        var url = cms + '/api/clients/' + encodeURIComponent(cid) + '/analytics/summary?days=30';
-        fetch(url, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token } })
-          .then(function(res) {
-            return res.json().then(function(data) { return { ok: res.ok, data: data }; });
-          })
-          .then(function(x) {
-            if (!x.ok || !x.data) return;
-            if (x.data.pageViews != null) pv.textContent = formatAnalyticsCount(x.data.pageViews);
-            if (x.data.visits != null) vs.textContent = formatAnalyticsCount(x.data.visits);
-          })
-          .catch(function() { /* keep dashes */ });
-      })();
 
       {{- if site.Params.notifications.enabled }}
-      if (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.apiUrl) {
-        (function() {
-          var base = String(window.NOTIFY_CONFIG.apiUrl).replace(/\/+$/, '');
-          var domain = window.NOTIFY_CONFIG.clientDomain || window.location.hostname;
-          var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
-          var subsEl = document.getElementById('dashboardCardNotifySubs');
-          var sentEl = document.getElementById('dashboardCardNotifySent');
-          if (!token || !subsEl || !sentEl) return;
-          var url = base + '/analytics/overview?client_domain=' + encodeURIComponent(domain) + '&days=30';
-          fetch(url, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
-          }).then(function(res) {
-            return res.text().then(function(text) {
-              var data = null;
-              try { data = text ? JSON.parse(text) : null; } catch (e) {}
-              if (!res.ok) throw new Error((data && (data.error || data.message)) || text || String(res.status));
-              return data;
-            });
-          }).then(function(data) {
-            var ov = (data && data.overview) || {};
-            var sub = ov.subscriptions || {};
-            var notif = ov.notifications || {};
-            if (subsEl) subsEl.textContent = sub.active != null ? String(sub.active) : '—';
-            if (sentEl) sentEl.textContent = notif.in_period != null ? String(notif.in_period) : '—';
-          }).catch(function() {
-            /* keep em dashes */
-          });
-        })();
+      if (window.DashboardNotifications && DashboardNotifications.loadDashboardCard) {
+        DashboardNotifications.loadDashboardCard({ days: 30 });
       }
       {{- end }}
     });

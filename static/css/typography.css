@@ -144,7 +144,6 @@ h2.center.title a,
 .menu-item-card .menu-item-promo-badge,
 .menu-item-card .sizes li,
 .menu-item-card .flavours li {
-    font-size: 0.68rem;
     font-weight: var(--ttms-font-weight-semibold);
 }
 
