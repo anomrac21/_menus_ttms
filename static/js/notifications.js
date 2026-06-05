@@ -3,12 +3,31 @@
  * Handles subscription to push notifications via notify-service
  */
 
+function resolveNotifyConfig() {
+  let cfg = window.NOTIFY_CONFIG;
+  if (typeof cfg === 'string') {
+    try {
+      cfg = JSON.parse(cfg);
+    } catch (e) {
+      cfg = null;
+    }
+  }
+  if (cfg && typeof cfg === 'object') {
+    window.NOTIFY_CONFIG = cfg;
+    return cfg;
+  }
+  return window.NOTIFY_CONFIG || {};
+}
+
 const NotificationService = {
-  notifyServiceUrl: window.NOTIFY_CONFIG?.serviceUrl || window.SiteConfig?.notifyServiceUrl || 'https://notify.ttmenus.com',
+  get notifyServiceUrl() {
+    const cfg = resolveNotifyConfig();
+    return cfg.serviceUrl || window.SiteConfig?.notifyServiceUrl || 'https://notify.ttmenus.com';
+  },
 
   /** Domain registered in notify-service (not necessarily window.location.hostname on localhost). */
   getClientDomain() {
-    const configured = (window.NOTIFY_CONFIG?.clientDomain || '').trim();
+    const configured = (resolveNotifyConfig().clientDomain || '').trim();
     if (configured) {
       return configured.replace(/^www\./i, '');
     }
@@ -55,7 +74,7 @@ const NotificationService = {
    */
   async init() {
     // Check if notifications are enabled
-    if (!window.NOTIFY_CONFIG?.enabled) {
+    if (!resolveNotifyConfig().enabled) {
       console.log('Notification service is disabled');
       return;
     }
@@ -117,7 +136,7 @@ const NotificationService = {
   async registerServiceWorker() {
     if ('serviceWorker' in navigator) {
       try {
-        const swPath = window.NOTIFY_CONFIG?.serviceWorkerPath || '/sw.js';
+        const swPath = resolveNotifyConfig().serviceWorkerPath || '/sw.js';
         const registration = await navigator.serviceWorker.register(swPath, {
           scope: '/',
         });
@@ -147,7 +166,7 @@ const NotificationService = {
    */
   configureServiceWorkerNotifyUrl(registration) {
     const serviceUrl =
-      window.NOTIFY_CONFIG?.serviceUrl ||
+      resolveNotifyConfig().serviceUrl ||
       window.SiteConfig?.notifyServiceUrl ||
       'https://notify.ttmenus.com';
     const payload = { type: 'SET_NOTIFY_CONFIG', serviceUrl };
@@ -520,7 +539,7 @@ const NotificationService = {
 
       await this.ensureClientRegistered(clientDomain);
 
-      const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
 
       if (this.isIOS() && !this.isStandalonePWA()) {
         throw new Error(this.getIOSPushRequirementMessage());
@@ -683,7 +702,7 @@ const NotificationService = {
     }
 
     try {
-      const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
       const response = await fetch(`${apiUrl}/subscriptions/${this.subscriptionId}`, {
         method: 'DELETE',
       });
@@ -740,7 +759,7 @@ const NotificationService = {
     }
 
     try {
-      const wsUrl = window.NOTIFY_CONFIG?.websocketUrl || this.notifyServiceUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/v1/ws/connect';
+      const wsUrl = resolveNotifyConfig().websocketUrl || this.notifyServiceUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/v1/ws/connect';
       // WebSocket handler requires client_domain query parameter
       const clientDomain = this.getClientDomain();
 
@@ -917,7 +936,7 @@ const NotificationService = {
     }
     
     try {
-      const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
       const trackUrl = `${apiUrl}/notifications/${notificationId}/confirm?subscription_id=${this.subscriptionId}`;
       const response = await fetch(trackUrl, {
         method: 'POST',
@@ -979,7 +998,7 @@ const NotificationService = {
     }
     
     try {
-      const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
       const trackUrl = `${apiUrl}/notifications/${notificationId}/click?subscription_id=${this.subscriptionId}`;
       const response = await fetch(trackUrl, {
         method: 'POST',
@@ -1092,12 +1111,12 @@ const NotificationService = {
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    if (window.NOTIFY_CONFIG?.enabled) {
+    if (resolveNotifyConfig().enabled) {
       NotificationService.init();
     }
   });
 } else {
-  if (window.NOTIFY_CONFIG?.enabled) {
+  if (resolveNotifyConfig().enabled) {
     NotificationService.init();
   }
 }

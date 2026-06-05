@@ -5,8 +5,26 @@
 (function () {
   'use strict';
 
+  /** Hugo jsonify in application/json tags can double-encode; normalize once. */
+  function resolveNotifyConfig() {
+    var cfg = window.NOTIFY_CONFIG;
+    if (typeof cfg === 'string') {
+      try {
+        cfg = JSON.parse(cfg);
+      } catch (e) {
+        cfg = null;
+      }
+    }
+    if (cfg && typeof cfg === 'object') {
+      window.NOTIFY_CONFIG = cfg;
+      return cfg;
+    }
+    return window.NOTIFY_CONFIG || {};
+  }
+
   function getApiBase() {
-    var base = (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.apiUrl) || '';
+    var cfg = resolveNotifyConfig();
+    var base = (cfg && cfg.apiUrl) || '';
     if (!base) {
       var codeEl = document.querySelector('.dashboard-notify-footnote .dashboard-notify-code');
       if (codeEl) base = (codeEl.textContent || '').trim();
@@ -25,8 +43,9 @@
   }
 
   function getClientDomain() {
-    if (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.clientDomain) {
-      return window.NOTIFY_CONFIG.clientDomain;
+    var cfg = resolveNotifyConfig();
+    if (cfg && cfg.clientDomain) {
+      return cfg.clientDomain;
     }
     return window.location.hostname || '';
   }

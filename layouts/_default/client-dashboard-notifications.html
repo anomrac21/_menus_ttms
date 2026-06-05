@@ -368,8 +368,6 @@
 
 <script>
 
-  window.NOTIFY_CONFIG = window.NOTIFY_CONFIG || {{ dict "enabled" site.Params.notifications.enabled "apiUrl" (site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1") "websocketUrl" (site.Params.notifications.websocketUrl | default "wss://notify.ttmenus.com/api/v1/ws/connect") "serviceUrl" (site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com") "clientDomain" (site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host) | jsonify }};
-
   document.addEventListener('DOMContentLoaded', async function() {
 
     if (window.DashboardNotifications && DashboardNotifications.initTabs) {

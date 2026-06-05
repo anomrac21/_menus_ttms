@@ -4,12 +4,27 @@
  */
 
 const NotifyClient = {
-  // Configuration
-  config: {
-    apiUrl: window.NOTIFY_CONFIG?.apiUrl || 'http://localhost:8080/api/v1',
-    websocketUrl: window.NOTIFY_CONFIG?.websocketUrl || 'ws://localhost:8080/api/v1/ws/connect',
-    clientDomain: window.NOTIFY_CONFIG?.clientDomain || window.location.hostname,
-    enabled: window.NOTIFY_CONFIG?.enabled !== false,
+  // Configuration (resolved lazily so Hugo config is always an object)
+  get config() {
+    var cfg = window.NOTIFY_CONFIG;
+    if (typeof cfg === 'string') {
+      try {
+        cfg = JSON.parse(cfg);
+      } catch (e) {
+        cfg = null;
+      }
+    }
+    if (cfg && typeof cfg === 'object') {
+      window.NOTIFY_CONFIG = cfg;
+    } else {
+      cfg = {};
+    }
+    return {
+      apiUrl: cfg.apiUrl || 'http://localhost:8080/api/v1',
+      websocketUrl: cfg.websocketUrl || 'ws://localhost:8080/api/v1/ws/connect',
+      clientDomain: cfg.clientDomain || window.location.hostname,
+      enabled: cfg.enabled !== false,
+    };
   },
 
   // State
