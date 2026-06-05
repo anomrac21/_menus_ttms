@@ -6,12 +6,12 @@
     <div class="main-content">
       <div class="menu-header list-page-header">
         {{ if .Params.images.top }}
-          <img class="food item listpageimage" src="/{{ .Params.images.top }}" alt="{{ .Title }}" loading="lazy">
+          <img class="food item listpageimage" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .Title }}" loading="lazy">
         {{ end }}
         <div class="headerstyle item">
           <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}
           {{ if .Params.images.bottom }}
-            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="/{{ .Params.images.bottom }}" alt="" loading="lazy">
+            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="" loading="lazy">
           {{ end }}
           </h1>
         </div>
@@ -103,36 +103,11 @@
                     {{end}}
                   {{end}}
                   
-                  {{/* Item-only images (no promo) — used by JS to fix thumbnail when build day ≠ viewer day */}}
-                  {{$regularImagesArray := slice}}
-                  {{if .Params.images}}
-                    {{range .Params.images}}
-                      {{if .image}}
-                        {{$regularImagesArray = $regularImagesArray | append .image}}
-                      {{end}}
-                    {{end}}
-                  {{end}}
-                  
-                  {{/* Build images array for carousel - prepend promo image when item is on promotion today */}}
-                  {{$today := now.Weekday.String}}
-                  {{$activePromo := dict "label" "" "image" "" "type" "" "value" 0}}
-                  {{range .Params.promotions}}
-                    {{if in .days $today}}
-                      {{$activePromo = dict "label" (.label | default "") "image" (.image | default "") "type" (.type | default "") "value" (.value | default 0)}}
-                      {{break}}
-                    {{end}}
-                  {{end}}
-                  {{$imagesArray := slice}}
-                  {{if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "")}}
-                    {{$imagesArray = $imagesArray | append (index $activePromo "image")}}
-                  {{end}}
-                  {{if .Params.images}}
-                    {{range .Params.images}}
-                      {{if .image}}
-                        {{$imagesArray = $imagesArray | append .image}}
-                      {{end}}
-                    {{end}}
-                  {{end}}
+                  {{ $imgData := partial "ttms/menu-card-images.html" . }}
+                  {{ $activePromo := $imgData.activePromo }}
+                  {{ $imagesArray := $imgData.imagesArray }}
+                  {{ $regularImagesArray := $imgData.regularImagesArray }}
+                  {{ $firstImage := $imgData.firstImage }}
                   
                   {{/* Determine default selected variable1 and variable2 */}}
                   {{$defaultVariable1 := "-"}}
@@ -144,7 +119,7 @@
                     {{$defaultVariable2 = index $variable2Values 0}}
                   {{end}}
                   
-                <div class="menu-item-card{{ if gt (len $imagesArray) 0 }} menu-item-card--has-image{{ end }}" 
+                <div class="menu-item-card{{ if $imgData.hasImage }} menu-item-card--has-image{{ end }}" 
                       data-item-url="{{ .RelPermalink }}"
                       role="button"
                       tabindex="0"
@@ -169,11 +144,10 @@
                     onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
                     {{ partial "components/menu-favorite-btn.html" . }}
                     <div class="menu-item-row-top">
-                      {{ if gt (len $imagesArray) 0 }}
-                        {{ $firstImage := index $imagesArray 0 }}
+                      {{ if $imgData.hasImage }}
                         <a href="{{ .RelPermalink }}" class="menu-item-image-link">
                           <div class="menu-item-image">
-                            <img src="/{{ $firstImage }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img">
+                            <img src="{{ partial "ttms/menu-img-src.html" (dict "path" $firstImage "size" "card") }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img" data-src-path="{{ $firstImage }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
                           </div>
                         </a>
                       {{ end }}

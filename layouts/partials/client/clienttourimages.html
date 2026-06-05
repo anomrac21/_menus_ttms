@@ -3,7 +3,7 @@
   <div class="slideshow-container">
     {{ range $index, $image := .Params.slideshow }}
     <div class="slide {{ if eq $index 0 }}active{{ end }}" data-slide="{{ $index }}">
-      <img src="{{ $image.image }}" alt="Client Tour Image {{ add $index 1 }}" loading="lazy">
+      <img src="{{ partial "ttms/menu-img-src.html" (dict "path" $image.image "size" "carousel") }}" alt="Client Tour Image {{ add $index 1 }}" loading="lazy">
     </div>
     {{ end }}
 

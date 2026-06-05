@@ -1,0 +1,51 @@
+{{- /*
+  Thumbor URL for menu/site content images.
+  Usage: {{ partial "ttms/thumbor-src.html" (dict "path" "images/foo.webp" "width" 480 "height" 480) }}
+*/ -}}
+{{- $path := strings.TrimSpace (.path | default "") -}}
+{{- if not $path -}}{{- else -}}
+  {{- $base := strings.TrimSuffix "/" (.base | default site.Params.thumbor.url | default "https://thumbor.ttmenus.com") -}}
+  {{- $enabled := .enabled | default site.Params.thumbor.menuImagesUseThumbor | default site.Params.thumbor.enabled | default false -}}
+  {{- $w := int (.width | default 480) -}}
+  {{- $h := int (.height | default 480) -}}
+  {{- $skip := false -}}
+  {{- if findRE `(?i)^https?://([^/]*\.)?cdn\.ttmenus\.com/` $path -}}{{- $skip = true -}}{{- end -}}
+  {{- if findRE `(?i)thumbor\.ttmenus\.com` $path -}}{{- $skip = true -}}{{- end -}}
+  {{- if or (hasPrefix $path "/branding") (hasPrefix $path "branding/") (hasPrefix $path "/main/") (hasPrefix $path "main/") -}}{{- $skip = true -}}{{- end -}}
+  {{- $out := $path -}}
+  {{- if hasPrefix $path "draft-assets/" -}}
+    {{- $cmsBase := site.Params.contentManagement.serviceUrl | default "" -}}
+    {{- if not $cmsBase -}}{{- $cmsBase = strings.TrimSuffix "/api" (site.Params.contentManagement.apiUrl | default "") -}}{{- end -}}
+    {{- $cid := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+    {{- if and $cmsBase $cid -}}
+      {{- $name := strings.TrimPrefix "draft-assets/" $path -}}
+      {{- $out = printf "%s/api/clients/%s/preview/draft-assets/%s" (strings.TrimSuffix "/" $cmsBase) $cid $name -}}
+    {{- end -}}
+    {{- $skip = true -}}
+  {{- end -}}
+  {{- if not $skip -}}
+    {{- $abs := "" -}}
+    {{- if findRE `(?i)^https?://` $path -}}
+      {{- $abs = $path -}}
+    {{- else -}}
+      {{- $rel := $path -}}
+      {{- if not (hasPrefix $rel "/") -}}{{- $rel = printf "/%s" $rel -}}{{- end -}}
+      {{- $sourceBase := .sourceBase | default site.Params.thumbor.sourceBaseUrl | default "" -}}
+      {{- if $sourceBase -}}
+        {{- $abs = printf "%s%s" (strings.TrimSuffix "/" $sourceBase) $rel -}}
+      {{- else -}}
+        {{- $abs = $rel | absURL -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if and $enabled $abs -}}
+      {{- $abs = strings.Replace $abs "+" "%2B" -}}
+      {{- $enc := strings.Replace ($abs | urlquery) "+" "%20" -}}
+      {{- $out = print $base "/unsafe/fit-in/" $w "x" $h "/" $enc -}}
+    {{- else if not (findRE `(?i)^https?://` $path) -}}
+      {{- if not (hasPrefix $out "/") -}}{{- $out = printf "/%s" $out -}}{{- end -}}
+    {{- end -}}
+  {{- else if not (findRE `(?i)^https?://` $out) -}}
+    {{- if not (hasPrefix $out "/") -}}{{- $out = printf "/%s" $out -}}{{- end -}}
+  {{- end -}}
+  {{- $out -}}
+{{- end -}}

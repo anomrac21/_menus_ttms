@@ -11,13 +11,10 @@
     {{- end -}}
     <div class="expanded-image-carousel-container menu-item-slideshow-track" role="region" aria-label="{{ $title }} images" tabindex="0">
       {{- range $i, $img := $images -}}
-        {{- $path := $img -}}
-        {{- if and $path (not (hasPrefix $path "/")) (not (findRE "^https?://" $path)) -}}
-          {{- $path = printf "/%s" $path -}}
-        {{- end -}}
+        {{- $src := partial "ttms/menu-img-src.html" (dict "path" $img "size" "carousel") -}}
         <div class="expanded-image-slide menu-item-slideshow-slide{{ if eq $i 0 }} active{{ end }}" data-image-index="{{ $i }}">
-          <div class="content-panel" style="--ad-image: url('{{ $path }}')">
-            <img src="{{ $path }}" class="ad-portrait expanded-image-carousel-img" alt="{{ $title }} - Image {{ add $i 1 }}" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if eq $i 0 }} fetchpriority="high"{{ end }}>
+          <div class="content-panel" style="--ad-image: url('{{ $src | replace "'" "%27" }}')">
+            <img src="{{ $src }}" class="ad-portrait expanded-image-carousel-img" alt="{{ $title }} - Image {{ add $i 1 }}" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if eq $i 0 }} fetchpriority="high"{{ end }}>
           </div>
         </div>
       {{- end -}}

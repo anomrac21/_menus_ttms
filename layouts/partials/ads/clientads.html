@@ -17,8 +17,8 @@
       {{ $slideIndex := 0 }}
       {{ range .Params.images }}
         {{ $img := .image }}
-        {{ if and $img (not (hasPrefix $img "/")) (not (hasPrefix $img "http")) }}{{ $img = printf "/%s" $img }}{{ end }}
         {{ if $img }}
+          {{ $imgSrc := partial "ttms/menu-img-src.html" (dict "path" $img "size" "ad") }}
           {{ $slideId := $adId }}
           {{ if gt (len $page.Params.images) 1 }}
             {{ $slideId = printf "%s-%d" $adId $slideIndex }}
@@ -32,8 +32,8 @@
             data-catalog-index="{{ $catalogIndex }}"
           >
             <span>Sponsored</span>
-            <img src="{{ $img }}" class="ad-portrait-bg" alt="{{ $adstitle }}" loading="lazy" decoding="async">
-            <img src="{{ $img }}" class="ad-portrait" alt="{{ $adstitle }}" loading="lazy" decoding="async">
+            <img src="{{ $imgSrc }}" class="ad-portrait-bg" alt="{{ $adstitle }}" loading="lazy" decoding="async">
+            <img src="{{ $imgSrc }}" class="ad-portrait" alt="{{ $adstitle }}" loading="lazy" decoding="async">
           </article>
           {{ $slideIndex = add $slideIndex 1 }}
         {{ end }}

@@ -2,7 +2,7 @@
   <div class="hero_logo_container item" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
   {{ $siteName := partial "site-name.html" . }}
   {{ if .Params.image }}
-    <img id="bg" src="{{ .Params.image }}" alt="{{ $siteName }} background" fetchpriority="high">
+    <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high">
   {{ else }}
     <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
   {{ end }}
@@ -48,13 +48,13 @@
                   <div class="menu-header" data-section-slug="{{ .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     {{ if .Params.images.top }}
-                      <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ .Params.images.top }}" alt="{{ .LinkTitle }}" loading="lazy"></a>
+                      <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy"></a>
                     {{ end }}
                     <div class="headerstyle item" >
                       <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
                         <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
                         {{ if .Params.images.bottom }}
-                          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ .Params.images.bottom }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
+                          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
                         {{ end }}
                       </h2>
                       
@@ -147,36 +147,11 @@
                           {{end}}
                         {{end}}
                         
-                        {{/* Item-only images (no promo) — used by JS to fix thumbnail when build day ≠ viewer day */}}
-                        {{$regularImagesArray := slice}}
-                        {{if .Params.images}}
-                          {{range .Params.images}}
-                            {{if .image}}
-                              {{$regularImagesArray = $regularImagesArray | append .image}}
-                            {{end}}
-                          {{end}}
-                        {{end}}
-                        
-                        {{/* Build images array - prepend promo image when item is on promotion today */}}
-                        {{$today := now.Weekday.String}}
-                        {{$activePromo := dict "label" "" "image" "" "type" "" "value" 0}}
-                        {{range .Params.promotions}}
-                          {{if in .days $today}}
-                            {{$activePromo = dict "label" (.label | default "") "image" (.image | default "") "type" (.type | default "") "value" (.value | default 0)}}
-                            {{break}}
-                          {{end}}
-                        {{end}}
-                        {{$imagesArray := slice}}
-                        {{if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "")}}
-                          {{$imagesArray = $imagesArray | append (index $activePromo "image")}}
-                        {{end}}
-                        {{if .Params.images}}
-                          {{range .Params.images}}
-                            {{if .image}}
-                              {{$imagesArray = $imagesArray | append .image}}
-                            {{end}}
-                          {{end}}
-                        {{end}}
+                        {{ $imgData := partial "ttms/menu-card-images.html" . }}
+                        {{ $activePromo := $imgData.activePromo }}
+                        {{ $imagesArray := $imgData.imagesArray }}
+                        {{ $regularImagesArray := $imgData.regularImagesArray }}
+                        {{ $firstImage := $imgData.firstImage }}
                         
                         {{/* Determine default selected variable1 and variable2 */}}
                         {{$defaultVariable1 := "-"}}
@@ -189,7 +164,7 @@
                         {{end}}
      
                         {{ $avail := .Params.availability | default $section.Params.availability }}
-                        <div class="menu-item-card{{ if gt (len $imagesArray) 0 }} menu-item-card--has-image{{ end }}" 
+                        <div class="menu-item-card{{ if $imgData.hasImage }} menu-item-card--has-image{{ end }}" 
                             {{ with $avail }}data-availability="{{ $avail | jsonify }}"{{ end }}
                             data-item-url="{{ .RelPermalink }}"
                             role="button"
@@ -214,11 +189,10 @@
                             onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
                             {{ partial "components/menu-favorite-btn.html" . }}
                             <div class="menu-item-row-top">
-                              {{ if gt (len $imagesArray) 0 }}
-                                {{ $firstImage := index $imagesArray 0 }}
+                              {{ if $imgData.hasImage }}
                                 <a href="{{ .RelPermalink }}" class="menu-item-image-link">
                                   <div class="menu-item-image">
-                                    <img src="/{{ $firstImage }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img">
+                                    <img src="{{ partial "ttms/menu-img-src.html" (dict "path" $firstImage "size" "card") }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img" data-src-path="{{ $firstImage }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
                                   </div>
                                 </a>
                               {{ end }}

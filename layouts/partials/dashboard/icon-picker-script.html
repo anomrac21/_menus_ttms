@@ -1,0 +1,34 @@
+{{- /* Dev (hugo server): local script. Production: CDN first, then /js/ fallback. Icons always from CDN API. */ -}}
+{{- if eq hugo.Environment "development" -}}
+<script src="/js/dashboard-section-icon-picker.js"></script>
+{{- else -}}
+<script>
+(function (global) {
+  var host = global.location && global.location.hostname ? global.location.hostname : '';
+  var isLocal = host === 'localhost' || host === '127.0.0.1';
+  var sources = isLocal
+    ? ['/js/dashboard-section-icon-picker.js', 'https://cdn.ttmenus.com/js/dashboard-section-icon-picker.js']
+    : ['https://cdn.ttmenus.com/js/dashboard-section-icon-picker.js', '/js/dashboard-section-icon-picker.js'];
+  var idx = 0;
+  function startPicker() {
+    if (global.DashboardSectionIconPicker) return;
+    if (idx >= sources.length) {
+      global.dispatchEvent(new CustomEvent('ttmenus-icon-picker-load-failed'));
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = sources[idx++];
+    s.onload = function () {
+      if (!global.DashboardSectionIconPicker) startPicker();
+    };
+    s.onerror = startPicker;
+    document.head.appendChild(s);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startPicker);
+  } else {
+    startPicker();
+  }
+})(window);
+</script>
+{{- end -}}

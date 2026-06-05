@@ -1,0 +1,41 @@
+{{- /* Lean head for /edit-menu/ — avoids menu Barba/loader scripts that can block dashboard JS */ -}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
+<link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
+<link rel="stylesheet" href="/css/auth.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+{{- if site.Params.auth.enabled -}}
+<script>
+window.AUTH_CONFIG = { apiUrl: "{{ site.Params.auth.apiUrl }}" };
+window.AUTH_SERVICE_URL = window.AUTH_SERVICE_URL || "{{ site.Params.auth.apiUrl }}";
+window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
+{{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
+{{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
+window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
+window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
+</script>
+<script src="/js/auth-client.js"></script>
+<script src="/js/auth-client-access.js"></script>
+{{- end -}}
+{{- $thumborUrl := site.Params.thumbor.url | default "https://thumbor.ttmenus.com" -}}
+{{- $sourceBase := site.Params.thumbor.sourceBaseUrl | default site.BaseURL | default "" -}}
+{{- $menuImagesUseThumbor := site.Params.thumbor.menuImagesUseThumbor | default false -}}
+<script src="/js/thumbor-url.js"></script>
+<script>
+window.MENU_IMAGE_THUMBOR_URL = "{{ $thumborUrl }}";
+window.MENU_IMAGE_SOURCE_BASE_URL = "{{ strings.TrimSuffix "/" $sourceBase }}";
+window.MENU_IMAGES_USE_THUMBOR = {{ $menuImagesUseThumbor }};
+window.SiteConfig = window.SiteConfig || {};
+window.SiteConfig.thumborUrl = window.MENU_IMAGE_THUMBOR_URL;
+window.SiteConfig.menuImageSourceBaseUrl = window.MENU_IMAGE_SOURCE_BASE_URL;
+window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
+</script>
+<script src="/js/cdn-config.js"></script>
+{{ partial "dashboard/icon-picker-script.html" . }}
+<script src="/js/dashboard-edit-field-prompts.js" defer></script>
+<script src="/js/dashboard-edit.js" defer></script>

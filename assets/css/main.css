@@ -87,7 +87,7 @@ footer {
     bottom: 0;
     width: 100%;
     padding: 0;
-    color: #fff;
+    color: var(--footer-text-color, #fff);
     text-align: center;
     z-index: 100;
     display: inline-block;
@@ -100,7 +100,7 @@ footer {
     transition: opacity .6s ease-in-out;
     width: max-content;
     border-radius: 3em;
-    border-top: 1px solid #fefefe55;
+    border-top: 1px solid color-mix(in srgb, var(--footer-text-color, #fefefe) 33%, transparent);
     margin-inline:auto;margin-block-end:.8em;padding-block:.4em;backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     pointer-events: none
@@ -112,12 +112,12 @@ footer {
 }
 
 .grad1 {
-    background: #000e;
-    border-top: 1px solid #fefefeaa!important;
+    background: color-mix(in srgb, var(--footer-bg-color, #000) 93%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--footer-text-color, #fefefe) 67%, transparent)!important;
     padding-inline:.8em;padding-block:.4em;padding-block:.4em .1em!important}
 
 .grad2 {
-    background-image: linear-gradient(transparent,#00000055,#000)
+    background-image: linear-gradient(transparent, color-mix(in srgb, var(--footer-bg-color, #000) 33%, transparent), var(--footer-bg-color, #000))
 }
 
 #footerBtns div {
@@ -130,7 +130,7 @@ footer {
 }
 
 #footerBtns a {
-    color: #fff;
+    color: var(--footer-text-color, #fff);
     max-width: 100px;
     width: 8dvh;
     min-width: 36px;
@@ -2005,6 +2005,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .menu-image-upload-btn {
     padding: .6rem 1.1rem;
+    width: -webkit-fill-available;
     border: none;
     border-radius: 9px;
     font-size: .88rem;
@@ -2024,7 +2025,8 @@ footer .icon,#footer .icon,#footerBtns .icon {
 
 .menu-image-upload-btn--cancel {
     background: rgba(255,255,255,.1);
-    color: #e2e8f0
+    color: #e2e8f0;
+    width: -webkit-fill-available;
 }
 
 .menu-image-upload-btn--cancel:hover:not(:disabled) {
@@ -2869,7 +2871,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,.75);
+    background: var(--modal-bg-container-color, rgba(0,0,0,.75));
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 10000;

@@ -15,40 +15,99 @@
     }
   }
 
+  function getAccessTokenForCms() {
+    var ac = global.AuthClient;
+    if (ac && ac.getAccessToken) {
+      var t = ac.getAccessToken();
+      if (ac._tokenLooksValid && typeof ac._tokenLooksValid === 'function') {
+        if (ac._tokenLooksValid(t)) return t;
+      } else if (t) {
+        return t;
+      }
+    }
+    var keys = ['auth_token', 'ttmenus_access_token'];
+    var i;
+    var v;
+    for (i = 0; i < keys.length; i++) {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem) {
+        v = localStorage.getItem(keys[i]);
+        if (v && String(v).trim()) {
+          if (ac && ac._tokenLooksValid && !ac._tokenLooksValid(v)) continue;
+          return v;
+        }
+      }
+    }
+    return null;
+  }
+
   function authHeaders() {
-    var token =
-      (global.AuthClient && global.AuthClient.getAccessToken && global.AuthClient.getAccessToken()) ||
-      (typeof localStorage !== 'undefined' &&
-        localStorage.getItem &&
-        localStorage.getItem('ttmenus_access_token'));
+    var token = getAccessTokenForCms();
     var h = { Accept: 'application/json' };
     if (token) h.Authorization = 'Bearer ' + token;
     return h;
+  }
+
+  function ensureAccessTokenForCms() {
+    var existing = getAccessTokenForCms();
+    if (existing) return Promise.resolve(existing);
+    var ac = global.AuthClient;
+    if (!ac) return Promise.resolve(null);
+    var chain = Promise.resolve();
+    if (typeof ac.syncHubSession === 'function') {
+      chain = chain.then(function () {
+        return ac.syncHubSession();
+      });
+    }
+    return chain.then(function () {
+      var token = getAccessTokenForCms();
+      if (token) return token;
+      if (typeof ac.refreshToken !== 'function') return null;
+      return ac.refreshToken().then(function () {
+        return getAccessTokenForCms();
+      });
+    });
   }
 
   function clientId() {
     return global.CLIENT_ID || global.SITE_CLIENT_ID || global.CMS_CLIENT_ID || '_ttms_menu_demo';
   }
 
-  function cmsBase() {
-    return (global.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+  function cmsApiBase() {
+    var api = (global.CMS_API_URL || '').replace(/\/+$/, '');
+    if (api) return api;
+    var svc = (global.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+    if (/\/api$/i.test(svc)) return svc;
+    return svc + '/api';
   }
 
   function fetchSummary(days) {
     days = days || 30;
     var url =
-      cmsBase() +
-      '/api/clients/' +
+      cmsApiBase() +
+      '/clients/' +
       encodeURIComponent(clientId()) +
       '/analytics/summary?days=' +
       encodeURIComponent(String(days));
-    return fetch(url, {
-      method: 'GET',
-      credentials: 'include',
-      headers: authHeaders(),
-    }).then(function (res) {
-      return res.json().then(function (data) {
-        return { ok: res.ok, status: res.status, data: data };
+    function doFetch() {
+      return fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: authHeaders(),
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: res.ok, status: res.status, data: data };
+        });
+      });
+    }
+    return ensureAccessTokenForCms().then(function () {
+      return doFetch();
+    }).then(function (result) {
+      if (result.ok || (result.status !== 401 && result.status !== 403)) return result;
+      var ac = global.AuthClient;
+      if (!ac || typeof ac.refreshToken !== 'function') return result;
+      return ac.refreshToken().then(function (rr) {
+        if (!rr || !rr.success) return result;
+        return doFetch();
       });
     });
   }
@@ -78,14 +137,6 @@
     var hint = document.getElementById('dashboardCardAnalyticsHint');
     var snap = document.getElementById('dashboardCardAnalyticsSnapshot');
     if (!pv || !vs) return Promise.resolve();
-
-    if (!authHeaders().Authorization) {
-      if (hint) {
-        hint.textContent = 'Sign in to load analytics.';
-        hint.classList.remove('hidden');
-      }
-      return Promise.resolve();
-    }
 
     return fetchSummary(days)
       .then(function (x) {
@@ -120,6 +171,31 @@
   /**
    * Full /analytics/ page metrics.
    */
+  function setAnalyticsNoteState(noteEl, state, htmlOrText) {
+    if (!noteEl) return;
+    var textEl = noteEl.querySelector('.dashboard-analytics-note-text');
+    var target = textEl || noteEl;
+    noteEl.classList.remove(
+      'dashboard-analytics-note--loading',
+      'dashboard-analytics-note--ok',
+      'dashboard-analytics-note--warn'
+    );
+    if (state) noteEl.classList.add('dashboard-analytics-note--' + state);
+    ['loading', 'ok', 'warn'].forEach(function (s) {
+      var icon = noteEl.querySelector('.dashboard-analytics-note-icon--' + s);
+      if (icon) icon.hidden = s !== state;
+    });
+    if (htmlOrText != null) {
+      if (textEl && String(htmlOrText).indexOf('<') !== -1) {
+        textEl.innerHTML = htmlOrText;
+      } else if (textEl) {
+        textEl.textContent = htmlOrText;
+      } else {
+        noteEl.textContent = htmlOrText;
+      }
+    }
+  }
+
   function loadAnalyticsPage(options) {
     options = options || {};
     var days = options.days || 30;
@@ -142,19 +218,17 @@
       if (el.textContent === '—') el.setAttribute('aria-label', 'Data not yet loaded');
     });
 
-    if (!authHeaders().Authorization) {
-      if (noteEl) noteEl.textContent = 'Sign in to load analytics. Open Matomo for full reports.';
-      return Promise.resolve();
-    }
-
-    if (noteEl) noteEl.textContent = 'Loading analytics from Matomo…';
+    setAnalyticsNoteState(noteEl, 'loading', 'Loading analytics from Matomo…');
 
     return fetchSummary(days)
       .then(function (x) {
         if (!x.ok) {
-          if (noteEl) {
-            noteEl.textContent = errorMessage(x.status, x.data) + ' Open Matomo for full reports.';
-          }
+          setAnalyticsNoteState(
+            noteEl,
+            'warn',
+            errorMessage(x.status, x.data) +
+              ' Open <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a> for full reports.'
+          );
           return;
         }
         var d = x.data || {};
@@ -163,15 +237,18 @@
         setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
         setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
         setMetric('metricAddToCart', d.addToCart, 'Add to cart');
-        if (noteEl) {
-          noteEl.innerHTML =
-            'Numbers come from Matomo for this site. Open <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a> for full reports and segments.';
-        }
+        setAnalyticsNoteState(
+          noteEl,
+          'ok',
+          'Numbers come from Matomo for this site. Open <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a> for full reports and segments.'
+        );
       })
       .catch(function () {
-        if (noteEl) {
-          noteEl.textContent = 'Could not load analytics. Try again later or open Matomo for full reports.';
-        }
+        setAnalyticsNoteState(
+          noteEl,
+          'warn',
+          'Could not load analytics. Try again later or open <a href="https://analytics.ttmenus.com" target="_blank" rel="noopener">Matomo</a> for full reports.'
+        );
       });
   }
 

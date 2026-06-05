@@ -78,6 +78,9 @@
 
   function thumborReel(url) {
     if (!url) return '';
+    if (typeof window.TtmsThumbor !== 'undefined' && window.TtmsThumbor.menuImageSrc) {
+      return window.TtmsThumbor.menuImageSrc(url, 'carousel') || url;
+    }
     var thumbor =
       (typeof window.MENU_IMAGE_THUMBOR_URL !== 'undefined' &&
         window.MENU_IMAGE_THUMBOR_URL) ||

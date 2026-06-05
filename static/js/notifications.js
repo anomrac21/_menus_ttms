@@ -14,6 +14,38 @@ const NotificationService = {
     }
     return (window.location.hostname || '').replace(/^www\./i, '');
   },
+
+  /** True when browser can receive push while site/app is closed (service worker + PushManager). */
+  supportsBackgroundPush() {
+    return (
+      'serviceWorker' in navigator &&
+      !!this.serviceWorkerRegistration &&
+      !!this.serviceWorkerRegistration.pushManager
+    );
+  },
+
+  isIOS() {
+    return (
+      /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+  },
+
+  isStandalonePWA() {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    );
+  },
+
+  /** iOS only delivers Web Push to home-screen PWAs (iOS 16.4+). */
+  getIOSPushRequirementMessage() {
+    return (
+      'On iPhone/iPad, background alerts require adding this menu to your Home Screen first ' +
+      '(Safari Share → Add to Home Screen), then open it from that icon and tap Get menu alerts again.'
+    );
+  },
+
   subscriptionId: null,
   wsConnection: null,
   serviceWorkerRegistration: null,
@@ -61,16 +93,18 @@ const NotificationService = {
       if (!stored) return;
 
       const subscription = JSON.parse(stored);
-      const currentPushSubscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
+      const currentPushSubscription =
+        await this.serviceWorkerRegistration.pushManager.getSubscription();
 
-      // If we have a stored push subscription but no current one, try to restore
-      if (subscription.pushSubscription && !currentPushSubscription) {
-        console.log('⚠️ Push subscription lost, attempting to restore...');
-        // The push subscription cannot be restored directly - user needs to resubscribe
-        // But we can continue with WebSocket for now
-        console.log('ℹ️ Push subscription cannot be auto-restored. WebSocket notifications will still work when site is open.');
-      } else if (currentPushSubscription) {
-        console.log('✅ Push subscription verified and active');
+      if (currentPushSubscription) {
+        console.log('✅ Background push subscription active');
+        this.updateSubscribeButton(true, { backgroundPush: true });
+        return;
+      }
+
+      if (subscription.pushSubscription || subscription.push_endpoint) {
+        console.warn('⚠️ Background push subscription missing — alerts only work while site is open');
+        this.updateSubscribeButton(true, { backgroundPush: false });
       }
     } catch (error) {
       console.error('Error verifying push subscription:', error);
@@ -132,6 +166,76 @@ const NotificationService = {
   },
 
   /**
+   * Create or refresh browser Push API subscription (required for phone alerts when app is closed).
+   */
+  async ensurePushSubscription(vapidPublicKey) {
+    const pushManager = this.serviceWorkerRegistration && this.serviceWorkerRegistration.pushManager;
+    if (!pushManager) {
+      return null;
+    }
+
+    const applicationServerKey = this.urlBase64ToUint8Array(vapidPublicKey);
+    let pushSubscription = await pushManager.getSubscription();
+
+    if (pushSubscription) {
+      try {
+        if (!pushSubscription.getKey('p256dh') || !pushSubscription.getKey('auth')) {
+          await pushSubscription.unsubscribe();
+          pushSubscription = null;
+        }
+      } catch (e) {
+        try {
+          await pushSubscription.unsubscribe();
+        } catch (unsubErr) {
+          console.warn('Could not refresh push subscription:', unsubErr);
+        }
+        pushSubscription = null;
+      }
+    }
+
+    if (!pushSubscription) {
+      pushSubscription = await pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: applicationServerKey,
+      });
+      console.log(
+        '✅ Background push subscription created:',
+        pushSubscription.endpoint.substring(0, 50) + '...'
+      );
+    } else {
+      console.log('✅ Using existing background push subscription');
+    }
+
+    return pushSubscription;
+  },
+
+  /**
+   * Fetch VAPID public key from notify-service.
+   */
+  async fetchVapidPublicKey(apiUrl, clientDomain) {
+    const keyResponse = await fetch(
+      `${apiUrl}/clients/${encodeURIComponent(clientDomain)}/vapid-key`
+    );
+    if (keyResponse.ok) {
+      const keyData = await keyResponse.json();
+      const key = keyData.publicKey || keyData.vapid_public_key;
+      if (key) {
+        console.log('✅ VAPID public key retrieved');
+        return key;
+      }
+    }
+    if (keyResponse.status === 503) {
+      throw new Error(
+        'Background push is not configured on the notification server (VAPID keys missing).'
+      );
+    }
+    const body = await keyResponse.text().catch(() => '');
+    throw new Error(
+      'Could not load push configuration (HTTP ' + keyResponse.status + '): ' + body
+    );
+  },
+
+  /**
    * Check if user has subscribed
    */
   checkSubscriptionStatus() {
@@ -190,7 +294,9 @@ const NotificationService = {
     } catch (error) {
       const msg = error && error.message ? error.message : String(error);
       throw new Error(
-        'Cannot reach notify service (' + msg + '). Check network or CORS from ' + window.location.origin
+        'Notify service is unreachable (' +
+          msg +
+          '). If notify.ttmenus.com is down or not deployed, subscriptions cannot work. Check https://notify.ttmenus.com/health from your browser.'
       );
     }
 
@@ -415,53 +521,27 @@ const NotificationService = {
       await this.ensureClientRegistered(clientDomain);
 
       const apiUrl = window.NOTIFY_CONFIG?.apiUrl || `${this.notifyServiceUrl}/api/v1`;
-      let vapidPublicKey = null;
 
-      try {
-        const keyResponse = await fetch(`${apiUrl}/clients/${encodeURIComponent(clientDomain)}/vapid-key`);
-        if (keyResponse.ok) {
-          const keyData = await keyResponse.json();
-          vapidPublicKey = keyData.publicKey || keyData.vapid_public_key;
-          console.log('✅ VAPID public key retrieved');
-        } else if (keyResponse.status === 503) {
-          console.warn('⚠️ Web Push (VAPID) not configured on notify-service — alerts work while this tab is open only');
-        } else {
-          console.warn('⚠️ VAPID key request failed:', keyResponse.status, await keyResponse.text().catch(() => ''));
-        }
-      } catch (e) {
-        const msg = e && e.message ? e.message : String(e);
-        console.warn('⚠️ Could not fetch VAPID key:', msg);
+      if (this.isIOS() && !this.isStandalonePWA()) {
+        throw new Error(this.getIOSPushRequirementMessage());
       }
 
       let pushSubscription = null;
       let deviceToken = this.getWebSocketConnectionID();
 
-      try {
-        if (this.serviceWorkerRegistration.pushManager && vapidPublicKey) {
-          let existingSubscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
-
-          if (!existingSubscription) {
-            pushSubscription = await this.serviceWorkerRegistration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
-            });
-            console.log('✅ Push API subscription created:', pushSubscription.endpoint.substring(0, 50) + '...');
-          } else {
-            pushSubscription = existingSubscription;
-            console.log('✅ Using existing Push API subscription');
-          }
-
-          if (pushSubscription) {
-            deviceToken = pushSubscription.endpoint;
-          }
-        } else if (this.serviceWorkerRegistration.pushManager && !vapidPublicKey) {
-          console.warn('⚠️ Skipping Push API subscribe until VAPID is configured on notify-service');
-        } else {
-          console.warn('⚠️ PushManager not available, using WebSocket only');
+      if (this.supportsBackgroundPush()) {
+        const vapidPublicKey = await this.fetchVapidPublicKey(apiUrl, clientDomain);
+        pushSubscription = await this.ensurePushSubscription(vapidPublicKey);
+        if (!pushSubscription) {
+          throw new Error('Could not register for background push notifications.');
         }
-      } catch (pushError) {
-        const msg = pushError && pushError.message ? pushError.message : String(pushError);
-        console.warn('⚠️ Push API subscription failed, using WebSocket only:', msg);
+        deviceToken = pushSubscription.endpoint;
+      } else if ('serviceWorker' in navigator) {
+        throw new Error(
+          'This browser cannot receive alerts when closed. Try Chrome or Safari on your phone, or add the menu to your home screen.'
+        );
+      } else {
+        throw new Error('Push notifications are not supported in this browser.');
       }
 
       console.log('Subscribing to notifications:', {
@@ -486,18 +566,22 @@ const NotificationService = {
         ws_connection_id: wsConnectionId,
       };
 
-      // Add push subscription details if available
-      if (pushSubscription) {
-        subscriptionData.push_endpoint = pushSubscription.endpoint;
-        subscriptionData.push_keys = {
-          p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
-          auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
-        };
+      // Add push subscription details (required for background delivery on phones)
+      if (!pushSubscription) {
+        throw new Error('Background push registration failed. Alerts cannot be delivered when the app is closed.');
       }
+      subscriptionData.push_endpoint = pushSubscription.endpoint;
+      subscriptionData.push_keys = {
+        p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
+        auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
+      };
 
       // Subscribe via notify-service API
       const subscribeUrl = `${apiUrl}/subscriptions`;
       console.log('Subscription URL:', subscribeUrl);
+
+      // Connect early so welcome notification can arrive via WebSocket while tab is open
+      this.connectWebSocket({ allowWithoutSubscription: true });
 
       const response = await fetch(subscribeUrl, {
         method: 'POST',
@@ -543,8 +627,11 @@ const NotificationService = {
       // Connect to WebSocket for real-time notifications (when site is open)
       this.connectWebSocket();
 
-      this.updateSubscribeButton(true);
-      this.showMessage('Successfully subscribed to notifications! You will receive notifications even when the site is closed.', 'success');
+      this.updateSubscribeButton(true, { backgroundPush: true });
+      this.showMessage(
+        'Alerts enabled! You will receive push notifications on this device even when the menu is closed.',
+        'success'
+      );
     } catch (error) {
       console.error('Subscription error:', error);
       let errorMessage = (error && error.message) ? error.message : String(error);
@@ -638,14 +725,16 @@ const NotificationService = {
 
   /**
    * Connect to WebSocket for real-time notifications
+   * @param {{ allowWithoutSubscription?: boolean }} [options]
    */
-  connectWebSocket() {
+  connectWebSocket(options) {
+    options = options || {};
     if (this.wsConnection && this.wsConnection.readyState === WebSocket.OPEN) {
       console.log('✅ WebSocket already connected');
       return; // Already connected
     }
     
-    if (!this.subscriptionId) {
+    if (!options.allowWithoutSubscription && !this.subscriptionId) {
       console.log('⚠️ Cannot connect WebSocket: No active subscription');
       return;
     }
@@ -911,8 +1000,12 @@ const NotificationService = {
 
   /**
    * Update subscribe button state
+   * @param {boolean} isSubscribed
+   * @param {{ backgroundPush?: boolean }} [options]
    */
-  updateSubscribeButton(isSubscribed) {
+  updateSubscribeButton(isSubscribed, options) {
+    options = options || {};
+    const backgroundPush = options.backgroundPush !== false;
     const btn = document.getElementById('subBtn');
     const btnText = document.getElementById('subBtnText');
     const btnHint = document.getElementById('subBtnHint');
@@ -925,8 +1018,14 @@ const NotificationService = {
         btn.classList.add('subscribed');
         btn.setAttribute('aria-pressed', 'true');
         btnText.textContent = 'Alerts on';
-        if (btnHint) btnHint.textContent = 'Tap to turn off';
-        btn.title = 'You receive menu alerts — tap to turn off';
+        if (btnHint) {
+          btnHint.textContent = backgroundPush
+            ? 'Tap to turn off'
+            : 'Tap to fix phone alerts';
+        }
+        btn.title = backgroundPush
+          ? 'You receive menu alerts — tap to turn off'
+          : 'Background alerts need setup — tap to re-enable';
       } else {
         btn.classList.remove('subscribed');
         btn.setAttribute('aria-pressed', 'false');
@@ -965,11 +1064,25 @@ const NotificationService = {
   },
 
   /**
-   * Toggle subscription
+   * Toggle subscription (or re-register background push if it was lost)
    */
   toggle() {
     if (this.subscriptionId) {
-      this.unsubscribe();
+      const pushManager =
+        this.serviceWorkerRegistration && this.serviceWorkerRegistration.pushManager;
+      if (pushManager) {
+        pushManager
+          .getSubscription()
+          .then((pushSub) => {
+            if (this.supportsBackgroundPush() && !pushSub) {
+              return this.unsubscribe().then(() => this.subscribe());
+            }
+            return this.unsubscribe();
+          })
+          .catch(() => this.unsubscribe());
+      } else {
+        this.unsubscribe();
+      }
     } else {
       this.subscribe();
     }

@@ -166,6 +166,21 @@
   background: #f5f7ff;
 }
 
+a.btn-secondary {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.auth-signup-note {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin: 12px 0 0;
+  line-height: 1.45;
+}
+
 .auth-divider {
   text-align: center;
   margin: 25px 0;
@@ -287,8 +302,6 @@
 }
 
 .dashboard-header {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
   display: flex;
   justify-content: space-between;
   align-items: center;

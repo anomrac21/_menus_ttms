@@ -1,4 +1,10 @@
 <script>
+function ttmsMenuImgSrc(path, size) {
+	if (!path) return '';
+	var p = String(path).trim().replace(/^\//, '');
+	if (window.TtmsThumbor && window.TtmsThumbor.menuImageSrc) return window.TtmsThumbor.menuImageSrc(p, size || 'thumb');
+	return '/' + p;
+}
 // Simple location selection using dropdown
 let number = '{{ site.Params.orderingsystem.whatsapp }}'; // Fallback number
 const name = '{{ site.Params.title }}'
@@ -700,7 +706,7 @@ async function openItem(ele, options) {
 	if(options.images && options.images.length>0){
 		var imgHtml = '';
 		for (var i = 0; i<=options.images.length - 1;  i++) {
-			imgHtml = imgHtml+'<img src="/'+options.images[i]+'">';
+			imgHtml = imgHtml+'<img src="'+ttmsMenuImgSrc(options.images[i], 'carousel')+'">';
 		}
 		document.getElementById("itemImages").innerHTML=imgHtml;
 
@@ -842,7 +848,7 @@ function renderSideCategoryButtons(sideCategories) {
 		items.forEach(item => {
 			const cssClass = item.type === 'Premium' ? 'premiumside' : 'regularside';
 			const starIcon = item.type === 'Premium' ? ' <i class="fa fa-star"></i>' : '';
-			const imageHtml = item.image ? `<img src="${item.image}" alt="${item.name}" class="side-item-image" onerror="this.style.display='none';">` : '';
+			const imageHtml = item.image ? `<img src="${ttmsMenuImgSrc(item.image, 'thumb')}" alt="${item.name}" class="side-item-image" onerror="this.style.display='none';">` : '';
 			
 			itemsHtml += `<div class="side-item-container"><b class="hide">1</b>${imageHtml}<a class="btn-side-option ${cssClass}" data-category="${categoryName}" data-item-name="${item.name}" data-item-type="${item.type}" data-item-price="${item.price}" onclick="selectSideItem(this, '${categoryName}');">${item.name}${starIcon}</a><p class="btn-add-extra hide" onclick="addExtraSide(this, '${categoryName}');"><i class="fa fa-plus"></i></p></div>`;
 		});

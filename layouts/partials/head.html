@@ -92,6 +92,9 @@
 {{ end }}
 
 <!--APPLE SUPPORT-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="{{ site.Title }}">
 <meta name="description" content="{{ .Summary }} "/>
 <meta property="og:description" content="{{ .Summary }} Digital Menu"/>
@@ -105,7 +108,6 @@
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
 <link rel="stylesheet" href="/css/colors.css"/>
 <link rel="stylesheet" href="/css/typography.css"/>
-<link rel="stylesheet" href="/css/theme-overrides.css"/>
 <link rel="stylesheet" href="/css/custom.css"/>
 <link rel="stylesheet" href="/css/header.css"/>
 <link rel="stylesheet" href="/css/account-dashboard.css"/>
@@ -269,6 +271,19 @@ window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/
 // API root must end with /api (use apiUrl from hugo.toml — avoids double /api when building paths)
 window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
 window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
+</script>
+{{- $thumborUrl := site.Params.thumbor.url | default "https://thumbor.ttmenus.com" -}}
+{{- $sourceBase := site.Params.thumbor.sourceBaseUrl | default site.BaseURL | default "" -}}
+{{- $menuImagesUseThumbor := site.Params.thumbor.menuImagesUseThumbor | default false -}}
+<script src="/js/thumbor-url.js"></script>
+<script>
+window.MENU_IMAGE_THUMBOR_URL = "{{ $thumborUrl }}";
+window.MENU_IMAGE_SOURCE_BASE_URL = "{{ strings.TrimSuffix "/" $sourceBase }}";
+window.MENU_IMAGES_USE_THUMBOR = {{ $menuImagesUseThumbor }};
+window.SiteConfig = window.SiteConfig || {};
+window.SiteConfig.thumborUrl = window.MENU_IMAGE_THUMBOR_URL;
+window.SiteConfig.menuImageSourceBaseUrl = window.MENU_IMAGE_SOURCE_BASE_URL;
+window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 </script>
 <script src="/js/auth-client.js"></script>
 <script src="/js/auth-client-access.js"></script>

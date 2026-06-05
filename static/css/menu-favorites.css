@@ -101,7 +101,7 @@
 }
 
 .expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn .fa {
-  font-size: 0.95rem;
+  font-size: x-large;
 }
 
 .expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn__label {

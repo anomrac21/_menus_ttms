@@ -1,0 +1,16 @@
+{{- /*
+  Menu content image src (Thumbor when enabled).
+  Usage: {{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}
+  Sizes: thumb, card, carousel, hero, section, ad
+*/ -}}
+{{- $size := .size | default "card" -}}
+{{- $dims := dict
+  "thumb" (dict "w" 320 "h" 320)
+  "card" (dict "w" 480 "h" 480)
+  "carousel" (dict "w" 720 "h" 900)
+  "hero" (dict "w" 1920 "h" 1080)
+  "section" (dict "w" 640 "h" 640)
+  "ad" (dict "w" 720 "h" 900)
+-}}
+{{- $dim := index $dims $size | default (index $dims "card") -}}
+{{- partial "ttms/thumbor-src.html" (dict "path" (.path | default "") "width" $dim.w "height" $dim.h) -}}

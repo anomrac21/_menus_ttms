@@ -540,7 +540,10 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
   font-size: 0.9rem;
   color: var(--text-secondary, rgba(0, 0, 0, 0.6));
 }
-
+.hero_logo_container .dashboard-edit-btn{
+  top: 7em;
+  position: relative;
+}
 [data-theme="dark"] #account-dashboard {
   background: rgba(20, 20, 24, 0.96);
   color: var(--text-primary, #eee);

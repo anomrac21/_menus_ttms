@@ -84,6 +84,21 @@
         }) || null;
     }
 
+    /** Promo image for today (ignores time windows — art shows all day on promo days). */
+    function getPromoImageForDay(promotionsJson, today) {
+        if (!promotionsJson || !today) return '';
+        let promotions;
+        try { promotions = typeof promotionsJson === 'string' ? JSON.parse(promotionsJson) : promotionsJson; } catch (_) { return ''; }
+        if (!Array.isArray(promotions)) return '';
+        for (let i = 0; i < promotions.length; i++) {
+            const p = promotions[i];
+            if (p && p.image && p.days && Array.isArray(p.days) && p.days.includes(today)) {
+                return String(p.image);
+            }
+        }
+        return '';
+    }
+
     function getBasePriceFromPricesArray(pricesArray) {
         if (!pricesArray) return 0;
         const arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
@@ -167,36 +182,94 @@
             if (cartPrice) cartPrice.textContent = `$${displayPrice.toFixed(2).replace(/\.00$/, '')}`;
         }
 
-        updateMenuItemCardImage(card, promo);
+        updateMenuItemCardImage(card, promo, today);
+    }
+
+    function parseJsonAttr(el, name) {
+        try {
+            const v = JSON.parse(el.getAttribute(name) || '[]');
+            return Array.isArray(v) ? v : [];
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function menuCardImageSrc(path) {
+        const p = String(path || '').replace(/^\//, '');
+        if (!p) return '';
+        if (p.indexOf('draft-assets/') === 0) {
+            return resolveCmsDraftAssetPreviewUrl(p);
+        }
+        return (typeof window !== 'undefined' && window.TtmsThumbor && window.TtmsThumbor.menuImageSrc)
+            ? window.TtmsThumbor.menuImageSrc(p, 'card')
+            : '/' + p;
+    }
+
+    function ensureCardImageLink(card) {
+        let imgLink = card.querySelector('.menu-item-image-link');
+        if (imgLink) return imgLink;
+        const allImages = parseJsonAttr(card, 'data-images-array');
+        if (!allImages.length) return null;
+        const rowTop = card.querySelector('.menu-item-row-top');
+        const itemUrl = card.getAttribute('data-item-url');
+        if (!rowTop || !itemUrl) return null;
+        imgLink = document.createElement('a');
+        imgLink.href = itemUrl;
+        imgLink.className = 'menu-item-image-link';
+        const wrap = document.createElement('div');
+        wrap.className = 'menu-item-image';
+        const img = document.createElement('img');
+        img.className = 'menu-item-img';
+        img.loading = 'lazy';
+        img.alt = (card.querySelector('.menu-item-title') && card.querySelector('.menu-item-title').textContent.trim()) || '';
+        img.setAttribute('data-src-path', allImages[0]);
+        img.onerror = function () {
+            if (window.TtmsThumbor && window.TtmsThumbor.fallbackImg) window.TtmsThumbor.fallbackImg(this);
+        };
+        wrap.appendChild(img);
+        imgLink.appendChild(wrap);
+        rowTop.insertBefore(imgLink, rowTop.firstChild);
+        card.classList.add('menu-item-card--has-image');
+        return imgLink;
     }
 
     /**
-     * Sync list/card thumbnail with the active promo for today vs item-only images (Hugo may embed build-time promo image).
+     * Card thumbnail: promo art for today (any time) → item photos → data-images-array. Never hide if a path exists.
      */
-    function updateMenuItemCardImage(card, promo) {
+    function updateMenuItemCardImage(card, promo, today) {
+        ensureCardImageLink(card);
         const imgLink = card.querySelector('.menu-item-image-link');
         if (!imgLink) return;
         const img = imgLink.querySelector('.menu-item-img');
         if (!img) return;
-        const rawRegular = card.getAttribute('data-regular-images-array');
-        if (rawRegular === null) {
-            if (promo && promo.image) {
-                img.src = '/' + String(promo.image).replace(/^\//, '');
-                imgLink.style.display = '';
-            }
-            return;
-        }
-        let regular = [];
-        try { regular = JSON.parse(rawRegular || '[]'); } catch (_) { regular = []; }
-        if (!Array.isArray(regular)) regular = [];
-        if (promo && promo.image) {
-            img.src = '/' + String(promo.image).replace(/^\//, '');
-            imgLink.style.display = '';
+
+        const regular = parseJsonAttr(card, 'data-regular-images-array');
+        const allImages = parseJsonAttr(card, 'data-images-array');
+        const promotionsJson = card.getAttribute('data-promotions');
+        const dayPromoImage = today ? getPromoImageForDay(promotionsJson, today) : '';
+
+        let path = '';
+        if (dayPromoImage) {
+            path = dayPromoImage;
         } else if (regular.length > 0) {
-            img.src = '/' + String(regular[0]).replace(/^\//, '');
+            path = regular[0];
+        } else if (allImages.length > 0) {
+            path = allImages[0];
+        }
+
+        if (path) {
+            const nextSrc = menuCardImageSrc(path);
+            if (nextSrc && img.src !== nextSrc) {
+                delete img.dataset.draftAssetHydrated;
+                img.src = nextSrc;
+            }
+            img.setAttribute('data-src-path', path);
+            hydrateAuthenticatedDraftAssetImg(img);
             imgLink.style.display = '';
-        } else {
-            imgLink.style.display = 'none';
+        } else if (img.getAttribute('src')) {
+            imgLink.style.display = '';
+        } else if (allImages.length > 0) {
+            imgLink.style.display = '';
         }
     }
 
@@ -664,16 +737,74 @@
     }
 
     /**
-     * In dashboard edit preview, draft-assets/* must load from CMS preview API; plain /draft-assets/* may 404 locally.
+     * draft-assets/* are served by CMS preview API (auth required). Static /draft-assets/* 404 until publish.
      */
+    function resolveCmsDraftAssetPreviewUrl(path) {
+        const p = (path || '').trim().replace(/^\/+/, '');
+        if (!p || p.indexOf('draft-assets/') !== 0) return '';
+        const base = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+        const cid = window.CMS_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+        const name = p.replace(/^draft-assets\//, '');
+        return base + '/api/clients/' + encodeURIComponent(cid) + '/preview/draft-assets/' + encodeURIComponent(name);
+    }
+
+    function cmsAuthHeadersForDraftImage() {
+        const h = {};
+        const token =
+            typeof AuthClient !== 'undefined' && AuthClient.getAccessToken
+                ? AuthClient.getAccessToken()
+                : typeof localStorage !== 'undefined'
+                  ? localStorage.getItem('ttmenus_access_token')
+                  : null;
+        if (token) h['Authorization'] = 'Bearer ' + token;
+        return h;
+    }
+
+    function isCmsDraftAssetPreviewUrl(url) {
+        return /\/api\/clients\/[^/]+\/preview\/draft-assets\//i.test(String(url || ''));
+    }
+
+    /**
+     * CMS draft preview URLs require Bearer/cookies; plain <img src> gets 401. Fetch → blob like dashboard thumbs.
+     */
+    function hydrateAuthenticatedDraftAssetImg(img) {
+        if (!img || img.dataset.draftAssetHydrated === '1') return;
+        const url = img.getAttribute('src') || '';
+        if (!isCmsDraftAssetPreviewUrl(url)) return;
+        img.dataset.draftAssetHydrated = '1';
+        const dataPath = img.getAttribute('data-src-path') || '';
+        fetch(url, { credentials: 'include', headers: cmsAuthHeadersForDraftImage() })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.blob();
+            })
+            .then(function (blob) {
+                const prev = img.dataset.draftBlobUrl;
+                if (prev) {
+                    try {
+                        URL.revokeObjectURL(prev);
+                    } catch (e) {}
+                }
+                const blobUrl = URL.createObjectURL(blob);
+                img.dataset.draftBlobUrl = blobUrl;
+                img.src = blobUrl;
+            })
+            .catch(function () {
+                if (dataPath && window.TtmsThumbor && typeof window.TtmsThumbor.fallbackImg === 'function') {
+                    img.setAttribute('data-src-path', dataPath);
+                    window.TtmsThumbor.fallbackImg(img);
+                }
+            });
+    }
+
     function resolveExpandedImageSrcForPreview(path) {
         const p = (path || '').trim().replace(/^\/+/, '');
         if (!p) return '';
-        if (typeof window !== 'undefined' && window.__dashboardEditMode && p.indexOf('draft-assets/') === 0) {
-            const base = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
-            const cid = window.CMS_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
-            const name = p.replace(/^draft-assets\//, '');
-            return base + '/api/clients/' + encodeURIComponent(cid) + '/preview/draft-assets/' + encodeURIComponent(name);
+        if (p.indexOf('draft-assets/') === 0) {
+            return resolveCmsDraftAssetPreviewUrl(p);
+        }
+        if (typeof window !== 'undefined' && window.TtmsThumbor && typeof window.TtmsThumbor.menuImageSrc === 'function') {
+            return window.TtmsThumbor.menuImageSrc(p, 'carousel');
         }
         if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) return p;
         return '/' + p;
@@ -734,7 +865,7 @@
         // If event is provided, check if click was on an interactive element
         if (event) {
             const target = event.target;
-            const isDragHandle = target.closest('.drag-handle');
+            const isDragHandle = target.closest('.drag-handle, .dashboard-edit-drag-handle');
             const isImageLink = target.closest('.menu-item-image-link');
             const isTitleLink = target.closest('.menu-item-title a');
             const isExpandedInteractive = target.closest(
@@ -1322,10 +1453,11 @@
                                     const loadingAttr = index === 0 ? 'eager' : 'lazy';
                                     const fetchAttr = index === 0 ? ' fetchpriority="high"' : '';
                                     const cssUrl = cssImageVarForPath(src);
+                                    const pathAttr = pathStr ? ` data-src-path="${pathStr.replace(/"/g, '&quot;')}"` : '';
                                     return `
                                     <div class="expanded-image-slide menu-item-slideshow-slide ${index === 0 ? 'active' : ''}" data-image-index="${index}">
                                         <div class="content-panel" style="--ad-image: ${cssUrl}">
-                                            <img src="${src}" alt="${itemName} - Image ${index + 1}" loading="${loadingAttr}" decoding="async"${fetchAttr} class="ad-portrait expanded-image-carousel-img">
+                                            <img src="${src}"${pathAttr} alt="${itemName} - Image ${index + 1}" loading="${loadingAttr}" decoding="async"${fetchAttr} class="ad-portrait expanded-image-carousel-img">
                                         </div>
                                     </div>`;
                                 }).join('')}
@@ -2239,7 +2371,9 @@
 
             if (e.target.closest(
                 '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
-                '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow'
+                '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow, ' +
+                '.dashboard-edit-drag-handle, .dashboard-edit-card-btn-wrap, .dashboard-edit-header-btn-wrap, ' +
+                '.dashboard-edit-btn, [data-dashboard-edit="1"]'
             )) {
                 return;
             }
@@ -2613,9 +2747,17 @@
         carousel.querySelectorAll('.expanded-image-carousel-img').forEach(function (img) {
             if (img.dataset.carouselImgBound) return;
             img.dataset.carouselImgBound = '1';
+            hydrateAuthenticatedDraftAssetImg(img);
             img.addEventListener('load', function () {
                 if (img.closest('.expanded-image-slide.active')) {
                     refreshExpandedCarousel(carousel);
+                }
+            });
+            img.addEventListener('error', function () {
+                if (img.dataset.draftAssetHydrated === '1') return;
+                const path = img.getAttribute('data-src-path') || '';
+                if (path && window.TtmsThumbor && typeof window.TtmsThumbor.fallbackImg === 'function') {
+                    window.TtmsThumbor.fallbackImg(img);
                 }
             });
         });

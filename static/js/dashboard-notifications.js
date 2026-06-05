@@ -7,7 +7,21 @@
 
   function getApiBase() {
     var base = (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.apiUrl) || '';
+    if (!base) {
+      var codeEl = document.querySelector('.dashboard-notify-footnote .dashboard-notify-code');
+      if (codeEl) base = (codeEl.textContent || '').trim();
+    }
     return String(base).replace(/\/+$/, '');
+  }
+
+  function setFormsApiDisabled(disabled) {
+    ['dashboardNotifySendForm', 'dashboardNotifyWelcomeForm'].forEach(function (id) {
+      var form = document.getElementById(id);
+      if (!form) return;
+      form.querySelectorAll('input, textarea, select, button').forEach(function (el) {
+        el.disabled = disabled;
+      });
+    });
   }
 
   function getClientDomain() {
@@ -305,12 +319,17 @@
   function init() {
     if (!document.getElementById('dashboardNotificationsPage')) return;
 
+    initNotifyTabs();
+
     var errBanner = document.getElementById('dashboardNotifyConfigError');
-    if (!getApiBase()) {
+    var hasApi = !!getApiBase();
+    if (!hasApi) {
       if (errBanner) errBanner.hidden = false;
+      setFormsApiDisabled(true);
       return;
     }
     if (errBanner) errBanner.hidden = true;
+    setFormsApiDisabled(false);
 
     loadMetrics().catch(function (err) {
       setText('metricNotifySent30d', '—');
@@ -339,16 +358,19 @@
     if (form) form.addEventListener('submit', sendNotification);
 
     initWelcomeForm();
-    initNotifyTabs();
   }
 
   function initNotifyTabs() {
     var root = document.getElementById('dashboardNotifyTabs');
-    if (!root) return;
+    if (!root || root.getAttribute('data-notify-tabs-bound') === 'true') return;
+    root.setAttribute('data-notify-tabs-bound', 'true');
 
     var tabs = Array.prototype.slice.call(root.querySelectorAll('[role="tab"]'));
+    if (!tabs.length) return;
+
     var panels = tabs.map(function (tab) {
-      return document.getElementById(tab.getAttribute('aria-controls'));
+      var id = tab.getAttribute('aria-controls');
+      return id ? document.getElementById(id) : null;
     });
 
     function selectTab(index) {
@@ -356,17 +378,23 @@
       tabs.forEach(function (tab, i) {
         var selected = i === index;
         tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        tab.classList.toggle('dashboard-notify-tab--active', selected);
         tab.tabIndex = selected ? 0 : -1;
         var panel = panels[i];
-        if (panel) {
-          if (selected) {
-            panel.removeAttribute('hidden');
-          } else {
-            panel.setAttribute('hidden', '');
-          }
+        if (!panel) return;
+        if (selected) {
+          panel.removeAttribute('hidden');
+        } else {
+          panel.setAttribute('hidden', '');
         }
       });
     }
+
+    var initial = tabs.findIndex(function (tab) {
+      return tab.getAttribute('aria-selected') === 'true';
+    });
+    if (initial < 0) initial = 0;
+    selectTab(initial);
 
     tabs.forEach(function (tab, index) {
       tab.addEventListener('click', function () {
@@ -379,6 +407,11 @@
           next = (index - 1 + tabs.length) % tabs.length;
         else if (ev.key === 'Home') next = 0;
         else if (ev.key === 'End') next = tabs.length - 1;
+        else if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          selectTab(index);
+          return;
+        }
         if (next !== null) {
           ev.preventDefault();
           selectTab(next);
@@ -460,6 +493,7 @@
 
   window.DashboardNotifications = {
     init: init,
+    initTabs: initNotifyTabs,
     loadDashboardCard: loadDashboardCard,
     fetchOverview: fetchOverview,
   };

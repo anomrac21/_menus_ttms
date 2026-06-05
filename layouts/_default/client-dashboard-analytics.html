@@ -1,62 +1,164 @@
 {{ define "main" }}
-<div class="dashboard-analytics-page" id="dashboardAnalyticsPage">
-  <div class="dashboard-edit-header">
+
+<div class="dashboard-analytics-page dashboard-analytics-page--full" id="dashboardAnalyticsPage">
+
+  <div class="dashboard-edit-header dashboard-analytics-header">
+
     <div class="dashboard-edit-header-inner">
-      <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-      <h1 class="dashboard-edit-title">Analytics</h1>
-      <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Open in Matomo</a>
-    </div>
-  </div>
 
-  <main class="dashboard-analytics-main">
-    <section class="dashboard-analytics-period" aria-labelledby="analytics-last-month-heading">
-      <h2 id="analytics-last-month-heading" class="dashboard-analytics-heading">Last 30 days</h2>
-      <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site. Unique visitors may use Matomo’s daily sum when exact range uniques aren’t computed.</p>
+      <div class="dashboard-analytics-header-start">
 
-      <div class="dashboard-analytics-metrics" id="dashboardAnalyticsMetrics">
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Page views</span>
-          <span class="dashboard-analytics-card-value" id="metricPageViews" aria-label="Data not yet loaded">—</span>
+        <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+
+        <div class="dashboard-analytics-header-text">
+
+          <h1 class="dashboard-edit-title">Analytics</h1>
+
+          <p class="dashboard-analytics-lead">Traffic and menu engagement for the last 30 days, powered by Matomo.</p>
+
         </div>
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Visits</span>
-          <span class="dashboard-analytics-card-value" id="metricVisits" aria-label="Data not yet loaded">—</span>
-        </div>
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Unique visitors</span>
-          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors" aria-label="Data not yet loaded">—</span>
-        </div>
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Menu item views</span>
-          <span class="dashboard-analytics-card-value" id="metricMenuItemViews" aria-label="Data not yet loaded">—</span>
-        </div>
-        <div class="dashboard-analytics-card">
-          <span class="dashboard-analytics-card-label">Add to cart</span>
-          <span class="dashboard-analytics-card-value" id="metricAddToCart" aria-label="Data not yet loaded">—</span>
-        </div>
+
       </div>
 
-      <p class="dashboard-analytics-note" id="dashboardAnalyticsNote" aria-live="polite">Loading analytics from Matomo…</p>
+      <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary dashboard-analytics-external-link" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Open in Matomo</a>
+
+    </div>
+
+  </div>
+
+
+
+  <main class="dashboard-analytics-main dashboard-analytics-main--full">
+
+    <section class="dashboard-settings-panel dashboard-analytics-panel" aria-labelledby="analytics-last-month-heading">
+
+      <div class="dashboard-settings-panel-head">
+
+        <span class="dashboard-settings-panel-icon dashboard-analytics-panel-icon" aria-hidden="true"><i class="fa fa-line-chart"></i></span>
+
+        <div class="dashboard-settings-panel-head-text">
+
+          <h2 id="analytics-last-month-heading" class="dashboard-analytics-heading">Last 30 days</h2>
+
+          <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site. Unique visitors may use Matomo’s daily sum when exact range uniques aren’t computed.</p>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full" id="dashboardAnalyticsMetrics">
+
+        <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+
+          <span class="dashboard-analytics-metric-icon" aria-hidden="true"><i class="fa fa-eye"></i></span>
+
+          <span class="dashboard-analytics-card-label">Page views</span>
+
+          <span class="dashboard-analytics-card-value" id="metricPageViews" aria-label="Data not yet loaded">—</span>
+
+        </div>
+
+        <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+
+          <span class="dashboard-analytics-metric-icon" aria-hidden="true"><i class="fa fa-sign-in"></i></span>
+
+          <span class="dashboard-analytics-card-label">Visits</span>
+
+          <span class="dashboard-analytics-card-value" id="metricVisits" aria-label="Data not yet loaded">—</span>
+
+        </div>
+
+        <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+
+          <span class="dashboard-analytics-metric-icon" aria-hidden="true"><i class="fa fa-user"></i></span>
+
+          <span class="dashboard-analytics-card-label">Unique visitors</span>
+
+          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors" aria-label="Data not yet loaded">—</span>
+
+        </div>
+
+        <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+
+          <span class="dashboard-analytics-metric-icon" aria-hidden="true"><i class="fa fa-cutlery"></i></span>
+
+          <span class="dashboard-analytics-card-label">Menu item views</span>
+
+          <span class="dashboard-analytics-card-value" id="metricMenuItemViews" aria-label="Data not yet loaded">—</span>
+
+        </div>
+
+        <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+
+          <span class="dashboard-analytics-metric-icon" aria-hidden="true"><i class="fa fa-shopping-cart"></i></span>
+
+          <span class="dashboard-analytics-card-label">Add to cart</span>
+
+          <span class="dashboard-analytics-card-value" id="metricAddToCart" aria-label="Data not yet loaded">—</span>
+
+        </div>
+
+      </div>
+
+
+
+      <aside class="dashboard-analytics-footnote dashboard-analytics-note dashboard-analytics-note--loading" id="dashboardAnalyticsNote" aria-live="polite">
+
+        <i class="fa fa-spinner fa-spin dashboard-analytics-note-icon dashboard-analytics-note-icon--loading" aria-hidden="true"></i>
+
+        <i class="fa fa-check-circle dashboard-analytics-note-icon dashboard-analytics-note-icon--ok" aria-hidden="true" hidden></i>
+
+        <i class="fa fa-exclamation-triangle dashboard-analytics-note-icon dashboard-analytics-note-icon--warn" aria-hidden="true" hidden></i>
+
+        <span class="dashboard-analytics-note-text">Loading analytics from Matomo…</span>
+
+      </aside>
+
     </section>
+
   </main>
+
 </div>
 
+
+
 <script>
+
   document.addEventListener('DOMContentLoaded', async function() {
+
     if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+
       await AuthClient.whenReady();
+
     }
+
     if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
+
       return;
+
     }
+
     function runAnalyticsLoad() {
+
       if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadAnalyticsPage) {
+
         DashboardAnalyticsSnapshot.loadAnalyticsPage({ days: 30 });
+
         return;
+
       }
+
       setTimeout(runAnalyticsLoad, 50);
+
     }
+
     runAnalyticsLoad();
+
   });
+
 </script>
+
 {{ end }}
+

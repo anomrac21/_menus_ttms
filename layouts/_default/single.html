@@ -34,31 +34,13 @@
           {{end}}
         {{end}}
         
-        {{/* Check for active promotion today - prepend promo image when applicable */}}
-        {{ $today := now.Weekday.String }}
-        {{ with .Params.promotions }}
-          {{ range . }}
-            {{ if in .days $today }}
-              {{ $activePromo = dict "label" (.label | default "") "image" (.image | default "") "type" (.type | default "") "value" (.value | default 0) }}
-              {{ break }}
-            {{ end }}
-          {{ end }}
-        {{ end }}
-        {{ $imagesArray := slice }}
-        {{ if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "") }}
-          {{ $imagesArray = $imagesArray | append (index $activePromo "image") }}
-        {{ end }}
-        {{ if .Params.images }}
-          {{ range .Params.images }}
-            {{ if .image }}
-              {{ $imagesArray = $imagesArray | append .image }}
-            {{ end }}
-          {{ end }}
-        {{ end }}
+        {{ $imgData := partial "ttms/menu-card-images.html" . }}
+        {{ $activePromo = $imgData.activePromo }}
+        {{ $imagesArray := $imgData.imagesArray }}
         {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
 
         <div class="menu-item-expanded-content" style="display: block;">
-          {{ $hasSinglePageCarousel := gt (len $imagesArray) 0 }}
+          {{ $hasSinglePageCarousel := $imgData.hasImage }}
           <div class="expanded-item-details single-page-content{{ if and (not $hasSinglePageCarousel) .Site.Params.menuImageService.enabled }} expanded-item-details--no-carousel{{ end }}" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}" data-menu-item-path="{{ .RelPermalink }}">
             {{ $promoCarouselLabel := "" }}
             {{ if and $activePromo (index $activePromo "label") }}{{ $promoCarouselLabel = "Promotion" }}{{ end }}
@@ -264,7 +246,7 @@
                               data-item-price="{{ .price }}"
                               onclick="selectSinglePageSide(this, event)">
                             {{ if .image }}
-                              <img src="{{ .image }}" alt="{{ .name }}" class="single-page-side-item-image" onerror="this.style.display='none';">
+                              <img src="{{ partial "ttms/menu-img-src.html" (dict "path" .image "size" "thumb") }}" alt="{{ .name }}" class="single-page-side-item-image" onerror="this.style.display='none';">
                             {{ end }}
                             <span class="single-page-side-item-content">
                               {{ .name }} {{ if gt (float .price) 0 }}<span class="addition-price">+${{ (printf "%.2f" (float .price)) | replaceRE "\\.00$" "" }}</span>{{ end }}
@@ -378,7 +360,7 @@
       {{ if gt (len .Params.images) 0 }}
         <a href="{{ .Params.link }}" class="singlepageimages">
           {{ range .Params.images }}
-            <img src="/{{ .image }}" alt="{{ $.Title }}" loading="lazy">
+            <img src="{{ partial "ttms/menu-img-src.html" (dict "path" .image "size" "ad") }}" alt="{{ $.Title }}" loading="lazy">
           {{ end }}
         </a>
       {{ else }}

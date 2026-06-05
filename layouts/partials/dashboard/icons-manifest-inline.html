@@ -1,0 +1,12 @@
+{{- /* Bundled icon index — instant picker + fallback when CDN fetch fails */ -}}
+{{- $iconsPath := "" -}}
+{{- range slice "static/data/ttmenus-icons.json" "themes/_menus_ttms/static/data/ttmenus-icons.json" -}}
+  {{- if and (not $iconsPath) (fileExists .) -}}
+    {{- $iconsPath = . -}}
+  {{- end -}}
+{{- end -}}
+{{- if $iconsPath -}}
+<script>
+window.TTMENUS_ICONS_MANIFEST = {{ readFile $iconsPath | safeJS }};
+</script>
+{{- end -}}

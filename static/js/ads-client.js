@@ -751,6 +751,10 @@
 
   mountAdCreative(rootEl, item, config, opts) {
     const { ad, firstMedia, mediaUrl, isVideo, linkUrl } = item;
+    const displayMediaUrl =
+      !isVideo && typeof window !== 'undefined' && window.TtmsThumbor && window.TtmsThumbor.menuImageSrc
+        ? window.TtmsThumbor.menuImageSrc(mediaUrl, 'ad')
+        : mediaUrl;
     const {
       videoSuffix = '',
       trackImpressionNow = true,
@@ -790,8 +794,8 @@
       }
     } else {
       mediaHTML = `
-        <img src="${this.escapeHtml(mediaUrl)}" class="ad-portrait-bg" alt="${safeAlt}">
-        <img src="${this.escapeHtml(mediaUrl)}" class="ad-portrait" alt="${safeAlt}">`;
+        <img src="${this.escapeHtml(displayMediaUrl)}" class="ad-portrait-bg" alt="${safeAlt}">
+        <img src="${this.escapeHtml(displayMediaUrl)}" class="ad-portrait" alt="${safeAlt}">`;
     }
 
     rootEl.innerHTML = `<span>Sponsored</span>${mediaHTML}`;
@@ -842,9 +846,15 @@
       reelsPreviewIndex = null,
       previewStrip = false,
     } = options;
+    const { linkUrl, ad } = item;
     const li = document.createElement('li');
     li.className = 'ad-panel';
     li.setAttribute('data-ad-id', item.ad.id);
+    if (ad.title) li.setAttribute('data-ad-title', ad.title);
+    if (linkUrl && linkUrl !== '#') {
+      li.setAttribute('data-ad-url', linkUrl);
+      li.setAttribute('data-ad-link', linkUrl);
+    }
     if (reelsPreviewIndex != null) {
       li.setAttribute('data-reels-preview-index', String(reelsPreviewIndex));
     }
@@ -854,7 +864,6 @@
       mode: 'panel',
       previewStrip,
     });
-    const { linkUrl, ad } = item;
     li.onclick = (e) => {
       if (e.target.closest('.ad-unmute-btn')) return;
       if (primaryClick) {
@@ -1446,10 +1455,14 @@
         ad.images.forEach((img) => {
           if (!img.image_url) return;
           const absolute = this.absolutizeAssetUrl(img.image_url);
-          img.image_url = absolute;
-          img.imageUrl = absolute;
-          img.url = absolute;
-          img.image = absolute;
+          const display =
+            typeof window !== 'undefined' && window.TtmsThumbor && window.TtmsThumbor.menuImageSrc
+              ? window.TtmsThumbor.menuImageSrc(absolute, 'ad')
+              : absolute;
+          img.image_url = display;
+          img.imageUrl = display;
+          img.url = display;
+          img.image = display;
         });
       });
       

@@ -1,0 +1,51 @@
+{{- /*
+  Resolve menu card / carousel image lists (promo + item photos).
+  Returns dict: firstImage, imagesArray, regularImagesArray, activePromo, hasImage
+*/ -}}
+{{- $today := now.Weekday.String -}}
+{{- $activePromo := dict "label" "" "image" "" "type" "" "value" 0 -}}
+{{- with .Params.promotions -}}
+  {{- range . -}}
+    {{- if in .days $today -}}
+      {{- $activePromo = dict "label" (.label | default "") "image" (.image | default "") "type" (.type | default "") "value" (.value | default 0) -}}
+      {{- break -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $regularImagesArray := slice -}}
+{{- if .Params.images -}}
+  {{- range .Params.images -}}
+    {{- if .image -}}
+      {{- $regularImagesArray = $regularImagesArray | append .image -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $imagesArray := slice -}}
+{{- if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "") -}}
+  {{- $imagesArray = $imagesArray | append (index $activePromo "image") -}}
+{{- end -}}
+{{- range $regularImagesArray -}}
+  {{- $imagesArray = $imagesArray | append . -}}
+{{- end -}}
+{{- with .Params.promotions -}}
+  {{- range . -}}
+    {{- if and .image (ne .image "") -}}
+      {{- $imagesArray = $imagesArray | append .image -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $firstImage := "" -}}
+{{- if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "") -}}
+  {{- $firstImage = index $activePromo "image" -}}
+{{- else if gt (len $regularImagesArray) 0 -}}
+  {{- $firstImage = index $regularImagesArray 0 -}}
+{{- else -}}
+  {{- with .Params.promotions -}}
+    {{- range . -}}
+      {{- if and (not $firstImage) .image (ne .image "") -}}
+        {{- $firstImage = .image -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return dict "firstImage" $firstImage "imagesArray" $imagesArray "regularImagesArray" $regularImagesArray "activePromo" $activePromo "hasImage" (ne $firstImage "") -}}

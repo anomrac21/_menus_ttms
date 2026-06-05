@@ -120,8 +120,12 @@ class ClientAdManager {
 
   normalizeImagePath(path) {
     if (!path) return '';
-    if (/^\//.test(path) || /^https?:\/\//i.test(path)) return path;
-    return '/' + path;
+    const raw = String(path).trim();
+    if (typeof window !== 'undefined' && window.TtmsThumbor && typeof window.TtmsThumbor.menuImageSrc === 'function') {
+      return window.TtmsThumbor.menuImageSrc(raw, 'ad');
+    }
+    if (/^\//.test(raw) || /^https?:\/\//i.test(raw)) return raw;
+    return '/' + raw;
   }
 
   cssImageVar(path) {

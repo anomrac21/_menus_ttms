@@ -16,52 +16,78 @@
   <script src="/js/dashboard-menu-images.js" defer></script>
   {{- end }}
   <script src="/js/dashboard-analytics-snapshot.js" defer></script>
+  <script src="/js/dashboard-menu-status.js" defer></script>
+  <script>
+  window.SITE_DISPLAY_NAME = {{ (site.Title | default "Menu Demo") | jsonify }};
+  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}";
+  </script>
+  <script src="/js/dashboard-control-room.js" defer></script>
   {{- if site.Params.notifications.enabled }}
   <script src="/js/dashboard-notifications.js" defer></script>
   {{- end }}
 </head>
 <body>
   <div class="dashboard-control-room" id="dashboardControlRoom">
-    <div class="dashboard-header">
-      <div class="dashboard-header-brand">
-        <div class="dashboard-header-container">
-          <a href="/" class="dashboard-logo-link"><img class="dashboard-logo" src="/branding/favicon192.webp" alt="{{ site.Title }} logo" width="48" height="48"></a>
-          <button type="button" class="btn-dash btn-dash-secondary" id="btnLogout">Sign out</button>
+    <div class="dashboard-header" role="banner">
+      <div class="dashboard-header-bar">
+        <a href="/" class="dashboard-logo-link" id="dashboardLogoLink">
+          <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
+        </a>
+        <div class="dashboard-header-main">
+          <p class="dashboard-header-kicker">Menu control room</p>
+          <h1 class="dashboard-header-site" id="dashboardHeaderSiteName">{{ site.Title | default "Menu Demo" }}</h1>
+          <p class="dashboard-header-tagline">Manage your digital menu and content</p>
         </div>
-        <div class="dashboard-header-user dashboard-header-user-wrap" id="dashboardUserInfo" data-business-name="{{ site.Title }}">
-          <span class="dashboard-header-user-business">{{ site.Title | default "—" }}</span>
-          <span class="dashboard-header-user-name">—</span>
+        <div class="dashboard-header-end">
+          <p class="dashboard-header-account" id="dashboardHeaderUserName" title="">—</p>
+          <button type="button" class="btn-dash btn-dash-secondary dashboard-header-signout" id="btnLogout"><i class="fa fa-sign-out" aria-hidden="true"></i> Sign out</button>
         </div>
-        <h3 class="dashboard-title">Menu control room</h3>
-        <p class="dashboard-subtitle">Manage your digital menu and content</p>
       </div>
     </div>
     <div class="cards">
       <div class="card card-edit-menu">
-        <h3>Edit menu</h3>
+        <div class="card-edit-menu-head">
+          <h3 class="card-edit-menu-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Edit menu</h3>
+          <p class="card-edit-menu-lead">Snapshots stay on the CMS; content drafts publish to Git.</p>
+        </div>
         <div class="dashboard-card-edit-menu-top">
-          <a href="/menu-settings/" class="btn-dash btn-dash-secondary">Menu settings →</a>
-          <a href="/edit-menu/" class="btn-dash btn-dash-primary" id="cardEditMenu">Open editor</a>
+          <a href="/menu-settings/" class="btn-dash btn-dash-secondary"><i class="fa fa-cog" aria-hidden="true"></i> Menu settings</a>
         </div>
         <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
-        <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Draft and publish status">
-          <div class="dashboard-menu-status-block">
-            <div class="dashboard-menu-status-heading">Drafts</div>
-            <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body"></div>
+        <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshots, content drafts, and publish status">
+          <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots">
+            <div class="dashboard-menu-status-heading">
+              <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
+              <span class="dashboard-menu-status-heading-text">Menu snapshots</span>
+            </div>
+            <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body" aria-live="polite"></div>
+            <div class="dashboard-menu-status-block-foot">
+              <a href="/edit-menu/" class="btn-dash btn-dash-primary dashboard-menu-status-open-editor" id="cardEditMenu"><i class="fa fa-pencil" aria-hidden="true"></i> Open editor</a>
+            </div>
           </div>
-          <div class="dashboard-menu-status-block">
-            <div class="dashboard-menu-status-heading">Last publish</div>
-            <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body"></div>
+          <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts">
+            <div class="dashboard-menu-status-heading">
+              <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
+              <span class="dashboard-menu-status-heading-text">Content drafts</span>
+            </div>
+            <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body" aria-live="polite"></div>
+            <div class="dashboard-menu-status-block-foot dashboard-menu-status-block-foot--publish">
+              <button type="button" class="btn-dash btn-dash-publish hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">Publish</span></button>
+            </div>
           </div>
-        </div>
-        <div class="dashboard-card-edit-menu-actions">
-          <button type="button" class="btn-dash btn-dash-secondary hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu">Publish</button>
+          <div class="dashboard-menu-status-block dashboard-menu-status-block--publish">
+            <div class="dashboard-menu-status-heading">
+              <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
+              <span class="dashboard-menu-status-heading-text">Last publish</span>
+            </div>
+            <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body" aria-live="polite"></div>
+          </div>
         </div>
       </div>
       {{- if site.Params.menuImageService.enabled }}
       <div class="card card-dashboard-menu-images" id="dashboardCardMenuImages">
-        <h3>Menu photo reel</h3>
-        <p class="dashboard-menu-images-tagline">Swipe or tap — <strong>Approve</strong> adds it to the menu, <strong>Decline</strong> skips it.</p>
+        <h3 class="dashboard-card-title"><i class="fa fa-picture-o" aria-hidden="true"></i> Menu photo reel</h3>
+        <p class="dashboard-menu-images-tagline">Swipe or Tap</p>
         <div class="dashboard-menu-images-reel-stats" aria-live="polite">
           <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending">—</span> in queue</span>
           <span class="dashboard-menu-images-reel-stat dashboard-menu-images-reel-stat--muted" id="dashboardMenuImagesReelProgress"></span>
@@ -88,12 +114,12 @@
       </div>
       {{- end }}
       <div class="card card-dashboard-ads">
-        <h3>Ads</h3>
+        <h3 class="dashboard-card-title"><i class="fa fa-bullhorn" aria-hidden="true"></i> Ads</h3>
         <p>Configure advertisements and promotions.</p>
-        <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Ads →</a>
+        <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Ads</a>
       </div>
       <div class="card card-dashboard-analytics">
-        <h3>Analytics</h3>
+        <h3 class="dashboard-card-title"><i class="fa fa-bar-chart" aria-hidden="true"></i> Analytics</h3>
         <p>View traffic, engagement, and menu performance.</p>
         <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
           <div class="dashboard-card-notify-snapshot-grid">
@@ -108,10 +134,10 @@
           </div>
         </div>
         <p id="dashboardCardAnalyticsHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
-        <a href="/analytics/" class="btn-dash btn-dash-secondary">Analytics →</a>
+        <a href="/analytics/" class="btn-dash btn-dash-secondary"><i class="fa fa-line-chart" aria-hidden="true"></i> Analytics</a>
       </div>
       <div class="card card-dashboard-notify">
-        <h3>Notifications</h3>
+        <h3 class="dashboard-card-title"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</h3>
         <p>Manage push notifications and alerts for your menu.</p>
         {{- if site.Params.notifications.enabled }}
         <div class="dashboard-card-notify-snapshot" id="dashboardCardNotifySnapshot" aria-label="Notification snapshot, last 30 days">
@@ -128,56 +154,31 @@
         </div>
         <p id="dashboardCardNotifyHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
         {{- end }}
-        <a href="/notifications/" class="btn-dash btn-dash-secondary">Notifications →</a>
+        <a href="/notifications/" class="btn-dash btn-dash-secondary"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</a>
       </div>
       <div class="card card-dashboard-auth">
-        <h3>Auth</h3>
+        <h3 class="dashboard-card-title"><i class="fa fa-lock" aria-hidden="true"></i> Auth</h3>
         <p>Manage login, users, and access for this client.</p>
-        <a href="{{ site.Params.authServiceUrl | default "https://auth.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener">Auth →</a>
-      </div>
-    </div>
-  </div>
-
-  <div id="dashboardDraftModal" class="dashboard-draft-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardDraftModalTitle" aria-hidden="true">
-    <div class="dashboard-draft-modal-backdrop"></div>
-    <div class="dashboard-draft-modal-dialog">
-      <h2 id="dashboardDraftModalTitle" class="dashboard-draft-modal-title">You have saved drafts</h2>
-      <p class="dashboard-draft-modal-text">Load saved changes or load live menu?</p>
-      <div class="dashboard-draft-modal-actions">
-        <button type="button" class="btn-dash btn-dash-primary" id="dashboardDraftModalLoad">Load</button>
-        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardDraftModalRevert">Revert</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="dashboardVersionModal" class="dashboard-draft-modal dashboard-version-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardVersionModalTitle" aria-hidden="true">
-    <div class="dashboard-draft-modal-backdrop"></div>
-    <div class="dashboard-draft-modal-dialog dashboard-version-modal-dialog">
-      <h2 id="dashboardVersionModalTitle" class="dashboard-draft-modal-title">Choose a saved menu version</h2>
-      <p class="dashboard-draft-modal-text dashboard-version-modal-hint">Pick a snapshot to open with your content drafts. Showing the five most recent.</p>
-      <div id="dashboardVersionModalLoading" class="dashboard-version-modal-loading hidden" aria-live="polite">Loading versions…</div>
-      <div id="dashboardVersionModalError" class="dashboard-version-modal-error hidden" role="alert"></div>
-      <p id="dashboardVersionModalEmpty" class="dashboard-version-modal-empty hidden" role="status">No saved menu snapshots yet. You can still continue with drafts on the live menu.</p>
-      <ul id="dashboardVersionModalList" class="dashboard-version-list" aria-label="Saved menu versions"></ul>
-      <p id="dashboardVersionModalMoreWrap" class="dashboard-version-more-wrap hidden">
-        <button type="button" class="dashboard-version-more-link" id="dashboardVersionModalMore">More…</button>
-      </p>
-      <div class="dashboard-draft-modal-actions dashboard-version-modal-actions">
-        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardVersionModalBack">Back</button>
-        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardVersionModalCancel">Cancel</button>
+        <a href="{{ site.Params.authServiceUrl | default "https://auth.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Auth</a>
       </div>
     </div>
   </div>
 
   <div id="dashboardPublishSummaryModal" class="dashboard-draft-modal dashboard-publish-summary-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardPublishSummaryTitle" aria-hidden="true">
-    <div class="dashboard-draft-modal-backdrop"></div>
+    <div class="dashboard-draft-modal-backdrop dashboard-publish-summary-backdrop" aria-hidden="true"></div>
     <div class="dashboard-draft-modal-dialog dashboard-publish-summary-dialog">
-      <h2 id="dashboardPublishSummaryTitle" class="dashboard-draft-modal-title">Review files to publish</h2>
-      <p id="dashboardPublishSummaryCount" class="dashboard-draft-modal-text">0 file(s) will be published.</p>
-      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="List of content files"></ul>
+      <div class="dashboard-publish-summary-head">
+        <span class="dashboard-publish-summary-head-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
+        <div class="dashboard-publish-summary-head-text">
+          <h2 id="dashboardPublishSummaryTitle" class="dashboard-publish-summary-title">Review files to publish</h2>
+          <p id="dashboardPublishSummaryCount" class="dashboard-publish-summary-count">0 files ready for Git</p>
+        </div>
+      </div>
+      <ul id="dashboardPublishSummaryList" class="dashboard-publish-summary-list" aria-label="Draft files to publish"></ul>
+      <p class="dashboard-publish-summary-hint">Remove a row to delete that draft from the CMS without publishing.</p>
       <div class="dashboard-draft-modal-actions dashboard-publish-summary-actions">
         <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPublishSummaryCancel">Cancel</button>
-        <button type="button" class="btn-dash btn-dash-primary" id="dashboardPublishSummaryConfirm">Publish</button>
+        <button type="button" class="btn-dash btn-dash-primary dashboard-publish-summary-confirm" id="dashboardPublishSummaryConfirm"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish</button>
       </div>
     </div>
   </div>
@@ -190,529 +191,15 @@
       if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
         return;
       }
-      var user = AuthClient.getCurrentUser();
-      var userEl = document.getElementById('dashboardUserInfo');
-      if (userEl && user) {
-        var businessEl = userEl.querySelector('.dashboard-header-user-business');
-        var nameEl = userEl.querySelector('.dashboard-header-user-name');
-        var businessName = userEl.getAttribute('data-business-name') || document.title || '';
-        var username = user.username || (user.first_name && user.last_name ? user.first_name + ' ' + user.last_name : null) || user.email || '';
-        if (businessEl) businessEl.textContent = businessName || '—';
-        if (nameEl) nameEl.textContent = username || '—';
-      }
-      document.getElementById('btnLogout').addEventListener('click', function() {
-        AuthClient.logout().then(function() { window.location.href = '/'; });
-      });
-
-      var CMS_SERVICE_URL = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
-      var CMS_CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
-      var editLink = document.getElementById('cardEditMenu');
-      var publishBtn = document.getElementById('cardPublishDrafts');
-      var cachedPreviews = [];
-      var draftStatusEl = document.getElementById('dashboardDraftStatusSummary');
-      var lastPublishEl = document.getElementById('dashboardLastPublishSummary');
-      var publishFlashEl = document.getElementById('dashboardPublishFlash');
-
-      function lastPublishStorageKey() {
-        return 'ttmenus_last_publish_' + CMS_CLIENT_ID;
-      }
-      function truncateMiddle(str, maxLen) {
-        str = String(str || '');
-        if (str.length <= maxLen) return str;
-        return str.slice(0, Math.max(8, maxLen - 14)) + '…' + str.slice(-10);
-      }
-      function persistLastPublishRecord(obj) {
-        try {
-          localStorage.setItem(lastPublishStorageKey(), JSON.stringify(obj));
-        } catch (e) {}
-      }
-      function showPublishFlashMessage(msg) {
-        if (!publishFlashEl) return;
-        publishFlashEl.textContent = msg;
-        publishFlashEl.classList.remove('hidden');
-        if (window.__ttmsPublishFlashTimer) clearTimeout(window.__ttmsPublishFlashTimer);
-        window.__ttmsPublishFlashTimer = setTimeout(function() {
-          publishFlashEl.classList.add('hidden');
-        }, 9000);
-      }
-      function previewSummaryLabel(p) {
-        var payload = p.payload || p.Payload || {};
-        var kind = payload.kind || p.kind || 'content';
-        var path = payload.contentPath || p.content_path || '';
-        var fm = payload.frontMatter || payload.front_matter || {};
-        var title = (fm.title != null && fm.title !== '') ? String(fm.title) : (path ? path.replace(/^content\//, '').replace(/\.md$/, '') : '');
-        var kindLabel = kind === 'menu-item' ? 'Menu item' : kind === 'section-header' ? 'Section' : kind === 'promotion' ? 'Promotion' : kind === 'home' ? 'Home' : kind === 'slideshow' ? 'Slideshow' : kind;
-        return title ? kindLabel + ': ' + title + ' (' + path + ')' : kindLabel + ': ' + path;
-      }
-      function renderDraftStatusSummary() {
-        if (!draftStatusEl) return;
-        draftStatusEl.textContent = '';
-        var n = cachedPreviews.length;
-        if (n === 0) {
-          var p0 = document.createElement('p');
-          p0.className = 'dashboard-menu-status-muted';
-          p0.textContent = 'No unpublished drafts. Your site matches the last successful publish until you save new changes in the editor.';
-          draftStatusEl.appendChild(p0);
-          return;
-        }
-        var p1 = document.createElement('p');
-        var t1 = document.createTextNode('You have ');
-        var strong = document.createElement('strong');
-        strong.textContent = n + ' draft' + (n === 1 ? '' : 's');
-        p1.appendChild(t1);
-        p1.appendChild(strong);
-        p1.appendChild(document.createTextNode(' ready to go live. Review the list below, then use Publish.'));
-        draftStatusEl.appendChild(p1);
-        var ul = document.createElement('ul');
-        ul.className = 'dashboard-menu-status-file-list';
-        var cap = Math.min(4, n);
-        for (var i = 0; i < cap; i++) {
-          var li = document.createElement('li');
-          li.textContent = truncateMiddle(previewSummaryLabel(cachedPreviews[i]), 92);
-          ul.appendChild(li);
-        }
-        if (n > cap) {
-          var liMore = document.createElement('li');
-          liMore.className = 'dashboard-menu-status-muted';
-          liMore.textContent = '… and ' + (n - cap) + ' more file' + (n - cap === 1 ? '' : 's');
-          ul.appendChild(liMore);
-        }
-        draftStatusEl.appendChild(ul);
-      }
-      function renderLastPublishSummary() {
-        if (!lastPublishEl) return;
-        lastPublishEl.textContent = '';
-        var raw = null;
-        try {
-          raw = localStorage.getItem(lastPublishStorageKey());
-        } catch (e) {}
-        if (!raw) {
-          var ph = document.createElement('p');
-          ph.className = 'dashboard-menu-status-muted';
-          ph.textContent = 'When you publish drafts, this shows the time, how many files went live, a short list of what changed, and the Git commit (when the server returns it).';
-          lastPublishEl.appendChild(ph);
-          return;
-        }
-        var data;
-        try {
-          data = JSON.parse(raw);
-        } catch (e) {
-          data = null;
-        }
-        if (!data || !data.at) {
-          var pb = document.createElement('p');
-          pb.className = 'dashboard-menu-status-muted';
-          pb.textContent = 'No publish record found.';
-          lastPublishEl.appendChild(pb);
-          return;
-        }
-        var when = data.at;
-        try {
-          when = new Date(data.at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-        } catch (e2) {}
-        var ok = data.ok !== false;
-        var line1 = document.createElement('p');
-        line1.className = ok ? 'dashboard-menu-status-success' : 'dashboard-menu-status-error';
-        line1.textContent = (ok ? 'Publish succeeded' : 'Publish failed') + ' · ' + when;
-        lastPublishEl.appendChild(line1);
-        var metaParts = [];
-        if (data.count != null) metaParts.push(data.count + ' file' + (data.count === 1 ? '' : 's'));
-        if (data.commitHash) metaParts.push('Git ' + String(data.commitHash).slice(0, 7));
-        if (metaParts.length) {
-          var line2 = document.createElement('p');
-          line2.className = 'dashboard-menu-status-muted';
-          line2.textContent = metaParts.join(' · ');
-          lastPublishEl.appendChild(line2);
-        }
-        if (data.fileLabels && data.fileLabels.length) {
-          var ul2 = document.createElement('ul');
-          ul2.className = 'dashboard-menu-status-file-list';
-          var maxL = 5;
-          for (var j = 0; j < Math.min(maxL, data.fileLabels.length); j++) {
-            var lj = document.createElement('li');
-            lj.textContent = truncateMiddle(data.fileLabels[j], 88);
-            ul2.appendChild(lj);
-          }
-          if (data.fileLabels.length > maxL) {
-            var lj2 = document.createElement('li');
-            lj2.className = 'dashboard-menu-status-muted';
-            lj2.textContent = '… and ' + (data.fileLabels.length - maxL) + ' more';
-            ul2.appendChild(lj2);
-          }
-          lastPublishEl.appendChild(ul2);
-        }
+      if (window.DashboardControlRoom && typeof DashboardControlRoom.init === 'function') {
+        DashboardControlRoom.init();
       }
 
-      function getAuthHeaders() {
-        var token = (window.AuthClient && AuthClient.getAccessToken && AuthClient.getAccessToken()) || (typeof localStorage !== 'undefined' && localStorage.getItem && localStorage.getItem('ttmenus_access_token'));
-        var h = { 'Accept': 'application/json' };
-        if (token) h['Authorization'] = 'Bearer ' + token;
-        return h;
-      }
-      /** One row per content file — keep newest draft when API returns legacy duplicates. */
-      function dedupePreviewsByContentPath(previews) {
-        if (!previews || !previews.length) return [];
-        var best = {};
-        previews.forEach(function(p) {
-          var payload = p.payload || p.Payload || {};
-          var path = p.content_path || payload.contentPath || '';
-          if (!path) return;
-          var cur = best[path];
-          var t = new Date(p.updated_at || p.UpdatedAt || 0).getTime();
-          if (!cur || t >= new Date(cur.updated_at || cur.UpdatedAt || 0).getTime()) {
-            best[path] = p;
-          }
-        });
-        return Object.keys(best).map(function(k) { return best[k]; });
-      }
-      function fetchPreviews() {
-        var url = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
-        return fetch(url, { method: 'GET', credentials: 'include', headers: getAuthHeaders() })
-          .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
-          .catch(function() { return { previews: [] }; })
-          .then(function(data) {
-            var raw = data && data.previews && Array.isArray(data.previews) ? data.previews : [];
-            cachedPreviews = dedupePreviewsByContentPath(raw);
-            if (publishBtn) {
-              if (cachedPreviews.length > 0) {
-                publishBtn.classList.remove('hidden');
-                publishBtn.textContent = 'Publish' + (cachedPreviews.length > 1 ? ' (' + cachedPreviews.length + ')' : '');
-              } else {
-                publishBtn.classList.add('hidden');
-              }
-            }
-            renderDraftStatusSummary();
-            return cachedPreviews;
-          });
-      }
-
-      renderLastPublishSummary();
-      fetchPreviews();
-
-      var draftModal = document.getElementById('dashboardDraftModal');
-      var draftModalLoadBtn = document.getElementById('dashboardDraftModalLoad');
-      var draftModalRevertBtn = document.getElementById('dashboardDraftModalRevert');
-      var versionModal = document.getElementById('dashboardVersionModal');
-      var versionModalList = document.getElementById('dashboardVersionModalList');
-      var versionModalLoading = document.getElementById('dashboardVersionModalLoading');
-      var versionModalError = document.getElementById('dashboardVersionModalError');
-      var versionModalMoreWrap = document.getElementById('dashboardVersionModalMoreWrap');
-      var versionModalMore = document.getElementById('dashboardVersionModalMore');
-      var versionModalBack = document.getElementById('dashboardVersionModalBack');
-      var versionModalCancel = document.getElementById('dashboardVersionModalCancel');
-      var versionModalEmpty = document.getElementById('dashboardVersionModalEmpty');
-      var versionModalSorted = [];
-      var versionModalExpanded = false;
-      var PREVIEW_VERSION_COUNT = 5;
-
-      /** API may return { versions }, a bare array, or { data / menu_versions } — normalize to an array. */
-      function normalizeVersionsPayload(data) {
-        if (!data) return [];
-        if (Array.isArray(data)) return data;
-        if (data.versions && Array.isArray(data.versions)) return data.versions;
-        if (data.data && Array.isArray(data.data)) return data.data;
-        if (data.menu_versions && Array.isArray(data.menu_versions)) return data.menu_versions;
-        if (data.MenuVersions && Array.isArray(data.MenuVersions)) return data.MenuVersions;
-        return [];
-      }
-      /** Prefer a stable id for navigation; backends vary (id, version_id, UUID, etc.). */
-      function versionIdFromRecord(v) {
-        if (v == null || typeof v !== 'object') return '';
-        var id = v.id || v.ID || v.version_id || v.VersionId || v.menu_version_id || v.MenuVersionId || v.uuid || v.UUID || v.snapshot_id || v.SnapshotId;
-        return id != null ? String(id).trim() : '';
-      }
-      function versionNameFromRecord(v) {
-        if (v == null || typeof v !== 'object') return '';
-        var n = v.name || v.label || v.title || v.Name || v.Label;
-        return n != null ? String(n).trim() : '';
-      }
-      function versionSortKey(v) {
-        var u = v.updated_at || v.updatedAt || v.UpdatedAt;
-        var c = v.created_at || v.createdAt || v.CreatedAt;
-        var t = u || c;
-        return t ? new Date(t).getTime() : 0;
-      }
-      function formatVersionWhen(v) {
-        var t = v.updated_at || v.updatedAt || v.UpdatedAt || v.created_at || v.createdAt || v.CreatedAt;
-        if (!t) return '';
-        try {
-          return new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-        } catch (e) {
-          return String(t);
-        }
-      }
-      function navigateEditDraftsWithVersion(versionId) {
-        sessionStorage.setItem('editPreviewMode', 'drafts');
-        if (versionId) {
-          sessionStorage.setItem('editMenuVersionId', versionId);
-          window.location.href = '/edit-menu/?load=drafts&menu_version=' + encodeURIComponent(versionId);
-        } else {
-          sessionStorage.removeItem('editMenuVersionId');
-          window.location.href = '/edit-menu/?load=drafts';
-        }
-      }
-      function closeVersionModal() {
-        if (!versionModal) return;
-        versionModal.classList.add('hidden');
-        versionModal.setAttribute('aria-hidden', 'true');
-        versionModalExpanded = false;
-        if (versionModalList) versionModalList.classList.remove('dashboard-version-list-expanded');
-        if (versionModalMoreWrap) versionModalMoreWrap.classList.add('hidden');
-      }
-      function renderVersionModalList() {
-        if (!versionModalList) return;
-        versionModalList.innerHTML = '';
-        if (versionModalExpanded) versionModalList.classList.add('dashboard-version-list-expanded');
-        else versionModalList.classList.remove('dashboard-version-list-expanded');
-        var renderable = versionModalSorted.filter(function(v) { return !!versionIdFromRecord(v); });
-        var errVisible = versionModalError && !versionModalError.classList.contains('hidden');
-        if (versionModalEmpty) {
-          versionModalEmpty.classList.toggle('hidden', errVisible || renderable.length > 0);
-        }
-        renderable.forEach(function(v, idx) {
-          var id = versionIdFromRecord(v);
-          var li = document.createElement('li');
-          li.className = 'dashboard-version-item';
-          if (idx >= PREVIEW_VERSION_COUNT) li.classList.add('dashboard-version-item-extra');
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'dashboard-version-item-btn';
-          var title = versionNameFromRecord(v) || ('Version ' + id.slice(0, 8));
-          var when = formatVersionWhen(v);
-          var titleSpan = document.createElement('span');
-          titleSpan.className = 'dashboard-version-item-title';
-          titleSpan.textContent = title;
-          btn.appendChild(titleSpan);
-          if (when) {
-            var whenSpan = document.createElement('span');
-            whenSpan.className = 'dashboard-version-item-when';
-            whenSpan.textContent = when;
-            btn.appendChild(whenSpan);
-          }
-          btn.addEventListener('click', function() {
-            closeVersionModal();
-            navigateEditDraftsWithVersion(id);
-          });
-          li.appendChild(btn);
-          versionModalList.appendChild(li);
-        });
-        if (versionModalMoreWrap && versionModalMore) {
-          if (renderable.length > PREVIEW_VERSION_COUNT) {
-            versionModalMoreWrap.classList.remove('hidden');
-            versionModalMore.textContent = versionModalExpanded ? 'Show less' : 'More…';
-          } else {
-            versionModalMoreWrap.classList.add('hidden');
-          }
-        }
-      }
-      function openVersionModal() {
-        if (!versionModal || !versionModalList) {
-          navigateEditDraftsWithVersion(null);
-          return;
-        }
-        versionModalExpanded = false;
-        if (versionModalList) versionModalList.classList.remove('dashboard-version-list-expanded');
-        if (versionModalError) {
-          versionModalError.classList.add('hidden');
-          versionModalError.textContent = '';
-        }
-        if (versionModalEmpty) versionModalEmpty.classList.add('hidden');
-        if (versionModalLoading) versionModalLoading.classList.remove('hidden');
-        versionModal.classList.remove('hidden');
-        versionModal.setAttribute('aria-hidden', 'false');
-        var url = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/menu-versions';
-        fetch(url, { method: 'GET', credentials: 'include', headers: getAuthHeaders() })
-          .then(function(res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
-          })
-          .then(function(data) {
-            var raw = normalizeVersionsPayload(data);
-            versionModalSorted = raw.slice().sort(function(a, b) { return versionSortKey(b) - versionSortKey(a); });
-            if (versionModalLoading) versionModalLoading.classList.add('hidden');
-            renderVersionModalList();
-          })
-          .catch(function(err) {
-            if (versionModalLoading) versionModalLoading.classList.add('hidden');
-            if (versionModalError) {
-              versionModalError.classList.remove('hidden');
-              versionModalError.textContent = 'Could not load menu versions. You can still open the editor with drafts and the live menu.';
-            }
-            if (versionModalEmpty) versionModalEmpty.classList.add('hidden');
-            versionModalSorted = [];
-            renderVersionModalList();
-          });
-      }
-      if (versionModalMore) {
-        versionModalMore.addEventListener('click', function() {
-          versionModalExpanded = !versionModalExpanded;
-          if (versionModalList) versionModalList.classList.toggle('dashboard-version-list-expanded', versionModalExpanded);
-          versionModalMore.textContent = versionModalExpanded ? 'Show less' : 'More…';
-        });
-      }
-      if (versionModalBack) {
-        versionModalBack.addEventListener('click', function() {
-          closeVersionModal();
-          if (draftModal) {
-            draftModal.classList.remove('hidden');
-            draftModal.setAttribute('aria-hidden', 'false');
-          }
-        });
-      }
-      if (versionModalCancel) {
-        versionModalCancel.addEventListener('click', function() {
-          closeVersionModal();
-        });
-      }
-
-      if (editLink) {
-        editLink.addEventListener('click', function(ev) {
-          ev.preventDefault();
-          fetchPreviews().then(function(previews) {
-            if (previews.length > 0 && draftModal && draftModalLoadBtn && draftModalRevertBtn) {
-              draftModal.classList.remove('hidden');
-              draftModal.setAttribute('aria-hidden', 'false');
-              draftModalLoadBtn.onclick = function() {
-                draftModal.classList.add('hidden');
-                draftModal.setAttribute('aria-hidden', 'true');
-                openVersionModal();
-              };
-              draftModalRevertBtn.onclick = function() {
-                draftModal.classList.add('hidden');
-                draftModal.setAttribute('aria-hidden', 'true');
-                sessionStorage.setItem('editPreviewMode', 'live');
-                sessionStorage.removeItem('editMenuVersionId');
-                window.location.href = '/edit-menu/';
-              };
-            } else {
-              sessionStorage.setItem('editPreviewMode', 'live');
-              sessionStorage.removeItem('editMenuVersionId');
-              window.location.href = '/edit-menu/';
-            }
-          });
-        });
-      }
-
-      var publishSummaryModal = document.getElementById('dashboardPublishSummaryModal');
-      var publishSummaryList = document.getElementById('dashboardPublishSummaryList');
-      var publishSummaryCount = document.getElementById('dashboardPublishSummaryCount');
-      var publishSummaryCancel = document.getElementById('dashboardPublishSummaryCancel');
-      var publishSummaryConfirm = document.getElementById('dashboardPublishSummaryConfirm');
-
-      if (publishBtn) {
-        publishBtn.addEventListener('click', function() {
-          if (cachedPreviews.length === 0) return;
-          var pending = dedupePreviewsByContentPath(cachedPreviews.slice());
-          function renderSummary() {
-            if (!publishSummaryList || !publishSummaryCount) return;
-            publishSummaryList.innerHTML = '';
-            publishSummaryCount.textContent = pending.length + ' file(s) will be published (one row per content file).';
-            if (publishSummaryConfirm) {
-              publishSummaryConfirm.disabled = pending.length === 0;
-              publishSummaryConfirm.textContent = pending.length === 0 ? 'Nothing to publish' : 'Publish';
-            }
-            pending.forEach(function(p) {
-              var rowId = p.id || '';
-              var li = document.createElement('li');
-              li.className = 'dashboard-publish-summary-item';
-              var label = document.createElement('span');
-              label.className = 'dashboard-publish-summary-label';
-              label.textContent = previewSummaryLabel(p);
-              var removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'btn-dash btn-dash-secondary dashboard-publish-summary-revert';
-              removeBtn.textContent = '×';
-              removeBtn.setAttribute('aria-label', 'Delete saved change');
-              removeBtn.addEventListener('click', function() {
-                var idx = pending.findIndex(function(x) { return (x.id || '') === rowId; });
-                if (idx === -1) return;
-                var previewId = pending[idx].id;
-                function removeFromList() {
-                  pending.splice(idx, 1);
-                  renderSummary();
-                  fetchPreviews();
-                  if (pending.length === 0 && publishSummaryModal) {
-                    publishSummaryModal.classList.add('hidden');
-                    publishSummaryModal.setAttribute('aria-hidden', 'true');
-                  }
-                }
-                if (previewId) {
-                  var delUrl = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews/' + encodeURIComponent(previewId);
-                  fetch(delUrl, { method: 'DELETE', credentials: 'include', headers: getAuthHeaders() })
-                    .then(function(res) {
-                      if (!res.ok && res.status !== 204) return res.text().then(function(t) { throw new Error(t); });
-                      removeFromList();
-                    })
-                    .catch(function(err) {
-                      console.error('Delete draft failed', err);
-                      alert('Could not delete saved change: ' + (err.message || err));
-                    });
-                } else {
-                  removeFromList();
-                }
-              });
-              li.appendChild(label);
-              li.appendChild(removeBtn);
-              publishSummaryList.appendChild(li);
-            });
-          }
-          renderSummary();
-          if (publishSummaryModal) {
-            publishSummaryModal.classList.remove('hidden');
-            publishSummaryModal.setAttribute('aria-hidden', 'false');
-          }
-          if (publishSummaryCancel) {
-            publishSummaryCancel.onclick = function() {
-              publishSummaryModal.classList.add('hidden');
-              publishSummaryModal.setAttribute('aria-hidden', 'true');
-            };
-          }
-          if (publishSummaryConfirm) {
-            publishSummaryConfirm.onclick = function() {
-              if (pending.length === 0) return;
-              publishSummaryConfirm.disabled = true;
-              var changes = pending.map(function(p) {
-                var o = { payload: p.payload || p.Payload || {} };
-                if (p.id) o.previewId = p.id;
-                return o;
-              });
-              var body = { changes: changes, commitMessage: 'Publish ' + pending.length + ' change(s)' };
-              var applyUrl = CMS_SERVICE_URL + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/apply-batch';
-              var headers = getAuthHeaders();
-              headers['Content-Type'] = 'application/json';
-              fetch(applyUrl, {
-                method: 'POST',
-                credentials: 'include',
-                headers: headers,
-                body: JSON.stringify(body)
-              }).then(function(res) {
-                if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
-                return res.json();
-              }).then(function(resp) {
-                var hash = (resp && resp.commit && resp.commit.hash) ? String(resp.commit.hash) : '';
-                var labels = pending.map(previewSummaryLabel);
-                persistLastPublishRecord({
-                  at: new Date().toISOString(),
-                  ok: true,
-                  count: pending.length,
-                  commitHash: hash,
-                  fileLabels: labels.slice(0, 24)
-                });
-                renderLastPublishSummary();
-                var flashMsg = 'Success — ' + pending.length + ' file' + (pending.length === 1 ? '' : 's') + ' published to your live site.';
-                if (hash) flashMsg += ' Git commit ' + hash.slice(0, 7) + '.';
-                showPublishFlashMessage(flashMsg);
-                publishSummaryModal.classList.add('hidden');
-                publishSummaryModal.setAttribute('aria-hidden', 'true');
-                publishSummaryConfirm.disabled = false;
-                return fetchPreviews();
-              }).catch(function(err) {
-                console.error('Publish failed', err);
-                alert('Publish failed: ' + (err.message || err));
-                publishSummaryConfirm.disabled = false;
-              });
-            };
-          }
+      if (window.DashboardMenuStatus && typeof DashboardMenuStatus.init === 'function') {
+        window.DashboardMenuStatus.init({
+          cmsUrl: window.CMS_SERVICE_URL,
+          cmsApiUrl: window.CMS_API_URL,
+          clientId: window.CLIENT_ID || window.SITE_CLIENT_ID
         });
       }
 
