@@ -23,11 +23,18 @@
   }
 
   function getApiBase() {
+    var page = document.getElementById('dashboardNotificationsPage');
     var cfg = resolveNotifyConfig();
-    var base = (cfg && cfg.apiUrl) || '';
+    var base =
+      (page && page.getAttribute('data-notify-api-url')) ||
+      (cfg && cfg.apiUrl) ||
+      '';
     if (!base) {
       var codeEl = document.querySelector('.dashboard-notify-footnote .dashboard-notify-code');
       if (codeEl) base = (codeEl.textContent || '').trim();
+    }
+    if (!base && window.SiteConfig && window.SiteConfig.notifyServiceUrl) {
+      base = String(window.SiteConfig.notifyServiceUrl).replace(/\/+$/, '') + '/api/v1';
     }
     return String(base).replace(/\/+$/, '');
   }
@@ -43,6 +50,9 @@
   }
 
   function getClientDomain() {
+    var page = document.getElementById('dashboardNotificationsPage');
+    var fromPage = page && page.getAttribute('data-notify-client-domain');
+    if (fromPage) return fromPage;
     var cfg = resolveNotifyConfig();
     if (cfg && cfg.clientDomain) {
       return cfg.clientDomain;
@@ -343,11 +353,11 @@
     var errBanner = document.getElementById('dashboardNotifyConfigError');
     var hasApi = !!getApiBase();
     if (!hasApi) {
-      if (errBanner) errBanner.hidden = false;
+      if (errBanner) errBanner.removeAttribute('hidden');
       setFormsApiDisabled(true);
       return;
     }
-    if (errBanner) errBanner.hidden = true;
+    if (errBanner) errBanner.setAttribute('hidden', '');
     setFormsApiDisabled(false);
 
     loadMetrics().catch(function (err) {

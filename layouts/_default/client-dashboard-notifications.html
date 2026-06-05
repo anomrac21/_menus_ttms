@@ -1,6 +1,8 @@
 {{ define "main" }}
+{{- $notifyApiUrl := site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" -}}
+{{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
 
-<div class="dashboard-analytics-page dashboard-notify-page" id="dashboardNotificationsPage">
+<div class="dashboard-analytics-page dashboard-notify-page" id="dashboardNotificationsPage" data-notify-api-url="{{ $notifyApiUrl }}" data-notify-client-domain="{{ $notifyClientDomain }}">
 
   <div class="dashboard-edit-header dashboard-notify-header">
 
@@ -34,7 +36,7 @@
 
       <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
 
-      <span>Notification API is not configured. Enable <code class="dashboard-notify-code">params.notifications</code> in your site config and set <code class="dashboard-notify-code">apiUrl</code>.</span>
+      <span>Notification API is not configured. Enable <code class="dashboard-notify-inline-code">params.notifications</code> in your site config and set <code class="dashboard-notify-inline-code">apiUrl</code>.</span>
 
     </p>
 
