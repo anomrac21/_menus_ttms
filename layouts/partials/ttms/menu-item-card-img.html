@@ -1,0 +1,8 @@
+{{- /*
+  Menu item card thumbnail. Draft assets omit src (CMS preview needs auth fetch in main.js).
+  Usage: {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
+*/ -}}
+{{- $path := strings.TrimSpace (.path | default "") -}}
+{{- $title := .title | default "" -}}
+{{- $isDraft := hasPrefix $path "draft-assets/" -}}
+<img{{ if not $isDraft }} src="{{ partial "ttms/menu-img-src.html" (dict "path" $path "size" "card") }}"{{ end }} alt="{{ $title }}" loading="lazy" class="menu-item-img" data-src-path="{{ $path }}"{{ if $isDraft }} data-draft-pending="1"{{ end }} onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">

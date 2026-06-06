@@ -20,7 +20,6 @@
         color-mix(in srgb, var(--button-color1, #333) 92%, #fff) 0%,
         color-mix(in srgb, var(--button-color2, #222) 95%, #000) 100%
     );
-    padding: 0.85em 0.9em 0.85em 0.85em;
     box-shadow:
         0 3px 14px rgba(0, 0, 0, 0.22),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -88,7 +87,6 @@
 .menu-item-row-top {
     gap: 0.85em;
     align-items: stretch;
-    padding-right: 1.35rem;
 }
 
 .menu-item-card.expanded .menu-item-row-top {
@@ -100,7 +98,6 @@
     width: 5.25rem;
     min-width: 5.25rem;
     height: 5.25rem;
-    border-radius: 14px;
     border: 2px solid rgba(255, 255, 255, 0.18);
     background: rgba(0, 0, 0, 0.25);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
@@ -189,6 +186,7 @@
     line-height: 1.1;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     border: 1px solid color-mix(in srgb, #fff 40%, transparent);
+    justify-content: center;
 }
 
 .menu-item-price-original {
@@ -284,7 +282,6 @@
     }
 
     .menu-item-row-top {
-        padding-right: 1.1rem;
     }
 
     .menu-item-price {

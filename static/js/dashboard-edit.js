@@ -805,18 +805,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function forEachSectionHeaderInDomOrder(doc, fn) {
-    var headers = [];
-    if (!doc || !doc.querySelectorAll) return headers;
-    var packery = doc.getElementById('packery-container');
-    if (packery) {
-      packery.querySelectorAll('.main-menu-bg .menu-header[data-section-slug]').forEach(function(header) {
-        headers.push(header);
-      });
-    } else {
-      doc.querySelectorAll('.menu-header[data-section-slug]').forEach(function(header) {
-        headers.push(header);
-      });
-    }
+    var headers = getOrderedSectionHeadersInDom(doc);
     headers.forEach(function(header, index) {
       fn(header, index, headers);
     });
@@ -827,7 +816,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!doc) return;
     forEachSectionHeaderInDomOrder(doc, function(header, index) {
       header.setAttribute('data-weight', String(index));
-      var section = header.closest('.main-menu-bg');
+      var section = isMenuReelsPreview(doc) ? header : header.closest('.main-menu-bg');
       if (section) section.classList.add('dashboard-edit-has-change');
       var bar = dashboardSectionBar(section);
       if (bar) bar.classList.add('dashboard-edit-has-change');
@@ -1011,6 +1000,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     var scrollTarget = wrap || contextEl;
     function tryScroll() {
       if (!scrollTarget || !scrollTarget.isConnected) return;
+      var track = getMenuReelsTrack(doc);
+      if (isMenuReelsPreview(doc) && track) {
+        var tr = track.getBoundingClientRect();
+        var sr = scrollTarget.getBoundingClientRect();
+        var pad = 16;
+        var outOfView = sr.top < tr.top + pad || sr.bottom > tr.bottom - pad;
+        if (!outOfView) return;
+        try {
+          track.scrollTo({
+            top: track.scrollTop + (sr.top - tr.top) - pad,
+            left: 0,
+            behavior: 'smooth'
+          });
+        } catch (e) { /* ignore */ }
+        return;
+      }
       var rect = scrollTarget.getBoundingClientRect();
       var vh = win.innerHeight || doc.documentElement.clientHeight;
       var vw = win.innerWidth || doc.documentElement.clientWidth;
@@ -1044,7 +1049,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (toggle) toggle.setAttribute('aria-expanded', 'true');
     if (actions) actions.hidden = false;
     clearMoveSelectionHighlight(doc);
-    var highlightTarget = moveKind === 'section' ? (contextEl.closest('.main-menu-bg') || contextEl) : contextEl;
+    var highlightTarget = moveKind === 'section'
+      ? (contextEl.closest('.main-menu-bg') || contextEl.closest('.menu-header') || contextEl)
+      : contextEl;
     if (highlightTarget) highlightTarget.classList.add('dashboard-edit-move-selected');
     updateMoveToolbarStates(actions, contextEl, moveKind);
   }
@@ -1057,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         finishMenuItemReorder(doc, contextEl.parentNode);
       }
     } else if (moveKind === 'section') {
-      var section = contextEl.closest && contextEl.closest('.main-menu-bg');
+      var section = contextEl.closest && (contextEl.closest('.main-menu-bg') || contextEl.closest('.menu-header'));
       if (section && moveSectionByAction(doc, section, action)) {
         finishSectionReorder(doc);
       }
@@ -1091,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var atTop = false;
     var atBottom = false;
     if (moveKind === 'section') {
-      var section = contextEl.closest ? contextEl.closest('.main-menu-bg') : null;
+      var section = contextEl.closest ? (contextEl.closest('.main-menu-bg') || contextEl.closest('.menu-header')) : null;
       if (!section) return;
       var sections = getOrderedSectionBlocks(doc);
       var secIdx = sections.indexOf(section);
@@ -1104,9 +1111,18 @@ document.addEventListener('DOMContentLoaded', async function() {
       atTop = promoFound.index <= 0;
       atBottom = promoFound.index >= promoFound.groups.length - 1;
     } else {
-      var container = contextEl.closest('.menu-items-container');
-      if (!container) return;
-      var cards = getOrderedMenuItemCards(container);
+      var cards = [];
+      if (isMenuReelsPreview(doc)) {
+        getOrderedSectionHeadersInDom(doc).forEach(function(header) {
+          if (getReelsSectionItemCards(doc, header).indexOf(contextEl) >= 0) {
+            cards = getReelsSectionItemCards(doc, header);
+          }
+        });
+      } else {
+        var container = contextEl.closest('.menu-items-container');
+        if (!container) return;
+        cards = getOrderedMenuItemCards(container);
+      }
       var cardIdx = cards.indexOf(contextEl);
       if (cardIdx < 0) return;
       atTop = cardIdx <= 0;
@@ -1131,6 +1147,226 @@ document.addEventListener('DOMContentLoaded', async function() {
     return cards;
   }
 
+  function getMenuReelsTrack(doc) {
+    return doc ? doc.getElementById('menu-reels-track') : null;
+  }
+
+  function isMenuReelsPreview(doc) {
+    var track = getMenuReelsTrack(doc);
+    return !!(track && track.querySelector('.menu-reels-slide--hero'));
+  }
+
+  function getOrderedSectionHeadersInDom(doc) {
+    if (!doc || !doc.querySelectorAll) return [];
+    if (isMenuReelsPreview(doc)) {
+      var track = getMenuReelsTrack(doc);
+      if (!track) return [];
+      return Array.from(track.querySelectorAll('.menu-header.menu-reels-slide[data-section-slug]')).sort(function(a, b) {
+        var aw = parseInt(a.getAttribute('data-weight'), 10);
+        var bw = parseInt(b.getAttribute('data-weight'), 10);
+        if (isNaN(aw)) aw = 999;
+        if (isNaN(bw)) bw = 999;
+        if (aw !== bw) return aw - bw;
+        var pos = a.compareDocumentPosition(b);
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+        return 0;
+      });
+    }
+    var headers = [];
+    var packery = doc.getElementById('packery-container');
+    if (packery) {
+      packery.querySelectorAll('.main-menu-bg .menu-header[data-section-slug]').forEach(function(header) {
+        headers.push(header);
+      });
+    } else {
+      doc.querySelectorAll('.menu-header[data-section-slug]').forEach(function(header) {
+        headers.push(header);
+      });
+    }
+    return headers;
+  }
+
+  function getSectionHeaderForSlug(doc, sectionSlug) {
+    if (!doc || !sectionSlug) return null;
+    return doc.querySelector('.menu-header[data-section-slug="' + String(sectionSlug).replace(/"/g, '\\"') + '"]');
+  }
+
+  function getReelsSectionItemCards(doc, header) {
+    var cards = [];
+    if (!doc || !header || !isMenuReelsPreview(doc)) return cards;
+    var track = getMenuReelsTrack(doc);
+    if (!track || !track.contains(header)) return cards;
+    var el = header.nextElementSibling;
+    while (el) {
+      if (el.classList && el.classList.contains('menu-header')) break;
+      if (el.classList && el.classList.contains('menu-item-card')) cards.push(el);
+      el = el.nextElementSibling;
+    }
+    return cards;
+  }
+
+  function getMenuItemCardsForSection(doc, header) {
+    if (!header) return [];
+    if (isMenuReelsPreview(doc)) return getReelsSectionItemCards(doc, header);
+    var bg = header.closest('.main-menu-bg');
+    var container = bg && bg.querySelector('.menu-items-container');
+    return container ? getOrderedMenuItemCards(container) : [];
+  }
+
+  function collectReelsSectionNodes(doc, header) {
+    var nodes = [];
+    if (!doc || !header) return nodes;
+    var bar = dashboardSectionBar(header);
+    if (bar) nodes.push(bar);
+    nodes.push(header);
+    var el = header.nextElementSibling;
+    while (el) {
+      if (el.classList && el.classList.contains('menu-header')) break;
+      nodes.push(el);
+      el = el.nextElementSibling;
+    }
+    return nodes;
+  }
+
+  function moveReelsSectionByAction(doc, header, action) {
+    var track = getMenuReelsTrack(doc);
+    if (!track || !header) return false;
+    var headers = getOrderedSectionHeadersInDom(doc);
+    var idx = headers.indexOf(header);
+    if (idx < 0) return false;
+
+    function insertSliceBefore(refNode) {
+      collectReelsSectionNodes(doc, header).forEach(function(node) {
+        track.insertBefore(node, refNode);
+      });
+    }
+
+    if (action === 'top') {
+      if (idx === 0) return false;
+      var firstBar = dashboardSectionBar(headers[0]);
+      insertSliceBefore(firstBar || headers[0]);
+      return true;
+    }
+    if (action === 'up') {
+      if (idx <= 0) return false;
+      var prevHeader = headers[idx - 1];
+      insertSliceBefore(dashboardSectionBar(prevHeader) || prevHeader);
+      return true;
+    }
+    if (action === 'down') {
+      if (idx >= headers.length - 1) return false;
+      var nextHeader = headers[idx + 1];
+      var nextNodes = collectReelsSectionNodes(doc, nextHeader);
+      var insertRef = nextNodes[nextNodes.length - 1].nextElementSibling;
+      insertSliceBefore(insertRef);
+      return true;
+    }
+    if (action === 'bottom') {
+      if (idx >= headers.length - 1) return false;
+      var lastHeader = headers[headers.length - 1];
+      var lastNodes = collectReelsSectionNodes(doc, lastHeader);
+      insertSliceBefore(lastNodes[lastNodes.length - 1].nextElementSibling);
+      return true;
+    }
+    return false;
+  }
+
+  function moveReelsMenuItemCard(doc, card, action) {
+    var track = getMenuReelsTrack(doc);
+    if (!track || !card) return false;
+    var header = null;
+    getOrderedSectionHeadersInDom(doc).forEach(function(h) {
+      if (getReelsSectionItemCards(doc, h).indexOf(card) >= 0) header = h;
+    });
+    if (!header) return false;
+    var cards = getReelsSectionItemCards(doc, header);
+    var idx = cards.indexOf(card);
+    if (idx < 0) return false;
+    if (action === 'top') {
+      if (idx === 0) return false;
+      var slug = header.getAttribute('data-section-slug') || '';
+      var itemBar = track.querySelector('.dashboard-edit-add-item-bar[data-section-slug="' + slug.replace(/"/g, '\\"') + '"]');
+      track.insertBefore(card, itemBar ? itemBar.nextElementSibling : header.nextElementSibling);
+      return true;
+    }
+    if (action === 'up') {
+      if (idx <= 0) return false;
+      track.insertBefore(card, cards[idx - 1]);
+      return true;
+    }
+    if (action === 'down') {
+      if (idx >= cards.length - 1) return false;
+      track.insertBefore(cards[idx + 1], card);
+      return true;
+    }
+    if (action === 'bottom') {
+      if (idx >= cards.length - 1) return false;
+      track.insertBefore(card, cards[cards.length - 1].nextElementSibling);
+      return true;
+    }
+    return false;
+  }
+
+  function syncMenuItemWeightsInReelsSection(doc, header, markChanged) {
+    getReelsSectionItemCards(doc, header).forEach(function(card, index) {
+      card.setAttribute('data-weight', String(menuItemWeightForIndex(index)));
+      if (markChanged) card.classList.add('dashboard-edit-has-change');
+    });
+  }
+
+  function insertMenuItemCardInSection(doc, header, card, itemBar) {
+    if (!doc || !header || !card) return false;
+    if (isMenuReelsPreview(doc)) {
+      var track = getMenuReelsTrack(doc);
+      if (!track) return false;
+      card.classList.add('menu-reels-slide');
+      var slug = header.getAttribute('data-section-slug') || '';
+      if (slug) {
+        card.setAttribute('data-section-slug', slug);
+        card.setAttribute('data-reel-section', header.getAttribute('data-reel-section') || slug);
+      }
+      if (itemBar && itemBar.parentNode === track) {
+        track.insertBefore(card, itemBar.nextElementSibling);
+      } else {
+        var items = getReelsSectionItemCards(doc, header);
+        if (items.length) track.insertBefore(card, items[0]);
+        else track.insertBefore(card, header.nextElementSibling);
+      }
+      return true;
+    }
+    var bg = header.closest('.main-menu-bg');
+    var container = bg && bg.querySelector('.menu-items-container');
+    if (!container) return false;
+    if (itemBar && itemBar.parentNode === container) container.insertBefore(card, itemBar.nextElementSibling);
+    else container.insertBefore(card, container.firstChild);
+    return true;
+  }
+
+  function scheduleDashboardPreviewBootstrap(win, callback) {
+    if (!win || typeof callback !== 'function') return;
+    var ran = false;
+    function runOnce() {
+      if (ran) return;
+      ran = true;
+      callback();
+    }
+    if (!isMenuReelsPreview(win.document)) {
+      runOnce();
+      return;
+    }
+    if (typeof win.initMenuReels === 'function') {
+      try { win.initMenuReels(); } catch (e) { /* ignore */ }
+    }
+    win.addEventListener('menuReelsFlattened', function() {
+      setTimeout(runOnce, 40);
+    }, { once: true });
+    win.addEventListener('adsPopulated', function() {
+      setTimeout(runOnce, 80);
+    }, { once: true });
+    setTimeout(runOnce, 450);
+  }
+
   function syncMenuItemWeightsInContainer(container, markChanged) {
     if (!container) return;
     getOrderedMenuItemCards(container).forEach(function(card, index) {
@@ -1141,6 +1377,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function syncMenuItemWeightsFromDom(doc, markChanged) {
     if (!doc || !doc.querySelectorAll) return;
+    if (isMenuReelsPreview(doc)) {
+      getOrderedSectionHeadersInDom(doc).forEach(function(header) {
+        syncMenuItemWeightsInReelsSection(doc, header, !!markChanged);
+      });
+      return;
+    }
     doc.querySelectorAll('.menu-items-container').forEach(function(container) {
       syncMenuItemWeightsInContainer(container, !!markChanged);
     });
@@ -1235,12 +1477,39 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function finishMenuItemReorder(doc, container) {
+    if (isMenuReelsPreview(doc)) {
+      getOrderedSectionHeadersInDom(doc).forEach(function(header) {
+        syncMenuItemWeightsInReelsSection(doc, header, true);
+      });
+      markMenuReorderDirty();
+      var chain = Promise.resolve();
+      getOrderedSectionHeadersInDom(doc).forEach(function(header) {
+        getReelsSectionItemCards(doc, header).forEach(function(card) {
+          var payload = buildMenuItemPayloadFromCard(card);
+          if (!payload) return;
+          var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+          chain = chain.then(function() {
+            return postToCMS(previewPath, { payload: payload }).then(function() {
+              if (payload.contentPath) draftContentPaths.add(payload.contentPath);
+            }).catch(function(err) {
+              console.warn('Menu item reorder draft save failed', payload.contentPath, err);
+            });
+          });
+        });
+      });
+      chain.then(function() { applyEditHighlights(); });
+      return;
+    }
     syncMenuItemWeightsInContainer(container, true);
     markMenuReorderDirty();
     persistMenuItemWeightsInContainer(doc, container);
   }
 
   function moveMenuItemCard(card, action) {
+    var doc = card && card.ownerDocument;
+    if (isMenuReelsPreview(doc) && card && card.classList && card.classList.contains('menu-item-card')) {
+      return moveReelsMenuItemCard(doc, card, action);
+    }
     var container = card && card.parentNode;
     if (!container || !container.classList || !container.classList.contains('menu-items-container')) return false;
     var cards = getOrderedMenuItemCards(container);
@@ -1271,6 +1540,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function getOrderedSectionBlocks(doc) {
+    if (isMenuReelsPreview(doc)) {
+      return getOrderedSectionHeadersInDom(doc);
+    }
     var sections = [];
     if (!doc || !doc.querySelectorAll) return sections;
     var packery = doc.getElementById('packery-container');
@@ -1283,6 +1555,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function moveSectionByAction(doc, section, action) {
     if (!doc || !section) return false;
+    if (isMenuReelsPreview(doc) && section.classList && section.classList.contains('menu-header')) {
+      return moveReelsSectionByAction(doc, section, action);
+    }
     var parent = section.parentNode;
     if (!parent) return false;
     var sections = getOrderedSectionBlocks(doc);
@@ -1551,12 +1826,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function dashboardResolveDropSection(target) {
     if (!target || !target.closest) return null;
+    var doc = target.ownerDocument;
     var section = target.closest('.main-menu-bg');
     if (section) return section;
+    var reelHeader = target.closest('.menu-header.menu-reels-slide');
+    if (reelHeader && isMenuReelsPreview(doc)) return reelHeader;
     var bar = target.closest('.dashboard-edit-add-section-bar');
     if (bar) {
       var next = bar.nextElementSibling;
-      if (next && next.classList && next.classList.contains('main-menu-bg')) return next;
+      if (next && next.classList) {
+        if (next.classList.contains('main-menu-bg')) return next;
+        if (next.classList.contains('menu-header')) return next;
+      }
     }
     return null;
   }
@@ -1744,9 +2025,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     var doc = iframe.contentDocument;
     var titleVal = (inputTitle.value || '').trim();
     var baseSlug = slugifyMenuItemTitle(titleVal);
+    var sectionSlug = (selectedElement.getAttribute('data-section-slug') || '').trim();
     var bg = selectedElement.closest('.main-menu-bg');
     var header = bg && bg.querySelector('.menu-header[data-section-slug]');
-    var sectionSlug = header ? (header.getAttribute('data-section-slug') || '').trim() : '';
+    if (!sectionSlug && header) sectionSlug = (header.getAttribute('data-section-slug') || '').trim();
     if (!sectionSlug) {
       var um = (selectedElement.getAttribute('data-item-url') || '').match(/^\/([^/]+)\//);
       if (um) sectionSlug = um[1];
@@ -1817,9 +2099,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     doc.querySelectorAll('.menu-item-card[data-dashboard-edit-new-item]').forEach(function(card) {
       var url = card.getAttribute('data-item-url') || '';
       if (!url) return;
+      var slug = (card.getAttribute('data-section-slug') || '').trim();
       var bg = card.closest('.main-menu-bg');
       var header = bg && bg.querySelector('.menu-header[data-section-slug]');
-      var slug = header ? (header.getAttribute('data-section-slug') || '').trim() : '';
+      if (!slug && header) slug = (header.getAttribute('data-section-slug') || '').trim();
+      if (!slug) {
+        var urlMatch = (card.getAttribute('data-item-url') || '').match(/^\/([^/]+)\//);
+        if (urlMatch) slug = urlMatch[1];
+      }
       var categoryUrl = slug ? '/' + slug + '/' : '';
       var titleEl = card.querySelector('.menu-item-title a, .menu-item-title');
       var title = titleEl ? (titleEl.textContent || '').trim() : 'New item';
@@ -1899,10 +2186,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         image: topImg || '',
         summary: catSummary
       });
-      var scope = header.closest('.main-menu-bg') || header.parentElement;
-      var container = scope && scope.querySelector('.menu-items-container');
-      if (!container) return;
-      container.querySelectorAll('.menu-item-card').forEach(function(card, idx) {
+      getMenuItemCardsForSection(doc, header).forEach(function(card, idx) {
         var url = (card.getAttribute('data-item-url') || '').trim();
         if (!url) return;
         var titleEl = card.querySelector('.menu-item-title a, .menu-item-title');
@@ -1971,21 +2255,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         nid: mSec[2]
       };
       var slug = (mi.categoryUrl || '').replace(/^\/+|\/+$/g, '').split('/').filter(Boolean)[0] || '';
-      var header = slug ? doc.querySelector('.menu-header[data-section-slug="' + slug.replace(/"/g, '\\"') + '"]') : null;
-      var bg = header && header.closest('.main-menu-bg');
-      var container = bg && bg.querySelector('.menu-items-container');
-      if (!container) {
-        var pack = doc.getElementById('packery-container') || doc.body;
-        container = pack.querySelector('.menu-items-container') || doc.querySelector('.main-menu-bg .menu-items-container');
+      var header = slug ? getSectionHeaderForSlug(doc, slug) : null;
+      if (!header) return;
+      var track = isMenuReelsPreview(doc) ? getMenuReelsTrack(doc) : null;
+      var bar = track
+        ? track.querySelector('.dashboard-edit-add-item-bar[data-section-slug="' + slug.replace(/"/g, '\\"') + '"]')
+        : null;
+      if (!bar && !isMenuReelsPreview(doc)) {
+        var container = findMenuItemsContainerForSectionSlug(doc, slug);
+        if (container && container.querySelector) bar = container.querySelector('.dashboard-edit-add-item-bar');
       }
-      if (!container) return;
-      var bar = container.querySelector('.dashboard-edit-add-item-bar');
       var card = win._dashboardCreateNewMenuItemCard(doc, cardOpts);
-      if (bar && bar.parentNode === container) {
-        container.insertBefore(card, bar.nextSibling);
-      } else {
-        container.insertBefore(card, container.firstChild);
-      }
+      insertMenuItemCardInSection(doc, header, card, bar);
     });
     if (Array.isArray(snap.contentEdits)) {
       snap.contentEdits.forEach(function(ce) {
@@ -5101,9 +5382,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function findMenuItemsContainerForSectionSlug(doc, sectionSlug) {
     if (!doc) return null;
-    if (sectionSlug) {
-      var header = doc.querySelector('.menu-header[data-section-slug="' + String(sectionSlug).replace(/"/g, '\\"') + '"]');
-      var bg = header && header.closest('.main-menu-bg');
+    var header = getSectionHeaderForSlug(doc, sectionSlug);
+    if (isMenuReelsPreview(doc) && header) {
+      return { __reelsHeader: header, __reelsTrack: getMenuReelsTrack(doc) };
+    }
+    if (header) {
+      var bg = header.closest('.main-menu-bg');
       var c = bg && bg.querySelector('.menu-items-container');
       if (c) return c;
     }
@@ -5130,11 +5414,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     var sectionForContainer = mp[1];
 
     var card = win._dashboardCreateNewMenuItemCard(doc, cardOpts);
-    var container = findMenuItemsContainerForSectionSlug(doc, sectionForContainer);
-    if (!container) return;
-    var bar = container.querySelector('.dashboard-edit-add-item-bar');
-    if (bar && bar.parentNode === container) container.insertBefore(card, bar.nextSibling);
-    else container.insertBefore(card, container.firstChild);
+    var header = getSectionHeaderForSlug(doc, sectionForContainer);
+    if (!header) return;
+    var track = isMenuReelsPreview(doc) ? getMenuReelsTrack(doc) : null;
+    var bar = track
+      ? track.querySelector('.dashboard-edit-add-item-bar[data-section-slug="' + String(sectionForContainer).replace(/"/g, '\\"') + '"]')
+      : null;
+    if (!bar && !isMenuReelsPreview(doc)) {
+      var container = findMenuItemsContainerForSectionSlug(doc, sectionForContainer);
+      if (container && container.querySelector) bar = container.querySelector('.dashboard-edit-add-item-bar');
+    }
+    insertMenuItemCardInSection(doc, header, card, bar);
     if (win._dashboardInjectEditButtons) win._dashboardInjectEditButtons();
   }
 
@@ -5607,7 +5897,12 @@ document.addEventListener('DOMContentLoaded', async function() {
           win.__dashboardAdsPopulatedBound = true;
           win.addEventListener('adsPopulated', function() {
             if (win.__dashboardEditMode && win._dashboardInjectEditButtons) {
-              setTimeout(win._dashboardInjectEditButtons, 50);
+              scheduleDashboardPreviewBootstrap(win, win._dashboardInjectEditButtons);
+            }
+          });
+          win.addEventListener('menuReelsFlattened', function() {
+            if (win.__dashboardEditMode && win._dashboardInjectEditButtons) {
+              scheduleDashboardPreviewBootstrap(win, win._dashboardInjectEditButtons);
             }
           });
         }
@@ -5686,7 +5981,19 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var imgEl = card.querySelector('img.menu-item-img');
                 if (imgEl && opts.imagesArray.length) {
                   var first = opts.imagesArray[0];
-                  imgEl.setAttribute('src', resolveMenuItemImageSrcForPreview(first));
+                  imgEl.setAttribute('data-src-path', first);
+                  if (first.indexOf('draft-assets/') === 0) {
+                    imgEl.removeAttribute('src');
+                    imgEl.setAttribute('data-draft-pending', '1');
+                    delete imgEl.dataset.draftAssetHydrated;
+                    delete imgEl.dataset.fellback;
+                  } else {
+                    imgEl.removeAttribute('data-draft-pending');
+                    imgEl.setAttribute('src', resolveMenuItemImageSrcForPreview(first));
+                  }
+                  if (typeof win.hydrateAuthenticatedDraftAssetImg === 'function') {
+                    win.hydrateAuthenticatedDraftAssetImg(imgEl);
+                  }
                 }
               }
               if (opts.modificationsFlat !== undefined) {
@@ -5734,7 +6041,10 @@ document.addEventListener('DOMContentLoaded', async function() {
               '.dashboard-edit-selected { outline: 2px solid #667eea !important; outline-offset: 2px !important; }',
               '.menu-item-card .dashboard-new-item-placeholder-link { cursor: default; color: inherit; text-decoration: none; }',
               '.menu-item-card.dashboard-edit-card-wrap { position: relative !important; pointer-events: none; }',
+              '.menu-item-card.menu-reels-slide.dashboard-edit-card-wrap { position: relative !important; pointer-events: none; }',
               '.menu-item-card.dashboard-edit-card-wrap > * { pointer-events: auto; }',
+              '.menu-header.menu-reels-slide.dashboard-edit-header-wrap { position: relative !important; pointer-events: none; overflow: visible !important; }',
+              '.menu-header.menu-reels-slide.dashboard-edit-header-wrap > * { pointer-events: auto; }',
               '.menu-item-card .dashboard-edit-card-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
               '.menu-header.dashboard-edit-header-wrap { position: relative !important; pointer-events: none; }',
               '.menu-header.dashboard-edit-header-wrap > * { pointer-events: auto; }',
@@ -5953,25 +6263,93 @@ document.addEventListener('DOMContentLoaded', async function() {
                 div.appendChild(editBtn);
                 hero.insertBefore(div, hero.firstChild);
               });
-              var packery = doc.getElementById('packery-container');
-              if (packery) {
-                doc.querySelectorAll('.main-menu-bg').forEach(function(section) {
-                  var prev = section.previousElementSibling;
-                  if (prev && prev.classList && prev.classList.contains('dashboard-edit-add-section-bar')) return;
+              if (isMenuReelsPreview(doc)) {
+                var reelsTrack = getMenuReelsTrack(doc);
+                if (reelsTrack) {
+                  getOrderedSectionHeadersInDom(doc).forEach(function(header) {
+                    var prev = header.previousElementSibling;
+                    if (!prev || !prev.classList || !prev.classList.contains('dashboard-edit-add-section-bar')) {
+                      var sectionBar = doc.createElement('div');
+                      sectionBar.className = 'dashboard-edit-add-section-bar';
+                      sectionBar.setAttribute('data-dashboard-edit', '1');
+                      var sectionBtn = doc.createElement('button');
+                      sectionBtn.type = 'button';
+                      sectionBtn.className = 'dashboard-edit-add-section-btn';
+                      sectionBtn.setAttribute('aria-label', 'Add section');
+                      sectionBtn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add section';
+                      sectionBar.appendChild(sectionBtn);
+                      reelsTrack.insertBefore(sectionBar, header);
+                    }
+                    var slug = header.getAttribute('data-section-slug') || '';
+                    var existingItemBar = reelsTrack.querySelector('.dashboard-edit-add-item-bar[data-section-slug="' + slug.replace(/"/g, '\\"') + '"]');
+                    if (!existingItemBar) {
+                      var itemBar = doc.createElement('div');
+                      itemBar.className = 'dashboard-edit-add-item-bar';
+                      itemBar.setAttribute('data-dashboard-edit', '1');
+                      if (slug) itemBar.setAttribute('data-section-slug', slug);
+                      var itemBtn = doc.createElement('button');
+                      itemBtn.type = 'button';
+                      itemBtn.className = 'dashboard-edit-add-item-btn';
+                      itemBtn.setAttribute('aria-label', 'Add item');
+                      itemBtn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add item';
+                      itemBar.appendChild(itemBtn);
+                      var items = getReelsSectionItemCards(doc, header);
+                      if (items.length) reelsTrack.insertBefore(itemBar, items[0]);
+                      else reelsTrack.insertBefore(itemBar, header.nextElementSibling);
+                    }
+                  });
+                  var promoTitle = reelsTrack.querySelector('.menu-reels-slide--section-title[data-reel-section="Promotions"]');
+                  if (promoTitle) {
+                    var promoPrev = promoTitle.nextElementSibling;
+                    if (!promoPrev || !promoPrev.classList || !promoPrev.classList.contains('dashboard-edit-add-promotion-bar')) {
+                      var promoBar = doc.createElement('div');
+                      promoBar.className = 'dashboard-edit-add-promotion-bar';
+                      promoBar.setAttribute('data-dashboard-edit', '1');
+                      var promoBtn = doc.createElement('button');
+                      promoBtn.type = 'button';
+                      promoBtn.className = 'dashboard-edit-add-promotion-btn';
+                      promoBtn.setAttribute('aria-label', 'Add promotion');
+                      promoBtn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add promotion';
+                      promoBar.appendChild(promoBtn);
+                      reelsTrack.insertBefore(promoBar, promoPrev);
+                    }
+                  }
+                }
+              } else {
+                var packery = doc.getElementById('packery-container');
+                if (packery) {
+                  doc.querySelectorAll('.main-menu-bg').forEach(function(section) {
+                    var prev = section.previousElementSibling;
+                    if (prev && prev.classList && prev.classList.contains('dashboard-edit-add-section-bar')) return;
+                    var bar = doc.createElement('div');
+                    bar.className = 'dashboard-edit-add-section-bar';
+                    bar.setAttribute('data-dashboard-edit', '1');
+                    var btn = doc.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'dashboard-edit-add-section-btn';
+                    btn.setAttribute('aria-label', 'Add section');
+                    btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add section';
+                    bar.appendChild(btn);
+                    packery.insertBefore(bar, section);
+                  });
+                }
+                doc.querySelectorAll('.menu-items-container').forEach(function(container) {
+                  var first = container.firstElementChild;
+                  if (first && first.classList && first.classList.contains('dashboard-edit-add-item-bar')) return;
                   var bar = doc.createElement('div');
-                  bar.className = 'dashboard-edit-add-section-bar';
+                  bar.className = 'dashboard-edit-add-item-bar';
                   bar.setAttribute('data-dashboard-edit', '1');
                   var btn = doc.createElement('button');
                   btn.type = 'button';
-                  btn.className = 'dashboard-edit-add-section-btn';
-                  btn.setAttribute('aria-label', 'Add section');
-                  btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add section';
+                  btn.className = 'dashboard-edit-add-item-btn';
+                  btn.setAttribute('aria-label', 'Add item');
+                  btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add item';
                   bar.appendChild(btn);
-                  packery.insertBefore(bar, section);
+                  container.insertBefore(bar, container.firstChild);
                 });
               }
               var adsContainer = doc.getElementById('homepage-ads-container') || doc.getElementById('client-ads-container') || doc.getElementById('frontpage-ads-container');
-              if (adsContainer) {
+              if (adsContainer && !isMenuReelsPreview(doc)) {
                 var prev = adsContainer.previousElementSibling;
                 if (!prev || !prev.classList || !prev.classList.contains('dashboard-edit-add-promotion-bar')) {
                   var promoBar = doc.createElement('div');
@@ -5986,20 +6364,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                   adsContainer.parentNode.insertBefore(promoBar, adsContainer);
                 }
               }
-              doc.querySelectorAll('.menu-items-container').forEach(function(container) {
-                var first = container.firstElementChild;
-                if (first && first.classList && first.classList.contains('dashboard-edit-add-item-bar')) return;
-                var bar = doc.createElement('div');
-                bar.className = 'dashboard-edit-add-item-bar';
-                bar.setAttribute('data-dashboard-edit', '1');
-                var btn = doc.createElement('button');
-                btn.type = 'button';
-                btn.className = 'dashboard-edit-add-item-btn';
-                btn.setAttribute('aria-label', 'Add item');
-                btn.innerHTML = '<i class="fa fa-plus" aria-hidden="true"></i> Add item';
-                bar.appendChild(btn);
-                container.insertBefore(bar, container.firstChild);
-              });
             } catch (err) { console.warn('injectEditButtons', err); }
           }
           function createNewMenuItemCard(doc, opts) {
@@ -6018,8 +6382,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             var summaryInner = summaryRaw
               ? '<p>' + summaryRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').split(/\n+/).filter(Boolean).join('</p><p>') + '</p>'
               : '<p></p>';
-            var card = doc.createElement('div');
-            card.className = 'menu-item-card';
+            var card = doc.createElement(isMenuReelsPreview(doc) ? 'section' : 'div');
+            card.className = 'menu-item-card' + (isMenuReelsPreview(doc) ? ' menu-reels-slide' : '');
+            if (isMenuReelsPreview(doc)) {
+              card.setAttribute('role', 'button');
+              card.setAttribute('tabindex', '0');
+              card.setAttribute('aria-expanded', 'false');
+              card.setAttribute('data-section-slug', rawSec);
+              card.setAttribute('data-reel-section', rawSec);
+            }
             card.setAttribute('data-dashboard-edit-new-item', '1');
             card.setAttribute('data-dashboard-new-item-id', nid);
             card.setAttribute('data-item-url', itemPath);
@@ -6058,10 +6429,25 @@ document.addEventListener('DOMContentLoaded', async function() {
             title = title || 'New Section';
             slug = slug || 'new-section';
             var safeTitle = (title || '').replace(/"/g, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var safeSlug = (slug || 'new-section').replace(/[^a-z0-9-]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'new-section';
+            if (isMenuReelsPreview(doc)) {
+              var reelHeader = doc.createElement('section');
+              reelHeader.className = 'menu-header menu-reels-slide';
+              reelHeader.setAttribute('data-dashboard-edit-new-section', '1');
+              reelHeader.setAttribute('data-section-slug', safeSlug);
+              reelHeader.setAttribute('data-reel-section', title);
+              reelHeader.setAttribute('data-weight', '0');
+              reelHeader.setAttribute('data-icon', '');
+              reelHeader.setAttribute('data-images-top', '');
+              reelHeader.setAttribute('data-images-bottom', '');
+              reelHeader.innerHTML = '<a class="menu-anchor" id="' + safeSlug + '"></a>' +
+                '<div class="headerstyle item"><h2 class="center title"><a href="/' + safeSlug + '/">' + safeTitle + '</a></h2></div>' +
+                '<div class="menu-summary item"></div>';
+              return reelHeader;
+            }
             var outer = doc.createElement('div');
             outer.className = 'main-menu-bg ' + safeTitle.replace(/\s+/g, ' ');
             outer.setAttribute('data-dashboard-edit-new-section', '1');
-            var safeSlug = (slug || 'new-section').replace(/[^a-z0-9-]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'new-section';
             var html = '<div class="main-menu ' + safeTitle.replace(/\s+/g, ' ') + ' item">' +
               '<div class="menu-header" data-section-slug="' + safeSlug + '" data-weight="0" data-icon="" data-images-top="" data-images-bottom="">' +
               '<a class="menu-anchor" id="' + safeSlug + '"></a>' +
@@ -6124,8 +6510,10 @@ document.addEventListener('DOMContentLoaded', async function() {
           }
           win._dashboardInjectEditButtons = injectEditButtons;
           win._dashboardRemoveEditButtons = removeEditButtons;
-          setTimeout(injectEditButtons, 100);
-          setTimeout(applyEditHighlights, 150);
+          scheduleDashboardPreviewBootstrap(win, function() {
+            injectEditButtons();
+            applyEditHighlights();
+          });
           if (win._dashboardEditClick) {
             try {
               doc.body.removeEventListener('click', win._dashboardEditClick, true);
@@ -6142,13 +6530,30 @@ document.addEventListener('DOMContentLoaded', async function() {
               e.preventDefault();
               e.stopPropagation();
               var bar = addItemBtn.closest('.dashboard-edit-add-item-bar');
-              var container = bar && bar.parentNode;
-              if (container && container.classList && container.classList.contains('menu-items-container')) {
-                var bg = container.closest('.main-menu-bg');
-                var hdr = bg && bg.querySelector('.menu-header[data-section-slug]');
-                var sectionSlug = (hdr && hdr.getAttribute('data-section-slug') || '').trim() || 'menu-items';
-                var newCard = createNewMenuItemCard(doc, { sectionSlug: sectionSlug });
-                container.insertBefore(newCard, bar.nextElementSibling);
+              if (!bar) return;
+              var sectionSlug = (bar.getAttribute('data-section-slug') || '').trim();
+              var header = getSectionHeaderForSlug(doc, sectionSlug);
+              if (!header && isMenuReelsPreview(doc)) {
+                var prev = bar.previousElementSibling;
+                while (prev) {
+                  if (prev.classList && prev.classList.contains('menu-header')) {
+                    header = prev;
+                    break;
+                  }
+                  prev = prev.previousElementSibling;
+                }
+              }
+              if (!header) {
+                var container = bar.parentNode;
+                if (container && container.classList && container.classList.contains('menu-items-container')) {
+                  var bg = container.closest('.main-menu-bg');
+                  header = bg && bg.querySelector('.menu-header[data-section-slug]');
+                }
+              }
+              if (header) {
+                var slug = (header.getAttribute('data-section-slug') || sectionSlug || 'menu-items').trim() || 'menu-items';
+                var newCard = createNewMenuItemCard(doc, { sectionSlug: slug });
+                insertMenuItemCardInSection(doc, header, newCard, bar);
                 if (win._dashboardInjectEditButtons) {
                   setTimeout(function() {
                     win._dashboardInjectEditButtons();
@@ -6166,9 +6571,13 @@ document.addEventListener('DOMContentLoaded', async function() {
               e.stopPropagation();
               var bar = addPromotionBtn.closest('.dashboard-edit-add-promotion-bar');
               var container = bar && (doc.getElementById('homepage-ads-container') || doc.getElementById('client-ads-container') || doc.getElementById('frontpage-ads-container'));
+              if (!container && isMenuReelsPreview(doc)) container = getMenuReelsTrack(doc);
               if (container) {
                 var newPromo = createNewPromotionElement(doc);
-                container.insertBefore(newPromo, container.firstChild);
+                var firstAd = container.querySelector('.ads-reels-slide');
+                if (firstAd) container.insertBefore(newPromo, firstAd);
+                else if (bar && bar.nextElementSibling) container.insertBefore(newPromo, bar.nextElementSibling);
+                else container.insertBefore(newPromo, container.firstChild);
                 if (win._dashboardInjectEditButtons) {
                   setTimeout(function() {
                     win._dashboardInjectEditButtons();
@@ -7364,8 +7773,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 
           renderMenuItemImagesUI(imagesArr, true);
           var imgEl = selectedElement.querySelector('img.menu-item-img');
-          if (imgEl) {
-            if (imagesArr.length) imgEl.setAttribute('src', resolveMenuItemImageSrcForPreview(imagesArr[0]));
+          if (imgEl && imagesArr.length) {
+            var previewFirst = imagesArr[0];
+            imgEl.setAttribute('data-src-path', previewFirst);
+            if (previewFirst.indexOf('draft-assets/') === 0) {
+              imgEl.removeAttribute('src');
+              imgEl.setAttribute('data-draft-pending', '1');
+              delete imgEl.dataset.draftAssetHydrated;
+              delete imgEl.dataset.fellback;
+            } else {
+              imgEl.removeAttribute('data-draft-pending');
+              imgEl.setAttribute('src', resolveMenuItemImageSrcForPreview(previewFirst));
+            }
+            var previewWin = iframe && iframe.contentWindow;
+            if (previewWin && typeof previewWin.hydrateAuthenticatedDraftAssetImg === 'function') {
+              previewWin.hydrateAuthenticatedDraftAssetImg(imgEl);
+            }
           }
 
           var priceEl = selectedElement.querySelector('.menu-item-price');

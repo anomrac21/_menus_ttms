@@ -1,14 +1,43 @@
 <a class="menu-anchor" id="ads-section"></a>
-{{/* Client-side filtering: Container is populated by client-ad-manager.js */}}
-{{/* JavaScript will fetch ads from /promotions/index.json and filter by day/date */}}
-<div id="homepage-ads-container" class="frontpageads item">
-  {{/* JavaScript (client-ad-manager.js) will populate this container with filtered ads */}}
-  {{/* Loading indicator while ads are being fetched */}}
-  <div class="ads-loading" style="text-align: center; padding: 2em; color: var(--text-color, #666);">
-    <p>Loading promotions...</p>
-  </div>
+{{/* Homepage promo reels — built at compile time (same slides as /promotions/). JS only binds clicks + optional day filter. */}}
+<div id="homepage-ads-container" class="frontpageads item client-ads-reels">
+  {{- $advertisements := site.GetPage "Promotions" -}}
+  {{- if $advertisements -}}
+    {{- range $catalogIndex, $page := $advertisements.RegularPages.ByWeight -}}
+      {{- $adstitle := .LinkTitle -}}
+      {{- $adurl := .RelPermalink -}}
+      {{- $adlink := .Params.link -}}
+      {{- $finalurl := cond $adlink $adlink $adurl -}}
+      {{- $adId := lower .LinkTitle | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" -}}
+      {{- $slideIndex := 0 -}}
+      {{- range .Params.images -}}
+        {{- $img := .image -}}
+        {{- if $img -}}
+          {{- $imgSrc := partial "ttms/menu-img-src.html" (dict "path" $img "size" "ad") -}}
+          {{- $slideId := $adId -}}
+          {{- if gt (len $page.Params.images) 1 -}}
+            {{- $slideId = printf "%s-%d" $adId $slideIndex -}}
+          {{- end -}}
+          <article
+            id="menu-ad-{{ $slideId }}"
+            class="ads-reels-slide"
+            data-ad-id="menu-ad-{{ $slideId }}"
+            data-ad-title="{{ $adstitle }}"
+            data-ad-url="{{ $finalurl }}"
+            data-catalog-index="{{ $catalogIndex }}"
+            {{- with $page.Params.daysofweek -}}
+            data-daysofweek="{{ . | jsonify }}"
+            {{- end -}}
+          >
+            <span>Sponsored</span>
+            <img src="{{ $imgSrc }}" class="ad-portrait-bg" alt="{{ $adstitle }}" loading="{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }} fetchpriority="high"{{ end }}>
+            <img src="{{ $imgSrc }}" class="ad-portrait" alt="{{ $adstitle }}" loading="{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }} fetchpriority="high"{{ end }}>
+          </article>
+          {{- $slideIndex = add $slideIndex 1 -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else -}}
+    <p class="homepage-ads-empty" style="text-align: center; padding: 2em;">No promotions available</p>
+  {{- end -}}
 </div>
-
-
-
-

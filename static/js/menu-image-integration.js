@@ -991,6 +991,7 @@
 
   function openUploadModal(clientId, menuItemPath) {
     const modal = ensureUploadModal();
+    document.body.appendChild(modal);
     resetUploadModal(modal, clientId, menuItemPath);
     modal.classList.add('is-open');
   }

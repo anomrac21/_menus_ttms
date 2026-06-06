@@ -58,9 +58,13 @@
       updateHeaderMenublockScroll();
     }
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    if (typeof window.scrollMenuReelsToTop === 'function' && document.getElementById('menu-reels-track')) {
+      window.scrollMenuReelsToTop('smooth');
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
 
     if (window.location.hash) {
       history.replaceState(null, '', window.location.pathname + window.location.search);

@@ -26,7 +26,7 @@
     position: fixed;
     top: 80px;
     right: 20px;
-    z-index: 9999;
+    z-index: var(--ttms-z-notification, 10100);
     max-width: 400px;
     display: flex;
     flex-direction: column;

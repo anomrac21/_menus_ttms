@@ -7,14 +7,14 @@
   position: absolute;
   top: 0.5em;
   right: 0.5em;
-  z-index: 12;
+  z-index: var(--ttms-z-card-controls, 8);
 }
 
 .single-page-content > .menu-image-actions {
   position: absolute;
   top: 0.5em;
   left: 0.5em;
-  z-index: 12;
+  z-index: var(--ttms-z-card-controls, 8);
   margin: 0;
   padding: 0;
   pointer-events: none;
@@ -69,7 +69,7 @@
   position: absolute;
   top: 0.5em;
   left: 0.5em;
-  z-index: 12;
+  z-index: var(--ttms-z-card-controls, 8);
   margin: 0;
   padding: 0;
   pointer-events: none;
@@ -212,7 +212,7 @@
   position: absolute;
   top: 0.35em;
   right: 0.35em;
-  z-index: 8;
+  z-index: var(--ttms-z-card-controls, 8);
 }
 
 .menu-item-card .menu-item-title {
@@ -341,7 +341,7 @@
   left: 50%;
   bottom: 5.5rem;
   transform: translateX(-50%);
-  z-index: 12000;
+  z-index: var(--ttms-z-toast, 10100);
   max-width: min(92vw, 22rem);
   padding: 0.65rem 1rem;
   border-radius: 0.5rem;

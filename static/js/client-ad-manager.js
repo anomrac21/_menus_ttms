@@ -304,7 +304,7 @@ class ClientAdManager {
         return `
       <article
         id="menu-ad-${slideId}"
-        class="ads-reels-slide sticky"
+        class="ads-reels-slide"
         data-ad-id="menu-ad-${slideId}"
         data-ad-title="${safeTitle}"
         data-ad-url="${finalUrl}"
@@ -377,11 +377,72 @@ class ClientAdManager {
     this.refreshAfterAdsPopulated();
   }
 
-  async populateHomepage(force = false) {
+  getHomepageAdSlides() {
+    const track = document.getElementById('menu-reels-track');
+    if (track) {
+      return Array.from(track.querySelectorAll('.ads-reels-slide'));
+    }
     const container = document.getElementById('homepage-ads-container');
-    if (!container) return;
+    return container ? Array.from(container.querySelectorAll('.ads-reels-slide')) : [];
+  }
 
+  applyHomepageDayFilter(root) {
+    const scope = root || document.getElementById('menu-reels-track') || document.getElementById('homepage-ads-container');
+    if (!scope) return;
+
+    const day = this.currentDay || new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    const slides = scope.querySelectorAll('.ads-reels-slide[data-daysofweek]');
+    let visible = 0;
+
+    slides.forEach((slide) => {
+      let days = [];
+      try {
+        days = JSON.parse(slide.getAttribute('data-daysofweek') || '[]');
+      } catch (_) {
+        days = [];
+      }
+      const show = !days.length || days.includes(day);
+      slide.hidden = !show;
+      slide.classList.toggle('ads-reels-slide--hidden', !show);
+      if (show) visible += 1;
+    });
+
+    if (visible === 0 && slides.length) {
+      slides.forEach((slide) => {
+        slide.hidden = false;
+        slide.classList.remove('ads-reels-slide--hidden');
+      });
+      visible = slides.length;
+    }
+
+    return visible;
+  }
+
+  async populateHomepage(force = false) {
     if (this.hasPopulatedHome && !force) return;
+
+    await this.ensureDateTime();
+
+    let container = document.getElementById('homepage-ads-container');
+    const track = document.getElementById('menu-reels-track');
+    let slides = this.getHomepageAdSlides();
+
+    if (slides.length > 0) {
+      if (container) {
+        const loading = container.querySelector('.ads-loading');
+        if (loading) loading.remove();
+        container.style.display = '';
+        container.style.visibility = 'visible';
+      }
+      this.applyHomepageDayFilter(track || container || document);
+      this.bindClientAdsReelsSlides(document);
+      this.hasPopulatedHome = true;
+      console.log('Homepage ads ready (SSR):', slides.length);
+      this.refreshAfterAdsPopulated();
+      return;
+    }
+
+    if (!container) return;
 
     const loading = container.querySelector('.ads-loading');
     if (loading) loading.remove();
@@ -393,45 +454,57 @@ class ClientAdManager {
       return;
     }
 
-    container.classList.add('client-ads-reels');
-    container.innerHTML =
-      ads.map((ad, index) => this.generateHomepageAdHTML(ad, index)).filter(Boolean).join('') +
-      '<section class="ads-reels-slide sticky menu-ad-scroll-end" aria-hidden="true"></section>';
+    container = document.getElementById('homepage-ads-container');
+    if (!container) return;
+
+    container.innerHTML = ads.map((ad, index) => this.generateHomepageAdHTML(ad, index)).filter(Boolean).join('');
     container.style.display = '';
     container.style.visibility = 'visible';
     this.hasPopulatedHome = true;
-    console.log('Homepage ads populated');
+    console.log('Homepage ads populated (JSON fallback):', ads.length);
     this.bindClientAdsReelsSlides(container);
     this.refreshAfterAdsPopulated();
+  }
+
+  bindReelsSlideClicks(slides) {
+    slides.forEach((slide, index) => {
+      if (slide.dataset.catalogIndex == null) slide.dataset.catalogIndex = String(index);
+      const url = slide.dataset.adUrl;
+      if (!url || slide.dataset.reelsClickBound === '1') return;
+      slide.dataset.reelsClickBound = '1';
+      slide.addEventListener('click', (e) => {
+        if (e.target.closest('.ad-unmute-btn')) return;
+        const t = e.target;
+        const onMedia =
+          (t.tagName === 'IMG' &&
+            (t.classList.contains('ad-portrait') || t.classList.contains('ad-portrait-bg'))) ||
+          t.matches?.('video.ad-video');
+        if (!onMedia) return;
+        e.preventDefault();
+        window.location.assign(url);
+      });
+    });
   }
 
   bindClientAdsReelsSlides(root = document) {
     const containers = root.querySelectorAll
       ? root.querySelectorAll('#client-ads-container, #homepage-ads-container')
       : [];
-    const scope = root.id === 'client-ads-container' || root.id === 'homepage-ads-container' ? [root] : Array.from(containers);
+    const scope =
+      root.id === 'client-ads-container' || root.id === 'homepage-ads-container'
+        ? [root]
+        : Array.from(containers);
 
     scope.forEach((container) => {
       if (!container) return;
       container.classList.add('client-ads-reels');
-      container.querySelectorAll('.ads-reels-slide').forEach((slide, index) => {
-        if (slide.dataset.catalogIndex == null) slide.dataset.catalogIndex = String(index);
-        const url = slide.dataset.adUrl;
-        if (!url || slide.dataset.reelsClickBound === '1') return;
-        slide.dataset.reelsClickBound = '1';
-        slide.addEventListener('click', (e) => {
-          if (e.target.closest('.ad-unmute-btn')) return;
-          const t = e.target;
-          const onMedia =
-            (t.tagName === 'IMG' &&
-              (t.classList.contains('ad-portrait') || t.classList.contains('ad-portrait-bg'))) ||
-            t.matches?.('video.ad-video');
-          if (!onMedia) return;
-          e.preventDefault();
-          window.location.assign(url);
-        });
-      });
+      this.bindReelsSlideClicks(container.querySelectorAll('.ads-reels-slide'));
     });
+
+    const track = document.getElementById('menu-reels-track');
+    if (track) {
+      this.bindReelsSlideClicks(track.querySelectorAll(':scope > .ads-reels-slide'));
+    }
   }
 
   async populateAds(forceRepopulate = false) {

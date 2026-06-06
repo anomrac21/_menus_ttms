@@ -11,10 +11,11 @@
     {{- end -}}
     <div class="expanded-image-carousel-container menu-item-slideshow-track" role="region" aria-label="{{ $title }} images" tabindex="0">
       {{- range $i, $img := $images -}}
+        {{- $isDraft := hasPrefix $img "draft-assets/" -}}
         {{- $src := partial "ttms/menu-img-src.html" (dict "path" $img "size" "carousel") -}}
         <div class="expanded-image-slide menu-item-slideshow-slide{{ if eq $i 0 }} active{{ end }}" data-image-index="{{ $i }}">
-          <div class="content-panel" style="--ad-image: url('{{ $src | replace "'" "%27" }}')">
-            <img src="{{ $src }}" class="ad-portrait expanded-image-carousel-img" alt="{{ $title }} - Image {{ add $i 1 }}" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if eq $i 0 }} fetchpriority="high"{{ end }}>
+          <div class="content-panel"{{ if not $isDraft }} style="--ad-image: url('{{ $src | replace "'" "%27" }}')"{{ end }}>
+            <img{{ if not $isDraft }} src="{{ $src }}"{{ end }} class="ad-portrait expanded-image-carousel-img" alt="{{ $title }} - Image {{ add $i 1 }}" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" decoding="async" data-src-path="{{ $img }}"{{ if $isDraft }} data-draft-pending="1"{{ end }}{{ if eq $i 0 }} fetchpriority="high"{{ end }}>
           </div>
         </div>
       {{- end -}}

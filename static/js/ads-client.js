@@ -449,6 +449,10 @@
 
   setupReelsFullscreenAutoOpen() {
     if (!this.shouldUseReelsMode()) return;
+    if (document.getElementById('menu-reels-track')) {
+      this.teardownReelsFullscreenAutoOpen();
+      return;
+    }
     this.teardownReelsFullscreenAutoOpen();
 
     this._previewFullscreenScrollHandler = () => {
@@ -1208,6 +1212,9 @@
       this.setupReelsFullscreenAutoOpen();
 
       console.log(`✅ Reels preview: ${n} of ${items.length} ad(s)`);
+      if (typeof window.initMenuReels === 'function') {
+        window.initMenuReels();
+      }
     } catch (error) {
       console.error('Error displaying reels ads:', error);
     }

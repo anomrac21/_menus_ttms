@@ -21,7 +21,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 99999;
+    z-index: var(--ttms-z-loader, 99999);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
   
@@ -73,6 +73,7 @@
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
 {{ partialCached "head/css.html" . }}
+<script src="/js/search.js" defer></script>
 {{ partialCached "head/js.html" . }}
 <meta property="og:title" content="{{ .Title }} | {{ site.Title }}"/>
 {{ $images := slice }}
@@ -106,6 +107,7 @@
 <meta name="theme-color" content="#000000"/>
 
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
+<link rel="stylesheet" href="/css/z-index.css"/>
 <link rel="stylesheet" href="/css/colors.css"/>
 <link rel="stylesheet" href="/css/typography.css"/>
 <link rel="stylesheet" href="/css/custom.css"/>
@@ -137,8 +139,8 @@
 <link rel="preload" href="https://cdn.ttmenus.com/css/dinein_select.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/dinein_select.css"/></noscript>
 
-<link rel="preload" href="https://cdn.ttmenus.com/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/search.css"/></noscript>
+<link rel="preload" href="/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="/css/search.css"/></noscript>
 
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
@@ -291,6 +293,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/admin-users.js"></script>
 <link rel="stylesheet" href="/css/menu-favorites.css">
 <link rel="stylesheet" href="/css/menu-cards.css">
+<link rel="stylesheet" href="/css/menu-reels.css">
 <script src="/js/menu-favorites.js" defer></script>
 {{- end -}}
 {{- if site.Params.menuImageService.enabled -}}

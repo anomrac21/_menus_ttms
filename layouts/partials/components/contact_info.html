@@ -1,4 +1,4 @@
-<div class="contactinfobg">
+<section class="contactinfobg menu-reels-slide menu-reels-slide--contact">
 	<div class="contactinfo item">
 		<ul>
 			{{ $locations := site.Data.locations }}
@@ -32,20 +32,6 @@
 				{{ $locations = getJSON "data/locations.yaml" }}
 				<!-- Debug: getJSON attempt - locations: {{ if $locations }}YES{{ else }}NO{{ end }} -->
 			{{ end }}
-
-			{{- if site.Params.notifications.enabled -}}
-			<li class="subscribe subscribe--notifications">
-				<a id="subBtn" class="subbtn btn subbtn--notify contact-cta contact-cta--notify" href="#" role="button" aria-pressed="false" onclick="toggleNotificationSubscription(); return false;" title="Get alerts for specials, hours, and menu updates">
-					<span class="contact-cta__icon" aria-hidden="true">
-						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
-					</span>
-					<span class="contact-cta__copy">
-						<span id="subBtnText" class="contact-cta__title">Get menu alerts</span>
-						<span id="subBtnHint" class="contact-cta__hint">Free · specials &amp; hours</span>
-					</span>
-				</a>
-			</li>
-			{{- end -}}
 
 			{{ if $locations }}
 				<!-- Debug: {{ len $locations }} locations found -->
@@ -217,18 +203,8 @@
 			{{ end }}
 		</li>
 		{{ end }}
-			<li class="subscribe subscribe--install contact-cta-row hide">
-				<a id="btn_SubInfo" class="contact-cta contact-cta--install hide" href="#" role="button" onclick="expandAppMenu(); return false;" title="Install this menu on your device" aria-hidden="true" tabindex="-1">
-					<span class="contact-cta__icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg></span>
-					<span class="contact-cta__copy"><span class="contact-cta__title">Install app</span><span class="contact-cta__hint">Add to home screen</span></span>
-				</a>
-				<a id="btn_install1" class="contact-cta contact-cta--install installBtn hide" href="#" role="button" title="Install app" aria-hidden="true" tabindex="-1">
-					<span class="contact-cta__icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></span>
-					<span class="contact-cta__copy"><span class="contact-cta__title">Install now</span></span>
-				</a>
-			</li>
 		</ul>
 	
 			
 	</div><!-- END CONTACT SECTION -->
-</div>	
+</section>

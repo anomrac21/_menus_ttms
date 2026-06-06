@@ -15,6 +15,7 @@
 
     function init() {
         hideAllPanels();
+        hydrateAllDraftMenuCardImages();
         initializeFooter();
         initializeModals();
         bindMenuInteractions();
@@ -224,6 +225,8 @@
         img.alt = (card.querySelector('.menu-item-title') && card.querySelector('.menu-item-title').textContent.trim()) || '';
         img.setAttribute('data-src-path', allImages[0]);
         img.onerror = function () {
+            const p = this.getAttribute('data-src-path') || '';
+            if (p.indexOf('draft-assets/') === 0) return;
             if (window.TtmsThumbor && window.TtmsThumbor.fallbackImg) window.TtmsThumbor.fallbackImg(this);
         };
         wrap.appendChild(img);
@@ -258,12 +261,19 @@
         }
 
         if (path) {
+            const isDraft = path.indexOf('draft-assets/') === 0;
             const nextSrc = menuCardImageSrc(path);
-            if (nextSrc && img.src !== nextSrc) {
+            img.setAttribute('data-src-path', path);
+            if (isDraft) {
                 delete img.dataset.draftAssetHydrated;
+                delete img.dataset.fellback;
+                img.removeAttribute('src');
+                if (path) img.setAttribute('data-draft-pending', '1');
+            } else if (nextSrc && img.src !== nextSrc) {
+                delete img.dataset.draftAssetHydrated;
+                img.removeAttribute('data-draft-pending');
                 img.src = nextSrc;
             }
-            img.setAttribute('data-src-path', path);
             hydrateAuthenticatedDraftAssetImg(img);
             imgLink.style.display = '';
         } else if (img.getAttribute('src')) {
@@ -558,22 +568,6 @@
     }
 
     /**
-     * Toggle search visibility
-     * @global
-     */
-    function toggleSearch() {
-        const search = document.getElementById('search');
-        
-        if (!search) return;
-
-        if (search.classList.contains('hide-search')) {
-            search.classList.remove('hide-search');
-        } else {
-            search.classList.add('hide-search');
-        }
-    }
-
-    /**
      * Toggle footer accessibility/settings panel
      * @global
      */
@@ -769,10 +763,17 @@
      */
     function hydrateAuthenticatedDraftAssetImg(img) {
         if (!img || img.dataset.draftAssetHydrated === '1') return;
-        const url = img.getAttribute('src') || '';
-        if (!isCmsDraftAssetPreviewUrl(url)) return;
+        const dataPath = (img.getAttribute('data-src-path') || '').replace(/^\/+/, '');
+        let url = img.getAttribute('src') || '';
+        if (!isCmsDraftAssetPreviewUrl(url)) {
+            if (dataPath.indexOf('draft-assets/') !== 0) return;
+            url = resolveCmsDraftAssetPreviewUrl(dataPath);
+            if (!url) return;
+        }
         img.dataset.draftAssetHydrated = '1';
-        const dataPath = img.getAttribute('data-src-path') || '';
+        if (isCmsDraftAssetPreviewUrl(img.getAttribute('src') || '')) {
+            img.removeAttribute('src');
+        }
         fetch(url, { credentials: 'include', headers: cmsAuthHeadersForDraftImage() })
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -787,14 +788,32 @@
                 }
                 const blobUrl = URL.createObjectURL(blob);
                 img.dataset.draftBlobUrl = blobUrl;
+                img.removeAttribute('data-draft-pending');
                 img.src = blobUrl;
             })
             .catch(function () {
+                if (dataPath.indexOf('draft-assets/') === 0) return;
                 if (dataPath && window.TtmsThumbor && typeof window.TtmsThumbor.fallbackImg === 'function') {
                     img.setAttribute('data-src-path', dataPath);
                     window.TtmsThumbor.fallbackImg(img);
                 }
             });
+    }
+
+    function hydrateAllDraftMenuCardImages(root) {
+        const scope = root || document;
+        scope.querySelectorAll('.menu-item-img, .expanded-image-carousel-img').forEach(function (img) {
+            const path = (img.getAttribute('data-src-path') || '').replace(/^\/+/, '');
+            if (path.indexOf('draft-assets/') !== 0) return;
+            const src = img.getAttribute('src') || '';
+            if (src && !isCmsDraftAssetPreviewUrl(src) && img.dataset.draftBlobUrl) return;
+            delete img.dataset.fellback;
+            delete img.dataset.draftAssetHydrated;
+            if (!src || isCmsDraftAssetPreviewUrl(src) || src.indexOf('/draft-assets/') !== -1) {
+                img.removeAttribute('src');
+            }
+            hydrateAuthenticatedDraftAssetImg(img);
+        });
     }
 
     function resolveExpandedImageSrcForPreview(path) {
@@ -844,6 +863,25 @@
         console.log('📊 Tracked menu item card click:', { itemName, url, price: itemPrice });
     }
 
+    function isReelsMenuItemCard(element) {
+        const track = document.getElementById('menu-reels-track');
+        return !!(track && element && track.contains(element) && element.classList.contains('menu-reels-slide'));
+    }
+
+    function isMenuItemExpanded(element) {
+        if (!element) return false;
+        if (isReelsMenuItemCard(element)) {
+            const modal = document.getElementById('menu-reels-item-modal');
+            if (modal && modal.classList.contains('is-open') &&
+                typeof window.getMenuReelsModalActiveCard === 'function' &&
+                window.getMenuReelsModalActiveCard() === element) {
+                return true;
+            }
+            return false;
+        }
+        return element.classList.contains('expanded') || element.getAttribute('data-item-expanded') === 'true';
+    }
+
     /**
      * Toggle item expansion (inline expansion instead of modal)
      * @global
@@ -860,7 +898,17 @@
         if (card && card.classList.contains('menu-item-unavailable')) return;
         if (card && card.classList.contains('single-page-item-card')) return;
 
-        const isExpanded = element.classList.contains('expanded') || element.getAttribute('data-item-expanded') === 'true';
+        if (event && event.target?.closest?.('.menu-favorite-btn')) {
+            return;
+        }
+
+        const isExpanded = isMenuItemExpanded(element);
+        const isReelsItem = isReelsMenuItemCard(element);
+
+        if (event && isReelsItem && !isExpanded) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
         // If event is provided, check if click was on an interactive element
         if (event) {
@@ -939,6 +987,12 @@
 
         // If we reach here, the card is NOT expanded and should be expanded
         // Collapse any other expanded items first
+        if (typeof window.getMenuReelsModalActiveCard === 'function') {
+            const activeReelsCard = window.getMenuReelsModalActiveCard();
+            if (activeReelsCard && activeReelsCard !== element) {
+                collapseItem(activeReelsCard);
+            }
+        }
         const allCards = document.querySelectorAll('.menu-item-card[data-item-expanded="true"]');
         allCards.forEach(card => {
             if (card !== element) {
@@ -950,16 +1004,49 @@
         expandItem(element, itemUrl);
     }
 
-    /**
-     * Expand a menu item card
-     * @param {HTMLElement} element - The menu item card
-     * @param {string} url - Item URL
-     */
+    function resolveMenuItemCard(contextEl) {
+        if (contextEl && typeof window.getMenuReelsModalActiveCard === 'function') {
+            const active = window.getMenuReelsModalActiveCard();
+            if (active && contextEl.closest?.('.menu-reels-item-modal')) {
+                return active;
+            }
+        }
+        return contextEl?.closest?.('.menu-item-card') || null;
+    }
+
+    function getExpandedViewRoot(card) {
+        if (!card) return null;
+        if (isReelsMenuItemCard(card) && typeof window.getMenuReelsItemModalDataRoot === 'function') {
+            const modalRoot = window.getMenuReelsItemModalDataRoot();
+            if (modalRoot) return modalRoot;
+        }
+        return card;
+    }
+
     async function expandItem(element, url) {
-        const expandedContent = element.querySelector('.menu-item-expanded-content');
-        const loadingDiv = expandedContent.querySelector('.menu-item-expanded-loading');
-        const dataDiv = expandedContent.querySelector('.menu-item-expanded-data');
-        
+        const isReelsItem = isReelsMenuItemCard(element);
+        const useReelsModal = isReelsItem && !!document.getElementById('menu-reels-item-modal');
+
+        let expandedContent;
+        let loadingDiv;
+        let dataDiv;
+
+        if (useReelsModal) {
+            if (typeof window.openMenuReelsItemModal === 'function') {
+                window.openMenuReelsItemModal(element);
+            }
+            const targets = typeof window.getMenuReelsItemModalTargets === 'function'
+                ? window.getMenuReelsItemModalTargets()
+                : { container: null, loading: null, data: null };
+            expandedContent = targets.container;
+            loadingDiv = targets.loading;
+            dataDiv = targets.data;
+        } else {
+            expandedContent = element.querySelector('.menu-item-expanded-content');
+            loadingDiv = expandedContent?.querySelector('.menu-item-expanded-loading');
+            dataDiv = expandedContent?.querySelector('.menu-item-expanded-data');
+        }
+
         if (!expandedContent || !loadingDiv || !dataDiv) return;
 
         const isDashboardNewPlaceholderUrl = typeof window !== 'undefined' && window.__dashboardEditMode &&
@@ -969,9 +1056,15 @@
         expandedContent.style.display = 'block';
         loadingDiv.style.display = 'block';
         dataDiv.style.display = 'none';
-        element.setAttribute('data-item-expanded', 'true');
-        element.setAttribute('aria-expanded', 'true');
-        element.classList.add('expanded');
+        if (useReelsModal) {
+            dataDiv.innerHTML = '';
+            const inlineExpanded = element.querySelector('.menu-item-expanded-content');
+            if (inlineExpanded) inlineExpanded.style.display = 'none';
+        } else {
+            element.setAttribute('data-item-expanded', 'true');
+            element.setAttribute('aria-expanded', 'true');
+            element.classList.add('expanded');
+        }
 
         try {
             // Use existing openItem function to get item data, but render inline
@@ -1615,18 +1708,27 @@
                 updateExpandedItemPriceFromOptions(element);
             }, 50);
 
-            // Scroll into view with 5em offset from top
+            // Scroll into view (menu reels track on home, else window + header offset)
             setTimeout(() => {
-                // Calculate 5em in pixels (using root font size)
+                if (isReelsItem) return;
+                const track = document.getElementById('menu-reels-track');
+                if (track) {
+                    const tr = track.getBoundingClientRect();
+                    const sr = element.getBoundingClientRect();
+                    track.scrollTo({
+                        top: track.scrollTop + (sr.top - tr.top),
+                        left: 0,
+                        behavior: 'smooth',
+                    });
+                    return;
+                }
                 const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-                const offset = rootFontSize * 5; // 5em
-                
+                const offset = rootFontSize * 5;
                 const elementTop = element.getBoundingClientRect().top + window.pageYOffset;
                 const targetPosition = elementTop - offset;
-                
                 window.scrollTo({
-                    top: Math.max(0, targetPosition), // Ensure we don't scroll to negative position
-                    behavior: 'smooth'
+                    top: Math.max(0, targetPosition),
+                    behavior: 'smooth',
                 });
             }, 100);
 
@@ -1644,11 +1746,21 @@
      * @param {HTMLElement} element - The menu item card
      */
     function collapseItem(element) {
-        const expandedContent = element.querySelector('.menu-item-expanded-content');
-        if (!expandedContent) return;
+        const isReelsItem = isReelsMenuItemCard(element);
 
-        expandedContent.style.display = 'none';
-        element.setAttribute('data-item-expanded', 'false');
+        if (isReelsItem && isMenuItemExpanded(element) &&
+            typeof window.closeMenuReelsItemModal === 'function') {
+            window.closeMenuReelsItemModal(element);
+        }
+
+        const expandedContent = element.querySelector('.menu-item-expanded-content');
+        if (expandedContent) {
+            expandedContent.style.display = 'none';
+        }
+
+        if (!isReelsItem) {
+            element.setAttribute('data-item-expanded', 'false');
+        }
         element.setAttribute('aria-expanded', 'false');
         element.classList.remove('expanded');
     }
@@ -1660,10 +1772,11 @@
      * @param {number} change - Amount to change (-1 or 1)
      */
     function adjustExpandedQuantity(button, change) {
-        const card = button.closest('.menu-item-card');
+        const card = resolveMenuItemCard(button);
         if (!card) return;
 
-        const quantitySpan = card.querySelector('.expanded-quantity');
+        const root = getExpandedViewRoot(card);
+        const quantitySpan = root.querySelector('.expanded-quantity');
         if (!quantitySpan) return;
 
         let currentQty = parseInt(quantitySpan.textContent) || 1;
@@ -1697,7 +1810,7 @@
             event.stopPropagation();
         }
         
-        const card = optionElement.closest('.menu-item-card');
+        const card = resolveMenuItemCard(optionElement);
         if (!card) return;
         
         const optionType = optionElement.getAttribute('data-option-type');
@@ -1735,7 +1848,7 @@
             event.stopPropagation();
         }
         
-        const card = additionElement.closest('.menu-item-card');
+        const card = resolveMenuItemCard(additionElement);
         if (!card) return;
         
         // Toggle selected class (additions can be multiple selections)
@@ -1759,7 +1872,7 @@
             event.stopPropagation();
         }
         
-        const card = sideElement.closest('.menu-item-card');
+        const card = resolveMenuItemCard(sideElement);
         if (!card) return;
         
         const categoryName = sideElement.getAttribute('data-category');
@@ -1889,14 +2002,16 @@
     function updateExpandedItemPriceWithSides(card) {
         // First update base price from size/flavour
         updateExpandedItemPriceFromOptions(card);
+
+        const root = getExpandedViewRoot(card);
         
         // Get base unit price
-        const priceElement = card.querySelector('.expanded-price');
+        const priceElement = root.querySelector('.expanded-price');
         const baseUnitPrice = parseFloat(priceElement?.getAttribute('data-unit-price')) || 0;
         
         // Calculate side prices
         let sidePrice = 0;
-        const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
+        const selectedSides = root.querySelectorAll('.expanded-side-option.selected');
         selectedSides.forEach(side => {
             const price = parseFloat(side.getAttribute('data-item-price')) || 0;
             sidePrice += price;
@@ -1904,14 +2019,14 @@
         
         // Calculate modification and addition prices
         let modificationPrice = 0;
-        const selectedModifications = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="modification"]');
+        const selectedModifications = root.querySelectorAll('.expanded-addition-option.selected[data-addition-type="modification"]');
         selectedModifications.forEach(modification => {
             const price = parseFloat(modification.getAttribute('data-addition-price')) || 0;
             modificationPrice += price;
         });
         
         let additionPrice = 0;
-        const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="addition"]');
+        const selectedAdditions = root.querySelectorAll('.expanded-addition-option.selected[data-addition-type="addition"]');
         selectedAdditions.forEach(addition => {
             const price = parseFloat(addition.getAttribute('data-addition-price')) || 0;
             additionPrice += price;
@@ -1920,14 +2035,14 @@
         const totalModAndAddPrice = modificationPrice + additionPrice;
         
         // Get quantity
-        const quantitySpan = card.querySelector('.expanded-quantity');
+        const quantitySpan = root.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
         // Calculate total
         const totalPrice = (baseUnitPrice + sidePrice + totalModAndAddPrice) * quantity;
         
         // Update price display
-        const addCartButton = card.querySelector('.expanded-add-cart');
+        const addCartButton = root.querySelector('.expanded-add-cart');
         const priceButton = addCartButton?.querySelector('.cart-button-price');
         
         if (priceButton) {
@@ -2014,13 +2129,15 @@
             displayUnitPrice = unitPrice * (100 - promoPercent) / 100;
         }
         
+        const root = getExpandedViewRoot(card);
+
         // Update price display
-        const quantitySpan = card.querySelector('.expanded-quantity');
+        const quantitySpan = root.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
         // Calculate side prices
         let sidePrice = 0;
-        const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
+        const selectedSides = root.querySelectorAll('.expanded-side-option.selected');
         selectedSides.forEach(side => {
             const price = parseFloat(side.getAttribute('data-item-price')) || 0;
             sidePrice += price;
@@ -2028,8 +2145,8 @@
         
         const totalPrice = (displayUnitPrice + sidePrice) * quantity;
         
-        const priceElement = card.querySelector('.expanded-price');
-        const addCartButton = card.querySelector('.expanded-add-cart');
+        const priceElement = root.querySelector('.expanded-price');
+        const addCartButton = root.querySelector('.expanded-add-cart');
         const priceButton = addCartButton?.querySelector('.cart-button-price');
         
         if (priceElement) {
@@ -2059,11 +2176,12 @@
      * @param {string} url - Item URL
      */
     function addExpandedItemToCart(button, url) {
-        const card = button.closest('.menu-item-card');
+        const card = resolveMenuItemCard(button);
         if (!card) {
             console.warn('Card not found for add to cart');
             return;
         }
+        const root = getExpandedViewRoot(card);
         if (card.classList.contains('menu-item-unavailable')) {
             alert('This item is not currently available. Lunch items are available Monday–Friday, 11AM–2PM.');
             return;
@@ -2082,7 +2200,7 @@
                 const minimum = config.minimum || 0;
                 
                 if (minimum > 0) {
-                    const categoryContainer = card.querySelector(`.expanded-side-category[data-category-name="${categoryName}"]`);
+                    const categoryContainer = root.querySelector(`.expanded-side-category[data-category-name="${categoryName}"]`);
                     if (categoryContainer) {
                         const selectedSides = categoryContainer.querySelectorAll('.expanded-side-option.selected');
                         // In expanded view, each selected item counts as 1
@@ -2116,7 +2234,7 @@
         }
 
         // Get item details
-        const quantitySpan = card.querySelector('.expanded-quantity');
+        const quantitySpan = root.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
         const titleElement = card.querySelector('.menu-item-title a') || card.querySelector('.menu-item-title');
@@ -2127,7 +2245,7 @@
         const selectedVariable2 = card.getAttribute('data-selected-variable2') || '-';
         
         // Get price - try expanded price first, then regular price
-        const priceElement = card.querySelector('.expanded-price') || card.querySelector('.menu-item-price');
+        const priceElement = root.querySelector('.expanded-price') || card.querySelector('.menu-item-price');
         const priceText = priceElement?.textContent?.trim() || '';
         
         // Extract numeric price (remove $ and any other characters)
@@ -2153,7 +2271,7 @@
                 : selectedVariable1 !== '-' ? selectedVariable1 : (selectedVariable2 !== '-' ? selectedVariable2 : '-');
             
             // Get selected sides
-            const selectedSides = card.querySelectorAll('.expanded-side-option.selected');
+            const selectedSides = root.querySelectorAll('.expanded-side-option.selected');
             const sidesData = { items: [], categories: {} };
             
             selectedSides.forEach(side => {
@@ -2177,8 +2295,8 @@
             });
             
             // Get selected modifications and additions separately
-            const selectedModifications = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="modification"]');
-            const selectedAdditions = card.querySelectorAll('.expanded-addition-option.selected[data-addition-type="addition"]');
+            const selectedModifications = root.querySelectorAll('.expanded-addition-option.selected[data-addition-type="modification"]');
+            const selectedAdditions = root.querySelectorAll('.expanded-addition-option.selected[data-addition-type="addition"]');
             
             const mods = [];
             selectedModifications.forEach(modification => {
@@ -2333,6 +2451,24 @@
     }
 
     function scrollToHashTarget(target, behavior) {
+        const track = document.getElementById('menu-reels-track');
+        if (track && target) {
+            const slide = target.closest('.menu-reels-slide, .ads-reels-slide');
+            if (slide) {
+                const tr = track.getBoundingClientRect();
+                const sr = slide.getBoundingClientRect();
+                track.scrollTo({
+                    top: track.scrollTop + (sr.top - tr.top),
+                    left: 0,
+                    behavior: behavior || 'smooth',
+                });
+                return;
+            }
+            if (target.id && typeof window.scrollMenuReelTo === 'function') {
+                window.scrollMenuReelTo(target.id);
+                return;
+            }
+        }
         const offset = getHeaderScrollOffset();
         const top = target.getBoundingClientRect().top + window.scrollY - offset;
         window.scrollTo({
@@ -2355,7 +2491,8 @@
             if (anchor) {
                 const href = anchor.getAttribute('href');
                 if (href && href !== '#') {
-                    const target = document.querySelector(href);
+                    const hashId = decodeURIComponent(href.slice(1));
+                    const target = hashId ? document.getElementById(hashId) : null;
                     if (target) {
                         e.preventDefault();
                         scrollToHashTarget(target, 'smooth');
@@ -2453,83 +2590,11 @@
     // Make functions globally available
     window.toggleCart = toggleCart;
     window.closeCart = closeCart;
-    window.toggleSearch = toggleSearch;
-
-    /**
-     * Live search functionality for menu items
-     * @global
-     */
-    function liveSearch() {
-        const searchInput = document.getElementById('searchbox');
-        
-        if (!searchInput) return;
-        
-        const searchTerm = searchInput.value.trim().toLowerCase();
-        
-        // If no search term, show all items and sections
-        if (searchTerm.length === 0) {
-            const allCards = document.querySelectorAll('.menu-item-card');
-            allCards.forEach(card => {
-                card.style.display = '';
-            });
-            
-            const menuSections = document.querySelectorAll('.main-menu-bg');
-            menuSections.forEach(section => {
-                section.style.display = '';
-            });
-            return;
-        }
-        
-        // Search through menu items
-        const menuItemCards = document.querySelectorAll('.menu-item-card');
-        const sectionsWithMatches = new Set();
-        
-        menuItemCards.forEach(card => {
-            const titleElement = card.querySelector('.menu-item-title a, .menu-item-title');
-            const descriptionElement = card.querySelector('.menu-item-description');
-            
-            let titleText = '';
-            let descriptionText = '';
-            
-            if (titleElement) {
-                titleText = titleElement.textContent.trim().toLowerCase();
-            }
-            
-            if (descriptionElement) {
-                descriptionText = descriptionElement.textContent.trim().toLowerCase();
-            }
-            
-            const matches = titleText.includes(searchTerm) || descriptionText.includes(searchTerm);
-            
-            if (matches) {
-                card.style.display = '';
-                
-                // Track which sections have matches
-                const menuSection = card.closest('.main-menu-bg');
-                if (menuSection) {
-                    sectionsWithMatches.add(menuSection);
-                }
-            } else {
-                card.style.display = 'none';
-            }
-        });
-        
-        // Show/hide menu sections based on whether they have matches
-        const menuSections = document.querySelectorAll('.main-menu-bg');
-        menuSections.forEach(section => {
-            if (sectionsWithMatches.has(section)) {
-                section.style.display = '';
-            } else {
-                section.style.display = 'none';
-            }
-        });
-    }
-    
-    window.liveSearch = liveSearch;
     window.toggleFooterAccessibility = toggleFooterAccessibility;
     window.closeShop = closeShop;
     window.openItem = openItem;
     window.toggleItemExpansion = toggleItemExpansion;
+    window.collapseMenuItemCard = collapseItem;
     window.adjustExpandedQuantity = adjustExpandedQuantity;
     window.addExpandedItemToCart = addExpandedItemToCart;
     window.selectExpandedOption = selectExpandedOption;
@@ -3546,6 +3611,12 @@
     window.applyDayBasedPromos = applyDayBasedPromos;
     window.initializeFooterVisibility = initializeFooterVisibility;
     window.initializeLocationNavigation = initializeLocationNavigation;
+    window.hydrateAuthenticatedDraftAssetImg = hydrateAuthenticatedDraftAssetImg;
+    window.hydrateAllDraftMenuCardImages = hydrateAllDraftMenuCardImages;
+
+    document.addEventListener('menuReelsFlattened', function () {
+        hydrateAllDraftMenuCardImages();
+    });
 
 })();
 
@@ -3868,6 +3939,15 @@
      * Reinitialize page-specific features after Barba transitions.
      */
     function reinitTTMSPageFeatures() {
+        if (typeof window.hydrateAllDraftMenuCardImages === 'function') {
+            window.hydrateAllDraftMenuCardImages();
+        }
+        if (typeof window.liveSearch === 'function') {
+            const searchInput = document.getElementById('searchbox');
+            if (searchInput && searchInput.value.trim()) {
+                window.liveSearch();
+            }
+        }
         if (typeof window.applyDayBasedPromos === 'function') {
             window.applyDayBasedPromos();
         }

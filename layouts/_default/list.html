@@ -147,7 +147,7 @@
                       {{ if $imgData.hasImage }}
                         <a href="{{ .RelPermalink }}" class="menu-item-image-link">
                           <div class="menu-item-image">
-                            <img src="{{ partial "ttms/menu-img-src.html" (dict "path" $firstImage "size" "card") }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img" data-src-path="{{ $firstImage }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+                            {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
                           </div>
                         </a>
                       {{ end }}

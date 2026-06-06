@@ -12,7 +12,7 @@
     width: 100%;
     height: 2px;
     background: rgba(255, 255, 255, 0.1);
-    z-index: 5;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
     overflow: hidden;
     pointer-events: none;
 }
@@ -43,7 +43,7 @@
     content: '';
     position: absolute;
     inset: -10%;
-    z-index: 0;
+    z-index: var(--ttms-z-reel-inner-bg, 0);
     background-image: var(--ad-image);
     background-size: cover;
     background-position: center center;
@@ -61,7 +61,7 @@
 #homepage-ads-container .content-panel .ad-portrait,
 #client-ads-container .content-panel .ad-portrait,
 .menu-ad .content-panel .ad-portrait {
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
 }
 #pageadscontainer,
 #homepage-ads-container,
@@ -89,7 +89,7 @@
     border-radius: 3em;
     font-size: xx-small;
     font-weight: 700;
-    z-index: 4;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
     box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1, #5c1014) 40%, transparent);
     text-shadow: none;
 }
@@ -103,7 +103,7 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 3;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     margin: 0;
     padding: 0.55em 1em;
     background: linear-gradient(
@@ -157,7 +157,7 @@
     position: relative;
     width: 100%;
     overflow: visible;
-    z-index: 11;
+    z-index: auto;
 }
 
 /* All ad sections - stack vertically */
@@ -188,14 +188,18 @@
 #homepage-ads-container .ads-reels-slide.sticky {
     position: -webkit-sticky !important;
     position: sticky !important;
-    z-index: 2;
-    top: 0;
-    contain: layout style;
+    z-index: var(--ttms-z-reel-base, 1);
+    top: var(--ttms-header-height, 5em);
+    contain: style;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scroll-margin-top: var(--ttms-header-height, 5em);
 }
 
 #client-ads-container .menu-ad-scroll-end,
-#homepage-ads-container .menu-ad-scroll-end {
-    z-index: 1 !important;
+#homepage-ads-container .menu-ad-scroll-end,
+.menu-reels-scroll-end {
+    z-index: var(--ttms-z-reel-end, 0) !important;
     pointer-events: none;
     contain: none;
 }
@@ -307,7 +311,7 @@
     max-width: -webkit-fill-available;
     margin-inline:  auto !important;
     object-fit: contain;
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     left: 0;
     top: 0;
     transition: none;
@@ -338,7 +342,7 @@
 #client-ads-container .inner .ad-panel button,
 #frontpage-ads-container .inner .ad-panel button{
     position: relative;
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     left: 0;
     color: #fefefe;
     border: none;
@@ -351,7 +355,7 @@
 #client-ads-container .inner .ad-panel button,
 #frontpage-ads-container .inner .ad-panel button{
     position: relative;
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     padding: 2em;
     left: 0;
     margin: .4em;
@@ -404,7 +408,7 @@
 .nav-btns {
     display: flex;
     position: absolute;
-    z-index: 2;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     justify-content: space-between;
     width: 100vw;
     height: 66dvh;
@@ -516,7 +520,7 @@
 }
 
 #pageadscontainer.frontpageads section.menu-ad--reels-preview ul.inner.ads-list--preview li.ad-panel.ad-panel--preview > span:first-of-type {
-    z-index: 4;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
 }
 
 #pageadscontainer.frontpageads section.menu-ad--reels-preview ul.inner.ads-list--preview li.ad-panel.ad-panel--preview .ad-preview-media {
@@ -548,7 +552,7 @@
 #pageadscontainer.frontpageads section.menu-ad--reels-preview ul.inner.ads-list--preview li.ad-panel.ad-panel--preview .ad-preview-throbber {
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -578,7 +582,7 @@
 }
 
 #pageadscontainer.frontpageads section.menu-ad--reels-preview ul.inner.ads-list--preview li.ad-panel.ad-panel--preview .ad-unmute-btn {
-    z-index: 4;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
 }
 
 #pageadscontainer.frontpageads .ad-panel.ad-panel--preview {
@@ -621,7 +625,7 @@ body.ads-reels-open {
 .ads-reels-overlay {
     position: fixed;
     inset: 0;
-    z-index: 10050;
+    z-index: var(--ttms-z-ads-reels-overlay, 10050);
     background: #000;
     display: flex;
     flex-direction: column;
@@ -635,7 +639,7 @@ body.ads-reels-open {
     position: absolute;
     top: max(0.75rem, env(safe-area-inset-top));
     right: max(0.75rem, env(safe-area-inset-right));
-    z-index: 2;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     background: rgba(0, 0, 0, 0.5);
     border: none;
     border-radius: 50%;
@@ -688,7 +692,7 @@ body.ads-reels-open {
     position: absolute;
     top: 1.2em;
     left: 1em;
-    z-index: 4;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
     background: linear-gradient(
         135deg,
         var(--selected-button-color3, #fcd000),
@@ -716,7 +720,7 @@ body.ads-reels-open {
     height: auto;
     overflow: visible;
     pointer-events: none;
-    z-index: 11;
+    z-index: auto;
 }
 
 #client-ads-container.client-ads-reels .ads-reels-slide,
@@ -743,12 +747,12 @@ body.ads-reels-open {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
+    z-index: var(--ttms-z-reel-inner-bg, 0);
 }
 
 .ads-reels-slide .ad-portrait {
     position: relative;
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom));
     width: auto;
     max-width: 100%;
@@ -757,7 +761,7 @@ body.ads-reels-open {
 
 .ads-reels-slide video.ad-video {
     position: relative;
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     max-height: 100dvh;
     width: auto;
     max-width: 100%;
@@ -767,7 +771,7 @@ body.ads-reels-open {
 .ads-reels-slide .ad-unmute-btn {
     position: absolute;
     left: max(0.75rem, env(safe-area-inset-left));
-    z-index: 4;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
     bottom: 1em;
     background: rgba(0, 0, 0, 0.6);
     border: 2px solid rgba(255, 250, 245, 0.9);

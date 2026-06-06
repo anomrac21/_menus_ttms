@@ -9,14 +9,14 @@
 
 .contactinfobg {
     background: linear-gradient(var(--hero-bg-color, #000), var(--hero-bg-color, #000), var(--hero-bg-color, #000), var(--hero-bg-color, #000), var(--hero-bg-color, #000), transparent);
-    z-index: 1;
+    z-index: auto;
     position: relative;
     padding-bottom: 2em;
 }
 
 .contactinfo {
     display: block;
-    z-index: 1;
+    z-index: var(--ttms-z-reel-inner-content, 1);
     position: relative;
     max-width: 640px;
     margin-inline: auto;
@@ -61,6 +61,7 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    justify-content: center;
 }
 
 .contactinfo .contact-cta:hover,
@@ -168,7 +169,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1em;
+    gap: .25em;
     padding: 0;
     position: relative;
 }
@@ -505,11 +506,12 @@
 
 /* Location carousel nav */
 .contactinfo .btn-nav-location.contact-cta--nav {
-    width: 3rem;
-    height: 3rem;
-    min-width: 3rem;
+    height: -webkit-fill-available;
+    min-width: auto;
+    background: none;
+    border: none;
+    box-shadow: none;
     padding: 0;
-    border-radius: 50%;
     justify-content: center;
     color: var(--contact-cta-ink);
 }
@@ -832,7 +834,7 @@
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 30, 0.98));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    z-index: 9999;
+    z-index: var(--ttms-z-modal, 10050);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -1,0 +1,574 @@
+/**
+ * Menu reels — same scroll model as #ads-reels-overlay / .ads-reels-track (header stays visible).
+ */
+
+/* Homepage uses in-track reels; hide footer ad strip before JS adds menu-reels-mode */
+main.main--home ~ .bottomads {
+    display: none !important;
+}
+
+body.menu-reels-mode {
+    overflow: hidden;
+}
+
+body.menu-reels-mode main.main--home {
+    margin: 0 !important;
+    padding: 0;
+    /* Fixed header (main.css) — content starts below it, not underneath */
+    padding-block-start: var(--ttms-header-height, 5em) !important;
+    box-sizing: border-box;
+    min-height: 0;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+body.menu-reels-mode .bottomads {
+    display: none;
+}
+
+.menu-reels-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--main-bg, #000);
+}
+
+/* Same as .ads-reels-track — dedicated vertical snap container */
+.menu-reels-track {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+    scrollbar-width: none;
+}
+
+.menu-reels-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* Flatten wrappers so slides are track snap children */
+#menu-reels-track #packery-container,
+#menu-reels-track #homepage-ads-container,
+#menu-reels-track .main-menu-bg,
+#menu-reels-track .main-menu,
+#menu-reels-track .menu-items-container {
+    display: contents;
+}
+
+#menu-reels-track .main-body {
+    display: contents;
+    column-count: 1 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* adsbase.css sets display:block on .client-ads-reels — flatten inside track */
+body.menu-reels-mode #menu-reels-track #homepage-ads-container.client-ads-reels,
+body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
+    display: contents !important;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    pointer-events: none;
+}
+
+/* Same snap slide model as .ads-reels-slide (height = track viewport) */
+.menu-reels-track .menu-reels-slide,
+.menu-reels-track .ads-reels-slide {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    min-height: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: var(--main-bg, #000);
+}
+
+/* Promo slides inside track — match overlay reel visuals */
+#menu-reels-track .ads-reels-slide {
+    color: #fff;
+    text-align: center;
+    background: #000;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+#menu-reels-track .ads-reels-slide .ad-portrait-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: var(--ttms-z-reel-inner-bg, 0);
+}
+
+#menu-reels-track .ads-reels-slide .ad-portrait,
+#menu-reels-track .ads-reels-slide video.ad-video {
+    position: relative;
+    z-index: var(--ttms-z-reel-inner-content, 1);
+    max-height: calc(100% - 5.5rem - env(safe-area-inset-bottom));
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+#menu-reels-track .ads-reels-slide > span {
+    position: absolute;
+    top: 1.2em;
+    left: 1em;
+    z-index: var(--ttms-z-reel-inner-controls, 4);
+}
+
+#homepage-ads-container .ads-loading,
+#homepage-ads-container .homepage-ads-empty {
+    min-height: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: start;
+}
+
+.ads-reels-slide--hidden,
+.ads-reels-slide[hidden],
+.menu-reels-slide[hidden],
+.menu-item-card.menu-reels-slide[hidden] {
+    display: none !important;
+}
+
+body.menu-search-active .menu-reels-track {
+    scroll-snap-type: none;
+}
+
+#menu-reels-track .ads-reels-slide {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+/* Hero slide */
+.hero_logo_container.menu-reels-slide {
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+    padding-block-start: 0;
+    padding-block-end: max(1.25rem, env(safe-area-inset-bottom));
+    background: var(--hero-bg-color, #000);
+}
+
+.hero_logo_container .hero-cta-list {
+    position: relative;
+    z-index: var(--ttms-z-reel-inner-content, 1);
+    list-style: none;
+    margin: 0;
+    padding: 0 1rem;
+    width: 100%;
+    max-width: 20rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+}
+
+.hero_logo_container .hero-cta-list .subscribe {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.hero_logo_container .subscribe--install {
+    width: 100%;
+    justify-content: center;
+}
+
+.hero_logo_container .subscribe--install.hide,
+.hero_logo_container .subscribe--install .contact-cta.hide {
+    display: none !important;
+}
+
+.hero_logo_container .contact-cta--install {
+    width: 100%;
+    min-width: 0;
+    padding: 0.65em 1.1em 0.65em 0.85em;
+    background: linear-gradient(135deg, #5c6bc0, #3949ab);
+    border-color: color-mix(in srgb, #7986cb 55%, #fff);
+    color: #fff;
+    --contact-cta-ink: #fff;
+    --contact-cta-ink-muted: rgba(255, 255, 255, 0.85);
+}
+
+.hero_logo_container .contact-cta--install .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.hero_logo_container .subscribe .subbtn--notify.contact-cta {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Contact slide — tall reel: track scrolls through full content (no nested scroll trap) */
+.contactinfobg.menu-reels-slide {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    justify-content: flex-start;
+    padding-block-start: 0.5rem;
+    padding-block-end: max(1.25rem, env(safe-area-inset-bottom));
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+}
+
+.contactinfobg.menu-reels-slide .contactinfo {
+    width: 100%;
+    max-width: 640px;
+}
+
+/* Intro / hero-content slide */
+.hero-content.menu-reels-slide {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    text-align: center;
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    justify-content: flex-start;
+    padding-block-start: 0.75rem;
+    padding-block-end: max(1.25rem, env(safe-area-inset-bottom));
+}
+
+.hero-content.menu-reels-slide .client-tour-slideshow {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Section title slide */
+.menu-reels-slide--section-title {
+    color: var(--main-text, #fff);
+    text-align: center;
+}
+
+.menu-reels-slide--section-title .title {
+    margin: 0;
+}
+
+.menu-reels-slide--section-title .title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Section header reel */
+.menu-header.menu-reels-slide {
+    color: var(--main-text, #fff);
+    text-align: center;
+    padding-inline: 1rem;
+}
+
+.menu-header.menu-reels-slide .food.item {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: var(--ttms-z-reel-inner-bg, 0);
+    opacity: 0.35;
+    margin: 0;
+    border-radius: 0;
+}
+
+.menu-header.menu-reels-slide .headerstyle,
+.menu-header.menu-reels-slide .menu-summary {
+    position: relative;
+    z-index: var(--ttms-z-reel-inner-content, 1);
+    width: 100%;
+    max-width: 36rem;
+}
+
+.menu-header.menu-reels-slide .menu-summary {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin-block-start: 0.5rem;
+}
+
+.menu-header.menu-reels-slide .menu-anchor {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Menu item reel — vertical food-card layout (image hero + stacked copy) */
+.menu-item-card.menu-reels-slide {
+    color: var(--button-text-color1, #fff);
+    background: linear-gradient(165deg, var(--button-color1), var(--button-color2));
+    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #fff) 22%, transparent);
+    border-radius: 0;
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38);
+    width: 100%;
+    max-width: 24rem;
+    margin: 0 auto;
+    justify-content: center;
+    cursor: pointer;
+    overflow: visible;
+    padding-block: 0em 4em;
+}
+
+.menu-item-card.menu-reels-slide:hover,
+.menu-item-card.menu-reels-slide:active {
+    transform: none;
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38);
+}
+
+body.menu-reels-item-modal-open {
+    overflow: hidden;
+}
+
+body.menu-reels-item-modal-open .menu-reels-track,
+.menu-reels-track.menu-reels-track--locked {
+    overflow: hidden !important;
+    pointer-events: none;
+    touch-action: none;
+    scroll-snap-type: none;
+}
+
+.menu-reels-item-modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--ttms-z-reels-item-modal, 10070);
+    display: none;
+    flex-direction: column;
+    color: var(--button-text-color1, #fff);
+}
+
+.menu-reels-item-modal.is-open {
+    display: flex;
+}
+
+.menu-reels-item-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.menu-reels-item-modal__panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-height: 100dvh;
+    background: linear-gradient(165deg, var(--button-color1), var(--button-color2));
+    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #fff) 18%, transparent);
+    overflow: hidden;
+}
+
+.menu-reels-item-modal__header {
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #fff) 15%, transparent);
+}
+
+.menu-reels-item-modal__title {
+    margin: 0;
+    font-size: clamp(1.05rem, 4vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.25;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.menu-reels-item-modal__close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.28);
+    color: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.menu-reels-item-modal__close:hover,
+.menu-reels-item-modal__close:focus-visible {
+    background: rgba(0, 0, 0, 0.42);
+    outline: none;
+}
+
+.menu-reels-item-modal__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+}
+
+.menu-reels-item-modal__data .expanded-item-details {
+    width: 100%;
+    max-width: 28rem;
+    margin: 0 auto;
+}
+
+.menu-reels-item-modal__data .expanded-image-carousel {
+    margin-bottom: 0.85rem;
+}
+
+.menu-reels-item-modal__data .expanded-item-controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    background: linear-gradient(to top, var(--button-color2) 70%, transparent);
+}
+
+.menu-item-card.menu-reels-slide > .menu-favorite-btn {
+    top: 0.65rem;
+    right: 0.65rem;
+    width: 2.1rem;
+    height: 2.1rem;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-row-top {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.9rem;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-image-link {
+    align-self: center;
+    width: 100%;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-image {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    aspect-ratio: 1;
+    max-height: min(46vh, 18.5rem);
+    background: rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-header-content {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-title {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: clamp(1.2rem, 4.5vw, 1.45rem);
+    line-height: 1.25;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-title a {
+    display: block;
+    width: 100%;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-promo-badge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-size: 0.72rem;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-promo-badge .menu-item-promo-value {
+    margin-left: 0;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-row-middle {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding-inline: 2em;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-description {
+    width: 100%;
+    max-width: 22rem;
+    text-align: center;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    -webkit-line-clamp: 4;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-price {
+    width: 100%;
+    text-align: center;
+    font-size: clamp(1.15rem, 4vw, 1.35rem);
+    font-weight: 700;
+    white-space: normal;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-options {
+    width: 100%;
+    align-items: center;
+    margin-top: 0.15rem;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-options .sizes,
+.menu-item-card.menu-reels-slide .menu-item-options .flavours {
+    justify-content: center;
+}
+
+.menu-item-card.menu-reels-slide:not(.menu-item-card--has-image) .menu-item-title {
+}
+
+.menu-item-card.menu-reels-slide .menu-item-expanded-content {
+    width: 100%;
+    margin-top: 0.75rem;
+}
+
+#menublock .menublock-item.active .menublock-link,
+#menublock .menublock-link.is-active {
+    opacity: 1;
+}

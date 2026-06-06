@@ -11,7 +11,7 @@
   height: 100dvh;
   position: fixed;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
-  z-index: 1001;
+  z-index: var(--ttms-z-account-dashboard, 1001);
   color: var(--text-darker, #222);
   box-shadow: rgba(0, 0, 0, 0.12) 0 8px 32px;
   border: 1px solid rgba(255, 255, 255, 0.2);

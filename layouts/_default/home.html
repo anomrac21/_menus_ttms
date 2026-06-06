@@ -1,5 +1,7 @@
 {{ define "main" }}
-  <div class="hero_logo_container item" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
+  <div id="menu-reels-viewport" class="menu-reels-viewport">
+  <div id="menu-reels-track" class="menu-reels-track">
+  <section class="hero_logo_container item menu-reels-slide menu-reels-slide--hero" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
   {{ $siteName := partial "site-name.html" . }}
   {{ if .Params.image }}
     <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high">
@@ -9,14 +11,15 @@
   <div class="logo_container">
     <a href="/locations/"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="512" height="512"></a>
   </div>
-  </div> 
+  {{ partial "components/hero_ctas.html" . }}
+  </section>
   {{ partial "components/contact_info.html" . }}
-  <div class="hero-content">
+  <section class="hero-content menu-reels-slide menu-reels-slide--intro">
     {{ .Content }}
     {{ partial "client/clienttourimages.html" . }}
     {{ partial "socialmedia/share-button.html" . }}
     
-  </div>
+  </section>
   {{ $advertisementsRendered := false }}
   {{ range site.Pages.ByWeight }}
     {{ if and (not .IsPage) (not .IsHome)}}
@@ -25,10 +28,12 @@
       {{ if not (or (in $titleurl "admins") (in $titleurl "admin")) }}
         {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
           {{/* Only render the first "Promotions" section found to avoid duplicates */}}
-          <a class="menu-anchor" id="{{ $title }}"></a>
-          <h2 class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
-            <a href="{{ $titleurl }}">{{ $title }}</a>
-          </h2>
+          <section class="menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}">
+            <a class="menu-anchor" id="{{ $title }}"></a>
+            <h2 class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
+              <a href="{{ $titleurl }}">{{ $title }}</a>
+            </h2>
+          </section>
           {{ partial "ads/homepageclientads.html" . }} 
           {{ $advertisementsRendered = true }}
         {{ end }}
@@ -45,7 +50,7 @@
           {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods") (in $titleurl "admins") (in $titleurl "admin")) }}
               <div class="main-menu-bg {{ .LinkTitle }}">
                 <div class="main-menu {{ .LinkTitle }} item">
-                  <div class="menu-header" data-section-slug="{{ .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
+                  <section class="menu-header menu-reels-slide" data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     {{ if .Params.images.top }}
                       <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy"></a>
@@ -62,7 +67,7 @@
                     <div class="menu-summary item">
                       {{ .Summary }}
                     </div>
-                  </div>
+                  </section>
                   <div class="menu-items-container">
                       {{ $category := .LinkTitle }}
                       {{ $categoryurl := .RelPermalink }}
@@ -164,8 +169,10 @@
                         {{end}}
      
                         {{ $avail := .Params.availability | default $section.Params.availability }}
-                        <div class="menu-item-card{{ if $imgData.hasImage }} menu-item-card--has-image{{ end }}" 
+                        <section class="menu-item-card menu-reels-slide{{ if $imgData.hasImage }} menu-item-card--has-image{{ end }}" 
                             {{ with $avail }}data-availability="{{ $avail | jsonify }}"{{ end }}
+                            data-reel-section="{{ $category }}"
+                            data-section-slug="{{ .Section }}"
                             data-item-url="{{ .RelPermalink }}"
                             role="button"
                             tabindex="0"
@@ -192,7 +199,7 @@
                               {{ if $imgData.hasImage }}
                                 <a href="{{ .RelPermalink }}" class="menu-item-image-link">
                                   <div class="menu-item-image">
-                                    <img src="{{ partial "ttms/menu-img-src.html" (dict "path" $firstImage "size" "card") }}" alt="{{ .LinkTitle }}" loading="lazy" class="menu-item-img" data-src-path="{{ $firstImage }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+                                    {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
                                   </div>
                                 </a>
                               {{ end }}
@@ -271,7 +278,7 @@
                               </div>
                               <div class="menu-item-expanded-data" style="display: none;"></div>
                             </div>
-                        </div>
+                        </section>
                         
                       {{ end }}
                   </div> 
@@ -282,6 +289,8 @@
       {{ end }}
     {{ end }}
   {{ end }}
+  </div>
+  </div>
   </div>
   
 {{ end }}

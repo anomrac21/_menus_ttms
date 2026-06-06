@@ -12,7 +12,7 @@
 .dashboard-draft-modal {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: var(--ttms-z-dashboard-edit, 10001);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -376,7 +376,7 @@
 }
 
 .dashboard-publish-summary-modal:not(.hidden) {
-  z-index: 10001;
+  z-index: var(--ttms-z-dashboard-edit, 10001);
 }
 
 .dashboard-publish-summary-backdrop {
@@ -1158,7 +1158,7 @@
   bottom: 1.25rem;
   left: 50%;
   transform: translateX(-50%) translateY(120%);
-  z-index: 10000;
+  z-index: var(--ttms-z-modal, 10050);
   padding: 0.65rem 1rem;
   border-radius: 8px;
   background: rgba(22, 33, 62, 0.95);

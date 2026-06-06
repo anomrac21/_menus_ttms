@@ -2,6 +2,7 @@
  * Hero / slideshow CTAs — same chip system as .contactinfo
  */
 
+.hero_logo_container,
 .hero-content,
 .social-share-btn-container,
 .client-tour-slideshow {
@@ -15,6 +16,7 @@
     --contact-cta-ink-muted: rgba(26, 18, 8, 0.82);
 }
 
+.hero_logo_container .contact-cta,
 .hero-content .contact-cta,
 .social-share-btn-container .contact-cta,
 .client-tour-slideshow .contact-cta {
@@ -34,6 +36,8 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+.hero_logo_container .contact-cta:hover,
+.hero_logo_container .contact-cta:focus-visible,
 .hero-content .contact-cta:hover,
 .hero-content .contact-cta:focus-visible,
 .social-share-btn-container .contact-cta:hover,
@@ -46,12 +50,14 @@
     outline: none;
 }
 
+.hero_logo_container .contact-cta:active,
 .hero-content .contact-cta:active,
 .social-share-btn-container .contact-cta:active,
 .client-tour-slideshow .contact-cta:active {
     transform: translateY(0) scale(0.99);
 }
 
+.hero_logo_container .contact-cta__icon,
 .hero-content .contact-cta__icon,
 .social-share-btn-container .contact-cta__icon,
 .client-tour-slideshow .contact-cta__icon {
@@ -67,6 +73,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
+.hero_logo_container .contact-cta__icon svg,
 .hero-content .contact-cta__icon svg,
 .social-share-btn-container .contact-cta__icon svg,
 .client-tour-slideshow .contact-cta__icon svg {
@@ -74,12 +81,14 @@
     height: 1.35rem;
 }
 
+.hero_logo_container .contact-cta__icon svg path,
 .hero-content .contact-cta__icon svg path,
 .social-share-btn-container .contact-cta__icon svg path,
 .client-tour-slideshow .contact-cta__icon svg path {
     fill: currentColor;
 }
 
+.hero_logo_container .contact-cta__copy,
 .hero-content .contact-cta__copy,
 .social-share-btn-container .contact-cta__copy {
     display: flex;
@@ -91,6 +100,7 @@
     line-height: 1.2;
 }
 
+.hero_logo_container .contact-cta__title,
 .hero-content .contact-cta__title,
 .social-share-btn-container .contact-cta__title {
     font-size: 0.95rem;
@@ -98,6 +108,7 @@
     letter-spacing: 0.01em;
 }
 
+.hero_logo_container .contact-cta__hint,
 .hero-content .contact-cta__hint,
 .social-share-btn-container .contact-cta__hint {
     font-size: 0.78rem;
@@ -166,7 +177,7 @@
     border-radius: var(--contact-cta-radius);
     border: 2px solid var(--contact-cta-accent-border);
     box-shadow: var(--contact-cta-shadow);
-    z-index: 10000;
+    z-index: var(--ttms-z-toast, 10100);
     opacity: 0;
     transition: opacity 0.3s ease, transform 0.3s ease;
     font-size: 0.9rem;

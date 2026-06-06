@@ -45,7 +45,7 @@
     flex-shrink: 0;
     align-items: center;
     gap: 0.35em;
-    z-index: 3;
+    z-index: var(--ttms-z-header-leading, 101);
     background: var(--header-bg-color);
     position: relative;
     padding-inline-end: 0.25em;

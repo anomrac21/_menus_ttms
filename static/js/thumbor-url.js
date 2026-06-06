@@ -117,6 +117,8 @@
     if (!imgEl || imgEl.dataset.fellback) return;
     var path = imgEl.getAttribute('data-src-path') || '';
     if (!path) return;
+    if (path.indexOf('draft-assets/') === 0) return;
+    if (/\/api\/clients\/[^/]+\/preview\/draft-assets\//i.test(String(imgEl.src || ''))) return;
     imgEl.dataset.fellback = '1';
     var direct = /^https?:\/\//i.test(path)
       ? path
