@@ -249,13 +249,13 @@
 .menu-smash-pass-card__counts {
     display: flex;
     gap: .25em;
+    text-wrap-mode: nowrap;
     position: absolute;
     bottom: 2.6em;
     right: 0em;
     background: #111111dd;
     padding: .2em;
     font-size: large;
-
 }
 
 .menu-smash-pass-card__counts span {
@@ -362,7 +362,7 @@
 
 .menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass__stack {
     flex: 0 0 auto;
-    width: min(78vw, 16rem, 100cqw, 100cqh);
+    width: min(78vw, 20rem, 100cqw, 100cqh);
     max-width: 100%;
     max-height: 100%;
     margin: 0 auto;

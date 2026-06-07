@@ -637,9 +637,28 @@
     } catch (err) {}
   }
 
+  function suppressCardClickAfterSwipe(card) {
+    if (!card) return;
+    card._ttmsSmashSuppressClick = true;
+    setTimeout(function () {
+      card._ttmsSmashSuppressClick = false;
+    }, 420);
+  }
+
   function bindCardDrag(inst, card) {
     if (!card || card._ttmsSmashDragBound) return;
     card._ttmsSmashDragBound = true;
+
+    card.addEventListener(
+      'click',
+      function (e) {
+        if (!card._ttmsSmashSuppressClick) return;
+        e.preventDefault();
+        e.stopPropagation();
+        card._ttmsSmashSuppressClick = false;
+      },
+      true
+    );
 
     function onPointerDown(e) {
       if (inst.busy || e.button > 0) return;
@@ -694,8 +713,10 @@
       } catch (err) {}
 
       if (dx > SWIPE_THRESHOLD) {
+        suppressCardClickAfterSwipe(card);
         commitVote(inst, 'like', 'like');
       } else if (dx < -SWIPE_THRESHOLD) {
+        suppressCardClickAfterSwipe(card);
         commitVote(inst, 'dislike', 'dislike');
       } else {
         card.classList.add('is-snapping-back');

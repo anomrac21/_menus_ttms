@@ -1022,8 +1022,11 @@
             return;
         }
 
-        if (event && event.target?.closest?.('.menu-smash-pass, .menu-item-smash-pass')) {
-            event.stopPropagation();
+        if (event && event.target?.closest?.('.menu-image-add-btn, .menu-image-actions')) {
+            return;
+        }
+
+        if (event && event.target?.closest?.('.menu-smash-pass-card__path')) {
             return;
         }
 

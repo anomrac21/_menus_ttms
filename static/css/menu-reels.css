@@ -292,6 +292,18 @@ body.menu-search-active .menu-reels-track {
     max-width: 100%;
 }
 
+.hero-content.menu-reels-slide--intro .menu-reels-intro__title {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.35rem 1rem 0.15rem;
+    font-size: clamp(1.05rem, 4.2vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: var(--main-text, #fff);
+    text-align: center;
+}
+
 .hero-content.menu-reels-slide--intro .menu-smash-pass {
     flex: 1 1 auto;
     min-height: 0;
