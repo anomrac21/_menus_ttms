@@ -105,7 +105,7 @@
     aspect-ratio: 3 / 4;
     min-height: 0;
     max-height: 100%;
-    touch-action: none;
+    touch-action: pan-y;
     user-select: none;
 }
 
@@ -118,6 +118,7 @@
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
     border: 2px solid rgba(255, 255, 255, 0.14);
     cursor: grab;
+    touch-action: pan-y;
     will-change: transform;
     transition: transform 0.28s ease, opacity 0.28s ease;
     display: flex;
@@ -247,9 +248,14 @@
 
 .menu-smash-pass-card__counts {
     display: flex;
-    gap: 0.65rem;
-    font-size: 0.74rem;
-    font-weight: 600;
+    gap: .25em;
+    position: absolute;
+    bottom: 2.6em;
+    right: 0em;
+    background: #111111dd;
+    padding: .2em;
+    font-size: large;
+
 }
 
 .menu-smash-pass-card__counts span {

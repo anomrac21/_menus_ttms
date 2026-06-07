@@ -19,8 +19,9 @@
 
   if (!isStandaloneAppDisplay()) return;
 
-  var THRESHOLD = 180;
-  var MAX_VISUAL = 240;
+  var THRESHOLD = 300;
+  var MAX_VISUAL = 360;
+  var MIN_PULL_BEFORE_UI = 24;
   var startY = 0;
   var startX = 0;
   var tracking = false;
@@ -36,6 +37,22 @@
       document.body.scrollTop ||
       0
     );
+  }
+
+  function isPullRefreshBlockedTarget(target) {
+    if (!target || !target.closest) return false;
+    if (document.body.classList.contains('menu-reels-item-modal-open')) return true;
+    if (target.closest('#menu-reels-track, .menu-reels-track')) return true;
+    if (target.closest('.menu-reels-item-modal, .menu-smash-pass__stack')) return true;
+    if (target.closest('[data-barba="container"] main')) {
+      var main = target.closest('[data-barba="container"] main');
+      if (main && main.scrollTop > 2) return true;
+    }
+    var scrollParent = target.closest(
+      '.menu-reels-track, .menu-reels-item-modal__body, .expanded-item-details, .single-page-content'
+    );
+    if (scrollParent && scrollParent.scrollTop > 2) return true;
+    return false;
   }
 
   var indicator = null;
@@ -119,10 +136,10 @@
       hideIndicator();
       return;
     }
-    if (Math.abs(dx) > Math.abs(dy) * 1.2) return;
+    if (Math.abs(dx) > Math.abs(dy) * 0.85) return;
 
     var clamped = Math.min(dy, MAX_VISUAL);
-    if (clamped > 8) {
+    if (clamped > MIN_PULL_BEFORE_UI) {
       try {
         e.preventDefault();
       } catch (err) {
@@ -157,6 +174,7 @@
     if (reloading) return;
     if (tracking) return;
     if (scrollTop() > 2) return;
+    if (isPullRefreshBlockedTarget(e.target)) return;
     var t = e.touches[0];
     startY = t.clientY;
     startX = t.clientX;

@@ -7,6 +7,7 @@
   var VOTER_KEY = 'ttmenus_smash_voter_id';
   var VOTES_KEY = 'ttmenus_smash_votes';
   var SWIPE_THRESHOLD = 72;
+  var DRAG_LOCK_THRESHOLD = 16;
   var ROTATION_MAX = 14;
 
   var instances = new WeakMap();
@@ -387,6 +388,34 @@
     );
   }
 
+  function canViewSmashPassDislikes() {
+    if (typeof AuthClient === 'undefined' || !AuthClient.isAuthenticated()) return false;
+    if (AuthClient.isSuperadmin && AuthClient.isSuperadmin()) return true;
+    if (!AuthClient.isAdmin || !AuthClient.isAdmin()) return false;
+    var c = cfg();
+    var siteClient =
+      (c && c.clientId) || window.SITE_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+    var user = AuthClient.getCurrentUser && AuthClient.getCurrentUser();
+    if (!user || !siteClient) return false;
+    var assigned = String(user.client_id || '')
+      .split(',')
+      .map(function (s) {
+        return s.trim();
+      });
+    if (assigned.indexOf(siteClient) !== -1) return true;
+    if (typeof AuthClientAccess !== 'undefined' && AuthClientAccess.hasClientAccess) {
+      return AuthClientAccess.hasClientAccess();
+    }
+    return false;
+  }
+
+  function buildDislikesCountHtml(dislikes) {
+    if (!canViewSmashPassDislikes()) return '';
+    return (
+      '<span class="menu-smash-pass-card__dislikes" data-count="dislikes">✕ ' + dislikes + '</span>'
+    );
+  }
+
   function buildMediaHtml(preview, srcPath, isDraft, layered) {
     if (!preview && !srcPath) return '';
     if (layered) {
@@ -436,9 +465,7 @@
         '<span class="menu-smash-pass-card__likes" data-count="likes">♥ ' +
         likes +
         '</span>' +
-        '<span class="menu-smash-pass-card__dislikes" data-count="dislikes">✕ ' +
-        dislikes +
-        '</span>' +
+        buildDislikesCountHtml(dislikes) +
         '</div>' +
         '</div>';
     } else if (!local) {
@@ -448,9 +475,7 @@
         '<span class="menu-smash-pass-card__likes" data-count="likes">♥ ' +
         likes +
         '</span>' +
-        '<span class="menu-smash-pass-card__dislikes" data-count="dislikes">✕ ' +
-        dislikes +
-        '</span>' +
+        buildDislikesCountHtml(dislikes) +
         '</div>' +
         '</div>';
     }
@@ -591,6 +616,27 @@
     });
   }
 
+  function clearCardDragState(inst, card, pointerId) {
+    if (!card) return;
+    card.classList.remove('is-dragging');
+    try {
+      if (pointerId != null) card.releasePointerCapture(pointerId);
+    } catch (err) {}
+    clearCardDragStyles(card);
+    if (inst.dragState && inst.dragState.card === card) {
+      inst.dragState = null;
+    }
+  }
+
+  function lockCardDrag(inst, card, e) {
+    if (!inst.dragState || inst.dragState.card !== card || inst.dragState.locked) return;
+    inst.dragState.locked = true;
+    card.classList.add('is-dragging');
+    try {
+      card.setPointerCapture(e.pointerId);
+    } catch (err) {}
+  }
+
   function bindCardDrag(inst, card) {
     if (!card || card._ttmsSmashDragBound) return;
     card._ttmsSmashDragBound = true;
@@ -598,28 +644,49 @@
     function onPointerDown(e) {
       if (inst.busy || e.button > 0) return;
       if (e.target.closest('.menu-smash-pass-card__path')) return;
-      e.stopPropagation();
       inst.dragState = {
         card: card,
         startX: e.clientX,
         startY: e.clientY,
         pointerId: e.pointerId,
+        locked: false,
       };
-      card.classList.add('is-dragging');
-      try {
-        card.setPointerCapture(e.pointerId);
-      } catch (err) {}
     }
 
     function onPointerMove(e) {
       if (!inst.dragState || inst.dragState.card !== card) return;
+
       var dx = e.clientX - inst.dragState.startX;
-      var dy = (e.clientY - inst.dragState.startY) * 0.35;
-      setCardDragStyles(card, dx, dy);
+      var dy = e.clientY - inst.dragState.startY;
+      var absDx = Math.abs(dx);
+      var absDy = Math.abs(dy);
+
+      if (!inst.dragState.locked) {
+        if (absDy > absDx && absDy >= DRAG_LOCK_THRESHOLD) {
+          clearCardDragState(inst, card, null);
+          return;
+        }
+        if (absDx < DRAG_LOCK_THRESHOLD && absDy < DRAG_LOCK_THRESHOLD) {
+          return;
+        }
+        if (absDx <= absDy) {
+          clearCardDragState(inst, card, null);
+          return;
+        }
+        lockCardDrag(inst, card, e);
+      }
+
+      setCardDragStyles(card, dx, dy * 0.35);
     }
 
     function onPointerUp(e) {
       if (!inst.dragState || inst.dragState.card !== card) return;
+
+      if (!inst.dragState.locked) {
+        clearCardDragState(inst, card, null);
+        return;
+      }
+
       var dx = e.clientX - inst.dragState.startX;
       card.classList.remove('is-dragging');
       try {
@@ -909,9 +976,21 @@
   window.initMenuSmashPass = initMenuSmashPass;
   window.destroyMenuSmashPass = destroyMenuSmashPass;
 
+  function registerSmashPassAuthWatch() {
+    var refresh = function () {
+      initMenuSmashPass();
+    };
+    document.addEventListener('auth:login', refresh);
+    document.addEventListener('auth:logout', refresh);
+    if (typeof AuthClient !== 'undefined' && AuthClient.whenReady) {
+      AuthClient.whenReady().then(refresh);
+    }
+  }
+
   function bootMenuSmashPass() {
     initMenuSmashPass();
     registerBarbaLifecycle();
+    registerSmashPassAuthWatch();
   }
 
   if (window.TTMSBarba) {
