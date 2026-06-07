@@ -37,14 +37,24 @@
 {{- $firstImage := "" -}}
 {{- if and $activePromo (index $activePromo "image") (ne (index $activePromo "image") "") -}}
   {{- $firstImage = index $activePromo "image" -}}
-{{- else if gt (len $regularImagesArray) 0 -}}
-  {{- $firstImage = index $regularImagesArray 0 -}}
 {{- else -}}
-  {{- with .Params.promotions -}}
-    {{- range . -}}
-      {{- if and (not $firstImage) .image (ne .image "") -}}
-        {{- $firstImage = .image -}}
+  {{- range $regularImagesArray -}}
+    {{- if and (not $firstImage) (not (hasPrefix . "draft-assets/")) -}}
+      {{- $firstImage = . -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $firstImage -}}
+    {{- range $imagesArray -}}
+      {{- if and (not $firstImage) (not (hasPrefix . "draft-assets/")) -}}
+        {{- $firstImage = . -}}
       {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $firstImage -}}
+    {{- if gt (len $regularImagesArray) 0 -}}
+      {{- $firstImage = index $regularImagesArray 0 -}}
+    {{- else if gt (len $imagesArray) 0 -}}
+      {{- $firstImage = index $imagesArray 0 -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}

@@ -1310,3 +1310,377 @@
         width: calc(33.333% - 1.34em);
     }
 }
+
+/* ============================================
+   REELS LOCATION PICKER
+   ============================================ */
+
+.location-picker__header {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.location-picker__eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--hero-text-color, #fff) 72%, transparent);
+}
+
+.location-picker__title {
+    margin: 0;
+    font-size: clamp(1.45rem, 5vw, 1.85rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--hero-text-color, #fff);
+}
+
+.location-picker__subtitle {
+    margin: 0.45rem 0 0;
+    font-size: 0.88rem;
+    color: color-mix(in srgb, var(--hero-text-color, #fff) 78%, transparent);
+}
+
+.location-picker__selected {
+    margin-top: 0.85rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--selected-button-color3, #fcd000) 28%, rgba(0, 0, 0, 0.35));
+    border: 1px solid color-mix(in srgb, var(--selected-button-color3, #fcd000) 45%, transparent);
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    max-width: 100%;
+}
+
+.location-picker__selected-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.location-picker__selected-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--hero-text-color, #fff);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 16rem;
+}
+
+.location-picker__carousel {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 0.15rem;
+    padding: 0;
+}
+
+.location-picker .locations-wrapper.location-picker__track-wrap {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+.location-picker__list,
+.location-picker .locations.location-picker__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overflow-y: visible;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.35rem 0.5rem;
+    margin: 0;
+    scrollbar-width: none;
+}
+
+.location-picker__list::-webkit-scrollbar {
+    display: none;
+}
+
+.location-picker__nav {
+    flex-shrink: 0;
+    align-self: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    min-width: 1.5rem;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--hero-text-color, #fff);
+    font-size: 1.05rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    padding: 0;
+}
+
+.location-picker__nav span {
+    margin-top: -0.05rem;
+}
+
+.location-picker__nav:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.05);
+}
+
+.location-picker__nav:disabled,
+.location-picker__nav.is-disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.location-picker .location-picker-card.location-item {
+    flex-shrink: 0;
+    min-width: calc(100% - 0.5rem);
+    width: calc(100% - 0.5rem);
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+}
+
+.location-picker:not([data-picker-ready]) .location-picker-card,
+.location-picker:not([data-picker-ready]) .location-picker-card__check {
+    transition: none;
+}
+
+.location-picker--aligning .location-picker__list,
+.location-picker--aligning .locations.location-picker__list {
+    scroll-snap-type: none !important;
+    scroll-behavior: auto !important;
+}
+
+.location-picker-card {
+    flex-shrink: 0;
+    min-width: calc(100% - 0.5rem);
+    width: calc(100% - 0.5rem);
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    padding: 0;
+    border-radius: 1.1rem;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease, background 0.22s ease;
+    overflow: hidden;
+}
+
+.location-picker-card__select {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 0.9rem;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+a.location-picker-card__select:hover {
+    color: inherit;
+}
+
+button.location-picker-card__select {
+    flex: 1;
+    min-width: 0;
+}
+
+.location-picker-card__pin {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--hero-text-color, #fff);
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+a.location-picker-card__select:hover .location-picker-card__pin {
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(1.04);
+}
+
+.location-picker-card__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.location-picker-card__meta {
+    font-size: x-small;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--hero-text-color, #fff) 70%, transparent);
+}
+
+.location-picker-card__address {
+    font-size: small;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--hero-text-color, #fff);
+}
+
+.location-picker-card__hint {
+    font-size: 0.72rem;
+    color: color-mix(in srgb, var(--hero-text-color, #fff) 58%, transparent);
+}
+
+.location-picker-card__check {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    color: transparent;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.location-picker-card--selected,
+.location-picker-card.active-location {
+    border-color: color-mix(in srgb, #4caf50 65%, #fff);
+    background: color-mix(in srgb, #4caf50 14%, rgba(255, 255, 255, 0.08));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), 0 0 0 1px color-mix(in srgb, #81c784 35%, transparent);
+    transform: scale(1.01);
+}
+
+.location-picker-card--selected .location-picker-card__check,
+.location-picker-card.active-location .location-picker-card__check {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    border-color: #a5d6a7;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.location-picker-card--selected .location-picker-card__hint,
+.location-picker-card.active-location .location-picker-card__hint {
+    color: #a5d6a7;
+    font-weight: 600;
+}
+
+.location-picker-card--selected .location-picker-card__hint::after,
+.location-picker-card.active-location .location-picker-card__hint::after {
+    content: ' · Selected for ordering';
+}
+
+.location-picker-card__footer {
+    padding: 0.55rem 0.75rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: visible;
+}
+
+.location-picker-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.location-picker-card__actions .contact-cta--location {
+    width: auto;
+    min-width: 0;
+    padding: 0.45em 0.75em;
+    font-size: 0.78rem;
+}
+
+.location-picker-card__actions .contact-cta--icon {
+    width: 2.65rem;
+    height: 2.65rem;
+    min-width: 2.65rem;
+}
+
+.location-picker-card__footer .location-status {
+    height: auto;
+    justify-content: center;
+}
+
+.location-picker__footer {
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.location-picker__continue {
+    width: 100%;
+    padding: 0.85em 1em;
+    justify-content: space-between;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--selected-button-color2, #b56024) 90%, #fff), color-mix(in srgb, var(--selected-button-color3, #fcd000) 80%, #fff));
+}
+
+.location-picker__continue:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    transform: none;
+}
+
+.location-picker__continue-arrow {
+    font-size: 1.35rem;
+    line-height: 1;
+    animation: location-picker-bounce 1.6s ease-in-out infinite;
+}
+
+.location-picker__continue:not(:disabled) .location-picker__continue-arrow {
+    animation-play-state: running;
+}
+
+@keyframes location-picker-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(0.22rem); }
+}
+
+.location-picker__social {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.location-picker__empty {
+    text-align: center;
+    color: var(--hero-text-color, #fff);
+    opacity: 0.8;
+}
+
+@media (min-width: 480px) {
+    .location-picker-card {
+        min-width: min(22rem, calc(100% - 1rem));
+        width: min(22rem, calc(100% - 1rem));
+    }
+}

@@ -206,7 +206,17 @@
             : '/' + p;
     }
 
+    function isReelsSmashPassCard(card) {
+        return !!(
+            card &&
+            card.classList.contains('menu-reels-slide') &&
+            typeof window.MENU_IMAGE_CONFIG !== 'undefined' &&
+            window.MENU_IMAGE_CONFIG.enabled
+        );
+    }
+
     function ensureCardImageLink(card) {
+        if (isReelsSmashPassCard(card)) return null;
         let imgLink = card.querySelector('.menu-item-image-link');
         if (imgLink) return imgLink;
         const allImages = parseJsonAttr(card, 'data-images-array');
@@ -223,10 +233,25 @@
         img.className = 'menu-item-img';
         img.loading = 'lazy';
         img.alt = (card.querySelector('.menu-item-title') && card.querySelector('.menu-item-title').textContent.trim()) || '';
-        img.setAttribute('data-src-path', allImages[0]);
+        const initialPath = selectMenuCardImagePath({
+            dayPromoImage: '',
+            regular: parseJsonAttr(card, 'data-regular-images-array'),
+            allImages: allImages,
+            promotionsJson: card.getAttribute('data-promotions') || '',
+        }) || normalizeMenuItemImagePath(allImages[0]);
+        img.setAttribute('data-src-path', initialPath);
+        if (!isDraftAssetPath(initialPath)) {
+            const initialSrc = menuCardImageSrc(initialPath);
+            if (initialSrc) img.src = initialSrc;
+        }
         img.onerror = function () {
+            const fallback = resolvePublicMenuImageFallback(this);
+            if (fallback) {
+                applyMenuCardImagePath(this, fallback);
+                return;
+            }
             const p = this.getAttribute('data-src-path') || '';
-            if (p.indexOf('draft-assets/') === 0) return;
+            if (isDraftAssetPath(p)) return;
             if (window.TtmsThumbor && window.TtmsThumbor.fallbackImg) window.TtmsThumbor.fallbackImg(this);
         };
         wrap.appendChild(img);
@@ -240,6 +265,11 @@
      * Card thumbnail: promo art for today (any time) → item photos → data-images-array. Never hide if a path exists.
      */
     function updateMenuItemCardImage(card, promo, today) {
+        if (isReelsSmashPassCard(card)) {
+            const staleLink = card.querySelector('.menu-item-image-link');
+            if (staleLink) staleLink.remove();
+            return;
+        }
         ensureCardImageLink(card);
         const imgLink = card.querySelector('.menu-item-image-link');
         if (!imgLink) return;
@@ -251,14 +281,12 @@
         const promotionsJson = card.getAttribute('data-promotions');
         const dayPromoImage = today ? getPromoImageForDay(promotionsJson, today) : '';
 
-        let path = '';
-        if (dayPromoImage) {
-            path = dayPromoImage;
-        } else if (regular.length > 0) {
-            path = regular[0];
-        } else if (allImages.length > 0) {
-            path = allImages[0];
-        }
+        const path = selectMenuCardImagePath({
+            dayPromoImage: dayPromoImage,
+            regular: regular,
+            allImages: allImages,
+            promotionsJson: promotionsJson,
+        });
 
         if (path) {
             const isDraft = path.indexOf('draft-assets/') === 0;
@@ -730,6 +758,93 @@
         return String(entry).trim();
     }
 
+    function isDraftAssetPath(path) {
+        return String(path || '').replace(/^\/+/, '').indexOf('draft-assets/') === 0;
+    }
+
+    function firstPublicImageFromList(list) {
+        for (let i = 0; i < list.length; i++) {
+            const p = normalizeMenuItemImagePath(list[i]);
+            if (p && !isDraftAssetPath(p)) return p;
+        }
+        return '';
+    }
+
+    function promoImagesFromCard(promotionsJson) {
+        const out = [];
+        try {
+            const promos = JSON.parse(promotionsJson || '[]');
+            if (Array.isArray(promos)) {
+                promos.forEach(function (p) {
+                    if (p && p.image) out.push(p.image);
+                });
+            }
+        } catch (_) { /* ignore */ }
+        return out;
+    }
+
+    function selectMenuCardImagePath(opts) {
+        const dayPromoImage = opts.dayPromoImage || '';
+        const regular = opts.regular || [];
+        const allImages = opts.allImages || [];
+        const promotionsJson = opts.promotionsJson || '';
+
+        if (dayPromoImage) return dayPromoImage;
+
+        const fromRegular = firstPublicImageFromList(regular);
+        if (fromRegular) return fromRegular;
+
+        const fromAll = firstPublicImageFromList(allImages);
+        if (fromAll) return fromAll;
+
+        const fromPromos = firstPublicImageFromList(promoImagesFromCard(promotionsJson));
+        if (fromPromos) return fromPromos;
+
+        if (regular.length > 0) return normalizeMenuItemImagePath(regular[0]);
+        if (allImages.length > 0) return normalizeMenuItemImagePath(allImages[0]);
+        return '';
+    }
+
+    function resolvePublicMenuImageFallback(img) {
+        if (!img) return '';
+        const card = img.closest('.menu-item-card');
+        if (!card) return '';
+
+        const regular = parseJsonAttr(card, 'data-regular-images-array');
+        const allImages = parseJsonAttr(card, 'data-images-array');
+        const promotionsJson = card.getAttribute('data-promotions') || '';
+        const current = (img.getAttribute('data-src-path') || '').replace(/^\/+/, '');
+
+        const candidates = []
+            .concat(promoImagesFromCard(promotionsJson))
+            .concat(regular)
+            .concat(allImages);
+
+        for (let i = 0; i < candidates.length; i++) {
+            const p = normalizeMenuItemImagePath(candidates[i]);
+            if (!p || isDraftAssetPath(p) || p === current) continue;
+            return p;
+        }
+        return '';
+    }
+
+    function applyMenuCardImagePath(img, path) {
+        if (!img || !path) return;
+        const isDraft = isDraftAssetPath(path);
+        const nextSrc = menuCardImageSrc(path);
+        img.setAttribute('data-src-path', path);
+        delete img.dataset.draftAssetHydrated;
+        delete img.dataset.fellback;
+        if (isDraft) {
+            img.removeAttribute('src');
+            img.setAttribute('data-draft-pending', '1');
+            hydrateAuthenticatedDraftAssetImg(img);
+            return;
+        }
+        img.removeAttribute('data-draft-pending');
+        if (nextSrc) img.src = nextSrc;
+    }
+
     /**
      * draft-assets/* are served by CMS preview API (auth required). Static /draft-assets/* 404 until publish.
      */
@@ -770,7 +885,6 @@
             url = resolveCmsDraftAssetPreviewUrl(dataPath);
             if (!url) return;
         }
-        img.dataset.draftAssetHydrated = '1';
         if (isCmsDraftAssetPreviewUrl(img.getAttribute('src') || '')) {
             img.removeAttribute('src');
         }
@@ -788,12 +902,18 @@
                 }
                 const blobUrl = URL.createObjectURL(blob);
                 img.dataset.draftBlobUrl = blobUrl;
+                img.dataset.draftAssetHydrated = '1';
                 img.removeAttribute('data-draft-pending');
                 img.src = blobUrl;
             })
             .catch(function () {
-                if (dataPath.indexOf('draft-assets/') === 0) return;
-                if (dataPath && window.TtmsThumbor && typeof window.TtmsThumbor.fallbackImg === 'function') {
+                delete img.dataset.draftAssetHydrated;
+                const fallback = resolvePublicMenuImageFallback(img);
+                if (fallback) {
+                    applyMenuCardImagePath(img, fallback);
+                    return;
+                }
+                if (!isDraftAssetPath(dataPath) && dataPath && window.TtmsThumbor && typeof window.TtmsThumbor.fallbackImg === 'function') {
                     img.setAttribute('data-src-path', dataPath);
                     window.TtmsThumbor.fallbackImg(img);
                 }
@@ -902,6 +1022,11 @@
             return;
         }
 
+        if (event && event.target?.closest?.('.menu-smash-pass, .menu-item-smash-pass')) {
+            event.stopPropagation();
+            return;
+        }
+
         const isExpanded = isMenuItemExpanded(element);
         const isReelsItem = isReelsMenuItemCard(element);
 
@@ -971,9 +1096,10 @@
             console.warn('No URL found for item');
             return;
         }
+        const useReelsModal = isReelsItem && !!document.getElementById('menu-reels-item-modal');
         const expandedContent = element.querySelector('.menu-item-expanded-content');
-        
-        if (!expandedContent) {
+
+        if (!useReelsModal && !expandedContent) {
             console.warn('Expanded content container not found');
             return;
         }
@@ -1528,11 +1654,27 @@
                 element.setAttribute('data-additions', JSON.stringify(additions));
                 imagesArray = resolveExpandedImagesForCarousel(element, imagesArray);
                 element.setAttribute('data-images-array', JSON.stringify(imagesArray));
+
+                const menuImageCfg = typeof window !== 'undefined' && window.MENU_IMAGE_CONFIG;
+                const menuImageEnabled = menuImageCfg && menuImageCfg.enabled;
+                const menuImageClientId = (menuImageCfg && menuImageCfg.clientId) ||
+                    (typeof window.SITE_CLIENT_ID !== 'undefined' && window.SITE_CLIENT_ID) ||
+                    '_ttms_menu_demo';
+                const useSmashPassMedia = menuImageEnabled && useReelsModal;
                 
-                // Build image carousel HTML if images exist (even for single image)
+                // Build smash-or-pass (reels modal) or image carousel HTML
+                let smashPassHTML = '';
                 let imageCarouselHTML = '';
                 const hasExpandedCarousel = imagesArray && imagesArray.length > 0;
-                if (hasExpandedCarousel) {
+                if (useSmashPassMedia) {
+                    if (typeof window.buildMenuSmashPassMarkup === 'function') {
+                        smashPassHTML = window.buildMenuSmashPassMarkup({
+                            clientId: menuImageClientId,
+                            menuItemPath: url,
+                            modal: true,
+                        });
+                    }
+                } else if (hasExpandedCarousel) {
                     const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
                     const showNavButtons = imagesArray.length > 1;
                     const showIndicators = imagesArray.length > 1;
@@ -1581,23 +1723,20 @@
                 const descLinkHref = isDashboardNewPlaceholderUrl ? '#' : url;
                 const descLinkClass = isDashboardNewPlaceholderUrl ? ' class="dashboard-new-item-placeholder-link"' : '';
                 const descLinkOnclick = isDashboardNewPlaceholderUrl ? ' onclick="return false;"' : '';
-                const menuImageCfg = typeof window !== 'undefined' && window.MENU_IMAGE_CONFIG;
-                const menuImageEnabled = menuImageCfg && menuImageCfg.enabled;
-                const menuImageClientId = (menuImageCfg && menuImageCfg.clientId) ||
-                    (typeof window.SITE_CLIENT_ID !== 'undefined' && window.SITE_CLIENT_ID) ||
-                    '_ttms_menu_demo';
                 const menuImagePathAttr = String(url || '').replace(/"/g, '&quot;');
                 const menuImageDataAttrs = menuImageEnabled
                     ? ` data-menu-image-client-id="${menuImageClientId}" data-menu-item-path="${menuImagePathAttr}"`
                     : '';
-                const menuImageNoCarouselClass = menuImageEnabled && !hasExpandedCarousel
+                const menuImageNoCarouselClass = menuImageEnabled && !hasExpandedCarousel && !useSmashPassMedia
                     ? ' expanded-item-details--no-carousel'
                     : '';
                 const menuImageAddBtnHTML = `
                             <button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>`;
                 let menuImageActionsHTML = '';
                 if (menuImageEnabled) {
-                    if (hasExpandedCarousel) {
+                    if (useSmashPassMedia) {
+                        menuImageActionsHTML = '';
+                    } else if (hasExpandedCarousel) {
                         menuImageActionsHTML = `
                         <div class="menu-image-actions">
                             ${menuImageAddBtnHTML}
@@ -1614,6 +1753,7 @@
                 }
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details${menuImageNoCarouselClass}"${menuImageDataAttrs}>
+                        ${smashPassHTML}
                         ${imageCarouselHTML}
                         ${menuImageActionsHTML}
                         ${itemDesc ? `
@@ -1685,7 +1825,10 @@
             loadingDiv.style.display = 'none';
             dataDiv.style.display = 'block';
 
-            dataDiv.querySelectorAll('.expanded-image-carousel').forEach(bindExpandedCarouselImages);
+            const modalSmashPass = dataDiv.querySelector('.menu-smash-pass--modal');
+            if (!modalSmashPass) {
+                dataDiv.querySelectorAll('.expanded-image-carousel').forEach(bindExpandedCarouselImages);
+            }
 
             const menuImageHost = dataDiv.querySelector('.expanded-item-details[data-menu-item-path]');
             if (menuImageHost) {
@@ -1695,6 +1838,10 @@
                 if (typeof window.scheduleMenuImageLoadForHost === 'function') {
                     window.scheduleMenuImageLoadForHost(menuImageHost);
                 }
+            }
+
+            if (modalSmashPass && typeof window.initMenuSmashPass === 'function') {
+                window.initMenuSmashPass();
             }
             
             // Initialize category counters
@@ -2356,9 +2503,8 @@
             setTimeout(() => {
                 button.classList.remove('adding');
             }, 500);
-            
-            // Optionally collapse the card after adding
-            // collapseItem(card);
+
+            collapseItem(card);
             
         } else {
             console.warn('addItem function not available, opening item page');
@@ -3521,6 +3667,11 @@
 
         if (!leftBtn || !rightBtn) return;
 
+        // Reels location picker uses infinite wrap — handled in location-picker.js
+        if (locations.closest('.location-picker')) {
+            return;
+        }
+
         const currentScroll = locations.scrollLeft;
 
         // Show/hide left button
@@ -3560,6 +3711,9 @@
 
         const locationsWrapper = document.querySelector('.locations-wrapper');
         if (!locationsWrapper) return;
+
+        // Reels location picker manages its own infinite carousel
+        if (locationsWrapper.closest('.location-picker')) return;
 
         const locations = locationsWrapper.querySelector('.locations');
         if (!locations) return;

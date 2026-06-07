@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     { selector: '.menu-item-description', type: 'Menu item description' },
     { selector: '.menu-item-price', type: 'Menu item price' },
     { selector: '.menu-item-card', type: 'Menu item' },
-    { selector: '.menu-header h2, .menu-header h2 a', type: 'Section title' },
+    { selector: '.menu-header h2, .menu-header h2 a, .menu-header__link h2', type: 'Section title' },
     { selector: '.menu-summary', type: 'Section summary' },
     { selector: '.headerstyle h1', type: 'Page title' },
     { selector: '#logo', type: 'Logo' },
@@ -6410,6 +6410,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             card.setAttribute('data-events', '[]');
             card.setAttribute('data-promotions', '[]');
             card.setAttribute('onclick', 'toggleItemExpansion(this, ' + JSON.stringify(itemPath) + ', event);');
+            var expandedBlock = isMenuReelsPreview(doc)
+              ? '<div class="menu-smash-pass menu-item-smash-pass menu-smash-pass--no-photos" data-client-id="_ttms_menu_demo" data-menu-item-path="' + itemPath + '">' +
+                '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
+                '<p class="menu-smash-pass__empty hidden"></p>' +
+                '<div class="menu-smash-pass__empty-state hidden" role="region" aria-label="Item photo">' +
+                '<div class="menu-image-actions menu-image-actions--standalone">' +
+                '<button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item">' +
+                '<i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button></div>' +
+                '<p class="menu-smash-pass__empty-hint">No photo yet — be the first to add one</p></div>' +
+                '<div class="menu-smash-pass__reel hidden"><div class="menu-smash-pass__stack" aria-live="polite"></div></div></div>'
+              : '<div class="menu-item-expanded-content" style="display: none;">' +
+                '<div class="menu-item-expanded-loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>' +
+                '<div class="menu-item-expanded-data" style="display: none;"></div></div>';
             card.innerHTML = '<div class="menu-item-row-top">' +
               '<div class="menu-item-header-content">' +
               '<h3 class="menu-item-title"><a href="#" class="dashboard-new-item-placeholder-link" onclick="return false;" aria-disabled="true">' + titleText + '</a></h3>' +
@@ -6418,10 +6431,7 @@ document.addEventListener('DOMContentLoaded', async function() {
               '<div class="menu-item-price">$0</div>' +
               '</div>' +
               '<div class="menu-item-options"><ul class="sizes"></ul><ul class="flavours"></ul></div>' +
-              '</div></div>' +
-              '<div class="menu-item-expanded-content" style="display: none;">' +
-              '<div class="menu-item-expanded-loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>' +
-              '<div class="menu-item-expanded-data" style="display: none;"></div></div>';
+              '</div></div>' + expandedBlock;
             return card;
           }
           win._dashboardCreateNewMenuItemCard = createNewMenuItemCard;

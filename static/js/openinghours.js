@@ -15,6 +15,15 @@ function initOpeninghoursDisplay() {
   console.log('Found', sections.length, 'sections with data-opening-hours');
 
   sections.forEach((section, index) => {
+    // Location picker cards store JSON hours for status badges, not today-hours UI
+    if (
+      section.classList.contains('location-picker-card') ||
+      section.closest('.location-picker') ||
+      section.hasAttribute('data-picker-clone')
+    ) {
+      return;
+    }
+
     console.log(`Processing section ${index}:`, section);
     const todayList = section.querySelector(".today-hours");
     const allItems = section.querySelectorAll(".all-hours li");

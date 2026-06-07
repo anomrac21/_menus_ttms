@@ -306,6 +306,8 @@ function showAppleMsg(x) {
       ele.nextElementSibling.classList.add('hide');
     }
   }
+
+  window.toggleDelivery = toggleDelivery;
   
   function closeDelivery(){
     var fooddrop = document.getElementById("fooddropBtn");

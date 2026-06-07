@@ -11,7 +11,7 @@
     background: #000d;
     border: 1px solid #fff;
     border-radius: 17px;
-    height: calc(100dvh - 5em);
+    height: calc(100dvh - 10em);
     margin-block-end: .4em;
     overflow: hidden;
     text-align: left;

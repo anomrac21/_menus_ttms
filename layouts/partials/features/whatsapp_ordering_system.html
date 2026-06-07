@@ -16,6 +16,7 @@ const orderPhone = '{{ site.Params.orderingsystem.phone }}';
 
 // Location storage key
 const LOCATION_STORAGE_KEY = 'ttms_selected_location';
+const LOCATION_ADDRESS_STORAGE_KEY = 'ttmenus_location_picker_address';
 
 // Menu items cache
 let menuItemsCache = null;
@@ -499,10 +500,13 @@ function getCurrentLocationData() {
 }
 
 // Function to save selected location to localStorage
-function saveSelectedLocation(whatsappNumber) {
+function saveSelectedLocation(whatsappNumber, address) {
 	try {
 		localStorage.setItem(LOCATION_STORAGE_KEY, whatsappNumber);
-		console.log('💾 Location saved to localStorage:', whatsappNumber);
+		if (address && address.trim() !== '') {
+			localStorage.setItem(LOCATION_ADDRESS_STORAGE_KEY, address);
+		}
+		console.log('💾 Location saved to localStorage:', whatsappNumber, address || '');
 	} catch (error) {
 		console.error('❌ Error saving location to localStorage:', error);
 	}
@@ -530,6 +534,21 @@ function clearSelectedLocation() {
 	} catch (error) {
 		console.error('❌ Error clearing location from localStorage:', error);
 	}
+}
+
+// Function to set location dropdown by saved address (unique per branch)
+function setLocationDropdownByAddress(address) {
+	const locationSelect = document.getElementById('locationSelect');
+	if (locationSelect && address) {
+		for (let i = 0; i < locationSelect.options.length; i++) {
+			if (locationSelect.options[i].getAttribute('data-address') === address) {
+				locationSelect.selectedIndex = i;
+				console.log('📍 Location dropdown set to saved address:', address);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 // Function to set location dropdown to saved value
@@ -2692,9 +2711,15 @@ document.addEventListener("DOMContentLoaded", function() {
     if (locationSelect) {
       console.log('📍 Location dropdown initialized');
       
-      // Load saved location from localStorage
+      // Load saved location from localStorage (address first — branches may share one WhatsApp)
+      const savedAddress = localStorage.getItem(LOCATION_ADDRESS_STORAGE_KEY);
       const savedLocation = loadSelectedLocation();
-      if (savedLocation) {
+      if (savedAddress && setLocationDropdownByAddress(savedAddress)) {
+        const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+        number = (selectedOption && selectedOption.value) || savedLocation || number;
+        selectLocation(number);
+        console.log('✅ Saved location restored by address:', savedAddress);
+      } else if (savedLocation) {
         // Set the dropdown to the saved location
         if (setLocationDropdown(savedLocation)) {
           // Update the WhatsApp number and trigger location selection

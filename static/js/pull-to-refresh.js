@@ -19,8 +19,8 @@
 
   if (!isStandaloneAppDisplay()) return;
 
-  var THRESHOLD = 72;
-  var MAX_VISUAL = 96;
+  var THRESHOLD = 180;
+  var MAX_VISUAL = 240;
   var startY = 0;
   var startX = 0;
   var tracking = false;

@@ -673,7 +673,7 @@ footer {
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: .75em
+    font-size: medium;
 }
 
 .menu-item-options .sizes li,.menu-item-options .flavours li {
@@ -718,7 +718,8 @@ footer {
 
 .expanded-side-categories {
     display: flex;
-    flex-direction: column
+    flex-direction: column;
+    padding-inline: 1em;
 }
 
 .expanded-side-category {

@@ -1,0 +1,924 @@
+/**
+ * Smash or pass — Tinder-style stack (intro feed + per-menu-item instances on reels).
+ */
+(function () {
+  'use strict';
+
+  var VOTER_KEY = 'ttmenus_smash_voter_id';
+  var VOTES_KEY = 'ttmenus_smash_votes';
+  var SWIPE_THRESHOLD = 72;
+  var ROTATION_MAX = 14;
+
+  var instances = new WeakMap();
+  var initScheduled = null;
+  var globalGen = 0;
+  var feedCache = {
+    promise: null,
+    data: null,
+    gen: 0,
+    abort: null,
+  };
+
+  function cfg() {
+    return typeof window.MENU_IMAGE_CONFIG !== 'undefined' ? window.MENU_IMAGE_CONFIG : null;
+  }
+
+  function apiBase() {
+    var c = cfg();
+    return c && c.apiUrl ? String(c.apiUrl).replace(/\/+$/, '') : '';
+  }
+
+  function escapeHtml(text) {
+    if (text == null) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function normalizePath(path) {
+    var p = String(path || '').trim();
+    if (!p) return '';
+    if (p.charAt(0) !== '/') p = '/' + p;
+    p = p.replace(/\/+$/, '');
+    return p || '/';
+  }
+
+  function normalizeImagePath(path) {
+    return String(path || '').trim().replace(/^\/+/, '');
+  }
+
+  function parseJsonAttr(el, name) {
+    if (!el) return [];
+    try {
+      var raw = el.getAttribute(name);
+      if (!raw) return [];
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function isLocalItem(item) {
+    return !!(item && (item.local || String(item.id || '').indexOf('local:') === 0));
+  }
+
+  function isDraftAssetPath(path) {
+    return normalizeImagePath(path).indexOf('draft-assets/') === 0;
+  }
+
+  function getLocalImageSource(inst) {
+    if (inst.root.classList.contains('menu-smash-pass--modal')) {
+      if (typeof window.getMenuReelsModalActiveCard === 'function') {
+        var active = window.getMenuReelsModalActiveCard();
+        if (active) return active;
+      }
+    }
+    return inst.root.closest('.menu-item-card');
+  }
+
+  function collectLocalImagesFromCard(card) {
+    if (!card) return [];
+    var seen = {};
+    var paths = [];
+
+    function add(path) {
+      var p = normalizeImagePath(path);
+      if (!p || seen[p] || isDraftAssetPath(p)) return;
+      seen[p] = true;
+      paths.push(p);
+    }
+
+    try {
+      var promos = JSON.parse(card.getAttribute('data-promotions') || '[]');
+      if (Array.isArray(promos)) {
+        promos.forEach(function (promo) {
+          if (promo && promo.image) add(promo.image);
+        });
+      }
+    } catch (e) { /* ignore */ }
+
+    parseJsonAttr(card, 'data-images-array').forEach(add);
+    parseJsonAttr(card, 'data-regular-images-array').forEach(add);
+
+    return paths;
+  }
+
+  function localImageToItem(path, menuItemPath) {
+    var normalized = normalizeImagePath(path);
+    return {
+      id: 'local:' + normalized,
+      local: true,
+      source: 'menu',
+      url: normalized,
+      menu_item_path: menuItemPath,
+      like_count: 0,
+      dislike_count: 0,
+      user_vote: '',
+    };
+  }
+
+  function mergeItemDeck(inst, feedItems) {
+    var feed = (feedItems || [])
+      .map(normalizeItem)
+      .filter(function (item) {
+        return !!item;
+      });
+
+    if (!inst.isItemScoped) {
+      return sortItems(feed);
+    }
+
+    var card = getLocalImageSource(inst);
+    var localItems = collectLocalImagesFromCard(card).map(function (path) {
+      return localImageToItem(path, inst.menuItemPath);
+    });
+
+    return localItems.concat(sortItems(feed));
+  }
+
+  function getVoterId() {
+    try {
+      var id = localStorage.getItem(VOTER_KEY);
+      if (!id) {
+        id = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem(VOTER_KEY, id);
+      }
+      return id;
+    } catch (e) {
+      return 'v_anon_' + Date.now();
+    }
+  }
+
+  function getCachedVotes() {
+    try {
+      var raw = localStorage.getItem(VOTES_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function cacheVote(id, vote) {
+    try {
+      var votes = getCachedVotes();
+      votes[id] = vote;
+      localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+    } catch (e) { /* ignore */ }
+  }
+
+  function getUserVote(item) {
+    if (!item) return '';
+    if (item.user_vote) return item.user_vote;
+    if (item.userVote) return item.userVote;
+    return getCachedVotes()[item.id] || '';
+  }
+
+  function normalizeItem(item) {
+    if (!item || !item.id) return null;
+    var vote = getUserVote(item);
+    if (vote) item.user_vote = vote;
+    return item;
+  }
+
+  function sortItems(list) {
+    return list.slice().sort(function (a, b) {
+      var aRated = !!getUserVote(a);
+      var bRated = !!getUserVote(b);
+      if (aRated !== bRated) return aRated ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function clientIdForRoot(root) {
+    return (
+      (root && root.getAttribute('data-client-id')) ||
+      window.CLIENT_ID ||
+      (cfg() && cfg().clientId) ||
+      '_ttms_menu_demo'
+    );
+  }
+
+  function queryRoots() {
+    return Array.prototype.slice.call(document.querySelectorAll('.menu-smash-pass'));
+  }
+
+  function createInstance(root) {
+    return {
+      root: root,
+      items: [],
+      deckIndex: 0,
+      busy: false,
+      dragState: null,
+      gen: 0,
+      menuItemPath: normalizePath(root.getAttribute('data-menu-item-path') || ''),
+      isItemScoped: root.classList.contains('menu-item-smash-pass'),
+    };
+  }
+
+  function getInstance(root) {
+    if (!root) return null;
+    if (!instances.has(root)) {
+      instances.set(root, createInstance(root));
+    }
+    return instances.get(root);
+  }
+
+  function q(inst, sel) {
+    return inst.root ? inst.root.querySelector(sel) : null;
+  }
+
+  function currentItem(inst) {
+    if (!inst.items.length) return null;
+    return inst.items[inst.deckIndex % inst.items.length];
+  }
+
+  function nextItem(inst) {
+    if (!inst.items.length) return null;
+    return inst.items[(inst.deckIndex + 1) % inst.items.length];
+  }
+
+  function advanceDeck(inst) {
+    if (!inst.items.length) return;
+    inst.deckIndex = (inst.deckIndex + 1) % inst.items.length;
+  }
+
+  function menuItemTitle(path) {
+    var p = String(path || '').replace(/\/$/, '');
+    var slug = p.split('/').filter(Boolean).pop() || 'Menu item';
+    return slug.replace(/-/g, ' ').replace(/\b\w/g, function (c) {
+      return c.toUpperCase();
+    });
+  }
+
+  function menuItemHref(path) {
+    var p = String(path || '').trim();
+    if (!p) return '#';
+    if (p.charAt(0) !== '/') p = '/' + p;
+    return p;
+  }
+
+  function thumbUrl(item) {
+    if (item.thumbor_url || item.thumborUrl) {
+      return item.thumbor_url || item.thumborUrl;
+    }
+    var url = item.url || '';
+    if (!url) return '';
+    if (isLocalItem(item) && typeof window.TtmsThumbor !== 'undefined') {
+      if (window.TtmsThumbor.resolvePreviewSrc) {
+        return (
+          window.TtmsThumbor.resolvePreviewSrc(url, { width: 720, height: 900 }) ||
+          window.TtmsThumbor.menuImageSrc(url, 'carousel') ||
+          ''
+        );
+      }
+      if (window.TtmsThumbor.menuImageSrc) {
+        return window.TtmsThumbor.menuImageSrc(url, 'carousel') || '';
+      }
+      return url.charAt(0) === '/' ? url : '/' + url;
+    }
+    if (typeof window.TtmsThumbor !== 'undefined' && window.TtmsThumbor.menuImageSrc) {
+      return window.TtmsThumbor.menuImageSrc(url, 'carousel') || url;
+    }
+    return url;
+  }
+
+  var ADD_PHOTO_BTN_HTML =
+    '<button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item">' +
+    '<i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>';
+
+  function buildItemEmptyStateHtml() {
+    return (
+      '<div class="menu-smash-pass__empty-state hidden" role="region" aria-label="Item photo">' +
+      '<div class="menu-image-actions menu-image-actions--standalone">' +
+      ADD_PHOTO_BTN_HTML +
+      '</div>' +
+      '<p class="menu-smash-pass__empty-hint">No photo yet — be the first to add one</p>' +
+      '</div>'
+    );
+  }
+
+  function bindItemAddPhoto(inst) {
+    if (!inst || !inst.isItemScoped || !inst.root) return;
+    if (typeof window.bindMenuImageAddButton !== 'function') return;
+    window.bindMenuImageAddButton(
+      inst.root,
+      clientIdForRoot(inst.root),
+      inst.menuItemPath || inst.root.getAttribute('data-menu-item-path') || ''
+    );
+  }
+
+  function showError(inst, msg) {
+    var err = q(inst, '.menu-smash-pass__error');
+    var reel = q(inst, '.menu-smash-pass__reel');
+    var empty = q(inst, '.menu-smash-pass__empty');
+    var emptyState = q(inst, '.menu-smash-pass__empty-state');
+    if (err) {
+      err.textContent = msg || '';
+      err.classList.toggle('hidden', !msg);
+    }
+    if (reel) reel.classList.add('hidden');
+    if (empty) empty.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    inst.root.classList.remove('menu-smash-pass--no-photos');
+  }
+
+  function showEmpty(inst) {
+    var empty = q(inst, '.menu-smash-pass__empty');
+    var emptyState = q(inst, '.menu-smash-pass__empty-state');
+    var reel = q(inst, '.menu-smash-pass__reel');
+    var err = q(inst, '.menu-smash-pass__error');
+    if (err) err.classList.add('hidden');
+    if (reel) reel.classList.add('hidden');
+    if (inst.isItemScoped) {
+      inst.root.classList.add('menu-smash-pass--no-photos');
+      if (empty) empty.classList.add('hidden');
+      if (emptyState) emptyState.classList.remove('hidden');
+      bindItemAddPhoto(inst);
+      return;
+    }
+    inst.root.classList.remove('menu-smash-pass--no-photos');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (empty) empty.classList.remove('hidden');
+  }
+
+  function showReel(inst) {
+    var empty = q(inst, '.menu-smash-pass__empty');
+    var emptyState = q(inst, '.menu-smash-pass__empty-state');
+    var reel = q(inst, '.menu-smash-pass__reel');
+    var err = q(inst, '.menu-smash-pass__error');
+    if (err) err.classList.add('hidden');
+    if (empty) empty.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (reel) reel.classList.remove('hidden');
+    inst.root.classList.remove('menu-smash-pass--no-photos');
+  }
+
+  function updateProgress(inst) {
+    if (inst.isItemScoped) return;
+    var progress = q(inst, '.menu-smash-pass__progress');
+    if (!progress) return;
+    if (!inst.items.length) {
+      progress.textContent = '';
+      return;
+    }
+    var unrated = inst.items.filter(function (item) {
+      return !isLocalItem(item) && !getUserVote(item);
+    }).length;
+    var position = (inst.deckIndex % inst.items.length) + 1;
+    progress.textContent =
+      position + ' of ' + inst.items.length + (unrated ? ' · ' + unrated + ' to rate' : '');
+  }
+
+  function buildImageTag(preview, srcPath, isDraft, className) {
+    if (!preview && !srcPath) return '';
+    return (
+      '<img' +
+      (preview ? ' src="' + escapeHtml(preview) + '"' : '') +
+      (srcPath ? ' data-src-path="' + escapeHtml(srcPath) + '"' : '') +
+      (isDraft && !preview ? ' data-draft-pending="1"' : '') +
+      ' alt="" class="' +
+      className +
+      '" draggable="false" decoding="async" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">'
+    );
+  }
+
+  function buildMediaHtml(preview, srcPath, isDraft, layered) {
+    if (!preview && !srcPath) return '';
+    if (layered) {
+      var baseClass = 'menu-smash-pass-card__img';
+      return (
+        '<div class="menu-smash-pass-card__img-stage">' +
+        buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--backdrop') +
+        buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--front') +
+        '</div>'
+      );
+    }
+    return buildImageTag(preview, srcPath, isDraft, 'menu-smash-pass-card__img');
+  }
+
+  function buildCardHtml(item, stackIndex, compact) {
+    var preview = thumbUrl(item);
+    var srcPath = isLocalItem(item) ? normalizeImagePath(item.url || '') : '';
+    var isDraft = srcPath.indexOf('draft-assets/') === 0;
+    var title = menuItemTitle(item.menu_item_path);
+    var pathLabel = item.menu_item_path || '—';
+    var likes = item.like_count != null ? item.like_count : item.likeCount || 0;
+    var dislikes = item.dislike_count != null ? item.dislike_count : item.dislikeCount || 0;
+    var userVote = getUserVote(item);
+    var local = isLocalItem(item);
+    var depth = stackIndex === 0 ? ' is-top' : ' is-behind';
+    var ratedClass = local
+      ? ' is-local'
+      : userVote === 'like'
+        ? ' is-rated-smash'
+        : userVote === 'dislike'
+          ? ' is-rated-pass'
+          : ' is-unrated';
+
+    var infoHtml = '';
+    if (!compact) {
+      infoHtml =
+        '<div class="menu-smash-pass-card__info">' +
+        '<h4 class="menu-smash-pass-card__title">' +
+        escapeHtml(title) +
+        '</h4>' +
+        '<a class="menu-smash-pass-card__path" href="' +
+        escapeHtml(menuItemHref(item.menu_item_path)) +
+        '" target="_blank" rel="noopener">' +
+        escapeHtml(pathLabel) +
+        '</a>' +
+        '<div class="menu-smash-pass-card__counts">' +
+        '<span class="menu-smash-pass-card__likes" data-count="likes">♥ ' +
+        likes +
+        '</span>' +
+        '<span class="menu-smash-pass-card__dislikes" data-count="dislikes">✕ ' +
+        dislikes +
+        '</span>' +
+        '</div>' +
+        '</div>';
+    } else if (!local) {
+      infoHtml =
+        '<div class="menu-smash-pass-card__info menu-smash-pass-card__info--compact">' +
+        '<div class="menu-smash-pass-card__counts">' +
+        '<span class="menu-smash-pass-card__likes" data-count="likes">♥ ' +
+        likes +
+        '</span>' +
+        '<span class="menu-smash-pass-card__dislikes" data-count="dislikes">✕ ' +
+        dislikes +
+        '</span>' +
+        '</div>' +
+        '</div>';
+    }
+
+    var imgHtml = buildMediaHtml(preview, srcPath, isDraft, compact);
+
+    return (
+      '<article class="menu-smash-pass-card' +
+      depth +
+      ratedClass +
+      '" data-image-id="' +
+      escapeHtml(item.id) +
+      '"' +
+      (local ? ' data-local-image="1"' : '') +
+      '>' +
+      (local
+        ? ''
+        : '<div class="menu-smash-pass-card__stamp menu-smash-pass-card__stamp--smash" aria-hidden="true">LIKE</div>' +
+          '<div class="menu-smash-pass-card__stamp menu-smash-pass-card__stamp--pass" aria-hidden="true">PASS</div>') +
+      '<div class="menu-smash-pass-card__media">' +
+      imgHtml +
+      '</div>' +
+      infoHtml +
+      '</article>'
+    );
+  }
+
+  function setCardDragStyles(card, dx, dy) {
+    if (!card) return;
+    var rot = Math.max(-ROTATION_MAX, Math.min(ROTATION_MAX, dx * 0.08));
+    card.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + rot + 'deg)';
+    if (!card.classList.contains('is-local')) {
+      card.style.setProperty('--smash-stamp-opacity', String(Math.min(1, Math.max(0, dx / SWIPE_THRESHOLD))));
+      card.style.setProperty('--pass-stamp-opacity', String(Math.min(1, Math.max(0, -dx / SWIPE_THRESHOLD))));
+    }
+  }
+
+  function clearCardDragStyles(card) {
+    if (!card) return;
+    card.style.transform = '';
+    card.style.removeProperty('--smash-stamp-opacity');
+    card.style.removeProperty('--pass-stamp-opacity');
+  }
+
+  function flyOffCard(card, direction, done) {
+    if (!card) {
+      if (done) done();
+      return;
+    }
+    card.classList.add('is-exiting');
+    card.classList.add(direction === 'like' ? 'is-exit-smash' : 'is-exit-pass');
+    setTimeout(function () {
+      if (done) done();
+    }, 320);
+  }
+
+  async function postVote(id, vote) {
+    var base = apiBase();
+    if (!base) throw new Error('Menu image service is not configured.');
+    var res = await fetch(base + '/menu-images/' + encodeURIComponent(id) + '/vote', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        voter_id: getVoterId(),
+        vote: vote,
+      }),
+    });
+    var json = await res.json().catch(function () {
+      return {};
+    });
+    if (!res.ok) {
+      throw new Error(json.error || 'Could not save your vote.');
+    }
+    return json.data || {};
+  }
+
+  function advanceDeckWithoutVote(inst, direction) {
+    if (inst.busy || !inst.items.length) return;
+    var stack = q(inst, '.menu-smash-pass__stack');
+    var card = stack && stack.querySelector('.menu-smash-pass-card.is-top');
+    inst.busy = true;
+
+    if (card) {
+      var dx = direction === 'like' ? window.innerWidth * 0.35 : -window.innerWidth * 0.35;
+      setCardDragStyles(card, dx, 0);
+    }
+
+    flyOffCard(card, direction, function () {
+      advanceDeck(inst);
+      renderStack(inst);
+      inst.busy = false;
+    });
+  }
+
+  function commitVote(inst, vote, direction) {
+    if (inst.busy || !inst.items.length) return;
+    var item = currentItem(inst);
+    if (!item) return;
+
+    if (isLocalItem(item)) {
+      advanceDeckWithoutVote(inst, direction);
+      return;
+    }
+
+    var stack = q(inst, '.menu-smash-pass__stack');
+    var card = stack && stack.querySelector('.menu-smash-pass-card.is-top');
+    inst.busy = true;
+
+    if (card) {
+      var dx = direction === 'like' ? window.innerWidth * 0.35 : -window.innerWidth * 0.35;
+      setCardDragStyles(card, dx, 0);
+    }
+
+    flyOffCard(card, direction, function () {
+      postVote(item.id, vote)
+        .then(function (data) {
+          item.user_vote = vote;
+          item.like_count = data.like_count != null ? data.like_count : item.like_count;
+          item.dislike_count = data.dislike_count != null ? data.dislike_count : item.dislike_count;
+          cacheVote(item.id, vote);
+          advanceDeck(inst);
+          renderStack(inst);
+        })
+        .catch(function (err) {
+          showError(inst, err.message || 'Vote failed.');
+          if (card) {
+            card.classList.remove('is-exiting', 'is-exit-smash', 'is-exit-pass');
+            clearCardDragStyles(card);
+          }
+          renderStack(inst);
+        })
+        .finally(function () {
+          inst.busy = false;
+        });
+    });
+  }
+
+  function bindCardDrag(inst, card) {
+    if (!card || card._ttmsSmashDragBound) return;
+    card._ttmsSmashDragBound = true;
+
+    function onPointerDown(e) {
+      if (inst.busy || e.button > 0) return;
+      if (e.target.closest('.menu-smash-pass-card__path')) return;
+      e.stopPropagation();
+      inst.dragState = {
+        card: card,
+        startX: e.clientX,
+        startY: e.clientY,
+        pointerId: e.pointerId,
+      };
+      card.classList.add('is-dragging');
+      try {
+        card.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+
+    function onPointerMove(e) {
+      if (!inst.dragState || inst.dragState.card !== card) return;
+      var dx = e.clientX - inst.dragState.startX;
+      var dy = (e.clientY - inst.dragState.startY) * 0.35;
+      setCardDragStyles(card, dx, dy);
+    }
+
+    function onPointerUp(e) {
+      if (!inst.dragState || inst.dragState.card !== card) return;
+      var dx = e.clientX - inst.dragState.startX;
+      card.classList.remove('is-dragging');
+      try {
+        card.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
+      if (dx > SWIPE_THRESHOLD) {
+        commitVote(inst, 'like', 'like');
+      } else if (dx < -SWIPE_THRESHOLD) {
+        commitVote(inst, 'dislike', 'dislike');
+      } else {
+        card.classList.add('is-snapping-back');
+        clearCardDragStyles(card);
+        setTimeout(function () {
+          card.classList.remove('is-snapping-back');
+        }, 280);
+      }
+      inst.dragState = null;
+    }
+
+    card.addEventListener('pointerdown', onPointerDown);
+    card.addEventListener('pointermove', onPointerMove);
+    card.addEventListener('pointerup', onPointerUp);
+    card.addEventListener('pointercancel', onPointerUp);
+  }
+
+  function renderStack(inst) {
+    var stack = q(inst, '.menu-smash-pass__stack');
+    if (!stack) return;
+
+    if (!inst.items.length) {
+      stack.innerHTML = '';
+      showEmpty(inst);
+      updateProgress(inst);
+      return;
+    }
+
+    showReel(inst);
+    updateProgress(inst);
+
+    var top = currentItem(inst);
+    var behind = inst.items.length > 1 ? nextItem(inst) : null;
+    var html = buildCardHtml(top, 0, inst.isItemScoped);
+    if (behind && behind.id !== top.id) {
+      html += buildCardHtml(behind, 1, inst.isItemScoped);
+    }
+
+    stack.innerHTML = html;
+
+    var topCard = stack.querySelector('.menu-smash-pass-card.is-top');
+    if (topCard) bindCardDrag(inst, topCard);
+    hydrateStackImages(stack);
+  }
+
+  function hydrateStackImages(stack) {
+    if (!stack) return;
+    var imgs = stack.querySelectorAll(
+      '.menu-smash-pass-card__img--front[data-src-path], .menu-smash-pass-card__img[data-src-path]'
+    );
+    imgs.forEach(function (img) {
+      var path = img.getAttribute('data-src-path') || '';
+      if (path.indexOf('draft-assets/') !== 0) return;
+      if (typeof window.hydrateAuthenticatedDraftAssetImg === 'function') {
+        window.hydrateAuthenticatedDraftAssetImg(img);
+      }
+      var stage = img.closest('.menu-smash-pass-card__img-stage');
+      if (!stage) return;
+      var backdrop = stage.querySelector('.menu-smash-pass-card__img--backdrop');
+      if (backdrop && img.src && backdrop.src !== img.src) {
+        backdrop.src = img.src;
+        backdrop.removeAttribute('data-draft-pending');
+      }
+    });
+  }
+
+  function filterFeedForInstance(inst, feed) {
+    if (!inst.menuItemPath) return feed;
+    return feed.filter(function (item) {
+      return normalizePath(item.menu_item_path || item.menuItemPath) === inst.menuItemPath;
+    });
+  }
+
+  async function fetchSharedFeed(signal) {
+    if (feedCache.data && feedCache.gen === globalGen) {
+      return feedCache.data;
+    }
+    if (feedCache.promise && feedCache.gen === globalGen) {
+      return feedCache.promise;
+    }
+
+    var base = apiBase();
+    if (!base) throw new Error('Menu image service is not configured.');
+
+    if (feedCache.abort) {
+      feedCache.abort.abort();
+    }
+    feedCache.abort = new AbortController();
+    var mergedSignal = signal || feedCache.abort.signal;
+
+    var clientID = clientIdForRoot(queryRoots()[0] || null);
+    var url =
+      base +
+      '/menu-images/feed?client_id=' +
+      encodeURIComponent(clientID) +
+      '&voter_id=' +
+      encodeURIComponent(getVoterId());
+
+    feedCache.gen = globalGen;
+    feedCache.promise = fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: mergedSignal,
+    })
+      .then(function (res) {
+        return res.json().catch(function () {
+          return {};
+        }).then(function (json) {
+          if (!res.ok) {
+            throw new Error(json.error || 'Could not load community photos.');
+          }
+          feedCache.data = json.data || [];
+          return feedCache.data;
+        });
+      })
+      .finally(function () {
+        feedCache.promise = null;
+      });
+
+    return feedCache.promise;
+  }
+
+  function resetUiState(inst) {
+    var err = q(inst, '.menu-smash-pass__error');
+    var reel = q(inst, '.menu-smash-pass__reel');
+    var empty = q(inst, '.menu-smash-pass__empty');
+    var emptyState = q(inst, '.menu-smash-pass__empty-state');
+    var progress = q(inst, '.menu-smash-pass__progress');
+    if (err) {
+      err.textContent = '';
+      err.classList.add('hidden');
+    }
+    if (empty) empty.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (reel) reel.classList.add('hidden');
+    if (progress) progress.textContent = '';
+    inst.root.classList.add('menu-smash-pass--no-photos');
+  }
+
+  function destroyInstance(inst) {
+    inst.gen += 1;
+    inst.busy = false;
+    inst.dragState = null;
+    inst.items = [];
+    inst.deckIndex = 0;
+    var stack = q(inst, '.menu-smash-pass__stack');
+    if (stack) stack.innerHTML = '';
+    resetUiState(inst);
+  }
+
+  function destroyMenuSmashPass() {
+    globalGen += 1;
+    feedCache.data = null;
+    feedCache.promise = null;
+    if (feedCache.abort) {
+      feedCache.abort.abort();
+      feedCache.abort = null;
+    }
+    if (initScheduled) {
+      clearTimeout(initScheduled);
+      initScheduled = null;
+    }
+    queryRoots().forEach(function (root) {
+      destroyInstance(getInstance(root));
+    });
+  }
+
+  async function initInstanceNow(inst, feed, generation) {
+    if (!inst.root || !inst.root.isConnected) return;
+    if (generation !== globalGen) return;
+
+    inst.gen += 1;
+    var localGen = inst.gen;
+    inst.busy = false;
+    inst.dragState = null;
+    inst.items = [];
+    inst.deckIndex = 0;
+
+    try {
+      var scoped = filterFeedForInstance(inst, feed);
+      if (localGen !== inst.gen || generation !== globalGen) return;
+      inst.items = mergeItemDeck(inst, scoped);
+      inst.deckIndex = 0;
+      renderStack(inst);
+    } catch (err) {
+      if (localGen !== inst.gen || generation !== globalGen) return;
+      if (err && err.name === 'AbortError') return;
+      if (inst.isItemScoped) {
+        inst.items = mergeItemDeck(inst, []);
+        if (inst.items.length) {
+          inst.deckIndex = 0;
+          renderStack(inst);
+          return;
+        }
+      }
+      showError(inst, err.message || 'Could not load photos.');
+    }
+  }
+
+  function stripReelsCardThumbnails() {
+    if (!cfg() || !cfg().enabled) return;
+    document.querySelectorAll('.menu-item-card.menu-reels-slide .menu-item-image-link').forEach(function (link) {
+      link.remove();
+    });
+  }
+
+  async function initMenuSmashPassNow() {
+    if (!cfg() || !cfg().enabled) return;
+
+    stripReelsCardThumbnails();
+
+    var roots = queryRoots();
+    if (!roots.length) return;
+
+    var generation = globalGen;
+    try {
+      var feed = await fetchSharedFeed();
+      if (generation !== globalGen) return;
+      roots.forEach(function (root) {
+        initInstanceNow(getInstance(root), feed, generation);
+      });
+    } catch (err) {
+      if (generation !== globalGen) return;
+      if (err && err.name === 'AbortError') return;
+      roots.forEach(function (root) {
+        initInstanceNow(getInstance(root), [], generation);
+      });
+    }
+  }
+
+  function initMenuSmashPass() {
+    if (initScheduled) {
+      clearTimeout(initScheduled);
+    }
+    initScheduled = setTimeout(function () {
+      initScheduled = null;
+      initMenuSmashPassNow();
+    }, 0);
+  }
+
+  function registerBarbaLifecycle() {
+    if (!window.TTMSBarba) return;
+    window.TTMSBarba.register(initMenuSmashPass);
+  }
+
+  function buildMenuSmashPassMarkup(options) {
+    options = options || {};
+    var client = options.clientId || clientIdForRoot(null) || '_ttms_menu_demo';
+    var path = options.menuItemPath || '';
+    var extra = options.modal ? ' menu-smash-pass--modal' : '';
+    return (
+      '<div class="menu-smash-pass menu-item-smash-pass' +
+      extra +
+      '" data-client-id="' +
+      escapeHtml(client) +
+      '"' +
+      (path ? ' data-menu-item-path="' + escapeHtml(path) + '"' : '') +
+      '>' +
+      '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
+      '<p class="menu-smash-pass__empty hidden">No community photos yet — check back after guests upload and admins approve.</p>' +
+      (path ? buildItemEmptyStateHtml() : '') +
+      '<div class="menu-smash-pass__reel hidden">' +
+      '<div class="menu-smash-pass__stack" aria-live="polite"></div>' +
+      '</div></div>'
+    );
+  }
+
+  function invalidateMenuSmashPassFeed() {
+    feedCache.data = null;
+    feedCache.promise = null;
+    if (feedCache.abort) {
+      feedCache.abort.abort();
+      feedCache.abort = null;
+    }
+  }
+
+  window.buildMenuSmashPassMarkup = buildMenuSmashPassMarkup;
+  window.invalidateMenuSmashPassFeed = invalidateMenuSmashPassFeed;
+  window.initMenuSmashPass = initMenuSmashPass;
+  window.destroyMenuSmashPass = destroyMenuSmashPass;
+
+  function bootMenuSmashPass() {
+    initMenuSmashPass();
+    registerBarbaLifecycle();
+  }
+
+  if (window.TTMSBarba) {
+    bootMenuSmashPass();
+  } else {
+    document.addEventListener('DOMContentLoaded', bootMenuSmashPass);
+  }
+
+  document.addEventListener('menuReelsFlattened', initMenuSmashPass);
+})();

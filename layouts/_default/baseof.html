@@ -59,6 +59,10 @@
   <!-- Ads client (Instagram-style reels) + homepage ad manager -->
   <script src="/js/ads-client.js" defer></script>
   <script src="/js/client-ad-manager.js" defer></script>
+  <script src="/js/location-picker.js" defer></script>
+  {{- if site.Params.menuImageService.enabled -}}
+  <script src="/js/menu-smash-pass.js" defer></script>
+  {{- end -}}
   <script src="/js/menu-reels.js" defer></script>
   
   <!-- Core app functionality - deferred -->

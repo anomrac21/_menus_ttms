@@ -565,8 +565,26 @@
     return cached && cached.length ? cached : images || [];
   }
 
+  function hostUsesSmashPassModal(host) {
+    return !!(host && host.querySelector('.menu-smash-pass--modal'));
+  }
+
+  function refreshSmashPassForHost(host) {
+    if (typeof window.invalidateMenuSmashPassFeed === 'function') {
+      window.invalidateMenuSmashPassFeed();
+    }
+    if (typeof window.initMenuSmashPass === 'function') {
+      window.initMenuSmashPass();
+    }
+  }
+
   function renderApprovedImagesToHost(host, clientId, pathForApi, images) {
     if (!host || !host.isConnected) return;
+
+    if (hostUsesSmashPassModal(host)) {
+      refreshSmashPassForHost(host);
+      return;
+    }
 
     images = resolveImagesForRender(clientId, pathForApi, images);
 
@@ -669,6 +687,25 @@
   }
 
   window.scheduleMenuImageLoadForHost = scheduleMenuImageLoadForHost;
+
+  window.bindMenuImageAddButton = function (host, clientId, pathForApi) {
+    if (!host) return;
+    bindAddPhotoButton(
+      host,
+      clientId || host.getAttribute('data-client-id') || hostClientId(host) || CONFIG.clientId,
+      pathForApi || host.getAttribute('data-menu-item-path') || hostPathForApi(host)
+    );
+  };
+
+  function refreshSmashPassAddButtons() {
+    document.querySelectorAll('.menu-item-smash-pass[data-menu-item-path]').forEach(function (root) {
+      if (!root.querySelector('.menu-smash-pass__empty-state:not(.hidden)')) return;
+      window.bindMenuImageAddButton(root);
+    });
+  }
+
+  document.addEventListener('auth:login', refreshSmashPassAddButtons);
+  document.addEventListener('auth:logout', refreshSmashPassAddButtons);
 
   function initMenuImageHost(host, options) {
     if (!host) return;

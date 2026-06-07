@@ -20,6 +20,14 @@ let maxLoaderTimeout = null;
 
 // Function to ensure ads are loaded with retry mechanism
 function ensureAdsLoaded() {
+    // Reels homepage uses AdsClient, not client-ad-manager
+    if (document.getElementById('pageadscontainer')) {
+        if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
+            window.AdsClient.loadAds();
+        }
+        return;
+    }
+
     // Prevent multiple simultaneous attempts
     if (isAdsLoading) {
         console.log('Ads already loading, skipping...');
@@ -210,6 +218,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (window.APP && APP.slideshow && typeof APP.slideshow.destroy === 'function') {
                     APP.slideshow.destroy();
                 }
+                if (typeof window.destroyLocationPicker === 'function') {
+                    window.destroyLocationPicker();
+                }
+                if (typeof window.destroyMenuSmashPass === 'function') {
+                    window.destroyMenuSmashPass();
+                }
+                if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+                    window.ensureMenuReelsItemModalClosed();
+                }
 
                 showLoader();
                 await new Promise(resolve => setTimeout(resolve, 366));
@@ -374,12 +391,15 @@ window.addEventListener("beforeunload", () => {
 
 // Listen for page refresh/reload events
 window.addEventListener('load', () => {
+    if (!shouldUseAdManager()) return;
     console.log('Page load event fired, attempting to load ads...');
-    // Try immediately first
     ensureAdsLoaded();
-    // Then try again after a delay to ensure AdManager is initialized
     setTimeout(() => ensureAdsLoaded(), 2000);
 });
+
+function shouldUseAdManager() {
+    return !document.getElementById('pageadscontainer');
+}
 
 // Also try to load ads as soon as possible
 if (document.readyState === 'loading') {
@@ -393,8 +413,13 @@ if (document.readyState === 'loading') {
     setTimeout(() => ensureAdsLoaded(), 500);
 }
 
-// Also listen for when the AdManager becomes available
+// Also listen for when the AdManager becomes available (homepage only)
 const checkAdManager = setInterval(() => {
+    if (!shouldUseAdManager()) {
+        clearInterval(checkAdManager);
+        return;
+    }
+
     adManagerCheckCount++;
     
     if (window.adManager && typeof window.adManager.populateAds === 'function') {
@@ -416,7 +441,7 @@ const checkAdManager = setInterval(() => {
 
 // Additional check: try to refresh ads when the page becomes visible
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
+    if (!document.hidden && shouldUseAdManager()) {
         console.log('Page became visible, checking ads...');
         setTimeout(() => ensureAdsLoaded(), 500);
     }

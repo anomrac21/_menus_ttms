@@ -1,0 +1,537 @@
+.menu-smash-pass {
+    width: 100%;
+    max-width: 100%;
+}
+
+.menu-smash-pass__error,
+.menu-smash-pass__empty {
+    text-align: center;
+    font-size: 0.88rem;
+    color: color-mix(in srgb, var(--main-text, #fff) 78%, transparent);
+    margin: 0.5rem 0;
+}
+
+.menu-smash-pass__error {
+    color: #fca5a5;
+}
+
+.menu-smash-pass__reel.hidden,
+.menu-smash-pass__error.hidden,
+.menu-smash-pass__empty.hidden,
+.menu-smash-pass__empty-state.hidden {
+    display: none;
+}
+
+.menu-smash-pass__empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    border-radius: 1rem;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+    text-align: center;
+    padding: 1rem;
+}
+
+.menu-smash-pass__empty-hint {
+    margin: 0;
+    max-width: 14em;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.menu-smash-pass__empty-state .menu-image-actions--standalone {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    pointer-events: auto;
+    border: none;
+}
+
+.menu-smash-pass__empty-state .menu-image-add-btn {
+    width: auto;
+    height: auto;
+    min-height: 2.25rem;
+    padding: 0.5em 1em;
+    gap: 0.5em;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    border-radius: 999px;
+    background: rgba(102, 126, 234, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.menu-smash-pass__empty-state .menu-image-add-btn:hover {
+    background: rgba(102, 126, 234, 0.65);
+    color: #fff;
+    transform: none;
+}
+
+.menu-smash-pass__empty-state .menu-image-add-btn .fa {
+    font-size: 0.95rem;
+}
+
+.menu-smash-pass__empty-state .menu-image-add-btn__label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: nowrap;
+}
+
+.menu-smash-pass__progress {
+    text-align: center;
+    margin: 0 0 0.45rem;
+    font-size: 0.75rem !important;
+    color: color-mix(in srgb, var(--main-text, #fff) 65%, transparent);
+}
+
+.menu-smash-pass__stack {
+    position: relative;
+    width: 100%;
+    max-width: 18rem;
+    margin-inline: auto;
+    aspect-ratio: 3 / 4;
+    min-height: 0;
+    max-height: 100%;
+    touch-action: none;
+    user-select: none;
+}
+
+.menu-smash-pass-card {
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #0f172a;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+    border: 2px solid rgba(255, 255, 255, 0.14);
+    cursor: grab;
+    will-change: transform;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-smash-pass-card.is-unrated {
+    border-color: rgba(196, 181, 253, 0.45);
+}
+
+.menu-smash-pass-card.is-rated-smash {
+    border-color: rgba(74, 222, 128, 0.55);
+}
+
+.menu-smash-pass-card.is-rated-pass {
+    border-color: rgba(248, 113, 113, 0.55);
+}
+
+.menu-smash-pass-card.is-behind {
+    transform: scale(0.94) translateY(8px);
+    opacity: 0.55;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.menu-smash-pass-card.is-top {
+    z-index: 2;
+}
+
+.menu-smash-pass-card.is-dragging {
+    cursor: grabbing;
+    transition: none;
+}
+
+.menu-smash-pass-card.is-snapping-back {
+    transition: transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.menu-smash-pass-card.is-exiting {
+    pointer-events: none;
+    transition: transform 0.32s ease-out, opacity 0.32s ease-out;
+}
+
+.menu-smash-pass-card.is-exit-smash {
+    transform: translate(115%, -6%) rotate(14deg) !important;
+    opacity: 0;
+}
+
+.menu-smash-pass-card.is-exit-pass {
+    transform: translate(-115%, -6%) rotate(-14deg) !important;
+    opacity: 0;
+}
+
+.menu-smash-pass-card__stamp {
+    position: absolute;
+    top: 1rem;
+    z-index: 4;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    border: 3px solid currentColor;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.menu-smash-pass-card__stamp--smash {
+    left: 0.85rem;
+    color: #4ade80;
+    border-color: #4ade80;
+    transform: rotate(-12deg);
+    opacity: var(--smash-stamp-opacity, 0);
+}
+
+.menu-smash-pass-card__stamp--pass {
+    right: 0.85rem;
+    color: #f87171;
+    border-color: #f87171;
+    transform: rotate(12deg);
+    opacity: var(--pass-stamp-opacity, 0);
+}
+
+.menu-smash-pass-card__media {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    background: #111827;
+}
+
+.menu-smash-pass-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+.menu-smash-pass-card__info {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
+    padding: 0.55rem 0.7rem 0.6rem;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
+    color: #fff;
+}
+
+.menu-smash-pass-card__title {
+    margin: 0 0 0.1rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.menu-smash-pass-card__path {
+    display: block;
+    font-size: 0.7rem;
+    color: #c4b5fd;
+    text-decoration: none;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.menu-smash-pass-card__counts {
+    display: flex;
+    gap: 0.65rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.menu-smash-pass-card__counts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.menu-smash-pass__actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.65rem;
+    flex-shrink: 0;
+}
+
+.menu-smash-pass__btn {
+    min-width: 6.5rem;
+    justify-content: center;
+    padding: 0.55em 0.9em;
+}
+
+.menu-smash-pass__btn--pass {
+    background: linear-gradient(135deg, #7f1d1d, #ef4444);
+}
+
+.menu-smash-pass__btn--smash {
+    background: linear-gradient(135deg, #14532d, #22c55e);
+}
+
+/* Intro reel slide — stack + actions + share in one viewport */
+.hero-content.menu-reels-slide--intro .menu-smash-pass__reel:not(.hidden) {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-content.menu-reels-slide--intro .menu-smash-pass__progress {
+    flex-shrink: 0;
+    margin: 0 0 0.25rem;
+    font-size: 0.68rem !important;
+}
+
+.hero-content.menu-reels-slide--intro .menu-smash-pass__stack {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: min(90vw, 20rem);
+    max-width: 20rem;
+    height: 100%;
+    max-height: 100%;
+    aspect-ratio: unset;
+}
+
+.hero-content.menu-reels-slide--intro .menu-smash-pass-card__title {
+    font-size: 0.82rem;
+}
+
+.hero-content.menu-reels-slide--intro .menu-smash-pass-card__path {
+    display: none;
+}
+
+.hero-content.menu-reels-slide--intro .menu-smash-pass__actions {
+    margin-top: 0.45rem;
+}
+
+.hero-content.menu-reels-slide--intro .menu-smash-pass__btn {
+    min-width: 5.75rem;
+    padding: 0.45em 0.8em;
+}
+
+.hero-content.menu-reels-slide--intro .social-share-btn-container .contact-cta--share {
+    min-height: 2.35rem;
+    padding: 0.45em 0.95em;
+}
+
+.hero-content.menu-reels-slide--intro .social-share-btn-container .contact-cta__hint {
+    display: none;
+}
+
+/* Per-item empty photo placeholder — same footprint as smash stack */
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass__empty-state:not(.hidden) {
+    flex: 0 0 auto;
+    width: min(78vw, 16rem, 100cqw, 100cqh);
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    height: auto;
+}
+
+/* Per-item smash pass on menu reel cards — largest 1:1 square that fits slide height */
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass__reel:not(.hidden) {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding-inline: 0.5rem;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass__stack {
+    flex: 0 0 auto;
+    width: min(78vw, 16rem, 100cqw, 100cqh);
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    height: auto;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card {
+    overflow: hidden;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__media {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__img-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__img--backdrop {
+    position: absolute;
+    inset: -10%;
+    width: 120%;
+    height: 120%;
+    object-fit: cover;
+    object-position: center;
+    filter: blur(20px) saturate(1.12);
+    transform: scale(1.06);
+    opacity: 0.78;
+    pointer-events: none;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__img--front {
+    position: relative;
+    z-index: 1;
+    object-fit: contain;
+    object-position: center;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    pointer-events: none;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card.is-behind .menu-smash-pass-card__img--front {
+    object-fit: contain;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__stamp {
+    top: 0.45rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.82rem;
+    border-width: 2px;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__info--compact {
+    padding: 0.25rem 0.4rem 0.35rem;
+    position: absolute;
+    bottom: 0px;
+    right: 0;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__counts {
+    justify-content: center;
+    font-size: 0.72rem;
+    gap: 0.45rem;
+}
+
+.menu-smash-pass-card.is-local .menu-smash-pass-card__stamp {
+    display: none;
+}
+
+/* Smash-or-pass in reels item modal */
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__empty-state:not(.hidden) {
+    flex: 0 0 auto;
+    width: min(68vw, 14rem);
+    max-width: 14rem;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-height: min(68vw, 14rem);
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__reel:not(.hidden) {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 100%;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__stack {
+    flex: 0 0 auto;
+    width: min(68vw, 14rem);
+    max-width: 14rem;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-height: min(68vw, 14rem);
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card {
+    overflow: hidden;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__media {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__img-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__img--backdrop {
+    position: absolute;
+    inset: -10%;
+    width: 120%;
+    height: 120%;
+    object-fit: cover;
+    object-position: center;
+    filter: blur(20px) saturate(1.12);
+    transform: scale(1.06);
+    opacity: 0.78;
+    pointer-events: none;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__img--front {
+    position: relative;
+    z-index: 1;
+    object-fit: contain;
+    object-position: center;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    pointer-events: none;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card.is-behind .menu-smash-pass-card__img--front {
+    object-fit: contain;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__info--compact {
+    padding: 0.35rem 0.5rem 0.45rem;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__counts {
+    justify-content: center;
+}

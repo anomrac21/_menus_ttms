@@ -11,11 +11,15 @@
   <div class="logo_container">
     <a href="/locations/"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="512" height="512"></a>
   </div>
+  {{ with .Content }}
+  <div class="hero-intro">
+    {{ . }}
+  </div>
+  {{ end }}
   {{ partial "components/hero_ctas.html" . }}
   </section>
   {{ partial "components/contact_info.html" . }}
   <section class="hero-content menu-reels-slide menu-reels-slide--intro">
-    {{ .Content }}
     {{ partial "client/clienttourimages.html" . }}
     {{ partial "socialmedia/share-button.html" . }}
     
@@ -52,21 +56,22 @@
                 <div class="main-menu {{ .LinkTitle }} item">
                   <section class="menu-header menu-reels-slide" data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
-                    {{ if .Params.images.top }}
-                      <a  href="{{ .RelPermalink }}"><img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy"></a>
-                    {{ end }}
-                    <div class="headerstyle item" >
-                      <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
-                        <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
-                        {{ if .Params.images.bottom }}
-                          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
-                        {{ end }}
-                      </h2>
-                      
-                    </div>
-                    <div class="menu-summary item">
-                      {{ .Summary }}
-                    </div>
+                    <a class="menu-header__link" href="{{ .RelPermalink }}">
+                      {{ if .Params.images.top }}
+                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy">
+                      {{ end }}
+                      <div class="headerstyle item">
+                        <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+                          {{ .LinkTitle }}
+                          {{ if .Params.images.bottom }}
+                            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
+                          {{ end }}
+                        </h2>
+                      </div>
+                      <div class="menu-summary item">
+                        {{ .Summary }}
+                      </div>
+                    </a>
                   </section>
                   <div class="menu-items-container">
                       {{ $category := .LinkTitle }}
@@ -169,7 +174,7 @@
                         {{end}}
      
                         {{ $avail := .Params.availability | default $section.Params.availability }}
-                        <section class="menu-item-card menu-reels-slide{{ if $imgData.hasImage }} menu-item-card--has-image{{ end }}" 
+                        <section class="menu-item-card menu-reels-slide{{ if and $imgData.hasImage (not site.Params.menuImageService.enabled) }} menu-item-card--has-image{{ end }}" 
                             {{ with $avail }}data-availability="{{ $avail | jsonify }}"{{ end }}
                             data-reel-section="{{ $category }}"
                             data-section-slug="{{ .Section }}"
@@ -195,8 +200,11 @@
                             data-events="{{ (.Params.events | default (slice)) | jsonify }}"
                             onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
                             {{ partial "components/menu-favorite-btn.html" . }}
+                            {{- if site.Params.menuImageService.enabled -}}
+                            {{ partial "components/menu-smash-pass.html" (dict "menuItemPath" .RelPermalink) }}
+                            {{- end -}}
                             <div class="menu-item-row-top">
-                              {{ if $imgData.hasImage }}
+                              {{ if and $imgData.hasImage (not site.Params.menuImageService.enabled) }}
                                 <a href="{{ .RelPermalink }}" class="menu-item-image-link">
                                   <div class="menu-item-image">
                                     {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
@@ -269,14 +277,6 @@
                               </ul> 
                                 </div>
                               </div>
-                            </div>
-                            <!-- Expanded content area (hidden by default) -->
-                            <div class="menu-item-expanded-content" style="display: none;">
-                              <div class="menu-item-expanded-loading">
-                                <div class="loading-spinner"></div>
-                                <div class="loading-text">Loading...</div>
-                              </div>
-                              <div class="menu-item-expanded-data" style="display: none;"></div>
                             </div>
                         </section>
                         

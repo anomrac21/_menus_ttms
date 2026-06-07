@@ -687,6 +687,31 @@
     activeReelsItemCard.classList.remove('expanded');
   }
 
+  function ensureMenuReelsItemModalClosed() {
+    var modal = getMenuReelsItemModal();
+    if (!modal || !modal.classList.contains('is-open')) return;
+    if (activeReelsItemCard) {
+      if (typeof window.collapseMenuItemCard === 'function') {
+        window.collapseMenuItemCard(activeReelsItemCard);
+        return;
+      }
+      closeMenuReelsItemModal(activeReelsItemCard);
+      activeReelsItemCard.classList.remove('expanded');
+      return;
+    }
+    closeMenuReelsItemModal();
+  }
+
+  function isSameOriginNavigationHref(href) {
+    if (!href || href.charAt(0) === '#') return false;
+    if (/^(javascript:|mailto:|tel:)/i.test(href)) return false;
+    try {
+      return new URL(href, window.location.href).origin === window.location.origin;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function bindMenuReelsItemModal() {
     var modal = getMenuReelsItemModal();
     if (!modal || modal._ttmsReelsItemModalBound) return;
@@ -706,6 +731,15 @@
       e.preventDefault();
       closeActiveReelsItemModalFromUI();
     });
+
+    modal.addEventListener('click', function (e) {
+      if (!modal.classList.contains('is-open')) return;
+      var link = e.target.closest && e.target.closest('a[href]');
+      if (!link || link.hasAttribute('data-close-reels-item-modal')) return;
+      if (link.classList.contains('dashboard-new-item-placeholder-link')) return;
+      if (!isSameOriginNavigationHref(link.getAttribute('href'))) return;
+      ensureMenuReelsItemModalClosed();
+    }, true);
   }
 
   window.getMenuReelsTrack = getTrack;
@@ -714,6 +748,7 @@
   window.initMenuReels = initMenuReels;
   window.openMenuReelsItemModal = openMenuReelsItemModal;
   window.closeMenuReelsItemModal = closeMenuReelsItemModal;
+  window.ensureMenuReelsItemModalClosed = ensureMenuReelsItemModalClosed;
   window.getMenuReelsModalActiveCard = getMenuReelsModalActiveCard;
   window.getMenuReelsItemModalTargets = getMenuReelsItemModalTargets;
   window.getMenuReelsItemModalDataRoot = getMenuReelsItemModalDataRoot;

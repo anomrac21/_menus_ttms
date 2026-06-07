@@ -51,7 +51,9 @@ p,
 .menu-summary,
 .menu-item-description,
 .hero-content,
-.hero-content p {
+.hero-content p,
+.hero_logo_container .hero-intro,
+.hero_logo_container .hero-intro p {
     font-size: var(--ttms-text-base);
     line-height: var(--ttms-leading-relaxed);
 }
