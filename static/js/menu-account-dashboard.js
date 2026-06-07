@@ -328,15 +328,10 @@
 
     if (window.AuthClient && typeof AuthClient.logout === 'function') {
       await AuthClient.logout();
-    }
-    updateAccountDashboardAuthState(false, null);
-    if (window.AuthMiddleware && typeof AuthMiddleware.toggleAuthElements === 'function') {
-      AuthMiddleware.toggleAuthElements();
+    } else if (typeof updateAccountDashboardAuthState === 'function') {
+      updateAccountDashboardAuthState(false, null);
     }
     closeAll();
-    try {
-      window.dispatchEvent(new CustomEvent('ttms:auth-ready'));
-    } catch (err) {}
   }
 
   function bindAccountLogoutButton() {

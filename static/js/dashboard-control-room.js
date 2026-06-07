@@ -85,9 +85,7 @@
     var logoutBtn = document.getElementById('btnLogout');
     if (logoutBtn && global.AuthClient) {
       logoutBtn.addEventListener('click', function () {
-        global.AuthClient.logout().then(function () {
-          global.location.href = '/';
-        });
+        global.AuthClient.logout({ redirect: true, redirectUrl: '/' });
       });
     }
   }

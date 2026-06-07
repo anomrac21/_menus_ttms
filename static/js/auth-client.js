@@ -172,11 +172,36 @@ const AuthClient = {
     }
   },
 
+  _clearAuthSessionExtras() {
+    var sessionKeys = ['ttmenus_redirect_after_login', 'ttmenus_ws_connection_id'];
+    var localKeys = ['ttmenus_user_id', 'ttmenus_notification_subscription'];
+    var i;
+    for (i = 0; i < sessionKeys.length; i++) {
+      sessionStorage.removeItem(sessionKeys[i]);
+      localStorage.removeItem(sessionKeys[i]);
+    }
+    for (i = 0; i < localKeys.length; i++) {
+      localStorage.removeItem(localKeys[i]);
+      sessionStorage.removeItem(localKeys[i]);
+    }
+  },
+
   clearAuth() {
     this._sessionFromCookie = false;
     this._removeStorageKeys(this.config.tokenKeys);
     this._removeStorageKeys(this.config.refreshKeys);
     this._removeStorageKeys(this.config.userKeys);
+    this._clearAuthSessionExtras();
+    try {
+      if (typeof window.syncBodyAuthClasses === 'function') {
+        window.syncBodyAuthClasses(false);
+      } else {
+        document.body.classList.remove('ttms-logged-in');
+        document.body.classList.add('ttms-logged-out');
+      }
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+      this._notifyAuthReady();
+    } catch (e) {}
   },
 
   _purgeExpiredLocalTokens() {
@@ -342,26 +367,49 @@ const AuthClient = {
   },
 
   /**
-   * Logout user
+   * Logout user from the full TT Menus auth system (hub cookies + local session).
+   * @param {{redirect?: boolean, redirectUrl?: string}} options
    */
-  async logout() {
-    const token = this.getAccessToken();
-    
+  async logout(options) {
+    options = options || {};
+    var redirect = !!options.redirect;
+    var redirectUrl = options.redirectUrl || '/';
+    var token = this.getAccessToken();
+
     try {
-      const headers = {};
-      if (token) {
+      var headers = { Accept: 'application/json' };
+      if (token && this._tokenLooksValid(token)) {
         headers.Authorization = 'Bearer ' + token;
       }
-      await fetch(`${this.config.apiUrl}/logout`, {
+      var response = await fetch(this.config.apiUrl + '/logout', {
         method: 'POST',
         credentials: 'include',
         headers: headers,
       });
+      if (!response.ok) {
+        await fetch(this.config.apiUrl + '/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+      }
     } catch (error) {
       console.error('Logout error:', error);
     }
 
     this.clearAuth();
+
+    if (window.AuthMiddleware && typeof AuthMiddleware.toggleAuthElements === 'function') {
+      AuthMiddleware.toggleAuthElements();
+    }
+    if (typeof window.updateAccountDashboardAuthState === 'function') {
+      window.updateAccountDashboardAuthState(false, null);
+    }
+
+    if (redirect) {
+      window.location.href = redirectUrl;
+    }
+
     return { success: true };
   },
 

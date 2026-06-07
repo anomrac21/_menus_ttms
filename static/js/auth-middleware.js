@@ -80,10 +80,7 @@ const AuthMiddleware = {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
 
-        const result = await AuthClient.logout();
-        if (result.success) {
-          window.location.href = '/';
-        }
+        await AuthClient.logout({ redirect: true, redirectUrl: '/' });
       });
     });
   },
