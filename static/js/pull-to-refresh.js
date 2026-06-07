@@ -21,10 +21,40 @@
 
   var THRESHOLD = 300;
   var MAX_VISUAL = 360;
-  var MIN_PULL_BEFORE_UI = 24;
+  var MIN_PULL_BEFORE_UI = 28;
+  var HORIZONTAL_CANCEL_RATIO = 0.85;
+
+  var BLOCKED_SELECTORS = [
+    '#menu-reels-track',
+    '.menu-reels-track',
+    '.menu-reels-viewport',
+    '.menu-reels-slide',
+    '.menu-smash-pass',
+    '.menu-smash-pass-card',
+    '.menu-reels-item-modal',
+    '.menu-reels-item-modal__body',
+    '.menu-item-card.menu-reels-slide',
+    '.hero-content.menu-reels-slide',
+    '.ads-reels-track',
+    '#ads-reels-overlay',
+    '.ads-reels-slide',
+    '#menublock',
+    '.dashboard',
+    '.menu-image-upload-modal',
+    '.expanded-item-details',
+    '.single-page-content',
+    '.menu-item-slideshow',
+    '.expanded-image-carousel',
+    '.location-picker',
+    '.search-results',
+    'header',
+    'footer',
+  ].join(', ');
+
   var startY = 0;
   var startX = 0;
   var tracking = false;
+  var pullCommitted = false;
   var reloading = false;
   var lastPullPx = 0;
   var optsMove = { passive: false, capture: true };
@@ -39,20 +69,60 @@
     );
   }
 
-  function isPullRefreshBlockedTarget(target) {
-    if (!target || !target.closest) return false;
-    if (document.body.classList.contains('menu-reels-item-modal-open')) return true;
-    if (target.closest('#menu-reels-track, .menu-reels-track')) return true;
-    if (target.closest('.menu-reels-item-modal, .menu-smash-pass__stack')) return true;
-    if (target.closest('[data-barba="container"] main')) {
-      var main = target.closest('[data-barba="container"] main');
-      if (main && main.scrollTop > 2) return true;
-    }
-    var scrollParent = target.closest(
-      '.menu-reels-track, .menu-reels-item-modal__body, .expanded-item-details, .single-page-content'
+  function isMenuReelsHomeActive() {
+    return (
+      document.body.classList.contains('menu-reels-mode') ||
+      document.documentElement.classList.contains('menu-reels-mode') ||
+      !!document.getElementById('menu-reels-track')
     );
-    if (scrollParent && scrollParent.scrollTop > 2) return true;
+  }
+
+  function isScrollableElement(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (el === document.documentElement || el === document.body) return false;
+    var style = window.getComputedStyle(el);
+    var overflowY = style.overflowY;
+    if (overflowY !== 'auto' && overflowY !== 'scroll' && overflowY !== 'overlay') {
+      return false;
+    }
+    return el.scrollHeight > el.clientHeight + 1;
+  }
+
+  function hasScrolledAncestor(target) {
+    var node = target;
+    while (node && node !== document.documentElement) {
+      if (isScrollableElement(node) && node.scrollTop > 2) {
+        return true;
+      }
+      node = node.parentElement;
+    }
     return false;
+  }
+
+  function isTouchOnBlockedTarget(target) {
+    if (!target || !target.closest) return true;
+    if (document.body.classList.contains('menu-reels-item-modal-open')) return true;
+    if (target.closest(BLOCKED_SELECTORS)) return true;
+    if (target.closest('main.main--home')) return true;
+    return false;
+  }
+
+  function canUsePullToRefresh(target) {
+    if (reloading) return false;
+    if (isMenuReelsHomeActive()) return false;
+    if (document.body.classList.contains('menu-reels-item-modal-open')) return false;
+    if (scrollTop() > 2) return false;
+    if (isTouchOnBlockedTarget(target)) return false;
+    if (hasScrolledAncestor(target)) return false;
+    return true;
+  }
+
+  function resetPullState() {
+    tracking = false;
+    pullCommitted = false;
+    lastPullPx = 0;
+    hideIndicator();
+    detachTouchListeners();
   }
 
   var indicator = null;
@@ -119,32 +189,49 @@
     document.removeEventListener('touchcancel', onTouchEnd, optsEnd);
   }
 
+  function cancelPullGesture() {
+    resetPullState();
+  }
+
   function onTouchMove(e) {
     if (!tracking || reloading) return;
-    if (scrollTop() > 2) {
-      tracking = false;
-      lastPullPx = 0;
-      hideIndicator();
-      detachTouchListeners();
+
+    if (!canUsePullToRefresh(e.target)) {
+      cancelPullGesture();
       return;
     }
+
+    if (scrollTop() > 2) {
+      cancelPullGesture();
+      return;
+    }
+
     var touch = e.touches[0];
     var dy = touch.clientY - startY;
     var dx = touch.clientX - startX;
+
     if (dy <= 0) {
+      pullCommitted = false;
       lastPullPx = 0;
       hideIndicator();
       return;
     }
-    if (Math.abs(dx) > Math.abs(dy) * 0.85) return;
 
+    if (Math.abs(dx) > Math.abs(dy) * HORIZONTAL_CANCEL_RATIO) {
+      cancelPullGesture();
+      return;
+    }
+
+    if (!pullCommitted && dy < MIN_PULL_BEFORE_UI) {
+      return;
+    }
+
+    pullCommitted = true;
     var clamped = Math.min(dy, MAX_VISUAL);
-    if (clamped > MIN_PULL_BEFORE_UI) {
-      try {
-        e.preventDefault();
-      } catch (err) {
-        /* non-passive fallback */
-      }
+    try {
+      e.preventDefault();
+    } catch (err) {
+      /* non-passive fallback */
     }
     setIndicatorPull(clamped);
   }
@@ -152,13 +239,13 @@
   function onTouchEnd() {
     detachTouchListeners();
 
-    if (!tracking || reloading) {
-      tracking = false;
-      lastPullPx = 0;
-      hideIndicator();
+    if (!tracking || reloading || !pullCommitted) {
+      resetPullState();
       return;
     }
+
     tracking = false;
+    pullCommitted = false;
 
     var shouldReload = lastPullPx >= THRESHOLD;
     lastPullPx = 0;
@@ -171,14 +258,14 @@
   }
 
   function onTouchStart(e) {
-    if (reloading) return;
-    if (tracking) return;
-    if (scrollTop() > 2) return;
-    if (isPullRefreshBlockedTarget(e.target)) return;
+    if (reloading || tracking) return;
+    if (!canUsePullToRefresh(e.target)) return;
+
     var t = e.touches[0];
     startY = t.clientY;
     startX = t.clientX;
     lastPullPx = 0;
+    pullCommitted = false;
     tracking = true;
 
     document.addEventListener('touchmove', onTouchMove, optsMove);
@@ -186,9 +273,18 @@
     document.addEventListener('touchcancel', onTouchEnd, optsEnd);
   }
 
+  function registerLifecycle() {
+    if (window.TTMSBarba) {
+      window.TTMSBarba.register(resetPullState);
+    }
+    document.addEventListener('ttms:page-enter', resetPullState);
+    document.addEventListener('menuReelsFlattened', resetPullState);
+  }
+
   function init() {
     injectStyles();
     document.addEventListener('touchstart', onTouchStart, { passive: true, capture: false });
+    registerLifecycle();
   }
 
   if (document.readyState === 'loading') {
