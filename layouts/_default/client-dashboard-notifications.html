@@ -86,7 +86,7 @@
 
                 <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-send"></i></span>
 
-                <span class="dashboard-analytics-card-label">Sent (30d)</span>
+                <span class="dashboard-analytics-card-label">Notifications sent (30d)</span>
 
                 <span class="dashboard-analytics-card-value" id="metricNotifySent30d">—</span>
 
@@ -106,9 +106,29 @@
 
                 <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-check-circle"></i></span>
 
-                <span class="dashboard-analytics-card-label">Delivered (30d)</span>
+                <span class="dashboard-analytics-card-label">Arrived (30d)</span>
 
-                <span class="dashboard-analytics-card-value" id="metricNotifyDelivered30d">—</span>
+                <span class="dashboard-analytics-card-value" id="metricNotifyArrived30d">—</span>
+
+              </div>
+
+              <div class="dashboard-analytics-card dashboard-notify-metric-card">
+
+                <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-eye"></i></span>
+
+                <span class="dashboard-analytics-card-label">Opened (30d)</span>
+
+                <span class="dashboard-analytics-card-value" id="metricNotifyOpened30d">—</span>
+
+              </div>
+
+              <div class="dashboard-analytics-card dashboard-notify-metric-card">
+
+                <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-times-circle"></i></span>
+
+                <span class="dashboard-analytics-card-label">Not arrived (30d)</span>
+
+                <span class="dashboard-analytics-card-value" id="metricNotifyNotArrived30d">—</span>
 
               </div>
 
@@ -116,11 +136,51 @@
 
                 <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-mouse-pointer"></i></span>
 
-                <span class="dashboard-analytics-card-label">Click-through (30d)</span>
+                <span class="dashboard-analytics-card-label">Clicked (30d)</span>
 
-                <span class="dashboard-analytics-card-value" id="metricNotifyCtr">—</span>
+                <span class="dashboard-analytics-card-value" id="metricNotifyClicked30d">—</span>
 
               </div>
+
+            </div>
+
+            <div class="dashboard-notify-subsection" id="dashboardNotifySubscribersSection" aria-labelledby="notify-subscribers-heading">
+
+              <h3 id="notify-subscribers-heading" class="dashboard-notify-subsection-title">Subscribers</h3>
+
+              <p class="dashboard-analytics-subtitle dashboard-notify-subsection-lead">Active push subscriptions for this site.</p>
+
+              <div class="dashboard-notify-table-wrap">
+
+                <table class="dashboard-notify-table" id="dashboardNotifySubscribersTable" aria-label="Subscriber list">
+
+                  <thead>
+
+                    <tr>
+
+                      <th scope="col">Subscription ID</th>
+
+                      <th scope="col">Platform</th>
+
+                      <th scope="col">Background push</th>
+
+                      <th scope="col">Status</th>
+
+                      <th scope="col">Subscribed</th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody id="dashboardNotifySubscribersBody"></tbody>
+
+                </table>
+
+              </div>
+
+              <p id="dashboardNotifySubscribersEmpty" class="dashboard-notify-empty" hidden>No subscribers yet.</p>
+
+              <p id="dashboardNotifySubscribersError" class="dashboard-notify-banner dashboard-notify-banner-warn" hidden role="alert"></p>
 
             </div>
 
@@ -328,13 +388,15 @@
 
                 <h2 id="notify-reports-heading" class="dashboard-analytics-heading">Reports &amp; history</h2>
 
-                <p class="dashboard-analytics-subtitle">Recent sends for this client. Detailed analytics and subscriber lists live in the notify service.</p>
+                <p class="dashboard-analytics-subtitle">Recent sends for this client. Expand a notification to see delivery counts and subscription IDs.</p>
 
               </div>
 
             </div>
 
             <ul id="dashboardNotifyRecentList" class="dashboard-notify-history-list" aria-label="Recent notifications"></ul>
+
+            <p class="dashboard-notify-history-hint"><i class="fa fa-info-circle" aria-hidden="true"></i> Click a notification to load sent, arrived, opened, and not-arrived counts per subscription.</p>
 
             <p id="dashboardNotifyRecentEmpty" class="dashboard-notify-empty" hidden>No notifications recorded yet.</p>
 

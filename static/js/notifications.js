@@ -88,9 +88,10 @@ const NotificationService = {
     this.checkSubscriptionStatus();
     this.loadSubscriptionFromStorage();
     
-    // Verify push subscription is still valid
+    // Verify push subscription is still valid and sync keys to server
     if (this.subscriptionId && this.serviceWorkerRegistration) {
       await this.verifyPushSubscription();
+      await this.syncPushSubscriptionToServer();
     }
     
     // If user is subscribed, connect to WebSocket to receive notifications (when site is open)
@@ -124,10 +125,92 @@ const NotificationService = {
       if (subscription.pushSubscription || subscription.push_endpoint) {
         console.warn('⚠️ Background push subscription missing — alerts only work while site is open');
         this.updateSubscribeButton(true, { backgroundPush: false });
+        await this.repairBackgroundPush();
       }
     } catch (error) {
       console.error('Error verifying push subscription:', error);
     }
+  },
+
+  /**
+   * Re-create browser Push subscription when it was lost but server subscription exists.
+   */
+  async repairBackgroundPush() {
+    if (!this.subscriptionId || !this.supportsBackgroundPush()) return;
+    try {
+      const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      const vapidPublicKey = await this.fetchVapidPublicKey(apiUrl, this.getClientDomain());
+      const pushSubscription = await this.ensurePushSubscription(vapidPublicKey);
+      if (pushSubscription) {
+        await this.syncPushSubscriptionToServer(pushSubscription);
+        this.updateSubscribeButton(true, { backgroundPush: true });
+        console.log('✅ Background push subscription repaired');
+      }
+    } catch (err) {
+      console.warn('Could not repair background push:', err && err.message ? err.message : err);
+    }
+  },
+
+  /**
+   * Keep server push endpoint/keys in sync with the browser (required for closed-app delivery).
+   */
+  async syncPushSubscriptionToServer(pushSubscription) {
+    if (!this.subscriptionId) return;
+
+    const pushManager =
+      this.serviceWorkerRegistration && this.serviceWorkerRegistration.pushManager;
+    if (!pushSubscription && pushManager) {
+      pushSubscription = await pushManager.getSubscription();
+    }
+    if (!pushSubscription) {
+      console.warn('⚠️ No browser push subscription to sync');
+      return;
+    }
+
+    const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
+    const payload = {
+      push_endpoint: pushSubscription.endpoint,
+      push_keys: {
+        p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
+        auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
+      },
+      ws_connection_id: this.getWebSocketConnectionID(),
+    };
+
+    try {
+      const res = await fetch(`${apiUrl}/subscriptions/${encodeURIComponent(this.subscriptionId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.warn('Push sync failed (HTTP ' + res.status + '):', body);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      console.log(
+        '✅ Push subscription synced to server',
+        data.has_background_push ? '(background push ready)' : '(incomplete keys)'
+      );
+      this.notifyServiceWorkerSubscription(this.subscriptionId);
+    } catch (err) {
+      console.warn('Push sync error:', err && err.message ? err.message : err);
+    }
+  },
+
+  /** Tell the service worker which subscription ID to use for confirm/click tracking. */
+  notifyServiceWorkerSubscription(subscriptionId) {
+    if (!subscriptionId || !navigator.serviceWorker) return;
+    const payload = { type: 'SET_SUBSCRIPTION_ID', id: subscriptionId };
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(payload);
+    }
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        if (reg.active) reg.active.postMessage(payload);
+      })
+      .catch(() => {});
   },
 
   /**
@@ -643,6 +726,8 @@ const NotificationService = {
       };
       localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(subscriptionToStore));
 
+      this.notifyServiceWorkerSubscription(subscription.id);
+
       // Connect to WebSocket for real-time notifications (when site is open)
       this.connectWebSocket();
 
@@ -790,6 +875,7 @@ const NotificationService = {
         console.log('✅ WebSocket connected for notifications');
         console.log('🔌 Connection ID:', connectionId);
         console.log('📡 WebSocket readyState:', this.wsConnection.readyState);
+        this.syncPushSubscriptionToServer();
       };
 
       this.wsConnection.onmessage = (event) => {

@@ -239,19 +239,166 @@
     var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
 
     var overview = await notifyFetch('/analytics/overview' + q, { headers: authHeaders() });
-    var engagement = await notifyFetch('/analytics/engagement-metrics' + q, {
-      headers: authHeaders(),
-    });
 
     var ov = (overview && overview.overview) || {};
     var sub = ov.subscriptions || {};
     var notif = ov.notifications || {};
-    var met = (engagement && engagement.metrics) || {};
 
     setText('metricNotifySent30d', formatInt(notif.in_period));
     setText('metricNotifySubscribers', formatInt(sub.active));
-    setText('metricNotifyDelivered30d', formatInt(met.total_delivered));
-    setText('metricNotifyCtr', met.click_through_rate != null ? formatNum(met.click_through_rate) + '%' : '—');
+    setText('metricNotifyArrived30d', formatInt(notif.delivered));
+    setText('metricNotifyOpened30d', formatInt(notif.confirmed));
+    setText(
+      'metricNotifyNotArrived30d',
+      formatInt((notif.failed || 0) + (notif.pending || 0))
+    );
+    setText('metricNotifyClicked30d', formatInt(notif.clicked));
+  }
+
+  function deliveryStats(deliveries) {
+    var stats = {
+      sent: deliveries.length,
+      arrived: 0,
+      opened: 0,
+      clicked: 0,
+      notArrived: 0,
+    };
+    deliveries.forEach(function (d) {
+      var status = (d && d.status) || '';
+      if (status === 'delivered' || status === 'confirmed' || status === 'clicked') {
+        stats.arrived++;
+      }
+      if (status === 'confirmed' || status === 'clicked') {
+        stats.opened++;
+      }
+      if (status === 'clicked') {
+        stats.clicked++;
+      }
+      if (status === 'failed' || status === 'pending') {
+        stats.notArrived++;
+      }
+    });
+    return stats;
+  }
+
+  function formatDeliveryStatus(status) {
+    var labels = {
+      delivered: 'Arrived',
+      confirmed: 'Opened',
+      clicked: 'Clicked',
+      pending: 'Pending',
+      failed: 'Not arrived',
+      bounced: 'Bounced',
+      unsubscribed: 'Unsubscribed',
+    };
+    return labels[status] || status || '—';
+  }
+
+  function renderNotificationDetail(container, data) {
+    var deliveries = (data && data.deliveries) || [];
+    var stats = deliveryStats(deliveries);
+
+    var html =
+      '<div class="dashboard-notify-detail-stats">' +
+      '<span class="dashboard-notify-detail-stat"><strong>Sent:</strong> ' +
+      formatInt(stats.sent) +
+      '</span>' +
+      '<span class="dashboard-notify-detail-stat"><strong>Arrived:</strong> ' +
+      formatInt(stats.arrived) +
+      '</span>' +
+      '<span class="dashboard-notify-detail-stat"><strong>Opened:</strong> ' +
+      formatInt(stats.opened) +
+      '</span>' +
+      '<span class="dashboard-notify-detail-stat"><strong>Not arrived:</strong> ' +
+      formatInt(stats.notArrived) +
+      '</span>' +
+      (stats.clicked
+        ? '<span class="dashboard-notify-detail-stat"><strong>Clicked:</strong> ' +
+          formatInt(stats.clicked) +
+          '</span>'
+        : '') +
+      '</div>';
+
+    if (!deliveries.length) {
+      html += '<p class="dashboard-notify-detail-empty">No delivery records for this notification.</p>';
+      container.innerHTML = html;
+      return;
+    }
+
+    html +=
+      '<div class="dashboard-notify-table-wrap dashboard-notify-detail-table-wrap">' +
+      '<table class="dashboard-notify-table dashboard-notify-detail-table" aria-label="Delivery details">' +
+      '<thead><tr>' +
+      '<th scope="col">Subscription ID</th>' +
+      '<th scope="col">Status</th>' +
+      '<th scope="col">Arrived</th>' +
+      '<th scope="col">Opened</th>' +
+      '<th scope="col">Error</th>' +
+      '</tr></thead><tbody>';
+
+    deliveries.forEach(function (d) {
+      var subId = d.subscription_id || '—';
+      var status = (d && d.status) || '';
+      var arrivedAt = d.delivered_at ? new Date(d.delivered_at).toLocaleString() : '—';
+      var openedAt = d.confirmed_at
+        ? new Date(d.confirmed_at).toLocaleString()
+        : d.clicked_at
+          ? new Date(d.clicked_at).toLocaleString()
+          : '—';
+      var errMsg = (d.error_message || '').trim();
+      html +=
+        '<tr>' +
+        '<td><code class="dashboard-notify-sub-id">' +
+        escapeHtml(String(subId)) +
+        '</code></td>' +
+        '<td><span class="dashboard-notify-status-badge dashboard-notify-status-badge--' +
+        escapeHtml(status) +
+        '">' +
+        escapeHtml(formatDeliveryStatus(status)) +
+        '</span></td>' +
+        '<td>' +
+        escapeHtml(arrivedAt) +
+        '</td>' +
+        '<td>' +
+        escapeHtml(openedAt) +
+        '</td>' +
+        '<td class="dashboard-notify-error-cell">' +
+        (errMsg ? escapeHtml(errMsg) : '—') +
+        '</td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  }
+
+  async function toggleNotificationDetail(li, notificationId) {
+    var detail = li.querySelector('.dashboard-notify-history-detail');
+    if (!detail) return;
+
+    var isOpen = li.classList.contains('dashboard-notify-history-item--open');
+    if (isOpen) {
+      li.classList.remove('dashboard-notify-history-item--open');
+      detail.hidden = true;
+      return;
+    }
+
+    li.classList.add('dashboard-notify-history-item--open');
+    detail.hidden = false;
+    detail.innerHTML =
+      '<p class="dashboard-notify-detail-loading"><i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Loading delivery data…</p>';
+
+    try {
+      var data = await notifyFetch('/notifications/' + encodeURIComponent(notificationId), {
+        headers: authHeaders(),
+      });
+      renderNotificationDetail(detail, data);
+    } catch (err) {
+      detail.innerHTML =
+        '<p class="dashboard-notify-detail-error">' +
+        escapeHtml(err.message || 'Could not load delivery details.') +
+        '</p>';
+    }
   }
 
   async function loadRecent() {
@@ -280,15 +427,93 @@
         created = created ? new Date(created).toLocaleString() : '';
       } catch (e) {}
       var status = n.status || '';
+      var notifId = n.id || '';
+
       li.innerHTML =
+        '<button type="button" class="dashboard-notify-history-toggle" aria-expanded="false">' +
         '<span class="dashboard-notify-history-title">' +
         escapeHtml(title) +
         '</span>' +
         '<span class="dashboard-notify-history-meta">' +
         escapeHtml(created) +
         (status ? ' · ' + escapeHtml(status) : '') +
-        '</span>';
+        '</span>' +
+        '<span class="dashboard-notify-history-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>' +
+        '</button>' +
+        '<div class="dashboard-notify-history-detail" hidden></div>';
+
+      if (notifId) {
+        li.setAttribute('data-notification-id', notifId);
+        var btn = li.querySelector('.dashboard-notify-history-toggle');
+        btn.addEventListener('click', function () {
+          var open = li.classList.contains('dashboard-notify-history-item--open');
+          toggleNotificationDetail(li, notifId);
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+        });
+      }
+
       list.appendChild(li);
+    });
+  }
+
+  async function loadSubscribers() {
+    var tbody = document.getElementById('dashboardNotifySubscribersBody');
+    var empty = document.getElementById('dashboardNotifySubscribersEmpty');
+    var errEl = document.getElementById('dashboardNotifySubscribersError');
+    var table = document.getElementById('dashboardNotifySubscribersTable');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    if (errEl) {
+      errEl.hidden = true;
+      errEl.textContent = '';
+    }
+
+    var domain = getClientDomain();
+    var data = await notifyFetch(
+      '/subscribers?client_domain=' + encodeURIComponent(domain),
+      { headers: authHeaders() }
+    );
+
+    var subs = (data && data.subscribers) || [];
+    if (!subs.length) {
+      if (table) table.hidden = true;
+      if (empty) empty.hidden = false;
+      return;
+    }
+
+    if (table) table.hidden = false;
+    if (empty) empty.hidden = true;
+
+    subs.forEach(function (s) {
+      var tr = document.createElement('tr');
+      var subscribed = s.subscribed_at || '';
+      try {
+        subscribed = subscribed ? new Date(subscribed).toLocaleString() : '—';
+      } catch (e) {
+        subscribed = '—';
+      }
+      tr.innerHTML =
+        '<td><code class="dashboard-notify-sub-id">' +
+        escapeHtml(s.id || '—') +
+        '</code></td>' +
+        '<td>' +
+        escapeHtml(s.platform || '—') +
+        '</td>' +
+        '<td>' +
+        (s.has_background_push
+          ? '<span class="dashboard-notify-status-badge dashboard-notify-status-badge--delivered" title="Can receive alerts when app is closed">Ready</span>'
+          : '<span class="dashboard-notify-status-badge dashboard-notify-status-badge--pending" title="User must open menu and re-subscribe">Missing keys</span>') +
+        '</td>' +
+        '<td>' +
+        (s.is_active
+          ? '<span class="dashboard-notify-status-badge dashboard-notify-status-badge--delivered">Active</span>'
+          : '<span class="dashboard-notify-status-badge dashboard-notify-status-badge--failed">Inactive</span>') +
+        '</td>' +
+        '<td>' +
+        escapeHtml(subscribed) +
+        '</td>';
+      tbody.appendChild(tr);
     });
   }
 
@@ -338,6 +563,7 @@
       form.reset();
       await loadMetrics();
       await loadRecent();
+      await loadSubscribers().catch(function () {});
     } catch (err) {
       setStatus(statusEl, err.message || 'Send failed.', true);
     } finally {
@@ -363,13 +589,24 @@
     loadMetrics().catch(function (err) {
       setText('metricNotifySent30d', '—');
       setText('metricNotifySubscribers', '—');
-      setText('metricNotifyDelivered30d', '—');
-      setText('metricNotifyCtr', '—');
+      setText('metricNotifyArrived30d', '—');
+      setText('metricNotifyOpened30d', '—');
+      setText('metricNotifyNotArrived30d', '—');
+      setText('metricNotifyClicked30d', '—');
       var note = document.getElementById('dashboardNotifyLoadError');
       if (note) {
         note.hidden = false;
         note.textContent =
           'Could not load notification stats. ' + (err && err.message ? err.message : 'Check that this site is registered with the notification service.');
+      }
+    });
+
+    loadSubscribers().catch(function (err) {
+      var errEl = document.getElementById('dashboardNotifySubscribersError');
+      if (errEl) {
+        errEl.hidden = false;
+        errEl.textContent =
+          'Could not load subscribers. ' + (err && err.message ? err.message : 'Try again later.');
       }
     });
 

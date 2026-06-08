@@ -4,6 +4,7 @@
  */
 
 const CACHE_NAME = 'ttmenus-notifications-v1';
+const SUB_META_CACHE = 'ttmenus-notify-meta-v1';
 let NOTIFY_SERVICE_URL = 'https://notify.ttmenus.com';
 
 function getNotifyApiBase() {
@@ -157,6 +158,12 @@ self.addEventListener('message', (event) => {
       NOTIFY_SERVICE_URL = event.data.serviceUrl;
     }
   }
+
+  if (event.data && event.data.type === 'SET_SUBSCRIPTION_ID' && event.data.id) {
+    storeSubscriptionMeta({ id: event.data.id }).catch((e) => {
+      console.warn('[SW] Could not store subscription id:', e);
+    });
+  }
   
   // Handle notification display requests from main thread
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
@@ -243,8 +250,34 @@ async function trackNotificationClick(notificationId) {
   }
 }
 
-// Get stored subscription from client via message passing
+// Persist subscription id so confirm/click works when no tab is open
+async function storeSubscriptionMeta(meta) {
+  const cache = await caches.open(SUB_META_CACHE);
+  await cache.put('/notify-subscription', new Response(JSON.stringify(meta), {
+    headers: { 'Content-Type': 'application/json' },
+  }));
+}
+
+async function readSubscriptionMetaFromCache() {
+  try {
+    const cache = await caches.open(SUB_META_CACHE);
+    const res = await cache.match('/notify-subscription');
+    if (res) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn('[SW] Cache read failed:', e);
+  }
+  return null;
+}
+
+// Get stored subscription from cache or open client
 async function getStoredSubscription() {
+  const cached = await readSubscriptionMetaFromCache();
+  if (cached && cached.id) {
+    return cached;
+  }
+
   return new Promise((resolve) => {
     // Send message to all clients to get subscription
     clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clientList) => {
