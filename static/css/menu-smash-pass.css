@@ -262,6 +262,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
+    width: max-content;
 }
 
 .menu-smash-pass__actions {
