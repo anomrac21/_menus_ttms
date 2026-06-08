@@ -456,6 +456,7 @@
     track.addEventListener(
       'touchmove',
       function (e) {
+        if (window.TTMS_PTR_PULLING) return;
         if (document.body.classList.contains('menu-reels-item-modal-open')) {
           e.preventDefault();
           return;

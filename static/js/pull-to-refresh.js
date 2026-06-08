@@ -19,26 +19,17 @@
 
   if (!isStandaloneAppDisplay()) return;
 
-  var THRESHOLD = 300;
-  var MAX_VISUAL = 360;
-  var MIN_PULL_BEFORE_UI = 28;
-  var HORIZONTAL_CANCEL_RATIO = 0.85;
+  var THRESHOLD = 72;
+  var MAX_VISUAL = 96;
+  var HORIZONTAL_CANCEL_RATIO = 1.2;
 
   var BLOCKED_SELECTORS = [
-    '#menu-reels-track',
-    '.menu-reels-track',
-    '.menu-reels-viewport',
-    '.menu-reels-slide',
-    '.menu-smash-pass',
     '.menu-smash-pass-card',
     '.menu-reels-item-modal',
     '.menu-reels-item-modal__body',
-    '.menu-item-card.menu-reels-slide',
-    '.hero-content.menu-reels-slide',
     '.ads-reels-track',
     '#ads-reels-overlay',
     '.ads-reels-slide',
-    '#menublock',
     '.dashboard',
     '.menu-image-upload-modal',
     '.expanded-item-details',
@@ -47,20 +38,17 @@
     '.expanded-image-carousel',
     '.location-picker',
     '.search-results',
-    'header',
-    'footer',
   ].join(', ');
 
   var startY = 0;
   var startX = 0;
   var tracking = false;
-  var pullCommitted = false;
   var reloading = false;
   var lastPullPx = 0;
   var optsMove = { passive: false, capture: true };
   var optsEnd = { capture: true };
 
-  function scrollTop() {
+  function windowScrollTop() {
     return (
       window.scrollY ||
       document.documentElement.scrollTop ||
@@ -69,12 +57,15 @@
     );
   }
 
-  function isMenuReelsHomeActive() {
-    return (
-      document.body.classList.contains('menu-reels-mode') ||
-      document.documentElement.classList.contains('menu-reels-mode') ||
-      !!document.getElementById('menu-reels-track')
-    );
+  function menuReelsTrackScrollTop() {
+    var track = document.getElementById('menu-reels-track');
+    return track ? track.scrollTop : 0;
+  }
+
+  function isAtPageTop() {
+    if (windowScrollTop() > 2) return false;
+    if (menuReelsTrackScrollTop() > 2) return false;
+    return true;
   }
 
   function isScrollableElement(el) {
@@ -103,15 +94,13 @@
     if (!target || !target.closest) return true;
     if (document.body.classList.contains('menu-reels-item-modal-open')) return true;
     if (target.closest(BLOCKED_SELECTORS)) return true;
-    if (target.closest('main.main--home')) return true;
     return false;
   }
 
   function canUsePullToRefresh(target) {
     if (reloading) return false;
-    if (isMenuReelsHomeActive()) return false;
     if (document.body.classList.contains('menu-reels-item-modal-open')) return false;
-    if (scrollTop() > 2) return false;
+    if (!isAtPageTop()) return false;
     if (isTouchOnBlockedTarget(target)) return false;
     if (hasScrolledAncestor(target)) return false;
     return true;
@@ -119,8 +108,8 @@
 
   function resetPullState() {
     tracking = false;
-    pullCommitted = false;
     lastPullPx = 0;
+    window.TTMS_PTR_PULLING = false;
     hideIndicator();
     detachTouchListeners();
   }
@@ -196,12 +185,7 @@
   function onTouchMove(e) {
     if (!tracking || reloading) return;
 
-    if (!canUsePullToRefresh(e.target)) {
-      cancelPullGesture();
-      return;
-    }
-
-    if (scrollTop() > 2) {
+    if (!canUsePullToRefresh(e.target) || !isAtPageTop()) {
       cancelPullGesture();
       return;
     }
@@ -211,7 +195,7 @@
     var dx = touch.clientX - startX;
 
     if (dy <= 0) {
-      pullCommitted = false;
+      window.TTMS_PTR_PULLING = false;
       lastPullPx = 0;
       hideIndicator();
       return;
@@ -222,30 +206,29 @@
       return;
     }
 
-    if (!pullCommitted && dy < MIN_PULL_BEFORE_UI) {
-      return;
-    }
-
-    pullCommitted = true;
     var clamped = Math.min(dy, MAX_VISUAL);
-    try {
-      e.preventDefault();
-    } catch (err) {
-      /* non-passive fallback */
+    if (clamped > 8) {
+      window.TTMS_PTR_PULLING = true;
+      try {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      } catch (err) {
+        /* non-passive fallback */
+      }
     }
     setIndicatorPull(clamped);
   }
 
   function onTouchEnd() {
     detachTouchListeners();
+    window.TTMS_PTR_PULLING = false;
 
-    if (!tracking || reloading || !pullCommitted) {
+    if (!tracking || reloading) {
       resetPullState();
       return;
     }
 
     tracking = false;
-    pullCommitted = false;
 
     var shouldReload = lastPullPx >= THRESHOLD;
     lastPullPx = 0;
@@ -265,7 +248,6 @@
     startY = t.clientY;
     startX = t.clientX;
     lastPullPx = 0;
-    pullCommitted = false;
     tracking = true;
 
     document.addEventListener('touchmove', onTouchMove, optsMove);
