@@ -34,6 +34,7 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    justify-content: center;
 }
 
 .hero_logo_container .contact-cta:hover,
@@ -124,10 +125,7 @@
     padding-block: 1rem;
 }
 
-.social-share-btn-container .contact-cta--share {
-    padding: 0.65em 1.15em;
-    min-height: 3.25rem;
-}
+.social-share-btn-container .contact-cta--share {padding: 0.2em 0.8em;}
 
 /* Slideshow nav chips */
 .client-tour-slideshow .slideshow-nav.contact-cta--nav {

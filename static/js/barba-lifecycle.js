@@ -43,6 +43,32 @@
     });
   }
 
+  function navigate(href) {
+    if (!href || href === '#') return false;
+
+    try {
+      var url = new URL(href, window.location.href);
+      if (/^(javascript:|mailto:|tel:)/i.test(url.href)) return false;
+
+      if (url.origin !== window.location.origin) {
+        window.location.assign(url.href);
+        return true;
+      }
+
+      var target = url.pathname + url.search + url.hash;
+      if (typeof window.barba !== 'undefined' && typeof window.barba.go === 'function') {
+        window.barba.go(target);
+        return true;
+      }
+
+      window.location.assign(url.href);
+      return true;
+    } catch (err) {
+      window.location.assign(href);
+      return true;
+    }
+  }
+
   window.TTMSBarba = {
     register: function (fn) {
       if (typeof fn === 'function' && callbacks.indexOf(fn) === -1) {
@@ -52,6 +78,7 @@
     runNow: function (source) {
       runAfterTransition(source || 'manual');
     },
+    navigate: navigate,
   };
 
   if (document.readyState === 'loading') {

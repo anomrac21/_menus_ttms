@@ -22,8 +22,21 @@
   <div class="menu-smash-pass__reel hidden">
     {{- if not $menuItemPath -}}
     <p class="menu-smash-pass__progress"></p>
-    {{- end -}}
+    <p class="menu-smash-pass__vote-hint hidden">Swipe left or right, or tap Pass / Like</p>
     <div class="menu-smash-pass__stack" aria-live="polite"></div>
+    <div class="menu-smash-pass__actions hidden" role="group" aria-label="Rate this photo">
+      <button type="button" class="contact-cta menu-smash-pass__btn menu-smash-pass__btn--pass" data-smash-action="dislike" aria-label="Pass this photo">
+        <span class="contact-cta__icon" aria-hidden="true"><i class="fa fa-thumbs-down"></i></span>
+        <span class="contact-cta__title">Pass</span>
+      </button>
+      <button type="button" class="contact-cta menu-smash-pass__btn menu-smash-pass__btn--smash" data-smash-action="like" aria-label="Like this photo">
+        <span class="contact-cta__icon" aria-hidden="true"><i class="fa fa-heart"></i></span>
+        <span class="contact-cta__title">Like</span>
+      </button>
+    </div>
+    {{- else -}}
+    <div class="menu-smash-pass__stack" aria-live="polite"></div>
+    {{- end -}}
   </div>
 </div>
 {{- end -}}

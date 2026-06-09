@@ -1,4 +1,4 @@
-<div id="cart" class="cart-hidden">
+<div id="cart" class="cart-hidden" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true">
 	<div class="order">
 		<!-- Modern Cart Header -->
 		<div class="cart-header-modern">
@@ -7,7 +7,7 @@
 				<button class="cart-back-btn" onclick="toggleCart();" title="Close cart">
 					<i class="fa fa-arrow-left"></i>
 				</button>
-				<h2 class="cart-title">
+				<h2 class="cart-title" id="cart-title">
 					<i class="fa fa-shopping-cart"></i>
 					<span>My Order</span>
 				</h2>
@@ -91,9 +91,9 @@
 		</div>
 		<div id="itemTotal">TOTAL $0</div>
 		{{ if site.Params.orderingsystem.usephonecall }}
-			<button type="button" class="placeOrder" onclick="placeOrderClick();"><i class="fa fa-phone"></i> Order Now</button>
+			<button type="button" class="placeOrder btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-phone"></i> Order Now</button>
 		{{ else }}
-			<button type="button" class="btn-place-order" onclick="placeOrderClick();"><i class="fa fa-whatsapp"></i> Order Now</button>
+			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-whatsapp"></i> Order Now</button>
 		{{ end }}
 	</div>
 </div>

@@ -212,6 +212,9 @@
     bindMenublockScroll();
     bindHeaderLogoClick();
     bindHeaderLogoSwipe();
+    if (typeof window.bindDashboardTriggers === 'function') {
+      window.bindDashboardTriggers();
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -230,6 +233,9 @@
         bindMenublockScroll();
         bindHeaderLogoClick();
         bindHeaderLogoSwipe();
+        if (typeof window.bindDashboardTriggers === 'function') {
+          window.bindDashboardTriggers();
+        }
       });
     }
   }

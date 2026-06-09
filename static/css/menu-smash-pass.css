@@ -18,7 +18,9 @@
 .menu-smash-pass__reel.hidden,
 .menu-smash-pass__error.hidden,
 .menu-smash-pass__empty.hidden,
-.menu-smash-pass__empty-state.hidden {
+.menu-smash-pass__empty-state.hidden,
+.menu-smash-pass__vote-hint.hidden,
+.menu-smash-pass__actions.hidden {
     display: none;
 }
 
@@ -97,6 +99,15 @@
     color: color-mix(in srgb, var(--main-text, #fff) 65%, transparent);
 }
 
+.menu-smash-pass__vote-hint {
+    text-align: center;
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: color-mix(in srgb, var(--main-text, #fff) 52%, transparent);
+    flex-shrink: 0;
+}
+
 .menu-smash-pass__stack {
     position: relative;
     width: 100%;
@@ -116,7 +127,7 @@
     overflow: hidden;
     background: #0f172a;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
-    border: 2px solid rgba(255, 255, 255, 0.14);
+    border: 3px solid rgba(255, 255, 255, 0.14);
     cursor: grab;
     touch-action: pan-y;
     will-change: transform;
@@ -178,7 +189,7 @@
     z-index: 4;
     padding: 0.3rem 0.6rem;
     border-radius: 8px;
-    font-size: 1.2rem;
+    font-size: large;
     font-weight: 800;
     letter-spacing: 0.08em;
     border: 3px solid currentColor;
@@ -189,7 +200,8 @@
 
 .menu-smash-pass-card__stamp--smash {
     left: 0.85rem;
-    color: #4ade80;
+    background: #4ade80;
+    color: #fff;
     border-color: #4ade80;
     transform: rotate(-12deg);
     opacity: var(--smash-stamp-opacity, 0);
@@ -197,7 +209,8 @@
 
 .menu-smash-pass-card__stamp--pass {
     right: 0.85rem;
-    color: #f87171;
+    color: #fff;7171;
+    background: #f87171;
     border-color: #f87171;
     transform: rotate(12deg);
     opacity: var(--pass-stamp-opacity, 0);
@@ -209,6 +222,7 @@
     min-height: 0;
     width: 100%;
     background: #111827;
+    cursor: grab;
 }
 
 .menu-smash-pass-card__img {
@@ -235,15 +249,18 @@
     text-transform: capitalize;
 }
 
-.menu-smash-pass-card__path {
-    display: block;
-    font-size: 0.7rem;
-    color: #c4b5fd;
+.menu-smash-pass-card__title-link {
+    color: inherit;
     text-decoration: none;
-    margin-bottom: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    position: relative;
+    z-index: 2;
+}
+
+.menu-smash-pass-card__title-link:hover,
+.menu-smash-pass-card__title-link:focus-visible {
+    color: #c4b5fd;
+    text-decoration: underline;
+    outline: none;
 }
 
 .menu-smash-pass-card__counts {
@@ -251,11 +268,14 @@
     gap: .25em;
     text-wrap-mode: nowrap;
     position: absolute;
-    bottom: 2.6em;
+    bottom: 0em;
     right: 0em;
     background: #111111dd;
-    padding: .2em;
-    font-size: large;
+    padding: .2em 0.5em;
+    width: -webkit-fill-available;
+    font-size: medium;
+    justify-content: space-between;
+    flex-direction: row-reverse;
 }
 
 .menu-smash-pass-card__counts span {
@@ -276,15 +296,78 @@
 .menu-smash-pass__btn {
     min-width: 6.5rem;
     justify-content: center;
+    gap: 0.45em;
     padding: 0.55em 0.9em;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.28);
 }
 
+.menu-smash-pass__btn .contact-cta__icon {
+    width: 2rem;
+    height: 2rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.menu-smash-pass__btn .contact-cta__title {
+    color: #fff;
+}
+
+.menu-smash-pass__btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.hero-content .menu-smash-pass__btn--pass,
 .menu-smash-pass__btn--pass {
-    background: linear-gradient(135deg, #7f1d1d, #ef4444);
+    background: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
+    border-color: #fca5a5;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 
+.hero-content .menu-smash-pass__btn--pass:hover,
+.hero-content .menu-smash-pass__btn--pass:focus-visible,
+.menu-smash-pass__btn--pass:hover,
+.menu-smash-pass__btn--pass:focus-visible {
+    background: linear-gradient(135deg, #b91c1c 0%, #f87171 100%);
+    border-color: #fecaca;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.hero-content .menu-smash-pass__btn--smash,
 .menu-smash-pass__btn--smash {
-    background: linear-gradient(135deg, #14532d, #22c55e);
+    background: linear-gradient(135deg, #166534 0%, #22c55e 100%);
+    border-color: #86efac;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.hero-content .menu-smash-pass__btn--smash:hover,
+.hero-content .menu-smash-pass__btn--smash:focus-visible,
+.menu-smash-pass__btn--smash:hover,
+.menu-smash-pass__btn--smash:focus-visible {
+    background: linear-gradient(135deg, #15803d 0%, #4ade80 100%);
+    border-color: #bbf7d0;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.hero-content .menu-smash-pass__btn--pass .contact-cta__icon,
+.hero-content .menu-smash-pass__btn--smash .contact-cta__icon,
+.menu-smash-pass__btn--pass .contact-cta__icon,
+.menu-smash-pass__btn--smash .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.hero-content .menu-smash-pass__btn--pass .contact-cta__title,
+.hero-content .menu-smash-pass__btn--smash .contact-cta__title,
+.menu-smash-pass__btn--pass .contact-cta__title,
+.menu-smash-pass__btn--smash .contact-cta__title {
+    color: #fff;
 }
 
 /* Intro reel slide — stack + actions + share in one viewport */
@@ -301,6 +384,11 @@
     font-size: 0.68rem !important;
 }
 
+.hero-content.menu-reels-slide--intro .menu-smash-pass__vote-hint {
+    margin: 0 0 0.2rem;
+    font-size: 0.66rem;
+}
+
 .hero-content.menu-reels-slide--intro .menu-smash-pass__stack {
     flex: 1 1 auto;
     min-height: 0;
@@ -315,8 +403,9 @@
     font-size: 0.82rem;
 }
 
-.hero-content.menu-reels-slide--intro .menu-smash-pass-card__path {
-    display: none;
+.hero-content.menu-reels-slide--intro .menu-smash-pass-card__title-link:hover,
+.hero-content.menu-reels-slide--intro .menu-smash-pass-card__title-link:focus-visible {
+    color: #ddd6fe;
 }
 
 .hero-content.menu-reels-slide--intro .menu-smash-pass__actions {
@@ -329,8 +418,6 @@
 }
 
 .hero-content.menu-reels-slide--intro .social-share-btn-container .contact-cta--share {
-    min-height: 2.35rem;
-    padding: 0.45em 0.95em;
 }
 
 .hero-content.menu-reels-slide--intro .social-share-btn-container .contact-cta__hint {
@@ -363,7 +450,6 @@
 
 .menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass__stack {
     flex: 0 0 auto;
-    width: min(78vw, 20rem, 100cqw, 100cqh);
     max-width: 100%;
     max-height: 100%;
     margin: 0 auto;
@@ -426,9 +512,8 @@
 }
 
 .menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__stamp {
-    top: 0.45rem;
+    top: 1.65rem;
     padding: 0.2rem 0.45rem;
-    font-size: 0.82rem;
     border-width: 2px;
 }
 
@@ -437,11 +522,11 @@
     position: absolute;
     bottom: 0px;
     right: 0;
+    width: -webkit-fill-available;
 }
 
 .menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__counts {
-    justify-content: center;
-    font-size: 0.72rem;
+    font-size: large;
     gap: 0.45rem;
 }
 
@@ -473,8 +558,7 @@
 
 .menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__stack {
     flex: 0 0 auto;
-    width: min(68vw, 14rem);
-    max-width: 14rem;
+    max-width: 100%;
     margin: 0 auto;
     aspect-ratio: 1 / 1;
     height: auto;
@@ -540,5 +624,98 @@
 }
 
 .menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card__counts {
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__vote-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.72rem;
+    text-align: center;
+    opacity: 0.75;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__actions {
+    margin-top: 0.45rem;
+    width: 100%;
+    max-width: 18rem;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass__btn {
+    min-width: 5.75rem;
+    padding: 0.45em 0.8em;
+}
+
+.main--home .menu-smash-pass-card__counts {
+    bottom: .6em;
+    background: none;
+    pointer-events: none;
+}
+
+/* Card-level add photo button — left of favorite, same look as heart control */
+.menu-add-photo-btn {
+    --add-photo-outline: rgba(255, 255, 255, 0.45);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--add-photo-outline);
+    cursor: pointer;
+    box-shadow: none;
+    transition:
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+        color 0.2s ease;
+}
+
+.menu-add-photo-btn:hover {
+    transform: scale(1.08);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.menu-add-photo-btn:active {
+    transform: scale(0.94);
+}
+
+.menu-add-photo-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 2px;
+}
+
+.menu-add-photo-btn__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    pointer-events: none;
+}
+
+.menu-add-photo-btn__svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    display: block;
+}
+
+.menu-add-photo-btn__svg path,
+.menu-add-photo-btn__svg circle {
+    fill: none;
+    stroke: currentColor;
+}
+
+.menu-item-card > .menu-add-photo-btn {
+    position: absolute;
+    top: 0.35em;
+    right: 0.35em;
+    z-index: var(--ttms-z-card-controls, 8);
+}
+
+.menu-item-card > .menu-add-photo-btn:has(+ .menu-favorite-btn) {
+    right: calc(0.35em + 1.65rem + 0.35rem);
+}
+
+.menu-item-card:has(> .menu-add-photo-btn):has(> .menu-favorite-btn) .menu-item-title {
 }

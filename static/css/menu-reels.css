@@ -26,6 +26,14 @@ body.menu-reels-mode .bottomads {
     display: none;
 }
 
+/* Community Photos intro + location picker — hide bottom nav */
+body.menu-reels-intro-active #footerBtns,
+body.menu-reels-contact-active #footerBtns {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden;
+}
+
 .menu-reels-viewport {
     position: relative;
     width: 100%;
@@ -231,7 +239,7 @@ body.menu-search-active .menu-reels-track {
 .hero_logo_container .hero-intro p {
     margin: 0;
     color: var(--hero-text-color, #fff);
-    font-size: var(--ttms-text-base, 1rem);
+    font-size: small;
     line-height: var(--ttms-leading-relaxed, 1.5);
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
@@ -242,7 +250,9 @@ body.menu-search-active .menu-reels-track {
     min-height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: stretch;
     scroll-snap-align: start;
     scroll-snap-stop: always;
@@ -254,13 +264,30 @@ body.menu-search-active .menu-reels-track {
 .contactinfobg.menu-reels-slide .contactinfo.location-picker {
     width: 100%;
     max-width: min(100%, 36rem);
-    min-height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     gap: 0.85rem;
     margin-inline: auto;
     padding-block: 0.25rem;
+}
+
+.contactinfobg.menu-reels-slide .location-picker__section-footer {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: min(100%, 36rem);
+    margin-inline: auto;
+    margin-top: auto;
+    padding: 0.35rem 0.75rem max(0.65rem, env(safe-area-inset-bottom, 0));
+    display: flex;
+    justify-content: center;
+}
+
+.contactinfobg.menu-reels-slide .location-picker__section-footer .location-picker__nearby-btn {
+    width: 100%;
+    max-width: 22rem;
 }
 
 /* Intro / hero-content slide */
@@ -335,7 +362,7 @@ body.menu-search-active .menu-reels-track {
 .menu-header.menu-reels-slide {
     color: var(--main-text, #fff);
     text-align: center;
-    padding-inline: 1rem;
+    padding-inline: ;
 }
 
 .menu-header.menu-reels-slide .menu-header__link {
@@ -377,6 +404,16 @@ body.menu-search-active .menu-reels-track {
     z-index: var(--ttms-z-reel-inner-content, 1);
     width: 100%;
     max-width: 36rem;
+}
+
+.menu-header.menu-reels-slide .menu-header__item-count,
+.menu-reels-slide--section-title .menu-header__item-count {
+    margin: 0.35rem 0 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--main-text, #fff) 72%, transparent);
 }
 
 .menu-header.menu-reels-slide .menu-summary {
@@ -520,6 +557,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
 
 .menu-reels-item-modal__data .expanded-item-details {
     width: 100%;
+    height: 100%;
     max-width: 28rem;
     margin: 0 auto;
 }
@@ -545,6 +583,19 @@ body.menu-reels-item-modal-open .menu-reels-track,
     background: linear-gradient(to top, var(--button-color2) 70%, transparent);
 }
 
+.menu-item-card.menu-reels-slide > .menu-add-photo-btn {
+    top: 0.65rem;
+    left: 0.65rem;
+    width: 2.1rem;
+    height: 2.1rem;
+}
+
+.menu-item-card.menu-reels-slide > .menu-add-photo-btn:has(+ .menu-favorite-btn) {
+}
+
+.menu-item-card.menu-reels-slide:has(> .menu-add-photo-btn):has(> .menu-favorite-btn) .menu-item-title {
+}
+
 .menu-item-card.menu-reels-slide > .menu-favorite-btn {
     top: 0.65rem;
     right: 0.65rem;
@@ -564,6 +615,20 @@ body.menu-reels-item-modal-open .menu-reels-track,
     padding-top: 0.15rem;
     container-type: size;
     container-name: item-smash-pass;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card.is-local {
+    touch-action: manipulation;
+    cursor: pointer;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card.is-local .menu-smash-pass-card__media {
+    cursor: pointer;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass__stack,
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card {
+    touch-action: pan-y pinch-zoom;
 }
 
 .menu-item-card.menu-reels-slide:has(.menu-item-smash-pass) {
@@ -627,6 +692,19 @@ body.menu-reels-item-modal-open .menu-reels-track,
 }
 
 .menu-item-card.menu-reels-slide:not(.expanded) .menu-item-header-content::after {
+    content: 'Tap to order';
+    display: block;
+    margin-top: 0.35em;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.62;
+    color: var(--button-text-color1, #fff);
+}
+
+.menu-item-card.menu-reels-slide.expanded .menu-item-header-content::after,
+.menu-item-card.menu-reels-slide[aria-expanded='true'] .menu-item-header-content::after {
     display: none;
 }
 
@@ -677,6 +755,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     justify-content: flex-start;
     gap: 0.25rem;
     padding-inline: 0;
+    margin-block-end: .6em;
 }
 
 .menu-item-card.menu-reels-slide .menu-item-description {

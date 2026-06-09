@@ -250,6 +250,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (typeof closeCart === 'function') {
                     closeCart();
                 }
+                if (typeof closeDashboard === 'function') {
+                    closeDashboard();
+                }
                 if (typeof closeShop === 'function') {
                     closeShop();
                 }
@@ -320,6 +323,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (window.TTMSBarba && typeof window.TTMSBarba.runNow === 'function') {
                         window.TTMSBarba.runNow('barba-enter');
                     }
+
+                    setTimeout(function () {
+                        if (typeof window.initLocationPicker === 'function') {
+                            window.initLocationPicker();
+                        }
+                    }, 350);
                 }, 300);
             },
             async once(data) {

@@ -6,13 +6,6 @@
 (function() {
     'use strict';
 
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
     function init() {
         hideAllPanels();
         hydrateAllDraftMenuCardImages();
@@ -34,6 +27,14 @@
      */
     async function fetchDateTimeFromAPI() {
         try {
+            const cachedRaw = sessionStorage.getItem('ttms_datetime_cache');
+            if (cachedRaw) {
+                const cached = JSON.parse(cachedRaw);
+                if (cached && cached.expires > Date.now() && cached.data && cached.data.day) {
+                    return cached.data;
+                }
+            }
+
             const res = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
             if (!res.ok) return null;
             const data = await res.json();
@@ -45,7 +46,14 @@
                 const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
                 if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
             }
-            return day ? { day, hour, minute } : null;
+            const result = day ? { day, hour, minute } : null;
+            if (result) {
+                sessionStorage.setItem('ttms_datetime_cache', JSON.stringify({
+                    data: result,
+                    expires: Date.now() + (5 * 60 * 1000)
+                }));
+            }
+            return result;
         } catch (_) { return null; }
     }
 
@@ -102,7 +110,12 @@
 
     function getBasePriceFromPricesArray(pricesArray) {
         if (!pricesArray) return 0;
-        const arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+        let arr;
+        try {
+            arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+        } catch (_) {
+            return 0;
+        }
         if (!Array.isArray(arr)) return 0;
         const prices = [];
         for (let i = 2; i < arr.length; i += 3) { const n = parseFloat(arr[i]); if (!isNaN(n) && n > 0) prices.push(n); }
@@ -111,7 +124,12 @@
 
     function getPriceRangeFromPricesArray(pricesArray) {
         if (!pricesArray) return null;
-        const arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+        let arr;
+        try {
+            arr = typeof pricesArray === 'string' ? JSON.parse(pricesArray) : pricesArray;
+        } catch (_) {
+            return null;
+        }
         if (!Array.isArray(arr)) return null;
         const prices = [];
         for (let i = 2; i < arr.length; i += 3) { const n = parseFloat(arr[i]); if (!isNaN(n) && n > 0) prices.push(n); }
@@ -489,8 +507,20 @@
         window.__ttmsDateTime = dateTime;
         const { day: today, hour, minute } = dateTime;
         const timeInfo = { hour, minute };
-        document.querySelectorAll('.menu-item-card:not(.single-page-item-card)').forEach(card => applyPromoToCard(card, today, timeInfo));
-        document.querySelectorAll('.menu-item-card[data-availability]').forEach(card => applyAvailabilityToCard(card, today, timeInfo));
+        document.querySelectorAll('.menu-item-card:not(.single-page-item-card)').forEach(card => {
+            try {
+                applyPromoToCard(card, today, timeInfo);
+            } catch (err) {
+                console.warn('[TTMS main] applyPromoToCard failed:', err);
+            }
+        });
+        document.querySelectorAll('.menu-item-card[data-availability]').forEach(card => {
+            try {
+                applyAvailabilityToCard(card, today, timeInfo);
+            } catch (err) {
+                console.warn('[TTMS main] applyAvailabilityToCard failed:', err);
+            }
+        });
         const singleData = document.getElementById('single-page-item-data');
         if (singleData) {
             applyPromoToSinglePage(singleData, today, timeInfo);
@@ -511,7 +541,9 @@
         const cart = document.getElementById('cart');
         if (cart) {
             cart.classList.add('cart-hidden');
+            cart.setAttribute('aria-hidden', 'true');
         }
+        document.body.classList.remove('cart-open');
 
         // Hide search
         const search = document.getElementById('search');
@@ -529,13 +561,16 @@
         // Order modal removed - no longer needed
 
         // Hide dashboard
-        const dashboard = document.getElementById('dashboard');
-        if (dashboard) {
-            dashboard.classList.add('loader-hide-left');
+        if (typeof window.closeDashboard === 'function') {
+            window.closeDashboard();
+        } else {
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+                dashboard.classList.add('loader-hide-left');
+                dashboard.setAttribute('aria-hidden', 'true');
+            }
+            document.body.classList.remove('modal-open');
         }
-
-        // Ensure body is not in modal-open state
-        document.body.classList.remove('modal-open');
     }
 
     // ============================================
@@ -555,6 +590,14 @@
         }
     }
 
+    function setCartModalOpen(isOpen) {
+        const cart = document.getElementById('cart');
+        if (cart) {
+            cart.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        }
+        document.body.classList.toggle('cart-open', isOpen);
+    }
+
     /**
      * Toggle cart visibility
      * @global
@@ -567,6 +610,7 @@
 
         if (cart.classList.contains('cart-hidden')) {
             cart.classList.remove('cart-hidden');
+            setCartModalOpen(true);
             footerBtns.classList.add('bigfont');
             footerBtns.classList.add('cartopen');
             footerBtns.classList.remove('smallfont');
@@ -588,6 +632,7 @@
         if (!cart || !footerBtns) return;
 
         cart.classList.add('cart-hidden');
+        setCartModalOpen(false);
         footerBtns.classList.remove('cartopen');
         footerBtns.classList.add('grad2');
         footerBtns.classList.remove('grad1');
@@ -634,92 +679,75 @@
         const footer = document.getElementById('footer');
         if (!footer) return;
 
-        let observer = null;
-        let scrollTimeout = null;
-        let isAdVisible = false;
+        const adSelectors = [
+            '#homepage-ads-container',
+            '#client-ads-container',
+            '#pageadscontainer',
+            '#frontpage-ads-container',
+            '.frontpageads'
+        ];
 
-        function checkAdVisibility() {
-            const adSelectors = [
-                '#homepage-ads-container',
-                '#client-ads-container',
-                '#pageadscontainer',
-                '#frontpage-ads-container',
-                '.frontpageads'
-            ];
+        let visibleAdCount = 0;
+        const trackedElements = new WeakSet();
 
-            const adElements = [];
-            adSelectors.forEach(selector => {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(el => {
-                    const hasContent = el.children.length > 0 &&
-                                     !el.textContent.includes('Loading') &&
-                                     !el.textContent.includes('Loading promotions') &&
-                                     el.offsetHeight > 0 &&
-                                     el.offsetWidth > 0;
-                    if (hasContent) {
-                        adElements.push(el);
-                    }
-                });
-            });
-
-            let hasVisibleAd = false;
-            adElements.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
-                if (isInViewport && el.offsetHeight > 0 && el.offsetWidth > 0) {
-                    hasVisibleAd = true;
-                }
-            });
-
-            if (hasVisibleAd !== isAdVisible) {
-                isAdVisible = hasVisibleAd;
-                footer.style.display = isAdVisible ? 'none' : '';
-            }
-
-            if (observer && adElements.length > 0) {
-                adElements.forEach(el => {
-                    try {
-                        observer.observe(el);
-                    } catch (e) {
-                        // Element already observed
-                    }
-                });
-            }
+        function hasRealAdContent(el) {
+            return el.children.length > 0 &&
+                !el.textContent.includes('Loading') &&
+                !el.textContent.includes('Loading promotions') &&
+                el.offsetHeight > 0 &&
+                el.offsetWidth > 0;
         }
 
-        const observerOptions = {
+        function syncFooterDisplay() {
+            footer.style.display = visibleAdCount > 0 ? 'none' : '';
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!hasRealAdContent(entry.target)) {
+                    return;
+                }
+
+                if (entry.isIntersecting) {
+                    if (!entry.target._ttmsAdVisible) {
+                        entry.target._ttmsAdVisible = true;
+                        visibleAdCount += 1;
+                    }
+                } else if (entry.target._ttmsAdVisible) {
+                    entry.target._ttmsAdVisible = false;
+                    visibleAdCount = Math.max(0, visibleAdCount - 1);
+                }
+            });
+            syncFooterDisplay();
+        }, {
             root: null,
             rootMargin: '0px',
             threshold: 0.1
-        };
+        });
 
-        observer = new IntersectionObserver(() => {
-            checkAdVisibility();
-        }, observerOptions);
-
-        function onScroll() {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(checkAdVisibility, 100);
+        function observeAdElements() {
+            adSelectors.forEach((selector) => {
+                document.querySelectorAll(selector).forEach((el) => {
+                    if (trackedElements.has(el) || !hasRealAdContent(el)) {
+                        return;
+                    }
+                    trackedElements.add(el);
+                    observer.observe(el);
+                });
+            });
         }
 
         function onAdsPopulated() {
-            setTimeout(checkAdVisibility, 500);
+            observeAdElements();
         }
 
-        checkAdVisibility();
-        window.addEventListener('scroll', onScroll, { passive: true });
+        observeAdElements();
+        syncFooterDisplay();
         window.addEventListener('adsPopulated', onAdsPopulated);
 
-        const intervalId = setInterval(checkAdVisibility, 2000);
-
         footerVisibilityCleanup = function () {
-            if (observer) {
-                observer.disconnect();
-            }
-            window.removeEventListener('scroll', onScroll);
+            observer.disconnect();
             window.removeEventListener('adsPopulated', onAdsPopulated);
-            clearTimeout(scrollTimeout);
-            clearInterval(intervalId);
         };
     }
 
@@ -735,7 +763,9 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeCart();
-                if (typeof closeDashboard === 'function') closeDashboard();
+                if (typeof window.closeDashboard === 'function') {
+                    window.closeDashboard();
+                }
             }
         });
     }
@@ -1022,21 +1052,26 @@
             return;
         }
 
-        if (event && event.target?.closest?.('.menu-image-add-btn, .menu-image-actions')) {
+        if (event && event.target?.closest?.('.menu-image-add-btn, .menu-add-photo-btn, .menu-image-actions')) {
             return;
         }
 
-        if (event && event.target?.closest?.('.menu-smash-pass-card__path')) {
+        if (event && event.target?.closest?.('.menu-smash-pass-card__title-link')) {
+            return;
+        }
+
+        if (
+            event &&
+            isReelsMenuItemCard(element) &&
+            !isMenuItemExpanded(element) &&
+            typeof window.shouldOpenMenuItemOrderFromEvent === 'function' &&
+            !window.shouldOpenMenuItemOrderFromEvent(event)
+        ) {
             return;
         }
 
         const isExpanded = isMenuItemExpanded(element);
         const isReelsItem = isReelsMenuItemCard(element);
-
-        if (event && isReelsItem && !isExpanded) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
 
         // If event is provided, check if click was on an interactive element
         if (event) {
@@ -1046,7 +1081,7 @@
             const isTitleLink = target.closest('.menu-item-title a');
             const isExpandedInteractive = target.closest(
                 '.expanded-item-controls a, .expanded-item-controls button, .btn-quantity, .expanded-add-cart, ' +
-                '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
+                '.menu-favorite-btn, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, ' +
                 '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow'
             );
             const isSideCategoryTitle = target.closest('.expanded-side-category-title');
@@ -1130,6 +1165,9 @@
         });
 
         // Expand this item
+        if (event && isReelsItem && !isExpanded) {
+            event.preventDefault();
+        }
         expandItem(element, itemUrl);
     }
 
@@ -1197,7 +1235,7 @@
 
         try {
             // Use existing openItem function to get item data, but render inline
-            if (typeof window.openItem === 'function' && window.openItem.length >= 2) {
+            if (typeof window.openItem === 'function') {
                 // In dashboard edit mode, use only card DOM/data so the expanded view shows current edits
                 const useCardDataOnly = !!window.__dashboardEditMode;
                 let itemData = null;
@@ -2551,40 +2589,6 @@
     }
 
     // ============================================
-    // DASHBOARD INTERACTIONS
-    // ============================================
-
-    /**
-     * Toggle dashboard visibility
-     * @global
-     */
-    function toggleDashboard() {
-        const dashboard = document.getElementById('dashboard');
-        
-        if (!dashboard) return;
-
-        if (dashboard.classList.contains('loader-hide-left')) {
-            dashboard.classList.remove('loader-hide-left');
-            document.body.classList.add('modal-open');
-        } else {
-            closeDashboard();
-        }
-    }
-
-    /**
-     * Close dashboard
-     * @global
-     */
-    function closeDashboard() {
-        const dashboard = document.getElementById('dashboard');
-        
-        if (!dashboard) return;
-
-        dashboard.classList.add('loader-hide-left');
-        document.body.classList.remove('modal-open');
-    }
-
-    // ============================================
     // MENU INTERACTIONS
     // ============================================
 
@@ -2656,7 +2660,7 @@
             }
 
             if (e.target.closest(
-                '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
+                '.menu-favorite-btn, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, ' +
                 '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow, ' +
                 '.dashboard-edit-drag-handle, .dashboard-edit-card-btn-wrap, .dashboard-edit-header-btn-wrap, ' +
                 '.dashboard-edit-btn, [data-dashboard-edit="1"]'
@@ -2666,6 +2670,9 @@
 
             const item = e.target.closest('[data-item-url]');
             if (item && !item.onclick) {
+                if (item.classList.contains('menu-reels-slide') && document.getElementById('menu-reels-track')) {
+                    return;
+                }
                 const url = item.dataset.itemUrl;
                 if (url) {
                     openItem(item, url);
@@ -2678,9 +2685,17 @@
             const card = e.target.closest('.menu-item-card[role="button"]');
             if (!card || card.classList.contains('menu-item-unavailable')) return;
             if (e.target.closest(
-                '.menu-favorite-btn, .menu-image-add-btn, .menu-image-actions, ' +
+                '.menu-favorite-btn, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, ' +
                 '.expanded-item-controls, .btn-quantity, .expanded-image-nav, .expanded-image-indicator'
             )) return;
+            if (
+                card.classList.contains('menu-reels-slide') &&
+                document.getElementById('menu-reels-track') &&
+                typeof window.shouldOpenMenuItemOrderFromEvent === 'function' &&
+                !window.shouldOpenMenuItemOrderFromEvent(e)
+            ) {
+                return;
+            }
             e.preventDefault();
             const url = card.dataset.itemUrl;
             if (url) toggleItemExpansion(card, url, e);
@@ -3577,197 +3592,14 @@
     window.selectSinglePageOption = selectSinglePageOption;
     window.selectSinglePageSide = selectSinglePageSide;
     window.selectSinglePageAddition = selectSinglePageAddition;
-    window.toggleDashboard = toggleDashboard;
-    window.closeDashboard = closeDashboard;
     window.updateCart = updateCart;
     window.updateAdCount = updateAdCount;
-
-    // Packery.js removed - no longer needed
-
-    /**
-     * Scroll locations horizontally
-     * @global
-     * @param {string} direction - 'left' or 'right'
-     */
-    function scrollLocations(direction) {
-        const locationsWrapper = document.querySelector('.locations-wrapper');
-        if (!locationsWrapper) {
-            console.warn('Locations wrapper not found');
-            return;
-        }
-
-        const locations = locationsWrapper.querySelector('.locations');
-        if (!locations) {
-            console.warn('Locations container not found');
-            return;
-        }
-
-        // Get scrollable element (might be locations or wrapper)
-        const scrollableElement = locations.scrollWidth > locations.clientWidth ? locations : locationsWrapper;
-        
-        const scrollAmount = 300; // pixels to scroll
-        const currentScroll = scrollableElement.scrollLeft;
-        const maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
-
-        console.log('Scroll Debug:', {
-            direction,
-            currentScroll,
-            maxScroll,
-            scrollWidth: scrollableElement.scrollWidth,
-            clientWidth: scrollableElement.clientWidth,
-            element: scrollableElement.className
-        });
-
-        // Check if scrolling is needed
-        if (maxScroll <= 0) {
-            console.log('No scrolling needed - content fits');
-            updateLocationNavButtons(scrollableElement, 0);
-            return;
-        }
-
-        let scrollDelta;
-        if (direction === 'left') {
-            scrollDelta = -scrollAmount;
-        } else if (direction === 'right') {
-            scrollDelta = scrollAmount;
-        } else {
-            console.warn('Invalid scroll direction:', direction);
-            return;
-        }
-
-        // Try scrollBy first (more reliable), fallback to scrollTo
-        if (scrollableElement.scrollBy) {
-            scrollableElement.scrollBy({
-                left: scrollDelta,
-                behavior: 'smooth'
-            });
-        } else {
-            const newScroll = Math.max(0, Math.min(maxScroll, currentScroll + scrollDelta));
-            if (scrollableElement.scrollTo) {
-                scrollableElement.scrollTo({
-                    left: newScroll,
-                    behavior: 'smooth'
-                });
-            } else {
-                scrollableElement.scrollLeft = newScroll;
-            }
-        }
-
-        // Update button visibility after a short delay to account for smooth scroll
-        setTimeout(() => {
-            updateLocationNavButtons(scrollableElement, maxScroll);
-        }, 100);
-    }
-
-    /**
-     * Update location navigation button visibility
-     * @param {HTMLElement} locations - The locations container
-     * @param {number} maxScroll - Maximum scroll value
-     */
-    function updateLocationNavButtons(locations, maxScroll) {
-        const leftBtn = document.getElementById('locationNavLeft');
-        const rightBtn = document.getElementById('locationNavRight');
-
-        if (!leftBtn || !rightBtn) return;
-
-        // Reels location picker uses infinite wrap — handled in location-picker.js
-        if (locations.closest('.location-picker')) {
-            return;
-        }
-
-        const currentScroll = locations.scrollLeft;
-
-        // Show/hide left button
-        if (currentScroll <= 0) {
-            leftBtn.style.opacity = '0.3';
-            leftBtn.style.pointerEvents = 'none';
-        } else {
-            leftBtn.style.opacity = '1';
-            leftBtn.style.pointerEvents = 'auto';
-        }
-
-        // Show/hide right button
-        if (currentScroll >= maxScroll - 1) {
-            rightBtn.style.opacity = '0.3';
-            rightBtn.style.pointerEvents = 'none';
-        } else {
-            rightBtn.style.opacity = '1';
-            rightBtn.style.pointerEvents = 'auto';
-        }
-    }
-
-    let locationNavState = null;
-
-    /**
-     * Initialize location navigation
-     */
-    function initializeLocationNavigation() {
-        if (locationNavState) {
-            if (locationNavState.scrollableElement && locationNavState.onScroll) {
-                locationNavState.scrollableElement.removeEventListener('scroll', locationNavState.onScroll);
-            }
-            if (locationNavState.onResize) {
-                window.removeEventListener('resize', locationNavState.onResize);
-            }
-            locationNavState = null;
-        }
-
-        const locationsWrapper = document.querySelector('.locations-wrapper');
-        if (!locationsWrapper) return;
-
-        // Reels location picker manages its own infinite carousel
-        if (locationsWrapper.closest('.location-picker')) return;
-
-        const locations = locationsWrapper.querySelector('.locations');
-        if (!locations) return;
-
-        const scrollableElement = locations.scrollWidth > locations.clientWidth ? locations : locationsWrapper;
-
-        const updateButtons = () => {
-            const maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
-            updateLocationNavButtons(scrollableElement, maxScroll);
-        };
-
-        setTimeout(updateButtons, 100);
-
-        function onScroll() {
-            const maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
-            updateLocationNavButtons(scrollableElement, maxScroll);
-        }
-
-        let resizeTimer;
-        function onResize() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(updateButtons, 250);
-        }
-
-        scrollableElement.addEventListener('scroll', onScroll);
-        window.addEventListener('resize', onResize);
-        locationNavState = { scrollableElement: scrollableElement, onScroll: onScroll, onResize: onResize };
-    }
-
-    // Initialize location navigation on page load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeLocationNavigation);
-    } else {
-        initializeLocationNavigation();
-    }
-
-    // Expose globally - ensure it overrides any placeholder functions
-    window.scrollLocations = scrollLocations;
-    
-    // Force override after a short delay to ensure it runs after other scripts
-    setTimeout(() => {
-        window.scrollLocations = scrollLocations;
-    }, 100);
 
     /** Rebuild expanded menu panel from card data-* (used by dashboard edit after Apply). */
     window.expandMenuItemCard = expandItem;
 
-    // Expose for Barba / second IIFE reinit (must not call across closure boundaries)
     window.applyDayBasedPromos = applyDayBasedPromos;
     window.initializeFooterVisibility = initializeFooterVisibility;
-    window.initializeLocationNavigation = initializeLocationNavigation;
     window.hydrateAuthenticatedDraftAssetImg = hydrateAuthenticatedDraftAssetImg;
     window.hydrateAllDraftMenuCardImages = hydrateAllDraftMenuCardImages;
 
@@ -3775,399 +3607,22 @@
         hydrateAllDraftMenuCardImages();
     });
 
-})();
-
-// ========================================
-// LOCATION STATUS DISPLAY
-// ========================================
-
-(function() {
-    'use strict';
-
-    /**
-     * Calculate and display open/closed status for location items
-     */
-    function updateLocationStatuses() {
-        // Support both .location-item format (contact_info) and .location-card format (locations page)
-        const locationItems = document.querySelectorAll('.location-item[data-location-index], .location-card[data-location-index]');
-        if (locationItems.length === 0) return;
-
-        // First, try to use data attributes (embedded in HTML)
-        let allHaveData = true;
-        locationItems.forEach(item => {
-            const openingHoursData = item.getAttribute('data-opening-hours');
-            if (openingHoursData) {
-                try {
-                    const openingHours = JSON.parse(openingHoursData);
-                    const status = calculateLocationStatus(openingHours);
-                    updateStatusBadge(item, status.type, status.text);
-                } catch (e) {
-                    console.error('Error parsing opening hours from data attribute:', e);
-                    allHaveData = false;
-                }
-            } else {
-                allHaveData = false;
-            }
-        });
-
-        // If all items have data attributes, we're done
-        if (allHaveData) return;
-
-        // Otherwise, fetch from index.json as fallback
-        fetch('/index.json')
-            .then(response => response.json())
-            .then(data => {
-                // Handle both data.locations and data.locations.locations structures
-                const locations = (data.locations && Array.isArray(data.locations)) 
-                    ? data.locations 
-                    : (data.locations && data.locations.locations && Array.isArray(data.locations.locations))
-                        ? data.locations.locations
-                        : [];
-                
-                locationItems.forEach(item => {
-                    // Skip if already updated from data attribute
-                    const openingHoursData = item.getAttribute('data-opening-hours');
-                    if (openingHoursData) return;
-
-                    const index = parseInt(item.getAttribute('data-location-index'), 10);
-                    const location = locations[index];
-                    if (!location || !location.opening_hours) {
-                        updateStatusBadge(item, 'closed', 'Closed');
-                        return;
-                    }
-
-                    const status = calculateLocationStatus(location.opening_hours);
-                    updateStatusBadge(item, status.type, status.text);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching locations data:', error);
-                // Set all to closed on error (only for items without data attributes)
-                locationItems.forEach(item => {
-                    const openingHoursData = item.getAttribute('data-opening-hours');
-                    if (!openingHoursData) {
-                        updateStatusBadge(item, 'closed', 'Closed');
-                    }
-                });
-            });
-    }
-
-    /**
-     * Calculate location status based on opening hours
-     * @param {Object} openingHours - Opening hours data
-     * @returns {Object} Status object with type and text
-     */
-    function calculateLocationStatus(openingHours) {
-        const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-        const now = new Date();
-        const todayIndex = now.getDay();
-        const todayDay = days[todayIndex];
-        const yesterdayIndex = (todayIndex - 1 + 7) % 7;
-        const yesterdayDay = days[yesterdayIndex];
-
-        function parseTime(timeStr, baseDate) {
-            if (!timeStr) return null;
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            const date = new Date(baseDate || now);
-            date.setHours(hours, minutes, 0, 0);
-            return date;
-        }
-
-        function getHoursForDay(day, baseDate) {
-            if (!openingHours[day] || !Array.isArray(openingHours[day])) return null;
-            
-            const entries = openingHours[day];
-            let openTimeStr = null;
-            let closeTimeStr = null;
-
-            for (const entry of entries) {
-                if (entry.type === 'Open') {
-                    openTimeStr = entry.time;
-                } else if (entry.type === 'Close') {
-                    closeTimeStr = entry.time;
-                }
-            }
-
-            if (!openTimeStr || !closeTimeStr) return null;
-
-            return { 
-                openTime: parseTime(openTimeStr, baseDate),
-                closeTime: parseTime(closeTimeStr, baseDate),
-                openTimeStr,
-                closeTimeStr
-            };
-        }
-
-        // Check yesterday's overnight hours first (for places that close after midnight)
-        const yesterdayDate = new Date(now);
-        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-        const yesterdayHours = getHoursForDay(yesterdayDay, yesterdayDate);
-        
-        if (yesterdayHours && yesterdayHours.openTime && yesterdayHours.closeTime) {
-            const yesterdayOpen = yesterdayHours.openTime;
-            let yesterdayClose = new Date(yesterdayHours.closeTime);
-            
-            // Parse close time to check if it's overnight
-            const [closeHours, closeMins] = yesterdayHours.closeTimeStr.split(':').map(Number);
-            const [openHours, openMins] = yesterdayHours.openTimeStr.split(':').map(Number);
-            
-            // If close time is before open time, it's overnight (closes next day)
-            if (closeHours < openHours || (closeHours === openHours && closeMins <= openMins)) {
-                yesterdayClose.setDate(yesterdayClose.getDate() + 1);
-            }
-
-            if (now >= yesterdayOpen && now < yesterdayClose) {
-                const minsToClose = Math.floor((yesterdayClose - now) / 60000);
-                if (minsToClose <= 30 && minsToClose > 0) {
-                    return { type: 'soon-close', text: 'Closes Soon' };
-                }
-                return { type: 'open', text: 'Open' };
-            }
-        }
-
-        // Check today's hours
-        const todayHours = getHoursForDay(todayDay, now);
-        if (todayHours && todayHours.openTime && todayHours.closeTime) {
-            const todayOpen = todayHours.openTime;
-            let todayClose = new Date(todayHours.closeTime);
-            
-            // Parse close time to check if it's overnight
-            const [closeHours, closeMins] = todayHours.closeTimeStr.split(':').map(Number);
-            const [openHours, openMins] = todayHours.openTimeStr.split(':').map(Number);
-            
-            // If close time is before or equal to open time, it's overnight (closes next day)
-            if (closeHours < openHours || (closeHours === openHours && closeMins <= openMins)) {
-                todayClose.setDate(todayClose.getDate() + 1);
-            }
-
-            if (now >= todayOpen && now < todayClose) {
-                const minsToClose = Math.floor((todayClose - now) / 60000);
-                if (minsToClose <= 30 && minsToClose > 0) {
-                    return { type: 'soon-close', text: 'Closes Soon' };
-                }
-                return { type: 'open', text: 'Open' };
-            } else if (now < todayOpen) {
-                const minsToOpen = Math.floor((todayOpen - now) / 60000);
-                if (minsToOpen > 0 && minsToOpen <= 30) {
-                    return { type: 'soon-open', text: 'Opens Soon' };
-                }
-            }
-        }
-
-        return { type: 'closed', text: 'Closed' };
-    }
-
-    /**
-     * Update status badge for a location item
-     * @param {HTMLElement} item - Location item element
-     * @param {string} statusType - Status type (open, closed, soon-open, soon-close)
-     * @param {string} statusText - Status text to display
-     */
-    function updateStatusBadge(item, statusType, statusText) {
-        // Support both .location-item format (contact_info) and .location-card format (locations page)
-        let statusElement = item.querySelector('.location-status-badge');
-        if (!statusElement) {
-            // Try locations page format
-            statusElement = item.querySelector('.openstatus .status-badge');
-        }
-        if (!statusElement) return;
-
-        // Remove all status classes
-        statusElement.classList.remove('open', 'closed', 'soon-open', 'soon-close', 'hide');
-        
-        // Add current status class
-        statusElement.classList.add(statusType);
-        statusElement.textContent = statusText;
-    }
-
-    /**
-     * Refresh status for a single location when button is clicked
-     * @param {HTMLElement} button - The status button element
-     */
-    function refreshLocationStatus(button) {
-        // Find the parent location-item or location-card (for locations page)
-        const locationStatusDiv = button.closest('.location-status');
-        const locationCard = button.closest('.location-card');
-        
-        // Support both contact_info format (.location-item) and locations page format (.location-card)
-        const locationItem = locationStatusDiv ? locationStatusDiv.closest('.location-item') : locationCard;
-        if (!locationItem && !locationCard) return;
-        
-        const targetElement = locationItem || locationCard;
-
-        // Disable button and show throbber
-        button.disabled = true;
-        const originalText = button.textContent.trim();
-        
-        // Remove any existing throbber
-        const existingThrobber = button.querySelector('.throbber');
-        if (existingThrobber) {
-            existingThrobber.remove();
-        }
-        
-        // Create and show throbber
-        const throbber = document.createElement('span');
-        throbber.className = 'throbber';
-        throbber.style.display = 'inline-block';
-        
-        // Set button content with throbber and text
-        button.innerHTML = '';
-        button.appendChild(throbber);
-        button.appendChild(document.createTextNode(' ' + originalText));
-
-        // Get opening hours from data attribute
-        const openingHoursData = targetElement.getAttribute('data-opening-hours');
-        
-        // Function to update status and hide throbber
-        const updateStatus = (statusType, statusText) => {
-            // Update status badge (this will replace the button content)
-            // Support both formats: .location-item (contact_info) and .location-card (locations page)
-            if (locationItem) {
-                updateStatusBadge(locationItem, statusType, statusText);
-            } else if (locationCard) {
-                // For locations page, update the button directly
-                const statusButton = locationCard.querySelector('.openstatus .status-badge');
-                if (statusButton) {
-                    statusButton.classList.remove('open', 'closed', 'soon-open', 'soon-close', 'hide');
-                    statusButton.classList.add(statusType);
-                    statusButton.textContent = statusText;
-                }
-            }
-            
-            // Re-enable button after throbber animation completes
-            setTimeout(() => {
-                button.disabled = false;
-            }, 100);
-        };
-        
-        if (openingHoursData) {
-            try {
-                const openingHours = JSON.parse(openingHoursData);
-                const status = calculateLocationStatus(openingHours);
-                // Wait 1 second to show throbber feedback
-                setTimeout(() => {
-                    updateStatus(status.type, status.text);
-                }, 1000);
-            } catch (e) {
-                console.error('Error parsing opening hours:', e);
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                }, 1000);
-            }
-        } else {
-            // Fallback: fetch from index.json
-            const indexDiv = locationStatusDiv || locationCard;
-            const index = parseInt(indexDiv.getAttribute('data-location-index'), 10);
-            fetch('/index.json')
-                .then(response => response.json())
-                .then(data => {
-                    const locations = (data.locations && Array.isArray(data.locations)) 
-                        ? data.locations 
-                        : (data.locations && data.locations.locations && Array.isArray(data.locations.locations))
-                            ? data.locations.locations
-                            : [];
-                    
-                    const location = locations[index];
-                    // Wait 1 second to show throbber feedback
-                    setTimeout(() => {
-                        if (!location || !location.opening_hours) {
-                            updateStatus('closed', 'Closed');
-                        } else {
-                            const status = calculateLocationStatus(location.opening_hours);
-                            updateStatus(status.type, status.text);
-                        }
-                    }, 1000);
-                })
-                .catch(error => {
-                    console.error('Error fetching location data:', error);
-                    setTimeout(() => {
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                    }, 1000);
-                });
+    function bootstrapMain() {
+        try {
+            init();
+        } catch (err) {
+            console.error('[TTMS main] init failed:', err);
         }
     }
 
-    // Expose function globally
-    window.refreshLocationStatus = refreshLocationStatus;
-
-    /**
-     * Reinitialize page-specific features after Barba transitions.
-     */
-    function reinitTTMSPageFeatures() {
-        if (typeof window.hydrateAllDraftMenuCardImages === 'function') {
-            window.hydrateAllDraftMenuCardImages();
-        }
-        if (typeof window.liveSearch === 'function') {
-            const searchInput = document.getElementById('searchbox');
-            if (searchInput && searchInput.value.trim()) {
-                window.liveSearch();
-            }
-        }
-        if (typeof window.applyDayBasedPromos === 'function') {
-            window.applyDayBasedPromos();
-        }
-        if (typeof window.initializeFooterVisibility === 'function') {
-            window.initializeFooterVisibility();
-        }
-        if (typeof window.initSinglePageFeatures === 'function') {
-            window.initSinglePageFeatures();
-        }
-        updateLocationStatuses();
-        if (typeof window.bindMenublockScroll === 'function') {
-            window.bindMenublockScroll();
-        }
-        if (typeof window.updateHeaderMenublockScroll === 'function') {
-            window.updateHeaderMenublockScroll();
-        }
-    }
-
-    window.reinitTTMSPageFeatures = reinitTTMSPageFeatures;
-
-    /**
-     * Initialize location status display
-     */
-    let locationStatusInterval = null;
-
-    function initLocationStatuses() {
-        updateLocationStatuses();
-        if (locationStatusInterval) {
-            clearInterval(locationStatusInterval);
-        }
-        locationStatusInterval = setInterval(updateLocationStatuses, 60000);
-    }
-
-    // Initialize on page load
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(initLocationStatuses, 500);
-        });
+        document.addEventListener('DOMContentLoaded', bootstrapMain);
     } else {
-        setTimeout(initLocationStatuses, 500);
+        bootstrapMain();
     }
-
-    function registerBarbaReinit() {
-        if (!window.TTMSBarba) return;
-        window.TTMSBarba.register(function () {
-            if (typeof window.initializeLocationNavigation === 'function') {
-                setTimeout(window.initializeLocationNavigation, 100);
-            }
-        });
-        window.TTMSBarba.register(function () {
-            setTimeout(reinitTTMSPageFeatures, 50);
-        });
-    }
-
-    if (window.TTMSBarba) {
-        registerBarbaReinit();
-    } else if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', registerBarbaReinit);
-    } else {
-        registerBarbaReinit();
-    }
-
-    // Expose function globally
-    window.updateLocationStatuses = updateLocationStatuses;
 
 })();
+
+// LOCATION STATUS — assets/js/location-status.js
+// PAGE REINIT — assets/js/page-reinit.js (body)
+// LOCATION NAV — assets/js/location-navigation.js

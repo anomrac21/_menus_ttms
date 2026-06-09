@@ -53,19 +53,18 @@
 }
 
 .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
-    max-width: 0;
+    max-width: 2.85em;
     margin-inline: 0;
     padding: 0;
-    overflow: hidden;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transform: translateX(-6px) scale(0.94);
+    overflow: visible;
+    opacity: 0.88;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0) scale(0.9);
     transition:
         opacity 0.45s ease,
         transform 0.45s ease,
-        max-width 0.5s ease,
-        visibility 0s linear 0.4s;
+        max-width 0.5s ease;
 }
 
 /* Keep signed-in badge visible on venue logo when dashboard chip is collapsed */
@@ -79,16 +78,18 @@
 }
 
 .main-header .dashboard-menu-btn-wrap {
+    display: flex;
     flex-shrink: 0;
     max-width: 8em;
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
     transform: translateX(0) scale(1);
     transition:
         opacity 0.35s ease,
         transform 0.35s ease,
-        max-width 0.4s ease,
-        visibility 0s;
+        max-width 0.4s ease;
+    justify-content: center;
 }
 
 .header-leading .logo-container {
@@ -104,9 +105,16 @@
     align-items: center;
     justify-content: center;
     height: unset;
+    border: none;
+    text-decoration: none;
+    color: inherit;
     transition: all 0.3s ease;
     cursor: pointer;
     background: transparent;
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #dashboardBtn:hover {

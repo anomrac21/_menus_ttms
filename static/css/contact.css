@@ -11,7 +11,7 @@
     background: linear-gradient(var(--hero-bg-color, #000), var(--hero-bg-color, #000), var(--hero-bg-color, #000), var(--hero-bg-color, #000), var(--hero-bg-color, #000), transparent);
     z-index: auto;
     position: relative;
-    padding-bottom: 2em;
+    padding-bottom: 3em;
 }
 
 .contactinfo {
@@ -177,6 +177,7 @@
 .locations-wrapper {
     flex: 1;
     max-width: 480px;
+    height: min-content;
     width: 100%;
     overflow: hidden;
     position: relative;
@@ -376,7 +377,7 @@
 .location-status-badge.open {
     background: linear-gradient(135deg, rgba(76, 175, 80, .25), rgba(56, 142, 60, .2));
     color: var(--hero-text-color, #66bb6a);
-    border: 1.5px solid rgba(76, 175, 80, .5);
+    border: 2px solid rgba(76, 175, 80, .5);
     text-shadow: 0 1px 2px rgba(0, 0, 0, .2);
 }
 
@@ -390,7 +391,7 @@
 .location-status-badge.closed {
     background: linear-gradient(135deg, rgba(244, 67, 54, .25), rgba(198, 40, 40, .2));
     color: var(--hero-text-color, #ef5350);
-    border: 1.5px solid rgba(244, 67, 54, .5);
+    border: 2px solid rgba(244, 67, 54, .5);
     text-shadow: 0 1px 2px rgba(0, 0, 0, .2);
 }
 
@@ -1331,7 +1332,8 @@
 
 .location-picker__title {
     margin: 0;
-    font-size: clamp(1.45rem, 5vw, 1.85rem);
+    margin-block-end: .5em;
+    font-size: large;
     font-weight: 800;
     line-height: 1.15;
     color: var(--hero-text-color, #fff);
@@ -1344,7 +1346,6 @@
 }
 
 .location-picker__selected {
-    margin-top: 0.85rem;
     padding: 0.55rem 0.9rem;
     border-radius: 999px;
     background: color-mix(in srgb, var(--selected-button-color3, #fcd000) 28%, rgba(0, 0, 0, 0.35));
@@ -1356,7 +1357,7 @@
 }
 
 .location-picker__selected-label {
-    font-size: 0.68rem;
+    font-size: xx-small;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -1364,7 +1365,7 @@
 }
 
 .location-picker__selected-name {
-    font-size: 0.92rem;
+    font-size: x-small;
     font-weight: 700;
     color: var(--hero-text-color, #fff);
     overflow: hidden;
@@ -1378,7 +1379,7 @@
     min-height: 0;
     width: 100%;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: 0.15rem;
     padding: 0;
 }
@@ -1406,7 +1407,6 @@
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    padding: 0.35rem 0.5rem;
     margin: 0;
     scrollbar-width: none;
 }
@@ -1512,8 +1512,8 @@ button.location-picker-card__select {
 
 .location-picker-card__pin {
     flex-shrink: 0;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1535,10 +1535,11 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
+    align-items: center;
 }
 
 .location-picker-card__meta {
-    font-size: x-small;
+    font-size: xx-small;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1546,7 +1547,7 @@ a.location-picker-card__select:hover .location-picker-card__pin {
 }
 
 .location-picker-card__address {
-    font-size: small;
+    font-size: x-small;
     font-weight: 700;
     line-height: 1.25;
     color: var(--hero-text-color, #fff);
@@ -1557,10 +1558,62 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     color: color-mix(in srgb, var(--hero-text-color, #fff) 58%, transparent);
 }
 
+.location-picker-card__closest-tag[hidden],
+.location-picker-card:not(.location-picker-card--closest) .location-picker-card__closest-tag {
+    display: none !important;
+}
+
+.location-picker-card__closest-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+    padding: 0.22em 0.6em;
+    border-radius: 999px;
+    font-size: xx-small;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #1a1400;
+    background: linear-gradient(135deg, #ffe082, #ffc107);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.35);
+    animation: location-picker-closest-pulse 2.2s ease-in-out infinite;
+}
+
+.location-picker-card__closest-tag::before {
+    content: '';
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: #e65100;
+    box-shadow: 0 0 0 2px rgba(230, 81, 0, 0.28);
+    flex-shrink: 0;
+}
+
+.location-picker-card--closest {
+    border-color: color-mix(in srgb, #ffc107 72%, #fff);
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.28),
+        0 0 0 2px color-mix(in srgb, #ffc107 48%, transparent);
+}
+
+.location-picker-card--closest.location-picker-card--selected,
+.location-picker-card--closest.active-location {
+    border-color: color-mix(in srgb, #4caf50 45%, #ffc107);
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.28),
+        0 0 0 2px color-mix(in srgb, #ffc107 38%, #81c784);
+}
+
+@keyframes location-picker-closest-pulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(255, 193, 7, 0.35); }
+    50% { box-shadow: 0 2px 14px rgba(255, 193, 7, 0.58); }
+}
+
 .location-picker-card__check {
     flex-shrink: 0;
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1601,7 +1654,7 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     padding: 0.55rem 0.75rem 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     overflow: visible;
 }
@@ -1612,6 +1665,23 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     gap: 0.45rem;
     justify-content: center;
     align-items: center;
+}
+
+.location-picker-card__actions .location-picker-card__status {
+    flex: 0 0 auto;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+}
+
+.location-picker-card__actions .location-status-badge {
+    min-height: 2.65rem;
+    min-width: auto;
+    padding: 0.35em 0.85em;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    border-radius: var(--contact-cta-radius);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
 }
 
 .location-picker-card__actions .contact-cta--location {
@@ -1627,14 +1697,140 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     min-width: 2.65rem;
 }
 
-.location-picker-card__footer .location-status {
-    height: auto;
+.location-picker__section-footer {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: min(100%, 36rem);
+    margin-inline: auto;
+    margin-top: auto;
+    padding: 0.35rem 0.75rem max(0.65rem, env(safe-area-inset-bottom, 0));
+    display: flex;
     justify-content: center;
+}
+
+.location-picker__nearby-btn {
+    position: relative;
+    width: 100%;
+    max-width: 22rem;
+    border: none;
+    border-radius: 1rem;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    background: transparent;
+    color: var(--hero-text-color, #fff);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.location-picker__nearby-btn-glow {
+    position: absolute;
+    inset: -3px;
+    border-radius: 1.05rem;
+    background: conic-gradient(
+        from 180deg,
+        transparent 0deg,
+        color-mix(in srgb, var(--selected-button-color3, #fcd000) 65%, transparent) 120deg,
+        transparent 240deg
+    );
+    opacity: 0.55;
+    animation: location-picker-nearby-spin 5s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+}
+
+@keyframes location-picker-nearby-spin {
+    to { transform: rotate(360deg); }
+}
+
+.location-picker__nearby-btn-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.85rem 1.15rem;
+    border-radius: 1rem;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--selected-button-color2, #b56024) 78%, #1a1a2e),
+        color-mix(in srgb, var(--selected-button-color3, #fcd000) 52%, #2d2d44)
+    );
+    border: 1px solid color-mix(in srgb, var(--selected-button-color3, #fcd000) 42%, transparent);
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    justify-content: center;
+}
+
+.location-picker__nearby-icon {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.location-picker__nearby-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    text-align: left;
+    min-width: 0;
+}
+
+.location-picker__nearby-label {
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+}
+
+.location-picker__nearby-hint {
+    font-size: 0.7rem;
+    font-weight: 500;
+    opacity: 0.84;
+    line-height: 1.25;
+}
+
+.location-picker__nearby-btn:hover:not(:disabled) .location-picker__nearby-btn-inner {
+    transform: translateY(-1px);
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.location-picker__nearby-btn:active:not(:disabled) {
+    transform: scale(0.985);
+}
+
+.location-picker__nearby-btn:disabled {
+    cursor: wait;
+    opacity: 0.92;
+}
+
+.location-picker__nearby-btn.is-loading .location-picker__nearby-icon svg {
+    animation: location-status-spin 0.85s linear infinite;
+}
+
+.location-picker__nearby-btn.is-error .location-picker__nearby-btn-inner {
+    background: linear-gradient(135deg, #8b2e2e, #5c1a1a);
+    border-color: rgba(255, 120, 120, 0.42);
+}
+
+.location-picker__nearby-btn.is-error .location-picker__nearby-hint {
+    opacity: 0.95;
 }
 
 .location-picker__footer {
     flex-shrink: 0;
-    width: 100%;
 }
 
 .location-picker__continue {

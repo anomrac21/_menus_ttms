@@ -417,11 +417,28 @@
   window.syncBodyAuthClasses = syncBodyAuthClasses;
 
   var origToggleDashboard = window.toggleDashboard;
-  if (typeof origToggleDashboard === 'function') {
+  function wrapToggleDashboard() {
+    if (typeof window.toggleDashboard !== 'function') return;
+    if (window.toggleDashboard.__ttmsAccountWrapped) return;
+
+    origToggleDashboard = window.toggleDashboard;
     window.toggleDashboard = function () {
       closeAccountDashboard();
       return origToggleDashboard.apply(this, arguments);
     };
+    window.toggleDashboard.__ttmsAccountWrapped = true;
+  }
+
+  wrapToggleDashboard();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wrapToggleDashboard);
+  }
+  if (window.TTMSBarba) {
+    window.TTMSBarba.register(wrapToggleDashboard);
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.TTMSBarba) window.TTMSBarba.register(wrapToggleDashboard);
+    });
   }
 
   function scheduleRefresh() {

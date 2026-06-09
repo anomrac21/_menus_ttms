@@ -614,6 +614,7 @@ function closeShop(){
 	var cart = document.getElementById("cart");
   var footerBtns = document.getElementById("footerBtns");
   if (cart) cart.classList.add('cart-hidden');
+  if (typeof setCartModalOpen === 'function') setCartModalOpen(false);
   if (footerBtns) {
   footerBtns.classList.add('grad2');
   footerBtns.classList.remove('grad1');
@@ -1522,6 +1523,30 @@ function itemAmtCalc(value){
 
 // CART
 
+function setCartModalOpen(isOpen) {
+  var cart = document.getElementById("cart");
+  if (cart) {
+    cart.setAttribute("aria-hidden", isOpen ? "false" : "true");
+  }
+  document.body.classList.toggle("cart-open", isOpen);
+}
+
+function setTableModalOpen(isOpen) {
+  var modal = document.getElementById("tableNumberModal");
+  if (modal) {
+    modal.setAttribute("aria-hidden", isOpen ? "false" : "true");
+  }
+  document.body.classList.toggle("table-modal-open", isOpen);
+}
+
+function showTableNumberModal() {
+  var modal = document.getElementById("tableNumberModal");
+  if (modal) {
+    modal.classList.remove("hide");
+  }
+  setTableModalOpen(true);
+}
+
 function toggleCart(){
     var cart = document.getElementById("cart");
     var footerBtns = document.getElementById("footerBtns");
@@ -1530,6 +1555,7 @@ function toggleCart(){
         refreshCartWithPromos();
       }
       cart.classList.remove('cart-hidden');
+      setCartModalOpen(true);
       footerBtns.classList.add('bigfont');
       footerBtns.classList.add('cartopen');
       footerBtns.classList.remove('smallfont');
@@ -1537,6 +1563,7 @@ function toggleCart(){
       footerBtns.classList.remove('grad2');
     }else{
       cart.classList.add('cart-hidden');
+      setCartModalOpen(false);
       footerBtns.classList.remove('cartopen');
       footerBtns.classList.add('grad2');
       footerBtns.classList.remove('grad1');
@@ -1549,6 +1576,7 @@ function toggleCart(){
     var cart = document.getElementById("cart");
     var footerBtns = document.getElementById("footerBtns");
     cart.classList.add('cart-hidden');
+    setCartModalOpen(false);
     footerBtns.classList.remove('cartopen');
     footerBtns.classList.add('grad2');
     footerBtns.classList.remove('grad1');
@@ -1862,6 +1890,7 @@ function buildCartCards() {
 	if (order.length === 0) {
 		if (emptyState) emptyState.style.display = 'flex';
 		cartContainer.innerHTML = '';
+		syncPlaceOrderButtonState();
 		return;
 	}
 	
@@ -1957,6 +1986,17 @@ function buildCartCards() {
 	}
 	
 	cartContainer.innerHTML = cardsHtml;
+	syncPlaceOrderButtonState();
+}
+
+function syncPlaceOrderButtonState() {
+	var canOrder = Array.isArray(order) && order.length > 0;
+	var buttons = document.querySelectorAll('#whatsappOrderBtn .btn-place-order, #whatsappOrderBtn .placeOrder');
+	buttons.forEach(function(btn) {
+		btn.disabled = !canOrder;
+		btn.setAttribute('aria-disabled', canOrder ? 'false' : 'true');
+		btn.classList.toggle('btn-place-order--disabled', !canOrder);
+	});
 }
 
 // Toggle individual cart item expansion
@@ -2089,6 +2129,9 @@ function placeOrderClick(){
 		alert(orderingDisabledMessage);
 		return;
 	}
+	if (!Array.isArray(order) || order.length === 0) {
+		return;
+	}
 	if (usephonecall) {
 		window.location.href = 'tel:' + orderPhone;
 		return;
@@ -2109,6 +2152,9 @@ async function placeOrderClickAsync(){
 function advanceOrder(){
 	if (!orderingEnabled) {
 		alert(orderingDisabledMessage);
+		return;
+	}
+	if (!Array.isArray(order) || order.length === 0) {
 		return;
 	}
 	if (hastables) {
@@ -2140,8 +2186,6 @@ function advanceOrder(){
 			if (currentLocationData.whatsapp) {
 				number = currentLocationData.whatsapp;
 			}
-			// Close the cart first
-			closeCart();
 			openTableModalWithLocation(currentLocationData);
 		} else {
 			// No location available, show alert
@@ -2184,7 +2228,7 @@ function openTableModalWithLocation(locationData) {
     }
     
     // Show the modal
-    document.getElementById('tableNumberModal').classList.remove('hide');
+    showTableNumberModal();
 }
 
 // Function to set table number from external sources (like table modal)
@@ -2401,9 +2445,8 @@ function cartSizeToggle(){
 }	
 
 function openTableModal(state){
-	closeCart();
 	if (state=='askforserver'){
-		document.getElementById("tableNumberModal").classList.remove('hide');
+		showTableNumberModal();
 		document.getElementById("confirmmodal").classList.add('hide');
 		document.getElementById("askforservermodal").classList.remove('hide');
 		//executeModeOnTableModal();
@@ -2411,7 +2454,7 @@ function openTableModal(state){
 		confirmWhatsAppOrder();
 		return;
 	}else{
-		document.getElementById("tableNumberModal").classList.remove('hide');
+		showTableNumberModal();
 		document.getElementById("askforservermodal").classList.add('hide');
 		document.getElementById("confirmmodal").classList.remove('hide');
 		//executeModeOnTableModal();
@@ -2420,6 +2463,7 @@ function openTableModal(state){
 }
 function closeTableModal() {
     document.getElementById('tableNumberModal').classList.add('hide');
+    setTableModalOpen(false);
     document.getElementById('confirmmodal').classList.remove('show');
     document.querySelector('.input').classList.remove('hide');
     
@@ -2544,8 +2588,12 @@ function askforserver(){
 	confirmSendOrder();
 }
 
-// Function to find closest location (simplified for dropdown)
+// Function to find closest location via reels location picker
 function findClosestLocation() {
+	if (typeof window.findClosestPickerLocation === 'function') {
+		window.findClosestPickerLocation();
+		return;
+	}
 	alert('Please use the location dropdown in the cart to select your preferred location.');
 }
 
@@ -2936,6 +2984,9 @@ window.confirmWhatsAppOrder = confirmWhatsAppOrder;
 window.advanceOrder = advanceOrder;
 window.placeOrderClick = placeOrderClick;
 window.openTableModalWithLocation = openTableModalWithLocation;
+window.closeTableModal = closeTableModal;
+window.showTableNumberModal = showTableNumberModal;
+window.setTableModalOpen = setTableModalOpen;
 window.getLocationDataFromElement = getLocationDataFromElement;
 window.updateCartLocationDisplay = updateCartLocationDisplay;
 
@@ -3140,7 +3191,7 @@ function openTableModal() {
     }
     
     // Show the modal
-    document.getElementById('tableNumberModal').classList.remove('hide');
+    showTableNumberModal();
     
     // Show table selection section immediately since we have location data
     document.getElementById('tableSelectionSection').classList.remove('hide');
@@ -3194,7 +3245,7 @@ window.testTableModalManually = function() {
 
 // Simple function to just show the modal without data
 window.showTableModal = function() {
-    document.getElementById('tableNumberModal').classList.remove('hide');
+    showTableNumberModal();
     console.log('✅ Table modal should now be visible');
 };
 
@@ -3294,6 +3345,7 @@ window.testTablePopulation = function() {
         if (modal) {
             modal.classList.add('hide');
         }
+        setTableModalOpen(false);
         
         // Hide the table selection section
         const tableSelectionSection = document.getElementById('tableSelectionSection');

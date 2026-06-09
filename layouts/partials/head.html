@@ -2,6 +2,8 @@
 <meta name="viewport" content="width=device-width">
 <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
 <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ site.Params.description | default "Delicious food and drinks at great prices. View our digital menu and order online." }}{{ end }}">
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
+{{- $menuPublicSite := not $dashboardLayout -}}
 
 <!-- Preload critical loader resources FIRST -->
 <link rel="preload" href="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
@@ -67,14 +69,20 @@
 <link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://notify.ttmenus.com" crossorigin>
 <link rel="preconnect" href="https://analytics.ttmenus.com" crossorigin>
-<link rel="preconnect" href="https://code.jquery.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
 {{ partialCached "head/css.html" . }}
+{{- if $menuPublicSite -}}
 <script src="/js/search.js" defer></script>
+{{ partialCached "head/menu-scripts.html" . }}
+{{- end -}}
 {{ partialCached "head/js.html" . }}
+{{- if $menuPublicSite -}}
+<script src="/js/dashboard-panel.js" defer></script>
+{{- end -}}
 <meta property="og:title" content="{{ .Title }} | {{ site.Title }}"/>
 {{ $images := slice }}
 {{ if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") }}
@@ -97,8 +105,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="{{ site.Title }}">
-<meta name="description" content="{{ .Summary }} "/>
-<meta property="og:description" content="{{ .Summary }} Digital Menu"/>
+<meta property="og:description" content="{{ if .Summary }}{{ .Summary }} Digital Menu{{ else }}{{ site.Params.description | default "Digital Menu" }}{{ end }}"/>
 
 <!-- WEBSITE LINK AND IMAGE -->
 <meta property="og:url" content="{{ site.GetPage.Permalink }}" />
@@ -112,38 +119,30 @@
 <link rel="stylesheet" href="/css/typography.css"/>
 <link rel="stylesheet" href="/css/custom.css"/>
 <link rel="stylesheet" href="/css/header.css"/>
-<link rel="stylesheet" href="/css/account-dashboard.css"/>
 <link rel="stylesheet" href="/css/cart.css"/>
 <link rel="stylesheet" href="/css/contact.css"/>
-<link rel="stylesheet" href="/css/hero.css"/>
-<link rel="stylesheet" href="/css/hero-cta.css"/>
-<link rel="stylesheet" href="/css/slideshow.css"/>
+<link rel="stylesheet" href="https://cdn.ttmenus.com/css/loader.css"/>
+{{- if $menuPublicSite -}}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero-cta.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/slideshow.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/expanded-carousel.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/adsbase.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/apple.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/ordering-system.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "https://cdn.ttmenus.com/css/animations.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "https://cdn.ttmenus.com/css/dinein_select.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/search.css") }}
 {{- if site.Params.menuImageService.enabled -}}
-<link rel="stylesheet" href="/css/menu-smash-pass.css"/>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-smash-pass.css") }}
 {{- end -}}
-<link rel="stylesheet" href="/css/expanded-carousel.css"/>
+{{- else -}}
+<link rel="stylesheet" href="/css/account-dashboard.css"/>
+{{- end -}}
 {{ if .Site.Params.notifications.enabled }}
 <link rel="stylesheet" href="/css/notifications.css"/>
 {{ end }}
-<link rel="stylesheet" href="https://cdn.ttmenus.com/css/loader.css"/>
-
-<!-- Non-critical CSS loaded with low priority -->
-<link rel="stylesheet" href="/css/adsbase.css"/>
-
-<link rel="preload" href="/css/apple.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="/css/apple.css"/></noscript>
-
-<link rel="preload" href="/css/ordering-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="/css/ordering-system.css"/></noscript>
-
-<link rel="preload" href="https://cdn.ttmenus.com/css/animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/animations.css"/></noscript>
-
-<link rel="preload" href="https://cdn.ttmenus.com/css/dinein_select.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="https://cdn.ttmenus.com/css/dinein_select.css"/></noscript>
-
-<link rel="preload" href="/css/search.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
-<noscript><link rel="stylesheet" href="/css/search.css"/></noscript>
 
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
@@ -168,10 +167,11 @@
   }
 </style>
 
-<!-- Menu UI font -->
+<!-- Menu UI font (non-blocking) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"/></noscript>
 
 {{- if site.Params.notifications.enabled -}}
 <script>
@@ -239,8 +239,10 @@
 <!-- TTMS Analytics Tracking - Deferred -->
 <script src="/js/analytics-tracking.js" defer></script>
 
+{{- if $menuPublicSite -}}
 <!-- Pull-to-refresh in PWA / standalone display mode (no browser chrome) -->
 <script src="/js/pull-to-refresh.js" defer></script>
+{{- end -}}
 
 {{- if site.Params.posintegration.enabled -}}
 <script>
@@ -256,7 +258,7 @@ window.POS_CONFIG = {
     fallbackToWhatsapp: {{ site.Params.posintegration.fallback_to_whatsapp }}
 };
 </script>
-<script src="/js/pos-integration.js"></script>
+<script src="/js/pos-integration.js" defer></script>
 {{- end -}}
 
 {{- if site.Params.auth.enabled -}}
@@ -280,7 +282,7 @@ window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 {{- $thumborUrl := site.Params.thumbor.url | default "https://thumbor.ttmenus.com" -}}
 {{- $sourceBase := site.Params.thumbor.sourceBaseUrl | default site.BaseURL | default "" -}}
 {{- $menuImagesUseThumbor := site.Params.thumbor.menuImagesUseThumbor | default false -}}
-<script src="/js/thumbor-url.js"></script>
+<script src="/js/thumbor-url.js" defer></script>
 <script>
 window.MENU_IMAGE_THUMBOR_URL = "{{ $thumborUrl }}";
 window.MENU_IMAGE_SOURCE_BASE_URL = "{{ strings.TrimSuffix "/" $sourceBase }}";
@@ -290,16 +292,18 @@ window.SiteConfig.thumborUrl = window.MENU_IMAGE_THUMBOR_URL;
 window.SiteConfig.menuImageSourceBaseUrl = window.MENU_IMAGE_SOURCE_BASE_URL;
 window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 </script>
-<script src="/js/auth-client.js"></script>
-<script src="/js/auth-client-access.js"></script>
-<script src="/js/auth-middleware.js"></script>
-<script src="/js/admin-users.js"></script>
-<link rel="stylesheet" href="/css/menu-favorites.css">
-<link rel="stylesheet" href="/css/menu-cards.css">
-<link rel="stylesheet" href="/css/menu-reels.css">
+<script src="/js/auth-client.js" defer></script>
+<script src="/js/auth-client-access.js" defer></script>
+<script src="/js/auth-middleware.js" defer></script>
+<script src="/js/admin-users.js" defer></script>
+{{- if $menuPublicSite -}}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-favorites.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-cards.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reels.css") }}
 <script src="/js/menu-favorites.js" defer></script>
 {{- end -}}
-{{- if site.Params.menuImageService.enabled -}}
+{{- end -}}
+{{- if and site.Params.menuImageService.enabled $menuPublicSite -}}
 <script>
 window.MENU_IMAGE_CONFIG = {
   enabled: true,
@@ -309,10 +313,12 @@ window.MENU_IMAGE_CONFIG = {
 </script>
 <script src="/js/menu-image-integration.js" defer></script>
 {{- end -}}
+{{- if $menuPublicSite -}}
 <script src="/js/share-buttons.js" defer></script>
 <script src="/js/single-page-init.js" defer></script>
 <script src="/js/menu-account-dashboard.js" defer></script>
 <script src="/js/header-menublock-scroll.js" defer></script>
+{{- end -}}
 
 {{- if site.Params.notifications.enabled -}}
 {{- $notifyApiUrl := site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" -}}

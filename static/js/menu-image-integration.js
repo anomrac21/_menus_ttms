@@ -1154,4 +1154,42 @@
       }
     });
   });
+
+  function promptLoginForUpload() {
+    if (typeof window.confirm !== 'function') {
+      return;
+    }
+    var goLogin = window.confirm(
+      'You need a TT Menus account to add photos.\n\nWould you like to go to the login page?'
+    );
+    if (!goLogin) {
+      return;
+    }
+    try {
+      sessionStorage.setItem('ttmenus_redirect_after_login', window.location.pathname);
+    } catch (err) {
+      /* ignore */
+    }
+    window.location.href = '/login/';
+  }
+
+  function onCardAddPhotoClick(e) {
+    var btn = e.target.closest('.menu-add-photo-btn');
+    if (!btn) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    var clientId = btn.getAttribute('data-menu-image-client-id') || CONFIG.clientId;
+    var path = String(btn.getAttribute('data-menu-item-path') || '').replace(/\/$/, '') || '/';
+    if (!isLoggedIn()) {
+      promptLoginForUpload();
+      return;
+    }
+    openUploadModal(clientId, path);
+  }
+
+  document.addEventListener('click', onCardAddPhotoClick, true);
+
+  window.openMenuImageUploadModal = openUploadModal;
 })();

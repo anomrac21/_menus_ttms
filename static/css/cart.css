@@ -8,32 +8,46 @@
    ============================================ */
 
 #cart {
-    background: #000d;
-    border: 1px solid #fff;
-    border-radius: 17px;
-    height: calc(100dvh - 10em);
-    margin-block-end: .4em;
+    position: fixed;
+    inset: 0;
+    z-index: var(--ttms-z-cart, 10080);
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--main-bg, #0a0a0f);
     overflow: hidden;
     text-align: left;
-    margin-inline: auto;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    position: relative;
-    transition: .25s;
-    max-width: 480px;
-    width: calc(100dvw - 1.5em);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    flex-wrap: nowrap;
+    justify-content: flex-start;
     align-items: stretch;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    box-sizing: border-box;
 }
 
-.cart-hidden {
-    transform: scale(0) !important;
-    pointer-events: none;
-    height: 0 !important;
-    opacity: 0;
+#cart.cart-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.cart-open {
+    overflow: hidden;
+}
+
+body.cart-open #footerBtns {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 /* ============================================
@@ -47,12 +61,13 @@
     border-bottom: 1px solid rgba(255, 255, 255, .1);
     position: sticky;
     top: 0;
-    z-index: var(--ttms-z-cart, 250);
+    z-index: 1;
 }
 
 .cart-title-bar {
     display: flex;
     align-items: center;
+    height: 4em;
     justify-content: space-between;
     padding: 0;
     background: linear-gradient(135deg, #25d366, #128c7e);
@@ -77,7 +92,7 @@
     background: rgba(0, 0, 0, .2);
     border: 1px solid rgba(255, 255, 255, .2);
     color: #fff;
-    padding: .4em;
+    padding: 1.4em;
     cursor: pointer;
     transition: all .2s ease;
     font-size: 1em;
@@ -239,7 +254,9 @@
    ============================================ */
 
 #cart .order {
-    height: calc(100dvh - 12em);
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
     display: flex;
     overflow: hidden;
     flex-direction: column;
@@ -248,8 +265,11 @@
 .cart-items-wrapper {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: scroll;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .cart-empty-state {
@@ -439,10 +459,11 @@
    ============================================ */
 
 #whatsappOrderBtn {
-    width: -webkit-fill-available;
+    flex-shrink: 0;
+    width: 100%;
     border-top: 1px solid rgba(255, 255, 255, .2);
-    padding: 0 .8em .8em;
-    background: rgba(0, 0, 0, .5);
+    padding: 0 .8em max(0.8em, env(safe-area-inset-bottom, 0));
+    background: rgba(0, 0, 0, .72);
 }
 
 #subTotalcontainer,
@@ -514,6 +535,27 @@
 .placeOrder:active {
     transform: translateY(0);
     box-shadow: 0 2px 10px rgba(37, 211, 102, .3);
+}
+
+.btn-place-order:disabled,
+.btn-place-order--disabled,
+.placeOrder:disabled,
+.placeOrder.btn-place-order--disabled {
+    background: linear-gradient(135deg, #5a5a5a, #3a3a3a);
+    color: rgba(255, 255, 255, .55);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: .72;
+}
+
+.btn-place-order:disabled:hover,
+.btn-place-order--disabled:hover,
+.placeOrder:disabled:hover,
+.placeOrder.btn-place-order--disabled:hover {
+    background: linear-gradient(135deg, #5a5a5a, #3a3a3a);
+    transform: none;
+    box-shadow: none;
 }
 
 /* ============================================

@@ -6450,8 +6450,10 @@ document.addEventListener('DOMContentLoaded', async function() {
               reelHeader.setAttribute('data-icon', '');
               reelHeader.setAttribute('data-images-top', '');
               reelHeader.setAttribute('data-images-bottom', '');
+              reelHeader.setAttribute('data-item-count', '0');
               reelHeader.innerHTML = '<a class="menu-anchor" id="' + safeSlug + '"></a>' +
-                '<div class="headerstyle item"><h2 class="center title"><a href="/' + safeSlug + '/">' + safeTitle + '</a></h2></div>' +
+                '<div class="headerstyle item"><h2 class="center title"><a href="/' + safeSlug + '/">' + safeTitle + '</a></h2>' +
+                '<p class="menu-header__item-count">0 items</p></div>' +
                 '<div class="menu-summary item"></div>';
               return reelHeader;
             }

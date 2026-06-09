@@ -252,11 +252,13 @@
   function whenCarouselReady(track, callback, attempt) {
     attempt = attempt || 0;
     if (!track || !track.isConnected) return;
-    if (track.clientWidth > 0 && track.scrollWidth > track.clientWidth) {
+    var hasWidth = track.clientWidth > 0;
+    var canScroll = track.scrollWidth > track.clientWidth + 1;
+    if (hasWidth && (canScroll || attempt >= 24)) {
       callback();
       return;
     }
-    if (attempt >= 40) {
+    if (attempt >= 72) {
       callback();
       return;
     }
@@ -455,6 +457,23 @@
     return target;
   }
 
+  function refreshLocationStatuses() {
+    if (typeof window.updateLocationStatuses === 'function') {
+      window.updateLocationStatuses();
+      return;
+    }
+    document
+      .querySelectorAll(
+        '.location-picker-card:not([data-picker-clone]) .location-status-badge'
+      )
+      .forEach(function (badge) {
+        if (/^loading\.?\.?\.?$/i.test(String(badge.textContent || '').trim())) {
+          badge.textContent = 'Closed';
+          badge.classList.add('closed');
+        }
+      });
+  }
+
   function finalizePickerAlignment(picker, track) {
     if (!picker || !track) return;
 
@@ -475,9 +494,12 @@
 
         if (carouselState) carouselState.initializing = false;
 
+        refreshLocationStatuses();
+
         setTimeout(function () {
           setProgrammaticScroll(false);
           setScrollSelectSuppressed(false);
+          refreshLocationStatuses();
         }, 200);
       });
     });
@@ -637,7 +659,168 @@
     return track;
   }
 
+  function parseCoord(value) {
+    var n = parseFloat(value);
+    return isFinite(n) ? n : null;
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    var toRad = function (deg) {
+      return deg * (Math.PI / 180);
+    };
+    var R = 6371;
+    var dLat = toRad(lat2 - lat1);
+    var dLon = toRad(lon2 - lon1);
+    var a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
+  function findClosestLocationCard(userLat, userLng, cards) {
+    var best = null;
+    var bestDist = Infinity;
+
+    cards.forEach(function (card) {
+      var lat = parseCoord(card.getAttribute('data-lat'));
+      var lng = parseCoord(card.getAttribute('data-lng'));
+      if (lat == null || lng == null) return;
+
+      var dist = haversineKm(userLat, userLng, lat, lng);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = card;
+      }
+    });
+
+    return best ? { card: best, distanceKm: bestDist } : null;
+  }
+
+  function formatClosestDistance(km) {
+    if (!isFinite(km) || km < 0) return '';
+    if (km < 1) return Math.max(1, Math.round(km * 1000)) + ' m away';
+    return km.toFixed(1) + ' km away';
+  }
+
+  function clearClosestMarkers() {
+    document.querySelectorAll('.location-picker-card').forEach(function (card) {
+      card.classList.remove('location-picker-card--closest');
+      var tag = card.querySelector('.location-picker-card__closest-tag');
+      if (tag) tag.hidden = true;
+    });
+  }
+
+  function markClosestLocation(card, distanceKm) {
+    clearClosestMarkers();
+    if (!card) return;
+
+    var index = card.getAttribute('data-location-index');
+    if (index == null) return;
+
+    var distLabel = formatClosestDistance(distanceKm);
+    document
+      .querySelectorAll('.location-picker-card[data-location-index="' + index + '"]')
+      .forEach(function (el) {
+        el.classList.add('location-picker-card--closest');
+        var tag = el.querySelector('.location-picker-card__closest-tag');
+        if (tag) {
+          tag.hidden = false;
+          tag.textContent = distLabel ? 'Closest · ' + distLabel : 'Closest to you';
+        }
+      });
+  }
+
+  function setNearbyButtonState(btn, state, message) {
+    if (!btn) return;
+
+    var defaultLabel = btn.getAttribute('data-default-label') || 'Find closest location';
+    var label = btn.querySelector('.location-picker__nearby-label');
+    btn.disabled = state === 'loading';
+    btn.classList.toggle('is-loading', state === 'loading');
+    btn.classList.toggle('is-error', state === 'error');
+
+    if (!label) return;
+    if (state === 'loading') {
+      label.textContent = 'Locating…';
+      return;
+    }
+    if (state === 'error' && message) {
+      label.textContent = message;
+      return;
+    }
+    label.textContent = defaultLabel;
+  }
+
+  function resetNearbyButtonState() {
+    setNearbyButtonState(document.getElementById('locationPickerNearbyBtn'), 'idle');
+  }
+
+  function findClosestPickerLocation() {
+    var picker = getPicker();
+    var btn = document.getElementById('locationPickerNearbyBtn');
+    if (!picker) return;
+
+    var cards = getCards(picker);
+    if (!cards.length) return;
+
+    if (!navigator.geolocation) {
+      setNearbyButtonState(btn, 'error', 'Not supported');
+      setTimeout(resetNearbyButtonState, 3200);
+      return;
+    }
+
+    setNearbyButtonState(btn, 'loading');
+    clearClosestMarkers();
+    setScrollSelectSuppressed(true);
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        var result = findClosestLocationCard(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          cards
+        );
+
+        if (!result) {
+          setNearbyButtonState(btn, 'error', 'No locations found');
+          setScrollSelectSuppressed(false);
+          setTimeout(resetNearbyButtonState, 3200);
+          return;
+        }
+
+        setNearbyButtonState(btn, 'idle');
+        markClosestLocation(result.card, result.distanceKm);
+        selectLocationCard(result.card, { behavior: 'smooth' });
+        setTimeout(function () {
+          setScrollSelectSuppressed(false);
+          updateNavButtons(picker);
+        }, 400);
+      },
+      function (err) {
+        var msg = 'Location denied';
+        if (err && err.code === 2) msg = 'Unavailable';
+        if (err && err.code === 3) msg = 'Timed out';
+        setNearbyButtonState(btn, 'error', msg);
+        setScrollSelectSuppressed(false);
+        setTimeout(resetNearbyButtonState, 3500);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  }
+
   function bindPickerEvents(picker, signal) {
+    var nearbyBtn = document.getElementById('locationPickerNearbyBtn');
+    if (nearbyBtn) {
+      nearbyBtn.addEventListener(
+        'click',
+        function (e) {
+          e.preventDefault();
+          findClosestPickerLocation();
+        },
+        { signal: signal }
+      );
+    }
+
     picker.addEventListener(
       'click',
       function (e) {
@@ -722,6 +905,11 @@
 
     document.querySelectorAll('.location-picker__list, .location-picker .locations').forEach(function (track) {
       removeInfiniteClones(track);
+      track.scrollLeft = 0;
+      track.style.scrollSnapType = '';
+      track.style.scrollBehavior = '';
+      delete track.dataset.pickerSnap;
+      delete track.dataset.pickerScrollBehavior;
     });
 
     ['locationNavLeft', 'locationNavRight'].forEach(function (id) {
@@ -731,6 +919,7 @@
       btn.style.opacity = '';
       btn.style.pointerEvents = '';
     });
+    resetNearbyButtonState();
   }
 
   function initLocationPickerNow() {
@@ -752,10 +941,6 @@
     bindCarouselHandlers(picker, track, pickerAbort.signal);
     observeContactSlide(picker, pickerAbort.signal);
 
-    if (typeof window.updateLocationStatuses === 'function') {
-      window.updateLocationStatuses();
-    }
-
     whenCarouselReady(track, function () {
       finalizePickerAlignment(picker, track);
     });
@@ -767,25 +952,29 @@
     }, 650);
   }
 
-  function initLocationPicker() {
+  function schedulePickerInit(delay) {
     if (initScheduled) {
       clearTimeout(initScheduled);
     }
     initScheduled = setTimeout(function () {
       initScheduled = null;
-      initLocationPickerNow();
-    }, 0);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          initLocationPickerNow();
+        });
+      });
+    }, typeof delay === 'number' ? delay : 80);
   }
 
-  function registerBarbaLifecycle() {
-    if (!window.TTMSBarba) return;
-    window.TTMSBarba.register(initLocationPicker);
+  function initLocationPicker() {
+    schedulePickerInit(80);
   }
 
   window.selectLocationCard = selectLocationCard;
   window.initLocationPicker = initLocationPicker;
   window.destroyLocationPicker = destroyLocationPicker;
   window.scrollPickerLocations = scrollToAdjacentCard;
+  window.findClosestPickerLocation = findClosestPickerLocation;
   window.getVisibleLocation = function () {
     var selected = document.querySelector(
       '.location-picker-card.location-picker-card--selected:not([data-picker-clone])'
@@ -794,15 +983,15 @@
     return selected.querySelector('.location-picker-card__address') || selected.querySelector('.locbtn[data-lat]');
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
+  function bootLocationPicker() {
+    if (getPicker()) {
       initLocationPicker();
-      registerBarbaLifecycle();
-    });
-  } else {
-    initLocationPicker();
-    registerBarbaLifecycle();
+    }
   }
 
-  document.addEventListener('menuReelsFlattened', initLocationPicker);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootLocationPicker);
+  } else {
+    bootLocationPicker();
+  }
 })();

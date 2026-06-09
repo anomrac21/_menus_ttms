@@ -27,7 +27,6 @@
 
     /* Page overlays (above header) */
     --ttms-z-search: 200;
-    --ttms-z-cart: 250;
     --ttms-z-card-controls: 8;
 
     /* Side panels */
@@ -39,6 +38,8 @@
     --ttms-z-modal: 10050;
     --ttms-z-ads-reels-overlay: 10050;
     --ttms-z-reels-item-modal: 10070;
+    --ttms-z-cart: 10080;
+    --ttms-z-table-modal: 10085;
     --ttms-z-menu-image-upload: 10090;
 
     /* Toasts & prompts */

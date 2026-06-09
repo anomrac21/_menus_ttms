@@ -1,0 +1,14 @@
+{{- $buildOpts := dict "minify" (ne hugo.Environment "development") -}}
+{{- range slice "js/location-status.js" "js/location-navigation.js" -}}
+  {{- with resources.Get . -}}
+    {{- if eq hugo.Environment "development" -}}
+      {{- with . | js.Build -}}
+        <script src="{{ .RelPermalink }}" defer></script>
+      {{- end -}}
+    {{- else -}}
+      {{- with . | js.Build $buildOpts | fingerprint -}}
+        <script src="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous" defer></script>
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

@@ -10,7 +10,7 @@
     --ttms-font-weight-bold: 700;
     --ttms-text-xs: 0.75rem;
     --ttms-text-sm: 0.875rem;
-    --ttms-text-base: 1rem;
+    --ttms-text-base: 1em;
     --ttms-text-lg: 1.125rem;
     --ttms-leading-tight: 1.25;
     --ttms-leading-normal: 1.45;
@@ -54,7 +54,7 @@ p,
 .hero-content p,
 .hero_logo_container .hero-intro,
 .hero_logo_container .hero-intro p {
-    font-size: var(--ttms-text-base);
+    font-size: var(--ttms-text-xs);
     line-height: var(--ttms-leading-relaxed);
 }
 

@@ -326,6 +326,7 @@
     if (empty) empty.classList.add('hidden');
     if (emptyState) emptyState.classList.add('hidden');
     inst.root.classList.remove('menu-smash-pass--no-photos');
+    updateVoteActions(inst);
   }
 
   function showEmpty(inst) {
@@ -340,11 +341,13 @@
       if (empty) empty.classList.add('hidden');
       if (emptyState) emptyState.classList.remove('hidden');
       bindItemAddPhoto(inst);
+      updateVoteActions(inst);
       return;
     }
     inst.root.classList.remove('menu-smash-pass--no-photos');
     if (emptyState) emptyState.classList.add('hidden');
     if (empty) empty.classList.remove('hidden');
+    updateVoteActions(inst);
   }
 
   function showReel(inst) {
@@ -357,6 +360,51 @@
     if (emptyState) emptyState.classList.add('hidden');
     if (reel) reel.classList.remove('hidden');
     inst.root.classList.remove('menu-smash-pass--no-photos');
+    updateVoteActions(inst);
+  }
+
+  function isModalSmashPass(inst) {
+    return !!(inst && inst.root && inst.root.classList.contains('menu-smash-pass--modal'));
+  }
+
+  function hasVoteActions(inst) {
+    return !!(inst && !inst.isItemScoped);
+  }
+
+  function updateVoteActions(inst) {
+    if (!hasVoteActions(inst)) return;
+    var actions = q(inst, '.menu-smash-pass__actions');
+    var hint = q(inst, '.menu-smash-pass__vote-hint');
+    var reel = q(inst, '.menu-smash-pass__reel');
+    var visible =
+      !!inst.items.length &&
+      reel &&
+      !reel.classList.contains('hidden') &&
+      !inst.root.classList.contains('menu-smash-pass--no-photos');
+
+    if (actions) actions.classList.toggle('hidden', !visible);
+    if (hint) hint.classList.toggle('hidden', !visible);
+    if (actions) {
+      actions.querySelectorAll('[data-smash-action]').forEach(function (btn) {
+        btn.disabled = inst.busy || !visible;
+      });
+    }
+  }
+
+  function bindVoteActions(inst) {
+    if (!hasVoteActions(inst) || inst.root._ttmsVoteActionsBound) return;
+    inst.root._ttmsVoteActionsBound = true;
+
+    inst.root.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-smash-action]');
+      if (!btn || !inst.root.contains(btn) || inst.busy) return;
+      var action = btn.getAttribute('data-smash-action');
+      if (action === 'like') {
+        commitVote(inst, 'like', 'like');
+      } else if (action === 'dislike') {
+        commitVote(inst, 'dislike', 'dislike');
+      }
+    });
   }
 
   function updateProgress(inst) {
@@ -435,7 +483,6 @@
     var srcPath = isLocalItem(item) ? normalizeImagePath(item.url || '') : '';
     var isDraft = srcPath.indexOf('draft-assets/') === 0;
     var title = menuItemTitle(item.menu_item_path);
-    var pathLabel = item.menu_item_path || '—';
     var likes = item.like_count != null ? item.like_count : item.likeCount || 0;
     var dislikes = item.dislike_count != null ? item.dislike_count : item.dislikeCount || 0;
     var userVote = getUserVote(item);
@@ -450,17 +497,16 @@
           : ' is-unrated';
 
     var infoHtml = '';
+    var itemHref = !local && item.menu_item_path ? menuItemHref(item.menu_item_path) : '';
     if (!compact) {
       infoHtml =
         '<div class="menu-smash-pass-card__info">' +
         '<h4 class="menu-smash-pass-card__title">' +
+        '<a class="menu-smash-pass-card__title-link" href="' +
+        escapeHtml(itemHref) +
+        '">' +
         escapeHtml(title) +
-        '</h4>' +
-        '<a class="menu-smash-pass-card__path" href="' +
-        escapeHtml(menuItemHref(item.menu_item_path)) +
-        '" target="_blank" rel="noopener">' +
-        escapeHtml(pathLabel) +
-        '</a>' +
+        '</a></h4>' +
         '<div class="menu-smash-pass-card__counts">' +
         '<span class="menu-smash-pass-card__likes" data-count="likes">♥ ' +
         likes +
@@ -490,11 +536,12 @@
       escapeHtml(item.id) +
       '"' +
       (local ? ' data-local-image="1"' : '') +
+      (itemHref ? ' data-menu-item-href="' + escapeHtml(itemHref) + '"' : '') +
       '>' +
       (local
         ? ''
-        : '<div class="menu-smash-pass-card__stamp menu-smash-pass-card__stamp--smash" aria-hidden="true">LIKE</div>' +
-          '<div class="menu-smash-pass-card__stamp menu-smash-pass-card__stamp--pass" aria-hidden="true">PASS</div>') +
+        : '<div class="menu-smash-pass-card__stamp menu-smash-pass-card__stamp--smash" aria-hidden="true"><i class="fa fa-heart"></i> LIKE</div>' +
+          '<div class="menu-smash-pass-card__stamp menu-smash-pass-card__stamp--pass" aria-hidden="true"><i class="fa fa-thumbs-down"></i> PASS</div>') +
       '<div class="menu-smash-pass-card__media">' +
       imgHtml +
       '</div>' +
@@ -560,6 +607,7 @@
     var stack = q(inst, '.menu-smash-pass__stack');
     var card = stack && stack.querySelector('.menu-smash-pass-card.is-top');
     inst.busy = true;
+    updateVoteActions(inst);
 
     if (card) {
       var dx = direction === 'like' ? window.innerWidth * 0.35 : -window.innerWidth * 0.35;
@@ -570,6 +618,7 @@
       advanceDeck(inst);
       renderStack(inst);
       inst.busy = false;
+      updateVoteActions(inst);
     });
   }
 
@@ -586,6 +635,7 @@
     var stack = q(inst, '.menu-smash-pass__stack');
     var card = stack && stack.querySelector('.menu-smash-pass-card.is-top');
     inst.busy = true;
+    updateVoteActions(inst);
 
     if (card) {
       var dx = direction === 'like' ? window.innerWidth * 0.35 : -window.innerWidth * 0.35;
@@ -612,6 +662,7 @@
         })
         .finally(function () {
           inst.busy = false;
+          updateVoteActions(inst);
         });
     });
   }
@@ -645,6 +696,79 @@
     }, 420);
   }
 
+  function isSmashPassNonDragTarget(el) {
+    return !!(el && el.closest && el.closest('.menu-smash-pass-card__counts'));
+  }
+
+  function hasCommunityPhotos(inst) {
+    if (!inst || !inst.items || !inst.items.length) return false;
+    for (var i = 0; i < inst.items.length; i += 1) {
+      if (!isLocalItem(inst.items[i])) return true;
+    }
+    return false;
+  }
+
+  function isPointerTapOnCard(inst, card, e) {
+    if (!inst.dragState || inst.dragState.card !== card) return false;
+    var dx = e.clientX - inst.dragState.startX;
+    var dy = e.clientY - inst.dragState.startY;
+    if (Math.abs(dx) >= DRAG_LOCK_THRESHOLD || Math.abs(dy) >= DRAG_LOCK_THRESHOLD) {
+      return false;
+    }
+    if (isSmashPassNonDragTarget(e.target)) return false;
+    return true;
+  }
+
+  function isLocalItemOrderTap(inst, card, e) {
+    if (!inst.isItemScoped || !card.classList.contains('is-local')) return false;
+    if (isModalSmashPass(inst)) return false;
+    return isPointerTapOnCard(inst, card, e);
+  }
+
+  function isItemCommunityPhotoOrderTap(inst, card, e) {
+    if (!inst.isItemScoped || card.classList.contains('is-local')) return false;
+    if (isModalSmashPass(inst)) return false;
+    return isPointerTapOnCard(inst, card, e);
+  }
+
+  function isSmashPassTap(inst, card, e) {
+    if (!isPointerTapOnCard(inst, card, e)) return false;
+    return !!card.getAttribute('data-menu-item-href');
+  }
+
+  function openItemOrderFromSmashPass(inst, e) {
+    var itemCard = getLocalImageSource(inst);
+    if (!itemCard) return;
+    var url = itemCard.getAttribute('data-item-url');
+    if (!url) return;
+    if (typeof window.openReelsMenuItemOrder === 'function') {
+      window.openReelsMenuItemOrder(itemCard, url, e);
+    } else if (typeof window.toggleItemExpansion === 'function') {
+      window.toggleItemExpansion(itemCard, url, e);
+    }
+  }
+
+  function navigateSmashPassCardItem(card) {
+    if (!card || card.classList.contains('is-local')) return;
+    var href = card.getAttribute('data-menu-item-href');
+    if (!href || href === '#') return;
+    if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+      window.ensureMenuReelsItemModalClosed();
+    }
+    if (window.TTMSBarba && typeof window.TTMSBarba.navigate === 'function') {
+      window.TTMSBarba.navigate(href);
+      return;
+    }
+    if (typeof window.barba !== 'undefined' && typeof window.barba.go === 'function') {
+      try {
+        var url = new URL(href, window.location.href);
+        window.barba.go(url.pathname + url.search + url.hash);
+        return;
+      } catch (err) {}
+    }
+    window.location.assign(href);
+  }
+
   function bindCardDrag(inst, card) {
     if (!card || card._ttmsSmashDragBound) return;
     card._ttmsSmashDragBound = true;
@@ -662,7 +786,7 @@
 
     function onPointerDown(e) {
       if (inst.busy || e.button > 0) return;
-      if (e.target.closest('.menu-smash-pass-card__path')) return;
+      if (isSmashPassNonDragTarget(e.target)) return;
       inst.dragState = {
         card: card,
         startX: e.clientX,
@@ -702,6 +826,13 @@
       if (!inst.dragState || inst.dragState.card !== card) return;
 
       if (!inst.dragState.locked) {
+        if (isLocalItemOrderTap(inst, card, e) || isItemCommunityPhotoOrderTap(inst, card, e)) {
+          suppressCardClickAfterSwipe(card);
+          openItemOrderFromSmashPass(inst, e);
+        } else if (isSmashPassTap(inst, card, e) && !inst.isItemScoped) {
+          suppressCardClickAfterSwipe(card);
+          navigateSmashPassCardItem(card);
+        }
         clearCardDragState(inst, card, null);
         return;
       }
@@ -711,6 +842,20 @@
       try {
         card.releasePointerCapture(e.pointerId);
       } catch (err) {}
+
+      if (
+        inst.isItemScoped &&
+        card.classList.contains('is-local') &&
+        !hasCommunityPhotos(inst)
+      ) {
+        card.classList.add('is-snapping-back');
+        clearCardDragStyles(card);
+        setTimeout(function () {
+          card.classList.remove('is-snapping-back');
+        }, 280);
+        inst.dragState = null;
+        return;
+      }
 
       if (dx > SWIPE_THRESHOLD) {
         suppressCardClickAfterSwipe(card);
@@ -760,6 +905,7 @@
     var topCard = stack.querySelector('.menu-smash-pass-card.is-top');
     if (topCard) bindCardDrag(inst, topCard);
     hydrateStackImages(stack);
+    updateVoteActions(inst);
   }
 
   function hydrateStackImages(stack) {
@@ -853,6 +999,7 @@
     if (reel) reel.classList.add('hidden');
     if (progress) progress.textContent = '';
     inst.root.classList.add('menu-smash-pass--no-photos');
+    updateVoteActions(inst);
   }
 
   function destroyInstance(inst) {
@@ -887,6 +1034,7 @@
     if (!inst.root || !inst.root.isConnected) return;
     if (generation !== globalGen) return;
 
+    bindVoteActions(inst);
     inst.gen += 1;
     var localGen = inst.gen;
     inst.busy = false;
@@ -961,11 +1109,34 @@
     window.TTMSBarba.register(initMenuSmashPass);
   }
 
+  function buildVoteActionsHtml() {
+    return (
+      '<p class="menu-smash-pass__vote-hint hidden">Swipe left or right, or tap Pass / Like</p>' +
+      '<div class="menu-smash-pass__actions hidden" role="group" aria-label="Rate this photo">' +
+      '<button type="button" class="contact-cta menu-smash-pass__btn menu-smash-pass__btn--pass" data-smash-action="dislike" aria-label="Pass this photo">' +
+      '<span class="contact-cta__icon" aria-hidden="true"><i class="fa fa-thumbs-down"></i></span>' +
+      '<span class="contact-cta__title">Pass</span>' +
+      '</button>' +
+      '<button type="button" class="contact-cta menu-smash-pass__btn menu-smash-pass__btn--smash" data-smash-action="like" aria-label="Like this photo">' +
+      '<span class="contact-cta__icon" aria-hidden="true"><i class="fa fa-heart"></i></span>' +
+      '<span class="contact-cta__title">Like</span>' +
+      '</button>' +
+      '</div>'
+    );
+  }
+
   function buildMenuSmashPassMarkup(options) {
     options = options || {};
     var client = options.clientId || clientIdForRoot(null) || '_ttms_menu_demo';
     var path = options.menuItemPath || '';
-    var extra = options.modal ? ' menu-smash-pass--modal' : '';
+    var isModal = !!options.modal;
+    var extra = isModal ? ' menu-smash-pass--modal' : '';
+    var showVoteUi = !path;
+    var reelInner =
+      (showVoteUi ? '<p class="menu-smash-pass__progress"></p>' : '') +
+      (showVoteUi ? buildVoteActionsHtml() : '') +
+      '<div class="menu-smash-pass__stack" aria-live="polite"></div>';
+
     return (
       '<div class="menu-smash-pass menu-item-smash-pass' +
       extra +
@@ -978,7 +1149,7 @@
       '<p class="menu-smash-pass__empty hidden">No community photos yet — check back after guests upload and admins approve.</p>' +
       (path ? buildItemEmptyStateHtml() : '') +
       '<div class="menu-smash-pass__reel hidden">' +
-      '<div class="menu-smash-pass__stack" aria-live="polite"></div>' +
+      reelInner +
       '</div></div>'
     );
   }

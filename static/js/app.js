@@ -285,35 +285,6 @@ function showAppleMsg(x) {
     }
   }
 
-  function toggleDashboard(){
-    var dashboard = document.getElementById("dashboard");
-    if(dashboard.classList.contains('loader-hide-left')){
-      dashboard.classList.remove('loader-hide-left');
-    }else{
-      dashboard.classList.add('loader-hide-left');
-    }
-  }
-  
-  function closeDashboard(){
-    var dashboard = document.getElementById("dashboard");
-    dashboard.classList.add('loader-hide-left');
-  }
-
-  function toggleDelivery(ele){
-    if(ele.nextElementSibling.classList.contains('hide')){
-      ele.nextElementSibling.classList.remove('hide');
-    }else{
-      ele.nextElementSibling.classList.add('hide');
-    }
-  }
-
-  window.toggleDelivery = toggleDelivery;
-  
-  function closeDelivery(){
-    var fooddrop = document.getElementById("fooddropBtn");
-    fooddrop.classList.add('hide');
-  }
-
   // Function to reload app.js functionality after DOM changes
   function reloadAppJS() {
     console.log('reloadAppJS called');
@@ -333,17 +304,3 @@ function showAppleMsg(x) {
   }
 
   window.reloadAppJS = reloadAppJS;
-
-  function registerBarbaReinit() {
-    if (window.TTMSBarba) {
-      window.TTMSBarba.register(reloadAppJS);
-    }
-  }
-
-  if (window.TTMSBarba) {
-    registerBarbaReinit();
-  } else if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', registerBarbaReinit);
-  } else {
-    registerBarbaReinit();
-  }

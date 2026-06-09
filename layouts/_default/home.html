@@ -32,11 +32,13 @@
       {{ if not (or (in $titleurl "admins") (in $titleurl "admin")) }}
         {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
           {{/* Only render the first "Promotions" section found to avoid duplicates */}}
-          <section class="menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}">
+          {{ $promoCount := len .RegularPages }}
+          <section class="menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-item-count="{{ $promoCount }}">
             <a class="menu-anchor" id="{{ $title }}"></a>
             <h2 class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
               <a href="{{ $titleurl }}">{{ $title }}</a>
             </h2>
+            <p class="menu-header__item-count">{{ $promoCount }} {{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</p>
           </section>
           {{ partial "ads/homepageclientads.html" . }} 
           {{ $advertisementsRendered = true }}
@@ -54,7 +56,8 @@
           {{ if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods") (in $titleurl "admins") (in $titleurl "admin")) }}
               <div class="main-menu-bg {{ .LinkTitle }}">
                 <div class="main-menu {{ .LinkTitle }} item">
-                  <section class="menu-header menu-reels-slide" data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
+                  {{ $itemCount := len .RegularPages }}
+                  <section class="menu-header menu-reels-slide" data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     <a class="menu-header__link" href="{{ .RelPermalink }}">
                       {{ if .Params.images.top }}
@@ -67,6 +70,7 @@
                             <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
                           {{ end }}
                         </h2>
+                        <p class="menu-header__item-count">{{ $itemCount }} {{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</p>
                       </div>
                       <div class="menu-summary item">
                         {{ .Summary }}
@@ -197,8 +201,8 @@
                             data-ingredients="{{ (.Params.ingredients | default (slice)) | jsonify }}"
                             data-cookingmethods="{{ (.Params.cookingmethods | default (slice)) | jsonify }}"
                             data-types="{{ (.Params.types | default (slice)) | jsonify }}"
-                            data-events="{{ (.Params.events | default (slice)) | jsonify }}"
-                            onclick="toggleItemExpansion(this, '{{ .RelPermalink }}', event);">
+                            data-events="{{ (.Params.events | default (slice)) | jsonify }}">
+                            {{ partial "components/menu-add-photo-btn.html" . }}
                             {{ partial "components/menu-favorite-btn.html" . }}
                             {{- if site.Params.menuImageService.enabled -}}
                             {{ partial "components/menu-smash-pass.html" (dict "menuItemPath" .RelPermalink) }}
