@@ -1,1 +1,25 @@
-<div id="search" class="hide-search"><input type="search" oninput="liveSearch();" id="searchbox" aria-label="Search menu items"><a id="searchClose" class="close" onclick="toggleSearch();" aria-label="Close search"><img class="icon center" src="https://cdn.ttmenus.com/icons/ui/close.svg" alt="Close search"></a></div>
+<div id="search" class="menu-search-bar hide-search" role="search" aria-label="Menu search">
+  <div class="menu-search-bar__shell">
+    <label class="menu-search-bar__field" for="searchbox">
+      <span class="menu-search-bar__leading" aria-hidden="true">
+        <svg class="menu-search-bar__search-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-3.5-3.5"/>
+        </svg>
+      </span>
+      <input
+        type="search"
+        id="searchbox"
+        class="menu-search-bar__input"
+        placeholder="Search dishes, ingredients…"
+        autocomplete="off"
+        enterkeyhint="search"
+        oninput="liveSearch();"
+        aria-label="Search menu items"
+      >
+    </label>
+    <button type="button" id="searchClose" class="menu-search-bar__close" onclick="toggleSearch();" aria-label="Close search">
+      <img class="menu-search-bar__close-icon" src="https://cdn.ttmenus.com/icons/ui/close.svg" alt="" width="20" height="20">
+    </button>
+  </div>
+</div>

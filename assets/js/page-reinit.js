@@ -74,6 +74,9 @@
     if (document.querySelector('.location-picker') && typeof window.initLocationPicker === 'function') {
       window.initLocationPicker();
     }
+    if (typeof window.consumeOpenLocationPickerIntent === 'function') {
+      setTimeout(window.consumeOpenLocationPickerIntent, 180);
+    }
   });
 
   if (window.TTMSBarba) {

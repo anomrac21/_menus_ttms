@@ -555,6 +555,7 @@
         const settings = document.getElementById('footerSettings');
         if (settings) {
             settings.classList.add('hide');
+            settings.setAttribute('aria-hidden', 'true');
         }
 
         // Hide order modal
@@ -616,6 +617,9 @@
             footerBtns.classList.remove('smallfont');
             footerBtns.classList.add('grad1');
             footerBtns.classList.remove('grad2');
+            if (typeof window.updateCartLocationDisplay === 'function') {
+                window.updateCartLocationDisplay();
+            }
         } else {
             closeCart();
         }
@@ -647,21 +651,30 @@
     function toggleFooterAccessibility() {
         const settings = document.getElementById('footerSettings');
         const footerBtns = document.getElementById('footerBtns');
+        const settingsToggle = footerBtns && footerBtns.querySelector('.footer-dock__action--settings');
         
         if (!settings || !footerBtns) return;
 
         if (settings.classList.contains('hide')) {
             settings.classList.remove('hide');
+            settings.setAttribute('aria-hidden', 'false');
             footerBtns.classList.add('bigfont');
             footerBtns.classList.remove('smallfont');
             footerBtns.classList.add('grad1');
             footerBtns.classList.remove('grad2');
+            if (settingsToggle) {
+                settingsToggle.setAttribute('aria-expanded', 'true');
+            }
         } else {
             settings.classList.add('hide');
+            settings.setAttribute('aria-hidden', 'true');
             footerBtns.classList.add('grad2');
             footerBtns.classList.remove('grad1');
             footerBtns.classList.remove('bigfont');
             footerBtns.classList.add('smallfont');
+            if (settingsToggle) {
+                settingsToggle.setAttribute('aria-expanded', 'false');
+            }
         }
     }
 

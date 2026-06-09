@@ -115,10 +115,39 @@ const AuthMiddleware = {
     if (!el) return;
 
     const hubAccount = 'https://www.ttmenus.com/account/';
+    const labelEl = el.querySelector('.footer-settings-popover__btn-label');
+    const iconEl = el.querySelector('.footer-settings-popover__btn-icon i');
+
+    function setLinkContent(iconClass, label) {
+      if (iconEl) {
+        iconEl.className = 'fa ' + iconClass;
+      } else {
+        el.innerHTML =
+          '<span class="footer-settings-popover__btn-icon" aria-hidden="true"><i class="fa ' +
+          iconClass +
+          '"></i></span><span class="footer-settings-popover__btn-label">' +
+          label +
+          '</span>';
+        return;
+      }
+      if (labelEl) {
+        labelEl.textContent = label;
+      } else {
+        el.appendChild(
+          Object.assign(document.createElement('span'), {
+            className: 'footer-settings-popover__btn-label',
+            textContent: label,
+          })
+        );
+      }
+    }
+
+    el.removeAttribute('target');
+    el.removeAttribute('rel');
 
     if (!AuthClient.isAuthenticated()) {
       el.href = '/login/';
-      el.innerHTML = '<i class="fa fa-user"></i> Login';
+      setLinkContent('fa-user', 'Login');
       return;
     }
 
@@ -129,12 +158,12 @@ const AuthMiddleware = {
 
     if (hasAdminAccess) {
       el.href = '/dashboard/';
-      el.innerHTML = '<i class="fa fa-th-large"></i> Dashboard';
+      setLinkContent('fa-th-large', 'Dashboard');
     } else {
       el.href = hubAccount;
       el.target = '_blank';
       el.rel = 'noopener noreferrer';
-      el.innerHTML = '<i class="fa fa-user"></i> My account';
+      setLinkContent('fa-user', 'My account');
     }
   },
 

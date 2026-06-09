@@ -1,17 +1,13 @@
-<div id="footerSettings" class="hide">
-	<div class="settings-panel">
-		<!-- Login / Dashboard: Dashboard shown only for users with admin/client access; otherwise Login -->
-		<a id="settingsLoginOrDashboard" href="/login/" class="btn settings-btn" data-aos="zoom-in">
-			<i class="fa fa-user"></i> Login
-		</a>
-		
-		<!-- Sound Toggle
-		<a id="btn_soundoff_settings" class="btn settings-btn hide" onclick="toggleSound();" data-aos="zoom-in">
-			<i class="fa fa-volume-off"></i> Sound Off
-		</a>
-		<a id="btn_soundon_settings" class="btn settings-btn" onclick="toggleSound();" data-aos="zoom-in">
-			<i class="fa fa-volume-up"></i> Sound On
-		</a> -->
+<div id="footerSettings" class="hide" aria-hidden="true">
+	<div class="settings-panel footer-settings-popover" role="dialog" aria-label="Menu settings">
+		<div class="footer-settings-popover__header">
+			<span class="footer-settings-popover__title">Quick settings</span>
+		</div>
+		<div class="footer-settings-popover__body">
+			<a id="settingsLoginOrDashboard" href="/login/" class="btn settings-btn footer-settings-popover__btn" data-aos="zoom-in">
+				<span class="footer-settings-popover__btn-icon" aria-hidden="true"><i class="fa fa-user"></i></span>
+				<span class="footer-settings-popover__btn-label">Login</span>
+			</a>
+		</div>
 	</div>
 </div>
-

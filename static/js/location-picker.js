@@ -987,7 +987,62 @@
     if (getPicker()) {
       initLocationPicker();
     }
+    consumeOpenLocationPickerIntent();
   }
+
+  function scrollToLocationPickerSlide(options) {
+    options = options || {};
+    var behavior = options.behavior || 'smooth';
+    var slide = document.querySelector('.menu-reels-slide--contact');
+    if (!slide) return false;
+    slide.scrollIntoView({ block: 'start', behavior: behavior });
+    return true;
+  }
+
+  function consumeOpenLocationPickerIntent() {
+    var shouldOpen = false;
+    try {
+      shouldOpen = sessionStorage.getItem('ttmenus_open_location_picker') === '1';
+      if (shouldOpen) sessionStorage.removeItem('ttmenus_open_location_picker');
+    } catch (e) {
+      return false;
+    }
+    if (!shouldOpen) return false;
+
+    var scrolled = scrollToLocationPickerSlide({ behavior: 'smooth' });
+    if (scrolled && typeof window.initLocationPicker === 'function') {
+      window.initLocationPicker();
+    }
+    return scrolled;
+  }
+
+  window.openLocationPickerFromCart = function () {
+    if (typeof window.closeCart === 'function') {
+      window.closeCart();
+    } else if (typeof window.toggleCart === 'function') {
+      var cart = document.getElementById('cart');
+      if (cart && !cart.classList.contains('cart-hidden')) {
+        window.toggleCart();
+      }
+    }
+
+    if (scrollToLocationPickerSlide({ behavior: 'smooth' })) {
+      if (typeof window.initLocationPicker === 'function') {
+        window.initLocationPicker();
+      }
+      return;
+    }
+
+    try {
+      sessionStorage.setItem('ttmenus_open_location_picker', '1');
+    } catch (e) {
+      /* ignore */
+    }
+    window.location.href = '/';
+  };
+
+  window.scrollToLocationPickerSlide = scrollToLocationPickerSlide;
+  window.consumeOpenLocationPickerIntent = consumeOpenLocationPickerIntent;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bootLocationPicker);

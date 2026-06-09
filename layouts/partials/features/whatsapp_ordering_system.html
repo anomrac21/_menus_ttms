@@ -431,13 +431,55 @@ function selectLocation(whatsappNumber) {
 
 // Function to update cart location display
 function updateCartLocationDisplay() {
-	const locationSelect = document.getElementById('locationSelect');
-	if (locationSelect && locationSelect.value) {
-		const selectedOption = locationSelect.options[locationSelect.selectedIndex];
-		const address = selectedOption.getAttribute('data-address');
-		if (address) {
-			console.log('🛒 Cart location updated to:', address);
+	const addressEl = document.getElementById('cartLocationAddress');
+	const changeBtn = document.getElementById('cartLocationChangeBtn');
+	let address = '';
+
+	if (window.currentOrderLocation && window.currentOrderLocation.address) {
+		address = window.currentOrderLocation.address;
+	} else {
+		const locationSelect = document.getElementById('locationSelect');
+		if (locationSelect && locationSelect.selectedIndex > 0) {
+			const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+			address = selectedOption.getAttribute('data-address') || selectedOption.text || '';
 		}
+	}
+
+	if (!address) {
+		try {
+			address = localStorage.getItem(LOCATION_ADDRESS_STORAGE_KEY) || '';
+		} catch (error) {
+			address = '';
+		}
+	}
+
+	let displayAddress = address || 'Select a location';
+	if (typeof myTable !== 'undefined' && myTable && String(myTable).trim() !== '') {
+		displayAddress = (address || 'Current location') + ' · Table ' + myTable;
+	}
+
+	if (addressEl) {
+		addressEl.textContent = displayAddress;
+	}
+	if (changeBtn) {
+		changeBtn.setAttribute(
+			'aria-label',
+			address ? 'Change location: ' + address : 'Choose a location'
+		);
+	}
+
+	const cartLocationDiv = document.getElementById('cartLocation');
+	if (cartLocationDiv) {
+		if (address) {
+			cartLocationDiv.textContent = displayAddress;
+			cartLocationDiv.classList.add('active');
+		} else {
+			cartLocationDiv.classList.remove('active');
+		}
+	}
+
+	if (address) {
+		console.log('🛒 Cart location updated to:', displayAddress);
 	}
 }
 
@@ -1766,7 +1808,6 @@ function buildOrderTextSync(){
 	var itemSides='';
 	var itemAdds='';
 	var itemMods='';
-	var orderHtml='<tr><th id="itemNo">#</th><th>Size</th><th>Item</th><th>Amt</th><th>Cost</th><th style="text-align: center;"><a style="font-size: medium;" onclick="removeAllItems();"><i class="fa fa-trash-o"></i></a></th></tr>';
 
 	for (var i = 0; i <= order.length-1; i++) {
 		// Reset variables for each item
@@ -1839,17 +1880,11 @@ function buildOrderTextSync(){
 			promoText = ' [' + itemPromo.label + ']';
 		}
 		messageBody=messageBody+'#'+(i+1)+' | '+order[i].size+' '+order[i].item+promoText+' | Qty'+order[i].amt+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayMods(i,itemMods)+printArrayAdds(i,itemAdds)+'\n\n';
-
-		//CUSTOM MESSAGE BODY
-		//messageBody='#'+messageBody+(i+1)+' | '+'Qty'+order[i].amt+' | '+order[i].size+' '+order[i].item+' $'+order[i].cost+printArraySides(i,itemSides)+printArrayAdds(i,itemAdds)+printArrayMods(i,itemMods)+'\n';
-		orderHtml = (orderHtml+'<tr><td id="itemNo">'+(i+1)+'</td><td id="itemSize">'+order[i].size+'</td><td id="itemDesc">'+order[i].item+printHtmlArraySides(i,itemSides)+printHtmlArrayMods(i,itemMods)+printHtmlArrayAdds(i,itemAdds)+'\n'+'</td><td>'+order[i].amt+' </td><th id="itemCost">$'+order[i].cost+'</th><td id="itemXBtn"><a onclick="removeItem('+i+');"><i class="fa fa-close"></i></a></td></tr>');
-		// console.log(orderHtml);
 	}
 
 	priceCalc();
 	vatCalc();
 	serviceCalc();
-	document.getElementById("whatsappOrder").innerHTML=orderHtml;
 	
 	// Build card-based UI
 	buildCartCards();
@@ -2050,28 +2085,6 @@ function printArray(arr){
 	return mod;
  }
 
-function printHtmlArraySides(i,itemSides){
-	// Check both new and old formats
-	const hasSides = (order[i].sides && order[i].sides.categories && Object.keys(order[i].sides.categories).length > 0) ||
-	                 (order[i].sides && order[i].sides.length > 0);
-	
-	if (hasSides && itemSides){
-		// Replace newlines with <br> for HTML display
-		const htmlSides = itemSides.replace(/\n/g, '<br>');
-		return ('<br>'+htmlSides);
-	}else return '';
-}
-function printHtmlArrayAdds(i,itemAdds){
-	if (order[i].adds.length>0){
-		return ('<br>'+itemAdds);
-	}else return '';
-}
-function printHtmlArrayMods(i,itemMods){
-	if (order[i].mods.length>0){
-		return ('<br>'+itemMods);
-	}else return '';
-}
-
 function printArraySides(i,itemSides){
 	// Check both new and old formats
 	const hasSides = (order[i].sides && order[i].sides.categories && Object.keys(order[i].sides.categories).length > 0) ||
@@ -2238,26 +2251,6 @@ function setTableNumber(tableNumber) {
 	
 	// Update the cart display if needed
 	updateCartLocationDisplay();
-}
-
-// Function to update cart location display with table info
-function updateCartLocationDisplay() {
-	const cartLocationDiv = document.getElementById('cartLocation');
-	if (cartLocationDiv) {
-		const currentLocation = getVisibleLocation();
-		if (currentLocation) {
-			const locationText = currentLocation.textContent.trim();
-			let displayText = `📍 ${locationText}`;
-			
-			// Add table number if available
-			if (myTable && myTable.trim() !== '') {
-				displayText += ` - Table ${myTable}`;
-			}
-			
-			cartLocationDiv.innerHTML = displayText;
-			cartLocationDiv.classList.add('active');
-		}
-	}
 }
 
 async function confirmWhatsAppOrder(){
@@ -2785,6 +2778,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       }
     }
+
+    updateCartLocationDisplay();
     
     // Add manual trigger for testing
     window.testWhatsAppUpdate = function() {
@@ -3092,18 +3087,23 @@ window.testTableSelection = function() {
 function toggleFooterAccessibility(){
     var settings = document.getElementById("footerSettings");
     var footerBtns = document.getElementById("footerBtns");
+    var settingsToggle = footerBtns && footerBtns.querySelector('.footer-dock__action--settings');
     if(settings.classList.contains('hide')){
       settings.classList.remove('hide');
+      settings.setAttribute('aria-hidden', 'false');
       footerBtns.classList.add('bigfont');
       footerBtns.classList.remove('smallfont');
       footerBtns.classList.add('grad1');
       footerBtns.classList.remove('grad2');
+      if (settingsToggle) settingsToggle.setAttribute('aria-expanded', 'true');
     }else{
       settings.classList.add('hide');
+      settings.setAttribute('aria-hidden', 'true');
       footerBtns.classList.add('grad2');
       footerBtns.classList.remove('grad1');
       footerBtns.classList.remove('bigfont');
       footerBtns.classList.add('smallfont');
+      if (settingsToggle) settingsToggle.setAttribute('aria-expanded', 'false');
     }
   }
 
@@ -3470,18 +3470,6 @@ window.testTablePopulation = function() {
         } else {
             console.log('📍 No location selected');
             number = '{{ site.Params.orderingsystem.whatsapp }}'; // Reset to fallback
-        }
-    }
-
-    // Function to update cart location display
-    function updateCartLocationDisplay() {
-        const locationSelect = document.getElementById('locationSelect');
-        if (locationSelect && locationSelect.value) {
-            const selectedOption = locationSelect.options[locationSelect.selectedIndex];
-            const address = selectedOption.getAttribute('data-address');
-            if (address) {
-                console.log('🛒 Cart location updated to:', address);
-            }
         }
     }
 

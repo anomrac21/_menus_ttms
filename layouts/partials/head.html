@@ -120,10 +120,13 @@
 <link rel="stylesheet" href="/css/custom.css"/>
 <link rel="stylesheet" href="/css/header.css"/>
 <link rel="stylesheet" href="/css/cart.css"/>
+<link rel="stylesheet" href="/css/footer.css"/>
 <link rel="stylesheet" href="/css/contact.css"/>
 <link rel="stylesheet" href="https://cdn.ttmenus.com/css/loader.css"/>
 {{- if $menuPublicSite -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
+<link rel="stylesheet" href="/css/account-dashboard-panel.css"/>
+<link rel="stylesheet" href="/css/dashboard-panel.css"/>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/hero.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/hero-cta.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/slideshow.css") }}
@@ -139,6 +142,8 @@
 {{- end -}}
 {{- else -}}
 <link rel="stylesheet" href="/css/account-dashboard.css"/>
+<link rel="stylesheet" href="/css/account-dashboard-panel.css"/>
+<link rel="stylesheet" href="/css/dashboard-panel.css"/>
 {{- end -}}
 {{ if .Site.Params.notifications.enabled }}
 <link rel="stylesheet" href="/css/notifications.css"/>

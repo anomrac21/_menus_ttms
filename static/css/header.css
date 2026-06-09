@@ -143,8 +143,8 @@
     justify-content: center;
     flex-shrink: 0;
     width: 4.35rem;
-    min-width: 4.35rem !important;
-    height: 4.35rem;
+    min-width: 4rem !important;
+    height: 5rem;
     margin: 0;
     border: 2px solid rgba(255, 255, 255, 0.14);
     text-decoration: none;

@@ -1,12 +1,33 @@
-<div id="footer" >
+<div id="footer">
 	{{ partial "components/settings.html" . }}
-	<!--Cart Short COde-->
 
-	<!--accessibility Short COde-->
-	
-		<div id="footerBtns" class="grad2">
-			<div>
-				<a href="#" role="button" data-dashboard-toggle aria-label="Open menu dashboard"><img class="icon center" src="https://cdn.ttmenus.com/icons/ui/home.svg" alt="Dashboard" loading="lazy"></a> | <a onclick="toggleCart();"><b id="cartcount" class="hide">0</b><img id="carticon" class="icon center" src="https://cdn.ttmenus.com/icons/ui/cart0.svg" alt="Shopping cart" loading="lazy"></a> | <a onclick="toggleSearch();"><img class="icon center" src="https://cdn.ttmenus.com/icons/ui/search.svg" alt="Search" loading="lazy"></a> | <a onclick="toggleFooterAccessibility();"><img class="icon center" src="https://cdn.ttmenus.com/icons/ui/settings.svg" alt="Settings" loading="lazy"></a>
-			</div>
+	<nav id="footerBtns" class="footer-dock grad2" aria-label="Menu quick actions">
+		<div class="footer-dock__bar">
+			<a href="#" class="footer-dock__action" role="button" data-dashboard-toggle aria-label="Open menu dashboard">
+				<span class="footer-dock__icon-wrap" aria-hidden="true">
+					<img class="icon center footer-dock__icon" src="https://cdn.ttmenus.com/icons/ui/home.svg" alt="" loading="lazy" width="24" height="24">
+				</span>
+				<span class="footer-dock__label">Home</span>
+			</a>
+			<a href="#" class="footer-dock__action footer-dock__action--cart" role="button" onclick="toggleCart(); return false;" aria-label="Open shopping cart">
+				<span class="footer-dock__icon-wrap" aria-hidden="true">
+					<b id="cartcount" class="footer-dock__badge hide">0</b>
+					<img id="carticon" class="icon center footer-dock__icon" src="https://cdn.ttmenus.com/icons/ui/cart0.svg" alt="" loading="lazy" width="24" height="24">
+				</span>
+				<span class="footer-dock__label">Cart</span>
+			</a>
+			<a href="#" class="footer-dock__action footer-dock__action--search" role="button" onclick="toggleSearch(); return false;" aria-label="Search menu">
+				<span class="footer-dock__icon-wrap" aria-hidden="true">
+					<img class="icon center footer-dock__icon" src="https://cdn.ttmenus.com/icons/ui/search.svg" alt="" loading="lazy" width="24" height="24">
+				</span>
+				<span class="footer-dock__label">Search</span>
+			</a>
+			<a href="#" class="footer-dock__action footer-dock__action--settings" role="button" onclick="toggleFooterAccessibility(); return false;" aria-label="Open settings" aria-expanded="false" aria-controls="footerSettings">
+				<span class="footer-dock__icon-wrap" aria-hidden="true">
+					<img class="icon center footer-dock__icon" src="https://cdn.ttmenus.com/icons/ui/settings.svg" alt="" loading="lazy" width="24" height="24">
+				</span>
+				<span class="footer-dock__label">Settings</span>
+			</a>
 		</div>
+	</nav>
 </div>

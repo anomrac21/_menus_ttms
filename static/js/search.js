@@ -183,6 +183,15 @@
         applyClassicMenuSearch(searchTerm);
     }
 
+    function setSearchBarOpen(isOpen) {
+        document.body.classList.toggle('menu-search-bar-open', !!isOpen);
+    }
+
+    function syncSearchBarOpenState() {
+        var search = document.getElementById('search');
+        setSearchBarOpen(search && !search.classList.contains('hide-search'));
+    }
+
     function toggleSearch() {
         var search = document.getElementById('search');
         var searchInput = document.getElementById('searchbox');
@@ -190,6 +199,7 @@
 
         if (search.classList.contains('hide-search')) {
             search.classList.remove('hide-search');
+            setSearchBarOpen(true);
             if (searchInput) {
                 try {
                     searchInput.focus({ preventScroll: true });
@@ -199,6 +209,7 @@
             }
         } else {
             search.classList.add('hide-search');
+            setSearchBarOpen(false);
             if (searchInput) {
                 searchInput.value = '';
             }
@@ -216,4 +227,20 @@
             liveSearch();
         }
     });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        var search = document.getElementById('search');
+        if (!search || search.classList.contains('hide-search')) return;
+        toggleSearch();
+    });
+
+    var searchRoot = document.getElementById('search');
+    if (searchRoot && typeof MutationObserver !== 'undefined') {
+        new MutationObserver(syncSearchBarOpenState).observe(searchRoot, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+    }
+    syncSearchBarOpenState();
 })();
