@@ -83,7 +83,7 @@
   position: relative;
   align-items: center;
   flex-shrink: 0;
-  width: 2.5em;
+  min-width: 0;
 }
 
 .dashboard-menu-btn-wrap #dashboardBtn {
@@ -120,10 +120,19 @@ body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--
 /* Signed-in badge on venue logo when category nav is scrolled right */
 .account-badge--on-logo {
   display: none !important;
+  opacity: 0;
+  transform: scale3d(0.82, 0.82, 1);
+  transition:
+    opacity 0.38s var(--ttms-dashboard-slide-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform 0.42s var(--ttms-dashboard-slide-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  backface-visibility: hidden;
 }
 
 body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-logo {
   display: flex !important;
+  opacity: 1;
+  transform: scale3d(1, 1, 1);
+  transition-delay: calc(var(--ttms-dashboard-slide-duration, 0.62s) * 0.35);
   position: absolute;
   bottom: -0.35em;
   right: -0.35em;

@@ -44,12 +44,17 @@
   {{ partial "modals/menu_reels_item_modal.html" . }}
   {{ partial "components/cart.html" . }}
   {{ partial "modals/table_select_modal.html" . }}
+  {{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
+  {{ partial "modals/payment_modal.html" . }}
+  {{- end -}}
 
   <footer>
     {{ partial "layout/footer.html" . }}
   </footer>
   
   <!-- CRITICAL SCRIPTS - Load first with defer (in order) -->
+  <!-- localStorage.js must load before app.js / hub loader (TTMSStorage) -->
+  <script src="/js/localStorage.js" defer></script>
   <!-- Barba.js must load early as loader.js depends on it -->
   <script src="https://cdn.jsdelivr.net/npm/@barba/core@2.9.7/dist/barba.umd.js" defer></script>
   <script src="/js/barba-lifecycle.js" defer></script>

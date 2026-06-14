@@ -37,3 +37,12 @@ weight = 30
   # For local development, use:
   # apiUrl = "http://localhost:8084/api"
   # serviceUrl = "http://localhost:8084"
+
+# Payment Service (menu checkout — POST /pay on payment-service)
+[params.paymentService]
+  enabled = false
+  apiUrl = "https://pay.ttmenus.com"
+  clientId = "_ttms_menu_demo"
+  currency = "TTD"
+  provider = "wipay"
+  apiKey = ""

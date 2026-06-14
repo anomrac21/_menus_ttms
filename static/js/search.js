@@ -53,8 +53,64 @@
         return haystack.indexOf(searchTerm) !== -1;
     }
 
+    function isTaxonomyBrowsePage() {
+        return !!document.querySelector('[data-menu-taxonomy-tabs]');
+    }
+
+    function taxonomyChipLabel(chip) {
+        var link = chip && chip.querySelector('[data-taxonomy-label], .menublock-link__label');
+        if (!link) return '';
+        var attr = link.getAttribute('data-taxonomy-label');
+        if (attr) return attr.trim().toLowerCase();
+        return link.textContent.trim().toLowerCase();
+    }
+
+    function applyTaxonomyBrowseSearch(searchTerm) {
+        var container = document.querySelector('[data-menu-taxonomy-tabs]');
+        if (!container) return false;
+
+        var activePanel = container.querySelector('.menu-taxonomy-tabs__panel.is-active');
+        if (!activePanel) return false;
+
+        var visibleCount = 0;
+        activePanel.querySelectorAll('[data-taxonomy-chip]').forEach(function (chip) {
+            var matches = !searchTerm || taxonomyChipLabel(chip).indexOf(searchTerm) !== -1;
+            chip.hidden = !matches;
+            chip.style.display = matches ? '' : 'none';
+            chip.toggleAttribute('data-menu-search-hidden', !matches);
+            if (matches) visibleCount += 1;
+        });
+
+        var emptyMsg = container.querySelector('[data-taxonomy-search-empty]');
+        if (emptyMsg) {
+            var showEmpty = !!searchTerm && visibleCount === 0;
+            emptyMsg.hidden = !showEmpty;
+            emptyMsg.classList.toggle('is-visible', showEmpty);
+        }
+
+        return true;
+    }
+
+    function clearTaxonomyBrowseSearch() {
+        var container = document.querySelector('[data-menu-taxonomy-tabs]');
+        if (!container) return;
+
+        container.querySelectorAll('[data-taxonomy-chip]').forEach(function (chip) {
+            chip.hidden = false;
+            chip.style.display = '';
+            chip.removeAttribute('data-menu-search-hidden');
+        });
+
+        container.querySelectorAll('[data-taxonomy-search-empty]').forEach(function (msg) {
+            msg.hidden = true;
+            msg.classList.remove('is-visible');
+        });
+    }
+
     function clearMenuSearchFilters() {
         document.body.classList.remove('menu-search-active');
+
+        clearTaxonomyBrowseSearch();
 
         document.querySelectorAll('.menu-item-card').forEach(function (card) {
             card.hidden = false;
@@ -174,6 +230,11 @@
         if (header) header.classList.remove('is-hidden');
 
         document.body.classList.add('menu-search-active');
+
+        if (isTaxonomyBrowsePage()) {
+            applyTaxonomyBrowseSearch(searchTerm);
+            return;
+        }
 
         if (isMenuReelsSearchContext()) {
             applyMenuReelsSearch(searchTerm);

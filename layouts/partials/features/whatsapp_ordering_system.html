@@ -13,6 +13,7 @@ const orderingEnabled = {{ default true site.Params.orderingsystem.enabled }};
 const orderingDisabledMessage = {{ (site.Params.orderingsystem.orderingDisabledMessage | default "Ordering is currently unavailable.") | jsonify }};
 const usephonecall = {{ site.Params.orderingsystem.usephonecall }};
 const orderPhone = '{{ site.Params.orderingsystem.phone }}';
+const paymentsEnabled = {{ and site.Params.features.payments site.Params.paymentService.enabled }};
 
 // Location storage key
 const LOCATION_STORAGE_KEY = 'ttms_selected_location';
@@ -2258,6 +2259,13 @@ async function confirmWhatsAppOrder(){
 	if (unavailable.length > 0) {
 		const list = unavailable.filter((v,i,a) => a.indexOf(v)===i).join(', ');
 		alert('The following items are not currently available and cannot be ordered:\n\n' + list + '\n\nLunch items are available Monday–Friday, 11AM–2PM. Please remove them from your cart to proceed.');
+		return;
+	}
+	if (paymentsEnabled && window.PaymentIntegration) {
+		await window.PaymentIntegration.ensurePaidBeforeOrder(null, function () {
+			constructWAMessage();
+			confirmSendOrder();
+		});
 		return;
 	}
 	constructWAMessage();

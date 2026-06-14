@@ -502,6 +502,61 @@
         return out;
     }
 
+    function escapePromoLabel(text) {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function buildPromoBadgeMarkup(label) {
+        const safeLabel = escapePromoLabel(label);
+        if (!safeLabel) return '';
+        return (
+            '<span class="menu-item-promo-badge">' +
+            '<span class="menu-item-promo-label">Promotion</span> ' +
+            '<span class="menu-item-promo-value">' + safeLabel + '</span>' +
+            '</span>'
+        );
+    }
+
+    function getPromoLabelForCard(card) {
+        if (!card) return '';
+        const dt = window.__ttmsDateTime || getLocalDateTime();
+        const promo = getActivePromoForDay(
+            card.getAttribute('data-promotions'),
+            dt.day,
+            { hour: dt.hour, minute: dt.minute }
+        );
+        if (promo && promo.label) return String(promo.label).trim();
+
+        const cardBadge = card.querySelector('.menu-item-promo-badge');
+        const valueEl = cardBadge && cardBadge.querySelector('.menu-item-promo-value');
+        if (valueEl && valueEl.textContent.trim()) return valueEl.textContent.trim();
+
+        return '';
+    }
+
+    function syncMenuReelsModalPromoBadge(card, host) {
+        if (!card || !host) return;
+
+        host.querySelectorAll('.menu-reels-item-modal__promo').forEach(function (el) {
+            el.remove();
+        });
+
+        const smashPass = host.querySelector('.menu-smash-pass--modal, .menu-item-smash-pass[data-menu-item-path]');
+        if (!smashPass) return;
+
+        const badgeHtml = buildPromoBadgeMarkup(getPromoLabelForCard(card));
+        if (!badgeHtml) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'menu-reels-item-modal__promo';
+        wrap.innerHTML = badgeHtml;
+        smashPass.insertAdjacentElement('afterend', wrap);
+    }
+
     function applyPromosWithDay(dateTime) {
         if (!dateTime) return;
         window.__ttmsDateTime = dateTime;
@@ -1896,6 +1951,13 @@
 
             if (modalSmashPass && typeof window.initMenuSmashPass === 'function') {
                 window.initMenuSmashPass();
+            }
+
+            if (useReelsModal && menuImageHost) {
+                syncMenuReelsModalPromoBadge(element, menuImageHost);
+                setTimeout(function () {
+                    syncMenuReelsModalPromoBadge(element, menuImageHost);
+                }, 80);
             }
             
             // Initialize category counters

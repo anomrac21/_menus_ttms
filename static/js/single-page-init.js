@@ -5,6 +5,12 @@
   'use strict';
 
   function initSinglePageFeatures() {
+    if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+      window.closeAllPanelsBeforeNavigation();
+    } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+      window.ensureMenuReelsItemModalClosed();
+    }
+
     if (!document.querySelector('.single-page-item-card')) {
       return;
     }
@@ -19,6 +25,10 @@
 
     if (typeof window.initMenuImageIntegration === 'function') {
       window.initMenuImageIntegration();
+    }
+
+    if (typeof window.initMenuSmashPass === 'function') {
+      window.initMenuSmashPass();
     }
 
     document.querySelectorAll('.single-page-item-card .js-share-btn').forEach(function (btn) {

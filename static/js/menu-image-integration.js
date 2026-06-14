@@ -566,7 +566,12 @@
   }
 
   function hostUsesSmashPassModal(host) {
-    return !!(host && host.querySelector('.menu-smash-pass--modal'));
+    return !!(
+      host &&
+      host.querySelector(
+        '.menu-smash-pass--modal, .menu-smash-pass--single-page, .menu-item-smash-pass[data-menu-item-path]'
+      )
+    );
   }
 
   function refreshSmashPassForHost(host) {

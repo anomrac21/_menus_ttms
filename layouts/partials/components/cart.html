@@ -93,10 +93,14 @@
 			</div>
 			<div id="itemTotal" class="cart-total-grand">TOTAL $0.00</div>
 		</div>
-		{{ if site.Params.orderingsystem.usephonecall }}
+		<div class="cart-checkout-bar__actions">
+		{{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
+			<button type="button" class="btn-place-order btn-pay-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-credit-card" aria-hidden="true"></i><span>Pay &amp; Order</span></button>
+		{{- else if site.Params.orderingsystem.usephonecall -}}
 			<button type="button" class="placeOrder btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-phone" aria-hidden="true"></i><span>Order Now</span></button>
-		{{ else }}
+		{{- else -}}
 			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-whatsapp" aria-hidden="true"></i><span>Order Now</span></button>
-		{{ end }}
+		{{- end -}}
+		</div>
 	</div>
 </div>

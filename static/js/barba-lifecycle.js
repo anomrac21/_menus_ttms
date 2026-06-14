@@ -46,6 +46,12 @@
   function navigate(href) {
     if (!href || href === '#') return false;
 
+    if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+      window.closeAllPanelsBeforeNavigation();
+    } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+      window.ensureMenuReelsItemModalClosed();
+    }
+
     try {
       var url = new URL(href, window.location.href);
       if (/^(javascript:|mailto:|tel:)/i.test(url.href)) return false;

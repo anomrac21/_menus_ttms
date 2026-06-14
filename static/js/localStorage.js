@@ -554,6 +554,49 @@ if (typeof module !== 'undefined' && module.exports) {
     window.LocalStorageManager = LocalStorageManager;
 }
 
+// Hub app.js / loader.js expect TTMSStorage (ttmenus-main localStorage.js API subset)
+(function () {
+    if (typeof window.TTMSStorage !== 'undefined') {
+        return;
+    }
+    window.TTMSStorage = {
+        get: function (key, defaultValue) {
+            try {
+                var val = localStorage.getItem(key);
+                return val !== null && val !== '' ? val : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        },
+        set: function (key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+        has: function (key) {
+            try {
+                return localStorage.getItem(key) !== null;
+            } catch (e) {
+                return false;
+            }
+        },
+        getTheme: function () {
+            return this.get('theme', 'light');
+        },
+        setTheme: function (theme) {
+            var ok = this.set('theme', theme);
+            try {
+                window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: theme } }));
+            } catch (e2) {}
+            return ok;
+        },
+        init: function () {}
+    };
+})();
+
 // Initialize and check availability
 document.addEventListener('DOMContentLoaded', function() {
     if (!LocalStorageManager.utils.isAvailable()) {

@@ -302,14 +302,29 @@
       });
     }
 
-    if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
-      await AuthClient.whenReady();
-      if (AuthClient.isAuthenticated()) {
-        var profile = await AuthClient.getProfile();
-        if (profile.success && profile.user) {
-          updateAccountDashboardAuthState(true, profile.user);
-          return;
-        }
+    if (!window.AuthClient || typeof AuthClient.whenReady !== 'function') {
+      return;
+    }
+
+    await AuthClient.whenReady();
+
+    var session = await AuthClient.syncHubSession();
+    if (session.success && session.user) {
+      updateAccountDashboardAuthState(true, session.user);
+      return;
+    }
+
+    var cachedUser = AuthClient.getCurrentUser();
+    if (cachedUser && AuthClient.isAuthenticated()) {
+      updateAccountDashboardAuthState(true, cachedUser);
+      return;
+    }
+
+    if (AuthClient.isAuthenticated()) {
+      var profile = await AuthClient.getProfile();
+      if (profile.success && profile.user) {
+        updateAccountDashboardAuthState(true, profile.user);
+        return;
       }
     }
 
@@ -396,6 +411,9 @@
   }
 
   function closeAll() {
+    if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+      window.ensureMenuReelsItemModalClosed();
+    }
     if (typeof window.closeDashboard === 'function') {
       window.closeDashboard();
     }

@@ -1,0 +1,50 @@
+{{ define "main" }}
+  {{- $groups := slice
+    (dict "key" "tags" "label" "Tags")
+    (dict "key" "ingredients" "label" "Ingredients")
+    (dict "key" "cookingmethods" "label" "Cooking Methods")
+    (dict "key" "types" "label" "Types")
+    (dict "key" "events" "label" "Events")
+  -}}
+  <div class="main-content">
+    <div class="menu-header list-page-header">
+      <div class="headerstyle item">
+        <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}</h1>
+      </div>
+      {{ with .Content }}
+      <div class="menu-summary item">{{ . }}</div>
+      {{ end }}
+    </div>
+
+    <div class="menu-taxonomy-tabs" data-menu-taxonomy-tabs>
+      <div class="menu-taxonomy-tabs__nav" role="tablist" aria-label="Menu taxonomy groups">
+        {{- range $i, $group := $groups -}}
+        <button type="button"
+          class="menu-taxonomy-tabs__tab{{ if eq $i 0 }} is-active{{ end }}"
+          role="tab"
+          id="taxonomy-tab-{{ $group.key }}"
+          data-taxonomy-tab="{{ $group.key }}"
+          aria-controls="taxonomy-panel-{{ $group.key }}"
+          aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}"
+          tabindex="{{ if eq $i 0 }}0{{ else }}-1{{ end }}">
+          {{ $group.label }}
+        </button>
+        {{- end -}}
+      </div>
+
+      {{- range $i, $group := $groups -}}
+      <section class="menu-taxonomy-tabs__panel{{ if eq $i 0 }} is-active{{ end }}"
+        id="taxonomy-panel-{{ $group.key }}"
+        role="tabpanel"
+        data-taxonomy-panel="{{ $group.key }}"
+        aria-labelledby="taxonomy-tab-{{ $group.key }}"
+        {{ if ne $i 0 }}hidden{{ end }}>
+        {{ partial "layout/menu-taxonomy-chips.html" $group }}
+      </section>
+      {{- end -}}
+      <p class="menu-taxonomy-tabs__empty-search" data-taxonomy-search-empty hidden>No matches in this tab.</p>
+    </div>
+  </div>
+  <script src="/js/menu-taxonomy-tabs.js" defer></script>
+  {{ partial "socialmedia/share-button.html" . }}
+{{ end }}

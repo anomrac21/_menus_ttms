@@ -900,7 +900,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var searchItem = menublock.querySelector('.menublock-item--search');
     var insertBefore = searchItem || null;
     var items = [];
-    menublock.querySelectorAll('li.menublock-item:not(.menublock-item--search)').forEach(function(li) {
+    menublock.querySelectorAll('li.menublock-item:not(.menublock-item--search):not(.menublock-item--tags)').forEach(function(li) {
       items.push(li);
     });
     if (!items.length) return;

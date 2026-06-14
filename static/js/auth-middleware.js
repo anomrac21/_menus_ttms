@@ -296,14 +296,7 @@ document.addEventListener('visibilitychange', function () {
 });
 
 window.addEventListener('storage', function (event) {
-  if (
-    event.key === 'auth_token' ||
-    event.key === 'ttmenus_access_token' ||
-    event.key === 'user_data' ||
-    event.key === 'ttmenus_user' ||
-    event.key === 'refresh_token' ||
-    event.key === 'ttmenus_refresh_token'
-  ) {
+  if (event.key === 'ttmenus_user_profile') {
     scheduleBootstrapMenuAuth('storage');
   }
 });

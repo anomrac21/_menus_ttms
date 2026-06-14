@@ -1,0 +1,19 @@
+{{- /*
+Renders menublock-style chips for one Hugo taxonomy.
+@context {string} key Taxonomy plural key (tags, ingredients, …).
+@context {string} label Display label for empty state.
+*/ -}}
+{{- $taxonomy := index site.Taxonomies .key -}}
+{{- if gt (len $taxonomy) 0 -}}
+<ul class="menu-tags-menublock menublock menu-taxonomy-chips menu-taxonomy-chips--{{ .key }}">
+	{{- range $taxonomy.Alphabetical -}}
+	<li class="item menublock-item" data-taxonomy-chip>
+		<a href="{{ .Page.RelPermalink }}" class="menublock-link menublock-link--text-only" onclick="closeCart();" data-taxonomy-label="{{ .Page.LinkTitle | lower }}">
+			<span class="menublock-link__label">{{ .Page.LinkTitle }}</span>
+		</a>
+	</li>
+	{{- end -}}
+</ul>
+{{- else -}}
+<p class="menu-taxonomy-empty center item">No {{ .label }} on this menu yet.</p>
+{{- end -}}

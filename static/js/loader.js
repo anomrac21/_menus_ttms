@@ -224,7 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (typeof window.destroyMenuSmashPass === 'function') {
                     window.destroyMenuSmashPass();
                 }
-                if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+                if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+                    window.closeAllPanelsBeforeNavigation();
+                } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
                     window.ensureMenuReelsItemModalClosed();
                 }
 
@@ -255,6 +257,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (typeof closeShop === 'function') {
                     closeShop();
+                }
+                if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+                    window.closeAllPanelsBeforeNavigation();
+                } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+                    window.ensureMenuReelsItemModalClosed();
                 }
                 await new Promise(resolve => setTimeout(resolve, 366));
                 hideLoader();
@@ -372,6 +379,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }]
     });
+
+    if (window.barba && window.barba.hooks && typeof window.barba.hooks.before === 'function') {
+        window.barba.hooks.before(function () {
+            if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+                window.closeAllPanelsBeforeNavigation();
+            } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+                window.ensureMenuReelsItemModalClosed();
+            }
+        });
+    }
 });
 
 // Function to load content dynamically

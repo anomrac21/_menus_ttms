@@ -1,0 +1,12 @@
+<li class="item menublock-item menublock-item--tags{{ if .onTagsPage }} active{{ end }}">
+	<a class="menublock-link menublock-link--tags{{ if .onTagsPage }} is-active{{ end }}" href="{{ `/tags/` | relURL }}" onclick="closeCart();" title="Browse tags" aria-label="Browse tags"{{ if .onTagsPage }} aria-current="page"{{ end }}>
+		<span class="menublock-link__icon" aria-hidden="true"><img class="icon center" src="https://cdn.ttmenus.com/icons/business/description.svg" alt="" loading="lazy" width="32" height="32"></span>
+		<span class="menublock-link__label">Tags</span>
+	</a>
+</li>
+<li class="item menublock-item menublock-item--search">
+	<a class="menublock-link menublock-link--search" href="#" role="button" onclick="toggleSearch(); return false;" title="Search menu" aria-label="Search menu">
+		<span class="menublock-link__icon" aria-hidden="true"><img class="icon center" src="https://cdn.ttmenus.com/icons/ui/search.svg" alt="" loading="lazy" width="32" height="32"></span>
+		<span class="menublock-link__label">Search</span>
+	</a>
+</li>

@@ -15,7 +15,11 @@
           {{ $pricesArrayForCard = $pricesArrayForCard | append .price }}
         {{ end }}
       {{ end }}
-      <div class="menu-item-card expanded menu-item-card--has-image single-page-item-card" data-item-url="{{ .RelPermalink }}" data-item-expanded="true" aria-expanded="true" data-prices-array="{{ $pricesArrayForCard | jsonify }}" data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}">
+      {{ $imgData := partial "ttms/menu-card-images.html" . }}
+      {{ $activePromo = $imgData.activePromo }}
+      {{ $imagesArray := $imgData.imagesArray }}
+      {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
+      <div class="menu-item-card expanded menu-item-card--has-image single-page-item-card" data-item-url="{{ .RelPermalink }}" data-item-expanded="true" aria-expanded="true" data-prices-array="{{ $pricesArrayForCard | jsonify }}" data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}" data-images-array="{{ $imagesArray | jsonify }}" data-regular-images-array="{{ $imgData.regularImagesArray | jsonify }}">
         {{ $category :=  .Section  }}
         {{ $categoryurl := .Parent.Permalink }}
         {{if .Params.prices}}
@@ -33,32 +37,29 @@
             {{end}}
           {{end}}
         {{end}}
-        
-        {{ $imgData := partial "ttms/menu-card-images.html" . }}
-        {{ $activePromo = $imgData.activePromo }}
-        {{ $imagesArray := $imgData.imagesArray }}
-        {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
 
         <div class="menu-item-expanded-content" style="display: block;">
           {{ $hasSinglePageCarousel := $imgData.hasImage }}
           <div class="expanded-item-details single-page-content{{ if and (not $hasSinglePageCarousel) .Site.Params.menuImageService.enabled }} expanded-item-details--no-carousel{{ end }}" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}" data-menu-item-path="{{ .RelPermalink }}">
+            {{- if .Site.Params.menuImageService.enabled -}}
+            {{ partial "components/menu-smash-pass.html" (dict "menuItemPath" .RelPermalink "extraClass" "menu-smash-pass--single-page") }}
+            {{- else -}}
             {{ $promoCarouselLabel := "" }}
             {{ if and $activePromo (index $activePromo "label") }}{{ $promoCarouselLabel = "Promotion" }}{{ end }}
             {{ partial "components/expanded-image-carousel.html" (dict "images" $imagesArray "title" .Title "id" "singlePageImageCarousel" "promoLabel" $promoCarouselLabel) }}
-            {{ if .Site.Params.menuImageService.enabled }}
-              {{ if $hasSinglePageCarousel }}
+            {{ if $hasSinglePageCarousel }}
           <div class="menu-image-actions">
             <button type="button" class="menu-image-add-btn" id="menuImageAddBtn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>
           </div>
-              {{ else }}
+            {{ else }}
           <div class="expanded-media-placeholder" role="region" aria-label="Item photo">
             <div class="menu-image-actions menu-image-actions--standalone">
               <button type="button" class="menu-image-add-btn" id="menuImageAddBtn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>
             </div>
             <p class="expanded-media-placeholder__hint">No photo yet — be the first to add one</p>
           </div>
-              {{ end }}
             {{ end }}
+            {{- end -}}
             {{ partial "components/menu-favorite-btn.html" . }}
 
             <div class="menu-item-header-content">

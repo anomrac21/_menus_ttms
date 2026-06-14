@@ -1,0 +1,19 @@
+<!-- Payment checkout modal (WiPay / Stripe hosted flows) -->
+<div id="paymentModal" class="payment-modal-overlay hide" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title" aria-hidden="true">
+	<div class="payment-modal-container">
+		<div class="payment-modal-header">
+			<h3 class="payment-modal-title" id="payment-modal-title">Secure Payment</h3>
+			<button type="button" class="payment-modal-close" onclick="closePaymentModal();" aria-label="Close payment modal">
+				<i class="fa fa-times" aria-hidden="true"></i>
+			</button>
+		</div>
+		<div id="paymentModalSummary" class="payment-modal__summary">
+			<div id="paymentModalAmount" class="payment-modal__amount">$0.00 TTD</div>
+			<div id="paymentModalDetails" class="payment-modal__details"></div>
+		</div>
+		<p id="paymentModalStatus" class="payment-modal__status payment-modal__status--idle"></p>
+		<div id="paymentModalActions" class="payment-modal__actions">
+			<button type="button" class="btn-payment-secondary" onclick="closePaymentModal();">Cancel</button>
+		</div>
+	</div>
+</div>

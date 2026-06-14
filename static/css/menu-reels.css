@@ -478,7 +478,9 @@ body.menu-reels-item-modal-open .menu-reels-track,
     flex-direction: column;
     color: var(--button-text-color1, #fff);
 }
-
+.menu-item-expanded-data {
+    height: 100%;
+}
 .menu-reels-item-modal.is-open {
     display: flex;
 }
@@ -525,6 +527,43 @@ body.menu-reels-item-modal-open .menu-reels-track,
     text-overflow: ellipsis;
     white-space: nowrap;
     padding: 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.menu-reels-item-modal__title-link {
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.menu-reels-item-modal__title-link:hover,
+.menu-reels-item-modal__title-link:focus-visible {
+    text-decoration: underline;
+    outline: none;
+}
+
+.menu-reels-item-modal__promo {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0.35rem 1em 0;
+    flex-shrink: 0;
+}
+
+.menu-reels-item-modal__promo .menu-item-promo-badge {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    margin: 0;
+    width: auto;
+    font-size: 0.78rem;
 }
 
 .menu-reels-item-modal__close {
@@ -564,6 +603,10 @@ body.menu-reels-item-modal-open .menu-reels-track,
 
 .menu-reels-item-modal__data .expanded-image-carousel,
 .menu-reels-item-modal__data .menu-smash-pass--modal {
+    margin-bottom: 0;
+}
+
+.menu-reels-item-modal__data .menu-reels-item-modal__promo {
     margin-bottom: 0.85rem;
 }
 
@@ -578,7 +621,8 @@ body.menu-reels-item-modal-open .menu-reels-track,
     position: sticky;
     bottom: 0;
     z-index: 2;
-    padding: 1rem;
+    padding-inline: 1rem;
+    padding-block-end: 2em;
     margin-top: 0.5rem;
     background: linear-gradient(to top, var(--button-color2) 70%, transparent);
 }
@@ -722,7 +766,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     flex-shrink: 0;
 }
 
-.menu-item-card.menu-reels-slide .menu-item-title a {
+.menu-item-card.menu-reels-slide .menu-item-title-text {
     display: block;
     width: 100%;
 }

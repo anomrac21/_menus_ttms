@@ -364,7 +364,12 @@
   }
 
   function isModalSmashPass(inst) {
-    return !!(inst && inst.root && inst.root.classList.contains('menu-smash-pass--modal'));
+    return !!(
+      inst &&
+      inst.root &&
+      (inst.root.classList.contains('menu-smash-pass--modal') ||
+        inst.root.classList.contains('menu-smash-pass--single-page'))
+    );
   }
 
   function hasVoteActions(inst) {
@@ -752,7 +757,9 @@
     if (!card || card.classList.contains('is-local')) return;
     var href = card.getAttribute('data-menu-item-href');
     if (!href || href === '#') return;
-    if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+    if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+      window.closeAllPanelsBeforeNavigation();
+    } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
       window.ensureMenuReelsItemModalClosed();
     }
     if (window.TTMSBarba && typeof window.TTMSBarba.navigate === 'function') {

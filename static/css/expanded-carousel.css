@@ -141,7 +141,7 @@
     gap: 0;
 }
 
-.single-page-item-card .single-page-content > *:not(.menu-item-slideshow):not(.menu-image-actions):not(.menu-favorite-btn):not(.expanded-media-placeholder) {
+.single-page-item-card .single-page-content > *:not(.menu-item-slideshow):not(.menu-image-actions):not(.menu-favorite-btn):not(.expanded-media-placeholder):not(.menu-item-smash-pass) {
     padding-inline: 1.25em;
 }
 

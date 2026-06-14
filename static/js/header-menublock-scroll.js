@@ -10,6 +10,36 @@
   var SHOW_AT_PX = 40;
   var LOGO_SWIPE_THRESHOLD = 40;
   var LOGO_SWIPE_LOCK_PX = 12;
+  var DASHBOARD_SLIDE_MS = 680;
+  var scrollRaf = 0;
+
+  function markDashboardSlideAnimating() {
+    var btn = document.getElementById('dashboardBtn');
+    if (!btn) {
+      return;
+    }
+    btn.style.willChange = 'transform';
+    if (btn._ttmsSlideClearTimer) {
+      window.clearTimeout(btn._ttmsSlideClearTimer);
+    }
+    btn._ttmsSlideClearTimer = window.setTimeout(function () {
+      btn.style.willChange = '';
+      btn._ttmsSlideClearTimer = 0;
+    }, DASHBOARD_SLIDE_MS);
+  }
+
+  function setMenublockScrolledRight(mainHeader, hidden) {
+    var isHidden = mainHeader.classList.contains('menublock-scrolled-right');
+    if (hidden === isHidden) {
+      return;
+    }
+    if (hidden) {
+      mainHeader.classList.add('menublock-scrolled-right');
+    } else {
+      mainHeader.classList.remove('menublock-scrolled-right');
+    }
+    markDashboardSlideAnimating();
+  }
 
   function updateHeaderMenublockScroll() {
     var menublock = document.getElementById('menublock');
@@ -21,11 +51,21 @@
     var isHidden = mainHeader.classList.contains('menublock-scrolled-right');
     if (isHidden) {
       if (scrollLeft <= SHOW_AT_PX) {
-        mainHeader.classList.remove('menublock-scrolled-right');
+        setMenublockScrolledRight(mainHeader, false);
       }
     } else if (scrollLeft >= HIDE_AT_PX) {
-      mainHeader.classList.add('menublock-scrolled-right');
+      setMenublockScrolledRight(mainHeader, true);
     }
+  }
+
+  function scheduleHeaderMenublockScrollUpdate() {
+    if (scrollRaf) {
+      return;
+    }
+    scrollRaf = window.requestAnimationFrame(function () {
+      scrollRaf = 0;
+      updateHeaderMenublockScroll();
+    });
   }
 
   function bindMenublockScroll() {
@@ -37,9 +77,7 @@
     menublock._ttmsMenublockScrollBound = true;
     menublock.addEventListener(
       'scroll',
-      function () {
-        updateHeaderMenublockScroll();
-      },
+      scheduleHeaderMenublockScrollUpdate,
       { passive: true }
     );
     updateHeaderMenublockScroll();
@@ -97,7 +135,7 @@
   function showDashboardControl(smooth) {
     var mainHeader = document.querySelector('.main-header');
     if (mainHeader) {
-      mainHeader.classList.remove('menublock-scrolled-right');
+      setMenublockScrolledRight(mainHeader, false);
     }
     scrollMenublockTo(0, smooth);
   }
