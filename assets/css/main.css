@@ -664,6 +664,7 @@ footer {
     margin-top: .3em;
     flex-direction: column;
     padding-inline: 1em;
+    align-items: center;
 }
 
 .menu-item-options .sizes,.menu-item-options .flavours {
@@ -893,8 +894,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
     border-left-color: gold
 }
 
-.expanded-additions-section {
-}
+.expanded-additions-section {padding-inline: 1em;}
 
 .expanded-additions-title {
     margin: 0 0 .5em;
