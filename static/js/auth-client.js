@@ -234,17 +234,22 @@ const AuthClient = {
   async _resolveSessionFromServer() {
     try {
       if (!this._tokenLooksValid(this._accessToken)) {
-        const refreshResult = await this.refreshToken();
-        if (!refreshResult.success) {
-          const sessionProbe = await this._fetchSession();
-          if (!sessionProbe.authenticated) {
-            this.clearAuth();
-            return { success: false, error: 'Not authenticated' };
-          }
-          this._sessionFromCookie = true;
-          this._lastSessionState = true;
-          if (sessionProbe.user) {
-            this._storeUserProfile(sessionProbe.user);
+        const sessionProbe = await this._fetchSession();
+        if (sessionProbe.accessToken) {
+          this._hydrateAccessToken(sessionProbe.accessToken);
+        }
+        if (!this._tokenLooksValid(this._accessToken)) {
+          const refreshResult = await this.refreshToken();
+          if (!refreshResult.success) {
+            if (!sessionProbe.authenticated) {
+              this.clearAuth();
+              return { success: false, error: 'Not authenticated' };
+            }
+            this._sessionFromCookie = true;
+            this._lastSessionState = true;
+            if (sessionProbe.user) {
+              this._storeUserProfile(sessionProbe.user);
+            }
           }
         }
       }
@@ -256,7 +261,15 @@ const AuthClient = {
         if (refreshResult.success) {
           result = await this._fetchMe();
         } else {
-          result = await this._fetchMe({ cookieOnly: true });
+          const sessionProbe = await this._fetchSession();
+          if (sessionProbe.accessToken) {
+            this._hydrateAccessToken(sessionProbe.accessToken);
+          }
+          if (this.getAccessToken()) {
+            result = await this._fetchMe();
+          } else {
+            result = await this._fetchMe({ cookieOnly: true });
+          }
         }
       }
 
@@ -265,6 +278,13 @@ const AuthClient = {
         this._lastSessionState = true;
         const userPayload = result.data.user || result.data;
         this._storeUserProfile(userPayload);
+        if (!this.getAccessToken()) {
+          const tokenResult = await this.ensureAccessToken();
+          if (!tokenResult.success) {
+            this.clearAuth();
+            return { success: false, error: tokenResult.error || 'Session expired' };
+          }
+        }
         return { success: true, user: userPayload };
       }
 
@@ -295,10 +315,48 @@ const AuthClient = {
       return {
         authenticated: !!data.authenticated,
         user: data.user || null,
+        accessToken: data.access_token || null,
       };
     } catch (e) {
-      return { authenticated: false, user: null };
+      return { authenticated: false, user: null, accessToken: null };
     }
+  },
+
+  _hydrateAccessToken(token) {
+    if (token && this._tokenLooksValid(token)) {
+      this._accessToken = token;
+      return true;
+    }
+    return false;
+  },
+
+  async ensureAccessToken() {
+    if (this.getAccessToken()) {
+      return { success: true, accessToken: this.getAccessToken() };
+    }
+    const sessionProbe = await this._fetchSession();
+    if (sessionProbe.accessToken && this._hydrateAccessToken(sessionProbe.accessToken)) {
+      this._sessionFromCookie = true;
+      this._lastSessionState = true;
+      if (sessionProbe.user) {
+        this._storeUserProfile(sessionProbe.user);
+      }
+      return { success: true, accessToken: this.getAccessToken() };
+    }
+    if (!this.isAuthenticated() && !sessionProbe.authenticated) {
+      return { success: false, error: 'Not authenticated' };
+    }
+    const refreshResult = await this.refreshToken();
+    if (refreshResult.success && this.getAccessToken()) {
+      return { success: true, accessToken: this.getAccessToken() };
+    }
+    if (sessionProbe.authenticated) {
+      const retry = await this._fetchSession();
+      if (retry.accessToken && this._hydrateAccessToken(retry.accessToken)) {
+        return { success: true, accessToken: this.getAccessToken() };
+      }
+    }
+    return { success: false, error: (refreshResult && refreshResult.error) || 'No access token' };
   },
 
   _startSessionPolling() {
@@ -617,6 +675,13 @@ const AuthClient = {
     if (!this.isAuthenticated()) {
       const synced = await this.syncHubSession();
       if (!synced.success) return { success: false, error: 'Not authenticated' };
+    }
+
+    if (!this.getAccessToken()) {
+      const tokenResult = await this.ensureAccessToken();
+      if (!tokenResult.success) {
+        return { success: false, error: tokenResult.error || 'Not authenticated' };
+      }
     }
 
     const token = this.getAccessToken();

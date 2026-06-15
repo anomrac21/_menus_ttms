@@ -33,11 +33,16 @@
     if (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) {
       return AuthClient.getAccessToken();
     }
-    try {
-      return localStorage.getItem('ttmenus_access_token');
-    } catch (e) {
-      return null;
+    return null;
+  }
+
+  async function ensureToken() {
+    if (getToken()) return getToken();
+    if (typeof AuthClient !== 'undefined' && typeof AuthClient.ensureAccessToken === 'function') {
+      var result = await AuthClient.ensureAccessToken();
+      if (result.success) return getToken();
     }
+    return null;
   }
 
   function escapeHtml(text) {
@@ -142,7 +147,7 @@
 
   async function fetchPending() {
     var base = apiBase();
-    var token = getToken();
+    var token = await ensureToken();
     if (!base || !token) {
       throw new Error('Sign in required to load photo approvals.');
     }
@@ -169,7 +174,10 @@
 
   async function postAction(id, action) {
     var base = apiBase();
-    var token = getToken();
+    var token = await ensureToken();
+    if (!base || !token) {
+      throw new Error('Sign in required.');
+    }
     var res = await fetch(
       base + '/admin/menu-images/' + encodeURIComponent(id) + '/' + action,
       {

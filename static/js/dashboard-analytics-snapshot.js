@@ -52,6 +52,12 @@
     if (existing) return Promise.resolve(existing);
     var ac = global.AuthClient;
     if (!ac) return Promise.resolve(null);
+    if (typeof ac.ensureAccessToken === 'function') {
+      return ac.ensureAccessToken().then(function (result) {
+        if (result && result.success) return getAccessTokenForCms();
+        return null;
+      });
+    }
     var chain = Promise.resolve();
     if (typeof ac.syncHubSession === 'function') {
       chain = chain.then(function () {

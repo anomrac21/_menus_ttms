@@ -63,10 +63,20 @@
   function authHeaders() {
     var h = { Accept: 'application/json', 'Content-Type': 'application/json' };
     var token =
-      (window.AuthClient && AuthClient.getAccessToken && AuthClient.getAccessToken()) ||
-      (typeof localStorage !== 'undefined' && localStorage.getItem('ttmenus_access_token'));
+      (window.AuthClient && AuthClient.getAccessToken && AuthClient.getAccessToken());
     if (token) h.Authorization = 'Bearer ' + token;
     return h;
+  }
+
+  async function ensureNotifyToken() {
+    if (window.AuthClient && AuthClient.getAccessToken && AuthClient.getAccessToken()) {
+      return AuthClient.getAccessToken();
+    }
+    if (window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
+      var result = await AuthClient.ensureAccessToken();
+      if (result.success) return AuthClient.getAccessToken();
+    }
+    return null;
   }
 
   async function notifyFetch(path, options) {
@@ -74,8 +84,10 @@
     if (!base) {
       throw new Error('Notification API URL is not configured (site notifications).');
     }
+    await ensureNotifyToken();
     var url = base + path;
-    var res = await fetch(url, Object.assign({ credentials: 'include' }, options || {}));
+    var headers = Object.assign({}, authHeaders(), (options && options.headers) || {});
+    var res = await fetch(url, Object.assign({ credentials: 'include' }, options || {}, { headers: headers }));
     if (res.status === 401) {
       if (window.AuthClient && AuthClient.logout) {
         await AuthClient.logout().catch(function () {});

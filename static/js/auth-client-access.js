@@ -119,10 +119,11 @@ const AuthClientAccess = {
   async ensureAuthSessionReady() {
     if (typeof AuthClient.refreshMenuSession === 'function') {
       await AuthClient.refreshMenuSession();
-      return;
-    }
-    if (typeof AuthClient.whenReady === 'function') {
+    } else if (typeof AuthClient.whenReady === 'function') {
       await AuthClient.whenReady();
+    }
+    if (typeof AuthClient.ensureAccessToken === 'function') {
+      await AuthClient.ensureAccessToken();
     }
   },
 

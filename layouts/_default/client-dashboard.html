@@ -188,6 +188,9 @@
       if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
         await AuthClient.whenReady();
       }
+      if (window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
+        await AuthClient.ensureAccessToken();
+      }
       if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
         return;
       }
