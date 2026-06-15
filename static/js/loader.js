@@ -207,6 +207,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     barba.init({
         cacheIgnore: true,
+        prevent: function (ctx) {
+            var el = ctx && ctx.el;
+            var href = (ctx && ctx.href) || (el && el.getAttribute && el.getAttribute('href'));
+            if (el && el.getAttribute && el.getAttribute('data-barba') === 'prevent') {
+                return true;
+            }
+            if (typeof window.TTMSBarbaShouldPrevent === 'function') {
+                return window.TTMSBarbaShouldPrevent(href);
+            }
+            return false;
+        },
         transitions: [{
             name: 'fade',
             async leave(data) {

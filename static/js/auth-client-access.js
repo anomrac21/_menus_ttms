@@ -8,11 +8,14 @@ const AuthClientAccess = {
    * Get the current site's client ID from the domain or config
    */
   getCurrentClientID() {
-    // Try to get from window config first
+    // Prefer Hugo-configured client id (subdomain != client id on some sites, e.g. menudemo)
     if (window.SITE_CLIENT_ID) {
       return window.SITE_CLIENT_ID;
     }
-    
+    if (window.CLIENT_ID) {
+      return window.CLIENT_ID;
+    }
+
     // Extract from hostname (e.g., omgsushi.ttmenus.com -> omgsushi)
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
