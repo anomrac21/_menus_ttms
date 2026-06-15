@@ -1452,8 +1452,9 @@
 
 .location-picker .location-picker-card.location-item {
     flex-shrink: 0;
-    min-width: calc(100% - 0.5rem);
-    width: calc(100% - 0.5rem);
+    min-width: calc(100% - 1.5rem);
+    width: calc(100% - 1.5rem);
+    margin: auto;
     scroll-snap-align: center;
     scroll-snap-stop: always;
 }
