@@ -348,7 +348,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 300);
 
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                // Hide as soon as the page finishes loading, with a short minimum for branding
+                await Promise.race([
+                    new Promise(function (resolve) {
+                        if (document.readyState === 'complete') resolve();
+                        else window.addEventListener('load', resolve, { once: true });
+                    }),
+                    new Promise(function (resolve) { setTimeout(resolve, 500); })
+                ]);
                 hideLoader();
                 
                 setTimeout(() => {

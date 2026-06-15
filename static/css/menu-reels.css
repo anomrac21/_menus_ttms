@@ -446,6 +446,13 @@ body.menu-search-active .menu-reels-track {
     padding: 0;
     padding-block: .6em 5em;
     box-sizing: border-box;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100dvh;
+}
+
+.menu-item-card.menu-reels-slide.expanded,
+.menu-item-card.menu-reels-slide[aria-expanded='true'] {
+    content-visibility: visible;
 }
 
 .menu-item-card.menu-reels-slide::after {

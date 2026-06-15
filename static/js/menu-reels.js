@@ -6,6 +6,7 @@
 
   var observer = null;
   var scrollHandler = null;
+  var scrollSyncPending = false;
   var RATIO_THRESHOLD = 0.45;
 
   function getTrack() {
@@ -438,7 +439,12 @@
 
     if (scrollHandler) track.removeEventListener('scroll', scrollHandler);
     scrollHandler = function () {
-      syncMenublockFromTrack();
+      if (scrollSyncPending) return;
+      scrollSyncPending = true;
+      requestAnimationFrame(function () {
+        scrollSyncPending = false;
+        syncMenublockFromTrack();
+      });
     };
     track.addEventListener('scroll', scrollHandler, { passive: true });
 
@@ -602,6 +608,7 @@
   function observeSections(track) {
     if (observer) observer.disconnect();
     var slides = getSlides(track).filter(function (slide) {
+      if (slide.classList.contains('menu-item-card')) return false;
       return !!sectionIdFromSlide(slide);
     });
     if (!slides.length) return;

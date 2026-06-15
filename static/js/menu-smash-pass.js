@@ -13,6 +13,8 @@
   var instances = new WeakMap();
   var initScheduled = null;
   var globalGen = 0;
+  var lazyInitObserver = null;
+  var sharedFeedSnapshot = null;
   var feedCache = {
     promise: null,
     data: null,
@@ -206,6 +208,92 @@
 
   function queryRoots() {
     return Array.prototype.slice.call(document.querySelectorAll('.menu-smash-pass'));
+  }
+
+  function isItemScopedRoot(root) {
+    return !!(root && root.classList.contains('menu-item-smash-pass'));
+  }
+
+  function isRootInitialized(root) {
+    return root && root.getAttribute('data-smash-pass-inited') === '1';
+  }
+
+  function markRootInitialized(root) {
+    if (root) root.setAttribute('data-smash-pass-inited', '1');
+  }
+
+  function clearInitializedMarkers() {
+    queryRoots().forEach(function (root) {
+      root.removeAttribute('data-smash-pass-inited');
+    });
+  }
+
+  function disconnectLazyObserver() {
+    if (lazyInitObserver) {
+      lazyInitObserver.disconnect();
+      lazyInitObserver = null;
+    }
+  }
+
+  function initRootWithFeed(root, feed, generation) {
+    if (!root || isRootInitialized(root)) return;
+    initInstanceNow(getInstance(root), feed, generation);
+    markRootInitialized(root);
+  }
+
+  function isCardNearViewport(card, track) {
+    if (!card) return false;
+    var trackRect = track ? track.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    var cardRect = card.getBoundingClientRect();
+    var buffer = track ? trackRect.height : window.innerHeight;
+    return cardRect.bottom > trackRect.top - buffer && cardRect.top < trackRect.bottom + buffer;
+  }
+
+  function setupLazyItemSmashPass(feed, generation) {
+    disconnectLazyObserver();
+    if (generation !== globalGen) return;
+
+    var track = document.getElementById('menu-reels-track');
+    var pendingRoots = queryRoots().filter(function (root) {
+      return isItemScopedRoot(root) && !isRootInitialized(root);
+    });
+    if (!pendingRoots.length) return;
+
+    pendingRoots.forEach(function (root) {
+      var card = root.closest('.menu-item-card.menu-reels-slide');
+      if (isCardNearViewport(card, track)) {
+        initRootWithFeed(root, feed, generation);
+      }
+    });
+
+    var remaining = pendingRoots.filter(function (root) {
+      return !isRootInitialized(root);
+    });
+    if (!remaining.length) return;
+
+    lazyInitObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting || !sharedFeedSnapshot) return;
+          var card = entry.target;
+          var root = card.querySelector('.menu-item-smash-pass');
+          if (root && !isRootInitialized(root)) {
+            initRootWithFeed(root, sharedFeedSnapshot.feed, sharedFeedSnapshot.generation);
+          }
+          lazyInitObserver.unobserve(card);
+        });
+      },
+      {
+        root: track || null,
+        rootMargin: '100% 0px',
+        threshold: 0.01,
+      }
+    );
+
+    remaining.forEach(function (root) {
+      var card = root.closest('.menu-item-card.menu-reels-slide');
+      if (card) lazyInitObserver.observe(card);
+    });
   }
 
   function createInstance(root) {
@@ -1024,6 +1112,9 @@
     globalGen += 1;
     feedCache.data = null;
     feedCache.promise = null;
+    sharedFeedSnapshot = null;
+    disconnectLazyObserver();
+    clearInitializedMarkers();
     if (feedCache.abort) {
       feedCache.abort.abort();
       feedCache.abort = null;
@@ -1086,18 +1177,28 @@
     if (!roots.length) return;
 
     var generation = globalGen;
+    var introRoots = roots.filter(function (root) {
+      return !isItemScopedRoot(root);
+    });
+
     try {
       var feed = await fetchSharedFeed();
       if (generation !== globalGen) return;
-      roots.forEach(function (root) {
-        initInstanceNow(getInstance(root), feed, generation);
+      sharedFeedSnapshot = { feed: feed, generation: generation };
+
+      introRoots.forEach(function (root) {
+        initRootWithFeed(root, feed, generation);
       });
+
+      setupLazyItemSmashPass(feed, generation);
     } catch (err) {
       if (generation !== globalGen) return;
       if (err && err.name === 'AbortError') return;
-      roots.forEach(function (root) {
-        initInstanceNow(getInstance(root), [], generation);
+      sharedFeedSnapshot = { feed: [], generation: generation };
+      introRoots.forEach(function (root) {
+        initRootWithFeed(root, [], generation);
       });
+      setupLazyItemSmashPass([], generation);
     }
   }
 
@@ -1177,6 +1278,7 @@
 
   function registerSmashPassAuthWatch() {
     var refresh = function () {
+      clearInitializedMarkers();
       initMenuSmashPass();
     };
     document.addEventListener('auth:login', refresh);
