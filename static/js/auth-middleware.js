@@ -71,6 +71,15 @@ const AuthMiddleware = {
         case 'admin':
           el.style.display = isAdmin ? '' : 'none';
           break;
+        case 'admin-site':
+          el.style.display =
+            isAdmin &&
+            window.AuthClientAccess &&
+            typeof window.AuthClientAccess.hasClientAccess === 'function' &&
+            window.AuthClientAccess.hasClientAccess()
+              ? ''
+              : 'none';
+          break;
       }
     });
   },
@@ -147,6 +156,9 @@ const AuthMiddleware = {
 
     if (!AuthClient.isAuthenticated()) {
       el.href = '/login/';
+      el.setAttribute('data-barba', 'prevent');
+      el.removeAttribute('target');
+      el.removeAttribute('rel');
       setLinkContent('fa-user', 'Login');
       return;
     }
@@ -158,9 +170,13 @@ const AuthMiddleware = {
 
     if (hasAdminAccess) {
       el.href = '/dashboard/';
+      el.setAttribute('data-barba', 'prevent');
+      el.removeAttribute('target');
+      el.removeAttribute('rel');
       setLinkContent('fa-th-large', 'Dashboard');
     } else {
       el.href = hubAccount;
+      el.removeAttribute('data-barba');
       el.target = '_blank';
       el.rel = 'noopener noreferrer';
       setLinkContent('fa-user', 'My account');

@@ -748,34 +748,76 @@
         initMenuImageHost(host, { forceLoad: true });
       }
     });
-    prefetchCardThumbnails(scope);
+    setupLazyCardThumbnailPrefetch(scope);
+  }
+
+  var thumbPrefetchObserver = null;
+
+  function disconnectThumbPrefetchObserver() {
+    if (thumbPrefetchObserver) {
+      thumbPrefetchObserver.disconnect();
+      thumbPrefetchObserver = null;
+    }
+  }
+
+  function prefetchCardThumbnail(card) {
+    if (!card || card.dataset.menuImageThumbLoaded === '1') return;
+    let menuImages = [];
+    try {
+      menuImages = JSON.parse(card.getAttribute('data-images-array') || '[]');
+    } catch (e) {
+      menuImages = [];
+    }
+    if (menuImages.length > 0) return;
+
+    const path = String(card.getAttribute('data-item-url') || '').replace(/\/$/, '') || '/';
+    const client = CONFIG.clientId;
+    card.dataset.menuImageThumbLoaded = 'pending';
+    fetchApprovedImagesCached(client, path).then(function (images) {
+      if (!images.length) {
+        card.dataset.menuImageThumbLoaded = '0';
+        return;
+      }
+      card.dataset.menuImageThumbLoaded = '1';
+      const imgLink = card.querySelector('.menu-item-image-link');
+      const img = imgLink && imgLink.querySelector('.menu-item-img');
+      if (!img) return;
+      img.src = thumbUrlFromApproved(images[0]);
+      img.loading = 'lazy';
+      imgLink.style.display = '';
+    });
+  }
+
+  function setupLazyCardThumbnailPrefetch(root) {
+    disconnectThumbPrefetchObserver();
+    const scope = root && root.querySelectorAll ? root : document;
+    const cards = scope.querySelectorAll('.menu-item-card[data-item-url]');
+    if (!cards.length) return;
+
+    const track = document.getElementById('menu-reels-track');
+    thumbPrefetchObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          prefetchCardThumbnail(entry.target);
+          thumbPrefetchObserver.unobserve(entry.target);
+        });
+      },
+      {
+        root: track || null,
+        rootMargin: '150% 0px',
+        threshold: 0.01,
+      }
+    );
+
+    cards.forEach(function (card) {
+      if (card.dataset.menuImageThumbLoaded === '1') return;
+      thumbPrefetchObserver.observe(card);
+    });
   }
 
   function prefetchCardThumbnails(root) {
-    const scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('.menu-item-card[data-item-url]').forEach(function (card) {
-      if (card.dataset.menuImageThumbLoaded === '1') return;
-      let menuImages = [];
-      try {
-        menuImages = JSON.parse(card.getAttribute('data-images-array') || '[]');
-      } catch (e) {
-        menuImages = [];
-      }
-      if (menuImages.length > 0) return;
-
-      const path = String(card.getAttribute('data-item-url') || '').replace(/\/$/, '') || '/';
-      const client = CONFIG.clientId;
-      fetchApprovedImagesCached(client, path).then(function (images) {
-        if (!images.length) return;
-        card.dataset.menuImageThumbLoaded = '1';
-        const imgLink = card.querySelector('.menu-item-image-link');
-        const img = imgLink && imgLink.querySelector('.menu-item-img');
-        if (!img) return;
-        img.src = thumbUrlFromApproved(images[0]);
-        img.loading = 'lazy';
-        imgLink.style.display = '';
-      });
-    });
+    setupLazyCardThumbnailPrefetch(root);
   }
 
   let uploadPreviewObjectUrl = null;

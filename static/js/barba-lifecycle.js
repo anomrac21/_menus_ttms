@@ -9,6 +9,36 @@
   var scheduled = null;
   var bound = false;
 
+  var FULL_PAGE_PATH_PREFIXES = [
+    '/dashboard',
+    '/login',
+    '/edit-menu',
+    '/analytics',
+    '/notifications',
+    '/menu-settings',
+    '/admin',
+  ];
+
+  function shouldUseFullPageNavigation(href) {
+    if (!href || href === '#') return false;
+    if (typeof href !== 'string') return false;
+
+    try {
+      var url = new URL(href, window.location.href);
+      if (/^(javascript:|mailto:|tel:)/i.test(url.href)) return true;
+      if (url.origin !== window.location.origin) return true;
+
+      var path = (url.pathname || '/').replace(/\/+$/, '') || '/';
+      return FULL_PAGE_PATH_PREFIXES.some(function (prefix) {
+        return path === prefix || path.indexOf(prefix + '/') === 0;
+      });
+    } catch (err) {
+      return false;
+    }
+  }
+
+  window.TTMSBarbaShouldPrevent = shouldUseFullPageNavigation;
+
   function runAfterTransition(source) {
     if (scheduled) {
       clearTimeout(scheduled);
@@ -61,6 +91,11 @@
         return true;
       }
 
+      if (shouldUseFullPageNavigation(url.href)) {
+        window.location.assign(url.href);
+        return true;
+      }
+
       var target = url.pathname + url.search + url.hash;
       if (typeof window.barba !== 'undefined' && typeof window.barba.go === 'function') {
         window.barba.go(target);
@@ -86,6 +121,42 @@
     },
     navigate: navigate,
   };
+
+  function bindFullPageNavGuard() {
+    if (window._ttmsFullPageNavGuardBound) return;
+    window._ttmsFullPageNavGuardBound = true;
+
+    document.addEventListener(
+      'click',
+      function (e) {
+        if (e.defaultPrevented || e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        var link = e.target && e.target.closest && e.target.closest('a[href]');
+        if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+
+        var href = link.getAttribute('href');
+        if (!shouldUseFullPageNavigation(href)) return;
+
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation === 'function') {
+          e.stopImmediatePropagation();
+        }
+        e.stopPropagation();
+
+        if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+          window.closeAllPanelsBeforeNavigation();
+        } else if (typeof window.closeAll === 'function') {
+          window.closeAll();
+        }
+
+        window.location.assign(new URL(href, window.location.href).href);
+      },
+      true
+    );
+  }
+
+  bindFullPageNavGuard();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindBarbaEvents);

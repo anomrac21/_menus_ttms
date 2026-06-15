@@ -8,15 +8,20 @@
 
     function init() {
         hideAllPanels();
-        hydrateAllDraftMenuCardImages();
         initializeFooter();
         initializeModals();
         bindMenuInteractions();
-        applyDayBasedPromos();
         initializeFooterVisibility();
         if (typeof window.initSinglePageFeatures === 'function') {
             window.initSinglePageFeatures();
         }
+        const deferNonCritical = typeof requestIdleCallback === 'function'
+            ? requestIdleCallback
+            : function (cb) { setTimeout(cb, 1); };
+        deferNonCritical(function () {
+            hydrateAllDraftMenuCardImages();
+            applyDayBasedPromos();
+        });
         // Packery removed - no initialization needed
     }
 
@@ -1314,8 +1319,9 @@
                 let modifications = []; // Array of [name, price] tuples (flat format)
                 let additions = []; // Array of [name, price] tuples (flat format)
                 let imagesArray = []; // Array of image paths
+                const hasCardData = element.hasAttribute('data-prices-array');
                 
-                if (!useCardDataOnly) {
+                if (!useCardDataOnly && !hasCardData) {
                 try {
                     // Hugo serves JSON at /path/index.json
                     let jsonResponse = await fetch(url + '/index.json');
@@ -1464,9 +1470,9 @@
                     }
                 }
                 
-                // Fetch HTML for description (skip in edit mode so expanded view shows current card state)
+                // Fetch HTML for description (skip in edit mode or when card already has summary data)
                 let fullDescElement = null;
-                if (!useCardDataOnly) {
+                if (!useCardDataOnly && !hasCardData) {
                     const response = await fetch(url + '?format=json').catch(() => fetch(url));
                     const html = await response.text();
                     const parser = new DOMParser();
