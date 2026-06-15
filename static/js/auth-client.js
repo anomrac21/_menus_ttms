@@ -430,6 +430,47 @@ const AuthClient = {
     }
   },
 
+  /**
+   * Redirect to auth-service Google OAuth. Sets hub SSO cookies on callback.
+   * @param {{ returnTo?: string, action?: 'login'|'signup', acceptLegal?: boolean }} options
+   */
+  loginWithGoogle(options) {
+    options = options || {};
+    var params = new URLSearchParams();
+    params.set('return_to', options.returnTo || window.location.href);
+    params.set('action', options.action === 'signup' ? 'signup' : 'login');
+    if (options.acceptLegal) {
+      params.set('accept_legal', '1');
+    }
+    window.location.href = this.config.apiUrl + '/oauth/google?' + params.toString();
+  },
+
+  parseOAuthRedirectMessage() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('oauth') === 'success') {
+        return { type: 'success', message: 'Signed in with Google successfully.' };
+      }
+      var err = params.get('oauth_error');
+      if (err) {
+        return { type: 'error', message: err };
+      }
+    } catch (e) {}
+    return null;
+  },
+
+  clearOAuthRedirectParams() {
+    try {
+      var url = new URL(window.location.href);
+      if (!url.searchParams.has('oauth') && !url.searchParams.has('oauth_error')) {
+        return;
+      }
+      url.searchParams.delete('oauth');
+      url.searchParams.delete('oauth_error');
+      window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    } catch (e) {}
+  },
+
   async signup(userData) {
     try {
       const response = await fetch(this.config.apiUrl + '/signup', {
