@@ -71,6 +71,15 @@ const AuthMiddleware = {
         case 'admin':
           el.style.display = isAdmin ? '' : 'none';
           break;
+        case 'admin-site':
+          el.style.display =
+            isAdmin &&
+            window.AuthClientAccess &&
+            typeof window.AuthClientAccess.hasClientAccess === 'function' &&
+            window.AuthClientAccess.hasClientAccess()
+              ? ''
+              : 'none';
+          break;
       }
     });
   },

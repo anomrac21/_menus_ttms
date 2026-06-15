@@ -122,6 +122,42 @@
     navigate: navigate,
   };
 
+  function bindFullPageNavGuard() {
+    if (window._ttmsFullPageNavGuardBound) return;
+    window._ttmsFullPageNavGuardBound = true;
+
+    document.addEventListener(
+      'click',
+      function (e) {
+        if (e.defaultPrevented || e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        var link = e.target && e.target.closest && e.target.closest('a[href]');
+        if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+
+        var href = link.getAttribute('href');
+        if (!shouldUseFullPageNavigation(href)) return;
+
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation === 'function') {
+          e.stopImmediatePropagation();
+        }
+        e.stopPropagation();
+
+        if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+          window.closeAllPanelsBeforeNavigation();
+        } else if (typeof window.closeAll === 'function') {
+          window.closeAll();
+        }
+
+        window.location.assign(new URL(href, window.location.href).href);
+      },
+      true
+    );
+  }
+
+  bindFullPageNavGuard();
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindBarbaEvents);
   } else {
