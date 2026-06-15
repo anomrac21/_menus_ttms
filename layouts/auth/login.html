@@ -144,7 +144,12 @@
         var googleBtn = document.getElementById('googleLoginBtn');
         if (googleBtn) {
           googleBtn.addEventListener('click', function() {
-            AuthClient.loginWithGoogle({ action: 'login', returnTo: window.location.href });
+            var googleLogin = AuthClient.loginWithGoogle || (window.TTMSGoogleAuth && TTMSGoogleAuth.loginWithGoogle);
+            if (!googleLogin) {
+              showAlert('error', 'Google sign-in is unavailable. Please refresh the page.');
+              return;
+            }
+            googleLogin({ action: 'login', returnTo: window.location.href });
           });
         }
 
@@ -340,19 +345,23 @@
       }
       }
 
+      function loadScript(src, onload) {
+        var script = document.createElement('script');
+        script.src = src;
+        script.onload = onload;
+        script.onerror = onload;
+        document.head.appendChild(script);
+      }
+
       function start() {
-        if (window.AuthClient) {
+        if (window.AuthClient && (window.AuthClient.loginWithGoogle || window.TTMSGoogleAuth)) {
           runLoginPage();
           return;
         }
-        var script = document.createElement('script');
-        script.src = new URL('/js/auth-client.js', window.location.origin).href;
-        script.onload = runLoginPage;
-        script.onerror = function() {
-          console.error('Failed to load auth-client.js from ' + script.src);
-          runLoginPage();
-        };
-        document.head.appendChild(script);
+        var base = new URL('/js/', window.location.origin).href;
+        loadScript(base + 'auth-client.js?v=google-oauth', function() {
+          loadScript(base + 'auth-google-oauth.js?v=google-oauth', runLoginPage);
+        });
       }
 
       if (document.readyState === 'loading') {
