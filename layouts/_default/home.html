@@ -3,13 +3,14 @@
   <div id="menu-reels-track" class="menu-reels-track">
   <section class="hero_logo_container item menu-reels-slide menu-reels-slide--hero" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
   {{ $siteName := partial "site-name.html" . }}
+  <h1 class="sr-only">{{ $siteName }}</h1>
   {{ if .Params.image }}
     <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high">
   {{ else }}
     <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
   {{ end }}
   <div class="logo_container">
-    <a href="/locations/"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="512" height="512"></a>
+    <a href="/locations/" aria-label="View {{ $siteName }} locations"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="512" height="512"></a>
   </div>
   {{ with .Content }}
   <div class="hero-intro">
@@ -210,7 +211,7 @@
                             {{- end -}}
                             <div class="menu-item-row-top">
                               {{ if and $imgData.hasImage (not site.Params.menuImageService.enabled) }}
-                                <a href="{{ .RelPermalink }}" class="menu-item-image-link">
+                                <a href="{{ .RelPermalink }}" class="menu-item-image-link" aria-label="View {{ .LinkTitle }}">
                                   <div class="menu-item-image">
                                     {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
                                   </div>
@@ -223,7 +224,7 @@
                                 </h3>
                                 <div class="menu-item-row-middle">
                                   <div class="menu-item-description">
-                              {{ .Summary }}
+                              {{ .Summary | truncate 120 }}
                                   </div>
                                   <div class="menu-item-price">
                                     {{$counter := 0}}

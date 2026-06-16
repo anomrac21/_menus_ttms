@@ -9,6 +9,7 @@
   <script src="/js/dashboard-analytics-snapshot.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to main content</a>
   {{ block "main" . }}{{ end }}
 </body>
 </html>
@@ -19,6 +20,7 @@
   {{ partial "head.html" . }}
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to main content</a>
   {{ partial "layout/loader.html" . }}
   {{ partial "features/askofserver.html" . }}
   {{ partial "modals/apple_instructions.html" . }}

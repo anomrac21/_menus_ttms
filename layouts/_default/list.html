@@ -11,7 +11,7 @@
         <div class="headerstyle item">
           <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}
           {{ if .Params.images.bottom }}
-            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="" loading="lazy">
+            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .Title }} decoration" loading="lazy">
           {{ end }}
           </h1>
         </div>

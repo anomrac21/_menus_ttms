@@ -1,7 +1,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
-<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
-<meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ site.Params.description | default "Delicious food and drinks at great prices. View our digital menu and order online." }}{{ end }}">
+{{- $siteName := partial "site-name.html" . -}}
+{{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
+{{- $metaDesc := .Description | default site.Params.description | default (printf "%s — view our full menu, prices, and order online." $siteName) -}}
+{{- $ogTitle := cond .IsHome $pageTitle (printf "%s | %s" .Title site.Title) -}}
+{{- $ogDesc := $metaDesc -}}
+{{- if and (not .IsHome) .Summary -}}
+  {{- $ogDesc = printf "%s — Digital Menu" (.Summary | plainify | truncate 155) -}}
+{{- end -}}
+<title>{{ $pageTitle }}</title>
+<meta name="description" content="{{ $metaDesc }}">
+<link rel="canonical" href="{{ .Permalink | absURL }}">
 {{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 
@@ -83,32 +92,38 @@
 {{- if $menuPublicSite -}}
 <script src="/js/dashboard-panel.js" defer></script>
 {{- end -}}
-<meta property="og:title" content="{{ .Title }} | {{ site.Title }}"/>
-{{ $images := slice }}
-{{ if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") }}
-  {{ with index .Params.images "top" }}{{ $images = $images | append . }}{{ end }}
-  {{ with index .Params.images "bottom" }}{{ $images = $images | append . }}{{ end }}
-{{ else if .Params.images }}
-  {{ range .Params.images }}
-    {{ if .image }}{{ $images = $images | append .image }}{{ end }}
-  {{ end }}
-{{ end }}
-{{ if gt (len $images) 0 }}
-  {{$firstImage := index $images 0}}
-  <meta property="og:image" content="/{{ $firstImage }}"/>
-{{ else }} 
-   <meta property="og:image" content="/branding/favicon152.webp"/>
-{{ end }}
+{{- $ogImage := "/branding/favicon152.webp" -}}
+{{- $images := slice -}}
+{{- if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") -}}
+  {{- with index .Params.images "top" }}{{ $images = $images | append . }}{{ end -}}
+  {{- with index .Params.images "bottom" }}{{ $images = $images | append . }}{{ end -}}
+{{- else if .Params.images -}}
+  {{- range .Params.images -}}
+    {{- if .image }}{{ $images = $images | append .image }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- if gt (len $images) 0 -}}
+  {{- $ogImage = printf "/%s" (index $images 0) -}}
+{{- end -}}
+<meta property="og:title" content="{{ $ogTitle }}">
+<meta property="og:description" content="{{ $ogDesc }}">
+<meta property="og:url" content="{{ .Permalink | absURL }}">
+<meta property="og:type" content="{{ if .IsHome }}website{{ else }}article{{ end }}">
+<meta property="og:site_name" content="{{ $siteName }}">
+<meta property="og:image" content="{{ $ogImage | absURL }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $ogTitle }}">
+<meta name="twitter:description" content="{{ $ogDesc }}">
+<meta name="twitter:image" content="{{ $ogImage | absURL }}">
 
 <!--APPLE SUPPORT-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="{{ site.Title }}">
-<meta property="og:description" content="{{ if .Summary }}{{ .Summary }} Digital Menu{{ else }}{{ site.Params.description | default "Digital Menu" }}{{ end }}"/>
-
-<!-- WEBSITE LINK AND IMAGE -->
-<meta property="og:url" content="{{ site.GetPage.Permalink }}" />
+{{- if $menuPublicSite -}}
+{{ partial "head/schema.html" . }}
+{{- end -}}
 
 <!-- APP THEME COLOR -->
 <meta name="theme-color" content="#000000"/>

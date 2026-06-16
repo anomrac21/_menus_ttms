@@ -1,0 +1,50 @@
+{{- $siteName := partial "site-name.html" . | strings.TrimSpace -}}
+{{- $locations := site.Data.locations -}}
+{{- if $locations -}}
+  {{- if not (reflect.IsSlice $locations) -}}
+    {{- with $locations.locations -}}{{- $locations = . -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $loc := dict -}}
+{{- if and $locations (reflect.IsSlice $locations) (gt (len $locations) 0) -}}
+  {{- $loc = index $locations 0 -}}
+{{- end -}}
+{{- $desc := site.Params.description | default (printf "Digital menu for %s." $siteName) -}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "{{ $siteName }}",
+  "url": "{{ site.BaseURL | absURL }}",
+  "description": "{{ $desc }}"
+  {{- with site.Params.social.phone -}}
+  ,"telephone": "+{{ . }}"
+  {{- end -}}
+  {{- with $loc.address -}}
+  ,"address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ . }}"
+    {{- with $loc.city -}}
+    ,"addressLocality": "{{ . }}"
+    {{- end -}}
+  }
+  {{- end -}}
+  {{- with $loc.latlon -}}
+    {{- if ge (len .) 2 -}}
+  ,"geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ index . 0 }},
+    "longitude": {{ index . 1 }}
+  }
+    {{- end -}}
+  {{- end -}}
+  {{- $sameAs := slice -}}
+  {{- with site.Params.social.facebook -}}{{- $sameAs = $sameAs | append . -}}{{- end -}}
+  {{- with site.Params.social.instagram -}}{{- $sameAs = $sameAs | append . -}}{{- end -}}
+  {{- with site.Params.social.youtube -}}{{- $sameAs = $sameAs | append . -}}{{- end -}}
+  {{- with site.Params.social.tiktok -}}{{- $sameAs = $sameAs | append . -}}{{- end -}}
+  {{- if gt (len $sameAs) 0 -}}
+  ,"sameAs": {{ $sameAs | jsonify }}
+  {{- end -}}
+}
+</script>
