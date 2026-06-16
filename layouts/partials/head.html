@@ -21,9 +21,16 @@
 {{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 
-<!-- Preload critical loader resources FIRST (local assets only) -->
+<!-- Preload critical loader resources FIRST -->
+<link rel="preload" href="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
 <link rel="preload" href="/branding/favicon192.webp" as="image" fetchpriority="high">
-<link rel="preload" href="/branding/favicon144.webp" as="image" fetchpriority="low">
+{{- if .IsHome -}}
+  {{- if .Params.image -}}
+<link rel="preload" href="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" as="image" fetchpriority="high">
+  {{- else -}}
+<link rel="preload" href="/main/bg.webp" as="image" fetchpriority="high">
+  {{- end -}}
+{{- end -}}
 
 <!-- Inline critical loader CSS for instant rendering -->
 <style>
@@ -36,8 +43,10 @@
     height: 100vh;
     background: var(--background-color, #000);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.75rem;
     z-index: var(--ttms-z-loader, 99999);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
@@ -50,19 +59,13 @@
   }
   
   #loaderImage {
-    
-    animation: pulse 1.5s ease-in-out infinite;
+    max-height: 8em;
   }
-  
+
   #menuImage {
     width: 120px;
     height: 120px;
     filter: drop-shadow(1px 1px 0px #000);
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
   }
   
   /* Hide classes for loader animations - basic fallback */

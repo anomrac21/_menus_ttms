@@ -350,23 +350,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             },
             async once(data) {
-                // Load reels ads early (init also runs, debounced in AdsClient)
-                setTimeout(() => {
-                    if (document.getElementById('pageadscontainer')) {
-                        if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
-                            window.AdsClient.loadAds();
-                        }
-                    }
-                }, 300);
+                var isReelsHome = !!document.getElementById('menu-reels-viewport');
 
-                // Hide as soon as the page finishes loading, with a short minimum for branding
-                await Promise.race([
-                    new Promise(function (resolve) {
-                        if (document.readyState === 'complete') resolve();
-                        else window.addEventListener('load', resolve, { once: true });
-                    }),
-                    new Promise(function (resolve) { setTimeout(resolve, 500); })
-                ]);
+                // Reels home defers video ads until the sponsored slide is near viewport
+                if (!isReelsHome) {
+                    setTimeout(() => {
+                        if (document.getElementById('pageadscontainer')) {
+                            if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
+                                window.AdsClient.loadAds();
+                            }
+                        }
+                    }, 300);
+                }
+
+                // Reels home: hide quickly so hero LCP is not blocked by window.load (ad videos)
+                if (isReelsHome) {
+                    await new Promise(function (resolve) { setTimeout(resolve, 600); });
+                } else {
+                    await Promise.race([
+                        new Promise(function (resolve) {
+                            if (document.readyState === 'complete') resolve();
+                            else window.addEventListener('load', resolve, { once: true });
+                        }),
+                        new Promise(function (resolve) { setTimeout(resolve, 500); })
+                    ]);
+                }
                 hideLoader();
                 
                 setTimeout(() => {
