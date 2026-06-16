@@ -2748,12 +2748,14 @@ document.addEventListener("DOMContentLoaded", function() {
     loadCart();  // Load saved cart from localStorage
     updateCart(order.length);
     
-    // Preload menu items JSON for faster item loading
-    fetchMenuItems().then(() => {
-      console.log('✅ Menu items preloaded and ready');
-    }).catch(err => {
-      console.error('❌ Failed to preload menu items:', err);
-    });
+    // Preload menu items JSON when cart/order flow needs it (home reels loader owns its own fetch)
+    if (!document.getElementById('menu-reels-viewport')) {
+      fetchMenuItems().then(() => {
+        console.log('✅ Menu items preloaded and ready');
+      }).catch(err => {
+        console.error('❌ Failed to preload menu items:', err);
+      });
+    }
     
     // Initialize location dropdown and load saved location
     const locationSelect = document.getElementById('locationSelect');

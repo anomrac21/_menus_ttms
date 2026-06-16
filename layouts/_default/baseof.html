@@ -15,11 +15,11 @@
 </html>
 {{- else -}}
 <!DOCTYPE html>
-<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
+<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if .IsHome }} class="menu-reels-mode"{{ end }}>
 <head>
   {{ partial "head.html" . }}
 </head>
-<body>
+<body{{ if .IsHome }} class="menu-reels-mode"{{ end }}>
   <a class="skip-link" href="#main">Skip to main content</a>
   {{ partial "layout/loader.html" . }}
   {{ partial "features/askofserver.html" . }}
@@ -88,7 +88,25 @@
   <script src="/js/custom.js" defer></script>
   
   <!-- NON-CRITICAL - Load after core functionality -->
+  {{- if .IsHome -}}
+  <script>
+    window.addEventListener('load', function () {
+      var load = function () {
+        var s = document.createElement('script');
+        s.src = '/js/analytics-integrations.js';
+        s.defer = true;
+        document.body.appendChild(s);
+      };
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(load, { timeout: 4000 });
+      } else {
+        setTimeout(load, 2000);
+      }
+    }, { once: true });
+  </script>
+  {{- else -}}
   <script src="/js/analytics-integrations.js" defer></script>
+  {{- end -}}
   
   {{ partial "features/whatsapp_ordering_system.html" . }}
   {{ partial "features/notifications.html" . }}

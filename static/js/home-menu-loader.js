@@ -543,16 +543,10 @@
     }
     loaderStarted = true;
 
-    fetchMenuItems(config.apiUrl)
-      .then(function () {
-        observeSectionHeaders(config);
-        bindTrackProximity(config);
-        bindMenublockPreload(config);
-        scheduleProximityCheck();
-      })
-      .catch(function () {
-        loaderStarted = false;
-      });
+    observeSectionHeaders(config);
+    bindTrackProximity(config);
+    bindMenublockPreload(config);
+    scheduleProximityCheck();
   }
 
   function initHomeMenuLoader() {

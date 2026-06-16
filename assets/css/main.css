@@ -8,6 +8,34 @@ html,body {
     margin: 0!important;
     padding: 0!important
 }
+#loader {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  min-height: 100vh;
+  max-height: 100vh;;
+  padding: 0;
+  margin: 0;
+  z-index: 99999;  
+  background: #fff;
+  transition: 0.33s;
+}
+
+#loader img{
+  display: block;  
+  max-width: 100%;
+  padding: 0;
+  margin: 0 auto;
+}
+#loader #loaderImage{
+  max-height: 16em;
+}
+
 
 [data-barba=wrapper],[data-barba=container] {
     margin: 0;

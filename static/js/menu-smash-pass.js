@@ -594,12 +594,12 @@
     if (!compact) {
       infoHtml =
         '<div class="menu-smash-pass-card__info">' +
-        '<h4 class="menu-smash-pass-card__title">' +
+        '<p class="menu-smash-pass-card__title">' +
         '<a class="menu-smash-pass-card__title-link" href="' +
         escapeHtml(itemHref) +
         '">' +
         escapeHtml(title) +
-        '</a></h4>' +
+        '</a></p>' +
         '<div class="menu-smash-pass-card__counts">' +
         '<span class="menu-smash-pass-card__likes" data-count="likes">♥ ' +
         likes +
@@ -1288,8 +1288,45 @@
     }
   }
 
+  function deferHomeSmashPassInit() {
+    var started = false;
+    var run = function () {
+      if (started) return;
+      started = true;
+      initMenuSmashPass();
+    };
+
+    var track = document.getElementById('menu-reels-track');
+    var introSlide = document.querySelector('.hero-content.menu-reels-slide--intro');
+
+    if (introSlide && track && typeof IntersectionObserver !== 'undefined') {
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            observer.disconnect();
+            run();
+          });
+        },
+        { root: track, rootMargin: '40% 0px', threshold: 0.01 }
+      );
+      observer.observe(introSlide);
+      return;
+    }
+
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(run, { timeout: 10000 });
+    } else {
+      setTimeout(run, 6000);
+    }
+  }
+
   function bootMenuSmashPass() {
-    initMenuSmashPass();
+    if (document.getElementById('menu-reels-viewport')) {
+      deferHomeSmashPassInit();
+    } else {
+      initMenuSmashPass();
+    }
     registerBarbaLifecycle();
     registerSmashPassAuthWatch();
   }

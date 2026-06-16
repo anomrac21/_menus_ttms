@@ -39,6 +39,7 @@ const AuthClient = {
   _readyPromise: null,
   _sessionPollTimer: null,
   _lastSessionState: null,
+  _resolveSessionPromise: null,
 
   config: {
     sessionPollMs: 45000,
@@ -182,6 +183,16 @@ const AuthClient = {
   },
 
   clearAuth() {
+    var wasAuthed =
+      !!this._accessToken ||
+      !!this._currentUser ||
+      this._sessionFromCookie ||
+      this._lastSessionState;
+
+    if (!wasAuthed) {
+      return;
+    }
+
     this._accessToken = null;
     this._currentUser = null;
     this._sessionFromCookie = false;
@@ -199,7 +210,6 @@ const AuthClient = {
         document.body.classList.add('ttms-logged-out');
       }
       window.dispatchEvent(new CustomEvent('auth:logout'));
-      this._notifyAuthReady();
     } catch (e) {}
   },
 
@@ -232,6 +242,17 @@ const AuthClient = {
   },
 
   async _resolveSessionFromServer() {
+    if (this._resolveSessionPromise) {
+      return this._resolveSessionPromise;
+    }
+
+    this._resolveSessionPromise = this._resolveSessionFromServerNow().finally(() => {
+      this._resolveSessionPromise = null;
+    });
+    return this._resolveSessionPromise;
+  },
+
+  async _resolveSessionFromServerNow() {
     try {
       if (!this._tokenLooksValid(this._accessToken)) {
         const sessionProbe = await this._fetchSession();

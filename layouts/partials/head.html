@@ -10,14 +10,20 @@
 {{- end -}}
 <title>{{ $pageTitle }}</title>
 <meta name="description" content="{{ $metaDesc }}">
-<link rel="canonical" href="{{ .Permalink | absURL }}">
+{{- $canonical := .Permalink | absURL -}}
+{{- if hasPrefix $canonical "//" -}}
+  {{- $canonical = printf "https:%s" $canonical -}}
+{{- end -}}
+{{- if eq hugo.Environment "development" -}}
+  {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
+{{- end -}}
+<link rel="canonical" href="{{ $canonical }}">
 {{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 
-<!-- Preload critical loader resources FIRST -->
-<link rel="preload" href="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
-<link rel="preload" href="/branding/favicon144.webp" as="image" fetchpriority="high">
-<link rel="preload" href="https://cdn.ttmenus.com/css/loader.css" as="style" fetchpriority="high">
+<!-- Preload critical loader resources FIRST (local assets only) -->
+<link rel="preload" href="/branding/favicon192.webp" as="image" fetchpriority="high">
+<link rel="preload" href="/branding/favicon144.webp" as="image" fetchpriority="low">
 
 <!-- Inline critical loader CSS for instant rendering -->
 <style>
@@ -74,11 +80,15 @@
   #loader.loader-hide-right { transform: translateX(100%); }
 </style>
 
-<!-- Preconnect to external domains for faster resource loading -->
+<!-- Preconnect sparingly (Lighthouse: max ~4); dns-prefetch for the rest -->
 <link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
+{{- if site.Params.notifications.enabled -}}
 <link rel="preconnect" href="https://notify.ttmenus.com" crossorigin>
-<link rel="preconnect" href="https://analytics.ttmenus.com" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+{{- else -}}
+<link rel="dns-prefetch" href="https://notify.ttmenus.com">
+{{- end -}}
+<link rel="dns-prefetch" href="https://analytics.ttmenus.com">
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 <link rel="dns-prefetch" href="https://fonts.gstatic.com">
@@ -134,18 +144,70 @@
 <link rel="stylesheet" href="/css/typography.css"/>
 <link rel="stylesheet" href="/css/custom.css"/>
 <link rel="stylesheet" href="/css/header.css"/>
-<link rel="stylesheet" href="/css/cart.css"/>
-<link rel="stylesheet" href="/css/table-modal.css"/>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/cart.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/table-modal.css") }}
 {{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
 <link rel="stylesheet" href="/css/payment.css"/>
 {{- end -}}
-<link rel="stylesheet" href="/css/footer.css"/>
-<link rel="stylesheet" href="/css/contact.css"/>
-<link rel="stylesheet" href="https://cdn.ttmenus.com/css/loader.css"/>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/footer.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/contact.css") }}
+{{- if .IsHome -}}
+<style id="ttms-home-critical">
+  html.menu-reels-mode, body.menu-reels-mode { overflow: hidden; }
+  body.menu-reels-mode main.main--home,
+  body.main--home main.main--home {
+    margin: 0 !important;
+    padding: 0;
+    padding-block-start: var(--ttms-header-height, 5em) !important;
+    box-sizing: border-box;
+    min-height: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .main--home .menu-reels-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--main-bg, #000);
+  }
+  .main--home .menu-reels-track {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+  }
+  .main--home .menu-reels-track .menu-reels-slide {
+    flex-shrink: 0;
+    width: 100%;
+    min-height: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    box-sizing: border-box;
+  }
+  .main--home .logo_container {
+    min-height: 12rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .main--home #logo {
+    width: 192px;
+    height: 192px;
+    max-width: min(192px, 66dvh);
+    max-height: min(192px, 66dvh);
+    object-fit: contain;
+  }
+  #footer { min-height: 4.5rem; }
+</style>
+{{- end -}}
 {{- if $menuPublicSite -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
-<link rel="stylesheet" href="/css/account-dashboard-panel.css"/>
-<link rel="stylesheet" href="/css/dashboard-panel.css"/>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard-panel.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-panel.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/hero.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/hero-cta.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/slideshow.css") }}
@@ -191,9 +253,7 @@
   }
 </style>
 
-<!-- Menu UI font (non-blocking) -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Menu UI font (non-blocking; dns-prefetch only — avoid unused preconnect) -->
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"/></noscript>
 
@@ -255,11 +315,15 @@
       s.parentNode.insertBefore(g,s);
     })();
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ttmsLoadMatomo);
-  } else {
-    ttmsLoadMatomo();
+  function ttmsScheduleMatomo() {
+    var run = function () { ttmsLoadMatomo(); };
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(run, { timeout: 3500 });
+    } else {
+      setTimeout(run, 2000);
+    }
   }
+  window.addEventListener('load', ttmsScheduleMatomo, { once: true });
 </script>
 <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 <!-- End Matomo -->
@@ -328,7 +392,11 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 {{- if $menuPublicSite -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-favorites.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-cards.css") }}
+{{- if .IsHome -}}
+<link rel="stylesheet" href="/css/menu-reels.css"/>
+{{- else -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reels.css") }}
+{{- end -}}
 <script src="/js/menu-favorites.js" defer></script>
 {{- end -}}
 {{- end -}}

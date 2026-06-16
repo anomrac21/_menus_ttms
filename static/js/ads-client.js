@@ -29,9 +29,50 @@
   init() {
     console.log('Ads Client initialized');
     this.loadConfig();
-    if (document.getElementById('pageadscontainer')) {
-      this.loadAds();
+    if (!document.getElementById('pageadscontainer')) return;
+    if (document.getElementById('menu-reels-viewport')) {
+      this.deferLoadUntilAdsSlideVisible();
+      return;
     }
+    this.loadAds();
+  },
+
+  deferLoadUntilAdsSlideVisible() {
+    if (this._deferredAdsBound) return;
+    this._deferredAdsBound = true;
+
+    var self = this;
+    var loaded = false;
+    var run = function () {
+      if (loaded) return;
+      loaded = true;
+      self.loadAds();
+    };
+
+    var slide = document.getElementById('menu-reels-sponsored-ads');
+    var target = slide || document.getElementById('pageadscontainer');
+    var track = document.getElementById('menu-reels-track');
+
+    if (!target || !track || typeof IntersectionObserver === 'undefined') {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(run, { timeout: 12000 });
+      } else {
+        setTimeout(run, 8000);
+      }
+      return;
+    }
+
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          observer.disconnect();
+          run();
+        });
+      },
+      { root: track, rootMargin: '80% 0px', threshold: 0.01 }
+    );
+    observer.observe(target);
   },
 
   /**
@@ -809,7 +850,7 @@
     let mediaHTML = '';
     if (isVideo) {
       const videoInner = `
-        <video id="${videoId}" class="ad-portrait ad-video" autoplay muted loop playsinline webkit-playsinline preload="metadata">
+        <video id="${videoId}" class="ad-portrait ad-video" autoplay muted loop playsinline webkit-playsinline preload="none">
           <source src="${this.escapeHtml(mediaUrl)}" type="video/${ext}">
           Your browser does not support the video tag.
         </video>`;
@@ -1648,6 +1689,7 @@
   function loadClientPageAdsIfPresent() {
     const container = document.getElementById('pageadscontainer');
     if (!container) return;
+    if (document.getElementById('menu-reels-viewport')) return;
     if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
       window.AdsClient.loadAds();
     } else {

@@ -287,48 +287,63 @@
     }
   }
 
-  async function fetchAndUpdateUserInfo() {
-    var retries = 0;
-    while (retries < 10) {
-      if (
-        document.getElementById('account-dashboard-user-info') &&
-        document.getElementById('account-dashboard-login-prompt')
-      ) {
-        break;
+  async function fetchAndUpdateUserInfo(options) {
+    options = options || {};
+    if (fetchAndUpdateUserInfo._inFlight) {
+      return fetchAndUpdateUserInfo._inFlight;
+    }
+
+    fetchAndUpdateUserInfo._inFlight = (async function () {
+      var retries = 0;
+      while (retries < 10) {
+        if (
+          document.getElementById('account-dashboard-user-info') &&
+          document.getElementById('account-dashboard-login-prompt')
+        ) {
+          break;
+        }
+        retries++;
+        await new Promise(function (r) {
+          setTimeout(r, 100);
+        });
       }
-      retries++;
-      await new Promise(function (r) {
-        setTimeout(r, 100);
-      });
-    }
 
-    if (!window.AuthClient || typeof AuthClient.whenReady !== 'function') {
-      return;
-    }
-
-    await AuthClient.whenReady();
-
-    var session = await AuthClient.syncHubSession();
-    if (session.success && session.user) {
-      updateAccountDashboardAuthState(true, session.user);
-      return;
-    }
-
-    var cachedUser = AuthClient.getCurrentUser();
-    if (cachedUser && AuthClient.isAuthenticated()) {
-      updateAccountDashboardAuthState(true, cachedUser);
-      return;
-    }
-
-    if (AuthClient.isAuthenticated()) {
-      var profile = await AuthClient.getProfile();
-      if (profile.success && profile.user) {
-        updateAccountDashboardAuthState(true, profile.user);
+      if (!window.AuthClient || typeof AuthClient.whenReady !== 'function') {
         return;
       }
-    }
 
-    updateAccountDashboardAuthState(false, null);
+      await AuthClient.whenReady();
+
+      if (options.syncSession && typeof AuthClient.syncHubSession === 'function') {
+        var session = await AuthClient.syncHubSession();
+        if (session.success && session.user) {
+          updateAccountDashboardAuthState(true, session.user);
+          return;
+        }
+      }
+
+      var cachedUser = AuthClient.getCurrentUser();
+      if (cachedUser && AuthClient.isAuthenticated()) {
+        updateAccountDashboardAuthState(true, cachedUser);
+        return;
+      }
+
+      if (options.syncSession && AuthClient.isAuthenticated()) {
+        var profile = await AuthClient.getProfile();
+        if (profile.success && profile.user) {
+          updateAccountDashboardAuthState(true, profile.user);
+          return;
+        }
+      }
+
+      updateAccountDashboardAuthState(false, null);
+    })();
+
+    try {
+      return await fetchAndUpdateUserInfo._inFlight;
+    } finally {
+      fetchAndUpdateUserInfo._inFlight = null;
+    }
   }
 
   async function menuAccountLogout(e) {
@@ -390,7 +405,7 @@
         window.closeDashboard();
       }
       setTimeout(function () {
-        fetchAndUpdateUserInfo();
+        fetchAndUpdateUserInfo({ syncSession: true });
       }, 200);
     } else {
       closeAccountDashboard();
@@ -461,7 +476,6 @@
 
   function scheduleRefresh() {
     fetchAndUpdateUserInfo();
-    setTimeout(fetchAndUpdateUserInfo, 800);
   }
 
   function initAccountDashboardUi() {
@@ -492,5 +506,11 @@
 
   window.addEventListener('ttms:auth-ready', function () {
     fetchAndUpdateUserInfo();
+  });
+  document.addEventListener('auth:login', function () {
+    fetchAndUpdateUserInfo({ syncSession: true });
+  });
+  document.addEventListener('auth:logout', function () {
+    updateAccountDashboardAuthState(false, null);
   });
 })();

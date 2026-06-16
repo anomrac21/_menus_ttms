@@ -23,7 +23,8 @@
 				</a>
 			{{ end }}
 		</div>
-		<ul id="menublock" class="menublock" role="navigation" aria-label="Menu categories">
+		<nav class="header-nav" aria-label="Menu categories">
+		<ul id="menublock" class="menublock">
 		{{- if and (not .IsHome) -}}
 			{{- range site.Pages.ByWeight -}}
 				{{- if .RegularPages -}}
@@ -69,5 +70,6 @@
 		{{- end -}}
 			{{ partial "layout/menublock-actions.html" (dict "onTagsPage" $onTagsPage) }}
 		</ul>
+		</nav>
 	</div><!-- END MENU ICONS FOR THE MENU SECTIONS -->
 </div><!-- END HEADER CONTAINER-->
