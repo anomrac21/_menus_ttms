@@ -14,6 +14,7 @@ class TTMSAnalytics {
     this.maxMatomoInitAttempts = 5;
     this.adImpressionRetries = 0;
     this.maxAdImpressionRetries = 4;
+    this._trackingError = false;
 
     this.init();
   }
@@ -28,7 +29,7 @@ class TTMSAnalytics {
    * Initialize analytics tracking
    */
   init() {
-    if (typeof _paq !== 'undefined') {
+    if (typeof _paq !== 'undefined' && window.__ttmsMatomoReady) {
       this.enabled = true;
       console.log('🎯 TTMS Analytics initialized');
 
@@ -41,10 +42,10 @@ class TTMSAnalytics {
 
     this.matomoInitAttempts++;
     if (this.matomoInitAttempts < this.maxMatomoInitAttempts) {
-      if (!this.isDevHost()) {
-        console.warn('⚠️ Matomo not available, retrying...');
+      if (!this.isDevHost() && this.matomoInitAttempts === 1) {
+        console.warn('⚠️ Matomo not ready, waiting...');
       }
-      setTimeout(() => this.init(), 1000);
+      setTimeout(() => this.init(), 500);
     } else if (!this.isDevHost()) {
       console.warn('⚠️ Matomo not available after retries; analytics disabled');
     }
@@ -464,18 +465,34 @@ class TTMSAnalytics {
    * Track error
    */
   trackError(errorMessage, errorLocation = '') {
-    this.trackEvent('Error', errorLocation || 'JavaScript', errorMessage);
-    console.log('❌ Error tracked:', { errorMessage, errorLocation });
+    if (!this.enabled || this._trackingError) return;
+    const msg = String(errorMessage || '');
+    if (!msg || msg === 'Script error.' || msg === 'Script error') return;
+    if (/analytics\.ttmenus\.com|matomo|piwik|Cache\.ts/i.test(String(errorLocation || ''))) return;
+
+    this._trackingError = true;
+    try {
+      this.trackEvent('Error', errorLocation || 'JavaScript', msg);
+      console.log('❌ Error tracked:', { errorMessage: msg, errorLocation });
+    } finally {
+      this._trackingError = false;
+    }
   }
 }
 
-// Initialize analytics
-let ttmsAnalytics;
+// Initialize when DOM is ready; wait for Matomo script load
+window.__ttmsMatomoReady = false;
+window.addEventListener('ttms:matomo-ready', function () {
+  window.__ttmsMatomoReady = true;
+  if (window.ttmsAnalytics) {
+    window.ttmsAnalytics.matomoInitAttempts = 0;
+    window.ttmsAnalytics.init();
+  }
+}, { once: true });
 
 function initTTMSAnalytics() {
-  if (!ttmsAnalytics) {
-    ttmsAnalytics = new TTMSAnalytics();
-    window.ttmsAnalytics = ttmsAnalytics;
+  if (!window.ttmsAnalytics) {
+    window.ttmsAnalytics = new TTMSAnalytics();
     console.log('✅ TTMS Analytics ready');
   }
 }
@@ -490,7 +507,6 @@ function registerBarbaAnalytics() {
   }
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function () {
     initTTMSAnalytics();
@@ -501,11 +517,10 @@ if (document.readyState === 'loading') {
   registerBarbaAnalytics();
 }
 
-// Global error tracking
+// Global error tracking (ignore cross-origin / analytics noise)
 window.addEventListener('error', (event) => {
-  if (window.ttmsAnalytics) {
-    window.ttmsAnalytics.trackError(event.message, event.filename + ':' + event.lineno);
-  }
+  if (!window.ttmsAnalytics) return;
+  window.ttmsAnalytics.trackError(event.message, (event.filename || '') + ':' + (event.lineno || 0));
 });
 
 // Export for use in other scripts

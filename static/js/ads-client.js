@@ -297,10 +297,16 @@
           device_type: this.getDeviceType(),
           location: this.userLocation || null,
           viewed_at: new Date().toISOString()
-        })
+        }),
+        mode: 'cors',
+        credentials: 'omit',
+        keepalive: true,
       });
     } catch (error) {
-      console.error('Error tracking impression:', error);
+      if (!window.__ttmsImpressionTrackWarned) {
+        window.__ttmsImpressionTrackWarned = true;
+        console.debug('Ad impression tracking unavailable:', error);
+      }
     }
   },
 
@@ -375,8 +381,20 @@
    * 100% when its top reaches the viewport top (sticky fullscreen).
    */
   getReelsPreviewScrollProgress() {
+    const track = document.getElementById('menu-reels-track');
     const section = document.querySelector('#pageadscontainer.frontpageads section.menu-ad--reels-preview');
     if (!section) return 0;
+
+    if (track && track.contains(section)) {
+      const trackRect = track.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+      const vh = trackRect.height;
+      if (!vh) return 0;
+      if (sectionRect.top <= trackRect.top + 8) return 100;
+      if (sectionRect.top >= trackRect.bottom) return 0;
+      return ((trackRect.bottom - sectionRect.top) / vh) * 100;
+    }
+
     const rect = section.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight || 0;
     if (!vh) return 0;
@@ -432,7 +450,11 @@
   },
 
   teardownReelsFullscreenAutoOpen() {
+    const track = document.getElementById('menu-reels-track');
     if (this._previewFullscreenScrollHandler) {
+      if (track) {
+        track.removeEventListener('scroll', this._previewFullscreenScrollHandler);
+      }
       window.removeEventListener('scroll', this._previewFullscreenScrollHandler, true);
       document.removeEventListener('scroll', this._previewFullscreenScrollHandler, true);
       window.removeEventListener('resize', this._previewFullscreenScrollHandler);
@@ -449,11 +471,12 @@
 
   setupReelsFullscreenAutoOpen() {
     if (!this.shouldUseReelsMode()) return;
-    if (document.getElementById('menu-reels-track')) {
-      this.teardownReelsFullscreenAutoOpen();
-      return;
-    }
     this.teardownReelsFullscreenAutoOpen();
+
+    const track = document.getElementById('menu-reels-track');
+    const scrollRoot = track && track.querySelector('#pageadscontainer')
+      ? track
+      : null;
 
     this._previewFullscreenScrollHandler = () => {
       const progress = this.getReelsPreviewScrollProgress();
@@ -474,8 +497,12 @@
       });
     };
 
-    window.addEventListener('scroll', this._previewFullscreenScrollHandler, { passive: true, capture: true });
-    document.addEventListener('scroll', this._previewFullscreenScrollHandler, { passive: true, capture: true });
+    if (scrollRoot) {
+      scrollRoot.addEventListener('scroll', this._previewFullscreenScrollHandler, { passive: true });
+    } else {
+      window.addEventListener('scroll', this._previewFullscreenScrollHandler, { passive: true, capture: true });
+      document.addEventListener('scroll', this._previewFullscreenScrollHandler, { passive: true, capture: true });
+    }
     window.addEventListener('resize', this._previewFullscreenScrollHandler, { passive: true });
 
     const section = document.querySelector('#pageadscontainer.frontpageads section.menu-ad--reels-preview');
@@ -484,12 +511,17 @@
         (entries) => {
           for (const entry of entries) {
             const top = entry.boundingClientRect.top;
-            if (entry.intersectionRatio >= 0.92 && top <= 4) {
+            const rootTop = scrollRoot
+              ? scrollRoot.getBoundingClientRect().top
+              : 0;
+            if (entry.intersectionRatio >= 0.92 && top <= rootTop + 4) {
               this.maybeOpenReelsFromPreviewScroll(100);
             }
           }
         },
-        { threshold: [0, 0.5, 0.92, 1] }
+        scrollRoot
+          ? { root: scrollRoot, threshold: [0, 0.5, 0.92, 1] }
+          : { threshold: [0, 0.5, 0.92, 1] }
       );
       this._previewFullscreenObserver.observe(section);
     }
@@ -1209,12 +1241,11 @@
       // Single preview card: auto-advance (video end or 30s for images)
       this._startPreviewAutoplay(start);
 
-      this.setupReelsFullscreenAutoOpen();
-
       console.log(`✅ Reels preview: ${n} of ${items.length} ad(s)`);
       if (typeof window.initMenuReels === 'function') {
         window.initMenuReels();
       }
+      this.setupReelsFullscreenAutoOpen();
     } catch (error) {
       console.error('Error displaying reels ads:', error);
     }
@@ -1411,39 +1442,49 @@
     try {
       const urls = [];
       const origin = this.resolveSiteOrigin();
-      // Same-origin first — reliable for Hugo dev (127.0.0.1 vs localhost)
       if (origin) {
-        urls.push(`${origin}/promotions/index.json?nocache=${Date.now()}`);
+        urls.push(`${origin}/promotions/index.json`);
       }
       if (menuUrl) {
         const baseUrl = this.resolveMenuBaseUrl(menuUrl);
-        const remoteUrl = `${baseUrl}promotions/index.json?nocache=${Date.now()}`;
+        const remoteUrl = `${baseUrl}promotions/index.json`;
         if (!urls.includes(remoteUrl)) {
           urls.push(remoteUrl);
         }
       }
 
       let adsData = null;
+      let lastStatus = 0;
       for (const url of urls) {
-        console.log('📡 Loading menu promotions from:', url);
         try {
           const response = await fetch(url, {
             method: 'GET',
             headers: { Accept: 'application/json' },
             mode: 'cors',
             credentials: 'omit',
+            cache: 'no-store',
           });
           if (response.ok) {
             adsData = await response.json();
             break;
           }
-          console.warn(`⚠️ Promotions fetch failed: ${response.status} ${response.statusText} (${url})`);
+          lastStatus = response.status;
         } catch (err) {
-          console.warn('⚠️ Promotions fetch error:', url, err);
+          if (!window.__ttmsPromotionsFetchWarned) {
+            console.debug('Promotions JSON unavailable:', url, err);
+          }
         }
       }
 
       if (!adsData) {
+        if (!window.__ttmsPromotionsFetchWarned) {
+          window.__ttmsPromotionsFetchWarned = true;
+          if (lastStatus === 404) {
+            console.info('ℹ️ No promotions/index.json on this site yet — using ads-service only');
+          } else if (lastStatus) {
+            console.warn(`⚠️ Promotions fetch failed: ${lastStatus}`);
+          }
+        }
         return [];
       }
       

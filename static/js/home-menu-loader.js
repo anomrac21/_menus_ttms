@@ -1,0 +1,620 @@
+/**
+ * Homepage menu reels — lazy-load menu item cards from /api/menu-items.json.
+ * Loads a section when its header slide is near the reels viewport (scroll or nav).
+ */
+(function () {
+  'use strict';
+
+  var menuBySection = null;
+  var fetchPromise = null;
+  var headerObserver = null;
+  var reelsRefreshTimer = null;
+  var proximityTick = false;
+  var loaderConfig = null;
+  var loaderStarted = false;
+
+  var PROXIMITY_VIEWPORTS = 2.5;
+
+  function getConfigRoot() {
+    return (
+      document.getElementById('menu-reels-viewport') ||
+      document.getElementById('packery-container')
+    );
+  }
+
+  function getTrack() {
+    return document.getElementById('menu-reels-track');
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function stripHtml(html) {
+    if (!html) return '';
+    var el = document.createElement('div');
+    el.innerHTML = html;
+    return (el.textContent || el.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function truncate(text, max) {
+    if (!text || text.length <= max) return text;
+    return text.slice(0, max - 1).trim() + '…';
+  }
+
+  function formatMoney(amount) {
+    var n = parseFloat(amount);
+    if (Number.isNaN(n)) return '0';
+    return n.toFixed(2).replace(/\.00$/, '');
+  }
+
+  function priceNumbers(item) {
+    var nums = [];
+    var prices = item.prices || [];
+    for (var i = 2; i < prices.length; i += 3) {
+      var val = parseFloat(prices[i]);
+      if (!Number.isNaN(val)) nums.push(val);
+    }
+    return nums.sort(function (a, b) {
+      return a - b;
+    });
+  }
+
+  function buildPriceHtml(item) {
+    var nums = priceNumbers(item);
+    if (!nums.length) return '';
+    if (nums[0] === nums[nums.length - 1]) {
+      return '$' + formatMoney(nums[0]);
+    }
+    return (
+      '$' +
+      formatMoney(nums[0]) +
+      ' | $' +
+      formatMoney(nums[nums.length - 1])
+    );
+  }
+
+  function filterOptionValues(values) {
+    return (values || []).filter(function (value) {
+      return value && value !== '-' && value !== 'None';
+    });
+  }
+
+  function buildListHtml(values) {
+    return filterOptionValues(values)
+      .map(function (value) {
+        return '<li>' + escapeHtml(value) + '</li>';
+      })
+      .join('');
+  }
+
+  function imagePath(item) {
+    var images = item.images || [];
+    if (!images.length) return '';
+    var first = images[0];
+    if (typeof first === 'string') return first;
+    if (first && first.image) return first.image;
+    return '';
+  }
+
+  function buildFavoriteBtn(item, authEnabled) {
+    if (!authEnabled) return '';
+    var clientId = window.SITE_CLIENT_ID || '';
+    var path = String(item.url || '').replace(/^\//, '').replace(/\/$/, '');
+    var itemKey = clientId + '|' + path;
+    var img = imagePath(item);
+    var title = item.linkTitle || item.name || '';
+    return (
+      '<button type="button" class="menu-favorite-btn"' +
+      ' data-favorite-kind="dish"' +
+      ' data-favorite-key="' +
+      escapeHtml(itemKey) +
+      '"' +
+      ' data-favorite-title="' +
+      escapeHtml(title) +
+      '"' +
+      ' data-favorite-url="' +
+      escapeHtml(item.url || '') +
+      '"' +
+      ' data-favorite-image="' +
+      escapeHtml(img) +
+      '"' +
+      ' data-favorite-section="' +
+      escapeHtml(item.section || '') +
+      '"' +
+      ' aria-pressed="false"' +
+      ' aria-label="Save ' +
+      escapeHtml(title) +
+      ' to favorites"' +
+      ' title="Save to favorites">' +
+      '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--outline" aria-hidden="true">' +
+      '<svg class="menu-favorite-btn__svg" viewBox="0 0 24 24" focusable="false">' +
+      '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6.5-4.35-9-8.2C1.2 9.6 2.4 5.8 6 5.2c2-.35 3.8.7 4.7 2 1-1.3 2.7-2.35 4.7-2 3.6.6 4.8 4.4 3 7.6-2.5 3.85-9 8.2-9 8.2z"/>' +
+      '</svg></span>' +
+      '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--filled" aria-hidden="true">' +
+      '<svg class="menu-favorite-btn__svg" viewBox="0 0 24 24" focusable="false">' +
+      '<path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>' +
+      '</svg></span></button>'
+    );
+  }
+
+  function menuImageClientId() {
+    return (
+      (window.MENU_IMAGE_CONFIG && window.MENU_IMAGE_CONFIG.clientId) ||
+      window.SITE_CLIENT_ID ||
+      '_ttms_menu_demo'
+    );
+  }
+
+  function buildAddPhotoBtn(item, menuImagesEnabled) {
+    if (!menuImagesEnabled) return '';
+    var title = item.linkTitle || item.name || '';
+    var clientId = menuImageClientId();
+    return (
+      '<button type="button" class="menu-add-photo-btn"' +
+      ' data-menu-image-client-id="' +
+      escapeHtml(clientId) +
+      '"' +
+      ' data-menu-item-path="' +
+      escapeHtml(item.url || '') +
+      '"' +
+      ' aria-label="Add a photo for ' +
+      escapeHtml(title) +
+      '"' +
+      ' title="Add photo">' +
+      '<span class="menu-add-photo-btn__icon" aria-hidden="true">' +
+      '<svg class="menu-add-photo-btn__svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false">' +
+      '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>' +
+      '<circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/>' +
+      '</svg></span></button>'
+    );
+  }
+
+  function buildSmashPassMarkup(item, menuImagesEnabled) {
+    if (!menuImagesEnabled) return '';
+    var clientId = menuImageClientId();
+    var path = item.url || '';
+    if (typeof window.buildMenuSmashPassMarkup === 'function') {
+      return window.buildMenuSmashPassMarkup({
+        clientId: clientId,
+        menuItemPath: path,
+      });
+    }
+    return (
+      '<div class="menu-smash-pass menu-item-smash-pass"' +
+      ' data-client-id="' +
+      escapeHtml(clientId) +
+      '"' +
+      ' data-menu-item-path="' +
+      escapeHtml(path) +
+      '">' +
+      '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
+      '<p class="menu-smash-pass__empty hidden">No community photos yet — check back after guests upload and admins approve.</p>' +
+      '<div class="menu-smash-pass__empty-state hidden" role="region" aria-label="Item photo">' +
+      '<div class="menu-image-actions menu-image-actions--standalone">' +
+      '<button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item">' +
+      '<i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>' +
+      '</div>' +
+      '<p class="menu-smash-pass__empty-hint">No photo yet — be the first to add one</p>' +
+      '</div>' +
+      '<div class="menu-smash-pass__reel hidden">' +
+      '<div class="menu-smash-pass__stack" aria-live="polite"></div>' +
+      '</div></div>'
+    );
+  }
+
+  function buildCard(item, category, config) {
+    var title = item.linkTitle || item.name || '';
+    var summary = truncate(stripHtml(item.summary), 120);
+    var v1 = filterOptionValues(item.variable1_values);
+    var v2 = filterOptionValues(item.variable2_values);
+    var defaultV1 = v1[0] || '-';
+    var defaultV2 = v2[0] || '-';
+    var pricesArray = item.prices || [];
+    var images = item.images || [];
+    var firstImage = imagePath(item);
+    var showImage = !!firstImage && !config.menuImages;
+    var sizesHtml = buildListHtml(item.variable1_values);
+    var flavoursHtml = buildListHtml(item.variable2_values);
+    var imageHtml = showImage
+      ? '<a href="' +
+        escapeHtml(item.url || '#') +
+        '" class="menu-item-image-link" aria-label="View ' +
+        escapeHtml(title) +
+        '"><div class="menu-item-image"><img src="/' +
+        escapeHtml(firstImage.replace(/^\//, '')) +
+        '" alt="' +
+        escapeHtml(title) +
+        '" loading="lazy" class="menu-item-img" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)"></div></a>'
+      : '';
+
+    return (
+      '<section class="menu-item-card menu-reels-slide' +
+      (showImage ? ' menu-item-card--has-image' : '') +
+      '"' +
+      ' data-reel-section="' +
+      escapeHtml(category) +
+      '"' +
+      ' data-section-slug="' +
+      escapeHtml(item.section || '') +
+      '"' +
+      ' data-item-url="' +
+      escapeHtml(item.url || '') +
+      '"' +
+      ' role="button" tabindex="0" aria-expanded="false" data-item-expanded="false"' +
+      ' data-prices-array="' +
+      escapeHtml(JSON.stringify(pricesArray)) +
+      '"' +
+      ' data-active-promo-percent="0"' +
+      ' data-selected-variable1="' +
+      escapeHtml(defaultV1) +
+      '"' +
+      ' data-selected-variable2="' +
+      escapeHtml(defaultV2) +
+      '"' +
+      ' data-side-categories="' +
+      escapeHtml(JSON.stringify(item.side_categories || [])) +
+      '"' +
+      ' data-modifications="' +
+      escapeHtml(JSON.stringify(item.modifications || [])) +
+      '"' +
+      ' data-additions="' +
+      escapeHtml(JSON.stringify(item.additions || [])) +
+      '"' +
+      ' data-images-array="' +
+      escapeHtml(JSON.stringify(images)) +
+      '"' +
+      ' data-regular-images-array="' +
+      escapeHtml(JSON.stringify(images)) +
+      '"' +
+      ' data-promotions="[]"' +
+      ' data-tags="' +
+      escapeHtml(JSON.stringify(item.tags || [])) +
+      '"' +
+      ' data-ingredients="' +
+      escapeHtml(JSON.stringify(item.ingredients || [])) +
+      '"' +
+      ' data-cookingmethods="' +
+      escapeHtml(JSON.stringify(item.cookingmethods || [])) +
+      '"' +
+      ' data-types="' +
+      escapeHtml(JSON.stringify(item.types || [])) +
+      '"' +
+      ' data-events="' +
+      escapeHtml(JSON.stringify(item.events || [])) +
+      '">' +
+      buildAddPhotoBtn(item, config.menuImages) +
+      buildFavoriteBtn(item, config.authEnabled) +
+      buildSmashPassMarkup(item, config.menuImages) +
+      '<div class="menu-item-row-top">' +
+      imageHtml +
+      '<div class="menu-item-header-content">' +
+      '<h3 class="menu-item-title"><span class="menu-item-title-text">' +
+      escapeHtml(title) +
+      '</span></h3>' +
+      '<div class="menu-item-row-middle">' +
+      '<div class="menu-item-description">' +
+      escapeHtml(summary) +
+      '</div>' +
+      '<div class="menu-item-price">' +
+      buildPriceHtml(item) +
+      '</div></div>' +
+      '<div class="menu-item-options">' +
+      (sizesHtml ? '<ul class="sizes">' + sizesHtml + '</ul>' : '') +
+      (flavoursHtml ? '<ul class="flavours">' + flavoursHtml + '</ul>' : '') +
+      '</div></div></div></section>'
+    );
+  }
+
+  function groupMenuItems(items) {
+    var grouped = {};
+    (items || []).forEach(function (item) {
+      if (!item || !item.section || item.section === 'promotions') return;
+      if (!grouped[item.section]) grouped[item.section] = [];
+      grouped[item.section].push(item);
+    });
+    return grouped;
+  }
+
+  function fetchMenuItems(apiUrl) {
+    if (menuBySection) return Promise.resolve(menuBySection);
+    if (fetchPromise) return fetchPromise;
+
+    fetchPromise = fetch(apiUrl, { credentials: 'same-origin' })
+      .then(function (response) {
+        if (!response.ok) throw new Error('Menu items fetch failed: ' + response.status);
+        return response.json();
+      })
+      .then(function (payload) {
+        menuBySection = groupMenuItems(payload.menu_items || []);
+        return menuBySection;
+      })
+      .catch(function (error) {
+        fetchPromise = null;
+        console.error('Home menu loader:', error);
+        throw error;
+      });
+
+    return fetchPromise;
+  }
+
+  function scheduleReelsRefresh() {
+    if (reelsRefreshTimer) window.clearTimeout(reelsRefreshTimer);
+    reelsRefreshTimer = window.setTimeout(function () {
+      reelsRefreshTimer = null;
+      if (typeof window.initMenuReels === 'function') {
+        window.initMenuReels();
+      }
+      if (typeof window.initMenuSmashPass === 'function') {
+        window.initMenuSmashPass();
+      }
+      if (typeof window.initMenuImageIntegration === 'function') {
+        window.initMenuImageIntegration();
+      }
+      if (
+        window.TTMSMenuFavorites &&
+        typeof window.TTMSMenuFavorites.refresh === 'function'
+      ) {
+        window.TTMSMenuFavorites.refresh();
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('homeMenuItemsLoaded'));
+      } catch (_) { /* ignore */ }
+    }, 32);
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && typeof window.CSS.escape === 'function') {
+      return window.CSS.escape(String(value));
+    }
+    return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  function getHeaderForSlug(slug) {
+    var track = getTrack();
+    if (!track || !slug) return null;
+    return track.querySelector(
+      '.menu-header.menu-reels-slide[data-section-slug="' + cssEscape(slug) + '"]'
+    );
+  }
+
+  function renderSectionAfterHeader(header, items, config) {
+    if (!header || header.dataset.homeMenuLoaded === '1') return;
+    var category = header.getAttribute('data-reel-section') || '';
+    var parent = header.parentElement;
+    if (!parent) return;
+
+    var fragment = document.createDocumentFragment();
+    items.forEach(function (item) {
+      var wrap = document.createElement('div');
+      wrap.innerHTML = buildCard(item, category, config);
+      if (wrap.firstElementChild) {
+        fragment.appendChild(wrap.firstElementChild);
+      }
+    });
+
+    var anchor = header.nextSibling;
+    while (fragment.firstChild) {
+      parent.insertBefore(fragment.firstChild, anchor);
+    }
+
+    header.removeAttribute('aria-busy');
+    header.dataset.homeMenuLoaded = '1';
+    scheduleReelsRefresh();
+  }
+
+  function loadSectionBySlug(slug, config) {
+    if (!slug || !config) return Promise.resolve();
+    var header = getHeaderForSlug(slug);
+    if (!header || header.dataset.homeMenuLoaded === '1') {
+      return Promise.resolve();
+    }
+
+    return fetchMenuItems(config.apiUrl).then(function (grouped) {
+      var items = grouped[slug] || [];
+      if (!items.length) {
+        header.removeAttribute('aria-busy');
+        header.dataset.homeMenuLoaded = '1';
+        return;
+      }
+      renderSectionAfterHeader(header, items, config);
+    });
+  }
+
+  function isHeaderNearViewport(header, track) {
+    if (!header || !track) return false;
+    var trackRect = track.getBoundingClientRect();
+    var headerRect = header.getBoundingClientRect();
+    var range = trackRect.height * PROXIMITY_VIEWPORTS;
+    var topDelta = headerRect.top - trackRect.top;
+    var bottomDelta = headerRect.bottom - trackRect.bottom;
+    return topDelta <= range && bottomDelta >= -range;
+  }
+
+  function checkProximityLoads() {
+    if (!loaderConfig) return;
+    var track = getTrack();
+    if (!track) return;
+
+    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      var slug = header.getAttribute('data-section-slug');
+      if (!slug || header.dataset.homeMenuLoaded === '1') return;
+      if (isHeaderNearViewport(header, track)) {
+        loadSectionBySlug(slug, loaderConfig);
+      }
+    });
+  }
+
+  function scheduleProximityCheck() {
+    if (proximityTick) return;
+    proximityTick = true;
+    requestAnimationFrame(function () {
+      proximityTick = false;
+      checkProximityLoads();
+    });
+  }
+
+  function observeSectionHeaders(config) {
+    var track = getTrack();
+    if (!track) return;
+
+    if (headerObserver) headerObserver.disconnect();
+
+    var headers = track.querySelectorAll(
+      '.menu-header.menu-reels-slide[data-home-menu-lazy]:not([data-home-menu-loaded])'
+    );
+    if (!headers.length) return;
+
+    headerObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var header = entry.target;
+          var slug = header.getAttribute('data-section-slug');
+          loadSectionBySlug(slug, config);
+        });
+      },
+      {
+        root: track,
+        rootMargin: Math.round(PROXIMITY_VIEWPORTS * 100) + '% 0px ' + Math.round(PROXIMITY_VIEWPORTS * 100) + '% 0px',
+        threshold: 0,
+      }
+    );
+
+    headers.forEach(function (header) {
+      headerObserver.observe(header);
+    });
+  }
+
+  function bindTrackProximity(config) {
+    var track = getTrack();
+    if (!track || track._ttmsHomeMenuProximityBound) return;
+    track._ttmsHomeMenuProximityBound = true;
+    track.addEventListener('scroll', scheduleProximityCheck, { passive: true });
+  }
+
+  function bindMenublockPreload(config) {
+    var menublock = document.getElementById('menublock');
+    if (!menublock || menublock._ttmsHomeMenuPreloadBound) return;
+    menublock._ttmsHomeMenuPreloadBound = true;
+
+    menublock.addEventListener('click', function (e) {
+      var link = e.target.closest('.menublock-link[href^="#"]');
+      if (!link) return;
+      var hash = link.getAttribute('href');
+      if (!hash || hash === '#') return;
+      var sectionId = decodeURIComponent(hash.slice(1));
+      loadHomeMenuForSectionId(sectionId);
+    });
+  }
+
+  function loadHomeMenuForSectionId(sectionId) {
+    if (!loaderConfig || !sectionId) return Promise.resolve();
+
+    var track = getTrack();
+    var header = null;
+    if (track) {
+      var anchor = document.getElementById(sectionId);
+      if (anchor) {
+        header = anchor.closest('.menu-header.menu-reels-slide');
+      }
+      if (!header) {
+        header = track.querySelector(
+          '.menu-header.menu-reels-slide[data-reel-section="' + cssEscape(sectionId) + '"]'
+        );
+      }
+    }
+
+    var slug = header ? header.getAttribute('data-section-slug') : '';
+    if (!slug) return Promise.resolve();
+    return loadSectionBySlug(slug, loaderConfig);
+  }
+
+  function startHomeMenuLoader(config) {
+    loaderConfig = config;
+    if (loaderStarted) {
+      observeSectionHeaders(config);
+      scheduleProximityCheck();
+      return;
+    }
+    loaderStarted = true;
+
+    fetchMenuItems(config.apiUrl)
+      .then(function () {
+        observeSectionHeaders(config);
+        bindTrackProximity(config);
+        bindMenublockPreload(config);
+        scheduleProximityCheck();
+      })
+      .catch(function () {
+        loaderStarted = false;
+      });
+  }
+
+  function initHomeMenuLoader() {
+    var root = getConfigRoot();
+    if (!root || !root.hasAttribute('data-home-menu-api')) return;
+
+    var config = {
+      apiUrl: root.getAttribute('data-home-menu-api') || '/api/menu-items.json',
+      authEnabled: root.getAttribute('data-auth-enabled') === 'true',
+      menuImages: root.getAttribute('data-menu-images') === 'true',
+    };
+
+    startHomeMenuLoader(config);
+  }
+
+  function resetHomeMenuLoader() {
+    menuBySection = null;
+    fetchPromise = null;
+    loaderStarted = false;
+    loaderConfig = null;
+    if (headerObserver) {
+      headerObserver.disconnect();
+      headerObserver = null;
+    }
+    var track = getTrack();
+    if (track) track._ttmsHomeMenuProximityBound = false;
+    var menublock = document.getElementById('menublock');
+    if (menublock) menublock._ttmsHomeMenuPreloadBound = false;
+  }
+
+  function registerLifecycle() {
+    if (!window.TTMSBarba) return;
+    window.TTMSBarba.register(function () {
+      resetHomeMenuLoader();
+      initHomeMenuLoader();
+    });
+  }
+
+  window.initHomeMenuLoader = initHomeMenuLoader;
+  window.loadHomeMenuForSectionId = loadHomeMenuForSectionId;
+
+  window.addEventListener('menuReelsFlattened', function () {
+    if (!loaderConfig) {
+      var root = getConfigRoot();
+      if (!root || !root.hasAttribute('data-home-menu-api')) return;
+      loaderConfig = {
+        apiUrl: root.getAttribute('data-home-menu-api') || '/api/menu-items.json',
+        authEnabled: root.getAttribute('data-auth-enabled') === 'true',
+        menuImages: root.getAttribute('data-menu-images') === 'true',
+      };
+    }
+    observeSectionHeaders(loaderConfig);
+    scheduleProximityCheck();
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      initHomeMenuLoader();
+      registerLifecycle();
+    });
+  } else {
+    initHomeMenuLoader();
+    registerLifecycle();
+  }
+})();

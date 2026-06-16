@@ -639,7 +639,7 @@ body.ads-reels-open {
     position: absolute;
     top: max(0.75rem, env(safe-area-inset-top));
     right: max(0.75rem, env(safe-area-inset-right));
-    z-index: var(--ttms-z-reel-inner-content, 1);
+    z-index: var(--ttms-z-reel-inner-controls, 1);
     background: rgba(0, 0, 0, 0.5);
     border: none;
     border-radius: 50%;

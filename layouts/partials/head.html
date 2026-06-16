@@ -214,35 +214,32 @@
     }
 </script>
 {{- end -}}
-<!-- Matomo Tag Manager - Deferred for performance -->
+<!-- Matomo Tag Manager - queue early; load after DOM ready -->
 <script>
-  // Defer analytics initialization
-  window.addEventListener('load', function() {
-    var _mtm = window._mtm = window._mtm || [];
+  window._mtm = window._mtm || [];
+  window._paq = window._paq || [];
+  function ttmsLoadMatomo() {
+    var _mtm = window._mtm;
     _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
     (function() {
       var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
       g.async=true; g.src='https://analytics.ttmenus.com/js/container_sfESrf87.js'; s.parentNode.insertBefore(g,s);
     })();
-  });
-</script>
-<!-- End Matomo Tag Manager -->
-<!-- Matomo Global and Client Tracking - Deferred -->
-<script>
-  window.addEventListener('load', function() {
-    var _paq = window._paq = window._paq || [];
 
-    /* Default tracker: ttmenus.com (Site ID 1) */
+    var _paq = window._paq;
     _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-    _paq.push(["setCookieDomain", "*.ttmenus.com"]);
-    _paq.push(["setDomains", ["*.ttmenus.com"]]);
+    var ttmsHost = window.location.hostname || '';
+    var ttmsLocalDev = ttmsHost === 'localhost' || ttmsHost === '127.0.0.1' || /\.local$/i.test(ttmsHost);
+    if (!ttmsLocalDev) {
+      _paq.push(["setCookieDomain", "*.ttmenus.com"]);
+      _paq.push(["setDomains", ["*.ttmenus.com"]]);
+    }
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
 
     {{- $analyticsId := site.Params.services.analyticsid | default 0 -}}
     {{- $analyticsIdStr := printf "%v" $analyticsId -}}
     {{- if and $analyticsId (ne $analyticsIdStr "0") (ne $analyticsIdStr "") -}}
-    /* Client site tracker (params.services.analyticsid) */
     _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ $analyticsId }}']);
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
@@ -253,12 +250,19 @@
       _paq.push(['setTrackerUrl', u+'matomo.php']);
       _paq.push(['setSiteId', '1']);
       var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+      g.async=true; g.src=u+'matomo.js';
+      g.onload=function(){ window.dispatchEvent(new Event('ttms:matomo-ready')); };
+      s.parentNode.insertBefore(g,s);
     })();
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ttmsLoadMatomo);
+  } else {
+    ttmsLoadMatomo();
+  }
 </script>
 <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
-<!-- End Matomo Code -->
+<!-- End Matomo -->
 
 <!-- TTMS Analytics Tracking - Deferred -->
 <script src="/js/analytics-tracking.js" defer></script>
@@ -317,6 +321,7 @@ window.SiteConfig.menuImageSourceBaseUrl = window.MENU_IMAGE_SOURCE_BASE_URL;
 window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 </script>
 <script src="/js/auth-client.js" defer></script>
+<script src="/js/auth-google-oauth.js" defer></script>
 <script src="/js/auth-client-access.js" defer></script>
 <script src="/js/auth-middleware.js" defer></script>
 <script src="/js/admin-users.js" defer></script>

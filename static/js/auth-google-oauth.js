@@ -79,14 +79,8 @@
   };
 
   if (window.AuthClient) {
-    if (typeof window.AuthClient.loginWithGoogle !== 'function') {
-      window.AuthClient.loginWithGoogle = loginWithGoogle;
-    }
-    if (typeof window.AuthClient.parseOAuthRedirectMessage !== 'function') {
-      window.AuthClient.parseOAuthRedirectMessage = parseOAuthRedirectMessage;
-    }
-    if (typeof window.AuthClient.clearOAuthRedirectParams !== 'function') {
-      window.AuthClient.clearOAuthRedirectParams = clearOAuthRedirectParams;
-    }
+    window.AuthClient.loginWithGoogle = loginWithGoogle;
+    window.AuthClient.parseOAuthRedirectMessage = parseOAuthRedirectMessage;
+    window.AuthClient.clearOAuthRedirectParams = clearOAuthRedirectParams;
   }
 })(window);

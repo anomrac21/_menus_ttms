@@ -132,12 +132,22 @@ function getOpenSigns() {
     console.log('Today:', todayDay, 'Yesterday:', yesterdayDay);
     console.log('Current hour:', now.getHours(), 'Current minute:', now.getMinutes());
 
-    const panels = document.querySelectorAll(".ad-panel");
-    console.log('Found', panels.length, 'ad-panel elements');
+    const panels = document.querySelectorAll(".location-card");
+    if (!panels.length) {
+      if (window._ttmsOpenSignsInterval) {
+        clearInterval(window._ttmsOpenSignsInterval);
+        window._ttmsOpenSignsInterval = null;
+      }
+      return;
+    }
+    console.log('Found', panels.length, 'location-card elements');
 
     panels.forEach((panel, i) => {
-      console.log(`Processing panel ${i}:`, panel);
       const hours = panel.querySelector(".hours");
+      if (!hours) {
+        return;
+      }
+      console.log(`Processing panel ${i}:`, panel);
       const allHoursList = hours?.querySelector(".all-hours");
       const todayLi = allHoursList?.querySelector(`li[data-day="${todayDay}"]`);
       const yesterdayLi = allHoursList?.querySelector(`li[data-day="${yesterdayDay}"]`);
@@ -389,11 +399,12 @@ function testOvernightScenario() {
   console.log('Today:', days[todayIndex], 'Yesterday:', days[yesterdayIndex]);
   
   // Test if we can find the elements
-  const panels = document.querySelectorAll(".ad-panel");
+  const panels = document.querySelectorAll(".location-card");
   console.log('Found panels:', panels.length);
   
   panels.forEach((panel, i) => {
     const hours = panel.querySelector(".hours");
+    if (!hours) return;
     const allHoursList = hours?.querySelector(".all-hours");
     const todayLi = allHoursList?.querySelector(`li[data-day="${days[todayIndex]}"]`);
     const yesterdayLi = allHoursList?.querySelector(`li[data-day="${days[yesterdayIndex]}"]`);

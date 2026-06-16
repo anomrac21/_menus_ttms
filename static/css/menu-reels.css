@@ -2,7 +2,7 @@
  * Menu reels — same scroll model as #ads-reels-overlay / .ads-reels-track (header stays visible).
  */
 
-/* Homepage uses in-track reels; hide footer ad strip before JS adds menu-reels-mode */
+/* Homepage uses in-track reels; external footer strip only on non-home pages */
 main.main--home ~ .bottomads {
     display: none !important;
 }
@@ -22,8 +22,77 @@ body.menu-reels-mode main.main--home {
     overflow: hidden;
 }
 
-body.menu-reels-mode .bottomads {
+body.menu-reels-mode .bottomads:not(.menu-reels-bottom-ads-in-track) {
     display: none;
+}
+
+body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track,
+#menu-reels-track .menu-reels-slide--bottom-ads {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    background: var(--main-bg, #000);
+}
+
+.menu-reels-slide--bottom-ads {
+    padding: 0;
+    justify-content: center;
+    align-items: stretch;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    flex-shrink: 0;
+}
+
+/* Track snap owns scroll — disable document sticky stack inside sponsored slide */
+#menu-reels-track .menu-reels-slide--bottom-ads section.sticky,
+#menu-reels-track .menu-reels-slide--bottom-ads .menu-ad.sticky {
+    position: relative !important;
+    top: auto !important;
+    scroll-snap-align: none !important;
+    scroll-margin-top: 0 !important;
+}
+
+#menu-reels-track .menu-reels-slide--bottom-ads .menu-ad-scroll-end {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#menu-reels-track .menu-reels-slide--bottom-ads #pageadscontainer,
+#menu-reels-track .menu-reels-slide--bottom-ads #pageadscontainer.frontpageads {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto !important;
+    overflow: visible;
+}
+
+#menu-reels-track .menu-reels-slide--bottom-ads section.menu-ad--reels-preview {
+    flex: 1;
+    width: 100%;
+    min-height: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto !important;
+}
+
+#menu-reels-track .menu-reels-slide--bottom-ads .inner.ads-list--preview,
+#menu-reels-track .menu-reels-slide--bottom-ads .ad-panel--preview {
+    pointer-events: auto !important;
 }
 
 /* Community Photos intro + location picker — hide bottom nav */

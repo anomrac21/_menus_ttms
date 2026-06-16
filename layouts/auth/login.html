@@ -115,12 +115,24 @@
         const loginBtn = document.getElementById('loginBtn');
         const alertContainer = document.getElementById('alertContainer');
 
-        if (AuthClient.isAuthenticated()) {
-          if (window.AuthClientAccess && AuthClientAccess.hasClientAccess()) {
-            window.location.href = '/dashboard/';
+        function redirectAfterSuccessfulLogin() {
+          var url = '/';
+          if (window.AuthMiddleware && typeof AuthMiddleware.resolvePostLoginRedirect === 'function') {
+            url = AuthMiddleware.resolvePostLoginRedirect();
+          } else if (window.AuthClientAccess && AuthClientAccess.hasClientAccess()) {
+            url = '/dashboard/';
           } else {
-            window.location.href = '/';
+            var saved = sessionStorage.getItem('ttmenus_redirect_after_login');
+            if (saved) {
+              sessionStorage.removeItem('ttmenus_redirect_after_login');
+              url = saved;
+            }
           }
+          window.location.href = url;
+        }
+
+        if (AuthClient.isAuthenticated()) {
+          redirectAfterSuccessfulLogin();
           return;
         }
 
@@ -130,13 +142,7 @@
           AuthClient.clearOAuthRedirectParams && AuthClient.clearOAuthRedirectParams();
           if (oauthMsg.type === 'success') {
             AuthClient.syncHubSession().then(function() {
-              setTimeout(function() {
-                if (window.AuthClientAccess && AuthClientAccess.hasClientAccess()) {
-                  window.location.href = '/dashboard/';
-                } else {
-                  window.location.href = '/';
-                }
-              }, 800);
+              setTimeout(redirectAfterSuccessfulLogin, 800);
             });
           }
         }
@@ -144,12 +150,15 @@
         var googleBtn = document.getElementById('googleLoginBtn');
         if (googleBtn) {
           googleBtn.addEventListener('click', function() {
-            var googleLogin = AuthClient.loginWithGoogle || (window.TTMSGoogleAuth && TTMSGoogleAuth.loginWithGoogle);
-            if (!googleLogin) {
-              showAlert('error', 'Google sign-in is unavailable. Please refresh the page.');
+            if (typeof AuthClient.loginWithGoogle === 'function') {
+              AuthClient.loginWithGoogle({ action: 'login', returnTo: window.location.href });
               return;
             }
-            googleLogin({ action: 'login', returnTo: window.location.href });
+            if (window.TTMSGoogleAuth && typeof TTMSGoogleAuth.loginWithGoogle === 'function') {
+              TTMSGoogleAuth.loginWithGoogle({ action: 'login', returnTo: window.location.href });
+              return;
+            }
+            showAlert('error', 'Google sign-in is unavailable. Please refresh the page.');
           });
         }
 
@@ -204,15 +213,17 @@
           console.log('📥 Login result:', result);
 
           if (result.success) {
-            // Client access check: only users with access to this site can access dashboard/CMS
-            if (window.AuthClientAccess && !AuthClientAccess.hasClientAccess()) {
-              showAlert('error', 'You don\'t have permission to access this menu. Contact your administrator.');
-              loginBtn.disabled = false;
-              loginBtn.innerHTML = 'Sign In';
-              return;
-            }
-            showAlert('success', 'Login successful! Redirecting to dashboard...');
-            setTimeout(() => {
+            var hasDashboardAccess =
+              window.AuthClientAccess &&
+              typeof AuthClientAccess.hasClientAccess === 'function' &&
+              AuthClientAccess.hasClientAccess();
+            showAlert(
+              'success',
+              hasDashboardAccess
+                ? 'Login successful! Redirecting to dashboard...'
+                : 'Login successful! Redirecting...'
+            );
+            setTimeout(function() {
               const user = AuthClient.getCurrentUser();
               if (!user) {
                 showAlert('error', 'Authentication failed. Please try again.');
@@ -220,17 +231,8 @@
                 loginBtn.innerHTML = 'Sign In';
                 return;
               }
-              const token = AuthClient.getAccessToken();
-              if (!token) {
-                showAlert('error', 'Invalid authentication token. Please try again.');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Sign In';
-                return;
-              }
-              const clientId = getClientIdForRedirect(user);
-              // Redirect to dashboard (control room) instead of CMS directly
-              window.location.href = '/dashboard/';
-            }, 1000);
+              redirectAfterSuccessfulLogin();
+            }, 600);
           } else {
             console.error('❌ Login failed:', result.error);
             showAlert('error', result.error || 'Login failed. Please check your credentials.');
@@ -354,7 +356,7 @@
       }
 
       function start() {
-        if (window.AuthClient && (window.AuthClient.loginWithGoogle || window.TTMSGoogleAuth)) {
+        if (window.AuthClient) {
           runLoginPage();
           return;
         }

@@ -45,10 +45,34 @@ const AuthMiddleware = {
     return true;
   },
 
-  redirectAfterLogin(defaultUrl = '/') {
-    const redirectUrl = sessionStorage.getItem('ttmenus_redirect_after_login');
+  resolvePostLoginRedirect(options = {}) {
+    const defaultGuestUrl = options.defaultGuestUrl || '/';
+    const defaultAdminUrl = options.defaultAdminUrl || '/dashboard/';
+    const saved = sessionStorage.getItem('ttmenus_redirect_after_login');
     sessionStorage.removeItem('ttmenus_redirect_after_login');
-    window.location.href = redirectUrl || defaultUrl;
+
+    const hasAdminSiteAccess =
+      window.AuthClientAccess &&
+      typeof window.AuthClientAccess.hasClientAccess === 'function' &&
+      window.AuthClientAccess.hasClientAccess();
+
+    if (saved) {
+      const path = String(saved).split('?')[0] || saved;
+      const wantsProtectedArea =
+        path.indexOf('/dashboard') === 0 ||
+        path.indexOf('/admin') === 0 ||
+        path.indexOf('/login') === 0;
+      if (wantsProtectedArea && !hasAdminSiteAccess) {
+        return defaultGuestUrl;
+      }
+      return saved;
+    }
+
+    return hasAdminSiteAccess ? defaultAdminUrl : defaultGuestUrl;
+  },
+
+  redirectAfterLogin(defaultUrl = '/') {
+    window.location.href = this.resolvePostLoginRedirect({ defaultGuestUrl: defaultUrl });
   },
 
   toggleAuthElements() {

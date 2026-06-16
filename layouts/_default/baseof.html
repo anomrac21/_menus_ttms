@@ -34,9 +34,11 @@
         {{ block "main" . }}{{ end }}
         
       </main>
+      {{- if not .IsHome -}}
       <div class="bottomads">
           {{ partial "ads/frontpageads.html" . }}
       </div>
+      {{- end -}}
     </div>
   </div>
 
@@ -76,6 +78,9 @@
   <script src="/js/menu-smash-pass.js" defer></script>
   {{- end -}}
   <script src="/js/menu-reels.js" defer></script>
+  {{- if .IsHome -}}
+  <script src="/js/home-menu-loader.js" defer></script>
+  {{- end -}}
   
   <!-- Core app functionality - deferred -->
   <script src="/js/app.js" defer></script>

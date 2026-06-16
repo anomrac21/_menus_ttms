@@ -159,7 +159,11 @@
   }
 
   function hostClientId(host) {
-    return host.getAttribute('data-menu-image-client-id') || CONFIG.clientId;
+    return (
+      host.getAttribute('data-menu-image-client-id') ||
+      host.getAttribute('data-client-id') ||
+      CONFIG.clientId
+    );
   }
 
   function shouldAutoInitHost(host) {
@@ -477,24 +481,46 @@
     return injected;
   }
 
-  function bindAddPhotoButton(host, clientId, pathForApi) {
+  function resolveMenuImageAddContext(btn) {
+    const host =
+      btn.closest('.menu-item-smash-pass[data-menu-item-path]') ||
+      btn.closest('[data-menu-item-path][data-menu-image-client-id]') ||
+      btn.closest('.expanded-item-details[data-menu-item-path]') ||
+      btn.closest('.single-page-content[data-menu-item-path]') ||
+      btn.closest('[data-menu-item-path]');
+    if (!host) {
+      return { clientId: CONFIG.clientId, path: '/' };
+    }
+    return {
+      clientId:
+        host.getAttribute('data-menu-image-client-id') ||
+        host.getAttribute('data-client-id') ||
+        CONFIG.clientId,
+      path: hostPathForApi(host),
+    };
+  }
+
+  function bindAddPhotoButton(host) {
     const addBtn = host.querySelector('.menu-image-add-btn');
     if (!addBtn) return;
+    addBtn.style.display = 'inline-flex';
+  }
 
-    if (isLoggedIn()) {
-      addBtn.style.display = 'inline-flex';
-      if (addBtn._menuImageClickHandler) {
-        addBtn.removeEventListener('click', addBtn._menuImageClickHandler);
-      }
-      addBtn._menuImageClickHandler = function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openUploadModal(clientId, pathForApi);
+  function resolveAddPhotoContext(btn) {
+    if (!btn) return null;
+    if (btn.classList.contains('menu-add-photo-btn')) {
+      return {
+        clientId: btn.getAttribute('data-menu-image-client-id') || CONFIG.clientId,
+        path:
+          String(btn.getAttribute('data-menu-item-path') || '').replace(/\/$/, '') || '/',
       };
-      addBtn.addEventListener('click', addBtn._menuImageClickHandler);
-    } else {
-      addBtn.style.display = 'none';
     }
+    const host = btn.closest('[data-menu-item-path]');
+    if (!host) return null;
+    return {
+      clientId: hostClientId(host),
+      path: hostPathForApi(host),
+    };
   }
 
   function restorePlaceholderIfNoSlides(host, carousel, clientId, pathForApi) {
@@ -1074,6 +1100,10 @@
   }
 
   function openUploadModal(clientId, menuItemPath) {
+    if (!isLoggedIn()) {
+      promptLoginForUpload();
+      return;
+    }
     const modal = ensureUploadModal();
     document.body.appendChild(modal);
     resetUploadModal(modal, clientId, menuItemPath);
@@ -1220,23 +1250,25 @@
     window.location.href = '/login/';
   }
 
-  function onCardAddPhotoClick(e) {
-    var btn = e.target.closest('.menu-add-photo-btn');
+  function onAddPhotoClick(e) {
+    var btn = e.target.closest('.menu-add-photo-btn, .menu-image-add-btn');
     if (!btn) {
       return;
     }
     e.preventDefault();
     e.stopPropagation();
-    var clientId = btn.getAttribute('data-menu-image-client-id') || CONFIG.clientId;
-    var path = String(btn.getAttribute('data-menu-item-path') || '').replace(/\/$/, '') || '/';
+    var ctx = resolveAddPhotoContext(btn);
+    if (!ctx) {
+      return;
+    }
     if (!isLoggedIn()) {
       promptLoginForUpload();
       return;
     }
-    openUploadModal(clientId, path);
+    openUploadModal(ctx.clientId, ctx.path);
   }
 
-  document.addEventListener('click', onCardAddPhotoClick, true);
+  document.addEventListener('click', onAddPhotoClick, true);
 
   window.openMenuImageUploadModal = openUploadModal;
 })();

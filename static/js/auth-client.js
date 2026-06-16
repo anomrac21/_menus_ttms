@@ -442,7 +442,7 @@ const AuthClient = {
     if (options.acceptLegal) {
       params.set('accept_legal', '1');
     }
-    window.location.href = this.config.apiUrl + '/oauth/google?' + params.toString();
+    window.location.href = AuthClient.config.apiUrl + '/oauth/google?' + params.toString();
   },
 
   parseOAuthRedirectMessage() {

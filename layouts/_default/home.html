@@ -1,5 +1,5 @@
 {{ define "main" }}
-  <div id="menu-reels-viewport" class="menu-reels-viewport">
+  <div id="menu-reels-viewport" class="menu-reels-viewport" data-home-menu-api="/api/menu-items.json" data-auth-enabled="{{ site.Params.auth.enabled }}" data-menu-images="{{ site.Params.menuImageService.enabled }}">
   <div id="menu-reels-track" class="menu-reels-track">
   <section class="hero_logo_container item menu-reels-slide menu-reels-slide--hero" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
   {{ $siteName := partial "site-name.html" . }}
@@ -58,7 +58,7 @@
               <div class="main-menu-bg {{ .LinkTitle }}">
                 <div class="main-menu {{ .LinkTitle }} item">
                   {{ $itemCount := len .RegularPages }}
-                  <section class="menu-header menu-reels-slide" data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
+                  <section class="menu-header menu-reels-slide" data-home-menu-lazy data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}" aria-busy="true">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     <a class="menu-header__link" href="{{ .RelPermalink }}">
                       {{ if .Params.images.top }}
@@ -78,217 +78,6 @@
                       </div>
                     </a>
                   </section>
-                  <div class="menu-items-container">
-                      {{ $category := .LinkTitle }}
-                      {{ $categoryurl := .RelPermalink }}
-                      {{ $section := . }}
-                      {{ range .RegularPages.ByWeight }}
-                        {{ if ne .Section "payment" }}
-
-                        {{$variable1Values := slice}}
-                        {{range .Params.prices}}
-                          {{if not (in $variable1Values .variable1)}}
-                            {{$variable1Values = $variable1Values | append .variable1}}
-                          {{end}}
-                        {{end}}
-
-                        {{$variable2Values := slice}}
-                        {{range .Params.prices}}
-                          {{if not (in $variable2Values .variable2)}}
-                            {{$variable2Values = $variable2Values | append .variable2}}
-                          {{end}}
-                        {{end}}
-                        
-                        {{/* Build prices array for JavaScript */}}
-                        {{$pricesArray := slice}}
-                        {{range .Params.prices}}
-                          {{$pricesArray = $pricesArray | append .variable1}}
-                          {{$pricesArray = $pricesArray | append .variable2}}
-                          {{$pricesArray = $pricesArray | append .price}}
-                        {{end}}
-                        
-                        {{/* Build side categories data */}}
-                        {{$sideCategories := slice}}
-                        {{if .Params.side_categories}}
-                          {{range .Params.side_categories}}
-                            {{$category := dict}}
-                            {{$category = merge $category (dict "category_name" .category_name)}}
-                            {{$category = merge $category (dict "display_name" .display_name)}}
-                            {{$items := slice}}
-                            {{range .items}}
-                              {{/* Support both object format (with image) and flat array format (backward compatible) */}}
-                              {{if .name}}
-                                {{/* Object format: {name, type, price, image} */}}
-                                {{$item := dict}}
-                                {{$item = merge $item (dict "name" .name)}}
-                                {{$item = merge $item (dict "type" (.type | default "Regular"))}}
-                                {{$item = merge $item (dict "price" (.price | default 0))}}
-                                {{if .image}}
-                                  {{$item = merge $item (dict "image" .image)}}
-                                {{end}}
-                                {{$items = $items | append $item}}
-                              {{else}}
-                                {{/* Flat array format: [name, type, price] - backward compatible */}}
-                                {{$item := slice}}
-                                {{$item = $item | append .}}
-                                {{$items = $items | append $item}}
-                              {{end}}
-                            {{end}}
-                            {{$category = merge $category (dict "items" $items)}}
-                            {{if .config}}
-                              {{$config := dict}}
-                              {{$config = merge $config (dict "minimum" (.config.minimum | default 0))}}
-                              {{$config = merge $config (dict "maximum" (.config.maximum | default 99))}}
-                              {{$category = merge $category (dict "config" $config)}}
-                            {{end}}
-                            {{$sideCategories = $sideCategories | append $category}}
-                          {{end}}
-                        {{end}}
-                        
-                        {{/* Build modifications data */}}
-                        {{$modifications := slice}}
-                        {{if .Params.modifications}}
-                          {{range .Params.modifications}}
-                            {{$modifications = $modifications | append .name}}
-                            {{$modifications = $modifications | append .price}}
-                          {{end}}
-                        {{end}}
-                        
-                        {{/* Build additions data */}}
-                        {{$additions := slice}}
-                        {{if .Params.additions}}
-                          {{range .Params.additions}}
-                            {{$additions = $additions | append .name}}
-                            {{$additions = $additions | append .price}}
-                          {{end}}
-                        {{end}}
-                        
-                        {{ $imgData := partial "ttms/menu-card-images.html" . }}
-                        {{ $activePromo := $imgData.activePromo }}
-                        {{ $imagesArray := $imgData.imagesArray }}
-                        {{ $regularImagesArray := $imgData.regularImagesArray }}
-                        {{ $firstImage := $imgData.firstImage }}
-                        
-                        {{/* Determine default selected variable1 and variable2 */}}
-                        {{$defaultVariable1 := "-"}}
-                        {{if gt (len $variable1Values) 0}}
-                          {{$defaultVariable1 = index $variable1Values 0}}
-                        {{end}}
-                        {{$defaultVariable2 := "-"}}
-                        {{if gt (len $variable2Values) 0}}
-                          {{$defaultVariable2 = index $variable2Values 0}}
-                        {{end}}
-     
-                        {{ $avail := .Params.availability | default $section.Params.availability }}
-                        <section class="menu-item-card menu-reels-slide{{ if and $imgData.hasImage (not site.Params.menuImageService.enabled) }} menu-item-card--has-image{{ end }}" 
-                            {{ with $avail }}data-availability="{{ $avail | jsonify }}"{{ end }}
-                            data-reel-section="{{ $category }}"
-                            data-section-slug="{{ .Section }}"
-                            data-item-url="{{ .RelPermalink }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            data-item-expanded="false"
-                            data-prices-array="{{ $pricesArray | jsonify }}"
-                            data-active-promo-percent="{{ if and $activePromo (eq (index $activePromo "type") "percent_off") }}{{ index $activePromo "value" }}{{ else }}0{{ end }}"
-                            data-selected-variable1="{{ $defaultVariable1 }}"
-                            data-selected-variable2="{{ $defaultVariable2 }}"
-                            data-side-categories="{{ $sideCategories | jsonify }}"
-                            data-modifications="{{ $modifications | jsonify }}"
-                            data-additions="{{ $additions | jsonify }}"
-                            data-images-array="{{ $imagesArray | jsonify }}"
-                            data-regular-images-array="{{ $regularImagesArray | jsonify }}"
-                            data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}"
-                            data-tags="{{ (.Params.tags | default (slice)) | jsonify }}"
-                            data-ingredients="{{ (.Params.ingredients | default (slice)) | jsonify }}"
-                            data-cookingmethods="{{ (.Params.cookingmethods | default (slice)) | jsonify }}"
-                            data-types="{{ (.Params.types | default (slice)) | jsonify }}"
-                            data-events="{{ (.Params.events | default (slice)) | jsonify }}">
-                            {{ partial "components/menu-add-photo-btn.html" . }}
-                            {{ partial "components/menu-favorite-btn.html" . }}
-                            {{- if site.Params.menuImageService.enabled -}}
-                            {{ partial "components/menu-smash-pass.html" (dict "menuItemPath" .RelPermalink) }}
-                            {{- end -}}
-                            <div class="menu-item-row-top">
-                              {{ if and $imgData.hasImage (not site.Params.menuImageService.enabled) }}
-                                <a href="{{ .RelPermalink }}" class="menu-item-image-link" aria-label="View {{ .LinkTitle }}">
-                                  <div class="menu-item-image">
-                                    {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
-                                  </div>
-                                </a>
-                              {{ end }}
-                              <div class="menu-item-header-content">
-                                <h3 class="menu-item-title">
-                                  <span class="menu-item-title-text">{{ .LinkTitle }}</span>
-                                  {{ if and $activePromo (index $activePromo "label") }}<span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}
-                                </h3>
-                                <div class="menu-item-row-middle">
-                                  <div class="menu-item-description">
-                              {{ .Summary | truncate 120 }}
-                                  </div>
-                                  <div class="menu-item-price">
-                                    {{$counter := 0}}
-                                    {{$number := slice}}
-                                    {{$total := 0}}
-                                    {{range .Params.prices}}
-                                      {{$counter = add $counter 1}}
-                                      {{$number = $number | append .price}}
-                                      {{$total = add $total .price}}
-                                    {{end}} 
-                                    {{$number := sort $number}}
-                                    {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
-                                    {{ if eq (index $number 0) (index $number (sub $counter 1)) }}
-                                      {{ $price := float (index $number (sub $counter 1)) }}
-                                      {{ if $hasPromoDiscount }}
-                                        {{ $discountPct := float (index $activePromo "value") }}
-                                        {{ $discounted := div (mul $price (sub 100 $discountPct)) 100 }}
-                                        <span class="menu-item-price-original">${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}</span>
-                                        <span class="menu-item-price-promo">${{ (printf "%.2f" $discounted) | replaceRE "\\.00$" "" }}</span>
-                                      {{ else }}
-                                        ${{ (printf "%.2f" $price) | replaceRE "\\.00$" "" }}
-                                      {{ end }}
-                                    {{else }}
-                                      {{ $price1 := float (index $number 0) }}
-                                      {{ $price2 := float (index $number (sub $counter 1)) }}
-                                      {{ if $hasPromoDiscount }}
-                                        {{ $discountPct := float (index $activePromo "value") }}
-                                        {{ $disc1 := div (mul $price1 (sub 100 $discountPct)) 100 }}
-                                        {{ $disc2 := div (mul $price2 (sub 100 $discountPct)) 100 }}
-                                        <span class="menu-item-price-original">${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}</span>
-                                        <span class="menu-item-price-promo">${{ (printf "%.2f" $disc1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $disc2) | replaceRE "\\.00$" "" }}</span>
-                                      {{ else }}
-                                        ${{ (printf "%.2f" $price1) | replaceRE "\\.00$" "" }} | ${{ (printf "%.2f" $price2) | replaceRE "\\.00$" "" }}      
-                                      {{ end }}
-                                    {{ end }}
-                                  </div>
-                                </div>
-                                <div class="menu-item-options">
-                              <ul class="sizes">
-                                {{ range $index, $currentItem := $variable1Values }}
-                                  {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
-                                    <li>
-                                      {{ $currentItem }}
-                                    </li>
-                                  {{ end }}
-                                {{ end }}
-                              </ul>
-                              <ul class="flavours">
-                                {{ range $index, $currentItem := $variable2Values }}
-                                  {{ if not (or (eq $currentItem "-") (eq $currentItem "None")) }}
-                                    <li>
-                                      {{ $currentItem }}
-                                    </li>
-                                  {{ end }}
-                                {{ end }}
-                              </ul> 
-                                </div>
-                              </div>
-                            </div>
-                        </section>
-                        
-                        {{ end }}
-                      {{ end }}
-                  </div> 
                 </div>
               </div>
           {{ end }}
@@ -297,6 +86,14 @@
     {{ end }}
   {{ end }}
   </div>
+  {{- if site.Params.ads.enabled -}}
+  <section class="menu-reels-slide menu-reels-slide--bottom-ads" id="menu-reels-sponsored-ads" data-reel-section="Sponsored">
+    <a class="menu-anchor" id="Sponsored"></a>
+    <div class="bottomads menu-reels-bottom-ads-in-track">
+      {{ partial "ads/frontpageads.html" . }}
+    </div>
+  </section>
+  {{- end -}}
   </div>
   </div>
   
