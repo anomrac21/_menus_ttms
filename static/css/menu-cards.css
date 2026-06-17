@@ -9,6 +9,7 @@
 
 /* ── Card shell ── */
 .menu-item-card {
+    padding: 1em;
     --menu-card-radius: 16px;
     --menu-card-accent-a: color-mix(in srgb, var(--selected-button-color2, #b56024) 82%, #fff);
     --menu-card-accent-b: color-mix(in srgb, var(--selected-button-color3, #fcd000) 68%, #fff);

@@ -3,19 +3,13 @@ let isAdsLoading = false;
 let adManagerCheckCount = 0;
 let maxLoaderTimeout = null;
 
-// CRITICAL: Ensure loader is visible immediately, even before DOMContentLoaded
-// This runs as soon as the script is parsed
-(function() {
-    // Set up early loader timeout that starts immediately
-    maxLoaderTimeout = setTimeout(() => {
-        console.log('Emergency loader timeout - forcing hide');
-        const loader = document.getElementById('loader');
-        if (loader) {
-            loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none';
-            setTimeout(() => loader.style.display = 'none', 500);
+// Fallback hide if Barba never initializes (very slow networks)
+(function () {
+    maxLoaderTimeout = setTimeout(function () {
+        if (typeof window.hideLoader === 'function') {
+            window.hideLoader();
         }
-    }, 4000); // 4 second emergency timeout
+    }, 12000);
 })();
 
 // Function to ensure ads are loaded with retry mechanism
@@ -100,18 +94,27 @@ function ensureAdsLoaded() {
 document.addEventListener('DOMContentLoaded', function() {
     const loader = document.getElementById('loader');
     const loaderImage = document.getElementById('loaderImage');
-    
-    // Clear emergency timeout and set up proper one now that DOM is ready
+
+    if (!loader) {
+        return;
+    }
+
+    if (typeof barba === 'undefined') {
+        console.error('Barba.js not loaded. Hiding loader without transitions.');
+        setTimeout(function () {
+            loader.classList.add('loader-hide-down');
+            var footerBtns = document.getElementById('footerBtns');
+            if (footerBtns) footerBtns.classList.add('visible');
+        }, 800);
+        return;
+    }
+
     if (maxLoaderTimeout) {
         clearTimeout(maxLoaderTimeout);
     }
-    
-    // Maximum timeout to hide loader (fallback in case page takes too long)
-    maxLoaderTimeout = setTimeout(() => {
-        console.log('Maximum loader timeout reached, force hiding loader...');
-        hideLoader();
-    }, 4000); // 4 seconds maximum
-    
+
+    let isHidingLoader = false;
+
     let animations = [  'loader-hide-up',
                         'loader-hide-up-right',
                         'loader-hide-right',
@@ -145,33 +148,108 @@ document.addEventListener('DOMContentLoaded', function() {
                         'loader-hide-left-rotate-scale',
                         'loader-hide-up-left-rotate-scale'];
     let randomAnim = '';
-    
-    function showLoader() {
-        // Remove all animation classes
-        animations.forEach(anim => {
+
+    function resetLoaderVisible() {
+        loader.style.display = 'flex';
+        loader.style.opacity = '';
+        loader.style.visibility = '';
+        loader.style.pointerEvents = '';
+        if (loaderImage) {
+            loaderImage.style.display = 'block';
+        }
+        animations.forEach(function (anim) {
             loader.classList.remove(anim);
         });
-        // console.log("Show loader");
     }
-    
+
+    function showLoader() {
+        if (!loader) return;
+        isHidingLoader = false;
+        resetLoaderVisible();
+    }
+
     function hideLoader() {
-        // Clear the maximum timeout since we're hiding the loader normally
+        if (!loader || isHidingLoader) return;
+        isHidingLoader = true;
+
         if (maxLoaderTimeout) {
             clearTimeout(maxLoaderTimeout);
             maxLoaderTimeout = null;
         }
-        
+
+        animations.forEach(function (anim) {
+            loader.classList.remove(anim);
+        });
+
         randomAnim = animations[Math.floor(Math.random() * animations.length)];
         loader.classList.add(randomAnim);
-        const footerBtns = document.getElementById("footerBtns");
+
+        const footerBtns = document.getElementById('footerBtns');
         if (footerBtns) {
-            footerBtns.classList.add("visible");
+            footerBtns.classList.add('visible');
         }
-        
-        // Note: Ad loading is now handled by barba transitions for better control
-        // Removed ensureAdsLoaded() call to prevent race conditions
-        
-        // console.log("hide loader");
+
+        setTimeout(function () {
+            isHidingLoader = false;
+        }, 500);
+    }
+
+    window.showLoader = showLoader;
+    window.hideLoader = hideLoader;
+    window.allowLoaderHide = hideLoader;
+
+    function scheduleLoaderFallback() {
+        if (maxLoaderTimeout) {
+            clearTimeout(maxLoaderTimeout);
+        }
+        maxLoaderTimeout = setTimeout(function () {
+            console.log('Maximum loader timeout reached, force hiding loader...');
+            hideLoader();
+        }, 10000);
+    }
+
+    function waitMs(ms) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, ms);
+        });
+    }
+
+    async function waitForInitialPageReady(isReelsHome) {
+        resetLoaderVisible();
+
+        if (isReelsHome) {
+            var bootstrap = Promise.resolve();
+            if (typeof window.waitForHomeMenuBootstrap === 'function') {
+                bootstrap = window.waitForHomeMenuBootstrap().catch(function () {
+                    return null;
+                });
+            } else {
+                var viewport = document.getElementById('menu-reels-viewport');
+                var apiUrl =
+                    viewport &&
+                    (viewport.getAttribute('data-home-menu-api') || '/api/menu-items.json');
+                if (apiUrl) {
+                    bootstrap = fetch(apiUrl, { credentials: 'same-origin' })
+                        .then(function (r) {
+                            return r.ok ? r.json() : null;
+                        })
+                        .catch(function () {
+                            return null;
+                        });
+                }
+            }
+
+            await Promise.all([waitMs(600), bootstrap]);
+            return;
+        }
+
+        await Promise.race([
+            new Promise(function (resolve) {
+                if (document.readyState === 'complete') resolve();
+                else window.addEventListener('load', resolve, { once: true });
+            }),
+            waitMs(800),
+        ]);
     }
 
     function getAd() {
@@ -221,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
         transitions: [{
             name: 'fade',
             async leave(data) {
+                scheduleLoaderFallback();
                 const menublock = document.getElementById("menublock");
                 if (menublock) {
                     localStorage.setItem("headerScroll", menublock.scrollLeft);
@@ -245,6 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await new Promise(resolve => setTimeout(resolve, 366));
             },
             async enter(data) {
+                scheduleLoaderFallback();
                 // Reset scroll position immediately to prevent spacing issues
                 window.scrollTo(0, 0);
                 document.documentElement.scrollTop = 0;
@@ -351,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             async once(data) {
                 var isReelsHome = !!document.getElementById('menu-reels-viewport');
+                scheduleLoaderFallback();
 
                 // Reels home defers video ads until the sponsored slide is near viewport
                 if (!isReelsHome) {
@@ -363,18 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 300);
                 }
 
-                // Reels home: hide quickly so hero LCP is not blocked by window.load (ad videos)
-                if (isReelsHome) {
-                    await new Promise(function (resolve) { setTimeout(resolve, 600); });
-                } else {
-                    await Promise.race([
-                        new Promise(function (resolve) {
-                            if (document.readyState === 'complete') resolve();
-                            else window.addEventListener('load', resolve, { once: true });
-                        }),
-                        new Promise(function (resolve) { setTimeout(resolve, 500); })
-                    ]);
-                }
+                await waitForInitialPageReady(isReelsHome);
                 hideLoader();
                 
                 setTimeout(() => {

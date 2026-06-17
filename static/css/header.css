@@ -566,6 +566,10 @@
     display: none;
 }
 
+.menu-taxonomy-tabs__panel[hidden] {
+    display: none !important;
+}
+
 .menu-taxonomy-tabs__panel.is-active {
     display: block;
 }

@@ -39,7 +39,7 @@
             <h2 class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
               <a href="{{ $titleurl }}">{{ $title }}</a>
             </h2>
-            <p class="menu-header__item-count">{{ $promoCount }} {{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</p>
+            <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">0</span> <span class="menu-header__item-count__suffix">{{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</span></p>
           </section>
           {{ partial "ads/homepageclientads.html" . }} 
           {{ $advertisementsRendered = true }}
@@ -71,7 +71,7 @@
                             <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
                           {{ end }}
                         </h2>
-                        <p class="menu-header__item-count">{{ $itemCount }} {{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</p>
+                        <p class="menu-header__item-count is-count-pending" aria-live="polite"><span class="menu-header__item-count__value">0</span> <span class="menu-header__item-count__suffix">{{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</span></p>
                       </div>
                       <div class="menu-summary item">
                         {{ .Summary }}

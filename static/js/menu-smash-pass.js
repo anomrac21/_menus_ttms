@@ -230,6 +230,15 @@
     return !!(root && root.classList.contains('menu-item-smash-pass'));
   }
 
+  function shouldInitItemRootImmediately(root) {
+    return !!(
+      root &&
+      isItemScopedRoot(root) &&
+      (root.classList.contains('menu-smash-pass--modal') ||
+        root.classList.contains('menu-smash-pass--single-page'))
+    );
+  }
+
   function isRootInitialized(root) {
     return root && root.getAttribute('data-smash-pass-inited') === '1';
   }
@@ -276,6 +285,10 @@
     if (!pendingRoots.length) return;
 
     pendingRoots.forEach(function (root) {
+      if (shouldInitItemRootImmediately(root)) {
+        initRootWithFeed(root, feed, generation);
+        return;
+      }
       var card = root.closest('.menu-item-card.menu-reels-slide');
       if (isCardNearViewport(card, track)) {
         initRootWithFeed(root, feed, generation);
@@ -307,9 +320,32 @@
     );
 
     remaining.forEach(function (root) {
+      if (shouldInitItemRootImmediately(root)) return;
       var card = root.closest('.menu-item-card.menu-reels-slide');
       if (card) lazyInitObserver.observe(card);
     });
+  }
+
+  function initMenuSmashPassRoot(root) {
+    if (!root || !cfg() || !cfg().enabled || isRootInitialized(root)) return;
+
+    var generation = globalGen;
+    if (sharedFeedSnapshot && sharedFeedSnapshot.generation === generation) {
+      initRootWithFeed(root, sharedFeedSnapshot.feed, generation);
+      return;
+    }
+
+    fetchSharedFeed()
+      .then(function (feed) {
+        if (generation !== globalGen) return;
+        sharedFeedSnapshot = { feed: feed, generation: generation };
+        initRootWithFeed(root, feed, generation);
+      })
+      .catch(function () {
+        if (generation !== globalGen) return;
+        sharedFeedSnapshot = { feed: [], generation: generation };
+        initRootWithFeed(root, [], generation);
+      });
   }
 
   function createInstance(root) {
@@ -1275,8 +1311,14 @@
     options = options || {};
     var client = options.clientId || clientIdForRoot(null) || '_ttms_menu_demo';
     var path = options.menuItemPath || '';
-    var isModal = !!options.modal;
-    var extra = isModal ? ' menu-smash-pass--modal' : '';
+    var extra = '';
+    if (options.modal) {
+      extra = ' menu-smash-pass--modal';
+    } else if (options.singlePage) {
+      extra = ' menu-smash-pass--single-page';
+    } else if (options.extraClass) {
+      extra = ' ' + options.extraClass;
+    }
     var showVoteUi = !path;
     var reelInner =
       (showVoteUi ? '<p class="menu-smash-pass__progress"></p>' : '') +
@@ -1303,6 +1345,7 @@
   function invalidateMenuSmashPassFeed() {
     feedCache.data = null;
     feedCache.promise = null;
+    sharedFeedSnapshot = null;
     if (feedCache.abort) {
       feedCache.abort.abort();
       feedCache.abort = null;
@@ -1312,6 +1355,7 @@
   window.buildMenuSmashPassMarkup = buildMenuSmashPassMarkup;
   window.invalidateMenuSmashPassFeed = invalidateMenuSmashPassFeed;
   window.initMenuSmashPass = initMenuSmashPass;
+  window.initMenuSmashPassRoot = initMenuSmashPassRoot;
   window.destroyMenuSmashPass = destroyMenuSmashPass;
 
   function registerSmashPassAuthWatch() {

@@ -604,7 +604,17 @@
     if (typeof window.invalidateMenuSmashPassFeed === 'function') {
       window.invalidateMenuSmashPassFeed();
     }
-    if (typeof window.initMenuSmashPass === 'function') {
+    var root =
+      host &&
+      host.querySelector(
+        '.menu-smash-pass--modal, .menu-smash-pass--single-page, .menu-item-smash-pass[data-menu-item-path]'
+      );
+    if (root) {
+      root.removeAttribute('data-smash-pass-inited');
+    }
+    if (root && typeof window.initMenuSmashPassRoot === 'function') {
+      window.initMenuSmashPassRoot(root);
+    } else if (typeof window.initMenuSmashPass === 'function') {
       window.initMenuSmashPass();
     }
   }

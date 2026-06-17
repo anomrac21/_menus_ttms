@@ -1775,9 +1775,9 @@
                 const menuImageClientId = (menuImageCfg && menuImageCfg.clientId) ||
                     (typeof window.SITE_CLIENT_ID !== 'undefined' && window.SITE_CLIENT_ID) ||
                     '_ttms_menu_demo';
-                const useSmashPassMedia = menuImageEnabled && useReelsModal;
+                const useSmashPassMedia = !!menuImageEnabled;
                 
-                // Build smash-or-pass (reels modal) or image carousel HTML
+                // Build smash-or-pass (menu images) or legacy promo carousel HTML
                 let smashPassHTML = '';
                 let imageCarouselHTML = '';
                 const hasExpandedCarousel = imagesArray && imagesArray.length > 0;
@@ -1786,7 +1786,8 @@
                         smashPassHTML = window.buildMenuSmashPassMarkup({
                             clientId: menuImageClientId,
                             menuItemPath: url,
-                            modal: true,
+                            modal: useReelsModal,
+                            singlePage: !useReelsModal,
                         });
                     }
                 } else if (hasExpandedCarousel) {
@@ -1940,8 +1941,10 @@
             loadingDiv.style.display = 'none';
             dataDiv.style.display = 'block';
 
-            const modalSmashPass = dataDiv.querySelector('.menu-smash-pass--modal');
-            if (!modalSmashPass) {
+            const smashPassRoot = dataDiv.querySelector(
+                '.menu-smash-pass--modal, .menu-smash-pass--single-page'
+            );
+            if (!smashPassRoot) {
                 dataDiv.querySelectorAll('.expanded-image-carousel').forEach(bindExpandedCarouselImages);
             }
 
@@ -1955,7 +1958,9 @@
                 }
             }
 
-            if (modalSmashPass && typeof window.initMenuSmashPass === 'function') {
+            if (smashPassRoot && typeof window.initMenuSmashPassRoot === 'function') {
+                window.initMenuSmashPassRoot(smashPassRoot);
+            } else if (smashPassRoot && typeof window.initMenuSmashPass === 'function') {
                 window.initMenuSmashPass();
             }
 

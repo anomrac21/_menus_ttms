@@ -12,6 +12,151 @@
   var proximityTick = false;
   var loaderConfig = null;
   var loaderStarted = false;
+  var countAnimations = new WeakMap();
+  var titleCountObserver = null;
+  var animatedTitleSections = new WeakSet();
+
+  function getTargetItemCount(section) {
+    if (!section) return 0;
+    var n = parseInt(section.getAttribute('data-item-count'), 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  }
+
+  function getCountRoot(section) {
+    return section ? section.querySelector('.menu-header__item-count') : null;
+  }
+
+  function getCurrentCount(section) {
+    var root = getCountRoot(section);
+    if (!root) return 0;
+    var valueEl = root.querySelector('.menu-header__item-count__value');
+    if (valueEl) {
+      var parsed = parseInt(valueEl.textContent, 10);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    var match = (root.textContent || '').match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  function setCountSuffix(root, count) {
+    var suffix = root && root.querySelector('.menu-header__item-count__suffix');
+    if (suffix) suffix.textContent = count === 1 ? 'item' : 'items';
+  }
+
+  function updateSectionCountDisplay(section, count, loading) {
+    var root = getCountRoot(section);
+    if (!root) return;
+    var valueEl = root.querySelector('.menu-header__item-count__value');
+    if (valueEl) {
+      valueEl.textContent = String(count);
+    } else {
+      root.textContent = count + (count === 1 ? ' item' : ' items');
+    }
+    setCountSuffix(root, count);
+    root.classList.toggle('is-count-loading', !!loading);
+    root.classList.toggle('is-count-pending', !!loading);
+    section.classList.toggle('is-section-loading', !!loading);
+  }
+
+  function stopSectionCountAnimation(section) {
+    var anim = countAnimations.get(section);
+    if (!anim) return;
+    if (anim.raf) cancelAnimationFrame(anim.raf);
+    countAnimations.delete(section);
+  }
+
+  function animateSectionItemCount(section, options) {
+    if (!section) return;
+    options = options || {};
+    var target = options.target != null ? options.target : getTargetItemCount(section);
+    var from = options.from != null ? options.from : getCurrentCount(section);
+    var duration = options.duration || 1100;
+    var clearLoadingOnComplete = !!options.clearLoadingOnComplete;
+
+    stopSectionCountAnimation(section);
+    updateSectionCountDisplay(section, from, true);
+
+    var startTime = null;
+    function tick(now) {
+      if (!section.isConnected) {
+        stopSectionCountAnimation(section);
+        return;
+      }
+      if (!startTime) startTime = now;
+      var progress = Math.min(1, (now - startTime) / duration);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var current = Math.round(from + (target - from) * eased);
+      updateSectionCountDisplay(section, current, true);
+      if (progress < 1) {
+        countAnimations.set(section, { raf: requestAnimationFrame(tick) });
+        return;
+      }
+      countAnimations.delete(section);
+      if (clearLoadingOnComplete) {
+        updateSectionCountDisplay(section, target, false);
+      }
+    }
+
+    countAnimations.set(section, { raf: requestAnimationFrame(tick) });
+  }
+
+  function finalizeSectionItemCount(section, actualCount) {
+    if (!section) return;
+    stopSectionCountAnimation(section);
+    var count =
+      actualCount != null && Number.isFinite(actualCount)
+        ? actualCount
+        : getTargetItemCount(section);
+    updateSectionCountDisplay(section, count, false);
+    section.classList.remove('is-section-loading');
+  }
+
+  function initPendingSectionCounts() {
+    var track = getTrack();
+    if (!track) return;
+    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      if (header.dataset.homeMenuLoaded === '1') return;
+      updateSectionCountDisplay(header, 0, true);
+    });
+  }
+
+  function observeSectionTitleCounts() {
+    var track = getTrack();
+    if (!track) return;
+
+    if (titleCountObserver) titleCountObserver.disconnect();
+
+    var titles = track.querySelectorAll('.menu-reels-slide--section-title[data-item-count]');
+    if (!titles.length) return;
+
+    titleCountObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var section = entry.target;
+          if (animatedTitleSections.has(section)) return;
+          animatedTitleSections.add(section);
+          animateSectionItemCount(section, { from: 0, duration: 900, clearLoadingOnComplete: true });
+          titleCountObserver.unobserve(section);
+        });
+      },
+      { root: track, threshold: 0.35 }
+    );
+
+    titles.forEach(function (section) {
+      updateSectionCountDisplay(section, 0, true);
+      titleCountObserver.observe(section);
+    });
+  }
+
+  function beginSectionLoadFeedback(header) {
+    if (!header || header.dataset.homeMenuLoaded === '1') return;
+    animateSectionItemCount(header, {
+      from: getCurrentCount(header),
+      target: getTargetItemCount(header),
+      duration: 1200,
+    });
+  }
 
   var PROXIMITY_VIEWPORTS = 2.5;
 
@@ -397,6 +542,7 @@
 
     header.removeAttribute('aria-busy');
     header.dataset.homeMenuLoaded = '1';
+    finalizeSectionItemCount(header, items.length);
     scheduleReelsRefresh();
   }
 
@@ -407,11 +553,14 @@
       return Promise.resolve();
     }
 
+    beginSectionLoadFeedback(header);
+
     return fetchMenuItems(config.apiUrl).then(function (grouped) {
       var items = grouped[slug] || [];
       if (!items.length) {
         header.removeAttribute('aria-busy');
         header.dataset.homeMenuLoaded = '1';
+        finalizeSectionItemCount(header, 0);
         return;
       }
       renderSectionAfterHeader(header, items, config);
@@ -530,12 +679,16 @@
   function startHomeMenuLoader(config) {
     loaderConfig = config;
     if (loaderStarted) {
+      initPendingSectionCounts();
+      observeSectionTitleCounts();
       observeSectionHeaders(config);
       scheduleProximityCheck();
       return;
     }
     loaderStarted = true;
 
+    initPendingSectionCounts();
+    observeSectionTitleCounts();
     observeSectionHeaders(config);
     bindTrackProximity(config);
     bindMenublockPreload(config);
@@ -555,17 +708,44 @@
     startHomeMenuLoader(config);
   }
 
+  function waitForHomeMenuBootstrap() {
+    var root = getConfigRoot();
+    if (!root || !root.hasAttribute('data-home-menu-api')) {
+      return Promise.resolve(null);
+    }
+    var apiUrl = root.getAttribute('data-home-menu-api') || '/api/menu-items.json';
+    return fetchMenuItems(apiUrl).then(function (data) {
+      try {
+        window.dispatchEvent(new CustomEvent('ttms:home-menu-ready'));
+      } catch (_) { /* ignore */ }
+      return data;
+    });
+  }
+
   function resetHomeMenuLoader() {
     menuBySection = null;
     fetchPromise = null;
     loaderStarted = false;
     loaderConfig = null;
+    animatedTitleSections = new WeakSet();
     if (headerObserver) {
       headerObserver.disconnect();
       headerObserver = null;
     }
+    if (titleCountObserver) {
+      titleCountObserver.disconnect();
+      titleCountObserver = null;
+    }
     var track = getTrack();
-    if (track) track._ttmsHomeMenuProximityBound = false;
+    if (track) {
+      track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+        stopSectionCountAnimation(header);
+      });
+      track.querySelectorAll('.menu-reels-slide--section-title[data-item-count]').forEach(function (section) {
+        stopSectionCountAnimation(section);
+      });
+      track._ttmsHomeMenuProximityBound = false;
+    }
     var menublock = document.getElementById('menublock');
     if (menublock) menublock._ttmsHomeMenuPreloadBound = false;
   }
@@ -580,6 +760,7 @@
 
   window.initHomeMenuLoader = initHomeMenuLoader;
   window.loadHomeMenuForSectionId = loadHomeMenuForSectionId;
+  window.waitForHomeMenuBootstrap = waitForHomeMenuBootstrap;
 
   window.addEventListener('menuReelsFlattened', function () {
     if (!loaderConfig) {
@@ -592,6 +773,7 @@
       };
     }
     observeSectionHeaders(loaderConfig);
+    observeSectionTitleCounts();
     scheduleProximityCheck();
   });
 

@@ -124,6 +124,8 @@
     position: absolute;
     inset: 0;
     border-radius: 1rem;
+    max-width: calc(100vw - 1em);
+    margin: auto;
     overflow: hidden;
     background: #0f172a;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
@@ -667,7 +669,8 @@
 }
 
 .menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card--add-photo,
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card--add-photo {
+.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card--add-photo,
+.menu-item-card.expanded .menu-smash-pass--single-page .menu-smash-pass-card--add-photo {
     border-color: rgba(129, 140, 248, 0.55);
 }
 
@@ -854,19 +857,19 @@
     right: calc(0.35em + 1.65rem + 0.35rem);
 }
 
-/* Single item page — smash-or-pass replaces image carousel */
-.single-page-item-card .single-page-content > .menu-item-smash-pass.menu-smash-pass--single-page {
+/* Item detail (single page + inline expanded card) — smash-or-pass replaces carousel */
+:is(.single-page-item-card .single-page-content, .menu-item-card.expanded .expanded-item-details)
+    > .menu-item-smash-pass.menu-smash-pass--single-page {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.28);
     padding: 0.75rem 0 1rem;
     position: relative;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass__empty-state:not(.hidden) {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass__empty-state:not(.hidden) {
     flex: 0 0 auto;
     width: min(100%, 28rem);
     max-width: 100%;
@@ -877,7 +880,7 @@
     min-height: 280px;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass__reel:not(.hidden) {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass__reel:not(.hidden) {
     flex: 0 1 auto;
     min-height: 0;
     display: flex;
@@ -888,7 +891,7 @@
     width: 100%;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass__stack {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass__stack {
     flex: 0 0 auto;
     width: min(100%, 28rem);
     max-width: 100%;
@@ -899,11 +902,11 @@
     min-height: 280px;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card {
     overflow: hidden;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card__media {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card__media {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -912,7 +915,7 @@
     overflow: hidden;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card__img-stage {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card__img-stage {
     position: relative;
     flex: 1 1 auto;
     min-height: 0;
@@ -924,7 +927,7 @@
     overflow: hidden;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card__img--backdrop {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card__img--backdrop {
     position: absolute;
     inset: -10%;
     width: 120%;
@@ -937,7 +940,7 @@
     pointer-events: none;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card__img--front {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card__img--front {
     position: relative;
     z-index: 1;
     object-fit: contain;
@@ -949,11 +952,11 @@
     pointer-events: none;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card.is-behind .menu-smash-pass-card__img--front {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card.is-behind .menu-smash-pass-card__img--front {
     object-fit: contain;
 }
 
-.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card__info--compact {
+:is(.single-page-item-card, .menu-item-card.expanded) .menu-smash-pass--single-page .menu-smash-pass-card__info--compact {
     padding: 0.35rem 0.5rem 0.45rem;
 }
 

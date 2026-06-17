@@ -75,15 +75,44 @@
     filter: drop-shadow(1px 1px 0px #000);
   }
   
-  /* Hide classes for loader animations - basic fallback */
+  /* Loader hide states — must cover every class used in loader.js */
   #loader.loader-hide-up,
+  #loader.loader-hide-up-right,
+  #loader.loader-hide-right,
+  #loader.loader-hide-down-right,
   #loader.loader-hide-down,
+  #loader.loader-hide-down-left,
   #loader.loader-hide-left,
-  #loader.loader-hide-right {
-    opacity: 0;
-    pointer-events: none;
+  #loader.loader-hide-up-left,
+  #loader.loader-hide-up-rotate-left,
+  #loader.loader-hide-up-right-rotate-left,
+  #loader.loader-hide-right-rotate-left,
+  #loader.loader-hide-down-right-rotate-left,
+  #loader.loader-hide-down-rotate-left,
+  #loader.loader-hide-down-left-rotate-left,
+  #loader.loader-hide-left-rotate-left,
+  #loader.loader-hide-up-left-rotate-left,
+  #loader.loader-hide-up-rotate-right,
+  #loader.loader-hide-up-right-rotate-right,
+  #loader.loader-hide-right-rotate-right,
+  #loader.loader-hide-down-right-rotate-right,
+  #loader.loader-hide-down-rotate-right,
+  #loader.loader-hide-down-left-rotate-right,
+  #loader.loader-hide-left-rotate-right,
+  #loader.loader-hide-up-left-rotate-right,
+  #loader.loader-hide-up-rotate-scale,
+  #loader.loader-hide-up-right-rotate-scale,
+  #loader.loader-hide-right-rotate-scale,
+  #loader.loader-hide-down-right-rotate-scale,
+  #loader.loader-hide-down-rotate-scale,
+  #loader.loader-hide-down-left-rotate-scale,
+  #loader.loader-hide-left-rotate-scale,
+  #loader.loader-hide-up-left-rotate-scale {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
-  
+
   #loader.loader-hide-up { transform: translateY(-100%); }
   #loader.loader-hide-down { transform: translateY(100%); }
   #loader.loader-hide-left { transform: translateX(-100%); }

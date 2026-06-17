@@ -485,6 +485,54 @@ body.menu-search-active .menu-reels-track {
     color: color-mix(in srgb, var(--main-text, #fff) 72%, transparent);
 }
 
+.menu-header__item-count__value {
+    font-variant-numeric: tabular-nums;
+    min-width: 1.25ch;
+    display: inline-block;
+}
+
+.menu-header__item-count.is-count-loading .menu-header__item-count__value {
+    color: color-mix(in srgb, var(--selected-button-color3, #fcd000) 78%, var(--main-text, #fff));
+    animation: menu-section-count-pulse 0.85s ease-in-out infinite;
+}
+
+.menu-header.menu-reels-slide.is-section-loading .headerstyle::after,
+.menu-reels-slide--section-title.is-section-loading::after {
+    content: '';
+    display: block;
+    width: min(5rem, 42%);
+    height: 2px;
+    margin: 0.45rem auto 0;
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--selected-button-color3, #fcd000) 70%, #fff),
+        transparent
+    );
+    background-size: 200% 100%;
+    animation: menu-section-load-bar 1.1s ease-in-out infinite;
+}
+
+@keyframes menu-section-count-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.72;
+    }
+}
+
+@keyframes menu-section-load-bar {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
+
 .menu-header.menu-reels-slide .menu-summary {
     font-size: 0.95rem;
     opacity: 0.9;

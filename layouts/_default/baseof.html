@@ -62,11 +62,13 @@
   <!-- Barba.js must load early as loader.js depends on it -->
   <script src="https://cdn.jsdelivr.net/npm/@barba/core@2.9.7/dist/barba.umd.js" defer></script>
   <script src="/js/barba-lifecycle.js" defer></script>
-  
-  <!-- Loader script - High priority, loads after Barba -->
+  <script src="/js/home-menu-loader.js" defer></script>
+
+  <!-- Loader script - High priority, loads after Barba + home menu bootstrap -->
   <script src="/js/loader.js" defer></script>
   <script src="/js/openinghours.js" defer></script>
   <script src="/js/section-scroll.js" defer></script>
+  <script src="/js/menu-taxonomy-tabs.js" defer></script>
   
   {{- if site.Params.ads.enabled -}}
   <!-- Ads client (Instagram-style reels) + homepage ad manager -->
@@ -78,9 +80,6 @@
   <script src="/js/menu-smash-pass.js" defer></script>
   {{- end -}}
   <script src="/js/menu-reels.js" defer></script>
-  {{- if .IsHome -}}
-  <script src="/js/home-menu-loader.js" defer></script>
-  {{- end -}}
   
   <!-- Core app functionality - deferred -->
   <script src="/js/app.js" defer></script>

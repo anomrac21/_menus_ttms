@@ -11,6 +11,9 @@
     if (typeof window.hydrateAllDraftMenuCardImages === 'function') {
       window.hydrateAllDraftMenuCardImages();
     }
+    if (typeof window.initMenuSearchBar === 'function') {
+      window.initMenuSearchBar();
+    }
     if (typeof window.liveSearch === 'function') {
       var searchInput = document.getElementById('searchbox');
       if (searchInput && searchInput.value.trim()) {
@@ -40,6 +43,12 @@
     }
     if (document.querySelector('.location-picker') && typeof window.initLocationPicker === 'function') {
       window.initLocationPicker();
+    }
+    if (document.querySelector('[data-menu-taxonomy-tabs]') && typeof window.initMenuTaxonomyTabs === 'function') {
+      if (typeof window.resetMenuTaxonomyTabs === 'function') {
+        window.resetMenuTaxonomyTabs(document.querySelector('[data-menu-taxonomy-tabs]'));
+      }
+      window.initMenuTaxonomyTabs();
     }
   }
 
