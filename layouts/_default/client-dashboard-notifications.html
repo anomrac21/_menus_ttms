@@ -1,6 +1,15 @@
 {{ define "main" }}
 {{- $notifyApiUrl := site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" -}}
 {{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
+{{- if site.Params.menuImageService.enabled }}
+<script>
+window.MENU_IMAGE_CONFIG = {
+  enabled: true,
+  apiUrl: "{{ site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
+  clientId: "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
+};
+</script>
+{{- end }}
 
 <div class="dashboard-analytics-page dashboard-notify-page" id="dashboardNotificationsPage" data-notify-api-url="{{ $notifyApiUrl }}" data-notify-client-domain="{{ $notifyClientDomain }}">
 
@@ -16,13 +25,9 @@
 
           <h1 class="dashboard-edit-title">Notifications</h1>
 
-          <p class="dashboard-notify-lead">Push alerts, welcome messages, and send history for this menu site.</p>
-
         </div>
 
       </div>
-
-      <a href="{{ site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" }}/dashboard" class="btn-dash btn-dash-secondary dashboard-notify-external-link" id="dashboardNotifyFullDashboardLink" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Notify dashboard</a>
 
     </div>
 
@@ -74,7 +79,7 @@
 
                 <h2 id="notifications-heading" class="dashboard-analytics-heading">Push notifications &amp; alerts</h2>
 
-                <p class="dashboard-analytics-subtitle">Send updates, offers, and reminders to subscribers. Numbers below use the last 30 days where noted.</p>
+                <p class="dashboard-analytics-subtitle">Send updates, offers, and reminders to subscribers. Message counts are unique sends; delivery stats count each subscriber separately.</p>
 
               </div>
 
@@ -82,17 +87,19 @@
 
             <div class="dashboard-analytics-metrics dashboard-notify-metrics" id="dashboardNotificationsMetrics">
 
-              <div class="dashboard-analytics-card dashboard-notify-metric-card">
+              <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--primary">
 
                 <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-send"></i></span>
 
-                <span class="dashboard-analytics-card-label">Notifications sent (30d)</span>
+                <span class="dashboard-analytics-card-label">Messages sent (30d)</span>
 
                 <span class="dashboard-analytics-card-value" id="metricNotifySent30d">—</span>
 
+                <span class="dashboard-analytics-card-meta" id="metricNotifySent30dMeta"></span>
+
               </div>
 
-              <div class="dashboard-analytics-card dashboard-notify-metric-card">
+              <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--primary">
 
                 <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-users"></i></span>
 
@@ -106,9 +113,11 @@
 
                 <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-check-circle"></i></span>
 
-                <span class="dashboard-analytics-card-label">Arrived (30d)</span>
+                <span class="dashboard-analytics-card-label">Recipients reached (30d)</span>
 
                 <span class="dashboard-analytics-card-value" id="metricNotifyArrived30d">—</span>
+
+                <span class="dashboard-analytics-card-meta" id="metricNotifyArrived30dMeta"></span>
 
               </div>
 
@@ -120,6 +129,8 @@
 
                 <span class="dashboard-analytics-card-value" id="metricNotifyOpened30d">—</span>
 
+                <span class="dashboard-analytics-card-meta" id="metricNotifyOpened30dMeta"></span>
+
               </div>
 
               <div class="dashboard-analytics-card dashboard-notify-metric-card">
@@ -130,6 +141,8 @@
 
                 <span class="dashboard-analytics-card-value" id="metricNotifyNotArrived30d">—</span>
 
+                <span class="dashboard-analytics-card-meta" id="metricNotifyNotArrived30dMeta"></span>
+
               </div>
 
               <div class="dashboard-analytics-card dashboard-notify-metric-card">
@@ -139,6 +152,68 @@
                 <span class="dashboard-analytics-card-label">Clicked (30d)</span>
 
                 <span class="dashboard-analytics-card-value" id="metricNotifyClicked30d">—</span>
+
+                <span class="dashboard-analytics-card-meta" id="metricNotifyClicked30dMeta"></span>
+
+              </div>
+
+              <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--growth">
+
+                <span class="dashboard-notify-metric-icon dashboard-notify-metric-icon--growth" aria-hidden="true"><i class="fa fa-user-plus"></i></span>
+
+                <span class="dashboard-analytics-card-label">New subscribers (30d)</span>
+
+                <span class="dashboard-analytics-card-value" id="metricNotifyNewSubscribers30d">—</span>
+
+                <span class="dashboard-analytics-card-meta" id="metricNotifyNewSubscribers30dMeta"></span>
+
+              </div>
+
+              <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--loss">
+
+                <span class="dashboard-notify-metric-icon dashboard-notify-metric-icon--loss" aria-hidden="true"><i class="fa fa-user-times"></i></span>
+
+                <span class="dashboard-analytics-card-label">Unsubscribes (30d)</span>
+
+                <span class="dashboard-analytics-card-value" id="metricNotifyUnsubscribes30d">—</span>
+
+                <span class="dashboard-analytics-card-meta" id="metricNotifyUnsubscribes30dMeta"></span>
+
+              </div>
+
+            </div>
+
+            <div class="dashboard-notify-subsection dashboard-notify-trends" id="dashboardNotifyTrendsSection" aria-labelledby="notify-trends-heading">
+
+              <div class="dashboard-notify-trends-head">
+
+                <h3 id="notify-trends-heading" class="dashboard-notify-subsection-title">Last 30 days</h3>
+
+                <div class="dashboard-notify-trends-legend" id="dashboardNotifyTrendLegend" aria-hidden="true">
+
+                  <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--sent"><i class="fa fa-square" aria-hidden="true"></i> Sent</span>
+
+                  <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--delivered"><i class="fa fa-square" aria-hidden="true"></i> Arrived</span>
+
+                  <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--confirmed"><i class="fa fa-square" aria-hidden="true"></i> Opened</span>
+
+                  <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--clicked"><i class="fa fa-square" aria-hidden="true"></i> Clicked</span>
+
+                  <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--subscribed"><i class="fa fa-square" aria-hidden="true"></i> Subscribers</span>
+
+                  <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--unsubscribed"><i class="fa fa-square" aria-hidden="true"></i> Unsubscribed</span>
+
+                </div>
+
+              </div>
+
+              <p class="dashboard-analytics-subtitle dashboard-notify-subsection-lead">Daily sends, delivery outcomes, and subscriber changes.</p>
+
+              <div class="dashboard-notify-trends-chart-wrap">
+
+                <div class="dashboard-notify-trends-chart" id="dashboardNotifyTrendChart" role="img" aria-label="Notification activity chart for the last 30 days"></div>
+
+                <p id="dashboardNotifyTrendEmpty" class="dashboard-notify-empty" hidden>No activity in this period yet.</p>
 
               </div>
 
@@ -202,45 +277,203 @@
 
                 <h2 id="notify-welcome-heading" class="dashboard-analytics-heading">Welcome message</h2>
 
-                <p class="dashboard-analytics-subtitle">First push subscribers see when they opt in. Unique to this site. Leave blank to use the default text.</p>
-
               </div>
 
             </div>
 
-            <form id="dashboardNotifyWelcomeForm" class="dashboard-settings-form" autocomplete="off">
+            <form id="dashboardNotifyWelcomeForm" class="dashboard-settings-form dashboard-notify-welcome-form" autocomplete="off">
 
-              <div class="dashboard-settings-grid dashboard-settings-form-grid">
+              <div class="dashboard-notify-form-layout">
 
-                <div class="dashboard-settings-row dashboard-settings-row--full">
+                <div class="dashboard-notify-form-fields">
 
-                  <label class="dashboard-settings-label" for="notifyWelcomeTitle">Welcome title</label>
+              <div class="dashboard-notify-form-section">
 
-                  <div class="dashboard-settings-value">
+                  <h3 class="dashboard-notify-form-section-title">Message</h3>
 
-                    <input type="text" id="notifyWelcomeTitle" name="welcome_title" class="dashboard-settings-input" maxlength="200" placeholder="e.g. Thanks for subscribing!">
+                  <p class="dashboard-notify-form-section-lead">Text shown in the first push after someone subscribes. Leave blank for service defaults.</p>
+
+                  <div class="dashboard-settings-grid dashboard-settings-form-grid dashboard-notify-form-grid">
+
+                    <div class="dashboard-settings-row dashboard-settings-row--full">
+
+                      <label class="dashboard-settings-label" for="notifyWelcomeTitle">Welcome title</label>
+
+                      <div class="dashboard-settings-value">
+
+                        <input type="text" id="notifyWelcomeTitle" name="welcome_title" class="dashboard-settings-input" maxlength="200" placeholder="e.g. Thanks for subscribing!">
+
+                      </div>
+
+                    </div>
+
+                    <div class="dashboard-settings-row dashboard-settings-row--full">
+
+                      <label class="dashboard-settings-label" for="notifyWelcomeMessage">Welcome message</label>
+
+                      <div class="dashboard-settings-value">
+
+                        <textarea id="notifyWelcomeMessage" name="welcome_message" class="dashboard-settings-input dashboard-settings-textarea" rows="4" maxlength="2000" placeholder="Short message for new subscribers"></textarea>
+
+                      </div>
+
+                    </div>
 
                   </div>
 
                 </div>
 
-                <div class="dashboard-settings-row dashboard-settings-row--full">
+                <div class="dashboard-notify-form-section" id="notifyWelcomeMediaTabs" data-notify-media-tabs-root>
 
-                  <label class="dashboard-settings-label" for="notifyWelcomeMessage">Welcome message</label>
+                  <h3 class="dashboard-notify-form-section-title">Push images</h3>
 
-                  <div class="dashboard-settings-value">
+                  <p class="dashboard-notify-form-section-lead">Default icon, banner, and badge for welcome and routine alerts on this site.</p>
 
-                    <textarea id="notifyWelcomeMessage" name="welcome_message" class="dashboard-settings-input dashboard-settings-textarea" rows="4" maxlength="2000" placeholder="Short message for new subscribers"></textarea>
+                  <div class="dashboard-notify-preview-tabs dashboard-notify-media-tablist" role="tablist" aria-label="Push image type">
+
+                    <button type="button" class="dashboard-notify-preview-tab dashboard-notify-preview-tab--active" role="tab" id="notifyWelcomeMediaTabIcon" aria-controls="notifyWelcomeMediaPaneIcon" aria-selected="true" data-media-tab="icon"><i class="fa fa-bell" aria-hidden="true"></i> Icon</button>
+
+                    <button type="button" class="dashboard-notify-preview-tab" role="tab" id="notifyWelcomeMediaTabBanner" aria-controls="notifyWelcomeMediaPaneBanner" aria-selected="false" tabindex="-1" data-media-tab="banner"><i class="fa fa-picture-o" aria-hidden="true"></i> Banner</button>
+
+                    <button type="button" class="dashboard-notify-preview-tab" role="tab" id="notifyWelcomeMediaTabBadge" aria-controls="notifyWelcomeMediaPaneBadge" aria-selected="false" tabindex="-1" data-media-tab="badge"><i class="fa fa-certificate" aria-hidden="true"></i> Badge</button>
+
+                  </div>
+
+                  <div class="dashboard-notify-media-panels">
+
+                    <div class="dashboard-notify-preview-pane dashboard-notify-preview-pane--active dashboard-notify-media-pane" id="notifyWelcomeMediaPaneIcon" role="tabpanel" aria-labelledby="notifyWelcomeMediaTabIcon" data-media-pane="icon">
+
+                      <div class="dashboard-notify-media-card dashboard-settings-branding-row" data-notify-media="notifyDefaultIcon">
+
+                        <div class="dashboard-settings-value dashboard-settings-branding-upload dashboard-notify-media-upload dashboard-notify-media-upload--tabbed">
+
+                          <div class="dashboard-notify-media-preview-wrap dashboard-notify-media-preview-wrap--icon">
+
+                            <div class="dashboard-notify-media-placeholder" id="notifyDefaultIconPlaceholder" aria-hidden="true"><i class="fa fa-bell"></i></div>
+
+                            <img id="notifyDefaultIconPreview" class="dashboard-branding-preview" alt="Notification icon preview" hidden>
+
+                          </div>
+
+                          <input type="hidden" id="notifyDefaultIcon" name="notification_icon" value="">
+
+                          <div class="dashboard-notify-media-actions">
+
+                            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary" for="notifyDefaultIconFile">
+
+                              <input type="file" id="notifyDefaultIconFile" class="dashboard-notify-image-file" accept="image/jpeg,image/png,image/gif,image/webp" data-notify-target="notifyDefaultIcon">
+
+                              <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload
+
+                            </label>
+
+                            <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-clear-image" data-notify-target="notifyDefaultIcon" hidden>Remove</button>
+
+                          </div>
+
+                          <span class="dashboard-branding-upload-status" id="notifyDefaultIconStatus" role="status" aria-live="polite"></span>
+
+                          <p class="dashboard-settings-hint">Small alert icon · max 5 MB</p>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <div class="dashboard-notify-preview-pane dashboard-notify-media-pane" id="notifyWelcomeMediaPaneBanner" role="tabpanel" aria-labelledby="notifyWelcomeMediaTabBanner" data-media-pane="banner">
+
+                      <div class="dashboard-notify-media-card dashboard-settings-branding-row" data-notify-media="notifyDefaultImage">
+
+                        <div class="dashboard-settings-value dashboard-settings-branding-upload dashboard-notify-media-upload dashboard-notify-media-upload--tabbed">
+
+                          <div class="dashboard-notify-media-preview-wrap dashboard-notify-media-preview-wrap--wide">
+
+                            <div class="dashboard-notify-media-placeholder dashboard-notify-media-placeholder--wide" id="notifyDefaultImagePlaceholder" aria-hidden="true"><i class="fa fa-picture-o"></i></div>
+
+                            <img id="notifyDefaultImagePreview" class="dashboard-branding-preview dashboard-branding-preview--wide" alt="Notification banner preview" hidden>
+
+                          </div>
+
+                          <input type="hidden" id="notifyDefaultImage" name="notification_image" value="">
+
+                          <div class="dashboard-notify-media-actions">
+
+                            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary" for="notifyDefaultImageFile">
+
+                              <input type="file" id="notifyDefaultImageFile" class="dashboard-notify-image-file" accept="image/jpeg,image/png,image/gif,image/webp" data-notify-target="notifyDefaultImage">
+
+                              <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload
+
+                            </label>
+
+                            <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-clear-image" data-notify-target="notifyDefaultImage" hidden>Remove</button>
+
+                          </div>
+
+                          <span class="dashboard-branding-upload-status" id="notifyDefaultImageStatus" role="status" aria-live="polite"></span>
+
+                          <p class="dashboard-settings-hint">Large image · optional</p>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <div class="dashboard-notify-preview-pane dashboard-notify-media-pane" id="notifyWelcomeMediaPaneBadge" role="tabpanel" aria-labelledby="notifyWelcomeMediaTabBadge" data-media-pane="badge">
+
+                      <div class="dashboard-notify-media-card dashboard-settings-branding-row" data-notify-media="notifyDefaultBadge">
+
+                        <div class="dashboard-settings-value dashboard-settings-branding-upload dashboard-notify-media-upload dashboard-notify-media-upload--tabbed">
+
+                          <div class="dashboard-notify-media-preview-wrap dashboard-notify-media-preview-wrap--icon">
+
+                            <div class="dashboard-notify-media-placeholder" id="notifyDefaultBadgePlaceholder" aria-hidden="true"><i class="fa fa-certificate"></i></div>
+
+                            <img id="notifyDefaultBadgePreview" class="dashboard-branding-preview" alt="Notification badge preview" hidden>
+
+                          </div>
+
+                          <input type="hidden" id="notifyDefaultBadge" name="notification_badge" value="">
+
+                          <div class="dashboard-notify-media-actions">
+
+                            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary" for="notifyDefaultBadgeFile">
+
+                              <input type="file" id="notifyDefaultBadgeFile" class="dashboard-notify-image-file" accept="image/jpeg,image/png,image/gif,image/webp" data-notify-target="notifyDefaultBadge">
+
+                              <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload
+
+                            </label>
+
+                            <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-clear-image" data-notify-target="notifyDefaultBadge" hidden>Remove</button>
+
+                          </div>
+
+                          <span class="dashboard-branding-upload-status" id="notifyDefaultBadgeStatus" role="status" aria-live="polite"></span>
+
+                          <p class="dashboard-settings-hint">Defaults to icon if empty</p>
+
+                        </div>
+
+                      </div>
+
+                    </div>
 
                   </div>
 
                 </div>
+
+                </div>
+
+              {{ partial "dashboard/notify-platform-previews.html" (dict "id" "notifyWelcomePlatformPreviews" "kind" "welcome") }}
 
               </div>
 
-              <div class="dashboard-settings-form-actions">
+              <div class="dashboard-settings-form-actions dashboard-notify-form-actions">
 
-                <button type="submit" class="btn-dash btn-dash-primary" id="btnNotifyWelcomeSave">Save welcome message</button>
+                <button type="submit" class="btn-dash btn-dash-primary" id="btnNotifyWelcomeSave"><i class="fa fa-save" aria-hidden="true"></i> Save welcome &amp; branding</button>
 
                 <span id="notifyWelcomeSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
 
@@ -272,87 +505,51 @@
 
             </div>
 
-            <form id="dashboardNotifySendForm" class="dashboard-settings-form" autocomplete="off">
+            <form id="dashboardNotifySendForm" class="dashboard-settings-form dashboard-notify-send-form" autocomplete="off">
 
-              <div class="dashboard-settings-grid dashboard-settings-form-grid">
+              <div class="dashboard-notify-form-layout">
 
-                <div class="dashboard-settings-row dashboard-settings-row--full">
+                <div class="dashboard-notify-form-fields">
 
-                  <label class="dashboard-settings-label" for="notifyTitle">Title</label>
+              <div class="dashboard-notify-form-section">
 
-                  <div class="dashboard-settings-value">
+                <h3 class="dashboard-notify-form-section-title">Content</h3>
 
-                    <input type="text" id="notifyTitle" name="title" class="dashboard-settings-input" required maxlength="200" placeholder="e.g. Weekend special">
+                <div class="dashboard-settings-grid dashboard-settings-form-grid dashboard-notify-form-grid">
 
-                  </div>
+                  <div class="dashboard-settings-row dashboard-settings-row--full">
 
-                </div>
+                    <label class="dashboard-settings-label" for="notifyTitle">Title</label>
 
-                <div class="dashboard-settings-row dashboard-settings-row--full">
+                    <div class="dashboard-settings-value">
 
-                  <label class="dashboard-settings-label" for="notifyMessage">Message</label>
+                      <input type="text" id="notifyTitle" name="title" class="dashboard-settings-input" required maxlength="200" placeholder="e.g. Weekend special">
 
-                  <div class="dashboard-settings-value">
-
-                    <textarea id="notifyMessage" name="message" class="dashboard-settings-input dashboard-settings-textarea" rows="3" required maxlength="2000" placeholder="Short message for customers"></textarea>
+                    </div>
 
                   </div>
 
-                </div>
+                  <div class="dashboard-settings-row dashboard-settings-row--full">
 
-                <div class="dashboard-settings-row">
+                    <label class="dashboard-settings-label" for="notifyMessage">Message</label>
 
-                  <label class="dashboard-settings-label" for="notifyType">Type</label>
+                    <div class="dashboard-settings-value">
 
-                  <div class="dashboard-settings-value">
+                      <textarea id="notifyMessage" name="message" class="dashboard-settings-input dashboard-settings-textarea" rows="3" required maxlength="2000" placeholder="Short message for customers"></textarea>
 
-                    <select id="notifyType" name="type" class="dashboard-settings-input">
-
-                      <option value="general">General</option>
-
-                      <option value="menu_update">Menu update</option>
-
-                      <option value="promotion">Promotion</option>
-
-                      <option value="order">Order</option>
-
-                      <option value="system">System</option>
-
-                    </select>
+                    </div>
 
                   </div>
 
-                </div>
+                  <div class="dashboard-settings-row dashboard-settings-row--full">
 
-                <div class="dashboard-settings-row">
+                    <label class="dashboard-settings-label" for="notifyLink">Link (optional)</label>
 
-                  <label class="dashboard-settings-label" for="notifyPriority">Priority</label>
+                    <div class="dashboard-settings-value">
 
-                  <div class="dashboard-settings-value">
+                      <input type="text" id="notifyLink" name="link" class="dashboard-settings-input" placeholder="/menu/ or https://…">
 
-                    <select id="notifyPriority" name="priority" class="dashboard-settings-input">
-
-                      <option value="low">Low</option>
-
-                      <option value="normal" selected>Normal</option>
-
-                      <option value="high">High</option>
-
-                      <option value="urgent">Urgent</option>
-
-                    </select>
-
-                  </div>
-
-                </div>
-
-                <div class="dashboard-settings-row dashboard-settings-row--full">
-
-                  <label class="dashboard-settings-label" for="notifyLink">Link (optional)</label>
-
-                  <div class="dashboard-settings-value">
-
-                    <input type="text" id="notifyLink" name="link" class="dashboard-settings-input" placeholder="/menu/ or https://…">
+                    </div>
 
                   </div>
 
@@ -360,7 +557,183 @@
 
               </div>
 
-              <div class="dashboard-settings-form-actions">
+              <div class="dashboard-notify-form-section">
+
+                <h3 class="dashboard-notify-form-section-title">Delivery options</h3>
+
+                <div class="dashboard-notify-send-options">
+
+                  <div class="dashboard-settings-row">
+
+                    <label class="dashboard-settings-label" for="notifyType">Type</label>
+
+                    <div class="dashboard-settings-value">
+
+                      <select id="notifyType" name="type" class="dashboard-settings-input">
+
+                        <option value="general">General</option>
+
+                        <option value="menu_update">Menu update</option>
+
+                        <option value="promotion">Promotion</option>
+
+                        <option value="order">Order</option>
+
+                        <option value="system">System</option>
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+                  <div class="dashboard-settings-row">
+
+                    <label class="dashboard-settings-label" for="notifyPriority">Priority</label>
+
+                    <div class="dashboard-settings-value">
+
+                      <select id="notifyPriority" name="priority" class="dashboard-settings-input">
+
+                        <option value="low">Low</option>
+
+                        <option value="normal" selected>Normal</option>
+
+                        <option value="high">High</option>
+
+                        <option value="urgent">Urgent</option>
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div class="dashboard-notify-form-section dashboard-notify-media-tabs-root dashboard-notify-media-tabs-root--send" id="notifySendMediaTabs">
+
+                <h3 class="dashboard-notify-form-section-title">Images for this send</h3>
+
+                <p class="dashboard-notify-form-section-lead">Optional overrides. Site defaults from the Welcome tab apply when left empty.</p>
+
+                <div class="dashboard-notify-preview-tabs dashboard-notify-media-tablist dashboard-notify-media-tablist--2" role="tablist" aria-label="Send image type">
+
+                  <button type="button" class="dashboard-notify-preview-tab dashboard-notify-preview-tab--active" role="tab" id="notifySendMediaTabIcon" aria-controls="notifySendMediaPaneIcon" aria-selected="true" data-media-tab="icon"><i class="fa fa-bell" aria-hidden="true"></i> Icon</button>
+
+                  <button type="button" class="dashboard-notify-preview-tab" role="tab" id="notifySendMediaTabBanner" aria-controls="notifySendMediaPaneBanner" aria-selected="false" tabindex="-1" data-media-tab="banner"><i class="fa fa-picture-o" aria-hidden="true"></i> Banner</button>
+
+                </div>
+
+                <div class="dashboard-notify-media-panels">
+
+                  <div class="dashboard-notify-preview-pane dashboard-notify-preview-pane--active dashboard-notify-media-pane" id="notifySendMediaPaneIcon" role="tabpanel" aria-labelledby="notifySendMediaTabIcon" data-media-pane="icon">
+
+                    <div class="dashboard-notify-media-card dashboard-settings-branding-row" data-notify-media="notifyIcon">
+
+                      <div class="dashboard-settings-value dashboard-settings-branding-upload dashboard-notify-media-upload dashboard-notify-media-upload--tabbed">
+
+                        <div class="dashboard-notify-media-preview-wrap dashboard-notify-media-preview-wrap--icon">
+
+                          <div class="dashboard-notify-media-placeholder" id="notifyIconPlaceholder" aria-hidden="true"><i class="fa fa-bell"></i></div>
+
+                          <img id="notifyIconPreview" class="dashboard-branding-preview" alt="Send icon preview" hidden>
+
+                        </div>
+
+                        <input type="hidden" id="notifyIcon" name="icon" value="">
+
+                        <div class="dashboard-notify-media-actions">
+
+                          <label class="dashboard-branding-file-label btn-dash btn-dash-secondary" for="notifyIconFile">
+
+                            <input type="file" id="notifyIconFile" class="dashboard-notify-image-file" accept="image/jpeg,image/png,image/gif,image/webp" data-notify-target="notifyIcon">
+
+                            <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload
+
+                          </label>
+
+                          <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-clear-image" data-notify-target="notifyIcon" hidden>Remove</button>
+
+                        </div>
+
+                        <span class="dashboard-branding-upload-status" id="notifyIconStatus" role="status" aria-live="polite"></span>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div class="dashboard-notify-preview-pane dashboard-notify-media-pane" id="notifySendMediaPaneBanner" role="tabpanel" aria-labelledby="notifySendMediaTabBanner" data-media-pane="banner">
+
+                    <div class="dashboard-notify-media-card dashboard-settings-branding-row" data-notify-media="notifyImage">
+
+                      <div class="dashboard-settings-value dashboard-settings-branding-upload dashboard-notify-media-upload dashboard-notify-media-upload--tabbed">
+
+                        <div class="dashboard-notify-media-preview-wrap dashboard-notify-media-preview-wrap--wide">
+
+                          <div class="dashboard-notify-media-placeholder dashboard-notify-media-placeholder--wide" id="notifyImagePlaceholder" aria-hidden="true"><i class="fa fa-picture-o"></i></div>
+
+                          <img id="notifyImagePreview" class="dashboard-branding-preview dashboard-branding-preview--wide" alt="Send banner preview" hidden>
+
+                        </div>
+
+                        <input type="hidden" id="notifyImage" name="image" value="">
+
+                        <div class="dashboard-notify-media-actions">
+
+                          <label class="dashboard-branding-file-label btn-dash btn-dash-secondary" for="notifyImageFile">
+
+                            <input type="file" id="notifyImageFile" class="dashboard-notify-image-file" accept="image/jpeg,image/png,image/gif,image/webp" data-notify-target="notifyImage">
+
+                            <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload
+
+                          </label>
+
+                          <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-clear-image" data-notify-target="notifyImage" hidden>Remove</button>
+
+                        </div>
+
+                        <span class="dashboard-branding-upload-status" id="notifyImageStatus" role="status" aria-live="polite"></span>
+
+                        <p class="dashboard-settings-hint">Large image · optional</p>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {{ partial "dashboard/notify-platform-previews.html" (dict "id" "notifySendPlatformPreviews" "kind" "send") }}
+
+              </div>
+
+              <div class="dashboard-notify-broadcast-callout" id="dashboardNotifyBroadcastRow" hidden>
+
+                <label class="dashboard-notify-broadcast-label" for="notifyBroadcast">
+
+                  <input type="checkbox" id="notifyBroadcast" name="is_broadcast" value="1">
+
+                  <span class="dashboard-notify-broadcast-text">
+
+                    <strong>Broadcast to all TTMenus subscribers</strong>
+
+                    <span class="dashboard-notify-broadcast-hint">Delivers to every active subscriber across all *.ttmenus.com menu sites. Hub only (ttmenus.com).</span>
+
+                  </span>
+
+                </label>
+
+              </div>
+
+              <div class="dashboard-settings-form-actions dashboard-notify-form-actions">
 
                 <button type="submit" class="btn-dash btn-dash-primary dashboard-notify-send-btn" id="dashboardNotifySendSubmit"><i class="fa fa-paper-plane" aria-hidden="true"></i> Send notification</button>
 
@@ -388,17 +761,61 @@
 
                 <h2 id="notify-reports-heading" class="dashboard-analytics-heading">Reports &amp; history</h2>
 
-                <p class="dashboard-analytics-subtitle">Recent sends for this client. Expand a notification to see delivery counts and subscription IDs.</p>
+                <p class="dashboard-analytics-subtitle">Sent alerts, welcome pushes, and menu photos waiting for your approval.</p>
 
               </div>
 
             </div>
 
-            <ul id="dashboardNotifyRecentList" class="dashboard-notify-history-list" aria-label="Recent notifications"></ul>
+            <div id="notifyHistorySubTabs" class="dashboard-notify-history-subtabs" data-notify-history-tabs-root>
 
-            <p class="dashboard-notify-history-hint"><i class="fa fa-info-circle" aria-hidden="true"></i> Click a notification to load sent, arrived, opened, and not-arrived counts per subscription.</p>
+              <div class="dashboard-notify-preview-tabs dashboard-notify-history-tablist" role="tablist" aria-label="History category">
 
-            <p id="dashboardNotifyRecentEmpty" class="dashboard-notify-empty" hidden>No notifications recorded yet.</p>
+                <button type="button" class="dashboard-notify-preview-tab dashboard-notify-preview-tab--active" role="tab" id="notifyHistoryTabSent" aria-controls="notifyHistoryPaneSent" aria-selected="true" data-history-tab="sent"><i class="fa fa-paper-plane" aria-hidden="true"></i> Sent</button>
+
+                <button type="button" class="dashboard-notify-preview-tab" role="tab" id="notifyHistoryTabWelcome" aria-controls="notifyHistoryPaneWelcome" aria-selected="false" tabindex="-1" data-history-tab="welcome"><i class="fa fa-handshake-o" aria-hidden="true"></i> Welcome</button>
+
+                <button type="button" class="dashboard-notify-preview-tab" role="tab" id="notifyHistoryTabPhotos" aria-controls="notifyHistoryPanePhotos" aria-selected="false" tabindex="-1" data-history-tab="photos"><i class="fa fa-camera" aria-hidden="true"></i> Photo approvals</button>
+
+              </div>
+
+              <div class="dashboard-notify-history-panels">
+
+                <div class="dashboard-notify-preview-pane dashboard-notify-preview-pane--active dashboard-notify-history-pane" id="notifyHistoryPaneSent" role="tabpanel" aria-labelledby="notifyHistoryTabSent" data-history-pane="sent">
+
+                  <ul id="dashboardNotifyRecentList" class="dashboard-notify-history-list" aria-label="Recent notifications"></ul>
+
+                  <p class="dashboard-notify-history-hint"><i class="fa fa-info-circle" aria-hidden="true"></i> Click a notification to load sent, arrived, opened, and not-arrived counts per subscription.</p>
+
+                  <p id="dashboardNotifyRecentEmpty" class="dashboard-notify-empty" hidden>No notifications recorded yet.</p>
+
+                </div>
+
+                <div class="dashboard-notify-preview-pane dashboard-notify-history-pane" id="notifyHistoryPaneWelcome" role="tabpanel" aria-labelledby="notifyHistoryTabWelcome" data-history-pane="welcome">
+
+                  <ul id="dashboardNotifyWelcomeList" class="dashboard-notify-history-list" aria-label="Welcome notifications"></ul>
+
+                  <p class="dashboard-notify-history-hint"><i class="fa fa-info-circle" aria-hidden="true"></i> Welcome pushes sent automatically when someone subscribes.</p>
+
+                  <p id="dashboardNotifyWelcomeEmpty" class="dashboard-notify-empty" hidden>No welcome notifications recorded yet.</p>
+
+                </div>
+
+                <div class="dashboard-notify-preview-pane dashboard-notify-history-pane" id="notifyHistoryPanePhotos" role="tabpanel" aria-labelledby="notifyHistoryTabPhotos" data-history-pane="photos">
+
+                  <ul id="dashboardNotifyPhotosList" class="dashboard-notify-photos-list" aria-label="Pending photo approvals"></ul>
+
+                  <p class="dashboard-notify-history-hint"><i class="fa fa-info-circle" aria-hidden="true"></i> Review uploaded menu photos on the <a href="/dashboard/#dashboardCardMenuImages">dashboard approval reel</a>.</p>
+
+                  <p id="dashboardNotifyPhotosEmpty" class="dashboard-notify-empty" hidden>No photos waiting for approval.</p>
+
+                  <p id="dashboardNotifyPhotosError" class="dashboard-notify-banner dashboard-notify-banner-warn" hidden role="alert"></p>
+
+                </div>
+
+              </div>
+
+            </div>
 
           </section>
 
@@ -409,18 +826,6 @@
     </div>
 
 
-
-    <aside class="dashboard-notify-footnote dashboard-analytics-note" role="note">
-
-      <i class="fa fa-info-circle" aria-hidden="true"></i>
-
-      <span>Full reports, demographics, and subscriber management:
-
-      <a id="dashboardNotifyFullDashboardLinkBottom" href="{{ site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" }}/dashboard" target="_blank" rel="noopener">notify dashboard</a>
-
-      · API: <code class="dashboard-notify-code">{{ site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" }}</code></span>
-
-    </aside>
 
   </main>
 
@@ -463,18 +868,6 @@
         : window.location.hostname;
 
     }
-
-    var bottom = document.getElementById('dashboardNotifyFullDashboardLinkBottom');
-
-    var top = document.getElementById('dashboardNotifyFullDashboardLink');
-
-    var svc = (window.NOTIFY_CONFIG && window.NOTIFY_CONFIG.serviceUrl) || '{{ site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" }}';
-
-    svc = String(svc).replace(/\/+$/, '');
-
-    if (bottom) bottom.href = svc + '/dashboard';
-
-    if (top) top.href = svc + '/dashboard';
 
     if (window.DashboardNotifications && DashboardNotifications.init) {
 

@@ -848,7 +848,7 @@
 
 .menu-item-card > .menu-add-photo-btn {
     position: absolute;
-    top: 0.35em;
+    top: 0.7em;
     right: 0.35em;
     z-index: var(--ttms-z-card-controls, 8);
 }

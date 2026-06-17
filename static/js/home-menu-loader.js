@@ -295,30 +295,6 @@
     );
   }
 
-  function buildAddPhotoBtn(item, menuImagesEnabled) {
-    if (!menuImagesEnabled) return '';
-    var title = item.linkTitle || item.name || '';
-    var clientId = menuImageClientId();
-    return (
-      '<button type="button" class="menu-add-photo-btn"' +
-      ' data-menu-image-client-id="' +
-      escapeHtml(clientId) +
-      '"' +
-      ' data-menu-item-path="' +
-      escapeHtml(item.url || '') +
-      '"' +
-      ' aria-label="Add a photo for ' +
-      escapeHtml(title) +
-      '"' +
-      ' title="Add photo">' +
-      '<span class="menu-add-photo-btn__icon" aria-hidden="true">' +
-      '<svg class="menu-add-photo-btn__svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false">' +
-      '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>' +
-      '<circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/>' +
-      '</svg></span></button>'
-    );
-  }
-
   function buildSmashPassMarkup(item, menuImagesEnabled) {
     if (!menuImagesEnabled) return '';
     var clientId = menuImageClientId();
@@ -425,7 +401,6 @@
       ' data-events="' +
       escapeHtml(JSON.stringify(item.events || [])) +
       '">' +
-      buildAddPhotoBtn(item, config.menuImages) +
       buildFavoriteBtn(item, config.authEnabled) +
       buildSmashPassMarkup(item, config.menuImages) +
       '<div class="menu-item-row-top">' +

@@ -1,0 +1,233 @@
+{{/* Tabbed platform previews — live-updated by dashboard-notifications.js */}}
+{{- $id := .id -}}
+{{- $kind := .kind -}}
+<aside class="dashboard-notify-preview-panel" id="{{ $id }}" data-notify-preview-kind="{{ $kind }}" aria-label="Notification preview">
+
+  <div class="dashboard-notify-preview-panel-head">
+
+    <h3 class="dashboard-notify-preview-panel-title">Preview</h3>
+
+    <p class="dashboard-notify-preview-panel-lead">How subscribers see this alert. Switch platform below.</p>
+
+  </div>
+
+  <div class="dashboard-notify-preview-tabs" role="tablist" aria-label="Preview platform">
+
+    <button type="button" class="dashboard-notify-preview-tab dashboard-notify-preview-tab--active" role="tab" id="{{ $id }}TabWeb" aria-controls="{{ $id }}PaneWeb" aria-selected="true" data-preview-tab="web"><i class="fa fa-chrome" aria-hidden="true"></i> Web</button>
+
+    <button type="button" class="dashboard-notify-preview-tab" role="tab" id="{{ $id }}TabAndroid" aria-controls="{{ $id }}PaneAndroid" aria-selected="false" tabindex="-1" data-preview-tab="android"><i class="fa fa-android" aria-hidden="true"></i> Android</button>
+
+    <button type="button" class="dashboard-notify-preview-tab" role="tab" id="{{ $id }}TabIos" aria-controls="{{ $id }}PaneIos" aria-selected="false" tabindex="-1" data-preview-tab="ios"><i class="fa fa-apple" aria-hidden="true"></i> iOS</button>
+
+  </div>
+
+  <div class="dashboard-notify-preview-stage">
+
+    {{/* —— Web: Chrome native notification —— */}}
+    <div class="dashboard-notify-preview-pane dashboard-notify-preview-pane--active" id="{{ $id }}PaneWeb" role="tabpanel" aria-labelledby="{{ $id }}TabWeb" data-preview-pane="web">
+
+      <div class="dashboard-notify-stage-label">Chrome · Windows notification</div>
+
+      <div class="dashboard-notify-stage-canvas dashboard-notify-stage-canvas--web">
+
+        <div class="dashboard-notify-chrome-toast" aria-label="Web push preview">
+
+          <div class="dashboard-notify-chrome-toast-head">
+
+            <div class="dashboard-notify-chrome-toast-origin">
+
+              <div class="dashboard-notify-mock-icon-wrap dashboard-notify-mock-icon-wrap--chrome" data-preview-icon-wrap>
+
+                <i class="fa fa-bell dashboard-notify-mock-icon-fallback" aria-hidden="true"></i>
+
+                <img class="dashboard-notify-mock-icon" data-preview-field="icon" alt="" hidden>
+
+              </div>
+
+              <div class="dashboard-notify-chrome-toast-origin-text">
+
+                <span class="dashboard-notify-chrome-toast-site" data-preview-field="app"></span>
+
+                <span class="dashboard-notify-chrome-toast-via">via Google Chrome</span>
+
+              </div>
+
+            </div>
+
+            <span class="dashboard-notify-chrome-toast-when" data-preview-field="time"></span>
+
+          </div>
+
+          <div class="dashboard-notify-chrome-toast-content">
+
+            <div class="dashboard-notify-mock-title" data-preview-field="title"></div>
+
+            <div class="dashboard-notify-mock-message" data-preview-field="message"></div>
+
+          </div>
+
+          <div class="dashboard-notify-chrome-toast-image" data-preview-banner-wrap hidden>
+
+            <img class="dashboard-notify-mock-banner" data-preview-field="banner" alt="">
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    {{/* —— Android: Material lock-screen notification —— */}}
+    <div class="dashboard-notify-preview-pane" id="{{ $id }}PaneAndroid" role="tabpanel" aria-labelledby="{{ $id }}TabAndroid" data-preview-pane="android">
+
+      <div class="dashboard-notify-stage-label">Android · expanded notification</div>
+
+      <div class="dashboard-notify-stage-canvas dashboard-notify-stage-canvas--phone">
+
+        <div class="dashboard-notify-phone-bezel dashboard-notify-phone-bezel--android">
+
+          <div class="dashboard-notify-phone-status" aria-hidden="true">
+
+            <span data-preview-field="time"></span>
+
+            <span class="dashboard-notify-phone-status-icons"><i class="fa fa-signal"></i><i class="fa fa-wifi"></i><i class="fa fa-battery-full"></i></span>
+
+          </div>
+
+          <div class="dashboard-notify-phone-camera" aria-hidden="true"></div>
+
+          <div class="dashboard-notify-phone-display dashboard-notify-phone-display--android">
+
+            <div class="dashboard-notify-material-card" aria-label="Android notification preview">
+
+              <div class="dashboard-notify-material-card-top">
+
+                <div class="dashboard-notify-mock-icon-wrap dashboard-notify-mock-icon-wrap--material" data-preview-icon-wrap>
+
+                  <i class="fa fa-bell dashboard-notify-mock-icon-fallback" aria-hidden="true"></i>
+
+                  <img class="dashboard-notify-mock-icon" data-preview-field="icon" alt="" hidden>
+
+                </div>
+
+                <span class="dashboard-notify-material-app" data-preview-field="app"></span>
+
+                <span class="dashboard-notify-material-dot" aria-hidden="true">·</span>
+
+                <span class="dashboard-notify-material-when">now</span>
+
+                <span class="dashboard-notify-material-chevron" aria-hidden="true"><i class="fa fa-chevron-up"></i></span>
+
+              </div>
+
+              <div class="dashboard-notify-material-body">
+
+                <div class="dashboard-notify-mock-title" data-preview-field="title"></div>
+
+                <div class="dashboard-notify-mock-message" data-preview-field="message"></div>
+
+              </div>
+
+              <div class="dashboard-notify-material-hero" data-preview-banner-wrap hidden>
+
+                <img class="dashboard-notify-mock-banner" data-preview-field="banner" alt="">
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    {{/* —— iOS: Lock screen banner + expanded image —— */}}
+    <div class="dashboard-notify-preview-pane" id="{{ $id }}PaneIos" role="tabpanel" aria-labelledby="{{ $id }}TabIos" data-preview-pane="ios">
+
+      <div class="dashboard-notify-stage-label">iOS · lock screen</div>
+
+      <div class="dashboard-notify-stage-canvas dashboard-notify-stage-canvas--phone">
+
+        <div class="dashboard-notify-phone-bezel dashboard-notify-phone-bezel--ios">
+
+          <div class="dashboard-notify-phone-status dashboard-notify-phone-status--ios" aria-hidden="true">
+
+            <span data-preview-field="time"></span>
+
+            <span class="dashboard-notify-phone-status-icons"><i class="fa fa-signal"></i><i class="fa fa-wifi"></i><i class="fa fa-battery-full"></i></span>
+
+          </div>
+
+          <div class="dashboard-notify-dynamic-island" aria-hidden="true"></div>
+
+          <div class="dashboard-notify-phone-display dashboard-notify-phone-display--ios">
+
+            <div class="dashboard-notify-ios-lock" aria-hidden="true">
+
+              <span class="dashboard-notify-ios-lock-day" data-preview-field="day"></span>
+
+              <span class="dashboard-notify-ios-lock-time" data-preview-field="clock"></span>
+
+            </div>
+
+            <div class="dashboard-notify-ios-notifs">
+
+              <div class="dashboard-notify-ios-group" aria-label="iOS notification preview">
+
+                <div class="dashboard-notify-ios-banner">
+
+                  <div class="dashboard-notify-mock-icon-wrap dashboard-notify-mock-icon-wrap--ios" data-preview-icon-wrap>
+
+                    <i class="fa fa-bell dashboard-notify-mock-icon-fallback" aria-hidden="true"></i>
+
+                    <img class="dashboard-notify-mock-icon" data-preview-field="icon" alt="" hidden>
+
+                  </div>
+
+                  <div class="dashboard-notify-ios-banner-copy">
+
+                    <div class="dashboard-notify-ios-banner-meta">
+
+                      <span class="dashboard-notify-ios-app" data-preview-field="app"></span>
+
+                      <span class="dashboard-notify-ios-when">now</span>
+
+                    </div>
+
+                    <div class="dashboard-notify-mock-title" data-preview-field="title"></div>
+
+                    <div class="dashboard-notify-mock-message" data-preview-field="message"></div>
+
+                  </div>
+
+                </div>
+
+                <div class="dashboard-notify-ios-rich" data-preview-ios-expanded hidden>
+
+                  <img class="dashboard-notify-mock-banner dashboard-notify-mock-banner--ios" data-preview-field="banner" alt="">
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</aside>

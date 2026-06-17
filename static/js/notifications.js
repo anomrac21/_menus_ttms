@@ -376,6 +376,12 @@ const NotificationService = {
    * Generate a unique user ID
    */
   generateUserID() {
+    if (typeof AuthClient !== 'undefined' && AuthClient.getCurrentUser) {
+      const user = AuthClient.getCurrentUser();
+      if (user && user.id != null && user.id !== '') {
+        return 'auth_' + String(user.id);
+      }
+    }
     let userId = localStorage.getItem('ttmenus_user_id');
     if (!userId) {
       userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -928,20 +934,26 @@ const NotificationService = {
       return;
     }
 
-    // Get image URL from notification data, or use default
-    const imageUrl = (notification.data && (notification.data.image || notification.data.image_url)) 
-      || (notification.image || notification.icon)
-      || 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
-    
-    // Get link URL from notification data
+    const defaultIcon = 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
+    const iconUrl =
+      (notification.data && (notification.data.icon || notification.data.image || notification.data.image_url)) ||
+      notification.icon ||
+      notification.image ||
+      defaultIcon;
+    const imageUrl =
+      (notification.data && (notification.data.image || notification.data.image_url)) ||
+      notification.image ||
+      undefined;
+    const badgeUrl = (notification.data && notification.data.badge) || iconUrl;
     const linkUrl = notification.data && (notification.data.url || notification.data.link);
 
     const notificationData = {
       title: notification.title || 'TTMenus',
       body: notification.message || notification.body || '',
-      icon: imageUrl,
-      badge: imageUrl,
+      icon: iconUrl,
+      badge: badgeUrl,
       image: imageUrl,
+      id: notification.id,
       tag: notification.id,
       data: {
         ...(notification.data || {}),

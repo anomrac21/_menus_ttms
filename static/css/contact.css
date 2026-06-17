@@ -1571,7 +1571,7 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     margin-top: 0.25rem;
     padding: 0.22em 0.6em;
     border-radius: 999px;
-    font-size: xx-small;
+    font-size: .46em;
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -1722,26 +1722,6 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     color: var(--hero-text-color, #fff);
     overflow: hidden;
     transition: transform 0.2s ease;
-}
-
-.location-picker__nearby-btn-glow {
-    position: absolute;
-    inset: -3px;
-    border-radius: 1.05rem;
-    background: conic-gradient(
-        from 180deg,
-        transparent 0deg,
-        color-mix(in srgb, var(--selected-button-color3, #fcd000) 65%, transparent) 120deg,
-        transparent 240deg
-    );
-    opacity: 0.55;
-    animation: location-picker-nearby-spin 5s linear infinite;
-    z-index: 0;
-    pointer-events: none;
-}
-
-@keyframes location-picker-nearby-spin {
-    to { transform: rotate(360deg); }
 }
 
 .location-picker__nearby-btn-inner {

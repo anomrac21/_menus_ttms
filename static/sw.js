@@ -6,10 +6,29 @@
 const CACHE_NAME = 'ttmenus-notifications-v1';
 const SUB_META_CACHE = 'ttmenus-notify-meta-v1';
 let NOTIFY_SERVICE_URL = 'https://notify.ttmenus.com';
+const DEFAULT_NOTIFY_ICON = 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
 
 function getNotifyApiBase() {
   const base = String(NOTIFY_SERVICE_URL || 'https://notify.ttmenus.com').replace(/\/+$/, '');
   return base + '/api/v1';
+}
+
+/** Resolve icon, badge, and large image from flat or nested push payload. */
+function extractMediaFromPayload(data) {
+  const nested = (data && data.data) || {};
+  const icon =
+    (data && (data.icon || data.image)) ||
+    nested.icon ||
+    nested.image ||
+    nested.image_url ||
+    DEFAULT_NOTIFY_ICON;
+  const image =
+    (data && data.image) ||
+    nested.image ||
+    nested.image_url ||
+    null;
+  const badge = (data && data.badge) || nested.badge || icon;
+  return { icon, badge, image: image || undefined };
 }
 
 // Install event - cache resources
@@ -40,8 +59,8 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'TTMenus',
     body: 'You have a new notification',
-    icon: 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
-    badge: 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif',
+    icon: DEFAULT_NOTIFY_ICON,
+    badge: DEFAULT_NOTIFY_ICON,
     tag: 'ttmenus-notification',
     data: {},
   };
@@ -50,33 +69,36 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const data = event.data.json();
+      const media = extractMediaFromPayload(data.notification || data);
+      const source = data.notification || data;
       if (data.notification) {
         notificationData = {
-          title: data.notification.title || notificationData.title,
-          body: data.notification.body || data.notification.message || notificationData.body,
-          icon: data.notification.icon || data.notification.image || notificationData.icon,
-          badge: data.notification.badge || notificationData.badge,
-          image: data.notification.image,
-          tag: data.notification.tag || data.notification.id || notificationData.tag,
+          title: source.title || notificationData.title,
+          body: source.body || source.message || notificationData.body,
+          icon: media.icon,
+          badge: media.badge,
+          image: media.image,
+          tag: source.tag || source.id || notificationData.tag,
           data: {
-            ...data.notification.data,
-            notificationId: data.notification.id,
-            linkUrl: data.notification.data?.url || data.notification.data?.link,
+            ...(source.data || {}),
+            notificationId: source.id || data.id,
+            linkUrl:
+              (source.data && (source.data.url || source.data.link)) ||
+              (data.data && (data.data.url || data.data.link || data.data.linkUrl)),
           },
         };
       } else if (data.title || data.message) {
-        // Direct notification object
         notificationData = {
           title: data.title || notificationData.title,
           body: data.message || data.body || notificationData.body,
-          icon: data.icon || data.image || notificationData.icon,
-          badge: data.badge || notificationData.badge,
-          image: data.image,
+          icon: media.icon,
+          badge: media.badge,
+          image: media.image,
           tag: data.tag || data.id || notificationData.tag,
           data: {
-            ...data.data,
+            ...(data.data || {}),
             notificationId: data.id,
-            linkUrl: data.data?.url || data.data?.link,
+            linkUrl: data.data?.url || data.data?.link || data.data?.linkUrl,
           },
         };
       }
@@ -170,8 +192,8 @@ self.addEventListener('message', (event) => {
     const { notification } = event.data;
     self.registration.showNotification(notification.title || 'TTMenus', {
       body: notification.message || notification.body || '',
-      icon: notification.icon || notification.image || 'https://ct.ttmenus.com/branding/ttmenus/ttmenu.gif',
-      badge: notification.badge || 'https://ct.ttmenus.com/branding/ttmenus/ttmenu.gif',
+      icon: notification.icon || notification.image || DEFAULT_NOTIFY_ICON,
+      badge: notification.badge || notification.icon || DEFAULT_NOTIFY_ICON,
       image: notification.image,
       tag: notification.tag || notification.id,
       data: {

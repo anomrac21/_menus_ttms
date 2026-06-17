@@ -1110,9 +1110,6 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 }
 
 .menu-item-expanded-content {
-    margin-top: 1em;
-    padding-top: 1em;
-    border-top: 1px solid rgba(255,255,255,.1);
     animation: slideDown .3s ease-out
 }
 
@@ -1206,7 +1203,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
     flex-direction: column;
     gap: 1em;
     padding-top: .5em;
-    padding-inline:1em;}
+    }
 
 .expanded-quantity-control {
     display: flex;
