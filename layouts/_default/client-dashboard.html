@@ -29,20 +29,7 @@
 <body>
   <div class="dashboard-control-room" id="dashboardControlRoom">
     <div class="dashboard-header" role="banner">
-      <div class="dashboard-header-bar">
-        <a href="/" class="dashboard-logo-link" id="dashboardLogoLink" aria-label="{{ site.Title | default "Menu" }} — home">
-          <img class="dashboard-logo" src="/branding/favicon192.webp" alt="{{ site.Title | default "Menu" }}" width="52" height="52">
-        </a>
-        <div class="dashboard-header-main">
-          <p class="dashboard-header-kicker">Menu control room</p>
-          <h1 class="dashboard-header-site" id="dashboardHeaderSiteName">{{ site.Title | default "Menu Demo" }}</h1>
-          <p class="dashboard-header-tagline">Manage your digital menu and content</p>
-        </div>
-        <div class="dashboard-header-end">
-          <p class="dashboard-header-account" id="dashboardHeaderUserName" title="">—</p>
-          <button type="button" class="btn-dash btn-dash-secondary dashboard-header-signout" id="btnLogout"><i class="fa fa-sign-out" aria-hidden="true"></i> Sign out</button>
-        </div>
-      </div>
+      {{ partial "dashboard/control-room-header.html" . }}
     </div>
     <div class="cards">
       <div class="card card-edit-menu">

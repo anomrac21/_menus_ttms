@@ -4,8 +4,14 @@
 (function (global) {
   'use strict';
 
-  function isJunkSiteName(s) {
+  function cleanSiteName(s) {
     s = String(s || '').trim();
+    s = s.replace(/^["']+|["']+$/g, '');
+    return s.trim();
+  }
+
+  function isJunkSiteName(s) {
+    s = cleanSiteName(s);
     if (!s || s === '—') return true;
     if (/^dashboard(\s*\|\s*)?$/i.test(s)) return true;
     if (/^dashboard\s*\|\s*$/i.test(s)) return true;
@@ -39,6 +45,7 @@
     if (stripped) candidates.push(stripped);
     candidates.push(formatClientIdFallback());
     for (var i = 0; i < candidates.length; i++) {
+      candidates[i] = cleanSiteName(candidates[i]);
       if (!isJunkSiteName(candidates[i])) return candidates[i];
     }
     return 'Your menu';
@@ -76,7 +83,11 @@
       user.email ||
       '—';
     accountEl.textContent = username;
-    accountEl.setAttribute('title', username);
+    if (user.email && user.email !== username) {
+      accountEl.setAttribute('title', user.email);
+    } else {
+      accountEl.setAttribute('title', username);
+    }
   }
 
   function init() {
