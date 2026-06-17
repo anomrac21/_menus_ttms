@@ -194,13 +194,6 @@
       '">' +
       '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
       '<p class="menu-smash-pass__empty hidden">No community photos yet — check back after guests upload and admins approve.</p>' +
-      '<div class="menu-smash-pass__empty-state hidden" role="region" aria-label="Item photo">' +
-      '<div class="menu-image-actions menu-image-actions--standalone">' +
-      '<button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item">' +
-      '<i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>' +
-      '</div>' +
-      '<p class="menu-smash-pass__empty-hint">No photo yet — be the first to add one</p>' +
-      '</div>' +
       '<div class="menu-smash-pass__reel hidden">' +
       '<div class="menu-smash-pass__stack" aria-live="polite"></div>' +
       '</div></div>'

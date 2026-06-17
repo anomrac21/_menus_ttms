@@ -64,8 +64,24 @@
     }
   }
 
+  var ADD_PHOTO_ITEM_ID = 'add-photo';
+
   function isLocalItem(item) {
     return !!(item && (item.local || String(item.id || '').indexOf('local:') === 0));
+  }
+
+  function isAddPhotoItem(item) {
+    return !!(item && (item.addPhoto || item.id === ADD_PHOTO_ITEM_ID));
+  }
+
+  function createAddPhotoDeckItem() {
+    return { id: ADD_PHOTO_ITEM_ID, addPhoto: true, local: true };
+  }
+
+  function appendAddPhotoToItemDeck(deck) {
+    var items = (deck || []).slice();
+    items.splice(Math.min(2, items.length), 0, createAddPhotoDeckItem());
+    return items;
   }
 
   function isDraftAssetPath(path) {
@@ -139,7 +155,7 @@
       return localImageToItem(path, inst.menuItemPath);
     });
 
-    return localItems.concat(sortItems(feed));
+    return appendAddPhotoToItemDeck(localItems.concat(sortItems(feed)));
   }
 
   function getVoterId() {
@@ -381,13 +397,34 @@
     '<i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>';
 
   function buildItemEmptyStateHtml() {
+    return '';
+  }
+
+  function buildAddPhotoCardHtml(stackIndex, compact) {
+    var depth = stackIndex === 0 ? ' is-top' : ' is-behind';
     return (
-      '<div class="menu-smash-pass__empty-state hidden" role="region" aria-label="Item photo">' +
+      '<article class="menu-smash-pass-card menu-smash-pass-card--add-photo is-local is-unrated' +
+      depth +
+      '" data-image-id="' +
+      ADD_PHOTO_ITEM_ID +
+      '" role="button" tabindex="0" aria-label="Add a photo for this menu item">' +
+      '<div class="menu-smash-pass-card__media menu-smash-pass-card__add-photo-media">' +
+      '<div class="menu-smash-pass-card__add-photo-bg" aria-hidden="true"></div>' +
+      '<div class="menu-smash-pass-card__add-photo-body">' +
+      '<span class="menu-smash-pass-card__add-photo-ring" aria-hidden="true"><i class="fa fa-camera"></i></span>' +
+      '<p class="menu-smash-pass-card__add-photo-title">Share your shot</p>' +
+      '<p class="menu-smash-pass-card__add-photo-hint">Be the first to add a photo</p>' +
       '<div class="menu-image-actions menu-image-actions--standalone">' +
       ADD_PHOTO_BTN_HTML +
       '</div>' +
-      '<p class="menu-smash-pass__empty-hint">No photo yet — be the first to add one</p>' +
-      '</div>'
+      '</div>' +
+      '</div>' +
+      (compact
+        ? ''
+        : '<div class="menu-smash-pass-card__info menu-smash-pass-card__info--add-photo">' +
+          '<p class="menu-smash-pass-card__add-photo-swipe">Swipe to browse · tap to upload</p>' +
+          '</div>') +
+      '</article>'
     );
   }
 
@@ -423,15 +460,13 @@
     var reel = q(inst, '.menu-smash-pass__reel');
     var err = q(inst, '.menu-smash-pass__error');
     if (err) err.classList.add('hidden');
-    if (reel) reel.classList.add('hidden');
     if (inst.isItemScoped) {
-      inst.root.classList.add('menu-smash-pass--no-photos');
-      if (empty) empty.classList.add('hidden');
-      if (emptyState) emptyState.classList.remove('hidden');
-      bindItemAddPhoto(inst);
-      updateVoteActions(inst);
+      inst.items = appendAddPhotoToItemDeck([]);
+      inst.deckIndex = 0;
+      renderStack(inst);
       return;
     }
+    if (reel) reel.classList.add('hidden');
     inst.root.classList.remove('menu-smash-pass--no-photos');
     if (emptyState) emptyState.classList.add('hidden');
     if (empty) empty.classList.remove('hidden');
@@ -572,6 +607,9 @@
   }
 
   function buildCardHtml(item, stackIndex, compact) {
+    if (isAddPhotoItem(item)) {
+      return buildAddPhotoCardHtml(stackIndex, compact);
+    }
     var preview = thumbUrl(item);
     var srcPath = isLocalItem(item) ? normalizeImagePath(item.url || '') : '';
     var isDraft = srcPath.indexOf('draft-assets/') === 0;
@@ -647,7 +685,10 @@
     if (!card) return;
     var rot = Math.max(-ROTATION_MAX, Math.min(ROTATION_MAX, dx * 0.08));
     card.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + rot + 'deg)';
-    if (!card.classList.contains('is-local')) {
+    if (
+      !card.classList.contains('is-local') &&
+      !card.classList.contains('menu-smash-pass-card--add-photo')
+    ) {
       card.style.setProperty('--smash-stamp-opacity', String(Math.min(1, Math.max(0, dx / SWIPE_THRESHOLD))));
       card.style.setProperty('--pass-stamp-opacity', String(Math.min(1, Math.max(0, -dx / SWIPE_THRESHOLD))));
     }
@@ -720,7 +761,7 @@
     var item = currentItem(inst);
     if (!item) return;
 
-    if (isLocalItem(item)) {
+    if (isAddPhotoItem(item) || (inst.isItemScoped && isLocalItem(item))) {
       advanceDeckWithoutVote(inst, direction);
       return;
     }
@@ -812,8 +853,14 @@
     return true;
   }
 
+  function isAddPhotoCardTap(inst, card, e) {
+    if (!inst.isItemScoped || !card.classList.contains('menu-smash-pass-card--add-photo')) return false;
+    return isPointerTapOnCard(inst, card, e);
+  }
+
   function isLocalItemOrderTap(inst, card, e) {
     if (!inst.isItemScoped || !card.classList.contains('is-local')) return false;
+    if (card.classList.contains('menu-smash-pass-card--add-photo')) return false;
     if (isModalSmashPass(inst)) return false;
     return isPointerTapOnCard(inst, card, e);
   }
@@ -921,7 +968,11 @@
       if (!inst.dragState || inst.dragState.card !== card) return;
 
       if (!inst.dragState.locked) {
-        if (isLocalItemOrderTap(inst, card, e) || isItemCommunityPhotoOrderTap(inst, card, e)) {
+        if (isAddPhotoCardTap(inst, card, e)) {
+          suppressCardClickAfterSwipe(card);
+          var addBtn = card.querySelector('.menu-image-add-btn');
+          if (addBtn) addBtn.click();
+        } else if (isLocalItemOrderTap(inst, card, e) || isItemCommunityPhotoOrderTap(inst, card, e)) {
           suppressCardClickAfterSwipe(card);
           openItemOrderFromSmashPass(inst, e);
         } else if (isSmashPassTap(inst, card, e) && !inst.isItemScoped) {
@@ -937,20 +988,6 @@
       try {
         card.releasePointerCapture(e.pointerId);
       } catch (err) {}
-
-      if (
-        inst.isItemScoped &&
-        card.classList.contains('is-local') &&
-        !hasCommunityPhotos(inst)
-      ) {
-        card.classList.add('is-snapping-back');
-        clearCardDragStyles(card);
-        setTimeout(function () {
-          card.classList.remove('is-snapping-back');
-        }, 280);
-        inst.dragState = null;
-        return;
-      }
 
       if (dx > SWIPE_THRESHOLD) {
         suppressCardClickAfterSwipe(card);
@@ -1000,6 +1037,7 @@
     var topCard = stack.querySelector('.menu-smash-pass-card.is-top');
     if (topCard) bindCardDrag(inst, topCard);
     hydrateStackImages(stack);
+    if (inst.isItemScoped) bindItemAddPhoto(inst);
     updateVoteActions(inst);
   }
 

@@ -730,7 +730,6 @@
 
   function refreshSmashPassAddButtons() {
     document.querySelectorAll('.menu-item-smash-pass[data-menu-item-path]').forEach(function (root) {
-      if (!root.querySelector('.menu-smash-pass__empty-state:not(.hidden)')) return;
       window.bindMenuImageAddButton(root);
     });
   }
@@ -880,10 +879,33 @@
     else if (type === 'muted') status.classList.add('is-muted');
   }
 
+  function setUploadBusy(modal, busy) {
+    const overlay = modal.querySelector('#menuImageUploadBusy');
+    const throbber = modal.querySelector('#menuImageUploadThrobber');
+    const changeBtn = modal.querySelector('#menuImageUploadChange');
+    const submitBtn = modal.querySelector('#menuImageUploadSubmit');
+    if (overlay) overlay.classList.toggle('is-hidden', !busy);
+    if (throbber) throbber.classList.toggle('is-hidden', !busy);
+    if (changeBtn) changeBtn.disabled = !!busy;
+    if (submitBtn) {
+      if (busy) {
+        if (!submitBtn.dataset.defaultLabel) {
+          submitBtn.dataset.defaultLabel = submitBtn.textContent.trim();
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML =
+          '<span class="menu-image-upload-throbber menu-image-upload-throbber--inline" aria-hidden="true"></span> Uploading…';
+      } else if (submitBtn.dataset.defaultLabel) {
+        submitBtn.textContent = submitBtn.dataset.defaultLabel;
+      }
+    }
+    modal.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+
   function setUploadProgress(modal, percent, label) {
     const wrap = modal.querySelector('#menuImageUploadProgress');
     const fill = modal.querySelector('.menu-image-upload-progress__fill');
-    const text = modal.querySelector('.menu-image-upload-progress__label');
+    const text = modal.querySelector('.menu-image-upload-progress__text');
     if (!wrap || !fill || !text) return;
     const pct = Math.max(0, Math.min(100, Math.round(percent)));
     wrap.classList.remove('is-hidden');
@@ -894,8 +916,11 @@
   function hideUploadProgress(modal) {
     const wrap = modal.querySelector('#menuImageUploadProgress');
     const fill = modal.querySelector('.menu-image-upload-progress__fill');
+    const text = modal.querySelector('.menu-image-upload-progress__text');
     if (wrap) wrap.classList.add('is-hidden');
     if (fill) fill.style.width = '0%';
+    if (text) text.textContent = 'Uploading… 0%';
+    setUploadBusy(modal, false);
   }
 
   function showFilePreview(modal, file) {
@@ -1018,13 +1043,49 @@
     });
   }
 
+  function ensureUploadBusyUi(modal) {
+    const preview = modal.querySelector('#menuImageUploadPreview');
+    if (preview && !modal.querySelector('#menuImageUploadBusy')) {
+      const busy = document.createElement('div');
+      busy.id = 'menuImageUploadBusy';
+      busy.className = 'menu-image-upload-preview__busy is-hidden';
+      busy.setAttribute('aria-hidden', 'true');
+      busy.innerHTML =
+        '<span class="menu-image-upload-throbber" aria-label="Uploading"></span>';
+      preview.appendChild(busy);
+    }
+
+    const progressLabel = modal.querySelector('.menu-image-upload-progress__label');
+    if (progressLabel && !modal.querySelector('#menuImageUploadThrobber')) {
+      const throbber = document.createElement('span');
+      throbber.id = 'menuImageUploadThrobber';
+      throbber.className = 'menu-image-upload-throbber menu-image-upload-throbber--inline is-hidden';
+      throbber.setAttribute('aria-hidden', 'true');
+      const text = progressLabel.querySelector('.menu-image-upload-progress__text');
+      if (text) {
+        progressLabel.insertBefore(throbber, text);
+      } else {
+        const labelText = progressLabel.textContent;
+        progressLabel.textContent = '';
+        progressLabel.appendChild(throbber);
+        const textEl = document.createElement('span');
+        textEl.className = 'menu-image-upload-progress__text';
+        textEl.textContent = labelText || 'Uploading… 0%';
+        progressLabel.appendChild(textEl);
+      }
+    }
+  }
+
   function ensureUploadModal() {
     let modal = document.getElementById('menuImageUploadModal');
     if (modal && !modal.querySelector('#menuImageTakePhoto')) {
       modal.remove();
       modal = null;
     }
-    if (modal) return modal;
+    if (modal) {
+      ensureUploadBusyUi(modal);
+      return modal;
+    }
 
     modal = document.createElement('div');
     modal.id = 'menuImageUploadModal';
@@ -1039,6 +1100,8 @@
       '<p class="menu-image-upload-hint">Share a real photo of this dish. It won&apos;t show on the menu until an admin approves it.</p>' +
       '<div class="menu-image-upload-preview is-hidden" id="menuImageUploadPreview">' +
       '<img class="menu-image-upload-preview__img" id="menuImagePreviewImg" alt="Photo preview">' +
+      '<div class="menu-image-upload-preview__busy is-hidden" id="menuImageUploadBusy" aria-hidden="true">' +
+      '<span class="menu-image-upload-throbber" aria-label="Uploading"></span></div>' +
       '<div class="menu-image-upload-preview__meta">' +
       '<span class="menu-image-upload-preview__name" id="menuImagePreviewName"></span>' +
       '<span class="menu-image-upload-preview__size" id="menuImagePreviewSize"></span>' +
@@ -1057,7 +1120,9 @@
       '</div>' +
       '<div class="menu-image-upload-progress is-hidden" id="menuImageUploadProgress">' +
       '<div class="menu-image-upload-progress__track"><div class="menu-image-upload-progress__fill"></div></div>' +
-      '<span class="menu-image-upload-progress__label">Uploading… 0%</span>' +
+      '<span class="menu-image-upload-progress__label">' +
+      '<span class="menu-image-upload-throbber menu-image-upload-throbber--inline is-hidden" id="menuImageUploadThrobber" aria-hidden="true"></span>' +
+      '<span class="menu-image-upload-progress__text">Uploading… 0%</span></span>' +
       '</div>' +
       '<div class="menu-image-upload-status is-muted" id="menuImageUploadStatus"></div>' +
       '<div class="menu-image-upload-actions">' +
@@ -1131,8 +1196,8 @@
     form.append('menu_item_path', modal.dataset.menuItemPath);
     form.append('image', file);
 
-    if (submitBtn) submitBtn.disabled = true;
     if (cancelBtn) cancelBtn.disabled = true;
+    setUploadBusy(modal, true);
     setUploadProgress(modal, 0, 'Uploading… 0%');
     setUploadStatus(modal, '', '');
 
@@ -1146,6 +1211,7 @@
         }
       );
       if (result.ok && result.json.success) {
+        setUploadBusy(modal, false);
         setUploadProgress(modal, 100, 'Upload complete');
         setUploadStatus(modal, 'Submitted! An admin will approve it soon.', 'success');
         setTimeout(function () {

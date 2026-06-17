@@ -625,7 +625,7 @@
       return true;
     }
 
-    if (e.target.closest('.menu-smash-pass-card.is-local, .menu-smash-pass__empty-state')) {
+    if (e.target.closest('.menu-smash-pass-card.is-local, .menu-smash-pass-card--add-photo, .menu-smash-pass__empty-state')) {
       return true;
     }
 

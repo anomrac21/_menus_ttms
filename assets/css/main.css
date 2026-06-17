@@ -27,13 +27,23 @@ html,body {
 }
 
 #loader img{
-  display: block;  
+  display: block;
   max-width: 100%;
   padding: 0;
   margin: 0 auto;
+  object-fit: contain;
 }
 #loader #loaderImage{
-  max-height: 16em;
+  max-width: calc(100% - 2rem);
+  max-height: min(360px, 70dvh);
+  width: auto;
+  height: auto;
+}
+#loader #menuImage{
+  width: 120px;
+  height: 120px;
+  max-width: 120px;
+  max-height: 120px;
 }
 
 
@@ -1871,6 +1881,43 @@ footer .icon,#footer .icon,#footerBtns .icon {
     object-fit: cover
 }
 
+.menu-image-upload-preview__busy {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2,6,23,.68)
+}
+
+.menu-image-upload-preview__busy.is-hidden {
+    display: none
+}
+
+.menu-image-upload-throbber {
+    display: inline-block;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid rgba(255,255,255,.18);
+    border-top-color: #a5b4fc;
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+    flex-shrink: 0
+}
+
+.menu-image-upload-throbber--inline {
+    width: .95rem;
+    height: .95rem;
+    border-width: 2px;
+    margin-right: .45rem;
+    vertical-align: -.15em
+}
+
+.menu-image-upload-throbber.is-hidden {
+    display: none
+}
+
 .menu-image-upload-preview__meta {
     display: flex;
     align-items: center;
@@ -1998,7 +2045,9 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .menu-image-upload-progress__label {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-top: .4rem;
     font-size: .8rem;
     color: #a5b4fc

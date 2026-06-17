@@ -209,7 +209,7 @@
 
 .menu-smash-pass-card__stamp--pass {
     right: 0.85rem;
-    color: #fff;7171;
+    color: #fff;
     background: #f87171;
     border-color: #f87171;
     transform: rotate(12deg);
@@ -532,6 +532,143 @@
 
 .menu-smash-pass-card.is-local .menu-smash-pass-card__stamp {
     display: none;
+}
+
+/* Add-photo card — styled like smash/pass stack card, inserted as 3rd swipe */
+.menu-smash-pass-card--add-photo {
+    border-color: rgba(129, 140, 248, 0.55);
+    background: linear-gradient(165deg, #1e1b4b 0%, #312e81 42%, #0f172a 100%);
+    cursor: grab;
+}
+
+.menu-smash-pass-card--add-photo.is-dragging {
+    cursor: grabbing;
+}
+
+.menu-smash-pass-card__add-photo-media {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.menu-smash-pass-card__add-photo-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 18%, rgba(167, 139, 250, 0.35), transparent 42%),
+        radial-gradient(circle at 82% 78%, rgba(96, 165, 250, 0.28), transparent 46%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.06), transparent 55%);
+    pointer-events: none;
+}
+
+.menu-smash-pass-card__add-photo-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 1.25rem 1rem 1rem;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.menu-smash-pass-card__add-photo-ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(196, 181, 253, 0.55);
+    box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.12), 0 10px 28px rgba(0, 0, 0, 0.35);
+    color: #e9d5ff;
+    font-size: 1.65rem;
+}
+
+.menu-smash-pass-card__add-photo-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #f8fafc;
+}
+
+.menu-smash-pass-card__add-photo-hint {
+    margin: 0;
+    max-width: 13em;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: rgba(226, 232, 240, 0.72);
+}
+
+.menu-smash-pass-card__add-photo-swipe {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: rgba(226, 232, 240, 0.62);
+}
+
+.menu-smash-pass-card--add-photo .menu-image-actions--standalone {
+    position: static;
+    display: flex;
+    justify-content: center;
+    margin: 0.15rem 0 0;
+    padding: 0;
+    pointer-events: auto;
+}
+
+.menu-smash-pass-card--add-photo .menu-image-add-btn {
+    min-height: 2.35rem;
+    padding: 0.55em 1.15em;
+    gap: 0.45em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(129, 140, 248, 0.95), rgba(99, 102, 241, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(79, 70, 229, 0.35);
+}
+
+.menu-smash-pass-card--add-photo .menu-image-add-btn:hover,
+.menu-smash-pass-card--add-photo .menu-image-add-btn:focus-visible {
+    background: linear-gradient(135deg, rgba(165, 180, 252, 1), rgba(129, 140, 248, 1));
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.menu-smash-pass-card--add-photo .menu-image-add-btn .fa {
+    font-size: 0.95rem;
+}
+
+.menu-smash-pass-card__info--add-photo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.45rem 0.65rem 0.55rem;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.88), transparent);
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card--add-photo .menu-smash-pass-card__add-photo-media {
+    min-height: 0;
+}
+
+.menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card--add-photo .menu-smash-pass-card__info--add-photo {
+    width: 100%;
+}
+
+.menu-reels-item-modal__data .menu-smash-pass--modal .menu-smash-pass-card--add-photo,
+.single-page-item-card .menu-smash-pass--single-page .menu-smash-pass-card--add-photo {
+    border-color: rgba(129, 140, 248, 0.55);
 }
 
 /* Smash-or-pass in reels item modal */

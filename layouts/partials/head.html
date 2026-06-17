@@ -52,19 +52,26 @@
   }
   
   #loader img {
-    max-width: 200px;
-    max-height: 200px;
+    display: block;
+    max-width: 100%;
+    padding: 0;
+    margin: 0 auto;
     object-fit: contain;
     image-rendering: -webkit-optimize-contrast;
   }
   
   #loaderImage {
-    max-height: 8em;
+    max-width: calc(100% - 2rem);
+    max-height: min(360px, 70dvh);
+    width: auto;
+    height: auto;
   }
 
   #menuImage {
     width: 120px;
     height: 120px;
+    max-width: 120px;
+    max-height: 120px;
     filter: drop-shadow(1px 1px 0px #000);
   }
   
