@@ -41,6 +41,18 @@
     markDashboardSlideAnimating();
   }
 
+  function updateMenublockScrollHints() {
+    var menublock = document.getElementById('menublock');
+    var nav = menublock && menublock.closest('.header-nav');
+    if (!menublock || !nav) {
+      return;
+    }
+    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);
+    var scrollLeft = menublock.scrollLeft;
+    nav.classList.toggle('menublock-can-scroll-left', scrollLeft > 4);
+    nav.classList.toggle('menublock-can-scroll-right', scrollLeft < maxScroll - 4);
+  }
+
   function updateHeaderMenublockScroll() {
     var menublock = document.getElementById('menublock');
     var mainHeader = document.querySelector('.main-header');
@@ -56,6 +68,7 @@
     } else if (scrollLeft >= HIDE_AT_PX) {
       setMenublockScrolledRight(mainHeader, true);
     }
+    updateMenublockScrollHints();
   }
 
   function scheduleHeaderMenublockScrollUpdate() {
@@ -66,6 +79,66 @@
       scrollRaf = 0;
       updateHeaderMenublockScroll();
     });
+  }
+
+  function bindMenublockTouchNav() {
+    var menublock = document.getElementById('menublock');
+    if (!menublock || menublock._ttmsTouchNavBound) {
+      return;
+    }
+    menublock._ttmsTouchNavBound = true;
+
+    var startX = 0;
+    var startY = 0;
+    var tracking = false;
+    var suppressClick = false;
+    var MOVE_THRESHOLD = 10;
+
+    menublock.addEventListener(
+      'pointerdown',
+      function (e) {
+        if (e.button > 0) return;
+        startX = e.clientX;
+        startY = e.clientY;
+        tracking = true;
+        suppressClick = false;
+      },
+      { passive: true }
+    );
+
+    menublock.addEventListener(
+      'pointermove',
+      function (e) {
+        if (!tracking) return;
+        if (
+          Math.abs(e.clientX - startX) >= MOVE_THRESHOLD ||
+          Math.abs(e.clientY - startY) >= MOVE_THRESHOLD
+        ) {
+          suppressClick = true;
+        }
+      },
+      { passive: true }
+    );
+
+    menublock.addEventListener(
+      'click',
+      function (e) {
+        if (!suppressClick) return;
+        var link = e.target.closest('.menublock-link');
+        if (!link) return;
+        e.preventDefault();
+        e.stopPropagation();
+        suppressClick = false;
+      },
+      true
+    );
+
+    function finishPointer() {
+      tracking = false;
+    }
+
+    menublock.addEventListener('pointerup', finishPointer, { passive: true });
+    menublock.addEventListener('pointercancel', finishPointer, { passive: true });
   }
 
   function bindMenublockScroll() {
@@ -246,8 +319,22 @@
   window.headerLogoActivate = headerLogoActivate;
   window.scrollPageAndMenublockToTop = scrollPageAndMenublockToTop;
 
+  function scrollMenublockLinkIntoView(link) {
+    if (!link || !link.scrollIntoView) return;
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    link.scrollIntoView({
+      block: 'nearest',
+      inline: 'center',
+      behavior: reducedMotion || coarsePointer ? 'auto' : 'smooth'
+    });
+  }
+
+  window.scrollMenublockLinkIntoView = scrollMenublockLinkIntoView;
+
   function initHeaderMenublock() {
     bindMenublockScroll();
+    bindMenublockTouchNav();
     bindHeaderLogoClick();
     bindHeaderLogoSwipe();
     if (typeof window.bindDashboardTriggers === 'function') {
@@ -261,14 +348,24 @@
     initHeaderMenublock();
   }
 
+  window.addEventListener(
+    'resize',
+    function () {
+      updateMenublockScrollHints();
+    },
+    { passive: true }
+  );
+
   function registerBarbaMenublockScroll() {
     if (window.TTMSBarba) {
       window.TTMSBarba.register(function () {
         var menublock = document.getElementById('menublock');
         if (menublock) {
           menublock._ttmsMenublockScrollBound = false;
+          menublock._ttmsTouchNavBound = false;
         }
         bindMenublockScroll();
+        bindMenublockTouchNav();
         bindHeaderLogoClick();
         bindHeaderLogoSwipe();
         if (typeof window.bindDashboardTriggers === 'function') {

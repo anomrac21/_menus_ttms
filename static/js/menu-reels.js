@@ -100,7 +100,11 @@
       if (isMatch) {
         link.classList.add('is-active');
         link.setAttribute('aria-current', 'location');
-        link.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        if (typeof window.scrollMenublockLinkIntoView === 'function') {
+          window.scrollMenublockLinkIntoView(link);
+        } else {
+          link.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'auto' });
+        }
       } else {
         link.classList.remove('is-active');
         link.removeAttribute('aria-current');

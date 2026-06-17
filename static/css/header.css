@@ -254,6 +254,49 @@
 }
 
 /* ============================================
+   MENU NAV WRAPPER (edge fade hints)
+   ============================================ */
+
+.header-nav {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.header-nav::before,
+.header-nav::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.35rem;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.header-nav::before {
+    left: 0;
+    background: linear-gradient(to right, var(--header-bg-color, rgba(0, 0, 0, 0.92)), transparent);
+}
+
+.header-nav::after {
+    right: 0;
+    background: linear-gradient(to left, var(--header-bg-color, rgba(0, 0, 0, 0.92)), transparent);
+}
+
+.header-nav.menublock-can-scroll-left::before {
+    opacity: 1;
+}
+
+.header-nav.menublock-can-scroll-right::after {
+    opacity: 1;
+}
+
+/* ============================================
    MENU BLOCK (NAVIGATION) — category chips
    ============================================ */
 
@@ -272,6 +315,7 @@
     overflow-y: hidden;
     margin: 0;
     padding: 0.45em 0.55em;
+    padding-inline-end: 0.85em;
     list-style: none;
     scroll-behavior: smooth;
     scrollbar-width: thin;
@@ -279,6 +323,9 @@
     gap: 0.4em;
     align-items: center;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    scroll-padding-inline: 0.45em;
 }
 
 #menublock::-webkit-scrollbar {
@@ -658,46 +705,66 @@
         max-height: 2.45rem !important;
     }
 
+    .header-nav::before,
+    .header-nav::after {
+        width: 1.1rem;
+    }
+
     #menublock {
         padding: 0.35em 0.45em;
-        gap: 0.32em;
+        padding-inline-end: 1em;
+        gap: 0.36em;
+        scroll-snap-type: x mandatory;
+        scroll-padding-inline: 0.45em;
+        scrollbar-width: none;
+    }
+
+    #menublock::-webkit-scrollbar {
+        display: none;
     }
 
     #menublock .menublock-item,
     #menublock li {
-        min-width: 3.85rem;
-        max-width: 4.75rem;
+        min-width: 4.1rem;
+        max-width: 5.1rem;
+        scroll-snap-align: center;
     }
 
     #menublock .menublock-link {
-        min-height: 3.65rem;
-        padding: 0.38em 0.28em 0.32em;
+        min-height: 3.85rem;
+        padding: 0.4em 0.32em 0.34em;
     }
 
     #menublock .menublock-link__icon {
-        width: 2rem;
-        height: 2rem;
+        width: 2.1rem;
+        height: 2.1rem;
     }
 
     #menublock .menublock-link__icon .icon,
     #menublock .icon {
-        max-width: 1.4rem !important;
-        max-height: 1.4rem !important;
-        width: 1.4rem !important;
-        height: 1.4rem !important;
+        max-width: 1.45rem !important;
+        max-height: 1.45rem !important;
+        width: 1.45rem !important;
+        height: 1.45rem !important;
     }
 
     #menublock .menublock-link__label,
     #menublock span {
-        font-size: 0.52rem;
+        font-size: 0.58rem;
     }
 }
 
 /* Small Mobile */
 @media (max-width: 480px) {
+    #menublock .menublock-item,
+    #menublock li {
+        min-width: 3.95rem;
+        max-width: 4.85rem;
+    }
+
     #menublock .menublock-link__label,
     #menublock span {
-        font-size: 0.48rem;
+        font-size: 0.55rem;
     }
 }
 
@@ -732,22 +799,4 @@
 #menublock .menublock-link:focus-visible {
     outline: 2px solid rgba(255, 255, 255, 0.75);
     outline-offset: 2px;
-}
-
-/* ============================================
-   SCROLL FADE (menu overflow hint)
-   ============================================ */
-
-#menublock {
-    position: relative;
-    mask-image: linear-gradient(
-        to right,
-        #000 calc(100% - 2.5rem),
-        transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-        to right,
-        #000 calc(100% - 2.5rem),
-        transparent 100%
-    );
 }

@@ -222,10 +222,6 @@ h2.center.title a,
     .menublock-link__label {
         font-size: 0.58rem;
     }
-
-    .menu-item-card .menu-item-title,
-    .menu-item-card .menu-item-title a {
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
