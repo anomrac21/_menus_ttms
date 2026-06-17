@@ -20,6 +20,7 @@
   <script>
   window.SITE_DISPLAY_NAME = {{ (site.Title | default "Menu Demo") | jsonify }};
   window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}";
+  window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
   </script>
   <script src="/js/dashboard-control-room.js" defer></script>
   {{- if site.Params.notifications.enabled }}

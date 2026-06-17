@@ -63,6 +63,20 @@
     return siteName;
   }
 
+  function hubAccountUrl() {
+    var base = String(global.HUB_ACCOUNT_URL || 'https://ttmenus.com/account/').replace(/\/+$/, '');
+    var id = global.SITE_CLIENT_ID || global.CLIENT_ID || '';
+    if (id && id.indexOf('ttms_') !== 0) {
+      id = 'ttms_' + String(id).replace(/^_ttms_/, '').replace(/^_/, '');
+    }
+    return id ? base + '/?client_id=' + encodeURIComponent(id) : base + '/';
+  }
+
+  function applyHeaderAccountLink() {
+    var linkEl = document.getElementById('dashboardHeaderAccountLink');
+    if (linkEl) linkEl.href = hubAccountUrl();
+  }
+
   function applyHeaderUser() {
     var accountEl = document.getElementById('dashboardHeaderUserName');
     if (!accountEl) return;
@@ -73,6 +87,7 @@
     if (!user) {
       accountEl.textContent = '—';
       accountEl.removeAttribute('title');
+      applyHeaderAccountLink();
       return;
     }
     var username =
@@ -88,10 +103,17 @@
     } else {
       accountEl.setAttribute('title', username);
     }
+    var linkEl = document.getElementById('dashboardHeaderAccountLink');
+    if (linkEl) {
+      linkEl.setAttribute('title', 'Open your TT Menus account');
+      linkEl.setAttribute('aria-label', username + ' — open account');
+    }
+    applyHeaderAccountLink();
   }
 
   function init() {
     applyHeaderSiteName();
+    applyHeaderAccountLink();
     applyHeaderUser();
     var logoutBtn = document.getElementById('btnLogout');
     if (logoutBtn && global.AuthClient) {

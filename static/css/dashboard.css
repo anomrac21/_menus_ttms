@@ -727,6 +727,7 @@
 .dashboard-control-room .dashboard-header-account-wrap {
   display: flex;
   align-items: center;
+  text-decoration: none;
   gap: 0.45rem;
   max-width: 100%;
   min-width: 0;

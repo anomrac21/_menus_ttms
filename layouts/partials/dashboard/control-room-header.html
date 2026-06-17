@@ -1,5 +1,11 @@
 {{- $siteName := site.Title | default "Menu Demo" -}}
 {{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $hubClientId := $dashClient -}}
+{{- if not (hasPrefix $hubClientId "ttms_") -}}
+  {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
+{{- end -}}
+{{- $accountUrl := printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery) -}}
 <div class="dashboard-header-bar">
   <a href="/" class="dashboard-logo-link" id="dashboardLogoLink" aria-label="{{ $siteName }} — view live menu" title="View {{ $siteName }} menu site">
     <span class="dashboard-logo-frame" aria-hidden="true">
@@ -13,10 +19,10 @@
     <p class="dashboard-header-tagline">Manage your digital menu and content</p>
   </div>
   <div class="dashboard-header-end">
-    <div class="dashboard-header-account-wrap">
+    <a href="{{ $accountUrl }}" class="dashboard-header-account-wrap" id="dashboardHeaderAccountLink" aria-label="Open your TT Menus account" title="Open your TT Menus account">
       <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
-      <p class="dashboard-header-account" id="dashboardHeaderUserName" title="">—</p>
-    </div>
+      <span class="dashboard-header-account" id="dashboardHeaderUserName">—</span>
+    </a>
     <button type="button" class="btn-dash btn-dash-secondary dashboard-header-signout" id="btnLogout"><i class="fa fa-sign-out" aria-hidden="true"></i> Sign out</button>
   </div>
 </div>
