@@ -815,6 +815,13 @@
     flyOffCard(card, direction, function () {
       postVote(item.id, vote)
         .then(function (data) {
+          window.dispatchEvent(new CustomEvent('ttms:smash-vote', {
+            detail: {
+              vote: vote,
+              itemId: item.id,
+              likeCount: data.like_count != null ? data.like_count : item.like_count
+            }
+          }));
           item.user_vote = vote;
           item.like_count = data.like_count != null ? data.like_count : item.like_count;
           item.dislike_count = data.dislike_count != null ? data.dislike_count : item.dislike_count;

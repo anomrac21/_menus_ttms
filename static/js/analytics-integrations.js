@@ -1,308 +1,371 @@
 /**
  * TTMS Analytics Integrations
- * Connects existing functionality with analytics tracking
+ * Connects menu features with Matomo event tracking (ttmsAnalytics).
  */
-
-(function() {
+(function () {
   'use strict';
 
-  // Wait for analytics to be ready
-  function waitForAnalytics(callback) {
+  function waitForAnalytics(callback, attempts) {
+    attempts = attempts || 0;
     if (window.ttmsAnalytics && window.ttmsAnalytics.enabled) {
       callback();
-    } else {
-      setTimeout(() => waitForAnalytics(callback), 100);
+      return;
+    }
+    if (attempts > 120) return;
+    setTimeout(function () {
+      waitForAnalytics(callback, attempts + 1);
+    }, 100);
+  }
+
+  function track(category, action, name, value) {
+    if (window.ttmsAnalytics && window.ttmsAnalytics.enabled) {
+      window.ttmsAnalytics.trackEvent(category, action, name, value);
     }
   }
 
-  // Initialize all tracking integrations
-  function initIntegrations() {
-    console.log('🔌 Initializing analytics integrations...');
-    
-    // Track menu item clicks
-    setupMenuItemTracking();
-    
-    // Track ad clicks
-    setupAdClickTracking();
-    
-    // Track location changes
-    setupLocationTracking();
-    
-    // Track PWA installation
-    setupPWATracking();
-    
-    // Track dashboard interactions
-    setupDashboardTracking();
-    
-    // Track social media clicks
-    setupSocialMediaTracking();
-    
-    console.log('✅ Analytics integrations initialized');
-  }
-
-  /**
-   * Track menu item clicks
-   */
-  function setupMenuItemTracking() {
-    // Override the global openItem function if it exists
-    if (typeof window.openItem === 'function') {
-      const originalOpenItem = window.openItem;
-      
-      window.openItem = function(element, permalink) {
-        // Extract item data
-        const itemData = {
-          url: permalink,
-          title: element.querySelector('h3, .title')?.textContent || 'Unknown Item',
-          category: element.closest('section')?.id || 'Unknown Category',
-          price: parseFloat(element.querySelector('.price, [class*="price"]')?.textContent?.replace(/[^0-9.]/g, '')) || 0
-        };
-        
-        // Track the view
-        if (window.ttmsAnalytics) {
-          window.ttmsAnalytics.trackMenuItemView(itemData);
-        }
-        
-        // Call original function
-        return originalOpenItem.apply(this, arguments);
-      };
-      
-      console.log('📝 Menu item tracking hooked');
+  function extractMenuItemDataFromCard(element, url) {
+    var card = element;
+    if (card && card.classList && !card.classList.contains('menu-item-card')) {
+      card = card.closest ? card.closest('.menu-item-card') : null;
     }
-    
-    // Also track clicks on menu item elements
-    document.addEventListener('click', function(e) {
-      const menuItem = e.target.closest('[onclick*="openItem"]');
-      if (menuItem) {
-        const onclickAttr = menuItem.getAttribute('onclick');
-        const urlMatch = onclickAttr?.match(/['"]([^'"]+)['"]/);
-        
-        if (urlMatch && window.ttmsAnalytics) {
-          const itemData = {
-            url: urlMatch[1],
-            title: menuItem.querySelector('h3, .title')?.textContent || 'Unknown Item',
-            category: menuItem.closest('section')?.id || 'Unknown Category',
-            price: parseFloat(menuItem.querySelector('.price')?.textContent?.replace(/[^0-9.]/g, '')) || 0
-          };
-          
-          window.ttmsAnalytics.trackMenuItemView(itemData);
-        }
-      }
-    });
+    if (!card) card = element;
+    var itemUrl =
+      url ||
+      (card && card.getAttribute && card.getAttribute('data-item-url')) ||
+      (card && card.getAttribute && card.getAttribute('data-favorite-url')) ||
+      '';
+    var title = '';
+    if (card && card.querySelector) {
+      var titleText = card.querySelector('.menu-item-title-text');
+      var titleLink = card.querySelector('.menu-item-title a');
+      var titleNode = card.querySelector('.menu-item-title, h3, .title, .single-page-title');
+      if (titleText) title = titleText.textContent.trim();
+      else if (titleLink) title = titleLink.textContent.trim();
+      else if (titleNode) title = titleNode.textContent.trim();
+    }
+    var section = card && card.closest ? card.closest('section') : null;
+    var category =
+      (section && section.id) ||
+      (card && card.getAttribute && card.getAttribute('data-favorite-section')) ||
+      'Unknown Category';
+    var priceEl =
+      card && card.querySelector
+        ? card.querySelector('.menu-item-price, .expanded-price, .single-page-price, .price, [class*="price"]')
+        : null;
+    var price = priceEl ? parseFloat(priceEl.textContent.replace(/[^0-9.]/g, '')) || 0 : 0;
+    return { url: itemUrl, title: title, name: title, category: category, price: price };
   }
 
-  /**
-   * Track add to cart (integrated with WhatsApp ordering system)
-   */
-  window.trackAddToCart = function(itemData, quantity, totalPrice) {
+  window.trackMenuItemView = function (itemData) {
+    if (window.ttmsAnalytics && window.ttmsAnalytics.enabled) {
+      window.ttmsAnalytics.trackMenuItemView(itemData || {});
+    }
+  };
+
+  window.trackAddToCart = function (itemData, quantity, totalPrice) {
     if (window.ttmsAnalytics) {
       window.ttmsAnalytics.trackAddToCart(itemData, quantity, totalPrice);
     }
   };
 
-  /**
-   * Track cart removal
-   */
-  window.trackRemoveFromCart = function(itemData, totalCartValue) {
+  window.trackRemoveFromCart = function (itemData, totalCartValue) {
     if (window.ttmsAnalytics) {
       window.ttmsAnalytics.trackRemoveFromCart(itemData, totalCartValue);
     }
   };
 
-  /**
-   * Track order submission
-   */
-  window.trackOrderSubmission = function(orderData) {
+  window.trackOrderSubmission = function (orderData) {
     if (window.ttmsAnalytics) {
       window.ttmsAnalytics.trackOrderSubmission(orderData);
     }
   };
 
-  /**
-   * Track advertisement clicks
-   */
-  function setupAdClickTracking() {
-    document.addEventListener('click', function(e) {
-      const adElement = e.target.closest('.ad-panel, .ads a, [class*="ad-"]');
-      
-      if (adElement) {
-        const adData = {
-          title: window.ttmsAnalytics.extractAdTitle(adElement.closest('section, .ad-panel') || adElement),
-          url: adElement.href || window.ttmsAnalytics.extractAdUrl(adElement)
-        };
-        
-        if (window.ttmsAnalytics && adData.title) {
-          window.ttmsAnalytics.trackAdClick(adData);
-        }
-      }
-    });
-    
-    console.log('📢 Ad click tracking hooked');
-  }
-
-  /**
-   * Track location selection
-   */
-  function setupLocationTracking() {
-    // Hook into location select if it exists
-    const locationSelect = document.getElementById('locationSelect');
-    
-    if (locationSelect) {
-      locationSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        
-        if (selectedOption && selectedOption.value) {
-          const locationData = {
-            name: selectedOption.text,
-            address: selectedOption.getAttribute('data-address') || '',
-            whatsapp: selectedOption.value,
-            lat: selectedOption.getAttribute('data-lat'),
-            lng: selectedOption.getAttribute('data-lng')
-          };
-          
-          if (window.ttmsAnalytics) {
-            window.ttmsAnalytics.trackLocationSelection(locationData);
-          }
-        }
-      });
-      
-      console.log('📍 Location tracking hooked');
-    } else {
-      // Retry if location select not yet loaded
-      setTimeout(setupLocationTracking, 1000);
-    }
-  }
-
-  /**
-   * Track PWA installation
-   */
-  function setupPWATracking() {
-    // Track install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      if (window.ttmsAnalytics) {
-        window.ttmsAnalytics.trackEvent('PWA', 'Install Prompt Shown');
-      }
-    });
-    
-    // Track successful install
-    window.addEventListener('appinstalled', (e) => {
-      if (window.ttmsAnalytics) {
-        window.ttmsAnalytics.trackPWAInstall('accepted');
-        window.ttmsAnalytics.trackGoal(1); // Goal 1: PWA Installation
-      }
-    });
-    
-    // Override install button click if APP.startChromeInstall exists
-    if (window.APP && typeof window.APP.startChromeInstall === 'function') {
-      const originalInstall = window.APP.startChromeInstall;
-      
-      window.APP.startChromeInstall = function() {
-        if (window.APP.deferredInstall) {
-          window.APP.deferredInstall.userChoice.then((choice) => {
-            if (window.ttmsAnalytics) {
-              window.ttmsAnalytics.trackPWAInstall(choice.outcome);
-            }
-          });
-        }
-        
-        return originalInstall.apply(this, arguments);
-      };
-    }
-    
-    console.log('📱 PWA tracking hooked');
-  }
-
-  /**
-   * Track dashboard interactions
-   */
-  function setupDashboardTracking() {
-    // Hook toggleDashboard
-    if (typeof window.toggleDashboard === 'function') {
-      const originalToggle = window.toggleDashboard;
-      
-      window.toggleDashboard = function() {
-        const dashboard = document.getElementById('dashboard');
-        const isOpening = dashboard?.classList.contains('loader-hide-left');
-        
-        if (window.ttmsAnalytics) {
-          window.ttmsAnalytics.trackDashboardAction(isOpening ? 'Open' : 'Close');
-        }
-        
-        return originalToggle.apply(this, arguments);
-      };
-    }
-    
-    // Track dashboard menu clicks
-    document.addEventListener('click', function(e) {
-      const dashboardItem = e.target.closest('#dashboard li');
-      
-      if (dashboardItem) {
-        const itemText = dashboardItem.textContent.trim();
-        
-        if (window.ttmsAnalytics) {
-          window.ttmsAnalytics.trackDashboardAction('Menu Click', itemText);
-        }
-      }
-    });
-    
-    console.log('📊 Dashboard tracking hooked');
-  }
-
-  /**
-   * Track social media clicks
-   */
-  function setupSocialMediaTracking() {
-    document.addEventListener('click', function(e) {
-      const link = e.target.closest('a');
-      
-      if (link && link.href) {
-        const url = link.href.toLowerCase();
-        
-        // Detect social media links
-        let network = null;
-        if (url.includes('facebook.com')) network = 'Facebook';
-        else if (url.includes('instagram.com')) network = 'Instagram';
-        else if (url.includes('tiktok.com')) network = 'TikTok';
-        else if (url.includes('youtube.com')) network = 'YouTube';
-        else if (url.includes('twitter.com') || url.includes('x.com')) network = 'Twitter';
-        else if (url.includes('whatsapp.com') || url.includes('wa.me')) network = 'WhatsApp';
-        
-        if (network && window.ttmsAnalytics) {
-          window.ttmsAnalytics.trackSocialInteraction(network, 'Click', link.href);
-        }
-        
-        // Track external links
-        if (link.hostname && link.hostname !== window.location.hostname && window.ttmsAnalytics) {
-          window.ttmsAnalytics.trackOutboundLink(link.href, link.textContent.trim());
-        }
-      }
-    });
-    
-    console.log('📱 Social media tracking hooked');
-  }
-
-  /**
-   * Track search functionality
-   */
-  window.trackSearch = function(searchTerm, resultsCount) {
+  window.trackSearch = function (searchTerm, resultsCount) {
     if (window.ttmsAnalytics) {
       window.ttmsAnalytics.trackSearch(searchTerm, resultsCount);
     }
   };
 
-  /**
-   * Enhanced function to track when ads are populated
-   */
-  window.addEventListener('adsPopulated', function() {
-    console.log('📢 Ads populated event received, re-initializing ad tracking...');
-    
-    // Re-run ad impression observer
-    if (window.ttmsAnalytics) {
-      window.ttmsAnalytics.observeAdImpressions();
+  window.trackPaymentEvent = function (action, name, value) {
+    track('Payment', action, name, value);
+  };
+
+  function wrapOnce(obj, methodName, beforeFn) {
+    if (!obj || typeof obj[methodName] !== 'function') return false;
+    var original = obj[methodName];
+    if (original.__ttmsAnalyticsWrapped) return true;
+    obj[methodName] = function () {
+      try {
+        beforeFn.apply(this, arguments);
+      } catch (e) {
+        console.warn('[analytics] hook error:', e);
+      }
+      return original.apply(this, arguments);
+    };
+    obj[methodName].__ttmsAnalyticsWrapped = true;
+    obj[methodName].__ttmsAnalyticsOriginal = original;
+    return true;
+  }
+
+  function trackMenuItemFromOpenItem(ele, options) {
+    if (typeof options === 'string') {
+      window.trackMenuItemView({ url: options, title: options });
+      return;
     }
+    if (options && typeof options === 'object') {
+      window.trackMenuItemView({
+        url: options.url || '',
+        title: options.name || options.title || 'Unknown Item',
+        category: options.category || 'Unknown Category',
+        price: options.items && options.items[0] ? options.items[0].price : 0,
+      });
+      track('Order', 'Open Item Shop', options.name || options.title || 'Unknown Item');
+      return;
+    }
+    window.trackMenuItemView(extractMenuItemDataFromCard(ele, ''));
+  }
+
+  function setupMenuItemTracking() {
+    wrapOnce(window, 'openItem', function (ele, options) {
+      trackMenuItemFromOpenItem(ele, options);
+    });
+
+    wrapOnce(window, 'openMenuReelsItemModal', function (card) {
+      if (card) {
+        window.trackMenuItemView(extractMenuItemDataFromCard(card, ''));
+        track('Menu', 'Reels Modal Open', extractMenuItemDataFromCard(card, '').title);
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      var menuItem = e.target.closest('[onclick*="openItem"]');
+      if (!menuItem || !window.ttmsAnalytics) return;
+      var onclickAttr = menuItem.getAttribute('onclick');
+      var urlMatch = onclickAttr && onclickAttr.match(/['"]([^'"]+)['"]/);
+      if (urlMatch) {
+        window.trackMenuItemView(extractMenuItemDataFromCard(menuItem, urlMatch[1]));
+      }
+    });
+  }
+
+  function setupSinglePageItemTracking() {
+    function trackCurrentItemPage() {
+      var card = document.querySelector('.single-page-item-card');
+      if (!card) return;
+      window.trackMenuItemView(extractMenuItemDataFromCard(card, window.location.pathname));
+    }
+    trackCurrentItemPage();
+    document.addEventListener('ttms:page-enter', trackCurrentItemPage);
+    window.addEventListener('ttms:page-enter', trackCurrentItemPage);
+  }
+
+  function setupSearchTracking() {
+    var searchTrackTimer = null;
+    document.addEventListener(
+      'input',
+      function (e) {
+        if (e.target.id !== 'searchbox') return;
+        clearTimeout(searchTrackTimer);
+        searchTrackTimer = setTimeout(function () {
+          var term = e.target.value.trim();
+          if (!term) return;
+          var count = document.querySelectorAll(
+            '.menu-item-card:not([hidden]):not(.menu-reels-slide[hidden])'
+          ).length;
+          window.trackSearch(term, count);
+        }, 900);
+      },
+      true
+    );
+  }
+
+  function setupAuthTracking() {
+    window.addEventListener('auth:login', function () {
+      track('Auth', 'Login', 'success');
+    });
+    window.addEventListener('auth:logout', function () {
+      track('Auth', 'Logout');
+    });
+    document.addEventListener('ttms:auth-ready', function () {
+      if (window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated()) {
+        track('Auth', 'Session', 'restored');
+      }
+    });
+  }
+
+  function setupFavoritesTracking() {
+    window.addEventListener('ttms:favorite-toggled', function (e) {
+      var d = (e && e.detail) || {};
+      track('Favorites', d.action || 'Toggle', d.title || d.item_key || '');
+    });
+    window.addEventListener('ttms:favorite-login-prompt', function () {
+      track('Auth', 'Login Prompt', 'Favorites');
+    });
+  }
+
+  function setupSmashPassTracking() {
+    window.addEventListener('ttms:smash-vote', function (e) {
+      var d = (e && e.detail) || {};
+      track('SmashPass', d.vote === 'like' ? 'Like' : 'Pass', d.itemId || '', d.likeCount);
+    });
+  }
+
+  function setupPaymentTracking() {
+    if (!window.PaymentIntegration) return;
+    wrapOnce(window.PaymentIntegration, 'startCheckout', function (context) {
+      var amount = context && context.amount ? Number(context.amount) : 0;
+      window.trackPaymentEvent('Checkout Start', 'order', amount);
+    });
+    wrapOnce(window.PaymentIntegration, 'isCurrentOrderPaid', function () {
+      /* no-op — avoid noise */
+    });
+  }
+
+  function setupWhatsAppModeTracking() {
+    wrapOnce(window, 'selectMode', function (modeIndex) {
+      track('Order', 'Select Mode', String(modeIndex));
+    });
+    wrapOnce(window, 'toggleDiningMode', function () {
+      track('Order', 'Toggle Dining Mode');
+    });
+  }
+
+  function setupAdClickTracking() {
+    document.addEventListener('click', function (e) {
+      var adElement = e.target.closest('.ad-panel, .ads a, [class*="ad-"]');
+      if (!adElement || !window.ttmsAnalytics) return;
+      var adData = {
+        title: window.ttmsAnalytics.extractAdTitle(
+          adElement.closest('section, .ad-panel') || adElement
+        ),
+        url: adElement.href || window.ttmsAnalytics.extractAdUrl(adElement),
+      };
+      if (adData.title) window.ttmsAnalytics.trackAdClick(adData);
+    });
+  }
+
+  function setupLocationTracking() {
+    var locationSelect = document.getElementById('locationSelect');
+    if (!locationSelect) {
+      setTimeout(setupLocationTracking, 1000);
+      return;
+    }
+    locationSelect.addEventListener('change', function () {
+      var selectedOption = this.options[this.selectedIndex];
+      if (!selectedOption || !selectedOption.value || !window.ttmsAnalytics) return;
+      window.ttmsAnalytics.trackLocationSelection({
+        name: selectedOption.text,
+        address: selectedOption.getAttribute('data-address') || '',
+        whatsapp: selectedOption.value,
+        lat: selectedOption.getAttribute('data-lat'),
+        lng: selectedOption.getAttribute('data-lng'),
+      });
+    });
+  }
+
+  function setupPWATracking() {
+    window.addEventListener('beforeinstallprompt', function () {
+      track('PWA', 'Install Prompt Shown');
+    });
+    window.addEventListener('appinstalled', function () {
+      if (window.ttmsAnalytics) {
+        window.ttmsAnalytics.trackPWAInstall('accepted');
+        window.ttmsAnalytics.trackGoal(1);
+      }
+    });
+    if (window.APP && typeof window.APP.startChromeInstall === 'function') {
+      wrapOnce(window.APP, 'startChromeInstall', function () {
+        if (window.APP.deferredInstall) {
+          window.APP.deferredInstall.userChoice.then(function (choice) {
+            if (window.ttmsAnalytics) window.ttmsAnalytics.trackPWAInstall(choice.outcome);
+          });
+        }
+      });
+    }
+  }
+
+  function setupDashboardTracking() {
+    wrapOnce(window, 'toggleDashboard', function () {
+      var dashboard = document.getElementById('dashboard');
+      var isOpening = dashboard && dashboard.classList.contains('loader-hide-left');
+      if (window.ttmsAnalytics) {
+        window.ttmsAnalytics.trackDashboardAction(isOpening ? 'Open' : 'Close');
+      }
+    });
+    wrapOnce(window, 'toggleAccountDashboard', function () {
+      var panel = document.getElementById('account-dashboard');
+      var isOpening = panel && !panel.classList.contains('loader-hide-right');
+      track('Dashboard', 'Account ' + (isOpening ? 'Open' : 'Close'));
+    });
+    document.addEventListener('click', function (e) {
+      var dashboardItem = e.target.closest('#dashboard li');
+      if (dashboardItem && window.ttmsAnalytics) {
+        window.ttmsAnalytics.trackDashboardAction('Menu Click', dashboardItem.textContent.trim());
+      }
+    });
+  }
+
+  function setupSocialMediaTracking() {
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('a');
+      if (!link || !link.href || !window.ttmsAnalytics) return;
+      var url = link.href.toLowerCase();
+      var network = null;
+      if (url.indexOf('facebook.com') !== -1) network = 'Facebook';
+      else if (url.indexOf('instagram.com') !== -1) network = 'Instagram';
+      else if (url.indexOf('tiktok.com') !== -1) network = 'TikTok';
+      else if (url.indexOf('youtube.com') !== -1) network = 'YouTube';
+      else if (url.indexOf('twitter.com') !== -1 || url.indexOf('x.com') !== -1) network = 'Twitter';
+      else if (url.indexOf('whatsapp.com') !== -1 || url.indexOf('wa.me') !== -1) network = 'WhatsApp';
+      if (network) window.ttmsAnalytics.trackSocialInteraction(network, 'Click', link.href);
+      if (link.hostname && link.hostname !== window.location.hostname) {
+        window.ttmsAnalytics.trackOutboundLink(link.href, link.textContent.trim());
+      }
+    });
+  }
+
+  function setupBarbaTracking() {
+    document.addEventListener('ttms:page-enter', function () {
+      track('Navigation', 'Page Enter', document.title);
+    });
+  }
+
+  function scheduleLateHooks() {
+    [500, 2000, 5000, 10000].forEach(function (ms) {
+      setTimeout(function () {
+        setupMenuItemTracking();
+        setupWhatsAppModeTracking();
+        setupPaymentTracking();
+      }, ms);
+    });
+  }
+
+  function initIntegrations() {
+    window.trackAddToCart =
+      window.trackAddToCart ||
+      function () {
+        /* defined above */
+      };
+    setupMenuItemTracking();
+    setupSinglePageItemTracking();
+    setupSearchTracking();
+    setupAuthTracking();
+    setupFavoritesTracking();
+    setupSmashPassTracking();
+    setupPaymentTracking();
+    setupWhatsAppModeTracking();
+    setupAdClickTracking();
+    setupLocationTracking();
+    setupPWATracking();
+    setupDashboardTracking();
+    setupSocialMediaTracking();
+    setupBarbaTracking();
+    scheduleLateHooks();
+  }
+
+  window.addEventListener('adsPopulated', function () {
+    if (window.ttmsAnalytics) window.ttmsAnalytics.observeAdImpressions();
   });
 
-  // Initialize when analytics is ready
   waitForAnalytics(initIntegrations);
-
 })();
-

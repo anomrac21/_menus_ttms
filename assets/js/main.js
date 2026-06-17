@@ -1074,15 +1074,21 @@
             sessionStorage.setItem('lastMenuItemClick', JSON.stringify(clickData));
         }
         
-        // Optional: Send to analytics
-        if (typeof gtag !== 'undefined') {
+        if (typeof window.trackMenuItemView === 'function') {
+            window.trackMenuItemView({
+                url: url,
+                title: itemName,
+                category: element.closest('section')?.id || element.getAttribute('data-favorite-section') || 'Unknown Category',
+                price: parseFloat(String(itemPrice).replace(/[^0-9.]/g, '')) || 0
+            });
+        } else if (typeof gtag !== 'undefined') {
             gtag('event', 'menu_item_card_click', {
                 'item_name': itemName,
                 'item_url': url,
                 'item_price': itemPrice
             });
         }
-        
+
         console.log('📊 Tracked menu item card click:', { itemName, url, price: itemPrice });
     }
 

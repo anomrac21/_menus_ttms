@@ -279,6 +279,22 @@
     min-width: 3rem;
 }
 
+.contactinfo .location-map-btn.contact-cta--icon {
+    width: 3rem;
+    height: 3rem;
+    min-width: 3rem;
+    background: linear-gradient(135deg, #42a5f5, #1565c0);
+    border-color: color-mix(in srgb, #42a5f5 50%, #fff);
+    color: #fff;
+}
+
+.contactinfo .location-map-btn.contact-cta--icon .contact-cta__icon {
+    width: 2rem;
+    height: 2rem;
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
 .contactinfo .location-call-btn.contact-cta--icon {
     background: linear-gradient(135deg, #667eea, #764ba2);
     border-color: color-mix(in srgb, #667eea 50%, #fff);
@@ -1459,6 +1475,18 @@
     scroll-snap-stop: always;
 }
 
+.location-picker-card[data-picker-clone] {
+    pointer-events: none;
+    user-select: none;
+}
+
+.location-picker-card[data-picker-clone] .location-picker-card__select,
+.location-picker-card[data-picker-clone] .location-picker-card__action,
+.location-picker-card[data-picker-clone] .location-status-badge,
+.location-picker-card[data-picker-clone] .delivery-toggle-btn {
+    pointer-events: none;
+}
+
 .location-picker:not([data-picker-ready]) .location-picker-card,
 .location-picker:not([data-picker-ready]) .location-picker-card__check {
     transition: none;
@@ -1509,6 +1537,12 @@ a.location-picker-card__select:hover {
 button.location-picker-card__select {
     flex: 1;
     min-width: 0;
+    width: 100%;
+}
+
+button.location-picker-card__select:hover,
+button.location-picker-card__select:focus-visible {
+    color: inherit;
 }
 
 .location-picker-card__pin {

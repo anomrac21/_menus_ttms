@@ -14,7 +14,10 @@
   var loaderStarted = false;
   var countAnimations = new WeakMap();
   var titleCountObserver = null;
+  var headerCountObserver = null;
   var animatedTitleSections = new WeakSet();
+  var headerCountSeen = new WeakSet();
+  var headerCountAnimated = new WeakSet();
 
   function getTargetItemCount(section) {
     if (!section) return 0;
@@ -100,14 +103,131 @@
     countAnimations.set(section, { raf: requestAnimationFrame(tick) });
   }
 
+  function countRenderedCardsAfterHeader(header) {
+    if (!header) return 0;
+    var count = 0;
+    var el = header.nextElementSibling;
+    while (el) {
+      if (el.classList.contains('menu-header')) break;
+      if (el.classList.contains('menu-item-card')) count++;
+      el = el.nextElementSibling;
+    }
+    return count;
+  }
+
+  function getAccurateItemCount(header, grouped) {
+    if (!header) return 0;
+
+    var stored = parseInt(header.getAttribute('data-home-menu-rendered-count'), 10);
+    if (Number.isFinite(stored) && stored >= 0) return stored;
+
+    if (header.dataset.homeMenuLoaded === '1') {
+      return countRenderedCardsAfterHeader(header);
+    }
+
+    if (grouped) {
+      var slug = header.getAttribute('data-section-slug');
+      return slug ? (grouped[slug] || []).length : 0;
+    }
+
+    return getTargetItemCount(header);
+  }
+
+  function playHeaderCountAnimation(header, grouped, options) {
+    if (!header || !headerCountSeen.has(header)) return;
+
+    options = options || {};
+    var target = options.target != null ? options.target : getAccurateItemCount(header, grouped);
+    var from = options.from != null ? options.from : getCurrentCount(header);
+    var duration = options.duration != null ? options.duration : 1100;
+    var force = !!options.force;
+
+    if (headerCountAnimated.has(header) && !force) {
+      updateSectionCountDisplay(header, target, false);
+      header.classList.remove('is-section-loading');
+      return;
+    }
+
+    headerCountAnimated.add(header);
+    animateSectionItemCount(header, {
+      from: from,
+      target: target,
+      duration: duration,
+      clearLoadingOnComplete: true,
+    });
+  }
+
+  function onHeaderEnteredView(header) {
+    if (!header) return;
+    headerCountSeen.add(header);
+
+    if (header.dataset.homeMenuLoaded === '1') {
+      playHeaderCountAnimation(header, menuBySection);
+      return;
+    }
+
+    updateSectionCountDisplay(header, 0, true);
+
+    if (loaderConfig) {
+      var slug = header.getAttribute('data-section-slug');
+      if (slug) loadSectionBySlug(slug, loaderConfig);
+    }
+  }
+
+  function observeHeaderCounts() {
+    var track = getTrack();
+    if (!track) return;
+
+    if (headerCountObserver) headerCountObserver.disconnect();
+
+    var headers = track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]');
+    if (!headers.length) return;
+
+    headerCountObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          onHeaderEnteredView(entry.target);
+        });
+      },
+      { root: track, threshold: 0.35 }
+    );
+
+    headers.forEach(function (header) {
+      if (headerCountAnimated.has(header)) {
+        headerCountObserver.observe(header);
+        return;
+      }
+      if (header.dataset.homeMenuLoaded === '1' && headerCountSeen.has(header)) {
+        playHeaderCountAnimation(header, menuBySection);
+      } else if (!headerCountSeen.has(header)) {
+        updateSectionCountDisplay(header, 0, true);
+      }
+      headerCountObserver.observe(header);
+    });
+  }
+
   function finalizeSectionItemCount(section, actualCount) {
     if (!section) return;
     stopSectionCountAnimation(section);
     var count =
       actualCount != null && Number.isFinite(actualCount)
         ? actualCount
-        : getTargetItemCount(section);
-    updateSectionCountDisplay(section, count, false);
+        : getAccurateItemCount(section, menuBySection);
+
+    section.setAttribute('data-home-menu-rendered-count', String(count));
+    section.setAttribute('data-item-count', String(count));
+
+    if (headerCountSeen.has(section)) {
+      if (headerCountAnimated.has(section)) {
+        updateSectionCountDisplay(section, count, false);
+      } else {
+        playHeaderCountAnimation(section, menuBySection, { target: count, from: 0 });
+      }
+    } else {
+      updateSectionCountDisplay(section, 0, true);
+    }
+
     section.classList.remove('is-section-loading');
   }
 
@@ -151,11 +271,9 @@
 
   function beginSectionLoadFeedback(header) {
     if (!header || header.dataset.homeMenuLoaded === '1') return;
-    animateSectionItemCount(header, {
-      from: getCurrentCount(header),
-      target: getTargetItemCount(header),
-      duration: 1200,
-    });
+    if (!headerCountSeen.has(header)) {
+      updateSectionCountDisplay(header, 0, true);
+    }
   }
 
   var PROXIMITY_VIEWPORTS = 2.5;
@@ -532,6 +650,7 @@
 
     return fetchMenuItems(config.apiUrl).then(function (grouped) {
       var items = grouped[slug] || [];
+      header.setAttribute('data-item-count', String(items.length));
       if (!items.length) {
         header.removeAttribute('aria-busy');
         header.dataset.homeMenuLoaded = '1';
@@ -656,6 +775,7 @@
     if (loaderStarted) {
       initPendingSectionCounts();
       observeSectionTitleCounts();
+      observeHeaderCounts();
       observeSectionHeaders(config);
       scheduleProximityCheck();
       return;
@@ -664,6 +784,7 @@
 
     initPendingSectionCounts();
     observeSectionTitleCounts();
+    observeHeaderCounts();
     observeSectionHeaders(config);
     bindTrackProximity(config);
     bindMenublockPreload(config);
@@ -703,6 +824,8 @@
     loaderStarted = false;
     loaderConfig = null;
     animatedTitleSections = new WeakSet();
+    headerCountSeen = new WeakSet();
+    headerCountAnimated = new WeakSet();
     if (headerObserver) {
       headerObserver.disconnect();
       headerObserver = null;
@@ -710,6 +833,10 @@
     if (titleCountObserver) {
       titleCountObserver.disconnect();
       titleCountObserver = null;
+    }
+    if (headerCountObserver) {
+      headerCountObserver.disconnect();
+      headerCountObserver = null;
     }
     var track = getTrack();
     if (track) {
@@ -749,6 +876,7 @@
     }
     observeSectionHeaders(loaderConfig);
     observeSectionTitleCounts();
+    observeHeaderCounts();
     scheduleProximityCheck();
   });
 

@@ -1,0 +1,32 @@
+<!-- Matomo (auth pages — standalone layout without full head.html) -->
+<script>
+  window._paq = window._paq || [];
+  _paq.push(['setCustomUrl', window.location.pathname + window.location.search]);
+  _paq.push(['setDocumentTitle', document.title]);
+  var ttmsHost = window.location.hostname || '';
+  var ttmsLocalDev = ttmsHost === 'localhost' || ttmsHost === '127.0.0.1' || /\.local$/i.test(ttmsHost);
+  if (!ttmsLocalDev) {
+    _paq.push(['setCookieDomain', '*.ttmenus.com']);
+    _paq.push(['setDomains', ['*.ttmenus.com']]);
+  }
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  {{- $analyticsId := site.Params.services.analyticsid | default 0 -}}
+  {{- $analyticsIdStr := printf "%v" $analyticsId -}}
+  {{- if and $analyticsId (ne $analyticsIdStr "0") (ne $analyticsIdStr "") -}}
+  _paq.push(['addTracker', 'https://analytics.ttmenus.com/matomo.php', '{{ $analyticsId }}']);
+  _paq.push(['trackPageView']);
+  {{- end -}}
+  (function () {
+    var u = '//analytics.ttmenus.com/';
+    _paq.push(['setTrackerUrl', u + 'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+    g.async = true;
+    g.src = u + 'matomo.js';
+    g.onload = function () { window.dispatchEvent(new Event('ttms:matomo-ready')); };
+    s.parentNode.insertBefore(g, s);
+  })();
+</script>
+<script src="/js/analytics-tracking.js" defer></script>
+<script src="/js/analytics-integrations.js" defer></script>

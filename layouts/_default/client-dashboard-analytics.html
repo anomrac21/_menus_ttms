@@ -1,6 +1,13 @@
 {{ define "main" }}
+{{- $tier := default "free" site.Params.tier -}}
+{{- $isPaid := ne $tier "free" -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $hubClientId := $dashClient -}}
+{{- if not (hasPrefix $hubClientId "ttms_") -}}
+  {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
+{{- end -}}
 
-<div class="dashboard-analytics-page dashboard-analytics-page--full" id="dashboardAnalyticsPage">
+<div class="dashboard-analytics-page dashboard-analytics-page--full" id="dashboardAnalyticsPage" data-site-tier="{{ $tier }}">
 
   <div class="dashboard-edit-header dashboard-analytics-header">
 
@@ -14,13 +21,12 @@
 
           <h1 class="dashboard-edit-title">Analytics</h1>
 
-          <p class="dashboard-analytics-lead">Traffic and menu engagement for the last 30 days, powered by Matomo.</p>
-
         </div>
 
       </div>
 
-      <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary dashboard-analytics-external-link" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Open in Matomo</a>
+      <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary dashboard-analytics-external-link" target="_blank" rel="noopener"{{ if not $isPaid }} hidden{{ end }}><i class="fa fa-external-link" aria-hidden="true"></i> Open analytics</a>
+      <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-primary dashboard-analytics-upgrade-link" target="_blank" rel="noopener"{{ if $isPaid }} hidden{{ end }}><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade</a>
 
     </div>
 
@@ -40,7 +46,7 @@
 
           <h2 id="analytics-last-month-heading" class="dashboard-analytics-heading">Last 30 days</h2>
 
-          <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site. Unique visitors may use Matomo’s daily sum when exact range uniques aren’t computed.</p>
+          <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site.</p>
 
         </div>
 
@@ -112,7 +118,7 @@
 
         <i class="fa fa-exclamation-triangle dashboard-analytics-note-icon dashboard-analytics-note-icon--warn" aria-hidden="true" hidden></i>
 
-        <span class="dashboard-analytics-note-text">Loading analytics from Matomo…</span>
+        <span class="dashboard-analytics-note-text">Loading analytics…</span>
 
       </aside>
 
@@ -125,6 +131,9 @@
 
 
 <script>
+  window.SITE_TIER = {{ $tier | jsonify }};
+  window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
+  window.CPS_SERVICE_URL = window.CPS_SERVICE_URL || {{ (site.Params.cpsServiceUrl | default "https://cps.ttmenus.com") | jsonify }};
 
   document.addEventListener('DOMContentLoaded', async function() {
 
@@ -138,6 +147,10 @@
 
       return;
 
+    }
+
+    if (window.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.applyAnalyticsHeaderActions === 'function') {
+      DashboardAnalyticsSnapshot.applyAnalyticsHeaderActions();
     }
 
     function runAnalyticsLoad() {

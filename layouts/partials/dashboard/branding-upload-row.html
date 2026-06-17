@@ -1,0 +1,17 @@
+{{- $fn := .filename -}}
+{{- $title := .title -}}
+{{- $usage := .usage -}}
+{{- $imgW := .imgW | default 48 -}}
+{{- $imgH := .imgH | default 48 -}}
+<div class="dashboard-settings-branding-card">
+  <div class="dashboard-settings-branding-card-text">
+    <h3 class="dashboard-settings-branding-card-title">{{ $title }}</h3>
+    <p class="dashboard-settings-branding-card-usage">{{ $usage }}</p>
+    <p class="dashboard-settings-branding-card-file"><code>{{ $fn }}</code></p>
+  </div>
+  <div class="dashboard-settings-branding-card-upload dashboard-settings-branding-upload">
+    <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $title }}" class="dashboard-settings-thumb dashboard-branding-preview{{ if findRE `(?i)400x200` $fn }} dashboard-branding-preview--wide{{ end }}" data-branding-preview="{{ $fn }}" width="{{ $imgW }}" height="{{ $imgH }}">
+    <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose file</label>
+    <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
+  </div>
+</div>

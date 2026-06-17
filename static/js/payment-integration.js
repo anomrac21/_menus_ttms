@@ -359,6 +359,9 @@
           });
           writePending(null);
           closeModal();
+          if (typeof window.trackPaymentEvent === 'function') {
+            window.trackPaymentEvent('Checkout Success', payment.payment_id, context.amount);
+          }
           if (typeof onSuccess === 'function') onSuccess();
           return true;
         }
@@ -377,6 +380,9 @@
 
         throw new Error('Unsupported payment response from server');
       } catch (err) {
+        if (typeof window.trackPaymentEvent === 'function') {
+          window.trackPaymentEvent('Checkout Error', err && err.message ? err.message : 'unknown');
+        }
         console.error('Payment checkout failed:', err);
         setModalState('error', err.message || 'Payment failed. Please try again.');
         return false;
@@ -409,6 +415,9 @@
 
       if (isCancel) {
         writePending(null);
+        if (typeof window.trackPaymentEvent === 'function') {
+          window.trackPaymentEvent('Checkout Cancel');
+        }
         var cancelMsg = document.getElementById('paymentReturnMessage');
         if (cancelMsg) cancelMsg.textContent = 'Payment was cancelled. You can return to your cart and try again.';
         return;
@@ -445,6 +454,9 @@
 
       if (verified) {
         writePending(null);
+        if (typeof window.trackPaymentEvent === 'function') {
+          window.trackPaymentEvent('Return Success', paymentId);
+        }
         if (statusEl) statusEl.textContent = 'Payment successful! You can complete your order.';
         if (continueBtn) {
           continueBtn.classList.remove('hide');

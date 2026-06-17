@@ -88,12 +88,14 @@
     var startClone = last.cloneNode(true);
     startClone.setAttribute('data-picker-clone', 'start');
     startClone.setAttribute('aria-hidden', 'true');
+    startClone.setAttribute('tabindex', '-1');
     startClone.classList.remove('active-location', 'location-picker-card--selected');
     startClone.setAttribute('aria-selected', 'false');
 
     var endClone = first.cloneNode(true);
     endClone.setAttribute('data-picker-clone', 'end');
     endClone.setAttribute('aria-hidden', 'true');
+    endClone.setAttribute('tabindex', '-1');
     endClone.classList.remove('active-location', 'location-picker-card--selected');
     endClone.setAttribute('aria-selected', 'false');
 
@@ -808,6 +810,12 @@
     );
   }
 
+  function isInteractivePickerTarget(target) {
+    return !!target.closest(
+      '.location-picker-card__action, .location-status-badge, .delivery-toggle-btn, .delivery-options, .location-picker-card__select'
+    );
+  }
+
   function bindPickerEvents(picker, signal) {
     var nearbyBtn = document.getElementById('locationPickerNearbyBtn');
     if (nearbyBtn) {
@@ -842,10 +850,23 @@
         }
 
         var selectEl = e.target.closest('.location-picker-card__select');
-        if (!selectEl) return;
-        var card = selectEl.closest('.location-picker-card');
+        if (selectEl) {
+          var card = selectEl.closest('.location-picker-card');
+          if (!card || card.closest('.location-picker') !== picker) return;
+          if (card.getAttribute('data-picker-clone')) {
+            e.preventDefault();
+            return;
+          }
+          e.preventDefault();
+          selectLocationCard(card, { scroll: false });
+          return;
+        }
+
+        var card = e.target.closest('.location-picker-card');
         if (!card || card.closest('.location-picker') !== picker) return;
         if (card.getAttribute('data-picker-clone')) return;
+        if (isInteractivePickerTarget(e.target)) return;
+        e.preventDefault();
         selectLocationCard(card, { scroll: false });
       },
       { signal: signal }
@@ -856,6 +877,7 @@
       function (e) {
         var card = e.target.closest('.location-picker-card');
         if (!card || card.closest('.location-picker') !== picker) return;
+        if (card.getAttribute('data-picker-clone')) return;
 
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
@@ -868,19 +890,8 @@
           return;
         }
         if (e.key !== 'Enter' && e.key !== ' ') return;
-        if (
-          e.target.closest(
-            '.location-picker-card__action, .location-status-badge, .delivery-toggle-btn, .location-picker-card__select'
-          )
-        ) {
-          return;
-        }
+        if (isInteractivePickerTarget(e.target)) return;
         e.preventDefault();
-        var selectLink = card.querySelector('a.location-picker-card__select');
-        if (selectLink) {
-          selectLink.click();
-          return;
-        }
         selectLocationCard(card);
       },
       { signal: signal }

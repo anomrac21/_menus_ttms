@@ -5,7 +5,6 @@
       <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
       <div class="dashboard-settings-header-text">
         <h1 class="dashboard-edit-title">Menu settings</h1>
-        <p class="dashboard-settings-lead">Ordering, contact, and branding for this menu site.</p>
       </div>
     </div>
   </div>
@@ -20,65 +19,85 @@
           <p class="dashboard-analytics-subtitle">Cart, checkout, and ordering behaviour.</p>
         </div>
       </div>
-      <form id="orderingSystemForm" class="dashboard-settings-form" autocomplete="off">
-        <div class="dashboard-settings-grid dashboard-settings-form-grid">
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-enabled">Enabled</label>
-            <div class="dashboard-settings-value">
-              <select id="os-enabled" name="enabled" class="dashboard-settings-input" data-os-key="enabled">
-                <option value="true" {{ if default true $os.enabled }}selected{{ end }}>Yes</option>
-                <option value="false" {{ if not (default true $os.enabled) }}selected{{ end }}>No</option>
-              </select>
+      <form id="orderingSystemForm" class="dashboard-settings-form dashboard-ordering-form" autocomplete="off">
+        {{- $usePhone := default false $os.usephonecall -}}
+        <div class="dashboard-ordering-layout">
+          <fieldset class="dashboard-ordering-group">
+            <legend class="dashboard-ordering-group-title">Availability</legend>
+            <div class="dashboard-ordering-group-body dashboard-settings-form-grid">
+              <div class="dashboard-settings-row dashboard-ordering-switch-row">
+                <span class="dashboard-settings-label" id="os-enabled-label">Ordering enabled</span>
+                <div class="dashboard-settings-value">
+                  <label class="dashboard-switch" for="os-enabled">
+                    <input type="checkbox" id="os-enabled" name="enabled" class="dashboard-switch-input" data-os-key="enabled"{{ if default true $os.enabled }} checked{{ end }}>
+                    <span class="dashboard-switch-track" aria-hidden="true"></span>
+                    <span class="dashboard-switch-state" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="dashboard-settings-row dashboard-settings-row--full">
+                <label class="dashboard-settings-label" for="os-disabled-msg">Disabled message</label>
+                <div class="dashboard-settings-value dashboard-settings-value--textarea">
+                  <textarea id="os-disabled-msg" name="orderingDisabledMessage" class="dashboard-settings-input dashboard-settings-textarea dashboard-settings-textarea--autosize" rows="2" maxlength="255" data-os-key="orderingDisabledMessage" aria-describedby="os-disabled-msg-count">{{ default "Ordering is not available for this menu at this time." $os.orderingDisabledMessage }}</textarea>
+                  <span id="os-disabled-msg-count" class="dashboard-settings-char-count" aria-live="polite"></span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="dashboard-settings-row dashboard-settings-row--full">
-            <label class="dashboard-settings-label" for="os-disabled-msg">Disabled message</label>
-            <div class="dashboard-settings-value">
-              <textarea id="os-disabled-msg" name="orderingDisabledMessage" class="dashboard-settings-input dashboard-settings-textarea" rows="2" data-os-key="orderingDisabledMessage">{{ default "Ordering is not available for this menu at this time." $os.orderingDisabledMessage }}</textarea>
+          </fieldset>
+
+          <fieldset class="dashboard-ordering-group">
+            <legend class="dashboard-ordering-group-title">Charges &amp; tables</legend>
+            <div class="dashboard-ordering-group-body dashboard-settings-form-grid">
+              <div class="dashboard-settings-row">
+                <label class="dashboard-settings-label" for="os-vat">VAT %</label>
+                <div class="dashboard-settings-value">
+                  <input type="number" id="os-vat" name="vat" class="dashboard-settings-input" min="0" step="0.01" data-os-key="vat" value="{{ default 0 $os.vat }}">
+                </div>
+              </div>
+              <div class="dashboard-settings-row">
+                <label class="dashboard-settings-label" for="os-service">Service charge</label>
+                <div class="dashboard-settings-value">
+                  <input type="number" id="os-service" name="servicecharge" class="dashboard-settings-input" min="0" step="0.01" data-os-key="servicecharge" value="{{ default 0 $os.servicecharge }}">
+                </div>
+              </div>
+              <div class="dashboard-settings-row dashboard-ordering-switch-row">
+                <span class="dashboard-settings-label" id="os-tables-label">Table ordering</span>
+                <div class="dashboard-settings-value">
+                  <label class="dashboard-switch" for="os-tables">
+                    <input type="checkbox" id="os-tables" name="hastables" class="dashboard-switch-input" data-os-key="hastables"{{ if default true $os.hastables }} checked{{ end }}>
+                    <span class="dashboard-switch-track" aria-hidden="true"></span>
+                    <span class="dashboard-switch-state" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-vat">VAT %</label>
-            <div class="dashboard-settings-value">
-              <input type="number" id="os-vat" name="vat" class="dashboard-settings-input" min="0" step="0.01" data-os-key="vat" value="{{ default 0 $os.vat }}">
+          </fieldset>
+
+          <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel">
+            <legend class="dashboard-ordering-group-title">Checkout channel</legend>
+            <p class="dashboard-ordering-group-hint">How customers send orders from the cart.</p>
+            <div class="dashboard-ordering-channel">
+              <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="Order via">
+                <button type="button" class="dashboard-ordering-channel-btn{{ if not $usePhone }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if not $usePhone }}true{{ else }}false{{ end }}">
+                  <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
+                </button>
+                <button type="button" class="dashboard-ordering-channel-btn{{ if $usePhone }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if $usePhone }}true{{ else }}false{{ end }}">
+                  <i class="fa fa-phone" aria-hidden="true"></i><span>Phone call</span>
+                </button>
+              </div>
+              <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if $usePhone }}true{{ else }}false{{ end }}">
+              <div class="dashboard-ordering-contact">
+                <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if $usePhone }}Phone number{{ else }}WhatsApp number{{ end }}</label>
+                <div class="dashboard-ordering-contact-field">
+                  <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if $usePhone }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
+                  <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if $usePhone }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
+                </div>
+                <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if $usePhone }}Opens the phone dialer when guests tap Order Now.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now.{{ end }}</p>
+              </div>
+              <input type="hidden" id="os-whatsapp" name="whatsapp" value="{{ default "" $os.whatsapp }}">
+              <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">
             </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-service">Service charge</label>
-            <div class="dashboard-settings-value">
-              <input type="number" id="os-service" name="servicecharge" class="dashboard-settings-input" min="0" step="0.01" data-os-key="servicecharge" value="{{ default 0 $os.servicecharge }}">
-            </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-tables">Has tables</label>
-            <div class="dashboard-settings-value">
-              <select id="os-tables" name="hastables" class="dashboard-settings-input" data-os-key="hastables">
-                <option value="true" {{ if default true $os.hastables }}selected{{ end }}>Yes</option>
-                <option value="false" {{ if not (default true $os.hastables) }}selected{{ end }}>No</option>
-              </select>
-            </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-phonecall">Use phone call</label>
-            <div class="dashboard-settings-value">
-              <select id="os-phonecall" name="usephonecall" class="dashboard-settings-input" data-os-key="usephonecall">
-                <option value="false" {{ if not (default false $os.usephonecall) }}selected{{ end }}>No</option>
-                <option value="true" {{ if default false $os.usephonecall }}selected{{ end }}>Yes</option>
-              </select>
-            </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-whatsapp">WhatsApp</label>
-            <div class="dashboard-settings-value">
-              <input type="text" id="os-whatsapp" name="whatsapp" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" data-os-key="whatsapp" value="{{ default "" $os.whatsapp }}">
-            </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="os-phone">Phone</label>
-            <div class="dashboard-settings-value">
-              <input type="text" id="os-phone" name="phone" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" data-os-key="phone" value="{{ default "" $os.phone }}">
-            </div>
-          </div>
+          </fieldset>
         </div>
         <div class="dashboard-settings-form-actions">
           <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveOrderingSystem">Save ordering settings</button>
@@ -173,59 +192,83 @@
     </section>
 
     {{- $brandingDir := "static/branding" -}}
-    {{- $brandingLabels := dict
-      "favicon192.webp" "Logo / app icon"
-      "favicon512.webp" "Large logo"
-      "favicon-400x200.webp" "Card / OG image"
+    {{- $brandingMeta := dict
+      "favicon-400x200.webp" (dict "title" "Card / OG image" "usage" "Placeholder when a menu item has no photo, 404 page hero, and cart fallback. Recommended 400×200.")
+      "favicon.png" (dict "title" "PWA icon (PNG)" "usage" "Web app manifest — install icon for browsers that prefer PNG (512×512).")
+      "favicon16.webp" (dict "title" "Browser tab icon" "usage" "Tiny favicon in browser tabs and bookmarks (16×16).")
+      "favicon144.webp" (dict "title" "PWA icon (144)" "usage" "manifest.json — Android / Chrome install icon (144×144).")
+      "favicon152.webp" (dict "title" "Social share image" "usage" "Default Open Graph and Twitter preview when a page has no item image; also Apple touch icon (152×152).")
+      "favicon192.webp" (dict "title" "Logo / app icon" "usage" "Main logo — site header, loader, client dashboard, cart/table modals, and PWA 192 icon.")
+      "favicon196.webp" (dict "title" "Maskable PWA icon" "usage" "manifest.json maskable icon and Android shortcut favicon (196×196).")
+      "favicon512.webp" (dict "title" "Large logo" "usage" "High-resolution PWA icon and large logo references (512×512).")
+      "mappin.webp" (dict "title" "Map pin" "usage" "Marker image on the TTMenus locations map (256×256). Pin fill, border, and width come from data/mappin.yaml and export in /index.json.")
+      "richscreenshot1.webp" (dict "title" "PWA screenshot (wide)" "usage" "manifest.json — wide promotional screenshot in the install app dialog (640×320).")
+      "richscreenshot2.webp" (dict "title" "PWA screenshot (mobile)" "usage" "manifest.json — tall mobile screenshot in the install app dialog (320×640).")
     -}}
+    {{- $mappinData := site.Data.mappin | default dict -}}
+    {{- $brandingOrder := slice "favicon192.webp" "favicon512.webp" "favicon-400x200.webp" "favicon152.webp" "favicon.png" "favicon144.webp" "favicon196.webp" "favicon16.webp" "richscreenshot1.webp" "richscreenshot2.webp" "mappin.webp" -}}
     {{- $brandingScratch := newScratch -}}
+    {{- $brandingScratch.Set "shown" slice -}}
     {{- $brandingScratch.Set "n" 0 -}}
     <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--branding" aria-labelledby="settings-branding-heading">
       <div class="dashboard-settings-panel-head">
         <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-picture-o"></i></span>
         <div class="dashboard-settings-panel-head-text">
           <h2 id="settings-branding-heading" class="dashboard-analytics-heading">Branding images</h2>
-          <p class="dashboard-analytics-subtitle">Logos, favicons, and share images under <code>static/branding/</code>. Uploads commit to your site repo.</p>
+          <p class="dashboard-analytics-subtitle">Logos, favicons, and share images under <code>static/branding/</code>. Each upload replaces that file in your site repo.</p>
         </div>
       </div>
-      <div class="dashboard-settings-grid dashboard-settings-branding dashboard-settings-branding-grid">
+      <div class="dashboard-settings-branding dashboard-settings-branding-grid">
         {{- if fileExists $brandingDir -}}
+          {{- range $brandingOrder -}}
+            {{- $fn := . -}}
+            {{- if fileExists (printf "%s/%s" $brandingDir $fn) -}}
+              {{- $meta := index $brandingMeta $fn | default dict -}}
+              {{- $title := default $fn $meta.title -}}
+              {{- $usage := default "Custom branding asset served from /branding/." $meta.usage -}}
+              {{- $imgW := 48 -}}{{- $imgH := 48 -}}
+              {{- if findRE `(?i)400x200` $fn -}}{{- $imgW = 96 -}}{{- $imgH = 48 -}}{{- end -}}
+              {{- $brandingScratch.Set "n" (add ($brandingScratch.Get "n") 1) -}}
+              {{- $brandingScratch.Set "shown" ($brandingScratch.Get "shown" | append $fn) -}}
+              {{- if eq $fn "mappin.webp" -}}
+              {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappinData) }}
+              {{- else -}}
+              {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage "imgW" $imgW "imgH" $imgH) }}
+              {{- end -}}
+            {{- end -}}
+          {{- end -}}
           {{- range sort (readDir $brandingDir) "Name" -}}
             {{- if and (not .IsDir) (findRE `(?i)\.(webp|png|jpe?g|gif)$` .Name) (ne (lower .Name) "ttmenus.gif") -}}
-              {{- $brandingScratch.Set "n" (add ($brandingScratch.Get "n") 1) -}}
               {{- $fn := .Name -}}
-              {{- $label := default $fn (index $brandingLabels $fn) -}}
-              {{- $imgW := 48 -}}{{- $imgH := 48 -}}
-              {{- if findRE `(?i)400x200` $fn -}}
-                {{- $imgW = 96 -}}{{- $imgH = 48 -}}
+              {{- if not (in ($brandingScratch.Get "shown") $fn) -}}
+                {{- $meta := index $brandingMeta $fn | default dict -}}
+                {{- $title := default $fn $meta.title -}}
+                {{- $usage := default "Custom branding asset served from /branding/." $meta.usage -}}
+                {{- $imgW := 48 -}}{{- $imgH := 48 -}}
+                {{- if findRE `(?i)400x200` $fn -}}{{- $imgW = 96 -}}{{- $imgH = 48 -}}{{- end -}}
+                {{- $brandingScratch.Set "n" (add ($brandingScratch.Get "n") 1) -}}
+                {{- if eq $fn "mappin.webp" -}}
+                {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappinData) }}
+                {{- else -}}
+                {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage "imgW" $imgW "imgH" $imgH) }}
+                {{- end -}}
               {{- end -}}
-        <div class="dashboard-settings-row dashboard-settings-branding-row">
-          <span class="dashboard-settings-label">{{ $label }}</span>
-          <div class="dashboard-settings-value dashboard-settings-branding-upload">
-            <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $label }}" class="dashboard-settings-thumb dashboard-branding-preview{{ if findRE `(?i)400x200` $fn }} dashboard-branding-preview--wide{{ end }}" data-branding-preview="{{ $fn }}" width="{{ $imgW }}" height="{{ $imgH }}">
-            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose file</label>
-            <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
-          </div>
-        </div>
             {{- end -}}
           {{- end -}}
         {{- end -}}
         {{- if eq ($brandingScratch.Get "n") 0 -}}
-          {{- range slice "favicon192.webp" "favicon512.webp" "favicon-400x200.webp" -}}
+          {{- range $brandingOrder -}}
             {{- $fn := . -}}
-            {{- $label := default $fn (index $brandingLabels $fn) -}}
+            {{- $meta := index $brandingMeta $fn | default dict -}}
+            {{- $title := default $fn $meta.title -}}
+            {{- $usage := default "Custom branding asset served from /branding/." $meta.usage -}}
             {{- $imgW := 48 -}}{{- $imgH := 48 -}}
-            {{- if findRE `(?i)400x200` $fn -}}
-              {{- $imgW = 96 -}}{{- $imgH = 48 -}}
+            {{- if findRE `(?i)400x200` $fn -}}{{- $imgW = 96 -}}{{- $imgH = 48 -}}{{- end -}}
+            {{- if eq $fn "mappin.webp" -}}
+            {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappinData) }}
+            {{- else -}}
+            {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage "imgW" $imgW "imgH" $imgH) }}
             {{- end -}}
-        <div class="dashboard-settings-row dashboard-settings-branding-row">
-          <span class="dashboard-settings-label">{{ $label }}</span>
-          <div class="dashboard-settings-value dashboard-settings-branding-upload">
-            <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $label }}" class="dashboard-settings-thumb dashboard-branding-preview{{ if findRE `(?i)400x200` $fn }} dashboard-branding-preview--wide{{ end }}" data-branding-preview="{{ $fn }}" width="{{ $imgW }}" height="{{ $imgH }}">
-            <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose file</label>
-            <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
-          </div>
-        </div>
           {{- end -}}
         {{- end -}}
       </div>
@@ -233,7 +276,7 @@
 
     <aside class="dashboard-settings-footnote dashboard-analytics-note" role="note">
       <i class="fa fa-info-circle" aria-hidden="true"></i>
-      <span>Sections other than ordering, social &amp; contact, and branding upload are read-only here. Edit <code>hugo.toml</code> for those, or rebuild after Git changes. Push welcome messages are managed on the <a href="/notifications/">Notifications</a> page.</span>
+      <span>Sections other than ordering, social &amp; contact, branding upload, and map pin colors are read-only here. Edit <code>hugo.toml</code> for those, or rebuild after Git changes. Push welcome messages are managed on the <a href="/notifications/">Notifications</a> page.</span>
     </aside>
   </main>
 </div>
@@ -300,9 +343,115 @@
     if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
       return;
     }
+    function autoResizeTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+
+    function updateTextareaCharCount(textarea, counterEl, maxLen) {
+      if (!textarea || !counterEl) return;
+      var len = (textarea.value || '').length;
+      counterEl.textContent = len + '/' + maxLen;
+      counterEl.classList.toggle('dashboard-settings-char-count--limit', len >= maxLen);
+    }
+
+    function bindAutosizeTextarea(textarea, maxLen) {
+      if (!textarea) return;
+      var counterEl = document.getElementById(textarea.id + '-count');
+      function refresh() {
+        autoResizeTextarea(textarea);
+        updateTextareaCharCount(textarea, counterEl, maxLen);
+      }
+      textarea.addEventListener('input', refresh);
+      refresh();
+    }
+
+    bindAutosizeTextarea(document.getElementById('os-disabled-msg'), 255);
+
     var form = document.getElementById('orderingSystemForm');
     var statusEl = document.getElementById('orderingSystemSaveStatus');
     var btn = document.getElementById('btnSaveOrderingSystem');
+    function digitsOnly(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+    function syncOrderingContactHiddenFields() {
+      var contactEl = document.getElementById('os-contact');
+      var whatsappEl = document.getElementById('os-whatsapp');
+      var phoneEl = document.getElementById('os-phone');
+      var phonecallEl = document.getElementById('os-phonecall');
+      if (!contactEl || !whatsappEl || !phoneEl || !phonecallEl) return;
+      var usePhone = phonecallEl.value === 'true';
+      var contact = digitsOnly(contactEl.value);
+      if (usePhone) {
+        phoneEl.value = contact;
+        contactEl.setAttribute('data-phone', contact);
+      } else {
+        whatsappEl.value = contact;
+        contactEl.setAttribute('data-whatsapp', contact);
+      }
+    }
+    function setOrderingChannel(channel) {
+      var usePhone = channel === 'phone';
+      var phonecallEl = document.getElementById('os-phonecall');
+      var contactEl = document.getElementById('os-contact');
+      var contactLabel = document.getElementById('os-contact-label');
+      var contactIcon = document.getElementById('os-contact-icon');
+      var contactHint = document.getElementById('os-contact-hint');
+      var whatsappBtn = document.getElementById('os-channel-whatsapp');
+      var phoneBtn = document.getElementById('os-channel-phone');
+      if (!phonecallEl || !contactEl) return;
+      var currentlyPhone = phonecallEl.value === 'true';
+      var currentContact = digitsOnly(contactEl.value);
+      if (currentlyPhone) {
+        contactEl.setAttribute('data-phone', currentContact);
+      } else {
+        contactEl.setAttribute('data-whatsapp', currentContact);
+      }
+      phonecallEl.value = usePhone ? 'true' : 'false';
+      contactEl.value = usePhone
+        ? (contactEl.getAttribute('data-phone') || '')
+        : (contactEl.getAttribute('data-whatsapp') || '');
+      if (whatsappBtn) {
+        whatsappBtn.classList.toggle('active', !usePhone);
+        whatsappBtn.setAttribute('aria-pressed', usePhone ? 'false' : 'true');
+      }
+      if (phoneBtn) {
+        phoneBtn.classList.toggle('active', usePhone);
+        phoneBtn.setAttribute('aria-pressed', usePhone ? 'true' : 'false');
+      }
+      if (contactLabel) {
+        contactLabel.textContent = usePhone ? 'Phone number' : 'WhatsApp number';
+      }
+      if (contactIcon) {
+        contactIcon.innerHTML = usePhone
+          ? '<i class="fa fa-phone" aria-hidden="true"></i>'
+          : '<i class="fa fa-whatsapp" aria-hidden="true"></i>';
+      }
+      if (contactHint) {
+        contactHint.textContent = usePhone
+          ? 'Opens the phone dialer when guests tap Order Now.'
+          : 'Opens WhatsApp with the order summary when guests tap Order Now.';
+      }
+      syncOrderingContactHiddenFields();
+    }
+    var channelWhatsappBtn = document.getElementById('os-channel-whatsapp');
+    var channelPhoneBtn = document.getElementById('os-channel-phone');
+    if (channelWhatsappBtn) {
+      channelWhatsappBtn.addEventListener('click', function() {
+        setOrderingChannel('whatsapp');
+      });
+    }
+    if (channelPhoneBtn) {
+      channelPhoneBtn.addEventListener('click', function() {
+        setOrderingChannel('phone');
+      });
+    }
+    var contactInput = document.getElementById('os-contact');
+    if (contactInput) {
+      contactInput.addEventListener('input', syncOrderingContactHiddenFields);
+      syncOrderingContactHiddenFields();
+    }
     if (form) {
       form.addEventListener('submit', function(ev) {
         ev.preventDefault();
@@ -311,15 +460,16 @@
           alert('Sign in required.');
           return;
         }
+        syncOrderingContactHiddenFields();
         var payload = {
-          enabled: document.getElementById('os-enabled').value === 'true',
-          orderingDisabledMessage: (document.getElementById('os-disabled-msg').value || '').trim(),
+          enabled: document.getElementById('os-enabled').checked,
+          orderingDisabledMessage: (document.getElementById('os-disabled-msg').value || '').trim().slice(0, 255),
           vat: parseFloat(document.getElementById('os-vat').value) || 0,
           servicecharge: parseFloat(document.getElementById('os-service').value) || 0,
-          hastables: document.getElementById('os-tables').value === 'true',
+          hastables: document.getElementById('os-tables').checked,
           usephonecall: document.getElementById('os-phonecall').value === 'true',
-          whatsapp: String(document.getElementById('os-whatsapp').value || '').replace(/\D/g, ''),
-          phone: String(document.getElementById('os-phone').value || '').replace(/\D/g, '')
+          whatsapp: digitsOnly(document.getElementById('os-whatsapp').value),
+          phone: digitsOnly(document.getElementById('os-phone').value)
         };
         var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
         var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/hugo-orderingsystem';
@@ -394,6 +544,105 @@
       });
     }
 
+    function normalizeHexColor(value) {
+      var s = String(value || '').trim();
+      if (!s) return '';
+      if (s.charAt(0) !== '#') s = '#' + s;
+      if (!/^#[0-9A-Fa-f]{6}$/.test(s)) return '';
+      return s.toLowerCase();
+    }
+
+    function updateMappinPreview() {
+      var preview = document.getElementById('mappinPinPreview');
+      var pin = preview ? preview.querySelector('.dashboard-mappin-preview-pin') : null;
+      var fill = document.getElementById('mappin-fill');
+      var border = document.getElementById('mappin-border');
+      var borderWidth = document.getElementById('mappin-border-width');
+      var fillColor = normalizeHexColor(fill && fill.value) || '#000000';
+      var borderColor = normalizeHexColor(border && border.value) || '#ffffff';
+      var width = Math.max(0, Math.min(12, parseInt(borderWidth && borderWidth.value, 10) || 0));
+      if (preview) {
+        preview.style.setProperty('--ttms-map-pin-color', fillColor);
+        preview.style.setProperty('--ttms-map-pin-border-color', borderColor);
+        preview.style.setProperty('--ttms-map-pin-border-width', width + 'px');
+      }
+      if (pin) {
+        pin.style.color = fillColor;
+      }
+    }
+
+    function bindMappinColorPair(textId, pickerId) {
+      var text = document.getElementById(textId);
+      var picker = document.getElementById(pickerId);
+      if (!text || !picker) return;
+      picker.addEventListener('input', function() {
+        text.value = picker.value;
+        updateMappinPreview();
+      });
+      text.addEventListener('input', function() {
+        var normalized = normalizeHexColor(text.value);
+        if (normalized) picker.value = normalized;
+        updateMappinPreview();
+      });
+    }
+
+    bindMappinColorPair('mappin-fill', 'mappin-fill-picker');
+    bindMappinColorPair('mappin-border', 'mappin-border-picker');
+    var mappinBorderWidth = document.getElementById('mappin-border-width');
+    if (mappinBorderWidth) {
+      mappinBorderWidth.addEventListener('input', updateMappinPreview);
+    }
+    updateMappinPreview();
+
+    var mappinStyleForm = document.getElementById('mappinStyleForm');
+    var mappinStyleStatus = document.getElementById('mappinStyleSaveStatus');
+    var mappinStyleBtn = document.getElementById('btnSaveMappinStyle');
+    if (mappinStyleForm) {
+      mappinStyleForm.addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) {
+          alert('Sign in required.');
+          return;
+        }
+        var fill = normalizeHexColor(document.getElementById('mappin-fill').value);
+        var border = normalizeHexColor(document.getElementById('mappin-border').value);
+        if (!fill || !border) {
+          alert('Fill and border must be hex colors like #000000');
+          return;
+        }
+        var payload = {
+          fill: fill,
+          border: border,
+          border_width: Math.max(0, Math.min(12, parseInt(document.getElementById('mappin-border-width').value, 10) || 0))
+        };
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/data-mappin';
+        if (mappinStyleBtn) mappinStyleBtn.disabled = true;
+        if (mappinStyleStatus) mappinStyleStatus.textContent = 'Saving…';
+        fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        }).then(parseCmsApiResponse).then(function(data) {
+          if (mappinStyleStatus) {
+            var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
+            mappinStyleStatus.textContent = h ? 'Saved · commit ' + h : 'Saved.';
+          }
+        }).catch(function(err) {
+          alert('Could not save pin colors: ' + (err.message || err));
+          if (mappinStyleStatus) mappinStyleStatus.textContent = '';
+        }).finally(function() {
+          if (mappinStyleBtn) mappinStyleBtn.disabled = false;
+        });
+      });
+    }
+
     document.querySelectorAll('.dashboard-branding-file-input').forEach(function(input) {
       input.addEventListener('change', function() {
         var file = input.files && input.files[0];
@@ -426,6 +675,12 @@
           }
           if (img) {
             img.src = '/branding/' + name + '?t=' + Date.now();
+          }
+          if (name === 'mappin.webp') {
+            var previewIcon = document.getElementById('mappinPinPreviewIcon');
+            if (previewIcon) {
+              previewIcon.src = '/branding/mappin.webp?t=' + Date.now();
+            }
           }
           input.value = '';
         }).catch(function(err) {

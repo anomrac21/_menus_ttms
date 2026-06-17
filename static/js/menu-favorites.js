@@ -51,6 +51,7 @@
     if (!goLogin) {
       return;
     }
+    window.dispatchEvent(new CustomEvent('ttms:favorite-login-prompt'));
     try {
       sessionStorage.setItem('ttmenus_redirect_after_login', window.location.pathname);
     } catch (err) {
@@ -135,10 +136,24 @@
       dishKeys.delete(itemKey);
       setButtonState(btn, false);
       showToast('Removed from favorites.');
+      window.dispatchEvent(new CustomEvent('ttms:favorite-toggled', {
+        detail: {
+          action: 'Remove',
+          item_key: itemKey,
+          title: btn.getAttribute('data-favorite-title') || ''
+        }
+      }));
     } else {
       dishKeys.add(itemKey);
       setButtonState(btn, true);
       showToast('Saved to favorites.');
+      window.dispatchEvent(new CustomEvent('ttms:favorite-toggled', {
+        detail: {
+          action: 'Add',
+          item_key: itemKey,
+          title: btn.getAttribute('data-favorite-title') || ''
+        }
+      }));
     }
   }
 
