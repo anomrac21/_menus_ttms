@@ -20,6 +20,8 @@ function resolveNotifyConfig() {
 }
 
 const NotificationService = {
+  VAPID_KEY_STORAGE: 'ttmenus_vapid_public_key',
+
   get notifyServiceUrl() {
     const cfg = resolveNotifyConfig();
     return cfg.serviceUrl || window.SiteConfig?.notifyServiceUrl || 'https://notify.ttmenus.com';
@@ -91,7 +93,6 @@ const NotificationService = {
     // Verify push subscription is still valid and sync keys to server
     if (this.subscriptionId && this.serviceWorkerRegistration) {
       await this.verifyPushSubscription();
-      await this.syncPushSubscriptionToServer();
     }
     
     // If user is subscribed, connect to WebSocket to receive notifications (when site is open)
@@ -108,25 +109,31 @@ const NotificationService = {
       return;
     }
 
+    if (!this.supportsBackgroundPush()) {
+      if (this.isIOS() && !this.isStandalonePWA()) {
+        this.updateSubscribeButton(!!this.subscriptionId, { backgroundPush: false });
+      }
+      return;
+    }
+
     try {
       const stored = localStorage.getItem('ttmenus_notification_subscription');
       if (!stored) return;
 
-      const subscription = JSON.parse(stored);
-      const currentPushSubscription =
-        await this.serviceWorkerRegistration.pushManager.getSubscription();
+      const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
+      const vapidPublicKey = await this.fetchVapidPublicKey(apiUrl, this.getClientDomain());
+      const pushSubscription = await this.ensurePushSubscription(vapidPublicKey);
 
-      if (currentPushSubscription) {
-        console.log('✅ Background push subscription active');
+      if (pushSubscription) {
+        await this.syncPushSubscriptionToServer(pushSubscription);
         this.updateSubscribeButton(true, { backgroundPush: true });
+        console.log('✅ Background push subscription active and synced');
         return;
       }
 
-      if (subscription.pushSubscription || subscription.push_endpoint) {
-        console.warn('⚠️ Background push subscription missing — alerts only work while site is open');
-        this.updateSubscribeButton(true, { backgroundPush: false });
-        await this.repairBackgroundPush();
-      }
+      console.warn('⚠️ Background push subscription missing — repairing…');
+      this.updateSubscribeButton(true, { backgroundPush: false });
+      await this.repairBackgroundPush();
     } catch (error) {
       console.error('Error verifying push subscription:', error);
     }
@@ -278,6 +285,17 @@ const NotificationService = {
 
     const applicationServerKey = this.urlBase64ToUint8Array(vapidPublicKey);
     let pushSubscription = await pushManager.getSubscription();
+    const storedVapid = localStorage.getItem(this.VAPID_KEY_STORAGE);
+
+    if (pushSubscription && storedVapid && storedVapid !== vapidPublicKey) {
+      console.warn('VAPID public key changed — recreating background push subscription');
+      try {
+        await pushSubscription.unsubscribe();
+      } catch (unsubErr) {
+        console.warn('Could not unsubscribe stale push subscription:', unsubErr);
+      }
+      pushSubscription = null;
+    }
 
     if (pushSubscription) {
       try {
@@ -308,6 +326,7 @@ const NotificationService = {
       console.log('✅ Using existing background push subscription');
     }
 
+    localStorage.setItem(this.VAPID_KEY_STORAGE, vapidPublicKey);
     return pushSubscription;
   },
 
