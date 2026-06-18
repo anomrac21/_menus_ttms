@@ -4648,6 +4648,54 @@
   margin-top: 0.5rem;
 }
 
+.dashboard-notify-overview-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.5rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  color: #c7d2fe;
+  font-size: 0.88rem;
+}
+
+.dashboard-notify-overview-loading[hidden] {
+  display: none !important;
+}
+
+.dashboard-notify-panel--loading .dashboard-notify-metrics {
+  opacity: 0.72;
+}
+
+.dashboard-notify-panel--loading .dashboard-notify-metric-card .dashboard-analytics-card-value {
+  color: rgba(226, 232, 240, 0.55);
+}
+
+.dashboard-notify-trends-chart-wrap--loading {
+  min-height: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-notify-trends-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(203, 213, 225, 0.8);
+}
+
+.dashboard-notify-table-loading-row td {
+  text-align: center;
+  padding: 1.25rem 0.75rem;
+  color: rgba(203, 213, 225, 0.8);
+  font-size: 0.88rem;
+}
+
 .dashboard-notify-photo-history-section {
   margin-bottom: 1.25rem;
 }

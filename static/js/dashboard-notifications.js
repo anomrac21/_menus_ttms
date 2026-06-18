@@ -135,6 +135,88 @@
     el.hidden = !text;
   }
 
+  var overviewLoading = {
+    metrics: false,
+    trends: false,
+    subscribers: false,
+  };
+
+  function updateOverviewLoadingUI() {
+    var panel = document.getElementById('notifyPanelOverview');
+    var banner = document.getElementById('dashboardNotifyOverviewLoading');
+    var busy =
+      overviewLoading.metrics || overviewLoading.trends || overviewLoading.subscribers;
+    if (panel) panel.classList.toggle('dashboard-notify-panel--loading', busy);
+    if (banner) banner.hidden = !busy;
+  }
+
+  function setOverviewSectionLoading(section, loading) {
+    if (!Object.prototype.hasOwnProperty.call(overviewLoading, section)) return;
+    overviewLoading[section] = !!loading;
+    updateOverviewLoadingUI();
+  }
+
+  function setMetricsLoading(loading) {
+    setOverviewSectionLoading('metrics', loading);
+    if (!loading) return;
+    [
+      'metricNotifySent30d',
+      'metricNotifySubscribers',
+      'metricNotifyArrived30d',
+      'metricNotifyOpened30d',
+      'metricNotifyNotArrived30d',
+      'metricNotifyClicked30d',
+      'metricNotifyNewSubscribers30d',
+      'metricNotifyUnsubscribes30d',
+    ].forEach(function (id) {
+      setText(id, '…');
+    });
+    [
+      'metricNotifySent30dMeta',
+      'metricNotifyArrived30dMeta',
+      'metricNotifyOpened30dMeta',
+      'metricNotifyNotArrived30dMeta',
+      'metricNotifyClicked30dMeta',
+      'metricNotifyNewSubscribers30dMeta',
+      'metricNotifyUnsubscribes30dMeta',
+    ].forEach(function (id) {
+      setMetricMeta(id, '');
+    });
+  }
+
+  function setTrendsLoading(loading) {
+    setOverviewSectionLoading('trends', loading);
+    var wrap = document.querySelector('#dashboardNotifyTrendsSection .dashboard-notify-trends-chart-wrap');
+    var chart = document.getElementById('dashboardNotifyTrendChart');
+    var empty = document.getElementById('dashboardNotifyTrendEmpty');
+    if (!wrap || !chart) return;
+    if (loading) {
+      wrap.classList.add('dashboard-notify-trends-chart-wrap--loading');
+      chart.innerHTML =
+        '<p class="dashboard-notify-trends-loading" role="status">' +
+        '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Loading chart…</p>';
+      if (empty) empty.hidden = true;
+      return;
+    }
+    wrap.classList.remove('dashboard-notify-trends-chart-wrap--loading');
+  }
+
+  function setSubscribersLoading(loading) {
+    setOverviewSectionLoading('subscribers', loading);
+    var tbody = document.getElementById('dashboardNotifySubscribersBody');
+    var empty = document.getElementById('dashboardNotifySubscribersEmpty');
+    var table = document.getElementById('dashboardNotifySubscribersTable');
+    if (!tbody) return;
+    if (loading) {
+      if (table) table.hidden = false;
+      if (empty) empty.hidden = true;
+      tbody.innerHTML =
+        '<tr class="dashboard-notify-table-loading-row">' +
+        '<td colspan="5"><i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Loading subscribers…</td>' +
+        '</tr>';
+    }
+  }
+
   function formatPercent(value) {
     if (value == null || isNaN(value)) return '—';
     return Math.round(Number(value)) + '%';
@@ -267,18 +349,20 @@
   }
 
   async function loadMetrics() {
-    var domain = getClientDomain();
-    var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
-    var headers = authHeaders();
+    setMetricsLoading(true);
+    try {
+      var domain = getClientDomain();
+      var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
+      var headers = authHeaders();
 
-    var overview = await notifyFetch('/analytics/overview' + q, { headers: headers });
-    var subTrends = await notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(
-      function () {
-        return { data: [] };
-      }
-    );
+      var overview = await notifyFetch('/analytics/overview' + q, { headers: headers });
+      var subTrends = await notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(
+        function () {
+          return { data: [] };
+        }
+      );
 
-    var ov = (overview && overview.overview) || {};
+      var ov = (overview && overview.overview) || {};
     var sub = ov.subscriptions || {};
     var notif = ov.notifications || {};
     var trendRows = (subTrends && subTrends.data) || [];
@@ -334,6 +418,9 @@
             ' net change'
         : ''
     );
+    } finally {
+      setMetricsLoading(false);
+    }
   }
 
   function formatShortDate(isoDate) {
@@ -519,24 +606,29 @@
   }
 
   async function loadEngagementTrends() {
-    var domain = getClientDomain();
-    var q =
-      '?client_domain=' + encodeURIComponent(domain) + '&days=30';
-    var headers = authHeaders();
+    setTrendsLoading(true);
+    try {
+      var domain = getClientDomain();
+      var q =
+        '?client_domain=' + encodeURIComponent(domain) + '&days=30';
+      var headers = authHeaders();
 
-    var engagement = await notifyFetch('/analytics/engagement-trends' + q, { headers: headers });
-    var subscriptions = await notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(
-      function () {
-        return { data: [] };
-      }
-    );
+      var engagement = await notifyFetch('/analytics/engagement-trends' + q, { headers: headers });
+      var subscriptions = await notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(
+        function () {
+          return { data: [] };
+        }
+      );
 
-    renderNotifyTrendChart(
-      mergeNotifyTrendRows(
-        (engagement && engagement.data) || [],
-        (subscriptions && subscriptions.data) || []
-      )
-    );
+      renderNotifyTrendChart(
+        mergeNotifyTrendRows(
+          (engagement && engagement.data) || [],
+          (subscriptions && subscriptions.data) || []
+        )
+      );
+    } finally {
+      setTrendsLoading(false);
+    }
   }
 
   function deliveryStats(deliveries) {
@@ -965,29 +1057,31 @@
     var table = document.getElementById('dashboardNotifySubscribersTable');
     if (!tbody) return;
 
-    tbody.innerHTML = '';
+    setSubscribersLoading(true);
     if (errEl) {
       errEl.hidden = true;
       errEl.textContent = '';
     }
 
-    var domain = getClientDomain();
-    var data = await notifyFetch(
-      '/subscribers?client_domain=' + encodeURIComponent(domain),
-      { headers: authHeaders() }
-    );
+    try {
+      var domain = getClientDomain();
+      var data = await notifyFetch(
+        '/subscribers?client_domain=' + encodeURIComponent(domain),
+        { headers: authHeaders() }
+      );
 
-    var subs = (data && data.subscribers) || [];
-    if (!subs.length) {
-      if (table) table.hidden = true;
-      if (empty) empty.hidden = false;
-      return;
-    }
+      var subs = (data && data.subscribers) || [];
+      tbody.innerHTML = '';
+      if (!subs.length) {
+        if (table) table.hidden = true;
+        if (empty) empty.hidden = false;
+        return;
+      }
 
-    if (table) table.hidden = false;
-    if (empty) empty.hidden = true;
+      if (table) table.hidden = false;
+      if (empty) empty.hidden = true;
 
-    subs.forEach(function (s) {
+      subs.forEach(function (s) {
       var tr = document.createElement('tr');
       var subscribed = s.subscribed_at || '';
       try {
@@ -1017,6 +1111,12 @@
         '</td>';
       tbody.appendChild(tr);
     });
+    } catch (err) {
+      tbody.innerHTML = '';
+      throw err;
+    } finally {
+      setSubscribersLoading(false);
+    }
   }
 
   async function sendNotification(ev) {
