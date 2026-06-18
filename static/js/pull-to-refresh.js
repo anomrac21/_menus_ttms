@@ -1,27 +1,21 @@
 /**
- * Pull-down to reload — intended for installed PWA / standalone display mode
- * where there is no browser refresh control.
+ * Pull-down to reload — PWA / standalone (menu) and client dashboard pages.
+ * Dashboard uses soft refresh (reload data); menu pages use a full reload.
  */
 (function () {
   'use strict';
 
-  function isStandaloneAppDisplay() {
-    try {
-      if (window.navigator.standalone === true) return true;
-      if (window.matchMedia('(display-mode: standalone)').matches) return true;
-      if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
-      if (window.matchMedia('(display-mode: minimal-ui)').matches) return true;
-    } catch (e) {
-      /* ignore */
-    }
-    return false;
-  }
-
-  if (!isStandaloneAppDisplay()) return;
-
-  var THRESHOLD = 72;
-  var MAX_VISUAL = 96;
+  var THRESHOLD = 120;
+  var MAX_VISUAL = 144;
   var HORIZONTAL_CANCEL_RATIO = 1.2;
+
+  var DASHBOARD_ROOT_SELECTORS = [
+    '.dashboard-control-room',
+    '.dashboard-analytics-page',
+    '.dashboard-notify-page',
+    '.dashboard-edit-page',
+    '.dashboard-settings-page',
+  ].join(', ');
 
   var BLOCKED_SELECTORS = [
     '.menu-smash-pass-card',
@@ -30,7 +24,7 @@
     '.ads-reels-track',
     '#ads-reels-overlay',
     '.ads-reels-slide',
-    '.dashboard',
+    '#dashboard',
     '.menu-image-upload-modal',
     '.expanded-item-details',
     '.single-page-content',
@@ -47,6 +41,26 @@
   var lastPullPx = 0;
   var optsMove = { passive: false, capture: true };
   var optsEnd = { capture: true };
+
+  function isStandaloneAppDisplay() {
+    try {
+      if (window.navigator.standalone === true) return true;
+      if (window.matchMedia('(display-mode: standalone)').matches) return true;
+      if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
+      if (window.matchMedia('(display-mode: minimal-ui)').matches) return true;
+    } catch (e) {
+      /* ignore */
+    }
+    return false;
+  }
+
+  function isDashboardPage() {
+    return !!document.querySelector(DASHBOARD_ROOT_SELECTORS);
+  }
+
+  function isPullToRefreshEnabled() {
+    return isStandaloneAppDisplay() || isDashboardPage();
+  }
 
   function windowScrollTop() {
     return (
@@ -98,6 +112,7 @@
   }
 
   function canUsePullToRefresh(target) {
+    if (!isPullToRefreshEnabled()) return false;
     if (reloading) return false;
     if (document.body.classList.contains('menu-reels-item-modal-open')) return false;
     if (!isAtPageTop()) return false;
@@ -142,7 +157,9 @@
       'display:flex;align-items:center;gap:8px;}' +
       '.ttms-ptr-icon{display:inline-block;transition:transform .12s ease;}' +
       '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-icon{transform:rotate(-180deg);}' +
-      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-text::after{content:" — release";}';
+      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-text::after{content:" — release";}' +
+      '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-icon{animation:ttms-ptr-spin .8s linear infinite;}' +
+      '@keyframes ttms-ptr-spin{to{transform:rotate(360deg);}}';
     var s = document.createElement('style');
     s.id = 'ttms-ptr-styles';
     s.textContent = css;
@@ -156,6 +173,7 @@
     var translate = -100 + t * 100;
     el.style.transform = 'translateY(' + Math.min(translate, 0) + '%)';
     el.classList.add('ttms-ptr-visible');
+    el.classList.remove('ttms-ptr-refreshing');
     if (dy >= THRESHOLD) {
       el.classList.add('ttms-ptr-ready');
       el.setAttribute('aria-hidden', 'false');
@@ -165,11 +183,28 @@
     }
   }
 
+  function setIndicatorRefreshing(active) {
+    var el = ensureIndicator();
+    var text = el.querySelector('.ttms-ptr-text');
+    if (active) {
+      el.classList.add('ttms-ptr-visible', 'ttms-ptr-refreshing');
+      el.classList.remove('ttms-ptr-ready');
+      el.style.transform = 'translateY(0%)';
+      el.setAttribute('aria-hidden', 'false');
+      if (text) text.textContent = 'Refreshing…';
+      return;
+    }
+    el.classList.remove('ttms-ptr-refreshing');
+    if (text) text.textContent = 'Pull to refresh';
+  }
+
   function hideIndicator() {
     if (!indicator) return;
-    indicator.classList.remove('ttms-ptr-visible', 'ttms-ptr-ready');
+    indicator.classList.remove('ttms-ptr-visible', 'ttms-ptr-ready', 'ttms-ptr-refreshing');
     indicator.style.transform = 'translateY(-100%)';
     indicator.setAttribute('aria-hidden', 'true');
+    var text = indicator.querySelector('.ttms-ptr-text');
+    if (text) text.textContent = 'Pull to refresh';
   }
 
   function detachTouchListeners() {
@@ -180,6 +215,53 @@
 
   function cancelPullGesture() {
     resetPullState();
+  }
+
+  function runDashboardSoftRefresh() {
+    var tasks = [];
+
+    document.dispatchEvent(
+      new CustomEvent('ttms:pull-refresh', { detail: { soft: true, dashboard: true } })
+    );
+
+    if (window.DashboardMenuStatus && typeof window.DashboardMenuStatus.refresh === 'function') {
+      tasks.push(Promise.resolve(window.DashboardMenuStatus.refresh()));
+    } else if (typeof window.__ttmsMenuStatusRefresh === 'function') {
+      tasks.push(Promise.resolve(window.__ttmsMenuStatusRefresh()));
+    }
+
+    if (window.DashboardAnalyticsSnapshot) {
+      if (document.getElementById('dashboardAnalyticsPage') && window.DashboardAnalyticsSnapshot.loadAnalyticsPage) {
+        tasks.push(Promise.resolve(window.DashboardAnalyticsSnapshot.loadAnalyticsPage({ days: 30 })));
+      } else if (window.DashboardAnalyticsSnapshot.loadDashboardCard) {
+        tasks.push(Promise.resolve(window.DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 })));
+      }
+    }
+
+    if (window.DashboardNotifications) {
+      if (document.getElementById('dashboardNotificationsPage') && window.DashboardNotifications.refreshOverview) {
+        tasks.push(Promise.resolve(window.DashboardNotifications.refreshOverview()));
+      } else if (window.DashboardNotifications.loadDashboardCard) {
+        tasks.push(Promise.resolve(window.DashboardNotifications.loadDashboardCard({ days: 30 })));
+      }
+    }
+
+    return Promise.allSettled(tasks);
+  }
+
+  function performDashboardSoftRefresh() {
+    if (reloading) return;
+    reloading = true;
+    setIndicatorRefreshing(true);
+
+    runDashboardSoftRefresh()
+      .catch(function () {
+        /* ignore */
+      })
+      .then(function () {
+        reloading = false;
+        hideIndicator();
+      });
   }
 
   function onTouchMove(e) {
@@ -232,12 +314,20 @@
 
     var shouldReload = lastPullPx >= THRESHOLD;
     lastPullPx = 0;
-    hideIndicator();
 
     if (shouldReload) {
+      if (isDashboardPage()) {
+        hideIndicator();
+        performDashboardSoftRefresh();
+        return;
+      }
       reloading = true;
+      hideIndicator();
       window.location.reload();
+      return;
     }
+
+    hideIndicator();
   }
 
   function onTouchStart(e) {
@@ -264,6 +354,7 @@
   }
 
   function init() {
+    if (!isPullToRefreshEnabled()) return;
     injectStyles();
     document.addEventListener('touchstart', onTouchStart, { passive: true, capture: false });
     registerLifecycle();

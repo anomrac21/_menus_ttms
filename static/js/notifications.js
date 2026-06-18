@@ -1105,6 +1105,18 @@ const NotificationService = {
       return;
     }
 
+    var notificationId = notification && notification.id;
+    if (notificationId) {
+      var now = Date.now();
+      if (!this._recentNotificationIds) this._recentNotificationIds = new Map();
+      var lastShown = this._recentNotificationIds.get(notificationId);
+      if (lastShown && now - lastShown < 15000) {
+        console.log('Skipping duplicate in-tab notification:', notificationId);
+        return;
+      }
+      this._recentNotificationIds.set(notificationId, now);
+    }
+
     const defaultIcon = 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
     const iconUrl =
       (notification.data && (notification.data.icon || notification.data.image || notification.data.image_url)) ||

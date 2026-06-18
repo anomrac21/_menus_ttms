@@ -492,6 +492,10 @@
       card.classList.remove('hidden');
       return refresh();
     });
+
+    document.addEventListener('ttms:pull-refresh', function () {
+      if (el('dashboardCardMenuImages')) refresh();
+    });
   }
 
   if (document.readyState === 'loading') {

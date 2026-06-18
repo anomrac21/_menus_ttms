@@ -135,6 +135,92 @@
     el.hidden = !text;
   }
 
+  var OVERVIEW_METRIC_IDS = [
+    'metricNotifySent30d',
+    'metricNotifySubscribers',
+    'metricNotifyArrived30d',
+    'metricNotifyOpened30d',
+    'metricNotifyNotArrived30d',
+    'metricNotifyClicked30d',
+    'metricNotifyNewSubscribers30d',
+    'metricNotifyUnsubscribes30d',
+  ];
+
+  var metricAnimations = {};
+
+  function stopMetricAnimation(id) {
+    var state = metricAnimations[id];
+    if (!state) return;
+    if (state.rafId) cancelAnimationFrame(state.rafId);
+    delete metricAnimations[id];
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('dashboard-analytics-card-value--counting');
+  }
+
+  function stopAllOverviewMetricAnimations() {
+    OVERVIEW_METRIC_IDS.forEach(stopMetricAnimation);
+  }
+
+  function startMetricLoadingCount(id) {
+    stopMetricAnimation(id);
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('dashboard-analytics-card-value--counting');
+    var phase = Math.random() * Math.PI * 2;
+    var state = { loading: true, started: performance.now() };
+    metricAnimations[id] = state;
+
+    function tick(now) {
+      if (metricAnimations[id] !== state || !state.loading) return;
+      var t = (now - state.started) / 1000;
+      var wave = (Math.sin(t * 4.2 + phase) + Math.sin(t * 2.1 + phase * 0.7)) * 0.5;
+      var pseudo = Math.max(0, Math.floor((wave * 0.5 + 0.5) * 99));
+      el.textContent = formatCount(pseudo);
+      state.rafId = requestAnimationFrame(tick);
+    }
+
+    state.rafId = requestAnimationFrame(tick);
+  }
+
+  function animateMetricCount(id, target, options) {
+    options = options || {};
+    var duration = options.duration || 480;
+    stopMetricAnimation(id);
+    var el = document.getElementById(id);
+    if (!el) return Promise.resolve();
+
+    if (target == null || isNaN(target)) {
+      el.textContent = '—';
+      return Promise.resolve();
+    }
+
+    var endValue = Math.floor(Number(target));
+    el.classList.add('dashboard-analytics-card-value--counting');
+    var state = { loading: false, started: performance.now() };
+    metricAnimations[id] = state;
+
+    return new Promise(function (resolve) {
+      function tick(now) {
+        if (metricAnimations[id] !== state) {
+          resolve();
+          return;
+        }
+        var progress = Math.min(1, (now - state.started) / duration);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = formatCount(Math.round(eased * endValue));
+        if (progress < 1) {
+          state.rafId = requestAnimationFrame(tick);
+          return;
+        }
+        el.textContent = formatCount(endValue);
+        el.classList.remove('dashboard-analytics-card-value--counting');
+        delete metricAnimations[id];
+        resolve();
+      }
+      state.rafId = requestAnimationFrame(tick);
+    });
+  }
+
   var overviewLoading = {
     metrics: false,
     trends: false,
@@ -147,7 +233,7 @@
     var busy =
       overviewLoading.metrics || overviewLoading.trends || overviewLoading.subscribers;
     if (panel) panel.classList.toggle('dashboard-notify-panel--loading', busy);
-    if (banner) banner.hidden = !busy;
+    if (banner) banner.hidden = !overviewLoading.metrics;
   }
 
   function setOverviewSectionLoading(section, loading) {
@@ -159,18 +245,7 @@
   function setMetricsLoading(loading) {
     setOverviewSectionLoading('metrics', loading);
     if (!loading) return;
-    [
-      'metricNotifySent30d',
-      'metricNotifySubscribers',
-      'metricNotifyArrived30d',
-      'metricNotifyOpened30d',
-      'metricNotifyNotArrived30d',
-      'metricNotifyClicked30d',
-      'metricNotifyNewSubscribers30d',
-      'metricNotifyUnsubscribes30d',
-    ].forEach(function (id) {
-      setText(id, '…');
-    });
+    OVERVIEW_METRIC_IDS.forEach(startMetricLoadingCount);
     [
       'metricNotifySent30dMeta',
       'metricNotifyArrived30dMeta',
@@ -348,24 +423,54 @@
     }, 0);
   }
 
-  async function loadMetrics() {
-    setMetricsLoading(true);
-    try {
-      var domain = getClientDomain();
-      var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
-      var headers = authHeaders();
+  var overviewBundleCache = null;
+  var overviewBundlePromise = null;
 
-      var overview = await notifyFetch('/analytics/overview' + q, { headers: headers });
-      var subTrends = await notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(
-        function () {
-          return { data: [] };
-        }
-      );
+  function invalidateOverviewBundle() {
+    overviewBundleCache = null;
+    overviewBundlePromise = null;
+  }
 
-      var ov = (overview && overview.overview) || {};
+  /** Shared parallel fetch for overview metrics + chart (dedupes concurrent callers). */
+  function fetchOverviewBundle(options) {
+    options = options || {};
+    if (options.force) invalidateOverviewBundle();
+    if (overviewBundleCache) return Promise.resolve(overviewBundleCache);
+    if (overviewBundlePromise) return overviewBundlePromise;
+
+    var domain = getClientDomain();
+    var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
+    var headers = authHeaders();
+
+    overviewBundlePromise = Promise.all([
+      notifyFetch('/analytics/overview' + q, { headers: headers }),
+      notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(function () {
+        return { data: [] };
+      }),
+      notifyFetch('/analytics/engagement-trends' + q, { headers: headers }).catch(function () {
+        return { data: [] };
+      }),
+    ])
+      .then(function (results) {
+        overviewBundleCache = {
+          overview: results[0],
+          subTrends: results[1],
+          engagement: results[2],
+        };
+        return overviewBundleCache;
+      })
+      .finally(function () {
+        overviewBundlePromise = null;
+      });
+
+    return overviewBundlePromise;
+  }
+
+  function applyOverviewMetrics(bundle) {
+    var ov = (bundle.overview && bundle.overview.overview) || {};
     var sub = ov.subscriptions || {};
     var notif = ov.notifications || {};
-    var trendRows = (subTrends && subTrends.data) || [];
+    var trendRows = (bundle.subTrends && bundle.subTrends.data) || [];
     var newSubscribers = sumTrendField(trendRows, 'new_subscribed');
     var unsubscribes = sumTrendField(trendRows, 'new_unsubscribed');
 
@@ -376,50 +481,63 @@
         ? Number(notif.not_delivered)
         : Math.max(0, attempts - delivered);
 
-    setText('metricNotifySent30d', formatInt(notif.in_period));
-    setMetricMeta(
-      'metricNotifySent30dMeta',
-      attempts ? formatInt(attempts) + ' delivery attempts' : ''
-    );
-    setText('metricNotifySubscribers', formatInt(sub.active));
-    setText('metricNotifyArrived30d', formatInt(delivered));
-    setMetricMeta(
-      'metricNotifyArrived30dMeta',
-      attempts
-        ? formatPercent(notif.arrival_rate) + ' · ' + formatInt(attempts) + ' recipients'
-        : ''
-    );
-    setText('metricNotifyOpened30d', formatInt(notif.confirmed));
-    setMetricMeta(
-      'metricNotifyOpened30dMeta',
-      delivered ? formatRateLabel(notif.confirmed, notif.open_rate) : ''
-    );
-    setText('metricNotifyNotArrived30d', formatInt(notDelivered));
-    setMetricMeta(
-      'metricNotifyNotArrived30dMeta',
-      attempts ? formatInt(notif.pending || 0) + ' pending · ' + formatInt(notif.failed || 0) + ' failed' : ''
-    );
-    setText('metricNotifyClicked30d', formatInt(notif.clicked));
-    setMetricMeta(
-      'metricNotifyClicked30dMeta',
-      delivered ? formatRateLabel(notif.clicked, notif.click_rate) : ''
-    );
-    setText('metricNotifyNewSubscribers30d', formatInt(newSubscribers));
-    setMetricMeta(
-      'metricNotifyNewSubscribers30dMeta',
-      sub.active != null ? formatInt(sub.active) + ' active now' : ''
-    );
-    setText('metricNotifyUnsubscribes30d', formatInt(unsubscribes));
-    setMetricMeta(
-      'metricNotifyUnsubscribes30dMeta',
-      newSubscribers || unsubscribes
-        ? (newSubscribers >= unsubscribes ? '+' : '') +
-            formatInt(newSubscribers - unsubscribes) +
-            ' net change'
-        : ''
-    );
-    } finally {
+    return Promise.all([
+      animateMetricCount('metricNotifySent30d', notif.in_period),
+      animateMetricCount('metricNotifySubscribers', sub.active),
+      animateMetricCount('metricNotifyArrived30d', delivered),
+      animateMetricCount('metricNotifyOpened30d', notif.confirmed),
+      animateMetricCount('metricNotifyNotArrived30d', notDelivered),
+      animateMetricCount('metricNotifyClicked30d', notif.clicked),
+      animateMetricCount('metricNotifyNewSubscribers30d', newSubscribers),
+      animateMetricCount('metricNotifyUnsubscribes30d', unsubscribes),
+    ]).then(function () {
+      setMetricMeta(
+        'metricNotifySent30dMeta',
+        attempts ? formatInt(attempts) + ' delivery attempts' : ''
+      );
+      setMetricMeta(
+        'metricNotifyArrived30dMeta',
+        attempts
+          ? formatPercent(notif.arrival_rate) + ' · ' + formatInt(attempts) + ' recipients'
+          : ''
+      );
+      setMetricMeta(
+        'metricNotifyOpened30dMeta',
+        delivered ? formatRateLabel(notif.confirmed, notif.open_rate) : ''
+      );
+      setMetricMeta(
+        'metricNotifyNotArrived30dMeta',
+        attempts ? formatInt(notif.pending || 0) + ' pending · ' + formatInt(notif.failed || 0) + ' failed' : ''
+      );
+      setMetricMeta(
+        'metricNotifyClicked30dMeta',
+        delivered ? formatRateLabel(notif.clicked, notif.click_rate) : ''
+      );
+      setMetricMeta(
+        'metricNotifyNewSubscribers30dMeta',
+        sub.active != null ? formatInt(sub.active) + ' active now' : ''
+      );
+      setMetricMeta(
+        'metricNotifyUnsubscribes30dMeta',
+        newSubscribers || unsubscribes
+          ? (newSubscribers >= unsubscribes ? '+' : '') +
+              formatInt(newSubscribers - unsubscribes) +
+              ' net change'
+          : ''
+      );
+    });
+  }
+
+  async function loadMetrics() {
+    setMetricsLoading(true);
+    try {
+      var bundle = await fetchOverviewBundle();
       setMetricsLoading(false);
+      applyOverviewMetrics(bundle).catch(function () {});
+    } catch (err) {
+      stopAllOverviewMetricAnimations();
+      setMetricsLoading(false);
+      throw err;
     }
   }
 
@@ -608,22 +726,11 @@
   async function loadEngagementTrends() {
     setTrendsLoading(true);
     try {
-      var domain = getClientDomain();
-      var q =
-        '?client_domain=' + encodeURIComponent(domain) + '&days=30';
-      var headers = authHeaders();
-
-      var engagement = await notifyFetch('/analytics/engagement-trends' + q, { headers: headers });
-      var subscriptions = await notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(
-        function () {
-          return { data: [] };
-        }
-      );
-
+      var bundle = await fetchOverviewBundle();
       renderNotifyTrendChart(
         mergeNotifyTrendRows(
-          (engagement && engagement.data) || [],
-          (subscriptions && subscriptions.data) || []
+          (bundle.engagement && bundle.engagement.data) || [],
+          (bundle.subTrends && bundle.subTrends.data) || []
         )
       );
     } finally {
@@ -1176,6 +1283,7 @@
       if (iconStatus) iconStatus.textContent = '';
       if (imageStatus) imageStatus.textContent = '';
       refreshSendPlatformPreview();
+      invalidateOverviewBundle();
       await loadMetrics();
       await loadEngagementTrends();
       await loadRecent();
@@ -1196,6 +1304,7 @@
     initNotifyImageUploads();
     initNotifyMediaTabs();
     initNotifyPlatformPreviews();
+    setNotifyImageField('notifyDefaultIcon', getNotifyFieldValue('notifyDefaultIcon'));
 
     var errBanner = document.getElementById('dashboardNotifyConfigError');
     var hasApi = !!getApiBase();
@@ -1208,14 +1317,10 @@
     setFormsApiDisabled(false);
 
     loadMetrics().catch(function (err) {
-      setText('metricNotifySent30d', '—');
-      setText('metricNotifySubscribers', '—');
-      setText('metricNotifyArrived30d', '—');
-      setText('metricNotifyOpened30d', '—');
-      setText('metricNotifyNotArrived30d', '—');
-      setText('metricNotifyClicked30d', '—');
-      setText('metricNotifyNewSubscribers30d', '—');
-      setText('metricNotifyUnsubscribes30d', '—');
+      stopAllOverviewMetricAnimations();
+      OVERVIEW_METRIC_IDS.forEach(function (id) {
+        setText(id, '—');
+      });
       [
         'metricNotifySent30dMeta',
         'metricNotifyArrived30dMeta',
@@ -1266,6 +1371,27 @@
     if (form) form.addEventListener('submit', sendNotification);
 
     initWelcomeForm();
+    initAdminPhotoReviewAlerts();
+  }
+
+  async function refreshOverview() {
+    var loadErr = document.getElementById('dashboardNotifyLoadError');
+    if (loadErr) {
+      loadErr.hidden = true;
+      loadErr.textContent = '';
+    }
+
+    invalidateOverviewBundle();
+
+    await Promise.allSettled([
+      loadMetrics(),
+      loadEngagementTrends(),
+      loadSubscribers(),
+      loadRecent(),
+      loadWelcomeHistory(),
+      loadPhotoApprovals(),
+    ]);
+
     initAdminPhotoReviewAlerts();
   }
 
@@ -1505,7 +1631,8 @@
     return getNotifyServiceRoot() + (path.charAt(0) === '/' ? path : '/' + path);
   }
 
-  function setNotifyImageField(targetId, urlPath) {
+  function setNotifyImageField(targetId, urlPath, options) {
+    options = options || {};
     var hidden = document.getElementById(targetId);
     var preview = document.getElementById(targetId + 'Preview');
     var placeholder = document.getElementById(targetId + 'Placeholder');
@@ -1514,26 +1641,47 @@
       '.dashboard-notify-clear-image[data-notify-target="' + targetId + '"]'
     );
     var value = String(urlPath || '').trim();
+    var previewUrl = getNotifyMediaPreviewUrl(targetId, value);
+    var isCustom = !!value;
+
     if (hidden) hidden.value = value;
     if (preview) {
-      if (value) {
-        preview.src = resolveNotifyImageUrl(value);
+      if (previewUrl) {
+        preview.onerror = function () {
+          if (!isCustom && targetId.indexOf('Icon') !== -1) {
+            preview.onerror = null;
+            preview.src = 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
+          }
+        };
+        preview.src = previewUrl;
         preview.removeAttribute('hidden');
       } else {
+        preview.onerror = null;
         preview.removeAttribute('src');
         preview.setAttribute('hidden', '');
       }
     }
     if (placeholder) {
-      if (value) placeholder.setAttribute('hidden', '');
+      if (previewUrl) placeholder.setAttribute('hidden', '');
       else placeholder.removeAttribute('hidden');
     }
     if (card) {
-      card.classList.toggle('dashboard-notify-media-card--has-image', !!value);
+      card.classList.toggle('dashboard-notify-media-card--has-image', !!previewUrl);
+      card.classList.toggle('dashboard-notify-media-card--using-default', !!previewUrl && !isCustom);
     }
     if (clearBtn) {
-      if (value) clearBtn.removeAttribute('hidden');
+      if (isCustom) clearBtn.removeAttribute('hidden');
       else clearBtn.setAttribute('hidden', '');
+    }
+    if (!options.skipLinkedRefresh) {
+      if (targetId === 'notifyDefaultIcon') {
+        setNotifyImageField('notifyDefaultBadge', getNotifyFieldValue('notifyDefaultBadge'), {
+          skipLinkedRefresh: true,
+        });
+        setNotifyImageField('notifyIcon', getNotifyFieldValue('notifyIcon'), { skipLinkedRefresh: true });
+      } else if (targetId === 'notifyDefaultImage') {
+        setNotifyImageField('notifyImage', getNotifyFieldValue('notifyImage'), { skipLinkedRefresh: true });
+      }
     }
     refreshNotifyPlatformPreviews();
   }
@@ -1541,6 +1689,32 @@
   function getNotifyFieldValue(id) {
     var el = document.getElementById(id);
     return el ? String(el.value || '').trim() : '';
+  }
+
+  function getNotifyMediaPreviewUrl(targetId, storedValue) {
+    var value = String(storedValue || '').trim();
+    if (value) return resolveNotifyImageUrl(value);
+
+    switch (targetId) {
+      case 'notifyDefaultIcon':
+        return getDefaultNotifyIconUrl();
+      case 'notifyIcon': {
+        var defaultIcon = getNotifyFieldValue('notifyDefaultIcon');
+        return defaultIcon ? resolveNotifyImageUrl(defaultIcon) : getDefaultNotifyIconUrl();
+      }
+      case 'notifyDefaultBadge': {
+        var iconPath = getNotifyFieldValue('notifyDefaultIcon');
+        return iconPath ? resolveNotifyImageUrl(iconPath) : getDefaultNotifyIconUrl();
+      }
+      case 'notifyDefaultImage':
+        return '';
+      case 'notifyImage': {
+        var defaultImage = getNotifyFieldValue('notifyDefaultImage');
+        return defaultImage ? resolveNotifyImageUrl(defaultImage) : '';
+      }
+      default:
+        return '';
+    }
   }
 
   function truncatePreviewText(text, maxLen) {
@@ -1577,9 +1751,17 @@
   }
 
   function getDefaultNotifyIconUrl() {
-    var link = document.querySelector('link[rel="icon"], link[rel="shortcut icon"]');
+    var siteIcon = '/branding/favicon192.webp';
+    if (siteIcon) {
+      if (/^https?:\/\//i.test(siteIcon)) return siteIcon;
+      var origin = window.location.origin || '';
+      return origin + (siteIcon.charAt(0) === '/' ? siteIcon : '/' + siteIcon);
+    }
+    var link = document.querySelector(
+      'link[rel="apple-touch-icon"], link[rel="shortcut icon"], link[rel="icon"]'
+    );
     if (link && link.href) return link.href;
-    return '/favicon.ico';
+    return 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
   }
 
   function setPreviewIconWrap(wrap, iconUrl, useFallbackBell) {
@@ -1956,6 +2138,8 @@
     setNotifyImageField('notifyDefaultIcon', s.notification_icon || '');
     setNotifyImageField('notifyDefaultImage', s.notification_image || '');
     setNotifyImageField('notifyDefaultBadge', s.notification_badge || '');
+    setNotifyImageField('notifyIcon', getNotifyFieldValue('notifyIcon'));
+    setNotifyImageField('notifyImage', getNotifyFieldValue('notifyImage'));
     refreshWelcomePlatformPreview();
   }
 
@@ -2021,6 +2205,7 @@
     initTabs: initNotifyTabs,
     loadDashboardCard: loadDashboardCard,
     fetchOverview: fetchOverview,
+    refreshOverview: refreshOverview,
     refreshPlatformPreviews: refreshNotifyPlatformPreviews,
   };
 })();
