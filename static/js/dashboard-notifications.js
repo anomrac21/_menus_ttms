@@ -829,7 +829,40 @@
     });
   }
 
+  async function loadPhotoReviewPushHistory() {
+    var list = document.getElementById('dashboardNotifyPhotoPushList');
+    var empty = document.getElementById('dashboardNotifyPhotoPushEmpty');
+    if (!list) return;
+
+    list.innerHTML = '';
+    if (empty) empty.hidden = true;
+
+    try {
+      var domain = getClientDomain();
+      var data = await notifyFetch(
+        '/notifications?client_domain=' + encodeURIComponent(domain) + '&limit=50',
+        { headers: authHeaders() }
+      );
+      var items = ((data && data.notifications) || []).filter(isAdminPhotoNotification);
+      if (!items.length) {
+        if (empty) empty.hidden = false;
+        return;
+      }
+      items.forEach(function (n) {
+        list.appendChild(renderNotificationHistoryItem(n));
+      });
+    } catch (err) {
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent =
+          (err && err.message ? err.message : 'Could not load photo approval alert history.') +
+          ' Push alerts are still sent when customers upload photos.';
+      }
+    }
+  }
+
   async function loadPhotoApprovals() {
+    await loadPhotoReviewPushHistory().catch(function () {});
     var list = document.getElementById('dashboardNotifyPhotosList');
     var empty = document.getElementById('dashboardNotifyPhotosEmpty');
     var errEl = document.getElementById('dashboardNotifyPhotosError');
@@ -1219,6 +1252,60 @@
       } else {
         subscribeHint.removeAttribute('hidden');
       }
+    }
+
+    var relinkBtn = document.getElementById('dashboardPhotoReviewRelinkBtn');
+    if (relinkBtn && relinkBtn.getAttribute('data-relink-bound') !== 'true') {
+      relinkBtn.setAttribute('data-relink-bound', 'true');
+      relinkBtn.addEventListener('click', function () {
+        relinkBtn.disabled = true;
+        var finish = function (message, ok) {
+          relinkBtn.disabled = false;
+          if (subscribeHint) {
+            var span = subscribeHint.querySelector('span');
+            if (span && message) span.textContent = message;
+          }
+          if (ok && subscribeHint) subscribeHint.setAttribute('hidden', '');
+        };
+        if (
+          window.NotificationService &&
+          NotificationService.relinkSubscriptionToAuthUser
+        ) {
+          NotificationService.relinkSubscriptionToAuthUser().then(function (result) {
+            if (result.ok) {
+              finish('This device is linked to your admin account for photo approval alerts.', true);
+              return;
+            }
+            if (result.reason === 'not_subscribed') {
+              if (NotificationService.subscribe) {
+                NotificationService.subscribe()
+                  .then(function () {
+                    return NotificationService.relinkSubscriptionToAuthUser();
+                  })
+                  .then(function (retry) {
+                    if (retry.ok) {
+                      finish('Push alerts enabled and linked to your admin account.', true);
+                    } else {
+                      finish(
+                        'Subscribe from the menu bell while signed in, then click Link this device again.',
+                        false
+                      );
+                    }
+                  })
+                  .catch(function () {
+                    finish('Could not enable push alerts. Allow notifications in your browser and try again.', false);
+                  });
+              } else {
+                finish('Use the menu bell to subscribe to push alerts while signed in as an admin.', false);
+              }
+              return;
+            }
+            finish('Sign in as an admin, enable push alerts from the menu bell, then try again.', false);
+          });
+          return;
+        }
+        finish('Open the public menu, tap the bell, allow notifications, then return here.', false);
+      });
     }
 
     if (toggle.getAttribute('data-photo-review-bound') === 'true') return;

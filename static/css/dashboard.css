@@ -4644,6 +4644,14 @@
   color: #fde68a;
 }
 
+.dashboard-notify-banner .dashboard-notify-relink-btn {
+  margin-top: 0.5rem;
+}
+
+.dashboard-notify-photo-history-section {
+  margin-bottom: 1.25rem;
+}
+
 .dashboard-notify-code,
 .dashboard-notify-inline-code {
   font-size: 0.82em;

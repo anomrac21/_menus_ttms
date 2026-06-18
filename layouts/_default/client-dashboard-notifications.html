@@ -207,7 +207,9 @@ window.MENU_IMAGE_CONFIG = {
 
                 <i class="fa fa-info-circle" aria-hidden="true"></i>
 
-                <span>Enable push alerts on this device (bell on the menu) while signed in as an admin to receive photo approval notifications.</span>
+                <span>Enable push alerts on this device while signed in as an admin to receive photo approval notifications.</span>
+
+                <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-relink-btn" id="dashboardPhotoReviewRelinkBtn">Link this device</button>
 
               </p>
 
@@ -832,6 +834,18 @@ window.MENU_IMAGE_CONFIG = {
                 </div>
 
                 <div class="dashboard-notify-preview-pane dashboard-notify-history-pane" id="notifyHistoryPanePhotos" role="tabpanel" aria-labelledby="notifyHistoryTabPhotos" data-history-pane="photos">
+
+                  <div class="dashboard-notify-photo-history-section" id="dashboardNotifyPhotoPushHistory">
+
+                    <h3 class="dashboard-notify-subsection-title">Photo approval alerts sent</h3>
+
+                    <ul id="dashboardNotifyPhotoPushList" class="dashboard-notify-history-list" aria-label="Photo approval push alerts"></ul>
+
+                    <p id="dashboardNotifyPhotoPushEmpty" class="dashboard-notify-empty" hidden>No photo approval push alerts recorded yet.</p>
+
+                  </div>
+
+                  <h3 class="dashboard-notify-subsection-title">Pending uploads</h3>
 
                   <ul id="dashboardNotifyPhotosList" class="dashboard-notify-photos-list" aria-label="Pending photo approvals"></ul>
 

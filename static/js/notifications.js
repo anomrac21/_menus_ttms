@@ -96,6 +96,22 @@ const NotificationService = {
     if (this.subscriptionId && this.serviceWorkerRegistration) {
       await this.verifyPushSubscription();
     }
+
+    if (this.subscriptionId && this.isCurrentUserAdmin()) {
+      const userId = this.generateUserID();
+      const stored = localStorage.getItem('ttmenus_notification_subscription');
+      let linked = false;
+      if (stored) {
+        try {
+          linked = JSON.parse(stored).user_id === userId;
+        } catch (e) {
+          linked = false;
+        }
+      }
+      if (!linked && userId.startsWith('auth_')) {
+        await this.relinkSubscriptionToAuthUser();
+      }
+    }
     
     // If user is subscribed, connect to WebSocket to receive notifications (when site is open)
     if (this.subscriptionId) {
@@ -184,7 +200,13 @@ const NotificationService = {
         auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
       },
       ws_connection_id: this.getWebSocketConnectionID(),
+      preferences: this.buildPreferencesPayload(),
     };
+
+    const authUserId = this.generateUserID();
+    if (authUserId.startsWith('auth_')) {
+      payload.user_id = authUserId;
+    }
 
     try {
       const res = await fetch(`${apiUrl}/subscriptions/${encodeURIComponent(this.subscriptionId)}`, {
@@ -202,6 +224,19 @@ const NotificationService = {
         '✅ Push subscription synced to server',
         data.has_background_push ? '(background push ready)' : '(incomplete keys)'
       );
+      if (data.user_id || data.preferences) {
+        const stored = localStorage.getItem('ttmenus_notification_subscription');
+        if (stored) {
+          try {
+            const sub = JSON.parse(stored);
+            if (data.user_id) sub.user_id = data.user_id;
+            if (data.preferences) sub.preferences = data.preferences;
+            localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(sub));
+          } catch (e) {
+            /* ignore */
+          }
+        }
+      }
       this.notifyServiceWorkerSubscription(this.subscriptionId);
     } catch (err) {
       console.warn('Push sync error:', err && err.message ? err.message : err);
@@ -493,6 +528,33 @@ const NotificationService = {
   },
 
   /**
+   * Link an existing push subscription to the signed-in admin account (required for photo approval alerts).
+   */
+  async relinkSubscriptionToAuthUser() {
+    if (!this.subscriptionId) return { ok: false, reason: 'not_subscribed' };
+    const userId = this.generateUserID();
+    if (!userId.startsWith('auth_')) {
+      return { ok: false, reason: 'not_signed_in' };
+    }
+
+    const pushManager =
+      this.serviceWorkerRegistration && this.serviceWorkerRegistration.pushManager;
+    let pushSubscription = pushManager ? await pushManager.getSubscription() : null;
+    if (this.supportsBackgroundPush() && !pushSubscription) {
+      try {
+        const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
+        const vapidPublicKey = await this.fetchVapidPublicKey(apiUrl, this.getClientDomain());
+        pushSubscription = await this.ensurePushSubscription(vapidPublicKey);
+      } catch (err) {
+        return { ok: false, reason: err && err.message ? err.message : 'push_unavailable' };
+      }
+    }
+
+    await this.syncPushSubscriptionToServer(pushSubscription);
+    return { ok: true, userId };
+  },
+
+  /**
    * Ensure client is registered in notify-service
    */
   async ensureClientRegistered(clientDomain) {
@@ -521,6 +583,11 @@ const NotificationService = {
     }
 
     console.log('Registering notify client:', clientDomain);
+    const authClientId =
+      window.CLIENT_ID ||
+      window.SITE_CLIENT_ID ||
+      (window.SiteConfig && window.SiteConfig.contentManagement && window.SiteConfig.contentManagement.clientId) ||
+      '';
     const registerUrl = `${this.notifyServiceUrl}/api/v1/clients/register`;
     let registerResponse;
     try {
@@ -531,6 +598,7 @@ const NotificationService = {
           domain: clientDomain,
           client_name: document.title || clientDomain,
           service_group: 'ttmenus',
+          auth_client_id: authClientId || undefined,
         }),
       });
     } catch (error) {
@@ -1321,6 +1389,14 @@ if (document.readyState === 'loading') {
     NotificationService.init();
   }
 }
+
+window.addEventListener('auth:login', function () {
+  if (!resolveNotifyConfig().enabled || !NotificationService.subscriptionId) return;
+  if (!NotificationService.isCurrentUserAdmin()) return;
+  NotificationService.relinkSubscriptionToAuthUser().catch(function (err) {
+    console.warn('Could not relink push subscription to admin account:', err);
+  });
+});
 
 // Export for global use
 window.NotificationService = NotificationService;
