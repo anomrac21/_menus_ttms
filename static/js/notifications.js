@@ -22,6 +22,7 @@ function resolveNotifyConfig() {
 const NotificationService = {
   VAPID_KEY_STORAGE: 'ttmenus_vapid_public_key',
   VAPID_RESYNC_STORAGE: 'ttmenus_vapid_resynced_for',
+  PHOTO_REVIEW_ALERTS_STORAGE: 'ttmenus_photo_review_alerts',
 
   get notifyServiceUrl() {
     const cfg = resolveNotifyConfig();
@@ -429,6 +430,68 @@ const NotificationService = {
     return userId;
   },
 
+  getPhotoReviewAlertsEnabled() {
+    const stored = localStorage.getItem(this.PHOTO_REVIEW_ALERTS_STORAGE);
+    return stored !== '0' && stored !== 'false';
+  },
+
+  setPhotoReviewAlertsEnabled(enabled) {
+    localStorage.setItem(this.PHOTO_REVIEW_ALERTS_STORAGE, enabled ? '1' : '0');
+  },
+
+  buildPreferencesPayload() {
+    return {
+      enable_photo_review_alerts: this.getPhotoReviewAlertsEnabled(),
+    };
+  },
+
+  async updatePhotoReviewPreference(enabled) {
+    this.setPhotoReviewAlertsEnabled(enabled);
+    if (!this.subscriptionId) {
+      return { ok: false, reason: 'not_subscribed' };
+    }
+
+    const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
+    try {
+      const res = await fetch(`${apiUrl}/subscriptions/${encodeURIComponent(this.subscriptionId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          preferences: { enable_photo_review_alerts: !!enabled },
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.warn('Photo review preference sync failed:', body);
+        return { ok: false, reason: body || res.statusText };
+      }
+      const data = await res.json().catch(() => ({}));
+      if (data.preferences) {
+        const stored = localStorage.getItem('ttmenus_notification_subscription');
+        if (stored) {
+          try {
+            const sub = JSON.parse(stored);
+            sub.preferences = data.preferences;
+            localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(sub));
+          } catch (e) {
+            /* ignore */
+          }
+        }
+      }
+      return { ok: true };
+    } catch (err) {
+      console.warn('Photo review preference sync error:', err && err.message ? err.message : err);
+      return { ok: false, reason: err && err.message ? err.message : 'network_error' };
+    }
+  },
+
+  isCurrentUserAdmin() {
+    if (typeof AuthClient === 'undefined') return false;
+    if (AuthClient.isSuperadmin && AuthClient.isSuperadmin()) return true;
+    if (AuthClient.isAdmin && AuthClient.isAdmin()) return true;
+    return false;
+  },
+
   /**
    * Ensure client is registered in notify-service
    */
@@ -722,6 +785,7 @@ const NotificationService = {
         p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
         auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
       };
+      subscriptionData.preferences = this.buildPreferencesPayload();
 
       // Subscribe via notify-service API
       const subscribeUrl = `${apiUrl}/subscriptions`;

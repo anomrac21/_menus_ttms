@@ -693,6 +693,7 @@
   }
 
   function isAdminPhotoNotification(n) {
+    if (n && n.type === 'photo_review') return true;
     var data = n && n.data;
     if (!data) return false;
     if (data.photo_review === true || data.photo_review === 'true') return true;
@@ -1132,6 +1133,116 @@
     if (form) form.addEventListener('submit', sendNotification);
 
     initWelcomeForm();
+    initAdminPhotoReviewAlerts();
+  }
+
+  function isDashboardAdminUser() {
+    if (typeof AuthClient === 'undefined') return false;
+    if (AuthClient.isSuperadmin && AuthClient.isSuperadmin()) return true;
+    if (AuthClient.isAdmin && AuthClient.isAdmin()) return true;
+    return false;
+  }
+
+  function getStoredNotifySubscriptionId() {
+    try {
+      var raw = localStorage.getItem('ttmenus_notification_subscription');
+      if (!raw) return null;
+      var sub = JSON.parse(raw);
+      return sub && sub.id ? String(sub.id) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function isAuthLinkedNotifySubscription() {
+    try {
+      var raw = localStorage.getItem('ttmenus_notification_subscription');
+      if (!raw) return false;
+      var sub = JSON.parse(raw);
+      return sub && typeof sub.user_id === 'string' && sub.user_id.indexOf('auth_') === 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function applyPhotoReviewToggleState(enabled) {
+    var toggle = document.getElementById('dashboardPhotoReviewAlertsToggle');
+    if (toggle) toggle.checked = !!enabled;
+    if (window.NotificationService && NotificationService.setPhotoReviewAlertsEnabled) {
+      NotificationService.setPhotoReviewAlertsEnabled(!!enabled);
+    } else {
+      localStorage.setItem('ttmenus_photo_review_alerts', enabled ? '1' : '0');
+    }
+  }
+
+  async function loadPhotoReviewPreferenceFromServer() {
+    var subId = getStoredNotifySubscriptionId();
+    if (!subId || !getApiBase()) return null;
+    try {
+      var data = await notifyFetch('/subscriptions/' + encodeURIComponent(subId));
+      var prefs = data && data.preferences;
+      if (prefs && prefs.enable_photo_review_alerts != null) {
+        return !!prefs.enable_photo_review_alerts;
+      }
+    } catch (e) {
+      /* use local default */
+    }
+    return null;
+  }
+
+  function initAdminPhotoReviewAlerts() {
+    var section = document.getElementById('dashboardAdminPhotoAlertsSection');
+    var toggle = document.getElementById('dashboardPhotoReviewAlertsToggle');
+    var subscribeHint = document.getElementById('dashboardPhotoReviewSubscribeHint');
+    if (!section || !toggle) return;
+
+    if (!isDashboardAdminUser()) {
+      section.setAttribute('hidden', '');
+      return;
+    }
+
+    section.removeAttribute('hidden');
+
+    var localEnabled =
+      window.NotificationService && NotificationService.getPhotoReviewAlertsEnabled
+        ? NotificationService.getPhotoReviewAlertsEnabled()
+        : localStorage.getItem('ttmenus_photo_review_alerts') !== '0';
+    applyPhotoReviewToggleState(localEnabled);
+
+    loadPhotoReviewPreferenceFromServer().then(function (serverEnabled) {
+      if (serverEnabled != null) applyPhotoReviewToggleState(serverEnabled);
+    });
+
+    if (subscribeHint) {
+      if (isAuthLinkedNotifySubscription()) {
+        subscribeHint.setAttribute('hidden', '');
+      } else {
+        subscribeHint.removeAttribute('hidden');
+      }
+    }
+
+    if (toggle.getAttribute('data-photo-review-bound') === 'true') return;
+    toggle.setAttribute('data-photo-review-bound', 'true');
+
+    toggle.addEventListener('change', function () {
+      var enabled = !!toggle.checked;
+      var hint = document.getElementById('dashboardPhotoReviewAlertsHint');
+      if (window.NotificationService && NotificationService.updatePhotoReviewPreference) {
+        NotificationService.updatePhotoReviewPreference(enabled).then(function (result) {
+          if (!result.ok && hint) {
+            hint.textContent = enabled
+              ? 'Could not enable photo approval alerts on the server. Try subscribing to push while signed in.'
+              : 'Could not save preference. Try again.';
+          } else if (hint) {
+            hint.textContent = enabled
+              ? 'Notify me when a customer uploads a menu photo for review.'
+              : 'Photo approval push alerts are off for this device.';
+          }
+        });
+      } else {
+        applyPhotoReviewToggleState(enabled);
+      }
+    });
   }
 
   function initNotifyTabs() {
