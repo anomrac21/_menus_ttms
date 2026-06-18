@@ -314,10 +314,20 @@ const NotificationService = {
     }
 
     if (!pushSubscription) {
-      pushSubscription = await pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: applicationServerKey,
-      });
+      try {
+        pushSubscription = await pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey,
+        });
+      } catch (subscribeErr) {
+        const name = subscribeErr && subscribeErr.name ? subscribeErr.name : 'PushSubscribeError';
+        const msg = subscribeErr && subscribeErr.message ? subscribeErr.message : '';
+        throw new Error(
+          msg
+            ? `Browser push subscribe failed (${name}): ${msg}`
+            : `Browser push subscribe failed (${name}). Check VAPID public key on notify-service and try again.`
+        );
+      }
       console.log(
         '✅ Background push subscription created:',
         pushSubscription.endpoint.substring(0, 50) + '...'
@@ -341,6 +351,11 @@ const NotificationService = {
       const keyData = await keyResponse.json();
       const key = keyData.publicKey || keyData.vapid_public_key;
       if (key) {
+        if (key.length < 80) {
+          throw new Error(
+            'Invalid VAPID public key from server (too short). Notify-service VAPID_PUBLIC_KEY may be misconfigured.'
+          );
+        }
         console.log('✅ VAPID public key retrieved');
         return key;
       }
