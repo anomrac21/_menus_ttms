@@ -21,6 +21,7 @@ function resolveNotifyConfig() {
 
 const NotificationService = {
   VAPID_KEY_STORAGE: 'ttmenus_vapid_public_key',
+  VAPID_RESYNC_STORAGE: 'ttmenus_vapid_resynced_for',
 
   get notifyServiceUrl() {
     const cfg = resolveNotifyConfig();
@@ -286,9 +287,12 @@ const NotificationService = {
     const applicationServerKey = this.urlBase64ToUint8Array(vapidPublicKey);
     let pushSubscription = await pushManager.getSubscription();
     const storedVapid = localStorage.getItem(this.VAPID_KEY_STORAGE);
+    const resyncedFor = localStorage.getItem(this.VAPID_RESYNC_STORAGE);
+    const vapidChanged = !storedVapid || storedVapid !== vapidPublicKey;
+    const needsResync = vapidChanged || resyncedFor !== vapidPublicKey;
 
-    if (pushSubscription && storedVapid && storedVapid !== vapidPublicKey) {
-      console.warn('VAPID public key changed — recreating background push subscription');
+    if (pushSubscription && needsResync) {
+      console.warn('VAPID key changed or push subscription needs resync — recreating background push subscription');
       try {
         await pushSubscription.unsubscribe();
       } catch (unsubErr) {
@@ -337,6 +341,7 @@ const NotificationService = {
     }
 
     localStorage.setItem(this.VAPID_KEY_STORAGE, vapidPublicKey);
+    localStorage.setItem(this.VAPID_RESYNC_STORAGE, vapidPublicKey);
     return pushSubscription;
   },
 
