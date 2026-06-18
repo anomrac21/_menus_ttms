@@ -199,27 +199,51 @@
   function getCardScrollTarget(track, card) {
     if (!track || !card) return 0;
     var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-    var target = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
-    return Math.max(0, Math.min(target, maxScroll));
+    if (maxScroll <= 0) return 0;
+
+    var trackRect = track.getBoundingClientRect();
+    var cardRect = card.getBoundingClientRect();
+    var cardLeft = cardRect.left - trackRect.left + track.scrollLeft;
+    var target = cardLeft - (track.clientWidth - cardRect.width) / 2;
+    return Math.max(0, Math.min(Math.round(target), maxScroll));
   }
 
   function scrollCardToCenter(track, card, behavior) {
     if (!track || !card) return;
 
-    var target = getCardScrollTarget(track, card);
     setProgrammaticScroll(true);
+    var attempt = 0;
+    var maxAttempts = behavior === 'smooth' ? 1 : 5;
 
-    if (behavior === 'smooth' && typeof track.scrollTo === 'function') {
-      track.scrollTo({ left: target, behavior: 'smooth' });
-    } else {
-      track.scrollLeft = target;
+    function applyScroll() {
+      var target = getCardScrollTarget(track, card);
+      if (behavior === 'smooth' && typeof track.scrollTo === 'function') {
+        track.scrollTo({ left: target, behavior: 'smooth' });
+      } else {
+        track.scrollLeft = target;
+      }
     }
 
-    requestAnimationFrame(function () {
+    function verifyAndFinish() {
       requestAnimationFrame(function () {
+        if (!isCardCentered(track, card) && attempt < maxAttempts) {
+          attempt++;
+          applyScroll();
+          verifyAndFinish();
+          return;
+        }
         setProgrammaticScroll(false);
       });
-    });
+    }
+
+    applyScroll();
+    if (behavior === 'smooth') {
+      setTimeout(function () {
+        setProgrammaticScroll(false);
+      }, 450);
+    } else {
+      verifyAndFinish();
+    }
   }
 
   function setProgrammaticScroll(active) {
@@ -356,7 +380,7 @@
     setTimeout(function () {
       setProgrammaticScroll(false);
       setScrollSelectSuppressed(false);
-    }, 180);
+    }, 320);
 
     return true;
   }
@@ -418,27 +442,43 @@
     if (index < 0) index = 0;
 
     var nextIndex;
+    var edgeClone = null;
     if (direction === 'left') {
-      nextIndex = (index - 1 + cards.length) % cards.length;
+      if (index === 0) {
+        edgeClone = track.querySelector('[data-picker-clone="start"]');
+        nextIndex = cards.length - 1;
+      } else {
+        nextIndex = index - 1;
+      }
+    } else if (index === cards.length - 1) {
+      edgeClone = track.querySelector('[data-picker-clone="end"]');
+      nextIndex = 0;
     } else {
-      nextIndex = (index + 1) % cards.length;
+      nextIndex = index + 1;
     }
 
     setScrollSelectSuppressed(true);
-    if (track) {
-      var prevSnap = track.style.scrollSnapType;
-      track.style.scrollSnapType = 'none';
-      selectLocationCard(cards[nextIndex]);
-      setTimeout(function () {
-        track.style.scrollSnapType = prevSnap || '';
-      }, 350);
-    } else {
-      selectLocationCard(cards[nextIndex]);
-    }
-    setTimeout(function () {
+    var prevSnap = track.style.scrollSnapType;
+    track.style.scrollSnapType = 'none';
+
+    function finishNav() {
+      track.style.scrollSnapType = prevSnap || '';
       setScrollSelectSuppressed(false);
       updateNavButtons(picker);
-    }, 350);
+    }
+
+    if (edgeClone) {
+      selectLocationCard(cards[nextIndex], { scroll: false });
+      scrollCardToCenter(track, edgeClone, 'smooth');
+      setTimeout(function () {
+        jumpFromClone(track, edgeClone, picker);
+        finishNav();
+      }, 340);
+      return;
+    }
+
+    selectLocationCard(cards[nextIndex]);
+    setTimeout(finishNav, 350);
   }
 
   function restoreSelection(picker, track, options) {
@@ -476,20 +516,28 @@
       });
   }
 
+  function alignSelectedCard(picker, track, behavior) {
+    var selected = getSelectedRealCard(picker);
+    if (!selected) {
+      selected = restoreSelection(picker, track, { align: false });
+    }
+    if (!selected || !track) return null;
+    scrollCardToCenter(track, selected, behavior || 'auto');
+    return selected;
+  }
+
   function finalizePickerAlignment(picker, track) {
     if (!picker || !track) return;
 
     setScrollSelectSuppressed(true);
     setProgrammaticScroll(true);
 
-    restoreSelection(picker, track, { align: true });
+    restoreSelection(picker, track, { align: false });
+    alignSelectedCard(picker, track, 'auto');
 
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
-        var selected = getSelectedRealCard(picker);
-        if (selected && !isCardCentered(track, selected)) {
-          scrollCardToCenter(track, selected, 'auto');
-        }
+        alignSelectedCard(picker, track, 'auto');
 
         picker.dataset.pickerReady = '1';
         setAligningMode(picker, track, false);
@@ -499,12 +547,28 @@
         refreshLocationStatuses();
 
         setTimeout(function () {
+          var selected = getSelectedRealCard(picker);
+          if (selected && !isCardCentered(track, selected)) {
+            alignSelectedCard(picker, track, 'auto');
+          }
           setProgrammaticScroll(false);
           setScrollSelectSuppressed(false);
           refreshLocationStatuses();
-        }, 200);
+        }, 220);
       });
     });
+  }
+
+  function realignSelectedIfNeeded(picker) {
+    var track = getTrack(picker);
+    var selected = getSelectedRealCard(picker);
+    if (!track || !selected || isCardCentered(track, selected)) return;
+
+    setScrollSelectSuppressed(true);
+    scrollCardToCenter(track, selected, 'auto');
+    setTimeout(function () {
+      setScrollSelectSuppressed(false);
+    }, 250);
   }
 
   function observeContactSlide(picker, signal) {
@@ -512,33 +576,19 @@
     if (!section || typeof IntersectionObserver === 'undefined') return;
 
     var alignTimer;
-    var hasAligned = false;
 
     var observer = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting || entry.intersectionRatio < 0.5) return;
-          if (hasAligned) return;
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.35) return;
 
           clearTimeout(alignTimer);
           alignTimer = setTimeout(function () {
-            var track = getTrack(picker);
-            var selected = getSelectedRealCard(picker);
-            if (!track || !selected || isCardCentered(track, selected)) {
-              hasAligned = true;
-              return;
-            }
-
-            setScrollSelectSuppressed(true);
-            scrollCardToCenter(track, selected, 'auto');
-            hasAligned = true;
-            setTimeout(function () {
-              setScrollSelectSuppressed(false);
-            }, 200);
-          }, 120);
+            realignSelectedIfNeeded(picker);
+          }, 100);
         });
       },
-      { threshold: [0.5] }
+      { threshold: [0.35, 0.5, 0.75] }
     );
 
     observer.observe(section);
@@ -617,11 +667,30 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
         updateNavButtons(picker);
+        if (picker.dataset.pickerReady === '1') {
+          realignSelectedIfNeeded(picker);
+        }
       }, 200);
     }
 
     track.addEventListener('scroll', onScroll, { passive: true, signal: carouselSignal });
     window.addEventListener('resize', onResize, { signal: carouselSignal });
+
+    if (typeof ResizeObserver !== 'undefined') {
+      var trackResizeObserver = new ResizeObserver(function () {
+        if (picker.dataset.pickerReady !== '1' || isScrollSelectionLocked()) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          realignSelectedIfNeeded(picker);
+        }, 120);
+      });
+      trackResizeObserver.observe(track);
+      if (signal) {
+        signal.addEventListener('abort', function () {
+          trackResizeObserver.disconnect();
+        });
+      }
+    }
 
     var leftBtn = document.getElementById('locationNavLeft');
     var rightBtn = document.getElementById('locationNavRight');

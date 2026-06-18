@@ -1074,21 +1074,7 @@
             sessionStorage.setItem('lastMenuItemClick', JSON.stringify(clickData));
         }
         
-        if (typeof window.trackMenuItemView === 'function') {
-            window.trackMenuItemView({
-                url: url,
-                title: itemName,
-                category: element.closest('section')?.id || element.getAttribute('data-favorite-section') || 'Unknown Category',
-                price: parseFloat(String(itemPrice).replace(/[^0-9.]/g, '')) || 0
-            });
-        } else if (typeof gtag !== 'undefined') {
-            gtag('event', 'menu_item_card_click', {
-                'item_name': itemName,
-                'item_url': url,
-                'item_price': itemPrice
-            });
-        }
-
+        // Card click intent — Matomo view is recorded in expandItem() when the item opens
         console.log('📊 Tracked menu item card click:', { itemName, url, price: itemPrice });
     }
 
@@ -1294,6 +1280,23 @@
         }
 
         if (!expandedContent || !loadingDiv || !dataDiv) return;
+
+        if (typeof window.trackMenuItemView === 'function') {
+            const trackUrl = url || element?.dataset?.itemUrl || '';
+            if (typeof window.extractMenuItemDataFromCard === 'function') {
+                window.trackMenuItemView(window.extractMenuItemDataFromCard(element, trackUrl));
+            } else {
+                window.trackMenuItemView({
+                    url: trackUrl,
+                    title: element.querySelector('.menu-item-title-text')?.textContent?.trim()
+                        || element.querySelector('.menu-item-title a')?.textContent?.trim()
+                        || element.querySelector('.menu-item-title')?.textContent?.trim()
+                        || 'Unknown Item',
+                    category: element.closest('section')?.id || element.getAttribute('data-favorite-section') || 'Unknown Category',
+                    price: parseFloat(element.querySelector('.menu-item-price, .expanded-price, .price')?.textContent?.replace(/[^0-9.]/g, '') || '') || 0
+                });
+            }
+        }
 
         const isDashboardNewPlaceholderUrl = typeof window !== 'undefined' && window.__dashboardEditMode &&
             element && element.hasAttribute('data-dashboard-edit-new-item');

@@ -31,6 +31,25 @@
       window.initMenuSmashPass();
     }
 
+    if (typeof window.trackMenuItemView === 'function') {
+      var card = document.querySelector('.single-page-item-card');
+      if (card) {
+        var itemData =
+          typeof window.extractMenuItemDataFromCard === 'function'
+            ? window.extractMenuItemDataFromCard(card, window.location.pathname)
+            : {
+                url: window.location.pathname,
+                title:
+                  (card.querySelector('.menu-item-title-text') &&
+                    card.querySelector('.menu-item-title-text').textContent.trim()) ||
+                  (card.querySelector('.single-page-title') &&
+                    card.querySelector('.single-page-title').textContent.trim()) ||
+                  document.title,
+              };
+        window.trackMenuItemView(itemData, { force: true });
+      }
+    }
+
     document.querySelectorAll('.single-page-item-card .js-share-btn').forEach(function (btn) {
       var titleEl = document.querySelector(
         '.single-page-item-card .menu-item-title-text, .single-page-item-card .single-page-title'

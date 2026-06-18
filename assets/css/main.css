@@ -175,8 +175,9 @@ footer {
     width: max-content;
     border-radius: 3em;
     border-top: 1px solid color-mix(in srgb,var(--footer-text-color,#fefefe) 33%,transparent);
-    margin-inline:auto;margin-block-end:.8em;padding-block:.4em;backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    margin-inline:auto;
+    margin-block-end:.8em;
+    padding-block:.4em;
     pointer-events: none
 }
 
@@ -186,9 +187,10 @@ footer {
 }
 
 .grad1 {
-    background: color-mix(in srgb,var(--footer-bg-color,#000) 93%,transparent);
-    border-top: 1px solid color-mix(in srgb,var(--footer-text-color,#fefefe) 67%,transparent)!important;
-    padding-inline:.8em;padding-block:.4em;padding-block:.4em .1em!important}
+    padding-inline:.8em;
+    padding-block:.4em;
+    padding-block:.4em .1em!important
+    }
 
 .grad2 {
     background-image: linear-gradient(transparent,color-mix(in srgb,var(--footer-bg-color,#000) 33%,transparent),var(--footer-bg-color,#000))

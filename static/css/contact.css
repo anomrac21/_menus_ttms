@@ -1498,6 +1498,15 @@
     scroll-behavior: auto !important;
 }
 
+.location-picker--aligning .location-picker__track-wrap {
+    opacity: 0;
+}
+
+.location-picker[data-picker-ready] .location-picker__track-wrap {
+    opacity: 1;
+    transition: opacity 0.18s ease;
+}
+
 .location-picker-card {
     flex-shrink: 0;
     min-width: calc(100% - 0.5rem);

@@ -240,7 +240,7 @@ body.menu-search-active .menu-reels-track {
     justify-content: center;
     gap: 1rem;
     padding-block-start: 0;
-    padding-block-end: max(1.25rem, env(safe-area-inset-bottom));
+    padding-block-end: max(4rem, env(safe-area-inset-bottom));
     background: var(--hero-bg-color, #000);
 }
 
@@ -1016,7 +1016,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     }
 
     .menu-item-card.menu-reels-slide:has(.menu-item-smash-pass) {
-        padding-block: 0.4em 4.25em;
+        padding-block: 0.4em 5em;
     }
 
     .menu-item-card.menu-reels-slide .menu-item-title {
