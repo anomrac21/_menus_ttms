@@ -527,6 +527,21 @@ const NotificationService = {
     return false;
   },
 
+  shouldDisplayNotification(notification) {
+    var data = notification && notification.data;
+    if (!data || data.admin_only !== true) return true;
+    if (!this.isCurrentUserAdmin()) return false;
+    var adminIds = data.admin_user_ids;
+    if (!adminIds || !adminIds.length) return true;
+    var userId = this.generateUserID();
+    if (!userId || userId.indexOf('auth_') !== 0) return false;
+    var numericId = userId.slice(5);
+    for (var i = 0; i < adminIds.length; i++) {
+      if (String(adminIds[i]) === numericId) return true;
+    }
+    return false;
+  },
+
   /**
    * Link an existing push subscription to the signed-in admin account (required for photo approval alerts).
    */
@@ -1102,6 +1117,11 @@ const NotificationService = {
   async showNotification(notification) {
     if (Notification.permission !== 'granted') {
       console.warn('⚠️ Notification permission not granted');
+      return;
+    }
+
+    if (!this.shouldDisplayNotification(notification)) {
+      console.log('Skipping admin-only notification for this user/device');
       return;
     }
 

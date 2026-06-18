@@ -101,6 +101,7 @@
     if (!res.ok) {
       var msg =
         (data && (data.error || data.message)) || text || 'Request failed (' + res.status + ')';
+      if (data && data.details) msg += ': ' + data.details;
       throw new Error(msg);
     }
     return data;
@@ -1471,6 +1472,16 @@
     loadPhotoReviewPreferenceFromServer().then(function (serverEnabled) {
       if (serverEnabled != null) applyPhotoReviewToggleState(serverEnabled);
     });
+
+    if (
+      !isAuthLinkedNotifySubscription() &&
+      window.NotificationService &&
+      NotificationService.relinkSubscriptionToAuthUser
+    ) {
+      NotificationService.relinkSubscriptionToAuthUser().then(function (result) {
+        if (result.ok && subscribeHint) subscribeHint.setAttribute('hidden', '');
+      });
+    }
 
     if (subscribeHint) {
       if (isAuthLinkedNotifySubscription()) {
