@@ -1319,6 +1319,49 @@ const NotificationService = {
   },
 
   /**
+   * Apply subscribed/unsubscribed labels to one notify CTA.
+   * @param {HTMLElement|null} btn
+   * @param {HTMLElement|null} btnText
+   * @param {HTMLElement|null} btnHint
+   * @param {boolean} isSubscribed
+   * @param {boolean} backgroundPush
+   */
+  applySubscribeButtonState(btn, btnText, btnHint, isSubscribed, backgroundPush) {
+    if (!btn) return;
+
+    if (isSubscribed) {
+      btn.classList.add('subscribed');
+      btn.setAttribute('aria-pressed', 'true');
+      if (btnText) {
+        btnText.textContent = 'Alerts on';
+      } else {
+        btn.setAttribute(
+          'aria-label',
+          backgroundPush ? 'Alerts on — tap to turn off' : 'Alerts need setup — tap to re-enable'
+        );
+      }
+      if (btnHint) {
+        btnHint.textContent = backgroundPush
+          ? 'Tap to turn off'
+          : 'Tap to fix phone alerts';
+      }
+      btn.title = backgroundPush
+        ? 'You receive menu alerts — tap to turn off'
+        : 'Background alerts need setup — tap to re-enable';
+    } else {
+      btn.classList.remove('subscribed');
+      btn.setAttribute('aria-pressed', 'false');
+      if (btnText) {
+        btnText.textContent = 'Get menu alerts';
+      } else {
+        btn.setAttribute('aria-label', 'Get menu alerts');
+      }
+      if (btnHint) btnHint.textContent = 'Free · specials & hours';
+      btn.title = 'Get alerts for specials, hours, and menu updates';
+    }
+  },
+
+  /**
    * Update subscribe button state
    * @param {boolean} isSubscribed
    * @param {{ backgroundPush?: boolean }} [options]
@@ -1326,36 +1369,26 @@ const NotificationService = {
   updateSubscribeButton(isSubscribed, options) {
     options = options || {};
     const backgroundPush = options.backgroundPush !== false;
-    const btn = document.getElementById('subBtn');
-    const btnText = document.getElementById('subBtnText');
-    const btnHint = document.getElementById('subBtnHint');
+
+    this.applySubscribeButtonState(
+      document.getElementById('subBtn'),
+      document.getElementById('subBtnText'),
+      document.getElementById('subBtnHint'),
+      isSubscribed,
+      backgroundPush
+    );
+
+    this.applySubscribeButtonState(
+      document.getElementById('subBtnHeader'),
+      document.getElementById('subBtnHeaderText'),
+      document.getElementById('subBtnHeaderHint'),
+      isSubscribed,
+      backgroundPush
+    );
+
     const btnHero = document.getElementById('subBtnHero');
     const btnHeroText = document.getElementById('subBtnHeroText');
     const btnHeroHint = document.getElementById('subBtnHeroHint');
-
-    if (btn && btnText) {
-      if (isSubscribed) {
-        btn.classList.add('subscribed');
-        btn.setAttribute('aria-pressed', 'true');
-        btnText.textContent = 'Alerts on';
-        if (btnHint) {
-          btnHint.textContent = backgroundPush
-            ? 'Tap to turn off'
-            : 'Tap to fix phone alerts';
-        }
-        btn.title = backgroundPush
-          ? 'You receive menu alerts — tap to turn off'
-          : 'Background alerts need setup — tap to re-enable';
-      } else {
-        btn.classList.remove('subscribed');
-        btn.setAttribute('aria-pressed', 'false');
-        btnText.textContent = 'Get menu alerts';
-        if (btnHint) btnHint.textContent = 'Free · specials & hours';
-        btn.title = 'Get alerts for specials, hours, and menu updates';
-      }
-    }
-
-    // Update hero subscribe button (if exists)
     if (btnHero && btnHeroText) {
       if (isSubscribed) {
         btnHero.classList.add('hide');

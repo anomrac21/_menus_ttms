@@ -22,6 +22,11 @@
 					</span>
 				</a>
 			{{ end }}
+			{{- if site.Params.notifications.enabled -}}
+			<span class="header-notify-btn-wrap">
+				{{ partial "components/notification-subscribe-btn.html" (dict "id" "subBtnHeader" "class" "header-notify-subscribe" "iconOnly" true) }}
+			</span>
+			{{- end -}}
 			<button type="button" class="header-menublock-toggle" id="menublockToggle" aria-label="Open menu categories" aria-controls="menublock" aria-expanded="false" aria-haspopup="true">
 				<span class="header-menublock-toggle__icon" aria-hidden="true"><span></span><span></span><span></span></span>
 			</button>

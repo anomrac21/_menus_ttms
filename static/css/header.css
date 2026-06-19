@@ -120,6 +120,89 @@
     transform: translate3d(-100%, 0, 0);
 }
 
+/* Header notification subscribe — before category menu toggle */
+.header-notify-btn-wrap {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-width: 0;
+}
+
+.header-leading .header-notify-subscribe.contact-cta {
+    --contact-cta-radius: 12px;
+    --contact-cta-accent-a: color-mix(in srgb, var(--selected-button-color2, #b56024) 88%, #fff);
+    --contact-cta-accent-b: color-mix(in srgb, var(--selected-button-color3, #fcd000) 75%, #fff);
+    --contact-cta-accent-border: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-width: unset;
+    max-width: none;
+    padding: 0;
+    border-radius: var(--contact-cta-radius);
+    border: 2px solid var(--contact-cta-accent-border);
+    background: linear-gradient(135deg, var(--contact-cta-accent-a) 0%, var(--contact-cta-accent-b) 100%);
+    color: #1a1208;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.header-leading .header-notify-subscribe--icon-only.contact-cta {
+    width: 3.6rem;
+    height: 3.6rem;
+}
+
+.header-leading .header-notify-subscribe:hover,
+.header-leading .header-notify-subscribe:focus-visible {
+    transform: translateY(-1px) scale(1.02);
+    border-color: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    outline: none;
+}
+
+.header-leading .header-notify-subscribe:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.header-leading .header-notify-subscribe .contact-cta__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    color: #1a1208;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.header-leading .header-notify-subscribe .contact-cta__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.header-leading .header-notify-subscribe.subscribed {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, #22c55e 35%, rgba(255, 255, 255, 0.12)) 0%,
+        color-mix(in srgb, #16a34a 25%, rgba(255, 255, 255, 0.08)) 100%
+    );
+    border-color: color-mix(in srgb, #4ade80 70%, transparent);
+    color: var(--hero-text-color, #fff);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+}
+
+.header-leading .header-notify-subscribe.subscribed .contact-cta__icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--hero-text-color, #fff);
+}
+
 .header-leading .logo-container {
     flex-shrink: 0;
     min-width: 0;
@@ -772,6 +855,14 @@
         min-width: 0;
         width: 100%;
         max-width: 100%;
+    }
+
+    .header-notify-btn-wrap {
+        margin-inline-start: auto;
+    }
+
+    .header-notify-btn-wrap + .header-menublock-toggle {
+        margin-inline-start: 0.35rem;
     }
 
     .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {

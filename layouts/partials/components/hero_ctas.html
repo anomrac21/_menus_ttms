@@ -1,15 +1,7 @@
 <ul class="hero-cta-list">
 	{{- if site.Params.notifications.enabled -}}
 	<li class="subscribe subscribe--notifications">
-		<a id="subBtn" class="subbtn btn subbtn--notify contact-cta contact-cta--notify" href="#" role="button" aria-pressed="false" onclick="toggleNotificationSubscription(); return false;" title="Get alerts for specials, hours, and menu updates">
-			<span class="contact-cta__icon" aria-hidden="true">
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
-			</span>
-			<span class="contact-cta__copy">
-				<span id="subBtnText" class="contact-cta__title">Get menu alerts</span>
-				<span id="subBtnHint" class="contact-cta__hint">Free · specials &amp; hours</span>
-			</span>
-		</a>
+		{{ partial "components/notification-subscribe-btn.html" (dict) }}
 	</li>
 	{{- end -}}
 	<li class="subscribe subscribe--install contact-cta-row">
