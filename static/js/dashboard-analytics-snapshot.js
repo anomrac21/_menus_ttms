@@ -160,14 +160,7 @@
     return svc + '/api';
   }
 
-  function fetchSummary(days) {
-    days = days || 30;
-    var url =
-      cmsApiBase() +
-      '/clients/' +
-      encodeURIComponent(clientId()) +
-      '/analytics/summary?days=' +
-      encodeURIComponent(String(days));
+  function fetchWithAuth(url) {
     function doFetch() {
       return fetch(url, {
         method: 'GET',
@@ -190,6 +183,28 @@
         return doFetch();
       });
     });
+  }
+
+  function fetchSummary(days) {
+    days = days || 30;
+    var url =
+      cmsApiBase() +
+      '/clients/' +
+      encodeURIComponent(clientId()) +
+      '/analytics/summary?days=' +
+      encodeURIComponent(String(days));
+    return fetchWithAuth(url);
+  }
+
+  function fetchTrends(days) {
+    days = days || 30;
+    var url =
+      cmsApiBase() +
+      '/clients/' +
+      encodeURIComponent(clientId()) +
+      '/analytics/trends?days=' +
+      encodeURIComponent(String(days));
+    return fetchWithAuth(url);
   }
 
   function errorMessage(status, data) {
@@ -276,6 +291,173 @@
     }
   }
 
+  function escapeHtml(s) {
+    if (s == null) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function formatShortDate(isoDate) {
+    if (!isoDate) return '';
+    try {
+      var d = new Date(isoDate + 'T12:00:00');
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch (e) {
+      return isoDate.slice(5);
+    }
+  }
+
+  function setAnalyticsTrendsLoading(loading) {
+    var wrap = document.getElementById('dashboardAnalyticsTrendChartWrap');
+    var chart = document.getElementById('dashboardAnalyticsTrendChart');
+    var empty = document.getElementById('dashboardAnalyticsTrendEmpty');
+    if (!wrap || !chart) return;
+    if (loading) {
+      wrap.classList.add('dashboard-notify-trends-chart-wrap--loading');
+      chart.innerHTML =
+        '<p class="dashboard-notify-trends-loading" role="status">' +
+        '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Loading chart…</p>';
+      if (empty) empty.hidden = true;
+      return;
+    }
+    wrap.classList.remove('dashboard-notify-trends-chart-wrap--loading');
+  }
+
+  function normalizeTrendRows(rows) {
+    return (rows || [])
+      .filter(function (row) {
+        return row && row.date;
+      })
+      .map(function (row) {
+        return {
+          date: row.date,
+          pageViews: Number(row.pageViews) || 0,
+          visits: Number(row.visits) || 0,
+          menuItemViews: Number(row.menuItemViews) || 0,
+          addToCart: Number(row.addToCart) || 0,
+        };
+      })
+      .sort(function (a, b) {
+        return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+      });
+  }
+
+  function renderAnalyticsTrendChart(rows) {
+    var chart = document.getElementById('dashboardAnalyticsTrendChart');
+    var empty = document.getElementById('dashboardAnalyticsTrendEmpty');
+    if (!chart) return;
+
+    rows = normalizeTrendRows(rows);
+    var hasData = rows.some(function (r) {
+      return r.pageViews + r.visits + r.menuItemViews + r.addToCart > 0;
+    });
+
+    if (!hasData) {
+      chart.innerHTML = '';
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    var width = 960;
+    var height = 260;
+    var pad = { top: 16, right: 12, bottom: 36, left: 40 };
+    var innerW = width - pad.left - pad.right;
+    var innerH = height - pad.top - pad.bottom;
+    var maxVal = 1;
+
+    rows.forEach(function (r) {
+      maxVal = Math.max(maxVal, r.pageViews, r.visits, r.menuItemViews, r.addToCart);
+    });
+
+    var series = [
+      { key: 'pageViews', label: 'Page views', className: 'dashboard-analytics-trends-bar--pageviews' },
+      { key: 'visits', label: 'Visits', className: 'dashboard-analytics-trends-bar--visits' },
+      { key: 'menuItemViews', label: 'Menu item views', className: 'dashboard-analytics-trends-bar--menu' },
+      { key: 'addToCart', label: 'Add to cart', className: 'dashboard-analytics-trends-bar--cart' },
+    ];
+    var seriesCount = series.length;
+    var barGroupW = innerW / rows.length;
+    var barW = Math.max(2, Math.min(6, (barGroupW - 8) / seriesCount));
+
+    var svg =
+      '<svg class="dashboard-notify-trends-svg" viewBox="0 0 ' +
+      width +
+      ' ' +
+      height +
+      '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">';
+
+    for (var g = 0; g <= 4; g++) {
+      var y = pad.top + (innerH * g) / 4;
+      var val = Math.round(maxVal * (1 - g / 4));
+      svg +=
+        '<line class="dashboard-notify-trends-grid" x1="' +
+        pad.left +
+        '" y1="' +
+        y +
+        '" x2="' +
+        (width - pad.right) +
+        '" y2="' +
+        y +
+        '"></line>';
+      svg +=
+        '<text class="dashboard-notify-trends-axis-y" x="' +
+        (pad.left - 8) +
+        '" y="' +
+        (y + 4) +
+        '" text-anchor="end">' +
+        escapeHtml(String(val)) +
+        '</text>';
+    }
+
+    rows.forEach(function (row, index) {
+      var groupX = pad.left + index * barGroupW + barGroupW / 2;
+      series.forEach(function (s, seriesIndex) {
+        var value = Number(row[s.key]) || 0;
+        var barH = maxVal ? (value / maxVal) * innerH : 0;
+        var x = groupX - (barW * seriesCount + (seriesCount - 1) * 2) / 2 + seriesIndex * (barW + 2);
+        var yBar = pad.top + innerH - barH;
+        svg +=
+          '<rect class="dashboard-notify-trends-bar ' +
+          s.className +
+          '" x="' +
+          x +
+          '" y="' +
+          yBar +
+          '" width="' +
+          barW +
+          '" height="' +
+          barH +
+          '" rx="1"><title>' +
+          escapeHtml(formatShortDate(row.date)) +
+          ' · ' +
+          s.label +
+          ': ' +
+          value +
+          '</title></rect>';
+      });
+
+      if (index % 5 === 0 || index === rows.length - 1) {
+        svg +=
+          '<text class="dashboard-notify-trends-axis-x" x="' +
+          groupX +
+          '" y="' +
+          (height - 10) +
+          '" text-anchor="middle">' +
+          escapeHtml(formatShortDate(row.date)) +
+          '</text>';
+      }
+    });
+
+    svg += '</svg>';
+    chart.innerHTML = svg;
+    chart.setAttribute(
+      'aria-label',
+      'Analytics activity chart for the last 30 days with daily page views, visits, menu item views, and add to cart'
+    );
+  }
+
   function loadAnalyticsPage(options) {
     options = options || {};
     var days = options.days || 30;
@@ -299,35 +481,51 @@
     });
 
     setAnalyticsNoteState(noteEl, 'loading', 'Loading analytics…');
+    setAnalyticsTrendsLoading(true);
 
-    return fetchSummary(days)
-      .then(function (x) {
-        if (!x.ok) {
-          setAnalyticsNoteState(noteEl, 'warn', errorMessage(x.status, x.data));
-          return;
+    return Promise.all([fetchSummary(days), fetchTrends(days)])
+      .then(function (results) {
+        var summaryResult = results[0];
+        var trendsResult = results[1];
+
+        if (!summaryResult.ok) {
+          setAnalyticsNoteState(noteEl, 'warn', errorMessage(summaryResult.status, summaryResult.data));
+        } else {
+          var d = summaryResult.data || {};
+          setMetric('metricPageViews', d.pageViews, 'Page views');
+          setMetric('metricVisits', d.visits, 'Visits');
+          setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
+          setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
+          setMetric('metricAddToCart', d.addToCart, 'Add to cart');
+          setAnalyticsNoteState(
+            noteEl,
+            'ok',
+            'Showing analytics for the last ' + days + ' days.'
+          );
         }
-        var d = x.data || {};
-        setMetric('metricPageViews', d.pageViews, 'Page views');
-        setMetric('metricVisits', d.visits, 'Visits');
-        setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
-        setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
-        setMetric('metricAddToCart', d.addToCart, 'Add to cart');
-        setAnalyticsNoteState(
-          noteEl,
-          'ok',
-          'Showing analytics for the last ' + days + ' days.'
-        );
+
+        if (trendsResult.ok) {
+          renderAnalyticsTrendChart((trendsResult.data && trendsResult.data.rows) || []);
+        } else {
+          renderAnalyticsTrendChart([]);
+        }
       })
       .catch(function () {
         setAnalyticsNoteState(noteEl, 'warn', 'Could not load analytics. Try again later.');
+        renderAnalyticsTrendChart([]);
+      })
+      .finally(function () {
+        setAnalyticsTrendsLoading(false);
       });
   }
 
   global.DashboardAnalyticsSnapshot = {
     formatCount: formatCount,
     fetchSummary: fetchSummary,
+    fetchTrends: fetchTrends,
     loadDashboardCard: loadDashboardCard,
     loadAnalyticsPage: loadAnalyticsPage,
+    renderAnalyticsTrendChart: renderAnalyticsTrendChart,
     applyAnalyticsHeaderActions: applyAnalyticsHeaderActions,
     isPaidPlan: isPaidPlan,
   };

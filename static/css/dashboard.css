@@ -564,6 +564,8 @@
   background: linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f172a 100%);
   padding: 1.5rem 1.25rem 2.5rem;
   color: #fff;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-control-room .dashboard-header {
@@ -785,6 +787,8 @@
 
 @media (max-width: 720px) {
   .dashboard-control-room .dashboard-header-bar {
+    width: 100%;
+    max-width: 100%;
     grid-template-columns: auto 1fr;
     grid-template-areas:
       "logo main"
@@ -917,10 +921,12 @@
 }
 
 .dashboard-control-room .cards {
-  max-width: 1000px;
+  max-width: min(1000px, 100%);
+  width: 100%;
+  min-width: 0;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
   gap: 1rem;
 }
 
@@ -931,6 +937,9 @@
   padding: 1.25rem 1.3rem;
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-control-room .card:hover {
@@ -969,7 +978,9 @@
 
 .dashboard-control-room .card .btn-dash {
   margin-top: 0.75rem;
-  width: -webkit-fill-available;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-card-notify-snapshot {
@@ -1445,9 +1456,10 @@
 
 .dashboard-menu-status-panel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: 0.65rem;
   margin: 0;
+  min-width: 0;
 }
 
 .dashboard-menu-status-block {
@@ -1674,12 +1686,44 @@
 }
 
 @media (max-width: 640px) {
+  .dashboard-control-room {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .dashboard-control-room .cards {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .dashboard-control-room .card {
+    padding: 1rem 0.85rem;
+  }
+
+  .dashboard-control-room .card-edit-menu {
+    grid-column: 1;
+    padding: 1rem 0.85rem 0.95rem;
+  }
+
+  .dashboard-control-room .card-dashboard-menu-images {
+    grid-column: 1;
+  }
+
   .dashboard-menu-status-panel {
     grid-template-columns: 1fr;
   }
 
   .dashboard-card-edit-menu-top .btn-dash {
-    min-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .dashboard-control-room .btn-dash {
+    text-wrap-mode: wrap;
+    white-space: normal;
+  }
+
+  .dashboard-menu-images-reel__stack {
+    max-width: min(340px, 100%);
   }
 }
 
@@ -4549,6 +4593,44 @@
 .dashboard-analytics-note a:hover {
   color: #fff;
   text-decoration: underline;
+}
+
+.dashboard-analytics-trends {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-analytics-trends-legend-item--pageviews .fa {
+  color: #93c5fd;
+}
+
+.dashboard-analytics-trends-legend-item--visits .fa {
+  color: #86efac;
+}
+
+.dashboard-analytics-trends-legend-item--menu .fa {
+  color: #fcd34d;
+}
+
+.dashboard-analytics-trends-legend-item--cart .fa {
+  color: #c4b5fd;
+}
+
+.dashboard-analytics-trends-bar--pageviews {
+  fill: rgba(96, 165, 250, 0.9);
+}
+
+.dashboard-analytics-trends-bar--visits {
+  fill: rgba(74, 222, 128, 0.85);
+}
+
+.dashboard-analytics-trends-bar--menu {
+  fill: rgba(251, 191, 36, 0.9);
+}
+
+.dashboard-analytics-trends-bar--cart {
+  fill: rgba(167, 139, 250, 0.85);
 }
 
 @media (max-width: 640px) {
