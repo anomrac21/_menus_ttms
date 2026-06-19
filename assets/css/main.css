@@ -6,7 +6,11 @@ html,body {
     overflow-x: clip!important;
     width: -webkit-fill-available!important;
     margin: 0!important;
-    padding: 0!important
+    padding: 0!important;
+    background-color: var(--main-bg,#000);
+    min-height: 100%;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available
 }
 #loader {
   justify-content: center;
@@ -86,7 +90,8 @@ html,body {
 
 [data-barba=wrapper],[data-barba=container] {
     margin: 0;
-    padding: 0
+    padding: 0;
+    background-color: var(--main-bg,#000)
 }
 
 body {
@@ -122,7 +127,9 @@ header {
     width: -webkit-fill-available;
     z-index: var(--ttms-z-header,100);
     margin: 0;
-    padding: 0
+    padding: 0;
+    padding-top: env(safe-area-inset-top,0);
+    box-sizing: border-box
 }
 
 main {
@@ -160,12 +167,13 @@ footer {
     position: fixed;
     bottom: 0;
     width: 100%;
-    padding: 0;
+    padding: 0 max(0.65rem,env(safe-area-inset-right,0)) max(0.85rem,env(safe-area-inset-bottom,0)) max(0.65rem,env(safe-area-inset-left,0));
     color: var(--footer-text-color,#fff);
     text-align: center;
     z-index: var(--ttms-z-footer-controls,55);
     display: inline-block;
-    transition: .5s
+    transition: .5s;
+    box-sizing: border-box
 }
 
 #footerBtns {

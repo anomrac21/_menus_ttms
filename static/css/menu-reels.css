@@ -9,17 +9,22 @@ main.main--home ~ .bottomads {
 
 body.menu-reels-mode {
     overflow: hidden;
+    background: var(--main-bg, #000);
 }
 
 body.menu-reels-mode main.main--home {
     margin: 0 !important;
     padding: 0;
-    /* Fixed header (main.css) — content starts below it, not underneath */
+    /* Fixed header — content starts below header + notch safe area */
     padding-block-start: var(--ttms-header-height, 5em) !important;
     box-sizing: border-box;
     min-height: 0;
+    min-height: 100svh;
+    min-height: 100dvh;
+    height: 100svh;
     height: 100dvh;
     overflow: hidden;
+    background: var(--main-bg, #000);
 }
 
 body.menu-reels-mode .bottomads:not(.menu-reels-bottom-ads-in-track) {

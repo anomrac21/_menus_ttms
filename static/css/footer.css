@@ -11,8 +11,9 @@
     flex-direction: column;
     align-items: center;
     gap: 0.55rem;
-    padding: 0 0.65rem 0.85rem;
+    padding: 0 max(0.65rem, env(safe-area-inset-right, 0)) max(0.85rem, env(safe-area-inset-bottom, 0)) max(0.65rem, env(safe-area-inset-left, 0));
     pointer-events: none;
+    box-sizing: border-box;
 }
 
 /* Settings popover above dock */
@@ -191,13 +192,13 @@
     position: fixed;
     inset-inline: 0;
     bottom: 0;
-    height: 6.5rem;
+    height: calc(6.5rem + env(safe-area-inset-bottom, 0px));
     pointer-events: none;
     z-index: -1;
 }
 
 #footerBtns.footer-dock.grad1::before {
-    height: 8.5rem;
+    height: calc(8.5rem + env(safe-area-inset-bottom, 0px));
     background: linear-gradient(
         180deg,
         transparent 0%,

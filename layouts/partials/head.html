@@ -84,6 +84,31 @@
     transform: none;
   }
 </style>
+<style id="ttms-safe-area-critical">
+  :root {
+    --ttms-safe-top: env(safe-area-inset-top, 0px);
+    --ttms-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --ttms-header-bar: 5em;
+    --ttms-header-height: calc(var(--ttms-header-bar) + var(--ttms-safe-top));
+  }
+  html,
+  body {
+    background-color: var(--main-bg, #000);
+    min-height: 100%;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+  header {
+    padding-top: var(--ttms-safe-top);
+    box-sizing: border-box;
+  }
+  #footer {
+    padding-bottom: max(0.85rem, var(--ttms-safe-bottom));
+    padding-left: max(0.65rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
+    box-sizing: border-box;
+  }
+</style>
 {{- $siteName := partial "site-name.html" . -}}
 {{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
 {{- $metaDesc := .Description | default site.Params.description | default (printf "%s — view our full menu, prices, and order online." $siteName) -}}
@@ -276,7 +301,11 @@
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/contact.css") }}
 {{- if .IsHome -}}
 <style id="ttms-home-critical">
-  html.menu-reels-mode, body.menu-reels-mode { overflow: hidden; }
+  html.menu-reels-mode,
+  body.menu-reels-mode {
+    overflow: hidden;
+    background: var(--main-bg, #000);
+  }
   body.menu-reels-mode main.main--home,
   body.main--home main.main--home {
     margin: 0 !important;
@@ -284,8 +313,12 @@
     padding-block-start: var(--ttms-header-height, 5em) !important;
     box-sizing: border-box;
     min-height: 0;
+    min-height: 100svh;
+    min-height: 100dvh;
+    height: 100svh;
     height: 100dvh;
     overflow: hidden;
+    background: var(--main-bg, #000);
   }
   .main--home .menu-reels-viewport {
     position: relative;
