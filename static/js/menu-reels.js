@@ -440,20 +440,26 @@
   }
 
   function bindMenublockReelsNav() {
-    var menublock = document.getElementById('menublock');
-    if (!menublock || menublock._ttmsReelsNavBound) return;
-    menublock._ttmsReelsNavBound = true;
+    if (document.documentElement._ttmsReelsNavBound) {
+      return;
+    }
+    document.documentElement._ttmsReelsNavBound = true;
 
-    menublock.addEventListener('click', function (e) {
-      var link = e.target.closest('.menublock-link[href^="#"]');
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('#menublock .menublock-link[href^="#"]');
       if (!link) return;
       var hash = link.getAttribute('href');
       if (!hash || hash === '#') return;
       var id = decodeURIComponent(hash.slice(1));
       if (!findSlideForSectionId(id)) return;
-      e.preventDefault();
+      if (e.cancelable) {
+        e.preventDefault();
+      }
       e.stopPropagation();
       if (typeof closeCart === 'function') closeCart();
+      if (typeof window.closeMenublockDropdown === 'function') {
+        window.closeMenublockDropdown();
+      }
       if (typeof window.loadHomeMenuForSectionId === 'function') {
         window.loadHomeMenuForSectionId(id);
       }

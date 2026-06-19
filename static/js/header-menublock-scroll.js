@@ -74,18 +74,57 @@
     setMenublockDropdownOpen(!isOpen);
   }
 
+  function invokeMenublockToggle(sourceEvent) {
+    if (sourceEvent) {
+      sourceEvent.preventDefault();
+    }
+    if (!isMobileMenublockMode()) {
+      return;
+    }
+    toggleMenublockDropdown();
+  }
+
   function bindMenublockDropdownGlobals() {
     if (window._ttmsMenublockDropdownGlobalsBound) {
       return;
     }
     window._ttmsMenublockDropdownGlobalsBound = true;
 
+    var lastToggleAt = 0;
+
+    function handleToggleActivation(e) {
+      if (!e.target.closest('#menublockToggle')) {
+        return;
+      }
+      var now = Date.now();
+      if (now - lastToggleAt < 400) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        return;
+      }
+      lastToggleAt = now;
+      invokeMenublockToggle(e);
+    }
+
+    document.addEventListener('click', handleToggleActivation, true);
+
+    // iOS Safari sometimes skips synthetic click on buttons; pointerup is reliable.
+    document.addEventListener(
+      'pointerup',
+      function (e) {
+        if (e.pointerType === 'mouse') {
+          return;
+        }
+        handleToggleActivation(e);
+      },
+      true
+    );
+
     document.addEventListener(
       'click',
       function (e) {
         if (e.target.closest('#menublockToggle')) {
-          e.preventDefault();
-          toggleMenublockDropdown();
           return;
         }
 
@@ -117,11 +156,21 @@
       mobileMenublockMq.addEventListener('change', function () {
         closeMenublockDropdown();
         updateHeaderMenublockScroll();
+        var menublock = document.getElementById('menublock');
+        if (menublock) {
+          menublock._ttmsTouchNavBound = false;
+        }
+        bindMenublockTouchNav();
       });
     } else if (typeof mobileMenublockMq.addListener === 'function') {
       mobileMenublockMq.addListener(function () {
         closeMenublockDropdown();
         updateHeaderMenublockScroll();
+        var menublock = document.getElementById('menublock');
+        if (menublock) {
+          menublock._ttmsTouchNavBound = false;
+        }
+        bindMenublockTouchNav();
       });
     }
   }
@@ -210,6 +259,11 @@
   }
 
   function bindMenublockTouchNav() {
+    // Mobile dropdown uses vertical scroll; suppressing "accidental" clicks breaks iOS taps.
+    if (isMobileMenublockMode()) {
+      return;
+    }
+
     var menublock = document.getElementById('menublock');
     if (!menublock || menublock._ttmsTouchNavBound) {
       return;
@@ -238,10 +292,10 @@
       'pointermove',
       function (e) {
         if (!tracking) return;
-        if (
-          Math.abs(e.clientX - startX) >= MOVE_THRESHOLD ||
-          Math.abs(e.clientY - startY) >= MOVE_THRESHOLD
-        ) {
+        var dx = Math.abs(e.clientX - startX);
+        var dy = Math.abs(e.clientY - startY);
+        // Only suppress link activation after horizontal scroll intent (desktop nav strip).
+        if (dx >= MOVE_THRESHOLD && dx > dy) {
           suppressClick = true;
         }
       },

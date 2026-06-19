@@ -32,6 +32,10 @@
     '.expanded-image-carousel',
     '.location-picker',
     '.search-results',
+    '.header-menublock-toggle',
+    '.header-menublock-backdrop',
+    '.main-header.menublock-dropdown-open .header-nav',
+    '#menublock',
   ].join(', ');
 
   var startY = 0;
