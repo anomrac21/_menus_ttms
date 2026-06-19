@@ -686,8 +686,8 @@
     }
 }
 
-/* Mobile */
-@media (max-width: 768px) {
+/* Mobile + touch devices (incl. iOS "Request Desktop Website" wide viewport) */
+@media (max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse)) {
     :root {
         --ttms-dashboard-btn-slot: 2.6em;
     }
@@ -764,6 +764,33 @@
     .header-leading {
         flex: 1 1 auto;
         min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
+        flex-basis: var(--ttms-dashboard-btn-slot);
+        width: var(--ttms-dashboard-btn-slot);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap #dashboardBtn {
+        transform: none;
+    }
+
+    .main-header.menublock-scrolled-right .header-leading .logo-container.header-logo {
+        overflow: hidden;
+    }
+
+    body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-logo {
+        display: none !important;
+        opacity: 0;
+    }
+
+    body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--on-logo) {
+        display: flex;
     }
 
     .header-nav {
@@ -920,8 +947,8 @@
 }
 
 @media (min-width: 769px) {
-    .header-menublock-toggle,
-    .header-menublock-backdrop {
+    html:not(.ttms-mobile-menublock) .header-menublock-toggle,
+    html:not(.ttms-mobile-menublock) .header-menublock-backdrop {
         display: none !important;
     }
 }

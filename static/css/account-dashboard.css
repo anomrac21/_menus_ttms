@@ -157,6 +157,26 @@ body.ttms-logged-in .main-header.menublock-scrolled-right .dashboard-menu-btn-wr
   display: none !important;
 }
 
+@media (max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse)) {
+  body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-logo {
+    display: none !important;
+    opacity: 0;
+  }
+
+  body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--on-logo) {
+    display: flex !important;
+  }
+}
+
+html.ttms-mobile-menublock body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-logo {
+  display: none !important;
+  opacity: 0;
+}
+
+html.ttms-mobile-menublock body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--on-logo) {
+  display: flex !important;
+}
+
 #dashboard .account-panel-btn {
   display: none;
   align-items: center;

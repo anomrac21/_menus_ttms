@@ -1,5 +1,89 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+(function (doc) {
+  var mq = window.matchMedia(
+    '(max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse))'
+  );
+  function sync() {
+    doc.documentElement.classList.toggle('ttms-mobile-menublock', mq.matches);
+  }
+  sync();
+  if (typeof mq.addEventListener === 'function') {
+    mq.addEventListener('change', sync);
+  } else if (typeof mq.addListener === 'function') {
+    mq.addListener(sync);
+  }
+})(document);
+</script>
+<style id="ttms-mobile-menublock-critical">
+  @media (max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse)) {
+    .main-header .container { overflow: visible; }
+    .main-header .header-leading { flex: 1 1 auto; min-width: 0; width: 100%; }
+    .main-header .header-nav {
+      position: fixed !important;
+      top: var(--ttms-header-height, 5em);
+      left: 0;
+      right: 0;
+      width: 100%;
+      flex: none !important;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: var(--ttms-z-header-dropdown, 210);
+    }
+    .main-header.menublock-dropdown-open .header-nav {
+      max-height: min(72vh, 72dvh, calc(100vh - var(--ttms-header-height, 5em)));
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .header-menublock-toggle { display: inline-flex !important; }
+    .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
+      flex-basis: var(--ttms-dashboard-btn-slot, 2.6em);
+      width: var(--ttms-dashboard-btn-slot, 2.6em);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap #dashboardBtn {
+      transform: none;
+    }
+  }
+  html.ttms-mobile-menublock .header-menublock-toggle { display: inline-flex !important; }
+  html.ttms-mobile-menublock .main-header .header-nav {
+    position: fixed !important;
+    top: var(--ttms-header-height, 5em);
+    left: 0;
+    right: 0;
+    width: 100%;
+    flex: none !important;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: var(--ttms-z-header-dropdown, 210);
+  }
+  html.ttms-mobile-menublock .main-header.menublock-dropdown-open .header-nav {
+    max-height: min(72vh, 72dvh, calc(100vh - var(--ttms-header-height, 5em)));
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  html.ttms-mobile-menublock .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
+    flex-basis: var(--ttms-dashboard-btn-slot, 2.6em);
+    width: var(--ttms-dashboard-btn-slot, 2.6em);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  html.ttms-mobile-menublock .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap #dashboardBtn {
+    transform: none;
+  }
+</style>
 {{- $siteName := partial "site-name.html" . -}}
 {{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
 {{- $metaDesc := .Description | default site.Params.description | default (printf "%s — view our full menu, prices, and order online." $siteName) -}}

@@ -12,10 +12,19 @@
   var LOGO_SWIPE_LOCK_PX = 12;
   var DASHBOARD_SLIDE_MS = 680;
   var scrollRaf = 0;
-  var mobileMenublockMq = window.matchMedia('(max-width: 768px)');
+  var MOBILE_MENUBLOCK_MQ =
+    '(max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse))';
+  var mobileMenublockMq = window.matchMedia(MOBILE_MENUBLOCK_MQ);
+
+  function syncMobileMenublockClass() {
+    document.documentElement.classList.toggle('ttms-mobile-menublock', mobileMenublockMq.matches);
+  }
 
   function isMobileMenublockMode() {
-    return mobileMenublockMq.matches;
+    return (
+      document.documentElement.classList.contains('ttms-mobile-menublock') ||
+      mobileMenublockMq.matches
+    );
   }
 
   function getMenublockToggle() {
@@ -154,6 +163,7 @@
 
     if (typeof mobileMenublockMq.addEventListener === 'function') {
       mobileMenublockMq.addEventListener('change', function () {
+        syncMobileMenublockClass();
         closeMenublockDropdown();
         updateHeaderMenublockScroll();
         var menublock = document.getElementById('menublock');
@@ -164,6 +174,7 @@
       });
     } else if (typeof mobileMenublockMq.addListener === 'function') {
       mobileMenublockMq.addListener(function () {
+        syncMobileMenublockClass();
         closeMenublockDropdown();
         updateHeaderMenublockScroll();
         var menublock = document.getElementById('menublock');
@@ -530,10 +541,22 @@
   }
 
   function reinitHeaderMenublock() {
+    syncMobileMenublockClass();
+
     var menublock = document.getElementById('menublock');
     if (menublock) {
       menublock._ttmsMenublockScrollBound = false;
       menublock._ttmsTouchNavBound = false;
+    }
+
+    if (isMobileMenublockMode()) {
+      var mainHeader = document.querySelector('.main-header');
+      if (mainHeader) {
+        mainHeader.classList.remove('menublock-scrolled-right');
+      }
+      if (menublock) {
+        menublock.scrollLeft = 0;
+      }
     }
 
     resetMenublockDropdownBindings();
@@ -574,6 +597,7 @@
   window.scheduleReinitHeaderMenublock = scheduleReinitHeaderMenublock;
 
   function initHeaderMenublock() {
+    syncMobileMenublockClass();
     reinitHeaderMenublock();
   }
 
