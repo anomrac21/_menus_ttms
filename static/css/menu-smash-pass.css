@@ -292,6 +292,7 @@ button.menu-smash-pass-card__dislikes {
     border: none;
     background: transparent;
     color: #ef4444;
+    text-shadow: -1px -1px #000000aa, 1px 1px #000000aa,1px -1px #000000aa, -1px 1px #000000aa;
     font: inherit;
     font-size: inherit;
     font-weight: bolder;
@@ -556,6 +557,8 @@ button.menu-smash-pass-card__dislikes:disabled {
 
 .menu-item-card.menu-reels-slide .menu-item-smash-pass .menu-smash-pass-card__counts {
     font-size: large;
+    font-weight: bolder;
+    text-shadow: -1px -1px #000000aa, 1px 1px #000000aa, 1px -1px #000000aa, -1px 1px #000000aa;
     gap: 0.45rem;
 }
 

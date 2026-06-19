@@ -4709,6 +4709,7 @@
   border: 1px solid rgba(248, 113, 113, 0.35);
   color: #fecaca;
   margin: 0 0 1rem;
+  flex-direction: column;
 }
 
 .dashboard-notify-banner[hidden] {
@@ -5411,8 +5412,7 @@
 
 .dashboard-notify-tablist {
   display: flex;
-  overflow-x: auto;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 1.1rem;
   padding: 0.35rem;
@@ -5421,6 +5421,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  justify-content: center;
 }
 
 .dashboard-notify-tab {
