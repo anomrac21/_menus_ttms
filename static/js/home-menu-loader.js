@@ -364,6 +364,12 @@
     return '';
   }
 
+  function favoriteIconMarkup(kind) {
+    var icons = window.TTMS_MENU_FAVORITE_ICONS;
+    if (icons && icons[kind]) return icons[kind];
+    return '';
+  }
+
   function buildFavoriteBtn(item, authEnabled) {
     if (!authEnabled) return '';
     var clientId = window.SITE_CLIENT_ID || '';
@@ -395,13 +401,11 @@
       ' to favorites"' +
       ' title="Save to favorites">' +
       '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--outline" aria-hidden="true">' +
-      '<svg class="menu-favorite-btn__svg" viewBox="0 0 24 24" focusable="false">' +
-      '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 21s-6.5-4.35-9-8.2C1.2 9.6 2.4 5.8 6 5.2c2-.35 3.8.7 4.7 2 1-1.3 2.7-2.35 4.7-2 3.6.6 4.8 4.4 3 7.6-2.5 3.85-9 8.2-9 8.2z"/>' +
-      '</svg></span>' +
+      favoriteIconMarkup('outline') +
+      '</span>' +
       '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--filled" aria-hidden="true">' +
-      '<svg class="menu-favorite-btn__svg" viewBox="0 0 24 24" focusable="false">' +
-      '<path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>' +
-      '</svg></span></button>'
+      favoriteIconMarkup('filled') +
+      '</span></button>'
     );
   }
 
@@ -439,6 +443,16 @@
     );
   }
 
+  function buildTitleRow(item, titleHtml, authEnabled) {
+    if (!titleHtml) return '';
+    return (
+      '<div class="menu-item-title-row">' +
+      buildFavoriteBtn(item, authEnabled) +
+      titleHtml +
+      '</div>'
+    );
+  }
+
   function buildCard(item, category, config) {
     var title = item.linkTitle || item.name || '';
     var summary = truncate(stripHtml(item.summary), 120);
@@ -463,6 +477,12 @@
         escapeHtml(title) +
         '" loading="lazy" class="menu-item-img" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)"></div></a>'
       : '';
+    var titleHtml =
+      '<h3 class="menu-item-title"><span class="menu-item-title-text">' +
+      escapeHtml(title) +
+      '</span></h3>';
+    var smashPassHtml = buildSmashPassMarkup(item, config.menuImages);
+    var titleRowHtml = buildTitleRow(item, titleHtml, config.authEnabled);
 
     return (
       '<section class="menu-item-card menu-reels-slide' +
@@ -519,14 +539,12 @@
       ' data-events="' +
       escapeHtml(JSON.stringify(item.events || [])) +
       '">' +
-      buildFavoriteBtn(item, config.authEnabled) +
-      buildSmashPassMarkup(item, config.menuImages) +
+      (smashPassHtml ? titleRowHtml : '') +
+      smashPassHtml +
       '<div class="menu-item-row-top">' +
       imageHtml +
       '<div class="menu-item-header-content">' +
-      '<h3 class="menu-item-title"><span class="menu-item-title-text">' +
-      escapeHtml(title) +
-      '</span></h3>' +
+      (smashPassHtml ? '' : titleRowHtml) +
       '<div class="menu-item-row-middle">' +
       '<div class="menu-item-description">' +
       escapeHtml(summary) +

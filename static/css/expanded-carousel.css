@@ -141,6 +141,42 @@
     gap: 0;
 }
 
+.single-page-item-card > .menu-item-header-content.single-page-header-top {
+    flex-shrink: 0;
+    padding: 0.85em 1.25em 0.35em;
+}
+
+.single-page-item-card > .menu-item-header-content.single-page-header-top .menu-item-title-row {
+    justify-content: center;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.single-page-item-card > .menu-item-header-content.single-page-header-top .menu-item-title-row > .menu-favorite-btn {
+    margin-top: 0;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+}
+
+.single-page-item-card > .menu-item-header-content.single-page-header-top .menu-item-title-row > .menu-item-title.single-page-title {
+    flex: 0 1 auto;
+    text-align: center;
+    font-size: clamp(1.35rem, 5.5vw, 2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--main-text-color, #fff);
+}
+
+.single-page-item-card > .menu-item-header-content.single-page-header-top .menu-item-title-row .menu-item-title-text {
+    text-align: center;
+}
+
+.single-page-item-card > .menu-item-header-content.single-page-header-top .menu-item-title-row .menu-item-promo-badge {
+    justify-content: center;
+    text-align: center;
+}
+
 .single-page-item-card .single-page-content > *:not(.menu-item-slideshow):not(.menu-image-actions):not(.menu-favorite-btn):not(.expanded-media-placeholder):not(.menu-item-smash-pass) {
     padding-inline: 1.25em;
 }
@@ -151,7 +187,6 @@
     border-radius: 0;
 }
 
-.single-page-item-card .single-page-content > .menu-item-header-content,
 .single-page-item-card .single-page-content > .expanded-item-description,
 .single-page-item-card .single-page-content > .single-page-prices-section,
 .single-page-item-card .single-page-content > .single-page-options-section {
@@ -164,10 +199,6 @@
 
 .single-page-item-card .menu-item-slideshow .expanded-image-indicators {
     margin: 0.5rem auto 0.75rem;
-}
-
-.single-page-item-card .menu-item-header-content {
-    padding-top: 1em;
 }
 
 /* Legacy single-page carousel — same horizontal snap as promo ads */

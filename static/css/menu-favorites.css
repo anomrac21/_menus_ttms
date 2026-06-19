@@ -3,11 +3,43 @@
   position: relative;
 }
 
+.menu-item-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.menu-item-title-row > .menu-favorite-btn {
+  position: static;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  margin-top: 0.12em;
+}
+
+.menu-item-title-row > .menu-item-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.menu-item-title-row .menu-item-title-text {
+  display: block;
+}
+
+.menu-item-title-row .menu-item-promo-badge {
+  display: block;
+  margin-top: 0.25em;
+  text-align: inherit;
+}
+
 .single-page-content > .menu-favorite-btn {
-  position: absolute;
-  top: 0.5em;
-  right: 0.5em;
-  z-index: var(--ttms-z-card-controls, 8);
+  display: none;
 }
 
 .single-page-content > .menu-image-actions {
@@ -196,18 +228,12 @@
   border: 0;
 }
 
-.single-page-title-row {
-  display: block;
-  padding-right: 3.25rem;
-  margin: 0;
-}
-
 .single-page-title {
   margin: 0;
   padding: 0;
 }
 
-/* Menu cards — heart pinned top-right of card */
+/* Legacy: favorite no longer pinned top-right when inside .menu-item-title-row */
 .menu-item-card > .menu-favorite-btn {
   position: absolute;
   top: 0.35em;
@@ -215,13 +241,11 @@
   z-index: var(--ttms-z-card-controls, 8);
 }
 
-.menu-item-card .menu-item-title {
-  display: block;
-  padding-right: 3.25rem;
-  box-sizing: border-box;
+.menu-item-card > .menu-item-title-row > .menu-favorite-btn {
+  position: static;
 }
 
-.menu-item-card .menu-item-title a {
+.menu-item-card .menu-item-title-row .menu-item-title a {
   display: inline;
   margin: 0;
   padding: 0;
@@ -310,16 +334,6 @@
 
 .menu-favorite-btn__svg path {
   fill: currentColor;
-  stroke: currentColor;
-}
-
-.menu-favorite-btn:not(.is-favorited) .menu-favorite-btn__icon--outline .menu-favorite-btn__svg path {
-  fill: none;
-  stroke: currentColor;
-}
-
-.menu-favorite-btn.is-favorited .menu-favorite-btn__icon--filled .menu-favorite-btn__svg path {
-  fill: currentColor;
   stroke: none;
 }
 
@@ -333,7 +347,6 @@
 
 .menu-favorite-btn.is-favorited .menu-favorite-btn__icon--filled {
   display: inline-flex;
-  margin-inline-start: -1px;
 }
 
 .menu-favorites-toast {

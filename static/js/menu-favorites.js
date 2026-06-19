@@ -134,7 +134,17 @@
 
     if (favorited) {
       dishKeys.delete(itemKey);
-      setButtonState(btn, false);
+    } else {
+      dishKeys.add(itemKey);
+    }
+    var nowFavorited = dishKeys.has(itemKey);
+    document.querySelectorAll('.menu-favorite-btn').forEach(function (b) {
+      if ((b.getAttribute('data-favorite-key') || '') === itemKey) {
+        setButtonState(b, nowFavorited);
+      }
+    });
+
+    if (favorited) {
       showToast('Removed from favorites.');
       window.dispatchEvent(new CustomEvent('ttms:favorite-toggled', {
         detail: {
@@ -144,8 +154,6 @@
         }
       }));
     } else {
-      dishKeys.add(itemKey);
-      setButtonState(btn, true);
       showToast('Saved to favorites.');
       window.dispatchEvent(new CustomEvent('ttms:favorite-toggled', {
         detail: {

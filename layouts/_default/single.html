@@ -20,6 +20,14 @@
       {{ $imagesArray := $imgData.imagesArray }}
       {{$hasPromoDiscount := and $activePromo (eq (index $activePromo "type") "percent_off") (index $activePromo "value")}}
       <div class="menu-item-card expanded menu-item-card--has-image single-page-item-card" data-item-url="{{ .RelPermalink }}" data-item-expanded="true" aria-expanded="true" data-prices-array="{{ $pricesArrayForCard | jsonify }}" data-promotions="{{ (.Params.promotions | default (slice)) | jsonify }}" data-images-array="{{ $imagesArray | jsonify }}" data-regular-images-array="{{ $imgData.regularImagesArray | jsonify }}">
+        <div class="menu-item-header-content single-page-header-top">
+          <div class="menu-item-title-row">
+            {{ partial "components/menu-favorite-btn.html" . }}
+            <h3 class="menu-item-title single-page-title">
+              <span class="menu-item-title-text">{{ .Title }}</span>{{ if and $activePromo (index $activePromo "label") }} <span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}
+            </h3>
+          </div>
+        </div>
         {{ $category :=  .Section  }}
         {{ $categoryurl := .Parent.Permalink }}
         {{if .Params.prices}}
@@ -60,13 +68,7 @@
           </div>
             {{ end }}
             {{- end -}}
-            {{ partial "components/menu-favorite-btn.html" . }}
 
-            <div class="menu-item-header-content">
-              <h3 class="menu-item-title single-page-title">
-                <span class="menu-item-title-text">{{ .Title }}</span>{{ if and $activePromo (index $activePromo "label") }} <span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}
-              </h3>
-            </div>
           <div class="expanded-item-description single-page-description">
               {{ .Content }}
           </div>

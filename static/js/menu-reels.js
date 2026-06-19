@@ -822,6 +822,9 @@
     }
     if (loading) loading.style.display = 'none';
 
+    var favSlot = modal.querySelector('#menuReelsItemModalFavoriteSlot');
+    if (favSlot) favSlot.innerHTML = '';
+
     modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
     modal.classList.remove('is-open');
@@ -848,6 +851,21 @@
       } catch (err) { /* fall through */ }
     }
     window.location.assign(href);
+  }
+
+  function syncMenuReelsModalFavoriteButton(card, modal) {
+    if (!card || !modal) return;
+    var slot = modal.querySelector('#menuReelsItemModalFavoriteSlot');
+    if (!slot) return;
+    slot.innerHTML = '';
+    var cardBtn = card.querySelector('.menu-item-title-row .menu-favorite-btn, .menu-favorite-btn');
+    if (!cardBtn) return;
+    var btn = cardBtn.cloneNode(true);
+    btn.classList.remove('is-busy');
+    slot.appendChild(btn);
+    if (window.TTMSMenuFavorites && typeof window.TTMSMenuFavorites.refresh === 'function') {
+      window.TTMSMenuFavorites.refresh();
+    }
   }
 
   function openMenuReelsItemModal(card) {
@@ -882,6 +900,8 @@
         titleLinkEl.setAttribute('aria-hidden', 'true');
       }
     }
+
+    syncMenuReelsModalFavoriteButton(card, modal);
 
     var loading = modal.querySelector('.menu-reels-item-modal__loading');
     var data = modal.querySelector('.menu-reels-item-modal__data');

@@ -253,15 +253,13 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* ── Favorite button (align with card chrome; do not override .is-favorited) ── */
-.menu-item-card > .menu-favorite-btn {
-    top: 0.5em;
-    right: 0.5em;
+/* ── Favorite button (inline in title row) ── */
+.menu-item-card .menu-item-title-row > .menu-favorite-btn {
     width: 2rem;
     height: 2rem;
 }
 
-.menu-item-card > .menu-favorite-btn:hover {
+.menu-item-card .menu-item-title-row > .menu-favorite-btn:hover {
     transform: scale(1.08);
 }
 

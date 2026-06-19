@@ -291,9 +291,10 @@
 button.menu-smash-pass-card__dislikes {
     border: none;
     background: transparent;
-    color: inherit;
+    color: #ef4444;
     font: inherit;
     font-size: inherit;
+    font-weight: bolder;
     line-height: inherit;
     pointer-events: all;
     cursor: pointer;
@@ -987,9 +988,5 @@ button.menu-smash-pass-card__dislikes:disabled {
 }
 
 .single-page-item-card .single-page-content > .menu-favorite-btn {
-    top: 0.65rem;
-    right: 0.65rem;
-}
-
-.menu-item-card:has(> .menu-add-photo-btn):has(> .menu-favorite-btn) .menu-item-title {
+    display: none;
 }
