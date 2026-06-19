@@ -22,7 +22,11 @@
 					</span>
 				</a>
 			{{ end }}
+			<button type="button" class="header-menublock-toggle" id="menublockToggle" aria-label="Open menu categories" aria-controls="menublock" aria-expanded="false" aria-haspopup="true">
+				<span class="header-menublock-toggle__icon" aria-hidden="true"><span></span><span></span><span></span></span>
+			</button>
 		</div>
+		<div class="header-menublock-backdrop" id="menublockBackdrop" hidden aria-hidden="true"></div>
 		<nav class="header-nav" aria-label="Menu categories">
 		<ul id="menublock" class="menublock">
 		{{- if and (not .IsHome) -}}

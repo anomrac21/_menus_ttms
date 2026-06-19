@@ -395,15 +395,19 @@
     if (!panel) return;
 
     if (panel.classList.contains('loader-hide-right')) {
+      if (typeof window.closeAllUiPanels === 'function') {
+        window.closeAllUiPanels({ keepAccountDashboard: true, skipReelsModal: true });
+      } else {
+        if (typeof window.closeCart === 'function') {
+          window.closeCart();
+        }
+        if (typeof window.closeDashboard === 'function') {
+          window.closeDashboard();
+        }
+      }
       panel.classList.remove('loader-hide-right');
       document.body.classList.add('modal-open');
       document.body.classList.add('account-dashboard-open');
-      if (typeof window.closeCart === 'function') {
-        window.closeCart();
-      }
-      if (typeof window.closeDashboard === 'function') {
-        window.closeDashboard();
-      }
       setTimeout(function () {
         fetchAndUpdateUserInfo({ syncSession: true });
       }, 200);
@@ -426,6 +430,10 @@
   }
 
   function closeAll() {
+    if (typeof window.closeAllUiPanels === 'function') {
+      window.closeAllUiPanels();
+      return;
+    }
     if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
       window.ensureMenuReelsItemModalClosed();
     }

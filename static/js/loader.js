@@ -334,11 +334,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (menublockEl) {
                     menublockEl.scrollTo(0, 0);
                 }
-                if (typeof window.bindMenublockScroll === 'function') {
+                if (typeof window.scheduleReinitHeaderMenublock === 'function') {
+                    window.scheduleReinitHeaderMenublock('barba-enter');
+                } else if (typeof window.reinitHeaderMenublock === 'function') {
+                    window.reinitHeaderMenublock();
+                } else if (typeof window.bindMenublockScroll === 'function') {
                     window.bindMenublockScroll();
-                }
-                if (typeof window.updateHeaderMenublockScroll === 'function') {
-                    window.updateHeaderMenublockScroll();
                 }
                 if (typeof closeCart === 'function') {
                     closeCart();
@@ -373,19 +374,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 const savedScroll = localStorage.getItem("headerScroll");
-                if (savedScroll !== null) {
+                const restoreMenublockScroll =
+                    savedScroll !== null &&
+                    !(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+                if (restoreMenublockScroll) {
                     requestAnimationFrame(() => {
                         const menublock = document.getElementById("menublock");
                         if (menublock) {
                             menublock.scrollLeft = savedScroll;
                         }
-                        if (typeof window.bindMenublockScroll === 'function') {
+                        if (typeof window.scheduleReinitHeaderMenublock === 'function') {
+                            window.scheduleReinitHeaderMenublock('barba-enter-scroll');
+                        } else if (typeof window.reinitHeaderMenublock === 'function') {
+                            window.reinitHeaderMenublock();
+                        } else if (typeof window.bindMenublockScroll === 'function') {
                             window.bindMenublockScroll();
                         }
                         if (typeof window.updateHeaderMenublockScroll === 'function') {
                             window.updateHeaderMenublockScroll();
                         }
                     });
+                } else if (typeof window.scheduleReinitHeaderMenublock === 'function') {
+                    window.scheduleReinitHeaderMenublock('barba-enter-fallback');
+                } else if (typeof window.reinitHeaderMenublock === 'function') {
+                    window.reinitHeaderMenublock();
                 } else if (typeof window.bindMenublockScroll === 'function') {
                     window.bindMenublockScroll();
                 }

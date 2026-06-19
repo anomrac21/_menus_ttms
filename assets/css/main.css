@@ -1468,7 +1468,9 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 #main p {
-    margin-inline:.8em;color: var(--menu-text-color,#fff)
+    margin-inline:.8em;
+    color: var(--menu-text-color,#fff);
+    pointer-events: all;
 }
 
 #main .selected p {

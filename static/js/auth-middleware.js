@@ -110,6 +110,8 @@ const AuthMiddleware = {
 
   setupLogoutButtons() {
     document.querySelectorAll('[data-logout]').forEach((btn) => {
+      if (btn.dataset.logoutBound === '1') return;
+      btn.dataset.logoutBound = '1';
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
 
@@ -144,66 +146,90 @@ const AuthMiddleware = {
   },
 
   updateSettingsLoginLink() {
-    const el = document.getElementById('settingsLoginOrDashboard');
-    if (!el) return;
-
+    const loginEl = document.getElementById('settingsLoginOrDashboard');
+    const accountEl = document.getElementById('settingsAccountLink');
     const hubAccount = 'https://www.ttmenus.com/account/';
-    const labelEl = el.querySelector('.footer-settings-popover__btn-label');
-    const iconEl = el.querySelector('.footer-settings-popover__btn-icon i');
 
-    function setLinkContent(iconClass, label) {
-      if (iconEl) {
-        iconEl.className = 'fa ' + iconClass;
-      } else {
-        el.innerHTML =
-          '<span class="footer-settings-popover__btn-icon" aria-hidden="true"><i class="fa ' +
-          iconClass +
-          '"></i></span><span class="footer-settings-popover__btn-label">' +
-          label +
-          '</span>';
-        return;
-      }
-      if (labelEl) {
-        labelEl.textContent = label;
-      } else {
-        el.appendChild(
-          Object.assign(document.createElement('span'), {
-            className: 'footer-settings-popover__btn-label',
-            textContent: label,
-          })
-        );
-      }
-    }
+    if (!loginEl && !accountEl) return;
 
-    el.removeAttribute('target');
-    el.removeAttribute('rel');
-
-    if (!AuthClient.isAuthenticated()) {
-      el.href = '/login/';
-      el.setAttribute('data-barba', 'prevent');
-      el.removeAttribute('target');
-      el.removeAttribute('rel');
-      setLinkContent('fa-user', 'Login');
-      return;
-    }
-
+    const isAuth = AuthClient.isAuthenticated();
     const hasAdminAccess =
+      isAuth &&
       window.AuthClientAccess &&
       typeof window.AuthClientAccess.hasClientAccess === 'function' &&
       window.AuthClientAccess.hasClientAccess();
 
-    if (hasAdminAccess) {
-      el.href = '/dashboard/';
-      el.setAttribute('data-barba', 'prevent');
-      el.removeAttribute('target');
-      el.removeAttribute('rel');
-      setLinkContent('fa-th-large', 'Dashboard');
-    } else {
-      el.href = hubAccount;
-      el.removeAttribute('data-barba');
-      el.target = '_blank';
-      el.rel = 'noopener noreferrer';
-      setLinkContent('fa-user', 'My account');
+    function setLinkContent(el, iconClass, label) {
+      if (!el) return;
+      const labelEl = el.querySelector('.footer-settings-popover__btn-label');
+      const iconEl = el.querySelector('.footer-settings-popover__btn-icon i');
+      if (iconEl) {
+        iconEl.className = 'fa ' + iconClass;
+      }
+      if (labelEl) {
+        labelEl.textContent = label;
+      }
+    }
+
+    if (accountEl) {
+      accountEl.removeAttribute('data-barba');
+      accountEl.removeAttribute('target');
+      accountEl.removeAttribute('rel');
+
+      if (hasAdminAccess) {
+        accountEl.href = '/dashboard/';
+        accountEl.setAttribute('data-barba', 'prevent');
+        setLinkContent(accountEl, 'fa-th-large', 'Dashboard');
+      } else {
+        accountEl.href = hubAccount;
+        accountEl.target = '_blank';
+        accountEl.rel = 'noopener noreferrer';
+        setLinkContent(accountEl, 'fa-user', 'My account');
+      }
+    }
+
+    if (loginEl && !accountEl) {
+      const labelEl = loginEl.querySelector('.footer-settings-popover__btn-label');
+      const iconEl = loginEl.querySelector('.footer-settings-popover__btn-icon i');
+
+      function setLegacyLinkContent(iconClass, label) {
+        if (iconEl) {
+          iconEl.className = 'fa ' + iconClass;
+        } else {
+          loginEl.innerHTML =
+            '<span class="footer-settings-popover__btn-icon" aria-hidden="true"><i class="fa ' +
+            iconClass +
+            '"></i></span><span class="footer-settings-popover__btn-label">' +
+            label +
+            '</span>';
+          return;
+        }
+        if (labelEl) {
+          labelEl.textContent = label;
+        }
+      }
+
+      loginEl.removeAttribute('target');
+      loginEl.removeAttribute('rel');
+
+      if (!isAuth) {
+        loginEl.href = '/login/';
+        loginEl.setAttribute('data-barba', 'prevent');
+        setLegacyLinkContent('fa-user', 'Login');
+        return;
+      }
+
+      if (hasAdminAccess) {
+        loginEl.href = '/dashboard/';
+        loginEl.setAttribute('data-barba', 'prevent');
+        setLegacyLinkContent('fa-th-large', 'Dashboard');
+      } else {
+        loginEl.href = hubAccount;
+        loginEl.removeAttribute('data-barba');
+        loginEl.target = '_blank';
+        loginEl.rel = 'noopener noreferrer';
+        setLegacyLinkContent('fa-user', 'My account');
+      }
     }
   },
 

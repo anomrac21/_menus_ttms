@@ -1594,6 +1594,9 @@ function toggleCart(){
     var cart = document.getElementById("cart");
     var footerBtns = document.getElementById("footerBtns");
     if(cart.classList.contains('cart-hidden')){
+      if (typeof window.closeAllUiPanels === 'function') {
+        window.closeAllUiPanels({ keepCart: true, skipReelsModal: true });
+      }
       if (order.length > 0 && order.some(o => o.promotions || o.pricesArray)) {
         refreshCartWithPromos();
       }
@@ -3099,6 +3102,9 @@ function toggleFooterAccessibility(){
     var footerBtns = document.getElementById("footerBtns");
     var settingsToggle = footerBtns && footerBtns.querySelector('.footer-dock__action--settings');
     if(settings.classList.contains('hide')){
+      if (typeof window.closeAllUiPanels === 'function') {
+        window.closeAllUiPanels({ keepSettings: true, skipReelsModal: true });
+      }
       settings.classList.remove('hide');
       settings.setAttribute('aria-hidden', 'false');
       footerBtns.classList.add('bigfont');
@@ -3107,13 +3113,17 @@ function toggleFooterAccessibility(){
       footerBtns.classList.remove('grad2');
       if (settingsToggle) settingsToggle.setAttribute('aria-expanded', 'true');
     }else{
-      settings.classList.add('hide');
-      settings.setAttribute('aria-hidden', 'true');
-      footerBtns.classList.add('grad2');
-      footerBtns.classList.remove('grad1');
-      footerBtns.classList.remove('bigfont');
-      footerBtns.classList.add('smallfont');
-      if (settingsToggle) settingsToggle.setAttribute('aria-expanded', 'false');
+      if (typeof window.closeFooterSettings === 'function') {
+        window.closeFooterSettings();
+      } else {
+        settings.classList.add('hide');
+        settings.setAttribute('aria-hidden', 'true');
+        footerBtns.classList.add('grad2');
+        footerBtns.classList.remove('grad1');
+        footerBtns.classList.remove('bigfont');
+        footerBtns.classList.add('smallfont');
+        if (settingsToggle) settingsToggle.setAttribute('aria-expanded', 'false');
+      }
     }
   }
 

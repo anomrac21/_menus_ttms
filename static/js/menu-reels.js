@@ -938,21 +938,60 @@
     closeActiveReelsItemModalFromUI();
   }
 
-  function closeAllPanelsBeforeNavigation(options) {
+  function closeAllUiPanels(options) {
     options = options || {};
+
     if (!options.skipReelsModal) {
       forceCloseMenuReelsItemModal();
     }
-    if (typeof window.closeCart === 'function') window.closeCart();
-    if (typeof window.closeDashboard === 'function') window.closeDashboard();
-    if (typeof window.closeAccountDashboard === 'function') window.closeAccountDashboard();
-    if (typeof window.toggleSearch === 'function') {
-      var search = document.getElementById('search');
-      if (search && !search.classList.contains('hide-search')) window.toggleSearch();
+
+    if (!options.keepCart && typeof window.closeCart === 'function') {
+      window.closeCart();
     }
-    document.body.classList.remove('modal-open');
-    document.body.classList.remove('account-dashboard-open');
-    document.body.classList.remove('menu-reels-item-modal-open');
+    if (!options.keepDashboard && typeof window.closeDashboard === 'function') {
+      window.closeDashboard();
+    }
+    if (!options.keepAccountDashboard && typeof window.closeAccountDashboard === 'function') {
+      window.closeAccountDashboard();
+    }
+    if (!options.keepSearch) {
+      if (typeof window.closeSearch === 'function') {
+        window.closeSearch();
+      } else if (typeof window.toggleSearch === 'function') {
+        var search = document.getElementById('search');
+        if (search && !search.classList.contains('hide-search')) {
+          window.toggleSearch();
+        }
+      }
+    }
+    if (!options.keepSettings && typeof window.closeFooterSettings === 'function') {
+      window.closeFooterSettings();
+    }
+    if (!options.keepMenublock) {
+      if (typeof window.closeMenublockDropdown === 'function') {
+        window.closeMenublockDropdown();
+      } else {
+        document.body.classList.remove('menublock-dropdown-open');
+        var mainHeader = document.querySelector('.main-header');
+        if (mainHeader) {
+          mainHeader.classList.remove('menublock-dropdown-open');
+        }
+      }
+    }
+
+    if (!options.keepDashboard && !options.keepAccountDashboard) {
+      document.body.classList.remove('modal-open');
+    }
+    if (!options.keepAccountDashboard) {
+      document.body.classList.remove('account-dashboard-open');
+    }
+    if (!options.skipReelsModal) {
+      document.body.classList.remove('menu-reels-item-modal-open');
+    }
+  }
+
+  function closeAllPanelsBeforeNavigation(options) {
+    closeAllUiPanels(Object.assign({ skipReelsModal: false }, options || {}));
   }
 
   function isSameOriginNavigationHref(href) {
@@ -1004,6 +1043,11 @@
     scrollToSlide(slide, behavior || 'smooth');
   }
 
+  function scrollToMenuReelsCard(card, behavior) {
+    scrollToSlide(card, behavior || 'smooth');
+  }
+
+  window.scrollToMenuReelsCard = scrollToMenuReelsCard;
   window.openReelsMenuItemOrder = openReelsMenuItemOrder;
   window.getMenuReelsTrack = getTrack;
   window.scrollMenuReelTo = scrollToSectionId;
@@ -1015,6 +1059,7 @@
   window.openMenuReelsItemModal = openMenuReelsItemModal;
   window.closeMenuReelsItemModal = closeMenuReelsItemModal;
   window.ensureMenuReelsItemModalClosed = ensureMenuReelsItemModalClosed;
+  window.closeAllUiPanels = closeAllUiPanels;
   window.closeAllPanelsBeforeNavigation = closeAllPanelsBeforeNavigation;
   window.getMenuReelsModalActiveCard = getMenuReelsModalActiveCard;
   window.getMenuReelsItemModalTargets = getMenuReelsItemModalTargets;

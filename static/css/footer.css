@@ -150,6 +150,18 @@
     line-height: 1.2;
 }
 
+.footer-settings-popover__btn--logout {
+    border-color: color-mix(in srgb, #e74c3c 35%, rgba(255, 255, 255, 0.14));
+}
+
+.footer-settings-popover__btn--logout .footer-settings-popover__btn-icon {
+    color: color-mix(in srgb, #ff8a80 88%, var(--footer-settings-accent));
+}
+
+.footer-settings-popover__btn--logout:hover {
+    border-color: color-mix(in srgb, #e74c3c 55%, rgba(255, 255, 255, 0.22));
+}
+
 /* Bottom action dock */
 #footerBtns.footer-dock {
     --footer-dock-accent: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);

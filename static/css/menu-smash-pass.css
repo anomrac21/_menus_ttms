@@ -238,8 +238,9 @@
 .menu-smash-pass-card__info {
     flex-shrink: 0;
     position: relative;
+    pointer-events: none;
     z-index: 3;
-    padding: 0.55rem 0.7rem 0.6rem;
+    padding: 0.55rem 3rem 0.6rem;
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
     color: #fff;
 }
@@ -285,6 +286,31 @@
     align-items: center;
     gap: 0.2rem;
     width: max-content;
+}
+
+button.menu-smash-pass-card__dislikes {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    pointer-events: all;
+    cursor: pointer;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button.menu-smash-pass-card__dislikes:hover,
+button.menu-smash-pass-card__dislikes:focus-visible {
+    color: #ff8a80;
+    outline: none;
+    text-decoration: underline;
+}
+
+button.menu-smash-pass-card__dislikes:disabled {
+    opacity: 0.55;
+    cursor: wait;
 }
 
 .menu-smash-pass__actions {

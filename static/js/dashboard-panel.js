@@ -41,19 +41,23 @@
     if (!dashboard) return;
 
     if (dashboard.classList.contains(HIDDEN_CLASS)) {
-      if (typeof window.closeCart === 'function') {
-        window.closeCart();
-      }
-      var search = document.getElementById('search');
-      if (
-        search &&
-        !search.classList.contains('hide-search') &&
-        typeof window.toggleSearch === 'function'
-      ) {
-        window.toggleSearch();
-      }
-      if (typeof window.closeAccountDashboard === 'function') {
-        window.closeAccountDashboard();
+      if (typeof window.closeAllUiPanels === 'function') {
+        window.closeAllUiPanels({ keepDashboard: true, skipReelsModal: true });
+      } else {
+        if (typeof window.closeCart === 'function') {
+          window.closeCart();
+        }
+        var search = document.getElementById('search');
+        if (
+          search &&
+          !search.classList.contains('hide-search') &&
+          typeof window.toggleSearch === 'function'
+        ) {
+          window.toggleSearch();
+        }
+        if (typeof window.closeAccountDashboard === 'function') {
+          window.closeAccountDashboard();
+        }
       }
 
       dashboard.classList.remove(HIDDEN_CLASS);

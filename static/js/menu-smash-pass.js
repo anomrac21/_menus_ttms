@@ -624,8 +624,174 @@
   function buildDislikesCountHtml(dislikes) {
     if (!canViewSmashPassDislikes()) return '';
     return (
-      '<span class="menu-smash-pass-card__dislikes" data-count="dislikes">✕ ' + dislikes + '</span>'
+      '<button type="button" class="menu-smash-pass-card__dislikes" data-count="dislikes" data-smash-admin-delete="1" aria-label="Delete photo (' +
+      dislikes +
+      ' dislikes)" title="Admin: delete this photo">✕ ' +
+      dislikes +
+      '</button>'
     );
+  }
+
+  function siteClientId() {
+    var c = cfg();
+    return (c && c.clientId) || window.SITE_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+  }
+
+  function getAuthToken() {
+    if (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) {
+      return AuthClient.getAccessToken();
+    }
+    try {
+      return localStorage.getItem('ttmenus_access_token');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function findItemInInstance(inst, imageId) {
+    if (!inst || !inst.items || !imageId) return null;
+    for (var i = 0; i < inst.items.length; i++) {
+      if (inst.items[i].id === imageId) return inst.items[i];
+    }
+    return null;
+  }
+
+  function removePhotoFromInstances(imageId) {
+    queryRoots().forEach(function (root) {
+      var inst = getInstance(root);
+      if (!inst || !inst.items.length) return;
+
+      var hadItem = false;
+      inst.items = inst.items.filter(function (item) {
+        if (item.id === imageId) {
+          hadItem = true;
+          return false;
+        }
+        return true;
+      });
+
+      if (!hadItem) return;
+
+      if (!inst.items.length) {
+        inst.deckIndex = 0;
+      } else if (inst.deckIndex >= inst.items.length) {
+        inst.deckIndex = 0;
+      }
+
+      inst.busy = false;
+      renderStack(inst);
+    });
+  }
+
+  function refreshMenuImagesForItem(item) {
+    if (!item || !item.menu_item_path) return;
+    var targetPath = normalizePath(item.menu_item_path);
+    document.querySelectorAll('[data-menu-item-path]').forEach(function (host) {
+      if (normalizePath(host.getAttribute('data-menu-item-path')) !== targetPath) return;
+      if (typeof window.refreshMenuItemImages === 'function') {
+        window.refreshMenuItemImages(host);
+      }
+    });
+  }
+
+  function promptDeleteSmashPassPhoto(inst, imageId) {
+    if (!canViewSmashPassDislikes()) return;
+
+    var item = findItemInInstance(inst, imageId);
+    if (!item || isLocalItem(item) || isAddPhotoItem(item)) return;
+
+    if (
+      !window.confirm(
+        'Delete this community photo? It will be removed from the menu and cannot be undone.'
+      )
+    ) {
+      return;
+    }
+
+    deleteSmashPassPhoto(item);
+  }
+
+  async function deleteSmashPassPhoto(item) {
+    if (!item || !item.id || isLocalItem(item)) return;
+
+    var token = getAuthToken();
+    if (!token) {
+      alert('Please sign in as a menu admin to delete photos.');
+      return;
+    }
+
+    var base = apiBase();
+    if (!base) {
+      alert('Menu image service is not configured.');
+      return;
+    }
+
+    queryRoots().forEach(function (root) {
+      var inst = getInstance(root);
+      if (!inst) return;
+      inst.busy = true;
+      updateVoteActions(inst);
+    });
+
+    var deleteUrl =
+      base +
+      '/admin/menu-images/' +
+      encodeURIComponent(item.id) +
+      '?client_id=' +
+      encodeURIComponent(siteClientId());
+
+    try {
+      var res = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          Accept: 'application/json',
+        },
+      });
+      var json = await res.json().catch(function () {
+        return {};
+      });
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to delete photo.');
+      }
+
+      if (feedCache.data) {
+        feedCache.data = feedCache.data.filter(function (entry) {
+          return entry.id !== item.id;
+        });
+      }
+
+      removePhotoFromInstances(item.id);
+      refreshMenuImagesForItem(item);
+    } catch (err) {
+      alert(err.message || 'Could not delete photo. Try again.');
+      queryRoots().forEach(function (root) {
+        var inst = getInstance(root);
+        if (!inst) return;
+        inst.busy = false;
+        updateVoteActions(inst);
+      });
+    }
+  }
+
+  function bindAdminDeleteActions(inst) {
+    if (!canViewSmashPassDislikes()) return;
+    if (!inst.root || inst.root._ttmsAdminDeleteBound) return;
+    inst.root._ttmsAdminDeleteBound = true;
+
+    inst.root.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-smash-admin-delete]');
+      if (!btn || !inst.root.contains(btn) || inst.busy) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      var card = btn.closest('.menu-smash-pass-card');
+      if (!card) return;
+      var imageId = card.getAttribute('data-image-id');
+      if (!imageId) return;
+
+      promptDeleteSmashPassPhoto(inst, imageId);
+    });
   }
 
   function buildMediaHtml(preview, srcPath, isDraft, layered) {
@@ -1214,6 +1380,7 @@
     if (generation !== globalGen) return;
 
     bindVoteActions(inst);
+    bindAdminDeleteActions(inst);
     inst.gen += 1;
     var localGen = inst.gen;
     inst.busy = false;

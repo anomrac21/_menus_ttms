@@ -32,11 +32,17 @@
     if (typeof window.updateLocationStatuses === 'function') {
       window.updateLocationStatuses();
     }
-    if (typeof window.bindMenublockScroll === 'function') {
-      window.bindMenublockScroll();
-    }
-    if (typeof window.updateHeaderMenublockScroll === 'function') {
-      window.updateHeaderMenublockScroll();
+    if (typeof window.scheduleReinitHeaderMenublock === 'function') {
+      window.scheduleReinitHeaderMenublock('page-reinit');
+    } else if (typeof window.reinitHeaderMenublock === 'function') {
+      window.reinitHeaderMenublock();
+    } else {
+      if (typeof window.bindMenublockScroll === 'function') {
+        window.bindMenublockScroll();
+      }
+      if (typeof window.updateHeaderMenublockScroll === 'function') {
+        window.updateHeaderMenublockScroll();
+      }
     }
     if (typeof window.bindDashboardTriggers === 'function') {
       window.bindDashboardTriggers();
