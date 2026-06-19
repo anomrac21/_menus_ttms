@@ -35,10 +35,19 @@
       z-index: var(--ttms-z-header-dropdown, 210);
     }
     .main-header.menublock-dropdown-open .header-nav {
-      max-height: min(72vh, 72dvh, calc(100vh - var(--ttms-header-height, 5em)));
+      max-height: none;
+      height: auto;
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
+      overflow: visible;
+    }
+    .main-header.menublock-dropdown-open #menublock {
+      max-height: min(26rem, calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
+      overflow-y: scroll;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
     .header-menublock-toggle { display: inline-flex !important; }
     .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
@@ -68,10 +77,19 @@
     z-index: var(--ttms-z-header-dropdown, 210);
   }
   html.ttms-mobile-menublock .main-header.menublock-dropdown-open .header-nav {
-    max-height: min(72vh, 72dvh, calc(100vh - var(--ttms-header-height, 5em)));
+    max-height: none;
+    height: auto;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+    overflow: visible;
+  }
+  html.ttms-mobile-menublock .main-header.menublock-dropdown-open #menublock {
+    max-height: min(26rem, calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
+    overflow-y: scroll;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
   html.ttms-mobile-menublock .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
     flex-basis: var(--ttms-dashboard-btn-slot, 2.6em);

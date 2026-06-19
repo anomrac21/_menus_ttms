@@ -334,6 +334,112 @@
     menublock.addEventListener('pointercancel', finishPointer, { passive: true });
   }
 
+  function bindMenublockDropdownTouchScroll() {
+    if (document.documentElement._ttmsMenublockDropdownTouchScrollBound) {
+      return;
+    }
+    document.documentElement._ttmsMenublockDropdownTouchScrollBound = true;
+
+    var activeEl = null;
+    var axis = null;
+    var startPrimary = 0;
+    var startScroll = 0;
+    var moved = false;
+
+    function getMobileScrollTarget(target) {
+      if (!isMobileMenublockMode()) {
+        return null;
+      }
+      if (!document.body.classList.contains('menublock-dropdown-open')) {
+        return null;
+      }
+      var menublock = document.getElementById('menublock');
+      if (!menublock || !menublock.contains(target)) {
+        return null;
+      }
+      if (menublock.scrollHeight <= menublock.clientHeight + 1) {
+        return null;
+      }
+      return menublock;
+    }
+
+    function getDesktopScrollTarget(target) {
+      if (isMobileMenublockMode()) {
+        return null;
+      }
+      var menublock = document.getElementById('menublock');
+      if (!menublock || !menublock.contains(target)) {
+        return null;
+      }
+      if (menublock.scrollWidth <= menublock.clientWidth + 1) {
+        return null;
+      }
+      return menublock;
+    }
+
+    function resetTouchScroll() {
+      activeEl = null;
+      axis = null;
+      moved = false;
+    }
+
+    document.addEventListener(
+      'touchstart',
+      function (e) {
+        if (!e.touches || e.touches.length !== 1) {
+          return;
+        }
+        var mobileTarget = getMobileScrollTarget(e.target);
+        var desktopTarget = getDesktopScrollTarget(e.target);
+        activeEl = mobileTarget || desktopTarget;
+        if (!activeEl) {
+          return;
+        }
+        axis = mobileTarget ? 'y' : 'x';
+        startPrimary = axis === 'y' ? e.touches[0].clientY : e.touches[0].clientX;
+        startScroll = axis === 'y' ? activeEl.scrollTop : activeEl.scrollLeft;
+        moved = false;
+      },
+      { passive: true, capture: true }
+    );
+
+    document.addEventListener(
+      'touchmove',
+      function (e) {
+        if (!activeEl || !e.touches || e.touches.length !== 1) {
+          return;
+        }
+        var primary = axis === 'y' ? e.touches[0].clientY : e.touches[0].clientX;
+        var delta = startPrimary - primary;
+        if (Math.abs(delta) < 4) {
+          return;
+        }
+        moved = true;
+        if (axis === 'y') {
+          var maxTop = activeEl.scrollHeight - activeEl.clientHeight;
+          activeEl.scrollTop = Math.max(0, Math.min(maxTop, startScroll + delta));
+        } else {
+          var maxLeft = activeEl.scrollWidth - activeEl.clientWidth;
+          activeEl.scrollLeft = Math.max(0, Math.min(maxLeft, startScroll + delta));
+        }
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+      },
+      { passive: false, capture: true }
+    );
+
+    ['touchend', 'touchcancel'].forEach(function (eventName) {
+      document.addEventListener(
+        eventName,
+        function () {
+          resetTouchScroll();
+        },
+        { passive: true, capture: true }
+      );
+    });
+  }
+
   function bindMenublockScroll() {
     var menublock = document.getElementById('menublock');
     if (!menublock || menublock._ttmsMenublockScrollBound) {
@@ -563,6 +669,7 @@
     resetHeaderLogoBindings();
 
     bindMenublockDropdown();
+    bindMenublockDropdownTouchScroll();
     bindMenublockScroll();
     bindMenublockTouchNav();
     bindHeaderLogoClick();

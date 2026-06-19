@@ -110,6 +110,7 @@
 
   function isTouchOnBlockedTarget(target) {
     if (!target || !target.closest) return true;
+    if (document.body.classList.contains('menublock-dropdown-open')) return true;
     if (document.body.classList.contains('menu-reels-item-modal-open')) return true;
     if (target.closest(BLOCKED_SELECTORS)) return true;
     return false;
@@ -118,6 +119,7 @@
   function canUsePullToRefresh(target) {
     if (!isPullToRefreshEnabled()) return false;
     if (reloading) return false;
+    if (document.body.classList.contains('menublock-dropdown-open')) return false;
     if (document.body.classList.contains('menu-reels-item-modal-open')) return false;
     if (!isAtPageTop()) return false;
     if (isTouchOnBlockedTarget(target)) return false;
