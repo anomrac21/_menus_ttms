@@ -443,12 +443,37 @@
     );
   }
 
+  function buildActionsMenu(item) {
+    if (window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.buildMarkup === 'function') {
+      return window.TTMSMenuItemActions.buildMarkup(item);
+    }
+    var url = String(item.url || '').trim();
+    var title = item.linkTitle || item.name || '';
+    return (
+      '<div class="menu-item-actions" data-menu-item-actions data-item-url="' +
+      escapeHtml(url) +
+      '" data-item-title="' +
+      escapeHtml(title) +
+      '">' +
+      '<button type="button" class="menu-item-actions__trigger" aria-haspopup="menu" aria-expanded="false" aria-label="More options for ' +
+      escapeHtml(title) +
+      '" title="More options">' +
+      '<i class="fa fa-ellipsis-v" aria-hidden="true"></i>' +
+      '</button>' +
+      '<div class="menu-item-actions__menu" role="menu" hidden>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem" disabled aria-disabled="true">Comment</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site" style="display: none;">Edit</button>' +
+      '</div></div>'
+    );
+  }
+
   function buildTitleRow(item, titleHtml, authEnabled) {
     if (!titleHtml) return '';
     return (
       '<div class="menu-item-title-row">' +
       buildFavoriteBtn(item, authEnabled) +
       titleHtml +
+      buildActionsMenu(item) +
       '</div>'
     );
   }

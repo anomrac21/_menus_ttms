@@ -310,6 +310,18 @@ class ClientAdManager {
         data-ad-url="${finalUrl}"
         data-catalog-index="${adIndex}"
       >
+        ${window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.buildPromotionHeaderMarkup === 'function'
+          ? window.TTMSMenuItemActions.buildPromotionHeaderMarkup({
+              title: ad.title,
+              url: finalUrl,
+              promoUrl: ad.url || ad.link || (ad.title ? `/promotions/${adId}/` : finalUrl),
+              catalogIndex: adIndex,
+              adId: `menu-ad-${slideId}`,
+              image: String(typeof img === 'string' ? img : img?.image || imagePath || '')
+                .replace(/^https?:\/\/[^/]+/i, '')
+                .replace(/^\//, ''),
+            })
+          : ''}
         <span>Sponsored</span>
         <img src="${imagePath}" class="ad-portrait-bg" alt="${safeTitle}" loading="${loading}" decoding="async"${fetchAttr}>
         <img src="${imagePath}" class="ad-portrait" alt="${safeTitle}" loading="${loading}" decoding="async"${fetchAttr}>
@@ -473,7 +485,7 @@ class ClientAdManager {
       if (!url || slide.dataset.reelsClickBound === '1') return;
       slide.dataset.reelsClickBound = '1';
       slide.addEventListener('click', (e) => {
-        if (e.target.closest('.ad-unmute-btn')) return;
+        if (e.target.closest('.ad-unmute-btn, .menu-item-actions, .menu-favorite-btn, .ads-reels-slide__title-row')) return;
         const t = e.target;
         const onMedia =
           (t.tagName === 'IMG' &&

@@ -565,6 +565,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/admin-users.js" defer></script>
 {{- if $menuPublicSite -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-favorites.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-actions.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-cards.css") }}
 {{- if .IsHome -}}
 <link rel="stylesheet" href="/css/menu-reels.css"/>
@@ -573,6 +574,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 {{- end -}}
 <script src="/js/menu-favorite-icons.js" defer></script>
 <script src="/js/menu-favorites.js" defer></script>
+<script src="/js/menu-item-actions.js" defer></script>
 {{- end -}}
 {{- end -}}
 {{- if and site.Params.menuImageService.enabled $menuPublicSite -}}

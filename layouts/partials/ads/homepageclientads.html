@@ -29,6 +29,7 @@
             data-daysofweek="{{ . | jsonify }}"
             {{- end -}}
           >
+            {{ partial "components/ads-reels-slide-header.html" (dict "title" $adstitle "url" $finalurl "promoUrl" $adurl "catalogIndex" $catalogIndex "slug" $adId "adId" (printf "menu-ad-%s" $slideId) "image" $img) }}
             <span>Sponsored</span>
             <img src="{{ $imgSrc }}" class="ad-portrait-bg" alt="{{ $adstitle }}" loading="{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }} fetchpriority="high"{{ end }}>
             <img src="{{ $imgSrc }}" class="ad-portrait" alt="{{ $adstitle }}" loading="{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }}eager{{ else }}lazy{{ end }}" decoding="async"{{ if and (eq $catalogIndex 0) (eq $slideIndex 0) }} fetchpriority="high"{{ end }}>

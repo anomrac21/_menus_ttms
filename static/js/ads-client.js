@@ -875,11 +875,44 @@
         <img src="${this.escapeHtml(displayMediaUrl)}" class="ad-portrait" alt="${safeAlt}">`;
     }
 
-    rootEl.innerHTML = `<span>Sponsored</span>${mediaHTML}`;
+    if (mode === 'reel') {
+      if (ad.title) rootEl.setAttribute('data-ad-title', ad.title);
+      if (linkUrl) rootEl.setAttribute('data-ad-url', linkUrl);
+      if (ad.id) rootEl.setAttribute('data-ad-id', ad.id);
+    }
+
+    var promoHeaderHTML = '';
+    if (
+      mode === 'reel' &&
+      window.TTMSMenuItemActions &&
+      typeof window.TTMSMenuItemActions.buildPromotionHeaderMarkup === 'function'
+    ) {
+      promoHeaderHTML = window.TTMSMenuItemActions.buildPromotionHeaderMarkup({
+        title: ad.title || '',
+        url: linkUrl || '',
+        promoUrl:
+          (ad.title &&
+            '/promotions/' +
+              String(ad.title)
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '') +
+              '/') ||
+          linkUrl ||
+          '',
+        catalogIndex: rootEl.getAttribute('data-catalog-index') || '',
+        adId: ad.id || rootEl.getAttribute('data-ad-id') || '',
+        image: String(mediaUrl || '')
+          .replace(/^https?:\/\/[^/]+/i, '')
+          .replace(/^\//, ''),
+      });
+    }
+
+    rootEl.innerHTML = promoHeaderHTML + `<span>Sponsored</span>${mediaHTML}`;
 
     if (mode === 'reel' && linkUrl && linkUrl !== '#') {
       rootEl.addEventListener('click', (e) => {
-        if (e.target.closest('.ad-unmute-btn')) return;
+        if (e.target.closest('.ad-unmute-btn, .menu-item-actions, .menu-favorite-btn, .ads-reels-slide__title-row')) return;
         const t = e.target;
         const onVideo = t.matches?.('video.ad-video');
         const onImg =

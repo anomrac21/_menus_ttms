@@ -213,6 +213,16 @@ body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
     z-index: var(--ttms-z-reel-inner-controls, 4);
 }
 
+#menu-reels-track .ads-reels-slide > .ads-reels-slide__title-row > .menu-favorite-btn {
+    margin-top: 0;
+    width: 2.1rem;
+    height: 2.1rem;
+}
+
+#menu-reels-track .ads-reels-slide:has(.ads-reels-slide__title-row) > span {
+    top: 3.35em;
+}
+
 #homepage-ads-container .ads-loading,
 #homepage-ads-container .homepage-ads-empty {
     min-height: 100%;
@@ -437,7 +447,6 @@ body.menu-search-active .menu-reels-track {
 .menu-header.menu-reels-slide {
     color: var(--main-text, #fff);
     text-align: center;
-    padding-inline: 1rem;
 }
 
 .menu-header.menu-reels-slide .headerstyle h2.center.title {
@@ -681,11 +690,21 @@ body.menu-reels-item-modal-open .menu-reels-track,
     display: contents;
 }
 
+.menu-reels-item-modal__actions-slot {
+    display: contents;
+}
+
 .menu-reels-item-modal__title-row > .menu-favorite-btn {
     margin-top: 0;
     flex-shrink: 0;
     width: 2rem;
     height: 2rem;
+}
+
+.menu-reels-item-modal__title-row > .menu-item-actions {
+    margin-top: 0;
+    margin-left: 0;
+    flex-shrink: 0;
 }
 
 .menu-reels-item-modal__title {

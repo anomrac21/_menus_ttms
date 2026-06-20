@@ -5380,6 +5380,57 @@ document.addEventListener('DOMContentLoaded', async function() {
     return u.replace(/\/+$/, '') + '/';
   }
 
+  function focusEditTargetFromSessionStorage() {
+    var promoCatalogIndex = '';
+    var promoId = '';
+    try {
+      promoCatalogIndex = sessionStorage.getItem('editMenuFocusPromoCatalogIndex') || '';
+      if (promoCatalogIndex) sessionStorage.removeItem('editMenuFocusPromoCatalogIndex');
+      promoId = sessionStorage.getItem('editMenuFocusPromoId') || '';
+      if (promoId) sessionStorage.removeItem('editMenuFocusPromoId');
+    } catch (e) { /* ignore */ }
+
+    try {
+      var doc = iframe.contentDocument;
+      if (!doc) return;
+
+      if (promoCatalogIndex !== '' || promoId) {
+        var slide = null;
+        doc.querySelectorAll('article.ads-reels-slide').forEach(function(el) {
+          if (slide) return;
+          if (promoCatalogIndex !== '' && el.getAttribute('data-catalog-index') === String(promoCatalogIndex)) {
+            slide = el;
+          } else if (promoId && el.getAttribute('data-ad-id') === promoId) {
+            slide = el;
+          }
+        });
+        if (slide) {
+          var promoEditBtn = slide.querySelector('.dashboard-edit-ad-btn-wrap .dashboard-edit-btn');
+          if (promoEditBtn) promoEditBtn.click();
+        }
+        return;
+      }
+
+      var itemUrl = '';
+      try {
+        itemUrl = sessionStorage.getItem('editMenuFocusItemUrl') || '';
+        if (itemUrl) sessionStorage.removeItem('editMenuFocusItemUrl');
+      } catch (e2) { /* ignore */ }
+      if (!itemUrl) return;
+
+      var targetNorm = normalizeItemUrlForMatch(itemUrl);
+      var card = null;
+      doc.querySelectorAll('.menu-item-card').forEach(function(el) {
+        if (card) return;
+        var du = el.getAttribute('data-item-url') || '';
+        if (normalizeItemUrlForMatch(du) === targetNorm) card = el;
+      });
+      if (!card) return;
+      var editBtn = card.querySelector('.dashboard-edit-card-btn-wrap .dashboard-edit-btn');
+      if (editBtn) editBtn.click();
+    } catch (err) { /* ignore */ }
+  }
+
   function findMenuItemsContainerForSectionSlug(doc, sectionSlug) {
     if (!doc) return null;
     var header = getSectionHeaderForSlug(doc, sectionSlug);
@@ -7984,6 +8035,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }, 50);
       }, 150);
     }
+    setTimeout(focusEditTargetFromSessionStorage, 450);
   });
 
   if (asideEl && btnTogglePanel) {

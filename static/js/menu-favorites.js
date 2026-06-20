@@ -1,10 +1,14 @@
 /**
- * Menu dish favorites — auth-service /api/v1/me/favorites (requires params.auth.enabled + signed-in user).
+ * Menu dish & promotion favorites — auth-service /api/v1/me/favorites (requires params.auth.enabled + signed-in user).
  */
 (function () {
   'use strict';
 
-  var dishKeys = new Set();
+  var FAVORITE_KINDS = ['dish', 'promotion'];
+  var favoriteKeySets = {
+    dish: new Set(),
+    promotion: new Set(),
+  };
 
   function authReady() {
     return window.AuthClient && typeof AuthClient.getFavorites === 'function';
@@ -19,6 +23,83 @@
       (typeof window.SITE_CLIENT_ID === 'string' && window.SITE_CLIENT_ID) ||
       (typeof window.CLIENT_ID === 'string' && window.CLIENT_ID) ||
       ''
+    );
+  }
+
+  function keysForKind(kind) {
+    var k = kind || 'dish';
+    if (!favoriteKeySets[k]) favoriteKeySets[k] = new Set();
+    return favoriteKeySets[k];
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function favoriteIconMarkup(kind) {
+    var icons = window.TTMS_MENU_FAVORITE_ICONS;
+    if (icons && icons[kind]) return icons[kind];
+    return '';
+  }
+
+  function promoSlugFromAdId(adId) {
+    return String(adId || '')
+      .replace(/^menu-ad-/, '')
+      .replace(/-\d+$/, '');
+  }
+
+  function promoImagePathFromSlide(slide) {
+    if (!slide || !slide.querySelector) return '';
+    var img = slide.querySelector('img.ad-portrait, img.ad-portrait-bg');
+    if (!img) return '';
+    var src = img.getAttribute('src') || '';
+    return src.replace(/^https?:\/\/[^/]+/i, '').replace(/^\//, '');
+  }
+
+  function buildPromoFavoriteMarkup(promo) {
+    if (!window.AUTH_CONFIG) return '';
+    var cid = clientId();
+    var adId = (promo && promo.adId) || '';
+    var slug = promoSlugFromAdId(adId);
+    if (!cid || !slug) return '';
+    var title = (promo && (promo.title || promo.linkTitle || promo.name)) || '';
+    var promoUrl =
+      (promo && promo.promoUrl) ||
+      (slug ? '/promotions/' + slug + '/' : promo && promo.url) ||
+      '';
+    var image = (promo && promo.image) || '';
+    var itemKey = cid + '|promotions/' + slug;
+    return (
+      '<button type="button" class="menu-favorite-btn"' +
+      ' data-favorite-kind="promotion"' +
+      ' data-favorite-key="' +
+      escapeHtml(itemKey) +
+      '"' +
+      ' data-favorite-title="' +
+      escapeHtml(title) +
+      '"' +
+      ' data-favorite-url="' +
+      escapeHtml(promoUrl) +
+      '"' +
+      ' data-favorite-image="' +
+      escapeHtml(image) +
+      '"' +
+      ' data-favorite-section="promotions"' +
+      ' aria-pressed="false"' +
+      ' aria-label="Save ' +
+      escapeHtml(title) +
+      ' to favorites"' +
+      ' title="Save to favorites">' +
+      '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--outline" aria-hidden="true">' +
+      favoriteIconMarkup('outline') +
+      '</span>' +
+      '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--filled" aria-hidden="true">' +
+      favoriteIconMarkup('filled') +
+      '</span></button>'
     );
   }
 
@@ -71,25 +152,33 @@
   }
 
   async function refreshFavoriteStates() {
+    FAVORITE_KINDS.forEach(function (kind) {
+      favoriteKeySets[kind] = new Set();
+    });
+
     if (!isLoggedIn()) {
-      dishKeys.clear();
       document.querySelectorAll('.menu-favorite-btn').forEach(function (btn) {
         setButtonState(btn, false);
       });
       return;
     }
-    var result = await AuthClient.getFavorites('dish');
-    dishKeys.clear();
-    if (result.success && result.data && Array.isArray(result.data.favorites)) {
-      result.data.favorites.forEach(function (f) {
-        if (f && f.item_key) {
-          dishKeys.add(String(f.item_key));
-        }
-      });
+
+    for (var i = 0; i < FAVORITE_KINDS.length; i++) {
+      var kind = FAVORITE_KINDS[i];
+      var result = await AuthClient.getFavorites(kind);
+      if (result.success && result.data && Array.isArray(result.data.favorites)) {
+        result.data.favorites.forEach(function (f) {
+          if (f && f.item_key) {
+            keysForKind(kind).add(String(f.item_key));
+          }
+        });
+      }
     }
+
     document.querySelectorAll('.menu-favorite-btn').forEach(function (btn) {
+      var kind = btn.getAttribute('data-favorite-kind') || 'dish';
       var key = btn.getAttribute('data-favorite-key') || '';
-      setButtonState(btn, dishKeys.has(key));
+      setButtonState(btn, keysForKind(kind).has(key));
     });
   }
 
@@ -100,7 +189,8 @@
       return;
     }
 
-    var favorited = dishKeys.has(itemKey);
+    var keys = keysForKind(kind);
+    var favorited = keys.has(itemKey);
     btn.classList.add('is-busy');
 
     var result;
@@ -133,13 +223,16 @@
     }
 
     if (favorited) {
-      dishKeys.delete(itemKey);
+      keys.delete(itemKey);
     } else {
-      dishKeys.add(itemKey);
+      keys.add(itemKey);
     }
-    var nowFavorited = dishKeys.has(itemKey);
+    var nowFavorited = keys.has(itemKey);
     document.querySelectorAll('.menu-favorite-btn').forEach(function (b) {
-      if ((b.getAttribute('data-favorite-key') || '') === itemKey) {
+      if (
+        (b.getAttribute('data-favorite-kind') || 'dish') === kind &&
+        (b.getAttribute('data-favorite-key') || '') === itemKey
+      ) {
         setButtonState(b, nowFavorited);
       }
     });
@@ -225,6 +318,8 @@
   window.TTMSMenuFavorites = {
     init: init,
     refresh: refreshFavoriteStates,
+    buildPromoFavoriteMarkup: buildPromoFavoriteMarkup,
+    promoImagePathFromSlide: promoImagePathFromSlide,
   };
 
   function registerBarbaFavorites() {

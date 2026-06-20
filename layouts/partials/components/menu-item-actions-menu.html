@@ -1,0 +1,57 @@
+{{- $url := "" -}}
+{{- $title := "" -}}
+{{- $actionsKind := "menu-item" -}}
+{{- $catalogIndex := "" -}}
+{{- $adId := "" -}}
+{{- if .RelPermalink -}}
+  {{- $url = .RelPermalink -}}
+  {{- $title = .LinkTitle | default .Title -}}
+{{- else -}}
+  {{- $url = index . "url" | default "" -}}
+  {{- $title = index . "title" | default "" -}}
+  {{- $actionsKind = index . "actionsKind" | default "menu-item" -}}
+  {{- $catalogIndex = index . "catalogIndex" | default "" -}}
+  {{- $adId = index . "adId" | default "" -}}
+{{- end -}}
+<div
+  class="menu-item-actions"
+  data-menu-item-actions
+  data-actions-kind="{{ $actionsKind }}"
+  data-item-url="{{ $url }}"
+  data-item-title="{{ $title }}"
+  {{- if eq $actionsKind "promotion" -}}
+  data-promotion-catalog-index="{{ $catalogIndex }}"
+  data-ad-id="{{ $adId }}"
+  {{- end -}}
+>
+  <button
+    type="button"
+    class="menu-item-actions__trigger"
+    aria-haspopup="menu"
+    aria-expanded="false"
+    aria-label="More options for {{ $title }}"
+    title="More options"
+  >
+    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+  </button>
+  <div class="menu-item-actions__menu" role="menu" hidden>
+    <button
+      type="button"
+      class="menu-item-actions__option menu-item-actions__option--comment"
+      role="menuitem"
+      disabled
+      aria-disabled="true"
+    >
+      Comment
+    </button>
+    <button
+      type="button"
+      class="menu-item-actions__option menu-item-actions__option--edit"
+      role="menuitem"
+      data-auth="admin-site"
+      style="display: none;"
+    >
+      Edit
+    </button>
+  </div>
+</div>

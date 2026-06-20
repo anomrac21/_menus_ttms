@@ -125,6 +125,7 @@ Renders menu item card for list and tag term pages.
           <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
           {{- if and $activePromo (index $activePromo "label") -}}<span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{- end -}}
         </h3>
+        {{ partial "components/menu-item-actions-menu.html" . }}
       </div>
       <div class="menu-item-row-middle">
         <div class="menu-item-description">

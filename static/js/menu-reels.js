@@ -825,6 +825,9 @@
     var favSlot = modal.querySelector('#menuReelsItemModalFavoriteSlot');
     if (favSlot) favSlot.innerHTML = '';
 
+    var actionsSlot = modal.querySelector('#menuReelsItemModalActionsSlot');
+    if (actionsSlot) actionsSlot.innerHTML = '';
+
     modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
     modal.classList.remove('is-open');
@@ -868,6 +871,25 @@
     }
   }
 
+  function syncMenuReelsModalActionsMenu(card, modal) {
+    if (!card || !modal) return;
+    var slot = modal.querySelector('#menuReelsItemModalActionsSlot');
+    if (!slot) return;
+    slot.innerHTML = '';
+    var cardMenu = card.querySelector('.menu-item-title-row .menu-item-actions, .menu-item-actions');
+    if (!cardMenu) return;
+    var menu = cardMenu.cloneNode(true);
+    menu.classList.remove('is-open');
+    var trigger = menu.querySelector('.menu-item-actions__trigger');
+    var panel = menu.querySelector('.menu-item-actions__menu');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (panel) panel.hidden = true;
+    slot.appendChild(menu);
+    if (window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.init === 'function') {
+      window.TTMSMenuItemActions.init();
+    }
+  }
+
   function openMenuReelsItemModal(card) {
     var modal = getMenuReelsItemModal();
     if (!modal || !card) return;
@@ -902,6 +924,7 @@
     }
 
     syncMenuReelsModalFavoriteButton(card, modal);
+    syncMenuReelsModalActionsMenu(card, modal);
 
     var loading = modal.querySelector('.menu-reels-item-modal__loading');
     var data = modal.querySelector('.menu-reels-item-modal__data');

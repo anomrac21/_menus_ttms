@@ -1,0 +1,11 @@
+{{- $title := .title -}}
+{{- $url := .url | default "" -}}
+{{- $catalogIndex := .catalogIndex -}}
+{{- $adId := .adId | default "" -}}
+<div class="ads-reels-slide__title-row menu-item-title-row">
+  {{ partial "components/menu-promo-favorite-btn.html" . }}
+  <h3 class="ads-reels-slide__title menu-item-title">
+    <span class="menu-item-title-text">{{ $title }}</span>
+  </h3>
+  {{ partial "components/menu-item-actions-menu.html" (dict "url" $url "title" $title "actionsKind" "promotion" "catalogIndex" $catalogIndex "adId" $adId) }}
+</div>

@@ -26,6 +26,7 @@
             <h3 class="menu-item-title single-page-title">
               <span class="menu-item-title-text">{{ .Title }}</span>{{ if and $activePromo (index $activePromo "label") }} <span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{ end }}
             </h3>
+            {{ partial "components/menu-item-actions-menu.html" . }}
           </div>
         </div>
         {{ $category :=  .Section  }}
