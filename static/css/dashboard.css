@@ -4617,6 +4617,14 @@
   color: #c4b5fd;
 }
 
+.dashboard-analytics-trends-legend-item--orders .fa {
+  color: #f472b6;
+}
+
+.dashboard-analytics-trends-legend-item--search .fa {
+  color: #67e8f9;
+}
+
 .dashboard-analytics-trends-bar--pageviews {
   fill: rgba(96, 165, 250, 0.9);
 }
@@ -4631,6 +4639,14 @@
 
 .dashboard-analytics-trends-bar--cart {
   fill: rgba(167, 139, 250, 0.85);
+}
+
+.dashboard-analytics-trends-bar--orders {
+  fill: rgba(244, 114, 182, 0.88);
+}
+
+.dashboard-analytics-trends-bar--search {
+  fill: rgba(103, 232, 249, 0.88);
 }
 
 @media (max-width: 640px) {

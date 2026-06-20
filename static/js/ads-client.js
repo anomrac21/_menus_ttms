@@ -837,6 +837,7 @@
       trackImpressionNow = true,
       mode = 'panel',
       previewStrip = false,
+      showTitleRow = false,
     } = opts;
 
     if (trackImpressionNow) {
@@ -884,6 +885,7 @@
     var promoHeaderHTML = '';
     if (
       mode === 'reel' &&
+      showTitleRow &&
       window.TTMSMenuItemActions &&
       typeof window.TTMSMenuItemActions.buildPromotionHeaderMarkup === 'function'
     ) {

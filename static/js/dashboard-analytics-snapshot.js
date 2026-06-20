@@ -336,6 +336,8 @@
           visits: Number(row.visits) || 0,
           menuItemViews: Number(row.menuItemViews) || 0,
           addToCart: Number(row.addToCart) || 0,
+          orderSubmissions: Number(row.orderSubmissions) || 0,
+          searches: Number(row.searches) || 0,
         };
       })
       .sort(function (a, b) {
@@ -350,7 +352,7 @@
 
     rows = normalizeTrendRows(rows);
     var hasData = rows.some(function (r) {
-      return r.pageViews + r.visits + r.menuItemViews + r.addToCart > 0;
+      return r.pageViews + r.visits + r.menuItemViews + r.addToCart + r.orderSubmissions + r.searches > 0;
     });
 
     if (!hasData) {
@@ -368,7 +370,7 @@
     var maxVal = 1;
 
     rows.forEach(function (r) {
-      maxVal = Math.max(maxVal, r.pageViews, r.visits, r.menuItemViews, r.addToCart);
+      maxVal = Math.max(maxVal, r.pageViews, r.visits, r.menuItemViews, r.addToCart, r.orderSubmissions, r.searches);
     });
 
     var series = [
@@ -376,6 +378,8 @@
       { key: 'visits', label: 'Visits', className: 'dashboard-analytics-trends-bar--visits' },
       { key: 'menuItemViews', label: 'Menu item views', className: 'dashboard-analytics-trends-bar--menu' },
       { key: 'addToCart', label: 'Add to cart', className: 'dashboard-analytics-trends-bar--cart' },
+      { key: 'orderSubmissions', label: 'Orders', className: 'dashboard-analytics-trends-bar--orders' },
+      { key: 'searches', label: 'Searches', className: 'dashboard-analytics-trends-bar--search' },
     ];
     var seriesCount = series.length;
     var barGroupW = innerW / rows.length;
@@ -454,7 +458,7 @@
     chart.innerHTML = svg;
     chart.setAttribute(
       'aria-label',
-      'Analytics activity chart for the last 30 days with daily page views, visits, menu item views, and add to cart'
+      'Analytics activity chart for the last 30 days with daily page views, visits, menu item views, add to cart, orders, and searches'
     );
   }
 
@@ -497,6 +501,8 @@
           setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
           setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
           setMetric('metricAddToCart', d.addToCart, 'Add to cart');
+          setMetric('metricOrderSubmissions', d.orderSubmissions, 'Orders submitted');
+          setMetric('metricSearches', d.searches, 'Searches');
           setAnalyticsNoteState(
             noteEl,
             'ok',

@@ -274,6 +274,21 @@
   }
 
   function setupLocationTracking() {
+    function trackLocationDetail(detail) {
+      if (!detail || !window.ttmsAnalytics) return;
+      window.ttmsAnalytics.trackLocationSelection({
+        name: detail.name || detail.address || '',
+        address: detail.address || '',
+        whatsapp: detail.whatsapp || '',
+        lat: detail.lat,
+        lng: detail.lng,
+      });
+    }
+
+    window.addEventListener('ttms:location-selected', function (e) {
+      trackLocationDetail((e && e.detail) || {});
+    });
+
     var locationSelect = document.getElementById('locationSelect');
     if (!locationSelect) {
       setTimeout(setupLocationTracking, 1000);
@@ -282,13 +297,76 @@
     locationSelect.addEventListener('change', function () {
       var selectedOption = this.options[this.selectedIndex];
       if (!selectedOption || !selectedOption.value || !window.ttmsAnalytics) return;
-      window.ttmsAnalytics.trackLocationSelection({
+      trackLocationDetail({
         name: selectedOption.text,
         address: selectedOption.getAttribute('data-address') || '',
         whatsapp: selectedOption.value,
         lat: selectedOption.getAttribute('data-lat'),
         lng: selectedOption.getAttribute('data-lng'),
+        source: 'dropdown',
       });
+    });
+  }
+
+  function setupCartTracking() {
+    wrapOnce(window, 'removeAllItems', function () {
+      track('Cart', 'Clear', String((window.order && window.order.length) || 0));
+    });
+    wrapOnce(window, 'toggleCart', function () {
+      var cart = document.getElementById('cart');
+      var isOpen = cart && !cart.classList.contains('cart-hidden');
+      track('Cart', isOpen ? 'Open' : 'Close');
+    });
+  }
+
+  function setupShareTracking() {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.js-share-btn');
+      if (!btn) return;
+      track(
+        'Engagement',
+        'Share',
+        btn.dataset.shareTitle || document.title || '',
+        btn.dataset.shareUrl || window.location.href
+      );
+    });
+  }
+
+  function setupTaxonomyTabTracking() {
+    document.addEventListener('click', function (e) {
+      var tab = e.target.closest('[data-taxonomy-tab]');
+      if (!tab) return;
+      track('Navigation', 'Taxonomy Tab', tab.getAttribute('data-taxonomy-tab') || tab.textContent.trim());
+    });
+  }
+
+  function setupSearchResultTracking() {
+    document.addEventListener('click', function (e) {
+      var card = e.target.closest('.menu-item-card');
+      if (!card || card.hidden) return;
+      var searchbox = document.getElementById('searchbox');
+      if (!searchbox || !searchbox.value.trim()) return;
+      var titleNode = card.querySelector('.menu-item-title-text, .menu-item-title a, h3');
+      track('Search', 'Result Click', titleNode ? titleNode.textContent.trim() : '', searchbox.value.trim());
+    });
+  }
+
+  function setupNotificationTracking() {
+    if (!window.NotificationService) return;
+    wrapOnce(window.NotificationService, 'subscribe', function () {
+      track('Notification', 'Subscribe Attempt');
+    });
+    wrapOnce(window.NotificationService, 'unsubscribe', function () {
+      track('Notification', 'Unsubscribe');
+    });
+  }
+
+  function setupPullToRefreshTracking() {
+    window.addEventListener('ttms:pull-refresh', function () {
+      track('Engagement', 'Pull to Refresh');
+    });
+    document.addEventListener('ttms:pull-refresh', function () {
+      track('Engagement', 'Pull to Refresh');
     });
   }
 
@@ -365,6 +443,8 @@
         setupMenuItemTrackingLate();
         setupWhatsAppModeTracking();
         setupPaymentTracking();
+        setupCartTracking();
+        setupNotificationTracking();
       }, ms);
     });
   }
@@ -385,6 +465,12 @@
     setupWhatsAppModeTracking();
     setupAdClickTracking();
     setupLocationTracking();
+    setupCartTracking();
+    setupShareTracking();
+    setupTaxonomyTabTracking();
+    setupSearchResultTracking();
+    setupNotificationTracking();
+    setupPullToRefreshTracking();
     setupPWATracking();
     setupDashboardTracking();
     setupSocialMediaTracking();

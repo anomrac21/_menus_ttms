@@ -270,7 +270,9 @@ class TTMSAnalytics {
   observeAdImpressions() {
     if (!this.enabled) return;
     setTimeout(() => {
-      const adElements = document.querySelectorAll('.ad-panel, .ads, section[id*="ad"]');
+      const adElements = document.querySelectorAll(
+        '.ad-panel, .ads, .ads-reels-slide, #menu-reels-sponsored-ads, section[id*="ad"]'
+      );
 
       if (adElements.length === 0) {
         if (this.isDevHost()) return;
@@ -377,19 +379,60 @@ class TTMSAnalytics {
    * Track scroll depth
    */
   setupScrollTracking() {
-    let scrollDepths = [25, 50, 75, 100];
-    let trackedDepths = new Set();
-    
-    window.addEventListener('scroll', () => {
-      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-      
-      scrollDepths.forEach(depth => {
-        if (scrollPercent >= depth && !trackedDepths.has(depth)) {
-          trackedDepths.add(depth);
-          this.trackEvent('Engagement', 'Scroll Depth', `${depth}%`);
+    if (this._scrollTrackingBound) return;
+    this._scrollTrackingBound = true;
+    this.trackedScrollDepths = this.trackedScrollDepths || new Set();
+
+    const scrollDepths = [25, 50, 75, 100];
+    const self = this;
+
+    function trackContainerScroll(container, scopeKey) {
+      const scrollTop =
+        container === window ? window.scrollY : container.scrollTop;
+      const scrollHeight =
+        container === window
+          ? document.documentElement.scrollHeight
+          : container.scrollHeight;
+      const clientHeight =
+        container === window ? window.innerHeight : container.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      if (maxScroll <= 0) return;
+
+      const scrollPercent = (scrollTop / maxScroll) * 100;
+      scrollDepths.forEach((depth) => {
+        const key = scopeKey + ':' + depth;
+        if (scrollPercent >= depth && !self.trackedScrollDepths.has(key)) {
+          self.trackedScrollDepths.add(key);
+          const label = scopeKey === 'page' ? `${depth}%` : `${scopeKey} ${depth}%`;
+          self.trackEvent('Engagement', 'Scroll Depth', label);
         }
       });
-    }, { passive: true });
+    }
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        trackContainerScroll(window, 'page');
+      },
+      { passive: true }
+    );
+
+    const bindReelsScroll = () => {
+      const reelsTrack = document.getElementById('menu-reels-track');
+      if (!reelsTrack || reelsTrack.dataset.ttmsScrollTracked === '1') return;
+      reelsTrack.dataset.ttmsScrollTracked = '1';
+      reelsTrack.addEventListener(
+        'scroll',
+        () => {
+          trackContainerScroll(reelsTrack, 'Menu Reels');
+        },
+        { passive: true }
+      );
+    };
+
+    bindReelsScroll();
+    document.addEventListener('ttms:page-enter', bindReelsScroll);
+    window.addEventListener('ttms:page-enter', bindReelsScroll);
   }
 
   /**
@@ -421,6 +464,7 @@ class TTMSAnalytics {
     this.adImpressionRetries = 0;
     this.trackedAdImpressions.clear();
     this.trackedAdClicks.clear();
+    this.trackedScrollDepths = new Set();
 
     if (typeof _paq !== 'undefined') {
       _paq.push(['setDocumentTitle', document.domain + '/' + document.title]);

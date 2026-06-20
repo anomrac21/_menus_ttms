@@ -95,6 +95,7 @@
   function ensureAdsReelsSlideHeaders(root) {
     var scope = root || document;
     scope.querySelectorAll('article.ads-reels-slide:not(.menu-ad-scroll-end)').forEach(function (slide) {
+      if (slide.closest('#ads-reels-overlay')) return;
       if (slide.querySelector('.ads-reels-slide__title-row')) return;
       var title = slide.getAttribute('data-ad-title') || '';
       if (!title) return;

@@ -412,6 +412,18 @@
       card.setAttribute('aria-selected', 'true');
       window.currentOrderLocation = data;
       persistLocationChoice(data);
+      document.dispatchEvent(
+        new CustomEvent('ttms:location-selected', {
+          detail: {
+            name: data.address || '',
+            address: data.address || '',
+            whatsapp: data.whatsapp || '',
+            lat: data.lat,
+            lng: data.lng,
+            source: options.source || 'picker',
+          },
+        })
+      );
     }
 
     syncCartDropdown(data);
