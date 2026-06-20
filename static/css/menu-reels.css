@@ -529,7 +529,7 @@ body.menu-search-active .menu-reels-track {
 }
 
 .menu-header__item-count.is-count-loading .menu-header__item-count__value {
-    color: color-mix(in srgb, var(--selected-button-color3, #fcd000) 78%, var(--main-text, #fff));
+    color: color-mix(in srgb, var(--selected-button-color3, #fcd000) 78%, var(--main-text-color, #fff));
     animation: menu-section-count-pulse 0.85s ease-in-out infinite;
 }
 
