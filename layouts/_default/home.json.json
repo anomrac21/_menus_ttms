@@ -73,9 +73,13 @@
   {{- $freeMenu := eq $tier "free" -}}
 
   {{- $mappin := site.Data.mappin | default dict -}}
+  {{- $clientID := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+  {{- $logo := "/branding/favicon144.webp" -}}
 
   {{- $json := dict
       "title" .Title
+      "client_id" $clientID
+      "logo" $logo
       "tier" $tier
       "free_menu" $freeMenu
       "paid_menu" (not $freeMenu)

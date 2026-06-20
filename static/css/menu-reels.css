@@ -308,6 +308,7 @@ body.menu-search-active .menu-reels-track {
     margin: 0;
     padding: 0 1.25rem;
     text-align: center;
+    color: var(--menu-text-color, #fff);
 }
 
 .hero_logo_container .hero-intro p {
