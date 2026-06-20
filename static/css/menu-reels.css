@@ -412,7 +412,7 @@ body.menu-search-active .menu-reels-track {
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.02em;
-    color: var(--main-text, #fff);
+    color: var(--main-text-color, #fff);
     text-align: center;
 }
 
@@ -439,7 +439,6 @@ body.menu-search-active .menu-reels-track {
 }
 
 .menu-reels-slide--section-title .title a {
-    color: inherit;
     text-decoration: none;
 }
 

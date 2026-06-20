@@ -283,7 +283,7 @@
 }
 
 .menu-favorite-btn:not(.is-favorited) {
-  color: var(--favorite-outline);
+  color: var(--menu-text-color);
 }
 
 .menu-favorite-btn:not(.is-favorited):hover {

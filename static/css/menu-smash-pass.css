@@ -630,7 +630,7 @@ button.menu-smash-pass-card__dislikes:disabled {
     font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: 0.01em;
-    color: #f8fafc;
+    color: #f8fafc !important;
 }
 
 .menu-smash-pass-card__add-photo-hint {
@@ -638,7 +638,7 @@ button.menu-smash-pass-card__dislikes:disabled {
     max-width: 13em;
     font-size: 0.78rem;
     line-height: 1.35;
-    color: rgba(226, 232, 240, 0.72);
+    color: rgba(226, 232, 240, 0.72) !important;
 }
 
 .menu-smash-pass-card__add-photo-swipe {
