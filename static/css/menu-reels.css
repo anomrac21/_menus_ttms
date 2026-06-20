@@ -995,13 +995,14 @@ body.menu-reels-item-modal-open .menu-reels-track,
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 0.25rem;
+    gap: 0.5rem;
     padding-inline: 0;
     margin-block-end: .6em;
 }
 
 .menu-item-card.menu-reels-slide .menu-item-description {
     width: 100%;
+    padding-block-start: 1em;
     max-width: 22rem;
     text-align: center;
     font-size: 0.82rem;
@@ -1075,7 +1076,6 @@ body.menu-reels-item-modal-open .menu-reels-track,
 
     .menu-item-card.menu-reels-slide .menu-item-description {
         -webkit-line-clamp: 1;
-        font-size: 0.78rem;
     }
 
     .menu-item-card.menu-reels-slide .menu-item-options .sizes,
