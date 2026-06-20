@@ -1205,7 +1205,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .expanded-item-description p {
     margin: 0;
     padding: 0;
-    color: var(--selected-text-color1,#fff)!important
+    color: var(--main-text-color,#fff)!important;
 }
 
 .expanded-item-controls {
