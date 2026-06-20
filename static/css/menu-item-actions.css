@@ -16,7 +16,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: var(--main-text-color);
+  color: var(--menu-text-color);
   cursor: pointer;
   transition: color 0.2s ease, transform 0.2s ease;
 }
