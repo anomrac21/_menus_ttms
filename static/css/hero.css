@@ -85,6 +85,7 @@
 /* Logo Image */
 #logo {
     display: block;
+    border-radius: 1em;
     width: auto;
     height: auto;
     max-width: min(40vw, 320px);
