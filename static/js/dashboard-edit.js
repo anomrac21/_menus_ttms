@@ -6349,7 +6349,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                       else reelsTrack.insertBefore(itemBar, header.nextElementSibling);
                     }
                   });
-                  var promoTitle = reelsTrack.querySelector('.menu-reels-slide--section-title[data-reel-section="Promotions"]');
+                  var promoTitle = reelsTrack.querySelector('.menu-reels-slide[data-reel-section="Promotions"]');
                   if (promoTitle) {
                     var promoPrev = promoTitle.nextElementSibling;
                     if (!promoPrev || !promoPrev.classList || !promoPrev.classList.contains('dashboard-edit-add-promotion-bar')) {

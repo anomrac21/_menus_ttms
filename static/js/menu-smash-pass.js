@@ -104,6 +104,9 @@
     var paths = [];
 
     function add(path) {
+      if (path && typeof path === 'object') {
+        path = path.image || path.url || '';
+      }
       var p = normalizeImagePath(path);
       if (!p || seen[p] || isDraftAssetPath(p)) return;
       seen[p] = true;
@@ -270,7 +273,7 @@
     if (!card) return false;
     var trackRect = track ? track.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
     var cardRect = card.getBoundingClientRect();
-    var buffer = track ? trackRect.height : window.innerHeight;
+    var buffer = track ? trackRect.height * 0.5 : window.innerHeight * 0.5;
     return cardRect.bottom > trackRect.top - buffer && cardRect.top < trackRect.bottom + buffer;
   }
 
@@ -303,12 +306,14 @@
     lazyInitObserver = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting || !sharedFeedSnapshot) return;
+          if (!entry.isIntersecting) return;
           var card = entry.target;
           var root = card.querySelector('.menu-item-smash-pass');
-          if (root && !isRootInitialized(root)) {
-            initRootWithFeed(root, sharedFeedSnapshot.feed, sharedFeedSnapshot.generation);
-          }
+          if (!root || isRootInitialized(root)) return;
+          var snap = sharedFeedSnapshot;
+          var feed = snap ? snap.feed : [];
+          var generation = snap ? snap.generation : globalGen;
+          initRootWithFeed(root, feed, generation);
           lazyInitObserver.unobserve(card);
         });
       },
@@ -412,18 +417,18 @@
     if (isLocalItem(item) && typeof window.TtmsThumbor !== 'undefined') {
       if (window.TtmsThumbor.resolvePreviewSrc) {
         return (
-          window.TtmsThumbor.resolvePreviewSrc(url, { width: 720, height: 900 }) ||
-          window.TtmsThumbor.menuImageSrc(url, 'carousel') ||
+          window.TtmsThumbor.resolvePreviewSrc(url, { width: 400, height: 500 }) ||
+          window.TtmsThumbor.menuImageSrc(url, 'smash') ||
           ''
         );
       }
       if (window.TtmsThumbor.menuImageSrc) {
-        return window.TtmsThumbor.menuImageSrc(url, 'carousel') || '';
+        return window.TtmsThumbor.menuImageSrc(url, 'smash') || '';
       }
       return url.charAt(0) === '/' ? url : '/' + url;
     }
     if (typeof window.TtmsThumbor !== 'undefined' && window.TtmsThumbor.menuImageSrc) {
-      return window.TtmsThumbor.menuImageSrc(url, 'carousel') || url;
+      return window.TtmsThumbor.menuImageSrc(url, 'smash') || url;
     }
     return url;
   }
@@ -587,13 +592,14 @@
       position + ' of ' + inst.items.length + (unrated ? ' · ' + unrated + ' to rate' : '');
   }
 
-  function buildImageTag(preview, srcPath, isDraft, className) {
+  function buildImageTag(preview, srcPath, isDraft, className, lazy) {
     if (!preview && !srcPath) return '';
     return (
       '<img' +
       (preview ? ' src="' + escapeHtml(preview) + '"' : '') +
       (srcPath ? ' data-src-path="' + escapeHtml(srcPath) + '"' : '') +
       (isDraft && !preview ? ' data-draft-pending="1"' : '') +
+      (lazy ? ' loading="lazy"' : '') +
       ' alt="" class="' +
       className +
       '" draggable="false" decoding="async" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">'
@@ -800,12 +806,12 @@
       var baseClass = 'menu-smash-pass-card__img';
       return (
         '<div class="menu-smash-pass-card__img-stage">' +
-        buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--backdrop') +
-        buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--front') +
+        buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--backdrop', true) +
+        buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--front', false) +
         '</div>'
       );
     }
-    return buildImageTag(preview, srcPath, isDraft, 'menu-smash-pass-card__img');
+    return buildImageTag(preview, srcPath, isDraft, 'menu-smash-pass-card__img', true);
   }
 
   function buildCardHtml(item, stackIndex, compact) {
@@ -1409,6 +1415,34 @@
     }
   }
 
+  function refreshLazyItemSmashPass() {
+    if (!cfg() || !cfg().enabled) return;
+
+    if (sharedFeedSnapshot) {
+      setupLazyItemSmashPass(sharedFeedSnapshot.feed, sharedFeedSnapshot.generation);
+      return;
+    }
+
+    if (feedCache.promise) {
+      feedCache.promise
+        .then(function (feed) {
+          if (!sharedFeedSnapshot) {
+            sharedFeedSnapshot = { feed: feed || [], generation: globalGen };
+          }
+          setupLazyItemSmashPass(sharedFeedSnapshot.feed, sharedFeedSnapshot.generation);
+        })
+        .catch(function () {
+          if (!sharedFeedSnapshot) {
+            sharedFeedSnapshot = { feed: [], generation: globalGen };
+          }
+          setupLazyItemSmashPass([], sharedFeedSnapshot.generation);
+        });
+      return;
+    }
+
+    initMenuSmashPass();
+  }
+
   function stripReelsCardThumbnails() {
     if (!cfg() || !cfg().enabled) return;
     document.querySelectorAll('.menu-item-card.menu-reels-slide .menu-item-image-link').forEach(function (link) {
@@ -1430,9 +1464,14 @@
     });
 
     try {
-      var feed = await fetchSharedFeed();
-      if (generation !== globalGen) return;
-      sharedFeedSnapshot = { feed: feed, generation: generation };
+      var feed;
+      if (sharedFeedSnapshot && sharedFeedSnapshot.generation === globalGen) {
+        feed = sharedFeedSnapshot.feed;
+      } else {
+        feed = await fetchSharedFeed();
+        if (generation !== globalGen) return;
+        sharedFeedSnapshot = { feed: feed, generation: generation };
+      }
 
       introRoots.forEach(function (root) {
         initRootWithFeed(root, feed, generation);
@@ -1530,6 +1569,7 @@
   window.invalidateMenuSmashPassFeed = invalidateMenuSmashPassFeed;
   window.initMenuSmashPass = initMenuSmashPass;
   window.initMenuSmashPassRoot = initMenuSmashPassRoot;
+  window.refreshLazyItemSmashPass = refreshLazyItemSmashPass;
   window.destroyMenuSmashPass = destroyMenuSmashPass;
 
   function registerSmashPassAuthWatch() {
@@ -1594,4 +1634,5 @@
   }
 
   document.addEventListener('menuReelsFlattened', initMenuSmashPass);
+  window.addEventListener('homeMenuItemsLoaded', refreshLazyItemSmashPass);
 })();

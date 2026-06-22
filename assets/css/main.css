@@ -519,31 +519,7 @@ footer {
 }
 
 .menu-item-card.menu-item-unavailable {
-    opacity: .7;
-    pointer-events: none
-}
-
-.menu-item-card.menu-item-unavailable .menu-item-unavailable-overlay {
-    pointer-events: auto
-}
-
-.menu-item-unavailable-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: inherit;
-    z-index: 5
-}
-
-.menu-item-unavailable-overlay span {
-    padding: .5em 1em;
-    background: rgba(0,0,0,.7);
-    border-radius: .5em;
-    font-size: .9em;
-    text-align: center
+    opacity: .85
 }
 
 .menu-item-row-top {
@@ -723,7 +699,8 @@ footer {
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: medium
+    font-size: medium;
+    justify-content: center
 }
 
 .menu-item-options .sizes li,.menu-item-options .flavours li {
@@ -826,7 +803,7 @@ footer {
 .expanded-side-items {
     list-style: none;
     margin: 0;
-    margin-block-end: .5em;padding: 0;
+    margin-block-end:.5em;padding: 0;
     display: flex;
     flex-direction: column;
     gap: .5em;
@@ -1075,7 +1052,6 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 .menu-item-card.expanded a,.menu-item-card.expanded button {
     z-index: 2;
     pointer-events: auto;
-    font-size: 1.25rem!important;
     color: var(--selected-text-color1,#fff)
 }
 
@@ -1168,6 +1144,80 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
     margin: 0;
     padding: 0;
     color: var(--main-text-color,#fff)!important
+}
+
+.expanded-item-details .expanded-item-taxonomies {
+    display: flex;
+    font-size: xx-small;
+    flex-direction: row;
+    gap: .35rem;
+    padding-inline:1em;
+    padding-block:.25em .35em;
+    flex-wrap: wrap;
+    }
+
+.expanded-item-details .expanded-item-taxonomies .taxonomy {
+    margin: 0;
+    padding: .35rem .5rem;
+    background: rgba(0,0,0,.2);
+    border-radius: .5rem;
+    width: max-content;
+}
+
+.expanded-item-details .expanded-item-taxonomies .taxonomy>div:first-child {
+    font-size: .625rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--button-text-color2,#aaa);
+    text-align: left;
+    margin-bottom: .35rem
+}
+
+.expanded-item-details .expanded-item-taxonomies .taxonomy ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: .35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%
+}
+
+.expanded-item-details .expanded-item-taxonomies .taxonomy ul li {
+    padding: 0;
+    margin: 0;
+    max-width: 100%
+}
+
+.expanded-item-details .expanded-item-taxonomies .taxonomy ul li a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .25rem .55rem;
+    margin: 0;
+    font-size: .6875rem;
+    line-height: 1.25;
+    font-weight: 600;
+    border-radius: 999px;
+    white-space: normal;
+    text-align: center;
+    max-width: 100%;
+    word-break: break-word;
+    min-height: 0;
+    height: auto
+}
+
+.expanded-item-details .expanded-item-taxonomies .taxonomy ul li a:hover {
+    transform: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25)
+}
+
+.menu-item-card.expanded .expanded-item-details .expanded-item-taxonomies {
+    max-width: 100%
 }
 
 .expanded-item-controls {
@@ -2128,7 +2178,8 @@ footer .icon,#footer .icon,#footerBtns .icon {
 .single-page-description {
     color: var(--button-text-color2,#ccc);
     font-size: 1.1em;
-    line-height: 1.6
+    line-height: 1.6;
+    min-height: 1.5em
 }
 
 .single-page-description p {
@@ -2184,7 +2235,21 @@ footer .icon,#footer .icon,#footerBtns .icon {
     border-top: 1px solid rgba(255,255,255,.1);
     display: flex;
     flex-direction: column;
-    gap: 1em
+    gap: 1em;
+    min-height: 7rem;
+    box-sizing: border-box
+}
+
+.single-page-unavailable-notice[hidden] {
+    display: none!important;
+    margin: 0
+}
+
+.single-page-unavailable-notice:not([hidden]) {
+    display: block;
+    margin: 0 0 .5em;
+    color: #e65100;
+    font-size: .95em
 }
 
 .single-page-quantity-control {

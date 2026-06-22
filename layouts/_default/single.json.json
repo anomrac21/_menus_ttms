@@ -115,6 +115,8 @@
     {{- $images = $images | append .image -}}
   {{- end -}}
 
+  {{- $availability := .Params.availability | default .CurrentSection.Params.availability -}}
+
   {{- $json := dict
     "category" $category
     "categoryurl" $categoryurl
@@ -142,6 +144,9 @@
     "daysofweek" (.Params.daysofweek | default slice)
     "promotions" (.Params.promotions | default slice)
   -}}
+  {{- with $availability -}}
+    {{- $json = merge $json (dict "availability" .) -}}
+  {{- end -}}
 
   {{- $json | jsonify -}}
 {{- else -}}

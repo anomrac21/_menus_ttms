@@ -28,6 +28,8 @@ var TTMS_LEGACY_TOKEN_KEYS = ['auth_token', 'ttmenus_access_token'];
 var TTMS_LEGACY_REFRESH_KEYS = ['refresh_token', 'ttmenus_refresh_token'];
 var TTMS_LEGACY_USER_KEYS = ['user_data', 'ttmenus_user'];
 var TTMS_USER_PROFILE_KEY = 'ttmenus_user_profile';
+var TTMS_LOGOUT_LATCH_KEY = 'ttmenus_logout_latch';
+var TTMS_LOGOUT_LATCH_MS = 20000;
 
 const AuthClient = {
   /** In-memory access JWT — never persisted to localStorage. */
@@ -60,6 +62,18 @@ const AuthClient = {
 
   init() {
     this._purgeLegacyStorage();
+    try {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('logout') === '1') {
+        this._setLogoutLatch();
+        params.delete('logout');
+        var clean =
+          window.location.pathname +
+          (params.toString() ? '?' + params.toString() : '') +
+          window.location.hash;
+        window.history.replaceState({}, document.title, clean);
+      }
+    } catch (e) {}
     this._readyPromise = this.checkAuthStatus();
     this._startSessionPolling();
     return this._readyPromise;
@@ -182,14 +196,61 @@ const AuthClient = {
     });
   },
 
-  clearAuth() {
+  _setLogoutLatch() {
+    try {
+      sessionStorage.setItem(TTMS_LOGOUT_LATCH_KEY, String(Date.now()));
+    } catch (e) {}
+  },
+
+  _clearLogoutLatch() {
+    try {
+      sessionStorage.removeItem(TTMS_LOGOUT_LATCH_KEY);
+    } catch (e) {}
+  },
+
+  _isLogoutLatched() {
+    try {
+      var raw = sessionStorage.getItem(TTMS_LOGOUT_LATCH_KEY);
+      if (!raw) return false;
+      var ts = parseInt(raw, 10);
+      if (!Number.isFinite(ts) || Date.now() - ts > TTMS_LOGOUT_LATCH_MS) {
+        sessionStorage.removeItem(TTMS_LOGOUT_LATCH_KEY);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  _stopSessionPolling() {
+    if (this._sessionPollTimer) {
+      clearInterval(this._sessionPollTimer);
+      this._sessionPollTimer = null;
+    }
+  },
+
+  _authApiIsLocalDev() {
+    return /localhost|127\.0\.0\.1/i.test(this.config.apiUrl || '');
+  },
+
+  _resolveLogoutReturnUrl(redirectUrl) {
+    var path = redirectUrl || window.location.pathname + window.location.search || '/';
+    if (/^https?:\/\//i.test(path)) {
+      return path;
+    }
+    return window.location.origin + (path.charAt(0) === '/' ? path : '/' + path);
+  },
+
+  clearAuth(force) {
     var wasAuthed =
       !!this._accessToken ||
       !!this._currentUser ||
       this._sessionFromCookie ||
-      this._lastSessionState;
+      this._lastSessionState ||
+      !!this.getCurrentUser();
 
-    if (!wasAuthed) {
+    if (!force && !wasAuthed) {
       return;
     }
 
@@ -253,6 +314,11 @@ const AuthClient = {
   },
 
   async _resolveSessionFromServerNow() {
+    if (this._isLogoutLatched()) {
+      this.clearAuth(true);
+      return { success: false, error: 'Logged out' };
+    }
+
     try {
       if (!this._tokenLooksValid(this._accessToken)) {
         const sessionProbe = await this._fetchSession();
@@ -295,6 +361,7 @@ const AuthClient = {
       }
 
       if (result.response.ok && result.data) {
+        this._clearLogoutLatch();
         this._sessionFromCookie = true;
         this._lastSessionState = true;
         const userPayload = result.data.user || result.data;
@@ -326,6 +393,9 @@ const AuthClient = {
   },
 
   async _fetchSession() {
+    if (this._isLogoutLatched()) {
+      return { authenticated: false, user: null, accessToken: null };
+    }
     try {
       const response = await fetch(this.config.apiUrl + '/session', {
         method: 'GET',
@@ -509,23 +579,13 @@ const AuthClient = {
 
   async logout(options) {
     options = options || {};
-    var redirect = !!options.redirect;
-    var redirectUrl = options.redirectUrl || '/';
-    var token = this.getAccessToken();
+    var redirect = options.redirect !== false;
+    var redirectUrl = options.redirectUrl || window.location.pathname + window.location.search || '/';
+    var returnTo = this._resolveLogoutReturnUrl(redirectUrl);
 
-    try {
-      var headers = { Accept: 'application/json' };
-      if (token) headers.Authorization = 'Bearer ' + token;
-      await fetch(this.config.apiUrl + '/logout', {
-        method: 'POST',
-        credentials: 'include',
-        headers: headers,
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-
-    this.clearAuth();
+    this._setLogoutLatch();
+    this._stopSessionPolling();
+    this.clearAuth(true);
 
     if (window.AuthMiddleware && typeof AuthMiddleware.toggleAuthElements === 'function') {
       AuthMiddleware.toggleAuthElements();
@@ -534,8 +594,34 @@ const AuthClient = {
       window.updateAccountDashboardAuthState(false, null);
     }
 
+    var apiUrl = this.config.apiUrl;
+
+    if (redirect && !this._authApiIsLocalDev()) {
+      window.location.replace(
+        apiUrl + '/sso/logout?return_to=' + encodeURIComponent(returnTo)
+      );
+      return { success: true };
+    }
+
+    var token = this.getAccessToken();
+    try {
+      var headers = { Accept: 'application/json' };
+      if (token) headers.Authorization = 'Bearer ' + token;
+      await fetch(apiUrl + '/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: headers,
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    this._clearLogoutLatch();
+
     if (redirect) {
-      window.location.href = redirectUrl;
+      window.location.replace(returnTo);
+    } else {
+      this._startSessionPolling();
     }
 
     return { success: true };

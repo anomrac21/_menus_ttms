@@ -1,36 +1,30 @@
 {{ define "main" }}
-  {{ if eq .LinkTitle ("Promotions") }}
-    <h1 data-aos="zoom-out-right">{{ .Title }}</h1>
-    {{ partial "ads/clientads.html" . }}
-  {{ else }}
-    <div class="main-content">
-      <div class="menu-header list-page-header">
-        {{ if .Params.images.top }}
-          <img class="food item listpageimage" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .Title }}" loading="lazy">
+  <div class="main-content">
+    <div class="menu-header list-page-header">
+      {{ if .Params.images.top }}
+        <img class="food item listpageimage" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .Title }}" loading="lazy">
+      {{ end }}
+      <div class="headerstyle item">
+        <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}
+        {{ if .Params.images.bottom }}
+          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "decoration") }}" alt="{{ .Title }} decoration" loading="lazy" width="160" height="200">
         {{ end }}
-        <div class="headerstyle item">
-          <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}
-          {{ if .Params.images.bottom }}
-            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .Title }} decoration" loading="lazy">
-          {{ end }}
-          </h1>
-        </div>
-        {{ if .Content }}
-        <div class="menu-summary item">{{ .Content }}</div>
+        </h1>
+      </div>
+      {{ if .Content }}
+      <div class="menu-summary item">{{ .Content }}</div>
+      {{ end }}
+    </div>
+
+    {{ if eq .LinkTitle ("Promotions") }}
+      {{ partial "ads/clientads.html" . }}
+    {{ else }}
+      <div class="menu-items-container">
+        {{ range .RegularPages.ByWeight }}
+          {{ partial "components/menu-item-card.html" . }}
         {{ end }}
       </div>
-
-          {{ $category := .LinkTitle }}
-          {{ $categoryurl := .RelPermalink }}            
-          <div class="menu-items-container">
-          {{ range .RegularPages.ByWeight }}
-            {{ if ne $category ("Promotions") }}
-                {{ partial "components/menu-item-card.html" . }}
-            {{ end }}
-            {{ end }}
-          </div>
-
-    </div>
-  {{ end }}
+    {{ end }}
+  </div>
   {{ partial "socialmedia/share-button.html" . }}
 {{ end }}

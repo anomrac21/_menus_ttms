@@ -35,7 +35,8 @@
     gap: 5px;
     list-style: none;
     margin: auto;
-    width: min-content-webkit-fill-available;
+    width: 100%;
+    max-width: 100%;
 }
 
 .taxonomy ul li {

@@ -73,6 +73,8 @@
           <div class="expanded-item-description single-page-description">
               {{ .Content }}
           </div>
+          {{- $avail := .Params.availability | default .CurrentSection.Params.availability -}}
+          {{- with $avail }}{{ partial "ttms/availability-schedule.html" . }}{{ end }}
           
               {{$allprices := .Params.prices | default slice}}
           {{/* Only show prices section if there are no interactive options to select */}}
@@ -301,8 +303,11 @@
             </div>
           {{ end }}
           
+          {{ partial "components/expanded-item-taxonomies.html" . }}
+
           <!-- Add to Cart Section -->
           <div class="expanded-item-controls single-page-add-cart">
+            <p class="single-page-unavailable-notice" hidden aria-live="polite"></p>
             <div class="expanded-quantity-control single-page-quantity-control">
               <button type="button" class="btn-quantity" onclick="adjustSinglePageQuantity(this, -1)">
                 <i class="fa fa-chevron-down"></i>
@@ -383,11 +388,13 @@
       {{ .Content }}
     </div>
   {{ end }}
+  {{ if not .Params.prices }}
   {{ partial "utilities/terms.html" (dict "taxonomy" "tags" "page" .) }}
   {{ partial "utilities/terms.html" (dict "taxonomy" "ingredients" "page" .) }}
   {{ partial "utilities/terms.html" (dict "taxonomy" "cookingmethods" "page" .) }}
   {{ partial "utilities/terms.html" (dict "taxonomy" "types" "page" .) }}
   {{ partial "utilities/terms.html" (dict "taxonomy" "events" "page" .) }}
-  
+  {{ end }}
+
   {{ partial "socialmedia/share-button.html" . }}
 {{ end }}

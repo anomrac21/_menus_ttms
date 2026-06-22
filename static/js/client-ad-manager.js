@@ -25,9 +25,26 @@ class ClientAdManager {
     }
   }
 
-  async fetchDateTimeFromAPI() {
+  _shouldUseExternalTimeApi() {
     try {
-      const res = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
+      var host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') return false;
+    } catch (_) { /* ignore */ }
+    return true;
+  }
+
+  async fetchDateTimeFromAPI() {
+    if (!this._shouldUseExternalTimeApi()) return null;
+    try {
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timeoutId = controller
+        ? setTimeout(function () { controller.abort(); }, 2500)
+        : null;
+      const res = await fetch('https://worldtimeapi.org/api/ip', {
+        cache: 'no-store',
+        signal: controller ? controller.signal : undefined,
+      });
+      if (timeoutId) clearTimeout(timeoutId);
       if (!res.ok) return null;
       const data = await res.json();
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -49,14 +66,13 @@ class ClientAdManager {
 
   async ensureDateTime() {
     if (this.currentDay) return;
-    const dt = await this.fetchDateTimeFromAPI();
     const now = new Date();
+    this.currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+    this.currentTime = { hour: now.getHours(), minute: now.getMinutes() };
+    const dt = await this.fetchDateTimeFromAPI();
     if (dt) {
       this.currentDay = dt.day;
       this.currentTime = { hour: dt.hour, minute: dt.minute };
-    } else {
-      this.currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
-      this.currentTime = { hour: now.getHours(), minute: now.getMinutes() };
     }
   }
 

@@ -815,6 +815,14 @@ body.menu-reels-item-modal-open .menu-reels-track,
     background: linear-gradient(to top, var(--button-color2) 70%, transparent);
 }
 
+.menu-reels-item-modal__data .expanded-item-taxonomies {
+    padding-inline: 1rem;
+    max-width: 28rem;
+    margin-inline: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .menu-item-card.menu-reels-slide > .menu-add-photo-btn {
     top: 0.65rem;
     left: 0.65rem;
@@ -855,6 +863,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     align-items: center;
     overflow: hidden;
     padding-top: 0.15rem;
+    margin-block-end: .5em;
     container-type: size;
     container-name: item-smash-pass;
 }
@@ -1002,7 +1011,6 @@ body.menu-reels-item-modal-open .menu-reels-track,
 
 .menu-item-card.menu-reels-slide .menu-item-description {
     width: 100%;
-    padding-block-start: 1em;
     max-width: 22rem;
     text-align: center;
     font-size: 0.82rem;

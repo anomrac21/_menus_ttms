@@ -15,9 +15,31 @@
   var countAnimations = new WeakMap();
   var titleCountObserver = null;
   var headerCountObserver = null;
-  var animatedTitleSections = new WeakSet();
   var headerCountSeen = new WeakSet();
   var headerCountAnimated = new WeakSet();
+
+  function isPromoSectionHeader(section) {
+    if (!section) return false;
+    if (section.getAttribute('data-promo-section') === '1') return true;
+    if (section.getAttribute('data-section-slug') === 'promotions') return true;
+    if (section.getAttribute('data-reel-section') === 'Promotions') return true;
+    return false;
+  }
+
+  function getPromoSlideCount() {
+    var track = getTrack();
+    if (!track) return 0;
+    var container = track.querySelector('#homepage-ads-container');
+    if (!container) return 0;
+    return container.querySelectorAll('.ads-reels-slide:not(.menu-ad-scroll-end)').length;
+  }
+
+  function getPromoSectionItemCount(section) {
+    var fromAttr = getTargetItemCount(section);
+    if (fromAttr > 0) return fromAttr;
+    var slides = getPromoSlideCount();
+    return slides > 0 ? slides : fromAttr;
+  }
 
   function getTargetItemCount(section) {
     if (!section) return 0;
@@ -68,6 +90,21 @@
     countAnimations.delete(section);
   }
 
+  function isSectionCountStuck(section) {
+    if (!section) return false;
+    var root = getCountRoot(section);
+    if (!root || !root.classList.contains('is-count-pending')) return false;
+    return getCurrentCount(section) === 0 && getTargetItemCount(section) > 0;
+  }
+
+  function isSlideNearViewport(slide, track) {
+    if (!slide || !track) return false;
+    var trackRect = track.getBoundingClientRect();
+    var slideRect = slide.getBoundingClientRect();
+    var range = trackRect.height * PROXIMITY_VIEWPORTS;
+    return slideRect.bottom >= trackRect.top - range && slideRect.top <= trackRect.bottom + range;
+  }
+
   function animateSectionItemCount(section, options) {
     if (!section) return;
     options = options || {};
@@ -75,6 +112,7 @@
     var from = options.from != null ? options.from : getCurrentCount(section);
     var duration = options.duration || 1100;
     var clearLoadingOnComplete = !!options.clearLoadingOnComplete;
+    var onComplete = typeof options.onComplete === 'function' ? options.onComplete : null;
 
     stopSectionCountAnimation(section);
     updateSectionCountDisplay(section, from, true);
@@ -83,6 +121,7 @@
     function tick(now) {
       if (!section.isConnected) {
         stopSectionCountAnimation(section);
+        section.removeAttribute('data-section-count-done');
         return;
       }
       if (!startTime) startTime = now;
@@ -98,9 +137,61 @@
       if (clearLoadingOnComplete) {
         updateSectionCountDisplay(section, target, false);
       }
+      if (onComplete) onComplete();
     }
 
     countAnimations.set(section, { raf: requestAnimationFrame(tick) });
+  }
+
+  function playSectionTitleCount(section) {
+    if (!section) return;
+    if (isPromoSectionHeader(section)) {
+      section.removeAttribute('data-home-menu-loaded');
+      section.removeAttribute('data-home-menu-rendered-count');
+      var promoCount = getPromoSectionItemCount(section);
+      section.setAttribute('data-item-count', String(promoCount));
+      updateSectionCountDisplay(section, promoCount, false);
+      section.classList.remove('is-section-loading');
+      section.dataset.sectionCountDone = '1';
+      return;
+    }
+    if (section.dataset.sectionCountDone === '1' && !isSectionCountStuck(section)) {
+      updateSectionCountDisplay(section, getTargetItemCount(section), false);
+      section.classList.remove('is-section-loading');
+      return;
+    }
+
+    section.removeAttribute('data-section-count-done');
+    stopSectionCountAnimation(section);
+    if (titleCountObserver) titleCountObserver.unobserve(section);
+
+    var target = getTargetItemCount(section);
+    if (target <= 0) {
+      updateSectionCountDisplay(section, 0, false);
+      section.dataset.sectionCountDone = '1';
+      return;
+    }
+
+    animateSectionItemCount(section, {
+      from: 0,
+      target: target,
+      duration: 900,
+      clearLoadingOnComplete: true,
+      onComplete: function () {
+        section.dataset.sectionCountDone = '1';
+      },
+    });
+  }
+
+  function syncPendingSectionTitleCounts() {
+    var track = getTrack();
+    if (!track) return;
+    track.querySelectorAll('.menu-reels-slide--section-title[data-item-count]').forEach(function (section) {
+      if (section.dataset.sectionCountDone === '1' && !isSectionCountStuck(section)) return;
+      if (isSlideNearViewport(section, track)) {
+        playSectionTitleCount(section);
+      }
+    });
   }
 
   function countRenderedCardsAfterHeader(header) {
@@ -253,20 +344,40 @@
       function (entries) {
         entries.forEach(function (entry) {
           if (!entry.isIntersecting) return;
-          var section = entry.target;
-          if (animatedTitleSections.has(section)) return;
-          animatedTitleSections.add(section);
-          animateSectionItemCount(section, { from: 0, duration: 900, clearLoadingOnComplete: true });
-          titleCountObserver.unobserve(section);
+          playSectionTitleCount(entry.target);
         });
       },
-      { root: track, threshold: 0.35 }
+      {
+        root: track,
+        rootMargin: '40% 0px 40% 0px',
+        threshold: 0,
+      }
     );
 
     titles.forEach(function (section) {
+      stopSectionCountAnimation(section);
+      if (isPromoSectionHeader(section)) {
+        section.removeAttribute('data-home-menu-loaded');
+        section.removeAttribute('data-home-menu-rendered-count');
+        var promoCount = getPromoSectionItemCount(section);
+        section.setAttribute('data-item-count', String(promoCount));
+        updateSectionCountDisplay(section, promoCount, false);
+        section.classList.remove('is-section-loading');
+        section.dataset.sectionCountDone = '1';
+        titleCountObserver.observe(section);
+        return;
+      }
+      if (section.dataset.sectionCountDone === '1' && !isSectionCountStuck(section)) {
+        updateSectionCountDisplay(section, getTargetItemCount(section), false);
+        section.classList.remove('is-section-loading');
+        return;
+      }
+      section.removeAttribute('data-section-count-done');
       updateSectionCountDisplay(section, 0, true);
       titleCountObserver.observe(section);
     });
+
+    syncPendingSectionTitleCounts();
   }
 
   function beginSectionLoadFeedback(header) {
@@ -276,7 +387,7 @@
     }
   }
 
-  var PROXIMITY_VIEWPORTS = 2.5;
+  var PROXIMITY_VIEWPORTS = 0.85;
 
   function getConfigRoot() {
     return (
@@ -443,6 +554,30 @@
     );
   }
 
+  function buildAvailabilityScheduleHtml(avail) {
+    if (!avail) return '';
+    var msg = '';
+    if (typeof window.TTMSFormatAvailabilityMessage === 'function') {
+      msg = window.TTMSFormatAvailabilityMessage(avail);
+    } else if (avail.days && avail.time_start && avail.time_finish) {
+      msg =
+        'Available ' +
+        avail.days.join(', ') +
+        ' · ' +
+        avail.time_start +
+        '–' +
+        avail.time_finish;
+    }
+    if (!msg) return '';
+    return (
+      '<div class="menu-item-availability">' +
+      '<i class="fa fa-clock-o" aria-hidden="true"></i>' +
+      '<span class="menu-item-availability__text">' +
+      escapeHtml(msg) +
+      '</span></div>'
+    );
+  }
+
   function buildActionsMenu(item) {
     if (window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.buildMarkup === 'function') {
       return window.TTMSMenuItemActions.buildMarkup(item);
@@ -491,16 +626,25 @@
     var showImage = !!firstImage && !config.menuImages;
     var sizesHtml = buildListHtml(item.variable1_values);
     var flavoursHtml = buildListHtml(item.variable2_values);
+    var imageSrc = firstImage;
+    if (typeof window.TtmsThumbor !== 'undefined' && window.TtmsThumbor.menuImageSrc) {
+      imageSrc = window.TtmsThumbor.menuImageSrc(firstImage, 'card') || firstImage;
+    }
+    if (imageSrc && !/^https?:\/\//i.test(imageSrc) && imageSrc.charAt(0) !== '/') {
+      imageSrc = '/' + imageSrc.replace(/^\//, '');
+    }
     var imageHtml = showImage
       ? '<a href="' +
         escapeHtml(item.url || '#') +
         '" class="menu-item-image-link" aria-label="View ' +
         escapeHtml(title) +
-        '"><div class="menu-item-image"><img src="/' +
+        '"><div class="menu-item-image"><img src="' +
+        escapeHtml(imageSrc) +
+        '" data-src-path="' +
         escapeHtml(firstImage.replace(/^\//, '')) +
         '" alt="' +
         escapeHtml(title) +
-        '" loading="lazy" class="menu-item-img" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)"></div></a>'
+        '" loading="lazy" decoding="async" width="480" height="480" class="menu-item-img" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)"></div></a>'
       : '';
     var titleHtml =
       '<h3 class="menu-item-title"><span class="menu-item-title-text">' +
@@ -508,6 +652,8 @@
       '</span></h3>';
     var smashPassHtml = buildSmashPassMarkup(item, config.menuImages);
     var titleRowHtml = buildTitleRow(item, titleHtml, config.authEnabled);
+    var availabilityAttr = item.availability ? JSON.stringify(item.availability) : '';
+    var availabilityHtml = buildAvailabilityScheduleHtml(item.availability);
 
     return (
       '<section class="menu-item-card menu-reels-slide' +
@@ -523,6 +669,9 @@
       escapeHtml(item.url || '') +
       '"' +
       ' role="button" tabindex="0" aria-expanded="false" data-item-expanded="false"' +
+      (availabilityAttr
+        ? ' data-availability="' + escapeHtml(availabilityAttr) + '"'
+        : '') +
       ' data-prices-array="' +
       escapeHtml(JSON.stringify(pricesArray)) +
       '"' +
@@ -548,7 +697,9 @@
       ' data-regular-images-array="' +
       escapeHtml(JSON.stringify(images)) +
       '"' +
-      ' data-promotions="[]"' +
+      ' data-promotions="' +
+      escapeHtml(JSON.stringify(item.promotions || [])) +
+      '"' +
       ' data-tags="' +
       escapeHtml(JSON.stringify(item.tags || [])) +
       '"' +
@@ -571,6 +722,7 @@
       '<div class="menu-item-header-content">' +
       (smashPassHtml ? '' : titleRowHtml) +
       '<div class="menu-item-row-middle">' +
+      availabilityHtml +
       '<div class="menu-item-description">' +
       escapeHtml(summary) +
       '</div>' +
@@ -626,19 +778,32 @@
       if (typeof window.initMenuSmashPass === 'function') {
         window.initMenuSmashPass();
       }
-      if (typeof window.initMenuImageIntegration === 'function') {
-        window.initMenuImageIntegration();
-      }
-      if (
-        window.TTMSMenuFavorites &&
-        typeof window.TTMSMenuFavorites.refresh === 'function'
-      ) {
-        window.TTMSMenuFavorites.refresh();
-      }
+      var deferIdle =
+        typeof requestIdleCallback === 'function'
+          ? function (fn, timeout) {
+              requestIdleCallback(fn, { timeout: timeout || 4000 });
+            }
+          : function (fn) {
+              setTimeout(fn, 400);
+            };
+      deferIdle(function () {
+        if (typeof window.initMenuImageIntegration === 'function') {
+          window.initMenuImageIntegration();
+        }
+        if (typeof window.applyDayBasedPromos === 'function') {
+          window.applyDayBasedPromos();
+        }
+        if (
+          window.TTMSMenuFavorites &&
+          typeof window.TTMSMenuFavorites.refresh === 'function'
+        ) {
+          window.TTMSMenuFavorites.refresh();
+        }
+      }, 5000);
       try {
         window.dispatchEvent(new CustomEvent('homeMenuItemsLoaded'));
       } catch (_) { /* ignore */ }
-    }, 32);
+    }, 150);
   }
 
   function cssEscape(value) {
@@ -680,14 +845,19 @@
     header.dataset.homeMenuLoaded = '1';
     finalizeSectionItemCount(header, items.length);
     scheduleReelsRefresh();
+    if (config.menuImages && typeof window.refreshLazyItemSmashPass === 'function') {
+      window.refreshLazyItemSmashPass();
+    }
   }
 
   function loadSectionBySlug(slug, config) {
     if (!slug || !config) return Promise.resolve();
+    if (slug === 'promotions') return Promise.resolve();
     var header = getHeaderForSlug(slug);
     if (!header || header.dataset.homeMenuLoaded === '1') {
       return Promise.resolve();
     }
+    if (isPromoSectionHeader(header)) return Promise.resolve();
 
     beginSectionLoadFeedback(header);
 
@@ -734,6 +904,7 @@
     requestAnimationFrame(function () {
       proximityTick = false;
       checkProximityLoads();
+      syncPendingSectionTitleCounts();
     });
   }
 
@@ -793,6 +964,7 @@
 
   function loadHomeMenuForSectionId(sectionId) {
     if (!loaderConfig || !sectionId) return Promise.resolve();
+    if (String(sectionId).trim() === 'Promotions') return Promise.resolve();
 
     var track = getTrack();
     var header = null;
@@ -866,7 +1038,6 @@
     fetchPromise = null;
     loaderStarted = false;
     loaderConfig = null;
-    animatedTitleSections = new WeakSet();
     headerCountSeen = new WeakSet();
     headerCountAnimated = new WeakSet();
     if (headerObserver) {
@@ -888,6 +1059,7 @@
       });
       track.querySelectorAll('.menu-reels-slide--section-title[data-item-count]').forEach(function (section) {
         stopSectionCountAnimation(section);
+        section.removeAttribute('data-section-count-done');
       });
       track._ttmsHomeMenuProximityBound = false;
     }
@@ -923,13 +1095,25 @@
     scheduleProximityCheck();
   });
 
+  function deferHomeMenuLoaderStart(fn) {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(fn, { timeout: 2500 });
+    } else {
+      setTimeout(fn, 300);
+    }
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
+      deferHomeMenuLoaderStart(function () {
+        initHomeMenuLoader();
+        registerLifecycle();
+      });
+    });
+  } else {
+    deferHomeMenuLoaderStart(function () {
       initHomeMenuLoader();
       registerLifecycle();
     });
-  } else {
-    initHomeMenuLoader();
-    registerLifecycle();
   }
 })();

@@ -128,6 +128,8 @@ Renders menu item card for list and tag term pages.
         {{ partial "components/menu-item-actions-menu.html" . }}
       </div>
       <div class="menu-item-row-middle">
+        {{- $avail := .Params.availability | default .CurrentSection.Params.availability -}}
+        {{- with $avail }}{{ partial "ttms/availability-schedule.html" . }}{{ end }}
         <div class="menu-item-description">
           {{ .Summary }}
         </div>

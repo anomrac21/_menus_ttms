@@ -1,0 +1,13 @@
+{{- $page := . -}}
+{{- $taxonomies := slice "tags" "ingredients" "cookingmethods" "types" "events" -}}
+{{- $hasAny := false -}}
+{{- range $taxonomies -}}
+  {{- with $page.GetTerms . -}}{{- $hasAny = true -}}{{- end -}}
+{{- end -}}
+{{- if $hasAny -}}
+<div class="expanded-item-taxonomies">
+  {{- range $taxonomies -}}
+    {{- partial "utilities/terms.html" (dict "taxonomy" . "page" $page) -}}
+  {{- end -}}
+</div>
+{{- end -}}

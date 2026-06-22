@@ -1,0 +1,39 @@
+{{- /*
+Renders a visible schedule block for items with availability windows.
+@context {map} availability object with days, time_start, time_finish
+*/ -}}
+{{- $a := . -}}
+{{- if not $a -}}{{- return -}}{{- end -}}
+{{- $days := $a.days | default slice -}}
+{{- $daysLabel := "" -}}
+{{- if eq (len $days) 5 -}}
+  {{- $weekdays := slice "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" -}}
+  {{- $isWeekdays := true -}}
+  {{- range $weekdays -}}
+    {{- if not (in $days .) -}}{{- $isWeekdays = false -}}{{- end -}}
+  {{- end -}}
+  {{- if $isWeekdays -}}{{- $daysLabel = "Mon–Fri" -}}{{- end -}}
+{{- end -}}
+{{- if and (not $daysLabel) (eq (len $days) 2) (in $days "Saturday") (in $days "Sunday") -}}
+  {{- $daysLabel = "Sat–Sun" -}}
+{{- end -}}
+{{- if and (not $daysLabel) (gt (len $days) 0) -}}
+  {{- $abbr := dict "Monday" "Mon" "Tuesday" "Tue" "Wednesday" "Wed" "Thursday" "Thu" "Friday" "Fri" "Saturday" "Sat" "Sunday" "Sun" -}}
+  {{- $parts := slice -}}
+  {{- range $days -}}
+    {{- $parts = $parts | append (index $abbr . | default .) -}}
+  {{- end -}}
+  {{- $daysLabel = delimit $parts ", " -}}
+{{- end -}}
+<div class="menu-item-availability">
+  <i class="fa fa-clock-o" aria-hidden="true"></i>
+  <span class="menu-item-availability__text">
+    {{- if $daysLabel -}}Available {{ $daysLabel }}{{- end -}}
+    {{- with $a.time_start -}}
+      {{- if $daysLabel -}} · {{- end -}}
+      {{- $start := . -}}
+      {{- $finish := $a.time_finish | default "23:59" -}}
+      {{ $start }}–{{ $finish }}
+    {{- end -}}
+  </span>
+</div>

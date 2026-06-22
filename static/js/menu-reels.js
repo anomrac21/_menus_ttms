@@ -310,7 +310,7 @@
   function insertAdsPlaceholderAfterPromotions(track, placeholder) {
     if (!track || !placeholder) return;
     var promo = track.querySelector(
-      '.menu-reels-slide--section-title[data-reel-section="Promotions"]'
+      '.menu-reels-slide[data-reel-section="Promotions"]'
     );
     if (promo && promo.nextSibling !== placeholder) {
       track.insertBefore(placeholder, promo.nextSibling);
@@ -403,7 +403,6 @@
       if (
         keepAdsPlaceholder &&
         !insertedAdsPlaceholder &&
-        slide.classList.contains('menu-reels-slide--section-title') &&
         slide.getAttribute('data-reel-section') === 'Promotions'
       ) {
         track.appendChild(adsPlaceholder);
@@ -426,10 +425,18 @@
   }
 
   function scrollToSectionId(id) {
-    if (typeof window.loadHomeMenuForSectionId === 'function') {
-      window.loadHomeMenuForSectionId(id);
-    }
     scrollToSlide(findSlideForSectionId(id), 'smooth');
+    var deferLoad =
+      typeof requestIdleCallback === 'function'
+        ? requestIdleCallback
+        : function (cb) {
+            setTimeout(cb, 1);
+          };
+    deferLoad(function () {
+      if (typeof window.loadHomeMenuForSectionId === 'function') {
+        window.loadHomeMenuForSectionId(id);
+      }
+    });
   }
 
   function scrollTrackToTop(behavior) {
@@ -459,9 +466,6 @@
       if (typeof closeCart === 'function') closeCart();
       if (typeof window.closeMenublockDropdown === 'function') {
         window.closeMenublockDropdown();
-      }
-      if (typeof window.loadHomeMenuForSectionId === 'function') {
-        window.loadHomeMenuForSectionId(id);
       }
       scrollToSectionId(id);
       history.replaceState(null, '', window.location.pathname + window.location.search + '#' + id);
@@ -747,26 +751,34 @@
       window.adManager.populateHomepage();
     }
 
-    flattenReelsTrack(track);
-    bindMenublockReelsNav();
-    bindTrackScroll();
-    observeSections(track);
-    syncMenublockFromTrack();
+    var finishInit = function () {
+      flattenReelsTrack(track);
+      bindMenublockReelsNav();
+      bindTrackScroll();
+      observeSections(track);
+      syncMenublockFromTrack();
 
-    if (window.location.hash) {
-      var hashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
-      var hashSlide = findSlideForSectionId(hashId);
-      if (hashSlide) {
+      if (window.location.hash) {
+        var hashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+        var hashSlide = findSlideForSectionId(hashId);
+        if (hashSlide) {
+          requestAnimationFrame(function () {
+            scrollToSlide(hashSlide, 'auto');
+          });
+        }
+      } else if (!track._ttmsReelsScrolledToStart) {
+        track._ttmsReelsScrolledToStart = true;
         requestAnimationFrame(function () {
-          scrollToSlide(hashSlide, 'auto');
+          track.scrollTop = 0;
+          setMenublockActive(null);
         });
       }
-    } else if (!track._ttmsReelsScrolledToStart) {
-      track._ttmsReelsScrolledToStart = true;
-      requestAnimationFrame(function () {
-        track.scrollTop = 0;
-        setMenublockActive(null);
-      });
+    };
+
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(finishInit);
+    } else {
+      setTimeout(finishInit, 0);
     }
   }
 

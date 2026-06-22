@@ -153,6 +153,8 @@
         {{- $events = . -}}
       {{- end -}}
 
+      {{- $availability := .Params.availability | default .CurrentSection.Params.availability -}}
+
       {{- /* Create item object with all data */ -}}
       {{- $item := dict
           "id" .File.UniqueID
@@ -177,6 +179,8 @@
           "cookingmethods" $cookingmethods
           "types" $types
           "events" $events
+          "availability" $availability
+          "promotions" (.Params.promotions | default slice)
       -}}
       {{- $menuItems = $menuItems | append $item -}}
     {{- end -}}

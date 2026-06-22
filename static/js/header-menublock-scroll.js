@@ -488,7 +488,14 @@
     if (event) {
       event.preventDefault();
     }
-    scrollPageAndMenublockToTop();
+    var run = function () {
+      scrollPageAndMenublockToTop();
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(run);
+    } else {
+      setTimeout(run, 0);
+    }
     return false;
   }
 
@@ -646,8 +653,38 @@
     });
   }
 
+  function fixMenublockIconPaths() {
+    var menublock = document.getElementById('menublock');
+    if (!menublock) return;
+
+    menublock.querySelectorAll('img.icon').forEach(function (img) {
+      var src = (img.getAttribute('src') || '').trim();
+      var path = (img.getAttribute('data-src-path') || '').trim();
+
+      if (!path && src && !/^https?:\/\//i.test(src)) {
+        path = src.replace(/^\/+/, '');
+        img.setAttribute('data-src-path', path);
+      }
+
+      if (path && window.TtmsThumbor && typeof window.TtmsThumbor.resolvePreviewSrc === 'function') {
+        var resolved = window.TtmsThumbor.resolvePreviewSrc(path, { width: 320, height: 320 });
+        if (resolved && img.getAttribute('src') !== resolved) {
+          img.setAttribute('src', resolved);
+        }
+        return;
+      }
+
+      if (src && !/^https?:\/\//i.test(src) && src.charAt(0) !== '/') {
+        img.setAttribute('src', '/' + src.replace(/^\/+/, ''));
+      }
+    });
+  }
+
+  window.fixMenublockIconPaths = fixMenublockIconPaths;
+
   function reinitHeaderMenublock() {
     syncMobileMenublockClass();
+    fixMenublockIconPaths();
 
     var menublock = document.getElementById('menublock');
     if (menublock) {

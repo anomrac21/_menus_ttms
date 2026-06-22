@@ -1,0 +1,8 @@
+{{- /*
+  Menublock category icon (root-relative src; Thumbor fallback via data-src-path).
+  Usage: {{ partial "ttms/menublock-icon-img.html" (dict "path" .Params.icon) }}
+*/ -}}
+{{- $path := strings.TrimSpace (.path | default "") -}}
+{{- if $path -}}
+<img class="icon center" src="{{ partial "ttms/menu-img-src.html" (dict "path" $path "size" "thumb") }}" alt="" loading="eager" decoding="async" width="32" height="32" data-src-path="{{ $path }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+{{- end -}}

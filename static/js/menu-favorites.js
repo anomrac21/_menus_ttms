@@ -4,7 +4,8 @@
 (function () {
   'use strict';
 
-  var FAVORITE_KINDS = ['dish', 'promotion'];
+  var FAVORITE_KINDS = ['dish'];
+  var PROMOTION_FAVORITE_KIND = 'promotion';
   var favoriteKeySets = {
     dish: new Set(),
     promotion: new Set(),

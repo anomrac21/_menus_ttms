@@ -48,7 +48,7 @@
 				<a href="{{ $titleurl }}" class="menublock-link" onclick="closeCart();">
 				{{- end -}}
 					{{- if .Params.icon -}}
-					<span class="menublock-link__icon" aria-hidden="true"><img class="icon center" src="{{ .Params.icon }}" alt="" loading="lazy" width="32" height="32"></span>
+					<span class="menublock-link__icon" aria-hidden="true">{{ partial "ttms/menublock-icon-img.html" (dict "path" .Params.icon) }}</span>
 					{{- end -}}
 					<span class="menublock-link__label">{{ .LinkTitle }}</span>
 				</a>
@@ -67,7 +67,7 @@
 			<li class="item menublock-item">
 				<a href="#{{ .LinkTitle }}" class="menublock-link" onclick="closeCart();">
 					{{- if .Params.icon -}}
-					<span class="menublock-link__icon" aria-hidden="true"><img class="icon center" src="{{ .Params.icon }}" alt="" loading="lazy" width="32" height="32"></span>
+					<span class="menublock-link__icon" aria-hidden="true">{{ partial "ttms/menublock-icon-img.html" (dict "path" .Params.icon) }}</span>
 					{{- end -}}
 					<span class="menublock-link__label">{{ .LinkTitle }}</span>
 				</a>

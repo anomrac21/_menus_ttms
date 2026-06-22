@@ -141,7 +141,13 @@
 {{- if hasPrefix $canonical "//" -}}
   {{- $canonical = printf "https:%s" $canonical -}}
 {{- end -}}
-{{- if eq hugo.Environment "development" -}}
+{{- if or (not (findRE `(?i)^https?://` $canonical)) (eq $canonical "/") -}}
+  {{- $canonicalBase := site.BaseURL | absURL -}}
+  {{- if eq hugo.Environment "development" -}}
+    {{- $canonicalBase = "http://localhost:1313" -}}
+  {{- end -}}
+  {{- $canonical = printf "%s%s" (strings.TrimSuffix "/" $canonicalBase) (cond (eq .RelPermalink "/") "/" .RelPermalink) -}}
+{{- else if eq hugo.Environment "development" -}}
   {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
 {{- end -}}
 <link rel="canonical" href="{{ $canonical }}">
@@ -379,6 +385,28 @@
 </style>
 {{- end -}}
 {{- if $menuPublicSite -}}
+<style id="ttms-perf-critical">
+  #footer { min-height: 4.5rem; }
+  #footerBtns.footer-dock { transform: none; }
+  .single-page-item-card .single-page-content { min-height: 12rem; }
+  .single-page-item-card .single-page-description { min-height: 1.5em; }
+  .single-page-item-card .menu-item-availability { min-height: 2.25rem; box-sizing: border-box; }
+  .single-page-item-card .single-page-add-cart { min-height: 7rem; box-sizing: border-box; }
+  .single-page-unavailable-notice[hidden] { display: none !important; margin: 0; }
+  .single-page-unavailable-notice:not([hidden]) {
+    display: block;
+    margin: 0 0 0.5em;
+    color: #e65100;
+    font-size: 0.95em;
+  }
+  .single-page-item-card .menu-item-title-row { min-height: 2.75rem; }
+  .main--home .menu-reels-viewport {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+</style>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard-panel.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-panel.css") }}
@@ -401,7 +429,7 @@
 <link rel="stylesheet" href="/css/dashboard-panel.css"/>
 {{- end -}}
 {{ if .Site.Params.notifications.enabled }}
-<link rel="stylesheet" href="/css/notifications.css"/>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/notifications.css") }}
 {{ end }}
 
 <!-- MANIFEST -->
@@ -548,6 +576,9 @@ window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 {{- $thumborUrl := site.Params.thumbor.url | default "https://thumbor.ttmenus.com" -}}
 {{- $sourceBase := site.Params.thumbor.sourceBaseUrl | default site.BaseURL | default "" -}}
 {{- $menuImagesUseThumbor := site.Params.thumbor.menuImagesUseThumbor | default false -}}
+{{- if eq hugo.Environment "development" -}}
+  {{- $menuImagesUseThumbor = false -}}
+{{- end -}}
 <script src="/js/thumbor-url.js" defer></script>
 <script>
 window.MENU_IMAGE_THUMBOR_URL = "{{ $thumborUrl }}";
@@ -568,7 +599,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-actions.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-cards.css") }}
 {{- if .IsHome -}}
-<link rel="stylesheet" href="/css/menu-reels.css"/>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reels.css") }}
 {{- else -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reels.css") }}
 {{- end -}}

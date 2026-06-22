@@ -6,6 +6,9 @@
 {{- if not $path -}}{{- else -}}
   {{- $base := strings.TrimSuffix "/" (.base | default site.Params.thumbor.url | default "https://thumbor.ttmenus.com") -}}
   {{- $enabled := .enabled | default site.Params.thumbor.menuImagesUseThumbor | default site.Params.thumbor.enabled | default false -}}
+  {{- if eq hugo.Environment "development" -}}
+    {{- $enabled = false -}}
+  {{- end -}}
   {{- $w := int (.width | default 480) -}}
   {{- $h := int (.height | default 480) -}}
   {{- $skip := false -}}

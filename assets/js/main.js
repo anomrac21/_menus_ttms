@@ -27,10 +27,19 @@
 
     /**
      * Fetch current weekday and time from trusted time API (not browser date).
-     * Uses WorldTimeAPI; on failure, promos are not applied.
+     * Skipped on localhost; uses short timeout elsewhere.
      * @returns {{ day: string, hour: number, minute: number }|null}
      */
+    function shouldUseExternalTimeApi() {
+        try {
+            var host = window.location.hostname;
+            if (host === 'localhost' || host === '127.0.0.1') return false;
+        } catch (_) { /* ignore */ }
+        return true;
+    }
+
     async function fetchDateTimeFromAPI() {
+        if (!shouldUseExternalTimeApi()) return null;
         try {
             const cachedRaw = sessionStorage.getItem('ttms_datetime_cache');
             if (cachedRaw) {
@@ -40,7 +49,15 @@
                 }
             }
 
-            const res = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
+            var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            var timeoutId = controller
+                ? setTimeout(function () { controller.abort(); }, 2500)
+                : null;
+            const res = await fetch('https://worldtimeapi.org/api/ip', {
+                cache: 'no-store',
+                signal: controller ? controller.signal : undefined,
+            });
+            if (timeoutId) clearTimeout(timeoutId);
             if (!res.ok) return null;
             const data = await res.json();
             const dayNum = data.day_of_week; // 1=Monday .. 7=Sunday
@@ -372,6 +389,96 @@
         if (typeof updateSinglePagePriceWithOptions === 'function') updateSinglePagePriceWithOptions();
     }
 
+    function parseAvailabilityObject(availability) {
+        if (!availability) return null;
+        try {
+            return typeof availability === 'string' ? JSON.parse(availability) : availability;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function formatAvailabilityTime12(t) {
+        const parts = String(t || '00:00').split(':');
+        const hh = parseInt(parts[0], 10);
+        const mm = parts[1];
+        const display = hh > 12 ? hh - 12 : (hh === 0 ? 12 : hh);
+        const suffix = mm && mm !== '00' ? ':' + mm : '';
+        return display + suffix + (hh >= 12 ? 'PM' : 'AM');
+    }
+
+    function formatAvailabilityDays(days) {
+        if (!days || !Array.isArray(days) || !days.length) return '';
+        const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        if (days.length === 5 && weekdays.every((d) => days.includes(d))) return 'Mon–Fri';
+        if (days.length === 2 && days.includes('Saturday') && days.includes('Sunday')) return 'Sat–Sun';
+        const abbr = {
+            Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu',
+            Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
+        };
+        return days.map((d) => abbr[d] || d).join(', ');
+    }
+
+    function formatAvailabilityMessage(availability) {
+        const a = parseAvailabilityObject(availability);
+        if (!a) return '';
+        const daysStr = formatAvailabilityDays(a.days);
+        if (a.time_start && a.time_finish) {
+            const timeStr = formatAvailabilityTime12(a.time_start) + '–' + formatAvailabilityTime12(a.time_finish);
+            return daysStr ? `Available ${daysStr} · ${timeStr}` : `Available ${timeStr}`;
+        }
+        return daysStr ? `Available ${daysStr}` : 'Limited availability';
+    }
+
+    function ensureAvailabilityScheduleElement(card, availability) {
+        let scheduleEl = card.querySelector('.menu-item-availability');
+        if (scheduleEl) return scheduleEl;
+        const msg = formatAvailabilityMessage(availability);
+        if (!msg) return null;
+        scheduleEl = document.createElement('div');
+        scheduleEl.className = 'menu-item-availability';
+        scheduleEl.innerHTML =
+            '<i class="fa fa-clock-o" aria-hidden="true"></i>' +
+            '<span class="menu-item-availability__text"></span>';
+        const rowMiddle = card.querySelector('.menu-item-row-middle');
+        if (rowMiddle) {
+            rowMiddle.insertBefore(scheduleEl, rowMiddle.firstChild);
+        } else {
+            card.appendChild(scheduleEl);
+        }
+        return scheduleEl;
+    }
+
+    function applyAvailabilityToExpandedCard(card, available, msg) {
+        const root = getExpandedViewRoot(card);
+        if (!root) return;
+        const controls = root.querySelector('.expanded-item-controls');
+        if (!controls) return;
+        const addBtn = controls.querySelector('.expanded-add-cart');
+        let notice = controls.querySelector('.expanded-unavailable-notice');
+        if (!available) {
+            if (!notice) {
+                notice = document.createElement('p');
+                notice.className = 'expanded-unavailable-notice';
+                controls.insertBefore(notice, controls.firstChild);
+            }
+            notice.textContent = `Ordering unavailable — ${msg}`;
+            notice.style.display = '';
+            if (addBtn) {
+                addBtn.disabled = true;
+                addBtn.classList.add('expanded-add-cart--disabled');
+            }
+            controls.querySelectorAll('.btn-quantity').forEach((btn) => { btn.disabled = true; });
+        } else {
+            if (notice) notice.style.display = 'none';
+            if (addBtn) {
+                addBtn.disabled = false;
+                addBtn.classList.remove('expanded-add-cart--disabled');
+            }
+            controls.querySelectorAll('.btn-quantity').forEach((btn) => { btn.disabled = false; });
+        }
+    }
+
     function isWithinAvailability(availability, today, timeInfo) {
         if (!availability || !today) return true;
         let a;
@@ -395,26 +502,21 @@
         const avail = card.getAttribute('data-availability');
         if (!avail) return;
         const available = isWithinAvailability(avail, today, timeInfo);
+        const msg = formatAvailabilityMessage(avail);
         card.classList.toggle('menu-item-unavailable', !available);
         card.setAttribute('data-availability-active', available ? 'true' : 'false');
-        const overlay = card.querySelector('.menu-item-unavailable-overlay');
-        if (overlay) overlay.style.display = available ? 'none' : 'flex';
-        else if (!available) {
-            let msg = 'Available Mon–Fri 11AM–2PM';
-            try {
-                const a = typeof avail === 'string' ? JSON.parse(avail) : avail;
-                if (a.days && a.time_start && a.time_finish) {
-                    const daysStr = a.days.length === 5 && a.days.includes('Monday') && a.days.includes('Friday') ? 'Mon–Fri' : a.days.join(', ');
-                    const fmt = t => { const [h, m] = t.split(':'); const hh = parseInt(h); return (hh > 12 ? hh - 12 : hh) + (m !== '00' ? ':' + m : '') + (hh >= 12 ? 'PM' : 'AM'); };
-                    msg = `Available ${daysStr} ${fmt(a.time_start)}–${fmt(a.time_finish)}`;
-                }
-            } catch (_) {}
-            const div = document.createElement('div');
-            div.className = 'menu-item-unavailable-overlay';
-            div.innerHTML = `<span>${msg}</span>`;
-            card.style.position = 'relative';
-            card.appendChild(div);
+
+        const scheduleEl = ensureAvailabilityScheduleElement(card, avail);
+        if (scheduleEl) {
+            const textEl = scheduleEl.querySelector('.menu-item-availability__text');
+            if (textEl) textEl.textContent = msg;
+            scheduleEl.classList.toggle('is-active', available);
+            scheduleEl.classList.toggle('is-outside-window', !available);
+            scheduleEl.setAttribute('aria-label', available ? msg : `Outside ordering window — ${msg}`);
         }
+
+        card.querySelectorAll('.menu-item-unavailable-overlay').forEach((el) => el.remove());
+        applyAvailabilityToExpandedCard(card, available, msg);
     }
 
     function applyAvailabilityToSinglePage(dataEl, today, timeInfo) {
@@ -422,15 +524,8 @@
         if (!avail) return;
         const available = isWithinAvailability(avail, today, timeInfo);
         document.body.classList.toggle('single-page-unavailable', !available);
-        let msg = 'Lunch available Monday–Friday, 11AM–2PM.';
-        try {
-            const a = typeof avail === 'string' ? JSON.parse(avail) : avail;
-            if (a.days && a.time_start && a.time_finish) {
-                const daysStr = a.days.length === 5 ? 'Mon–Fri' : (a.days || []).join(', ');
-                const fmt = t => { const [h, m] = String(t).split(':'); const hh = parseInt(h, 10); return (hh > 12 ? hh - 12 : hh) + (m !== '00' ? ':' + m : '') + (hh >= 12 ? 'PM' : 'AM'); };
-                msg = `Available ${daysStr} ${fmt(a.time_start)}–${fmt(a.time_finish)}.`;
-            }
-        } catch (_) {}
+        let msg = formatAvailabilityMessage(avail);
+        if (!msg) msg = 'This item is not currently available for ordering.';
         const addCartSection = document.querySelector('.single-page-add-cart, .single-page-item-card .expanded-item-controls');
         if (addCartSection) {
             let notice = addCartSection.querySelector('.single-page-unavailable-notice');
@@ -438,12 +533,13 @@
                 if (!notice) {
                     notice = document.createElement('p');
                     notice.className = 'single-page-unavailable-notice';
-                    notice.style.cssText = 'margin:0 0 .5em;color:#e65100;font-size:.95em;';
                     addCartSection.insertBefore(notice, addCartSection.firstChild);
                 }
                 notice.textContent = msg;
-                notice.style.display = '';
-            } else if (notice) notice.style.display = 'none';
+                notice.hidden = false;
+            } else if (notice) {
+                notice.hidden = true;
+            }
         }
         const addBtn = document.querySelector('.single-page-add-cart-btn, .single-page-item-card .expanded-add-cart');
         if (addBtn) addBtn.disabled = !available;
@@ -589,8 +685,14 @@
     }
 
     async function applyDayBasedPromos() {
-        const dateTime = await fetchDateTimeFromAPI() || getLocalDateTime();
-        applyPromosWithDay(dateTime);
+        const local = getLocalDateTime();
+        applyPromosWithDay(local);
+        try {
+            const dateTime = await fetchDateTimeFromAPI();
+            if (dateTime) {
+                applyPromosWithDay(dateTime);
+            }
+        } catch (_) { /* keep local promo state */ }
     }
 
     /**
@@ -643,11 +745,8 @@
      */
     function initializeFooter() {
         const footerBtns = document.getElementById('footerBtns');
-        if (footerBtns) {
-            // Show footer buttons after page load
-            setTimeout(() => {
-                footerBtns.classList.add('visible');
-            }, 300);
+        if (footerBtns && !footerBtns.classList.contains('visible')) {
+            footerBtns.classList.add('visible');
         }
     }
 
@@ -1132,7 +1231,6 @@
             return;
         }
         const card = element.classList?.contains('menu-item-card') ? element : element.closest?.('.menu-item-card');
-        if (card && card.classList.contains('menu-item-unavailable')) return;
         if (card && card.classList.contains('single-page-item-card')) return;
 
         if (event && event.target?.closest?.('.menu-favorite-btn')) {
@@ -1237,25 +1335,31 @@
         }
 
         // If we reach here, the card is NOT expanded and should be expanded
-        // Collapse any other expanded items first
-        if (typeof window.getMenuReelsModalActiveCard === 'function') {
-            const activeReelsCard = window.getMenuReelsModalActiveCard();
-            if (activeReelsCard && activeReelsCard !== element) {
-                collapseItem(activeReelsCard);
-            }
-        }
-        const allCards = document.querySelectorAll('.menu-item-card[data-item-expanded="true"]');
-        allCards.forEach(card => {
-            if (card !== element) {
-                collapseItem(card);
-            }
-        });
-
-        // Expand this item
+        // Collapse any other expanded items first (deferred with expand for INP)
         if (event && isReelsItem && !isExpanded) {
             event.preventDefault();
         }
-        expandItem(element, itemUrl);
+        const expandUrl = itemUrl;
+        const expandTarget = element;
+        const runExpand = function () {
+            if (typeof window.getMenuReelsModalActiveCard === 'function') {
+                const activeReelsCard = window.getMenuReelsModalActiveCard();
+                if (activeReelsCard && activeReelsCard !== expandTarget) {
+                    collapseItem(activeReelsCard);
+                }
+            }
+            document.querySelectorAll('.menu-item-card[data-item-expanded="true"]').forEach(function (card) {
+                if (card !== expandTarget) {
+                    collapseItem(card);
+                }
+            });
+            expandItem(expandTarget, expandUrl);
+        };
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(runExpand);
+        } else {
+            setTimeout(runExpand, 0);
+        }
     }
 
     function resolveMenuItemCard(contextEl) {
@@ -1275,6 +1379,75 @@
             if (modalRoot) return modalRoot;
         }
         return card;
+    }
+
+    function slugifyTaxonomyTerm(text) {
+        return String(text || '').toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .trim();
+    }
+
+    function parseMenuCardJsonAttr(element, attr) {
+        if (!element) return [];
+        const raw = element.getAttribute(attr);
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.filter(function (v) { return v != null && String(v).trim() !== ''; }) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function buildExpandedItemTaxonomiesHTML(taxonomyData) {
+        const taxonomies = [
+            { key: 'tags', label: 'Tags', urlPath: '/tags/', className: 'Tags' },
+            { key: 'ingredients', label: 'Ingredients', urlPath: '/ingredients/', className: 'Ingredients' },
+            { key: 'cookingmethods', label: 'Cooking Methods', urlPath: '/cookingmethods/', className: 'Cookingmethods' },
+            { key: 'types', label: 'Types', urlPath: '/types/', className: 'Types' },
+            { key: 'events', label: 'Events', urlPath: '/events/', className: 'Events' }
+        ];
+        let html = '';
+        let hasAny = false;
+        taxonomies.forEach(function (tax) {
+            const items = taxonomyData && taxonomyData[tax.key];
+            if (!items || !items.length) return;
+            hasAny = true;
+            html += '<div class="taxonomy ' + tax.className + '"><div>' + tax.label + '</div><ul>';
+            items.forEach(function (item) {
+                const name = String(item).trim();
+                if (!name) return;
+                const href = tax.urlPath + slugifyTaxonomyTerm(name) + '/';
+                html += '<li><a href="' + href + '">' + name.replace(/</g, '&lt;') + '</a></li>';
+            });
+            html += '</ul></div>';
+        });
+        return hasAny ? '<div class="expanded-item-taxonomies">' + html + '</div>' : '';
+    }
+
+    function collectItemTaxonomyData(element, itemData) {
+        const data = {
+            tags: [],
+            ingredients: [],
+            cookingmethods: [],
+            types: [],
+            events: []
+        };
+        if (itemData) {
+            if (Array.isArray(itemData.tags)) data.tags = itemData.tags;
+            if (Array.isArray(itemData.ingredients)) data.ingredients = itemData.ingredients;
+            if (Array.isArray(itemData.cookingmethods)) data.cookingmethods = itemData.cookingmethods;
+            if (Array.isArray(itemData.types)) data.types = itemData.types;
+            if (Array.isArray(itemData.events)) data.events = itemData.events;
+        }
+        if (!data.tags.length) data.tags = parseMenuCardJsonAttr(element, 'data-tags');
+        if (!data.ingredients.length) data.ingredients = parseMenuCardJsonAttr(element, 'data-ingredients');
+        if (!data.cookingmethods.length) data.cookingmethods = parseMenuCardJsonAttr(element, 'data-cookingmethods');
+        if (!data.types.length) data.types = parseMenuCardJsonAttr(element, 'data-types');
+        if (!data.events.length) data.events = parseMenuCardJsonAttr(element, 'data-events');
+        return data;
     }
 
     async function expandItem(element, url) {
@@ -1877,6 +2050,9 @@
                 const menuImageNoCarouselClass = menuImageEnabled && !hasExpandedCarousel && !useSmashPassMedia
                     ? ' expanded-item-details--no-carousel'
                     : '';
+                const itemTaxonomyData = collectItemTaxonomyData(element, itemData);
+                const taxonomiesHTML = buildExpandedItemTaxonomiesHTML(itemTaxonomyData);
+
                 const menuImageAddBtnHTML = `
                             <button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item"><i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button>`;
                 let menuImageActionsHTML = '';
@@ -1931,6 +2107,7 @@
                             ${additionsHTML}
                         </div>
                         ` : ''}
+                        ${taxonomiesHTML}
                         <div class="expanded-item-controls">
                             <div class="expanded-quantity-control">
                                 <button class="btn-quantity" onclick="adjustExpandedQuantity(this, -1)">
@@ -2011,6 +2188,12 @@
             // Update price based on initial selections
             setTimeout(() => {
                 updateExpandedItemPriceFromOptions(element);
+                const dt = window.__ttmsDateTime || getLocalDateTime();
+                const availAttr = element.getAttribute('data-availability');
+                if (availAttr) {
+                    const available = isWithinAvailability(availAttr, dt.day, { hour: dt.hour, minute: dt.minute });
+                    applyAvailabilityToExpandedCard(element, available, formatAvailabilityMessage(availAttr));
+                }
             }, 50);
 
             // Scroll into view (menu reels track on home, else window + header offset)
@@ -2488,7 +2671,7 @@
         }
         const root = getExpandedViewRoot(card);
         if (card.classList.contains('menu-item-unavailable')) {
-            alert('This item is not currently available. Lunch items are available Monday–Friday, 11AM–2PM.');
+            alert('This item is not currently available for ordering. ' + formatAvailabilityMessage(card.getAttribute('data-availability')));
             return;
         }
 
@@ -2800,7 +2983,7 @@
         document.addEventListener('keydown', function (e) {
             if (e.key !== 'Enter' && e.key !== ' ') return;
             const card = e.target.closest('.menu-item-card[role="button"]');
-            if (!card || card.classList.contains('menu-item-unavailable')) return;
+            if (!card) return;
             if (e.target.closest(
                 '.menu-favorite-btn, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, ' +
                 '.expanded-item-controls, .btn-quantity, .expanded-image-nav, .expanded-image-indicator'
@@ -3717,12 +3900,17 @@
     window.expandMenuItemCard = expandItem;
 
     window.applyDayBasedPromos = applyDayBasedPromos;
+    window.TTMSFormatAvailabilityMessage = formatAvailabilityMessage;
     window.initializeFooterVisibility = initializeFooterVisibility;
     window.hydrateAuthenticatedDraftAssetImg = hydrateAuthenticatedDraftAssetImg;
     window.hydrateAllDraftMenuCardImages = hydrateAllDraftMenuCardImages;
 
     document.addEventListener('menuReelsFlattened', function () {
         hydrateAllDraftMenuCardImages();
+    });
+
+    document.addEventListener('homeMenuItemsLoaded', function () {
+        if (typeof applyDayBasedPromos === 'function') applyDayBasedPromos();
     });
 
     function bootstrapMain() {

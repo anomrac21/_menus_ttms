@@ -175,16 +175,13 @@
     background-image: none !important;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(0.5rem);
-    transition:
-        opacity 0.45s ease,
-        transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: none;
+    transition: opacity 0.45s ease;
 }
 
 #footerBtns.footer-dock.visible {
     opacity: 1 !important;
     pointer-events: auto !important;
-    transform: translateY(0);
 }
 
 #footerBtns.footer-dock.grad2::before {

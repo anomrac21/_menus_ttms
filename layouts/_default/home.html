@@ -5,7 +5,7 @@
   {{ $siteName := partial "site-name.html" . }}
   <h1 class="sr-only">{{ $siteName }}</h1>
   {{ if .Params.image }}
-    <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high">
+    <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high" data-src-path="{{ .Params.image }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
   {{ else }}
     <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
   {{ end }}
@@ -32,16 +32,33 @@
       {{ $titleurl := .RelPermalink }}
       {{ if not (or (in $titleurl "admins") (in $titleurl "admin")) }}
         {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
-          {{/* Only render the first "Promotions" section found to avoid duplicates */}}
+          {{/* Promotions: full section header (icon/images from _index.md) then promo reels */}}
           {{ $promoCount := len .RegularPages }}
-          <section class="menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-item-count="{{ $promoCount }}">
-            <a class="menu-anchor" id="{{ $title }}"></a>
-            <h2 class="center title item" data-aos="zoom-out-right" data-aos-offset="50">
-              <a href="{{ $titleurl }}">{{ $title }}</a>
-            </h2>
-            <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">0</span> <span class="menu-header__item-count__suffix">{{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</span></p>
-          </section>
-          {{ partial "ads/homepageclientads.html" . }} 
+          <div class="main-menu-bg {{ $title }}">
+            <div class="main-menu {{ $title }} item">
+              <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ .Section }}" data-promo-section="1" data-item-count="{{ $promoCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
+                <a class="menu-anchor" id="{{ $title }}"></a>
+                <a class="menu-header__link" href="{{ $titleurl }}">
+                  {{ if .Params.images.top }}
+                    <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640">
+                  {{ end }}
+                  <div class="headerstyle item">
+                    <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+                      {{ $title }}
+                      {{ if .Params.images.bottom }}
+                        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "decoration") }}" alt="{{ $title }} decoration" loading="lazy" width="160" height="200">
+                      {{ end }}
+                    </h2>
+                    <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">{{ $promoCount }}</span> <span class="menu-header__item-count__suffix">{{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</span></p>
+                  </div>
+                  {{ with .Summary }}
+                  <div class="menu-summary item">{{ . }}</div>
+                  {{ end }}
+                </a>
+              </section>
+            </div>
+          </div>
+          {{ partial "ads/homepageclientads.html" . }}
           {{ $advertisementsRendered = true }}
         {{ end }}
       {{ end }}
@@ -62,13 +79,13 @@
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
                     <a class="menu-header__link" href="{{ .RelPermalink }}">
                       {{ if .Params.images.top }}
-                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy">
+                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640">
                       {{ end }}
                       <div class="headerstyle item">
                         <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
                           {{ .LinkTitle }}
                           {{ if .Params.images.bottom }}
-                            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "section") }}" alt="{{ .LinkTitle }} decoration" loading="lazy">
+                            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "decoration") }}" alt="{{ .LinkTitle }} decoration" loading="lazy" width="160" height="200">
                           {{ end }}
                         </h2>
                         <p class="menu-header__item-count is-count-pending" aria-live="polite"><span class="menu-header__item-count__value">0</span> <span class="menu-header__item-count__suffix">{{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</span></p>

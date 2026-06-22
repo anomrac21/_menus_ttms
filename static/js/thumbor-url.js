@@ -20,6 +20,14 @@
   }
 
   function siteOrigin() {
+    try {
+      var loc = global.location;
+      if (loc && (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1')) {
+        return String(loc.origin || '').replace(/\/+$/, '');
+      }
+    } catch (e) {
+      /* ignore */
+    }
     var configured =
       (typeof global.MENU_IMAGE_SOURCE_BASE_URL !== 'undefined' &&
         global.MENU_IMAGE_SOURCE_BASE_URL) ||
@@ -34,6 +42,14 @@
   }
 
   function menuImagesUseThumbor() {
+    try {
+      var loc = global.location;
+      if (loc && (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1')) {
+        return false;
+      }
+    } catch (e) {
+      /* ignore */
+    }
     if (typeof global.MENU_IMAGES_USE_THUMBOR !== 'undefined') {
       return !!global.MENU_IMAGES_USE_THUMBOR;
     }
@@ -92,9 +108,11 @@
     thumb: [320, 320],
     card: [480, 480],
     carousel: [720, 900],
-    hero: [1920, 1080],
+    hero: [1280, 720],
     section: [640, 640],
+    decoration: [160, 200],
     ad: [720, 900],
+    smash: [400, 500],
   };
 
   function shouldSkipThumbor(path) {
