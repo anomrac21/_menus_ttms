@@ -18,6 +18,31 @@
     clientId: 'ttmenus',
   },
 
+  isHomeSmoothNavMode() {
+    return (
+      document.documentElement.classList.contains('menu-nav-smooth') ||
+      (document.body && document.body.classList.contains('menu-nav-smooth')) ||
+      (typeof window.getMenuNavMode === 'function' && window.getMenuNavMode() === 'smooth')
+    );
+  },
+
+  getHomeReelsScrollRoot() {
+    if (this.isHomeSmoothNavMode()) return null;
+    const track = document.getElementById('menu-reels-track');
+    if (!track || !track.querySelector('#pageadscontainer')) return null;
+    return track;
+  },
+
+  getHeaderScrollOffset() {
+    const raw = (getComputedStyle(document.documentElement).getPropertyValue('--ttms-header-height') || '5em').trim();
+    const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const emMatch = raw.match(/^([\d.]+)em$/);
+    if (emMatch) return parseFloat(emMatch[1]) * rootPx;
+    const pxMatch = raw.match(/^([\d.]+)px$/);
+    if (pxMatch) return parseFloat(pxMatch[1]);
+    return rootPx * 5;
+  },
+
   // Get user's location if available
   userLocation: '',
   _displayGeneration: 0,
@@ -51,9 +76,9 @@
 
     var slide = document.getElementById('menu-reels-sponsored-ads');
     var target = slide || document.getElementById('pageadscontainer');
-    var track = document.getElementById('menu-reels-track');
+    var scrollRoot = self.getHomeReelsScrollRoot();
 
-    if (!target || !track || typeof IntersectionObserver === 'undefined') {
+    if (!target || typeof IntersectionObserver === 'undefined') {
       if (typeof requestIdleCallback === 'function') {
         requestIdleCallback(run, { timeout: 12000 });
       } else {
@@ -70,7 +95,9 @@
           run();
         });
       },
-      { root: track, rootMargin: '80% 0px', threshold: 0.01 }
+      scrollRoot
+        ? { root: scrollRoot, rootMargin: '80% 0px', threshold: 0.01 }
+        : { root: null, rootMargin: '120px 0px', threshold: 0.01 }
     );
     observer.observe(target);
   },
@@ -422,11 +449,11 @@
    * 100% when its top reaches the viewport top (sticky fullscreen).
    */
   getReelsPreviewScrollProgress() {
-    const track = document.getElementById('menu-reels-track');
     const section = document.querySelector('#pageadscontainer.frontpageads section.menu-ad--reels-preview');
     if (!section) return 0;
 
-    if (track && track.contains(section)) {
+    const track = document.getElementById('menu-reels-track');
+    if (track && track.contains(section) && !this.isHomeSmoothNavMode()) {
       const trackRect = track.getBoundingClientRect();
       const sectionRect = section.getBoundingClientRect();
       const vh = trackRect.height;
@@ -439,9 +466,10 @@
     const rect = section.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight || 0;
     if (!vh) return 0;
-    if (rect.top <= 0) return 100;
+    const rootTop = this.isHomeSmoothNavMode() ? this.getHeaderScrollOffset() : 0;
+    if (rect.top <= rootTop + 8) return 100;
     if (rect.top >= vh) return 0;
-    return ((vh - rect.top) / vh) * 100;
+    return ((vh - rect.top) / (vh - rootTop)) * 100;
   },
 
   updateReelsPreviewScrollProgressBar() {
@@ -514,10 +542,7 @@
     if (!this.shouldUseReelsMode()) return;
     this.teardownReelsFullscreenAutoOpen();
 
-    const track = document.getElementById('menu-reels-track');
-    const scrollRoot = track && track.querySelector('#pageadscontainer')
-      ? track
-      : null;
+    const scrollRoot = this.getHomeReelsScrollRoot();
 
     this._previewFullscreenScrollHandler = () => {
       const progress = this.getReelsPreviewScrollProgress();
@@ -548,13 +573,14 @@
 
     const section = document.querySelector('#pageadscontainer.frontpageads section.menu-ad--reels-preview');
     if (section && typeof IntersectionObserver !== 'undefined') {
+      const headerOffset = this.isHomeSmoothNavMode() ? this.getHeaderScrollOffset() : 0;
       this._previewFullscreenObserver = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
             const top = entry.boundingClientRect.top;
             const rootTop = scrollRoot
               ? scrollRoot.getBoundingClientRect().top
-              : 0;
+              : headerOffset;
             if (entry.intersectionRatio >= 0.92 && top <= rootTop + 4) {
               this.maybeOpenReelsFromPreviewScroll(100);
             }
@@ -562,7 +588,7 @@
         },
         scrollRoot
           ? { root: scrollRoot, threshold: [0, 0.5, 0.92, 1] }
-          : { threshold: [0, 0.5, 0.92, 1] }
+          : { root: null, threshold: [0, 0.5, 0.92, 1], rootMargin: `-${headerOffset}px 0px 0px 0px` }
       );
       this._previewFullscreenObserver.observe(section);
     }
@@ -1751,5 +1777,11 @@
   } else {
     registerBarbaAdsClient();
   }
+
+  window.addEventListener('ttms:nav-mode-change', function () {
+    if (typeof AdsClient.setupReelsFullscreenAutoOpen === 'function') {
+      AdsClient.setupReelsFullscreenAutoOpen();
+    }
+  });
 })();
 

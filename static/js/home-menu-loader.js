@@ -98,7 +98,15 @@
   }
 
   function isSlideNearViewport(slide, track) {
-    if (!slide || !track) return false;
+    if (!slide) return false;
+    if (isSmoothNavMode()) {
+      var headerOffset = getHeaderScrollOffset();
+      var viewportBottom = window.innerHeight;
+      var range = viewportBottom * PROXIMITY_VIEWPORTS;
+      var slideRect = slide.getBoundingClientRect();
+      return slideRect.bottom >= headerOffset - range && slideRect.top <= viewportBottom + range;
+    }
+    if (!track) return false;
     var trackRect = track.getBoundingClientRect();
     var slideRect = slide.getBoundingClientRect();
     var range = trackRect.height * PROXIMITY_VIEWPORTS;
@@ -388,6 +396,28 @@
   }
 
   var PROXIMITY_VIEWPORTS = 0.85;
+
+  function isSmoothNavMode() {
+    return (
+      document.documentElement.classList.contains('menu-nav-smooth') ||
+      (document.body && document.body.classList.contains('menu-nav-smooth')) ||
+      (typeof window.getMenuNavMode === 'function' && window.getMenuNavMode() === 'smooth')
+    );
+  }
+
+  function getHeaderScrollOffset() {
+    var raw = (getComputedStyle(document.documentElement).getPropertyValue('--ttms-header-height') || '5em').trim();
+    var rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    var emMatch = raw.match(/^([\d.]+)em$/);
+    if (emMatch) return parseFloat(emMatch[1]) * rootPx;
+    var pxMatch = raw.match(/^([\d.]+)px$/);
+    if (pxMatch) return parseFloat(pxMatch[1]);
+    return rootPx * 5;
+  }
+
+  function getProximityScrollRoot() {
+    return isSmoothNavMode() ? null : getTrack();
+  }
 
   function getConfigRoot() {
     return (
@@ -829,6 +859,8 @@
     var parent = header.parentElement;
     if (!parent) return;
 
+    var preserveScrollY = isSmoothNavMode() ? window.scrollY : null;
+
     var fragment = document.createDocumentFragment();
     items.forEach(function (item) {
       var wrap = document.createElement('div');
@@ -846,6 +878,11 @@
     header.removeAttribute('aria-busy');
     header.dataset.homeMenuLoaded = '1';
     finalizeSectionItemCount(header, items.length);
+    if (preserveScrollY != null) {
+      requestAnimationFrame(function () {
+        window.scrollTo({ top: preserveScrollY, left: 0, behavior: 'auto' });
+      });
+    }
     scheduleReelsRefresh();
     if (config.menuImages && typeof window.refreshLazyItemSmashPass === 'function') {
       window.refreshLazyItemSmashPass();
@@ -877,7 +914,11 @@
   }
 
   function isHeaderNearViewport(header, track) {
-    if (!header || !track) return false;
+    if (!header) return false;
+    if (isSmoothNavMode()) {
+      return isSlideNearViewport(header, track);
+    }
+    if (!track) return false;
     var trackRect = track.getBoundingClientRect();
     var headerRect = header.getBoundingClientRect();
     var range = trackRect.height * PROXIMITY_VIEWPORTS;
@@ -931,7 +972,7 @@
         });
       },
       {
-        root: track,
+        root: getProximityScrollRoot(),
         rootMargin: Math.round(PROXIMITY_VIEWPORTS * 100) + '% 0px ' + Math.round(PROXIMITY_VIEWPORTS * 100) + '% 0px',
         threshold: 0,
       }
@@ -947,6 +988,9 @@
     if (!track || track._ttmsHomeMenuProximityBound) return;
     track._ttmsHomeMenuProximityBound = true;
     track.addEventListener('scroll', scheduleProximityCheck, { passive: true });
+    if (isSmoothNavMode()) {
+      window.addEventListener('scroll', scheduleProximityCheck, { passive: true });
+    }
   }
 
   function bindMenublockPreload(config) {

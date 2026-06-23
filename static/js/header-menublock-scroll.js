@@ -632,14 +632,21 @@
   window.scrollPageAndMenublockToTop = scrollPageAndMenublockToTop;
 
   function scrollMenublockLinkIntoView(link) {
-    if (!link || !link.scrollIntoView || isMobileMenublockMode()) return;
+    if (!link || isMobileMenublockMode()) return;
+    var menublock = document.getElementById('menublock');
+    if (!menublock) return;
+
+    var linkRect = link.getBoundingClientRect();
+    var blockRect = menublock.getBoundingClientRect();
+    var linkCenter = linkRect.left + linkRect.width / 2;
+    var blockCenter = blockRect.left + blockRect.width / 2;
+    var targetLeft = menublock.scrollLeft + (linkCenter - blockCenter);
+    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);
+    targetLeft = Math.max(0, Math.min(maxScroll, targetLeft));
+
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    link.scrollIntoView({
-      block: 'nearest',
-      inline: 'center',
-      behavior: reducedMotion || coarsePointer ? 'auto' : 'smooth'
-    });
+    scrollMenublockTo(targetLeft, !(reducedMotion || coarsePointer));
   }
 
   window.scrollMenublockLinkIntoView = scrollMenublockLinkIntoView;

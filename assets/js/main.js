@@ -2907,6 +2907,10 @@
         const track = document.getElementById('menu-reels-track');
         if (track && target) {
             const slide = target.closest('.menu-reels-slide, .ads-reels-slide');
+            if (slide && typeof window.scrollToMenuReelsCard === 'function') {
+                window.scrollToMenuReelsCard(slide, behavior || 'smooth');
+                return;
+            }
             if (slide) {
                 const tr = track.getBoundingClientRect();
                 const sr = slide.getBoundingClientRect();

@@ -12,6 +12,16 @@ body.menu-reels-mode {
     background: var(--main-bg, #000);
 }
 
+html.menu-nav-smooth,
+html.menu-nav-smooth body.menu-reels-mode {
+    overflow: auto;
+    scroll-behavior: smooth;
+}
+
+html.menu-nav-smooth body.menu-reels-mode {
+    background: var(--main-bg, #000);
+}
+
 body.menu-reels-mode main.main--home {
     margin: 0 !important;
     padding: 0;
@@ -25,6 +35,61 @@ body.menu-reels-mode main.main--home {
     height: 100dvh;
     overflow: hidden;
     background: var(--main-bg, #000);
+}
+
+html.menu-nav-smooth body.menu-reels-mode main.main--home,
+body.menu-nav-smooth main.main--home {
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+    padding-block-end: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.menu-nav-smooth .menu-reels-viewport,
+html.menu-nav-smooth .menu-reels-track,
+body.menu-nav-smooth .menu-reels-viewport,
+body.menu-nav-smooth .menu-reels-track {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+}
+
+/* Smooth scroll — same slide heights as snap, without scroll-snap */
+html.menu-nav-smooth .menu-reels-track .menu-reels-slide,
+html.menu-nav-smooth .menu-reels-track .ads-reels-slide,
+html.menu-nav-smooth .menu-item-card.menu-reels-slide,
+body.menu-nav-smooth .menu-reels-track .menu-reels-slide,
+body.menu-nav-smooth .menu-reels-track .ads-reels-slide,
+body.menu-nav-smooth .menu-item-card.menu-reels-slide {
+    flex-shrink: 0;
+    width: 100%;
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    height: calc(100dvh - var(--ttms-header-height, 5em));
+    max-height: calc(100dvh - var(--ttms-header-height, 5em));
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+    overflow: hidden;
+}
+
+html.menu-nav-smooth .menu-reels-slide--bottom-ads,
+body.menu-nav-smooth .menu-reels-slide--bottom-ads {
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    height: calc(100dvh - var(--ttms-header-height, 5em));
+}
+
+html.menu-nav-smooth #homepage-ads-container .ads-loading,
+html.menu-nav-smooth #homepage-ads-container .homepage-ads-empty,
+body.menu-nav-smooth #homepage-ads-container .ads-loading,
+body.menu-nav-smooth #homepage-ads-container .homepage-ads-empty {
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    height: calc(100dvh - var(--ttms-header-height, 5em));
+    scroll-snap-align: none;
+}
+
+html.menu-nav-smooth .menu-anchor,
+body.menu-nav-smooth .menu-anchor {
+    scroll-margin-top: var(--ttms-header-height, 5em);
 }
 
 body.menu-reels-mode .bottomads:not(.menu-reels-bottom-ads-in-track) {
@@ -111,13 +176,16 @@ body.menu-reels-contact-active #footerBtns {
 .menu-reels-viewport {
     position: relative;
     width: 100%;
-    height: 100%;
-    overflow: hidden;
     background: var(--main-bg, #000);
 }
 
+html:not(.menu-nav-smooth) .menu-reels-viewport {
+    height: 100%;
+    overflow: hidden;
+}
+
 /* Same as .ads-reels-track — dedicated vertical snap container */
-.menu-reels-track {
+html:not(.menu-nav-smooth) .menu-reels-track {
     position: relative;
     height: 100%;
     overflow-y: auto;
@@ -128,6 +196,13 @@ body.menu-reels-contact-active #footerBtns {
     overscroll-behavior-y: contain;
     touch-action: pan-y;
     scrollbar-width: none;
+}
+
+html.menu-nav-smooth .menu-reels-track {
+    position: relative;
+    overflow: visible;
+    scroll-snap-type: none;
+    overscroll-behavior-y: auto;
 }
 
 .menu-reels-track::-webkit-scrollbar {

@@ -10,6 +10,27 @@
   var initReelsScheduled = null;
   var initReelsRunning = false;
   var RATIO_THRESHOLD = 0.45;
+  var lastDominantSlide = null;
+  var lastSyncedMenublockSectionId = null;
+  var lastMenublockActiveId = null;
+
+  function isSmoothNavMode() {
+    return (
+      document.documentElement.classList.contains('menu-nav-smooth') ||
+      (document.body && document.body.classList.contains('menu-nav-smooth')) ||
+      (typeof window.getMenuNavMode === 'function' && window.getMenuNavMode() === 'smooth')
+    );
+  }
+
+  function getHeaderScrollOffset() {
+    var raw = (getComputedStyle(document.documentElement).getPropertyValue('--ttms-header-height') || '5em').trim();
+    var rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    var emMatch = raw.match(/^([\d.]+)em$/);
+    if (emMatch) return parseFloat(emMatch[1]) * rootPx;
+    var pxMatch = raw.match(/^([\d.]+)px$/);
+    if (pxMatch) return parseFloat(pxMatch[1]);
+    return rootPx * 5;
+  }
 
   function getTrack() {
     return document.getElementById('menu-reels-track');
@@ -32,21 +53,58 @@
 
   function getDominantSlide(track) {
     if (!track) return null;
+    if (isSmoothNavMode()) {
+      var viewportTop = getHeaderScrollOffset();
+      var viewportBottom = window.innerHeight;
+      var viewportHeight = Math.max(1, viewportBottom - viewportTop);
+      var best = null;
+      var bestVisible = 0;
+      getSlides(track).forEach(function (slide) {
+        var sr = slide.getBoundingClientRect();
+        var visibleTop = Math.max(sr.top, viewportTop);
+        var visibleBottom = Math.min(sr.bottom, viewportBottom);
+        var visible = Math.max(0, visibleBottom - visibleTop);
+        if (visible > bestVisible) {
+          bestVisible = visible;
+          best = slide;
+        }
+      });
+      if (lastDominantSlide && lastDominantSlide.isConnected) {
+        var lr = lastDominantSlide.getBoundingClientRect();
+        var lastVisible = Math.max(
+          0,
+          Math.min(lr.bottom, viewportBottom) - Math.max(lr.top, viewportTop)
+        );
+        var lastRatio = lastVisible / viewportHeight;
+        if (lastRatio > 0.35) {
+          if (!best || best === lastDominantSlide || bestVisible <= lastVisible * 1.12) {
+            return lastDominantSlide;
+          }
+        }
+      }
+      lastDominantSlide = best;
+      return best;
+    }
+    var top;
+    var bottom;
+    var midY;
     var tr = track.getBoundingClientRect();
-    var midY = tr.top + tr.height / 2;
-    var best = null;
+    top = tr.top;
+    bottom = tr.bottom;
+    midY = tr.top + tr.height / 2;
+    var bestSnap = null;
     var bestDist = Infinity;
     getSlides(track).forEach(function (slide) {
       var sr = slide.getBoundingClientRect();
-      if (sr.bottom <= tr.top || sr.top >= tr.bottom) return;
+      if (sr.bottom <= top || sr.top >= bottom) return;
       var center = (sr.top + sr.bottom) / 2;
       var dist = Math.abs(center - midY);
       if (dist < bestDist) {
         bestDist = dist;
-        best = slide;
+        bestSnap = slide;
       }
     });
-    return best;
+    return bestSnap;
   }
 
   function normalizeMenublockSectionId(value) {
@@ -104,8 +162,6 @@
         link.setAttribute('aria-current', 'location');
         if (typeof window.scrollMenublockLinkIntoView === 'function') {
           window.scrollMenublockLinkIntoView(link);
-        } else {
-          link.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'auto' });
         }
       } else {
         link.classList.remove('is-active');
@@ -135,15 +191,31 @@
     var dom = getDominantSlide(track);
     syncFooterFromTrack();
     if (!dom) {
-      if (track.scrollTop < 40) setMenublockActive(null);
+      var scrollPos = isSmoothNavMode() ? window.scrollY : track.scrollTop;
+      if (scrollPos < 40) {
+        lastSyncedMenublockSectionId = null;
+        if (lastMenublockActiveId !== null) {
+          lastMenublockActiveId = null;
+          setMenublockActive(null);
+        }
+      }
       return;
     }
     var id = resolveSectionIdForSlide(dom, slides);
-    if (id === 'Sponsored') return;
-    if (id && typeof window.loadHomeMenuForSectionId === 'function') {
-      window.loadHomeMenuForSectionId(id);
+    if (id === 'Sponsored') {
+      lastSyncedMenublockSectionId = 'Sponsored';
+      return;
     }
-    if (id) setMenublockActive(id);
+    if (id && id !== lastSyncedMenublockSectionId) {
+      lastSyncedMenublockSectionId = id;
+      if (!isSmoothNavMode() && typeof window.loadHomeMenuForSectionId === 'function') {
+        window.loadHomeMenuForSectionId(id);
+      }
+    }
+    if (id !== lastMenublockActiveId) {
+      lastMenublockActiveId = id || null;
+      if (id) setMenublockActive(id);
+    }
   }
 
   function findSlideForSectionId(id) {
@@ -168,6 +240,9 @@
   }
 
   function slideScrollTop(track, slide) {
+    if (isSmoothNavMode()) {
+      return slide.getBoundingClientRect().top + window.scrollY - getHeaderScrollOffset();
+    }
     var tr = track.getBoundingClientRect();
     var sr = slide.getBoundingClientRect();
     return track.scrollTop + (sr.top - tr.top);
@@ -176,11 +251,19 @@
   function scrollToSlide(slide, behavior) {
     var track = getTrack();
     if (!track || !slide) return;
-    track.scrollTo({
-      top: slideScrollTop(track, slide),
-      left: 0,
-      behavior: behavior || 'smooth'
-    });
+    if (isSmoothNavMode()) {
+      window.scrollTo({
+        top: Math.max(0, slideScrollTop(track, slide)),
+        left: 0,
+        behavior: behavior || 'smooth'
+      });
+    } else {
+      track.scrollTo({
+        top: slideScrollTop(track, slide),
+        left: 0,
+        behavior: behavior || 'smooth'
+      });
+    }
     window.setTimeout(syncMenublockFromTrack, behavior === 'auto' ? 50 : 400);
   }
 
@@ -420,6 +503,17 @@
       return false;
     }
 
+    var restoreScrollY = null;
+    var anchorSlide = null;
+    if (isSmoothNavMode()) {
+      anchorSlide = getDominantSlide(track);
+      if (anchorSlide && anchorSlide.isConnected) {
+        restoreScrollY = slideScrollTop(track, anchorSlide);
+      } else {
+        restoreScrollY = window.scrollY;
+      }
+    }
+
     var bottomAdsSlide = track.querySelector('.menu-reels-slide--bottom-ads');
     if (bottomAdsSlide && bottomAdsSlide.parentElement === track) {
       bottomAdsSlide.parentElement.removeChild(bottomAdsSlide);
@@ -458,6 +552,18 @@
 
     mountBottomAdsInTrack(track);
 
+    if (restoreScrollY != null) {
+      var y = restoreScrollY;
+      var anchor = anchorSlide;
+      requestAnimationFrame(function () {
+        if (anchor && anchor.isConnected) {
+          window.scrollTo({ top: slideScrollTop(track, anchor), left: 0, behavior: 'auto' });
+        } else {
+          window.scrollTo({ top: Math.max(0, y), left: 0, behavior: 'auto' });
+        }
+      });
+    }
+
     try {
       var win = track.ownerDocument && track.ownerDocument.defaultView;
       if (win) win.dispatchEvent(new CustomEvent('menuReelsFlattened'));
@@ -473,6 +579,10 @@
     }
     if (scrollHandler) {
       track.removeEventListener('scroll', scrollHandler);
+      if (track._ttmsReelsWindowScrollBound) {
+        window.removeEventListener('scroll', scrollHandler);
+        track._ttmsReelsWindowScrollBound = false;
+      }
     }
     track._ttmsReelsTrackBound = false;
   }
@@ -495,7 +605,11 @@
   function scrollTrackToTop(behavior) {
     var track = getTrack();
     if (!track) return;
-    track.scrollTo({ top: 0, left: 0, behavior: behavior || 'smooth' });
+    if (isSmoothNavMode()) {
+      window.scrollTo({ top: 0, left: 0, behavior: behavior || 'smooth' });
+    } else {
+      track.scrollTo({ top: 0, left: 0, behavior: behavior || 'smooth' });
+    }
     setMenublockActive(null);
   }
 
@@ -586,10 +700,6 @@
     teardownTrackScroll(track);
     track._ttmsReelsTrackBound = true;
 
-    var trackAbort = new AbortController();
-    track._ttmsReelsTrackAbort = trackAbort;
-    var signal = trackAbort.signal;
-
     scrollHandler = function () {
       if (scrollSyncPending) return;
       scrollSyncPending = true;
@@ -598,6 +708,17 @@
         syncMenublockFromTrack();
       });
     };
+
+    if (isSmoothNavMode()) {
+      window.addEventListener('scroll', scrollHandler, { passive: true });
+      track._ttmsReelsWindowScrollBound = true;
+      return;
+    }
+
+    var trackAbort = new AbortController();
+    track._ttmsReelsTrackAbort = trackAbort;
+    var signal = trackAbort.signal;
+
     track.addEventListener('scroll', scrollHandler, { passive: true, signal: signal });
 
     track.addEventListener(
@@ -765,7 +886,11 @@
       function () {
         syncMenublockFromTrack();
       },
-      { root: track, rootMargin: '0px', threshold: [0, 0.35, 0.55, 0.75, 1] }
+      {
+        root: isSmoothNavMode() ? null : track,
+        rootMargin: '0px',
+        threshold: [0, 0.35, 0.55, 0.75, 1]
+      }
     );
     slides.forEach(function (slide) {
       observer.observe(slide);
@@ -828,7 +953,11 @@
         } else if (!track._ttmsReelsScrolledToStart) {
           track._ttmsReelsScrolledToStart = true;
           requestAnimationFrame(function () {
-            track.scrollTop = 0;
+            if (isSmoothNavMode()) {
+              window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            } else {
+              track.scrollTop = 0;
+            }
             setMenublockActive(null);
           });
         }
@@ -889,6 +1018,7 @@
           teardownTrackScroll(track);
           track._ttmsReelsScrolledToStart = false;
         }
+        resetScrollSyncState();
         initMenuReels({ immediate: true, forceFlatten: true });
         bindMenuReelsItemModal();
       });
@@ -1194,6 +1324,12 @@
     }, true);
   }
 
+  function resetScrollSyncState() {
+    lastDominantSlide = null;
+    lastSyncedMenublockSectionId = null;
+    lastMenublockActiveId = null;
+  }
+
   function scrollToSponsoredAds(behavior) {
     var slide =
       document.getElementById('menu-reels-sponsored-ads') ||
@@ -1201,10 +1337,21 @@
     scrollToSlide(slide, behavior || 'smooth');
   }
 
+  function refreshMenuNavScrollBindings() {
+    var track = getTrack();
+    if (!track) return;
+    lastDominantSlide = null;
+    teardownTrackScroll(track);
+    bindTrackScroll();
+    observeSections(track);
+    syncMenublockFromTrack();
+  }
+
   function scrollToMenuReelsCard(card, behavior) {
     scrollToSlide(card, behavior || 'smooth');
   }
 
+  window.refreshMenuNavScrollBindings = refreshMenuNavScrollBindings;
   window.scrollToMenuReelsCard = scrollToMenuReelsCard;
   window.openReelsMenuItemOrder = openReelsMenuItemOrder;
   window.getMenuReelsTrack = getTrack;
@@ -1230,6 +1377,11 @@
 
   window.addEventListener('adManagerReady', function () {
     initMenuReels({ forceFlatten: true });
+  });
+
+  window.addEventListener('ttms:nav-mode-change', function () {
+    resetScrollSyncState();
+    refreshMenuNavScrollBindings();
   });
 
   if (document.readyState === 'loading') {

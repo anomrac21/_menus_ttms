@@ -4,6 +4,16 @@
 			<span class="footer-settings-popover__title">Quick settings</span>
 		</div>
 		<div class="footer-settings-popover__body">
+			<div class="footer-settings-popover__row footer-settings-popover__nav-mode" id="settingsNavModeRow">
+				<span class="footer-settings-popover__nav-mode-label">
+					<span class="footer-settings-popover__btn-icon" aria-hidden="true"><i class="fa fa-arrows-v"></i></span>
+					<span class="footer-settings-popover__nav-mode-text">Navigation</span>
+				</span>
+				<div class="footer-settings-nav-toggle" role="group" aria-label="Navigation style">
+					<button type="button" class="footer-settings-nav-toggle__btn is-active" data-nav-mode="snap" aria-pressed="true">Snap</button>
+					<button type="button" class="footer-settings-nav-toggle__btn" data-nav-mode="smooth" aria-pressed="false">Smooth</button>
+				</div>
+			</div>
 			<a id="settingsLoginOrDashboard" href="/login/" class="btn settings-btn footer-settings-popover__btn" data-aos="zoom-in" data-barba="prevent" data-auth="guest">
 				<span class="footer-settings-popover__btn-icon" aria-hidden="true"><i class="fa fa-user"></i></span>
 				<span class="footer-settings-popover__btn-label">Login</span>

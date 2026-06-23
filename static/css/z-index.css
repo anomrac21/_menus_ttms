@@ -19,6 +19,9 @@
     --ttms-z-bottom-reel-max: 44;
     --ttms-z-bottom-ads-wrap: 45;
 
+    /* Ambient tap feedback (above app overlays; below loader) */
+    --ttms-z-tap-particles: 10105;
+
     /* Fixed chrome */
     --ttms-z-footer: 50;
     --ttms-z-footer-controls: 55;

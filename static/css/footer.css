@@ -90,6 +90,84 @@
     padding: 0.65rem;
 }
 
+.footer-settings-popover__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 2.85rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.85rem;
+    background: linear-gradient(
+        160deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
+}
+
+.footer-settings-popover__nav-mode-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    color: var(--footer-text-color, #fff);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.footer-settings-popover__nav-mode-text {
+    white-space: nowrap;
+}
+
+.footer-settings-nav-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    padding: 0.18rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.footer-settings-nav-toggle__btn {
+    min-width: 4.1rem;
+    padding: 0.42rem 0.72rem;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: color-mix(in srgb, var(--footer-text-color, #fff) 72%, transparent);
+    font: inherit;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.footer-settings-nav-toggle__btn.is-active {
+    background: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--footer-settings-accent) 72%, #fff) 0%,
+        color-mix(in srgb, var(--footer-settings-accent) 42%, rgba(255, 255, 255, 0.2)) 100%
+    );
+    color: #111;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.footer-settings-nav-toggle__btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--footer-settings-accent) 65%, #fff);
+    outline-offset: 2px;
+}
+
 .footer-settings-popover__btn,
 #footerSettings .btn.settings-btn {
     display: inline-flex;
@@ -405,6 +483,15 @@
 @media (max-width: 380px) {
     .footer-dock__label {
         display: none;
+    }
+
+    .footer-settings-nav-toggle__btn {
+        min-width: 3.5rem;
+        padding-inline: 0.55rem;
+    }
+
+    .footer-settings-popover__nav-mode-text {
+        font-size: 0.88rem;
     }
 
     .footer-dock__bar {

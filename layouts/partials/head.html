@@ -324,14 +324,34 @@
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/footer.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/contact.css") }}
 {{- if .IsHome -}}
+<script>
+(function () {
+  try {
+    var mode = 'snap';
+    var raw = localStorage.getItem('userPreferences');
+    if (raw) {
+      var prefs = JSON.parse(raw);
+      if (prefs && prefs.homeNavMode === 'smooth') mode = 'smooth';
+    }
+    if (mode === 'smooth') {
+      document.documentElement.classList.add('menu-nav-smooth');
+    }
+  } catch (e) { /* ignore */ }
+})();
+</script>
 <style id="ttms-home-critical">
-  html.menu-reels-mode,
-  body.menu-reels-mode {
+  html.menu-reels-mode:not(.menu-nav-smooth),
+  body.menu-reels-mode:not(.menu-nav-smooth) {
     overflow: hidden;
     background: var(--main-bg, #000);
   }
-  body.menu-reels-mode main.main--home,
-  body.main--home main.main--home {
+  html.menu-nav-smooth,
+  body.menu-nav-smooth {
+    scroll-behavior: smooth;
+    background: var(--main-bg, #000);
+  }
+  html:not(.menu-nav-smooth) body.menu-reels-mode main.main--home,
+  html:not(.menu-nav-smooth) body.main--home main.main--home {
     margin: 0 !important;
     padding: 0;
     padding-block-start: var(--ttms-header-height, 5em) !important;
@@ -344,7 +364,7 @@
     overflow: hidden;
     background: var(--main-bg, #000);
   }
-  .main--home .menu-reels-viewport {
+  html:not(.menu-nav-smooth) .main--home .menu-reels-viewport {
     position: relative;
     width: 100%;
     height: 100%;
@@ -352,14 +372,14 @@
     overflow: hidden;
     background: var(--main-bg, #000);
   }
-  .main--home .menu-reels-track {
+  html:not(.menu-nav-smooth) .main--home .menu-reels-track {
     position: relative;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-snap-type: y mandatory;
   }
-  .main--home .menu-reels-track .menu-reels-slide {
+  html:not(.menu-nav-smooth) .main--home .menu-reels-track .menu-reels-slide {
     flex-shrink: 0;
     width: 100%;
     min-height: 100%;
@@ -367,6 +387,46 @@
     scroll-snap-align: start;
     scroll-snap-stop: always;
     box-sizing: border-box;
+  }
+  html.menu-nav-smooth body.menu-reels-mode main.main--home,
+  html.menu-nav-smooth body.main--home main.main--home,
+  body.menu-nav-smooth main.main--home {
+    margin: 0 !important;
+    padding: 0;
+    padding-block-start: var(--ttms-header-height, 5em) !important;
+    box-sizing: border-box;
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+    background: var(--main-bg, #000);
+  }
+  html.menu-nav-smooth .main--home .menu-reels-viewport,
+  html.menu-nav-smooth .main--home .menu-reels-track,
+  body.menu-nav-smooth .main--home .menu-reels-viewport,
+  body.menu-nav-smooth .main--home .menu-reels-track {
+    height: auto;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+  html.menu-nav-smooth .main--home .menu-reels-track .menu-reels-slide,
+  html.menu-nav-smooth .main--home .menu-reels-track .ads-reels-slide,
+  html.menu-nav-smooth .main--home .menu-item-card.menu-reels-slide,
+  body.menu-nav-smooth .main--home .menu-reels-track .menu-reels-slide,
+  body.menu-nav-smooth .main--home .menu-reels-track .ads-reels-slide,
+  body.menu-nav-smooth .main--home .menu-item-card.menu-reels-slide {
+    flex-shrink: 0;
+    width: 100%;
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    height: calc(100dvh - var(--ttms-header-height, 5em));
+    max-height: calc(100dvh - var(--ttms-header-height, 5em));
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+    overflow: hidden;
+  }
+  html.menu-nav-smooth .main--home .menu-reels-slide--bottom-ads,
+  body.menu-nav-smooth .main--home .menu-reels-slide--bottom-ads {
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    height: calc(100dvh - var(--ttms-header-height, 5em));
   }
   .main--home .logo_container {
     min-height: 12rem;
@@ -400,11 +460,23 @@
     font-size: 0.95em;
   }
   .single-page-item-card .menu-item-title-row { min-height: 2.75rem; }
-  .main--home .menu-reels-viewport {
+  html:not(.menu-nav-smooth) .main--home .menu-reels-viewport {
     width: 100%;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+  html.menu-nav-smooth .main--home .menu-reels-viewport,
+  html.menu-nav-smooth .main--home .menu-reels-track,
+  body.menu-nav-smooth .main--home .menu-reels-viewport,
+  body.menu-nav-smooth .main--home .menu-reels-track {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  html.menu-nav-smooth body.menu-reels-mode main.main--home,
+  body.menu-nav-smooth main.main--home {
+    padding-block-end: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 </style>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
@@ -532,6 +604,10 @@
 
 <!-- TTMS Analytics Tracking - Deferred -->
 <script src="/js/analytics-tracking.js" defer></script>
+
+<!-- Touch particles — all pages -->
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/tap-particles.css") }}
+<script src="/js/tap-particles.js" defer></script>
 
 {{- if $menuPublicSite -}}
 <!-- Pull-to-refresh in PWA / standalone display mode (no browser chrome) -->
