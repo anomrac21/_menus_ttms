@@ -125,10 +125,10 @@
     inset: 0;
     border-radius: 1rem;
     max-width: calc(100vw - 1em);
-    margin: auto;
+    margin: .5em auto;
     overflow: hidden;
     background: #0f172a;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.38);
     border: 3px solid rgba(255, 255, 255, 0.14);
     cursor: grab;
     touch-action: pan-y;
