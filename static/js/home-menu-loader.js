@@ -772,7 +772,9 @@
     if (reelsRefreshTimer) window.clearTimeout(reelsRefreshTimer);
     reelsRefreshTimer = window.setTimeout(function () {
       reelsRefreshTimer = null;
-      if (typeof window.initMenuReels === 'function') {
+      if (typeof window.refreshMenuReelsLayout === 'function') {
+        window.refreshMenuReelsLayout();
+      } else if (typeof window.initMenuReels === 'function') {
         window.initMenuReels();
       }
       if (typeof window.initMenuSmashPass === 'function') {
@@ -1092,6 +1094,13 @@
     observeSectionHeaders(loaderConfig);
     observeSectionTitleCounts();
     observeHeaderCounts();
+    scheduleProximityCheck();
+  });
+
+  window.addEventListener('menuReelsUpdated', function () {
+    if (!loaderConfig) return;
+    observeSectionHeaders(loaderConfig);
+    observeSectionTitleCounts();
     scheduleProximityCheck();
   });
 

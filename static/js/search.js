@@ -5,10 +5,12 @@
     'use strict';
 
     var SUGGESTION_LIMIT = 8;
+    var LIVE_SEARCH_DEBOUNCE_MS = 120;
     var menuSearchIndex = null;
     var menuSearchIndexPromise = null;
     var activeSuggestions = [];
     var activeSuggestionIndex = -1;
+    var liveSearchTimer = null;
 
     function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -563,7 +565,7 @@
 
         searchInput.value = suggestion.query || suggestion.label;
         hideSearchSuggestions();
-        liveSearch();
+        liveSearchNow();
         searchInput.focus();
 
         if (!isMenuReelsSearchContext()) return;
@@ -835,7 +837,7 @@
         });
     }
 
-    function liveSearch() {
+    function liveSearchNow() {
         var searchInput = document.getElementById('searchbox');
         if (!searchInput) return;
 
@@ -866,6 +868,14 @@
         applyClassicMenuSearch(searchTerm);
     }
 
+    function liveSearch() {
+        if (liveSearchTimer) window.clearTimeout(liveSearchTimer);
+        liveSearchTimer = window.setTimeout(function () {
+            liveSearchTimer = null;
+            liveSearchNow();
+        }, LIVE_SEARCH_DEBOUNCE_MS);
+    }
+
     function setSearchBarOpen(isOpen) {
         document.body.classList.toggle('menu-search-bar-open', !!isOpen);
     }
@@ -887,7 +897,11 @@
         if (searchInput) {
             searchInput.value = '';
         }
-        liveSearch();
+        if (liveSearchTimer) {
+            window.clearTimeout(liveSearchTimer);
+            liveSearchTimer = null;
+        }
+        liveSearchNow();
         document.body.classList.remove('menu-search-active');
     }
 
@@ -922,13 +936,21 @@
     window.toggleSearch = toggleSearch;
     window.closeSearch = closeSearch;
     window.liveSearch = liveSearch;
+    window.liveSearchNow = liveSearchNow;
     window.clearMenuSearchFilters = clearMenuSearchFilters;
     window.initMenuSearchBar = initMenuSearchBar;
 
     document.addEventListener('menuReelsFlattened', function () {
         var searchInput = document.getElementById('searchbox');
         if (searchInput && searchInput.value.trim()) {
-            liveSearch();
+            liveSearchNow();
+        }
+    });
+
+    document.addEventListener('menuReelsUpdated', function () {
+        var searchInput = document.getElementById('searchbox');
+        if (searchInput && searchInput.value.trim()) {
+            liveSearchNow();
         }
     });
 

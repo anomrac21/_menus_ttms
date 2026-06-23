@@ -439,12 +439,14 @@ class TTMSAnalytics {
    * Track time on page
    */
   trackPageEngagement() {
-    // Track time spent on page
-    window.addEventListener('beforeunload', () => {
-      const timeSpent = Math.round((Date.now() - this.pageLoadTime) / 1000);
-      this.trackEvent('Engagement', 'Time on Page', document.title, timeSpent);
-    });
-    
+    if (!this._beforeUnloadHandler) {
+      this._beforeUnloadHandler = () => {
+        const timeSpent = Math.round((Date.now() - this.pageLoadTime) / 1000);
+        this.trackEvent('Engagement', 'Time on Page', document.title, timeSpent);
+      };
+      window.addEventListener('beforeunload', this._beforeUnloadHandler);
+    }
+
     // Track heartbeat every 30 seconds (user is still engaged)
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);

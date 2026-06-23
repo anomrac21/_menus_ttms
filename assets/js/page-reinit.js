@@ -14,7 +14,12 @@
     if (typeof window.initMenuSearchBar === 'function') {
       window.initMenuSearchBar();
     }
-    if (typeof window.liveSearch === 'function') {
+    if (typeof window.liveSearchNow === 'function') {
+      var searchInput = document.getElementById('searchbox');
+      if (searchInput && searchInput.value.trim()) {
+        window.liveSearchNow();
+      }
+    } else if (typeof window.liveSearch === 'function') {
       var searchInput = document.getElementById('searchbox');
       if (searchInput && searchInput.value.trim()) {
         window.liveSearch();
@@ -77,10 +82,6 @@
       window.TTMSBarba.register(window.reloadAppJS);
     }
   }
-
-  document.addEventListener('ttms:page-enter', function () {
-    setTimeout(reinitTTMSPageFeatures, 80);
-  });
 
   document.addEventListener('menuReelsFlattened', function () {
     if (typeof window.updateLocationStatuses === 'function') {

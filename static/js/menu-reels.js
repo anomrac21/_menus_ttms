@@ -7,6 +7,8 @@
   var observer = null;
   var scrollHandler = null;
   var scrollSyncPending = false;
+  var initReelsScheduled = null;
+  var initReelsRunning = false;
   var RATIO_THRESHOLD = 0.45;
 
   function getTrack() {
@@ -378,8 +380,46 @@
     return slide;
   }
 
+  function getTrackSlideChildren(track) {
+    return Array.from(track.children).filter(function (child) {
+      if (child.id === 'homepage-ads-container') return false;
+      return (
+        (child.classList.contains('menu-reels-slide') || child.classList.contains('ads-reels-slide')) &&
+        isVisibleReelSlide(child)
+      );
+    });
+  }
+
+  /** True when slides are nested or out of canonical order (full rebuild required). */
+  function trackNeedsFlatten(track) {
+    if (!track) return false;
+    if (track.querySelector('#packery-container, .main-body, .main-menu-bg')) return true;
+
+    var expected = collectSlidesInReelOrder(track);
+    var i;
+    for (i = 0; i < expected.length; i++) {
+      if (expected[i].parentElement !== track) return true;
+    }
+
+    var actual = getTrackSlideChildren(track);
+    if (actual.length !== expected.length) return true;
+    for (i = 0; i < expected.length; i++) {
+      if (actual[i] !== expected[i]) return true;
+    }
+    return false;
+  }
+
   /** Move every reel slide to direct children of the track in canonical order. */
-  function flattenReelsTrack(track) {
+  function flattenReelsTrack(track, options) {
+    options = options || {};
+    if (!track) return false;
+
+    if (!options.force && !trackNeedsFlatten(track)) {
+      cleanupTrackShells(track);
+      mountBottomAdsInTrack(track);
+      return false;
+    }
+
     var bottomAdsSlide = track.querySelector('.menu-reels-slide--bottom-ads');
     if (bottomAdsSlide && bottomAdsSlide.parentElement === track) {
       bottomAdsSlide.parentElement.removeChild(bottomAdsSlide);
@@ -422,6 +462,19 @@
       var win = track.ownerDocument && track.ownerDocument.defaultView;
       if (win) win.dispatchEvent(new CustomEvent('menuReelsFlattened'));
     } catch (e) { /* ignore */ }
+    return true;
+  }
+
+  function teardownTrackScroll(track) {
+    if (!track) return;
+    if (track._ttmsReelsTrackAbort) {
+      track._ttmsReelsTrackAbort.abort();
+      track._ttmsReelsTrackAbort = null;
+    }
+    if (scrollHandler) {
+      track.removeEventListener('scroll', scrollHandler);
+    }
+    track._ttmsReelsTrackBound = false;
   }
 
   function scrollToSectionId(id) {
@@ -529,9 +582,14 @@
   function bindTrackScroll() {
     var track = getTrack();
     if (!track || track._ttmsReelsTrackBound) return;
+
+    teardownTrackScroll(track);
     track._ttmsReelsTrackBound = true;
 
-    if (scrollHandler) track.removeEventListener('scroll', scrollHandler);
+    var trackAbort = new AbortController();
+    track._ttmsReelsTrackAbort = trackAbort;
+    var signal = trackAbort.signal;
+
     scrollHandler = function () {
       if (scrollSyncPending) return;
       scrollSyncPending = true;
@@ -540,7 +598,7 @@
         syncMenublockFromTrack();
       });
     };
-    track.addEventListener('scroll', scrollHandler, { passive: true });
+    track.addEventListener('scroll', scrollHandler, { passive: true, signal: signal });
 
     track.addEventListener(
       'wheel',
@@ -556,7 +614,7 @@
           track.scrollTop += e.deltaY;
         }
       },
-      { passive: false, capture: true }
+      { passive: false, capture: true, signal: signal }
     );
 
     var touchState = { slide: null, lastY: 0 };
@@ -566,7 +624,7 @@
         touchState.slide = getInnerScrollSlide(e.target, track);
         touchState.lastY = e.touches[0] ? e.touches[0].clientY : 0;
       },
-      { passive: true }
+      { passive: true, signal: signal }
     );
     track.addEventListener(
       'touchmove',
@@ -586,42 +644,38 @@
           track.scrollTop += delta;
         }
       },
-      { passive: false, capture: true }
+      { passive: false, capture: true, signal: signal }
     );
     track.addEventListener(
       'touchend',
       function () {
         touchState.slide = null;
       },
-      { passive: true }
+      { passive: true, signal: signal }
     );
 
-    if (!track._ttmsItemClickScrollGuard) {
-      track._ttmsItemClickScrollGuard = true;
-      track.addEventListener(
-        'click',
-        function (e) {
-          var card = e.target.closest('.menu-item-card.menu-reels-slide');
-          if (!card || e.target.closest('.menu-favorite-btn')) return;
-          var savedTop = track.scrollTop;
+    track.addEventListener(
+      'click',
+      function (e) {
+        var card = e.target.closest('.menu-item-card.menu-reels-slide');
+        if (!card || e.target.closest('.menu-favorite-btn')) return;
+        var savedTop = track.scrollTop;
+        window.requestAnimationFrame(function () {
           window.requestAnimationFrame(function () {
-            window.requestAnimationFrame(function () {
-              if (document.body.classList.contains('menu-reels-item-modal-open')) {
-                if (typeof track._ttmsLockedScrollTop === 'number') {
-                  track.scrollTop = track._ttmsLockedScrollTop;
-                }
-                return;
+            if (document.body.classList.contains('menu-reels-item-modal-open')) {
+              if (typeof track._ttmsLockedScrollTop === 'number') {
+                track.scrollTop = track._ttmsLockedScrollTop;
               }
-              if (Math.abs(track.scrollTop - savedTop) > 8) {
-                track.scrollTop = savedTop;
-              }
-            });
+              return;
+            }
+            if (Math.abs(track.scrollTop - savedTop) > 8) {
+              track.scrollTop = savedTop;
+            }
           });
-        },
-        true
-      );
-    }
-
+        });
+      },
+      { capture: true, signal: signal }
+    );
   }
 
   function shouldOpenMenuItemOrderFromEvent(e) {
@@ -718,7 +772,10 @@
     });
   }
 
-  function initMenuReels() {
+  function runInitMenuReels(forceFlatten) {
+    if (initReelsRunning) return;
+    initReelsRunning = true;
+
     var track = getTrack();
     if (!track) {
       document.documentElement.classList.remove('menu-reels-mode');
@@ -729,6 +786,7 @@
         observer.disconnect();
         observer = null;
       }
+      initReelsRunning = false;
       return;
     }
 
@@ -752,26 +810,30 @@
     }
 
     var finishInit = function () {
-      flattenReelsTrack(track);
-      bindMenublockReelsNav();
-      bindTrackScroll();
-      observeSections(track);
-      syncMenublockFromTrack();
+      try {
+        flattenReelsTrack(track, { force: !!forceFlatten });
+        bindMenublockReelsNav();
+        bindTrackScroll();
+        observeSections(track);
+        syncMenublockFromTrack();
 
-      if (window.location.hash) {
-        var hashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
-        var hashSlide = findSlideForSectionId(hashId);
-        if (hashSlide) {
+        if (window.location.hash) {
+          var hashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+          var hashSlide = findSlideForSectionId(hashId);
+          if (hashSlide) {
+            requestAnimationFrame(function () {
+              scrollToSlide(hashSlide, 'auto');
+            });
+          }
+        } else if (!track._ttmsReelsScrolledToStart) {
+          track._ttmsReelsScrolledToStart = true;
           requestAnimationFrame(function () {
-            scrollToSlide(hashSlide, 'auto');
+            track.scrollTop = 0;
+            setMenublockActive(null);
           });
         }
-      } else if (!track._ttmsReelsScrolledToStart) {
-        track._ttmsReelsScrolledToStart = true;
-        requestAnimationFrame(function () {
-          track.scrollTop = 0;
-          setMenublockActive(null);
-        });
+      } finally {
+        initReelsRunning = false;
       }
     };
 
@@ -782,6 +844,41 @@
     }
   }
 
+  function initMenuReels(options) {
+    options = options || {};
+    if (options.immediate) {
+      if (initReelsScheduled) {
+        clearTimeout(initReelsScheduled);
+        initReelsScheduled = null;
+      }
+      runInitMenuReels(options.forceFlatten);
+      return;
+    }
+    if (initReelsScheduled) clearTimeout(initReelsScheduled);
+    initReelsScheduled = setTimeout(function () {
+      initReelsScheduled = null;
+      runInitMenuReels(options.forceFlatten);
+    }, 50);
+  }
+
+  /** Lighter refresh after lazy-loaded menu cards — avoids full track rebuild when order is already correct. */
+  function refreshMenuReelsLayout() {
+    var track = getTrack();
+    if (!track) return;
+    if (initReelsScheduled) {
+      clearTimeout(initReelsScheduled);
+      initReelsScheduled = null;
+    }
+    var didFlatten = flattenReelsTrack(track);
+    observeSections(track);
+    syncMenublockFromTrack();
+    if (!didFlatten) {
+      try {
+        window.dispatchEvent(new CustomEvent('menuReelsUpdated'));
+      } catch (e) { /* ignore */ }
+    }
+  }
+
   function registerLifecycle() {
     if (window.TTMSBarba) {
       window.TTMSBarba.register(function () {
@@ -789,10 +886,10 @@
         if (menublock) menublock._ttmsReelsNavBound = false;
         var track = getTrack();
         if (track) {
-          track._ttmsReelsTrackBound = false;
+          teardownTrackScroll(track);
           track._ttmsReelsScrolledToStart = false;
         }
-        initMenuReels();
+        initMenuReels({ immediate: true, forceFlatten: true });
         bindMenuReelsItemModal();
       });
     }
@@ -1115,6 +1212,7 @@
   window.scrollToSponsoredAds = scrollToSponsoredAds;
   window.scrollMenuReelsToTop = scrollTrackToTop;
   window.initMenuReels = initMenuReels;
+  window.refreshMenuReelsLayout = refreshMenuReelsLayout;
   window.mountBottomAdsInTrack = mountBottomAdsInTrack;
   window.shouldOpenMenuItemOrderFromEvent = shouldOpenMenuItemOrderFromEvent;
   window.openMenuReelsItemModal = openMenuReelsItemModal;
@@ -1127,21 +1225,21 @@
   window.getMenuReelsItemModalDataRoot = getMenuReelsItemModalDataRoot;
 
   window.addEventListener('adsPopulated', function () {
-    initMenuReels();
+    initMenuReels({ forceFlatten: true });
   });
 
   window.addEventListener('adManagerReady', function () {
-    initMenuReels();
+    initMenuReels({ forceFlatten: true });
   });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
-      initMenuReels();
+      initMenuReels({ immediate: true });
       bindMenuReelsItemModal();
       registerLifecycle();
     });
   } else {
-    initMenuReels();
+    initMenuReels({ immediate: true });
     bindMenuReelsItemModal();
     registerLifecycle();
   }
