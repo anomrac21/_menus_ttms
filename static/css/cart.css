@@ -17,8 +17,8 @@
     z-index: var(--ttms-z-cart, 10080);
     width: 100%;
     max-width: none;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: var(--ttms-overlay-height, 100dvh);
+    max-height: var(--ttms-overlay-height, 100dvh);
     margin: 0;
     border: none;
     border-radius: 0;

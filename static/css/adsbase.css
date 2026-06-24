@@ -629,6 +629,13 @@ body.ads-reels-open {
     background: #000;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    height: var(--ttms-overlay-height, 100dvh);
+    max-height: var(--ttms-overlay-height, 100dvh);
+    box-sizing: border-box;
+    padding-top: var(--ttms-safe-top, env(safe-area-inset-top, 0px));
+    padding-bottom: var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px));
+    overscroll-behavior: none;
 }
 
 .ads-reels-overlay[hidden] {

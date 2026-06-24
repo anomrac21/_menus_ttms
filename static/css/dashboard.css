@@ -16,7 +16,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  width: 100%;
+  height: var(--ttms-overlay-height, 100dvh);
+  max-height: var(--ttms-overlay-height, 100dvh);
+  box-sizing: border-box;
+  padding: max(1rem, env(safe-area-inset-top, 0)) max(1rem, env(safe-area-inset-right, 0)) max(1rem, env(safe-area-inset-bottom, 0)) max(1rem, env(safe-area-inset-left, 0));
+  overscroll-behavior: none;
 }
 
 .dashboard-draft-modal.hidden {
@@ -560,7 +565,7 @@
 /* ========== Control room (/dashboard/) ========== */
 
 .dashboard-control-room {
-  min-height: 100vh;
+  min-height: var(--ttms-overlay-height, 100dvh);
   background: linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f172a 100%);
   padding: 1.5rem 1.25rem 2.5rem;
   color: #fff;
@@ -1785,7 +1790,7 @@
 
 .dashboard-edit-page {
   --dashboard-edit-header-height: 3.5rem;
-  min-height: 100vh;
+  min-height: var(--ttms-overlay-height, 100dvh);
   background: #1a1a2e;
   color: #fff;
   display: flex;
@@ -2130,9 +2135,9 @@
   min-width: 0;
   width: -webkit-fill-available;
   max-width: 444PX;
-  top: var(--dashboard-edit-header-height, 3.5rem);
-  height: calc(100vh - var(--dashboard-edit-header-height, 3.5rem));
-  max-height: calc(100vh - var(--dashboard-edit-header-height, 3.5rem));
+  top: calc(var(--dashboard-edit-header-height, 3.5rem) + var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
+  height: calc(var(--ttms-overlay-height, 100dvh) - var(--dashboard-edit-header-height, 3.5rem) - var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
+  max-height: calc(var(--ttms-overlay-height, 100dvh) - var(--dashboard-edit-header-height, 3.5rem) - var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.94) 0%, rgba(13, 27, 42, 0.88) 100%);
@@ -2555,9 +2560,9 @@
   min-width: 17.5rem;
   max-width: 17.5rem;
   width: 100%;
-  top: var(--dashboard-edit-header-height, 3.5rem);
-  height: calc(100vh - var(--dashboard-edit-header-height, 3.5rem));
-  max-height: calc(100vh - var(--dashboard-edit-header-height, 3.5rem));
+  top: calc(var(--dashboard-edit-header-height, 3.5rem) + var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
+  height: calc(var(--ttms-overlay-height, 100dvh) - var(--dashboard-edit-header-height, 3.5rem) - var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
+  max-height: calc(var(--ttms-overlay-height, 100dvh) - var(--dashboard-edit-header-height, 3.5rem) - var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
   position: fixed;
   right: 0;
   background: linear-gradient(165deg, rgba(22, 33, 62, 0.97) 0%, rgba(15, 23, 42, 0.98) 55%, rgba(10, 15, 30, 0.99) 100%);

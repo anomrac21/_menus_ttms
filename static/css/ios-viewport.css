@@ -1,0 +1,47 @@
+/**
+ * iOS-safe viewport sizing for fullscreen overlays, dashboards, and modals.
+ * --ttms-vvh is synced from visualViewport in ios-viewport.js.
+ */
+
+:root {
+    --ttms-overlay-height: var(--ttms-vvh, 100dvh);
+}
+
+/* Scroll lock — top offset applied by ios-viewport.js */
+html.ttms-scroll-locked,
+body.ttms-scroll-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+body.ttms-scroll-locked {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+}
+
+/* Fallback when JS has not yet toggled ttms-scroll-locked */
+body.cart-open,
+body.modal-open,
+body.table-modal-open,
+body.menu-reels-item-modal-open,
+body.ads-reels-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body.cart-open #footerBtns,
+body.cart-open #footerSettings,
+body.modal-open #footerBtns,
+body.modal-open #footerSettings,
+body.table-modal-open #footerBtns,
+body.table-modal-open #footerSettings,
+body.menu-reels-item-modal-open #footerBtns,
+body.menu-reels-item-modal-open #footerSettings,
+body.ads-reels-open #footerBtns,
+body.ads-reels-open #footerSettings {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}

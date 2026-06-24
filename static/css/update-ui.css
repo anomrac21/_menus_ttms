@@ -462,17 +462,18 @@ body{
 .modal {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0,0,0,0.5);
   z-index: 1000;
   align-items: center;
   justify-content: center;
   margin: 0;
-  height: 100dvh;
-  max-height: 100dvh;
+  width: 100%;
+  height: var(--ttms-overlay-height, 100dvh);
+  max-height: var(--ttms-overlay-height, 100dvh);
+  box-sizing: border-box;
+  padding: max(1rem, env(safe-area-inset-top, 0)) max(1rem, env(safe-area-inset-right, 0)) max(1rem, env(safe-area-inset-bottom, 0)) max(1rem, env(safe-area-inset-left, 0));
+  overscroll-behavior: none;
 }
 
 .modal.active {

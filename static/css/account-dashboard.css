@@ -1,14 +1,14 @@
 /* Account panel + header account button (menu theme) */
 
 #account-dashboard {
-  right: 0;
+  inset: 0;
   left: auto;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(30px);
   display: flex;
   width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  height: var(--ttms-overlay-height, 100dvh);
+  max-height: var(--ttms-overlay-height, 100dvh);
   position: fixed;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
   z-index: var(--ttms-z-account-dashboard, 1001);
@@ -16,11 +16,14 @@
   box-shadow: rgba(0, 0, 0, 0.12) 0 8px 32px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   flex-direction: column;
-  top: 0;
   max-width: 600px;
   transform: translateX(100%);
   visibility: hidden;
   pointer-events: none;
+  box-sizing: border-box;
+  padding-top: var(--ttms-safe-top, env(safe-area-inset-top, 0px));
+  padding-bottom: var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px));
+  overscroll-behavior: none;
 }
 
 #account-dashboard.loader-hide-right {
@@ -38,7 +41,7 @@
 }
 
 #account-dashboard .body {
-  height: calc(-7.2em + 100dvh);
+  height: calc(var(--ttms-overlay-height, 100dvh) - 7.2em - var(--ttms-safe-top, env(safe-area-inset-top, 0px)) - var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px)));
   display: flex;
   flex-direction: column;
   padding-inline: 0.8em;

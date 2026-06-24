@@ -841,13 +841,10 @@
 
 #appleMessage {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     width: 100vw;
-    height: 100vh;
-    height: 100dvh;
+    height: var(--ttms-overlay-height, 100dvh);
+    max-height: var(--ttms-overlay-height, 100dvh);
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 30, 0.98));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -855,8 +852,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1em;
+    padding: max(1em, env(safe-area-inset-top, 0)) max(1em, env(safe-area-inset-right, 0)) max(1em, env(safe-area-inset-bottom, 0)) max(1em, env(safe-area-inset-left, 0));
+    box-sizing: border-box;
     overflow-y: auto;
+    overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
 }
 
