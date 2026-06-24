@@ -431,6 +431,16 @@
     opacity: 1;
 }
 
+/* Keep settings popover hidden whenever the dock is suppressed */
+body.menu-reels-intro-active #footerSettings,
+body.menu-reels-contact-active #footerSettings,
+body.cart-open #footerSettings,
+body.table-modal-open #footerSettings {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 /* Expanded dock when cart/settings open (legacy JS classes) */
 #footerBtns.bigfont .footer-dock__icon,
 #footerBtns.bigfont .footer-dock__icon-wrap {

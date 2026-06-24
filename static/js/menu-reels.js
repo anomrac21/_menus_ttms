@@ -182,6 +182,9 @@
     var onContact = !!(dom && dom.classList.contains('menu-reels-slide--contact'));
     document.body.classList.toggle('menu-reels-intro-active', onIntro);
     document.body.classList.toggle('menu-reels-contact-active', onContact);
+    if ((onIntro || onContact) && typeof window.closeFooterSettings === 'function') {
+      window.closeFooterSettings();
+    }
   }
 
   function syncMenublockFromTrack() {

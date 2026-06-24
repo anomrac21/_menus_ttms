@@ -3051,6 +3051,12 @@ body.table-modal-open #footerBtns {
     pointer-events: none!important
 }
 
+body.table-modal-open #footerSettings {
+    opacity: 0!important;
+    visibility: hidden!important;
+    pointer-events: none!important
+}
+
 .table-modal-container {
     width: 100%;
     max-width: 600px;

@@ -165,9 +165,11 @@ body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track {
     pointer-events: auto !important;
 }
 
-/* Community Photos intro + location picker — hide bottom nav */
+/* Community Photos intro + location picker — hide bottom nav + settings popover */
 body.menu-reels-intro-active #footerBtns,
-body.menu-reels-contact-active #footerBtns {
+body.menu-reels-contact-active #footerBtns,
+body.menu-reels-intro-active #footerSettings,
+body.menu-reels-contact-active #footerSettings {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden;

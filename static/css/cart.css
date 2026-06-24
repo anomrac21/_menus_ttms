@@ -54,6 +54,12 @@ body.cart-open #footerBtns {
     pointer-events: none !important;
 }
 
+body.cart-open #footerSettings {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 #cart .order,
 #cart .order.cart-shell {
     flex: 1 1 0;
