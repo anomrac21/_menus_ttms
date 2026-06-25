@@ -61,6 +61,48 @@
     return src.replace(/^https?:\/\/[^/]+/i, '').replace(/^\//, '');
   }
 
+  function buildSectionFavoriteMarkup(section) {
+    if (!window.AUTH_CONFIG) return '';
+    var cid = clientId();
+    var url = (section && section.url) || '';
+    var path = String(url).replace(/^\//, '');
+    if (!cid || !path) return '';
+    var title = (section && (section.title || section.linkTitle)) || '';
+    var sectionSlug = (section && section.sectionSlug) || '';
+    var image = (section && section.image) || '';
+    var itemKey = cid + '|' + path;
+    return (
+      '<button type="button" class="menu-favorite-btn"' +
+      ' data-favorite-kind="dish"' +
+      ' data-favorite-key="' +
+      escapeHtml(itemKey) +
+      '"' +
+      ' data-favorite-title="' +
+      escapeHtml(title) +
+      '"' +
+      ' data-favorite-url="' +
+      escapeHtml(url) +
+      '"' +
+      ' data-favorite-image="' +
+      escapeHtml(image) +
+      '"' +
+      ' data-favorite-section="' +
+      escapeHtml(sectionSlug) +
+      '"' +
+      ' aria-pressed="false"' +
+      ' aria-label="Save ' +
+      escapeHtml(title) +
+      ' to favorites"' +
+      ' title="Save to favorites">' +
+      '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--outline" aria-hidden="true">' +
+      favoriteIconMarkup('outline') +
+      '</span>' +
+      '<span class="menu-favorite-btn__icon menu-favorite-btn__icon--filled" aria-hidden="true">' +
+      favoriteIconMarkup('filled') +
+      '</span></button>'
+    );
+  }
+
   function buildPromoFavoriteMarkup(promo) {
     if (!window.AUTH_CONFIG) return '';
     var cid = clientId();
@@ -319,6 +361,7 @@
   window.TTMSMenuFavorites = {
     init: init,
     refresh: refreshFavoriteStates,
+    buildSectionFavoriteMarkup: buildSectionFavoriteMarkup,
     buildPromoFavoriteMarkup: buildPromoFavoriteMarkup,
     promoImagePathFromSlide: promoImagePathFromSlide,
   };

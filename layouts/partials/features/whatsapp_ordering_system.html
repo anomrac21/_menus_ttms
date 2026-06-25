@@ -2166,6 +2166,13 @@ async function placeOrderClickAsync(){
 	advanceOrder();
 }
 
+function shouldPromptForTableSelection(locationData) {
+	if (locationData && Array.isArray(locationData.orderingtables) && locationData.orderingtables.length > 0) {
+		return true;
+	}
+	return hastables;
+}
+
 function advanceOrder(){
 	if (!orderingEnabled) {
 		alert(orderingDisabledMessage);
@@ -2174,43 +2181,34 @@ function advanceOrder(){
 	if (!Array.isArray(order) || order.length === 0) {
 		return;
 	}
-	if (hastables) {
-	
-		// Get the currently selected location from dropdown
-		let currentLocationData = getCurrentLocationData();
-		
-		// If no location data found, try to use the default (first available location)
-		if (!currentLocationData) {
-			const locationSelect = document.getElementById('locationSelect');
-			if (locationSelect && locationSelect.options.length > 1) {
-				// Skip the placeholder option (index 0) and use the first real location (index 1)
-				const firstOption = locationSelect.options[1];
-				if (firstOption && firstOption.getAttribute('data-address')) {
-					// Set the dropdown to the first option
-					locationSelect.selectedIndex = 1;
-					// Update the WhatsApp number (use value if available, otherwise use fallback)
-					const whatsappValue = firstOption.value || '{{ site.Params.orderingsystem.whatsapp }}';
-					number = whatsappValue;
-					selectLocation(whatsappValue);
-					// Get the location data again
-					currentLocationData = getCurrentLocationData();
-				}
+
+	let currentLocationData = getCurrentLocationData();
+
+	if (!currentLocationData) {
+		const locationSelect = document.getElementById('locationSelect');
+		if (locationSelect && locationSelect.options.length > 1) {
+			const firstOption = locationSelect.options[1];
+			if (firstOption && firstOption.getAttribute('data-address')) {
+				locationSelect.selectedIndex = 1;
+				const whatsappValue = firstOption.value || '{{ site.Params.orderingsystem.whatsapp }}';
+				number = whatsappValue;
+				selectLocation(whatsappValue);
+				currentLocationData = getCurrentLocationData();
 			}
 		}
-		
+	}
+
+	if (shouldPromptForTableSelection(currentLocationData)) {
 		if (currentLocationData) {
-			// Update the global WhatsApp number to match the location data
 			if (currentLocationData.whatsapp) {
 				number = currentLocationData.whatsapp;
 			}
 			openTableModalWithLocation(currentLocationData);
 		} else {
-			// No location available, show alert
 			alert('Please select a location first before placing your order.');
 			return;
 		}
-	}else{
-		// Close the cart first
+	} else {
 		closeCart();
 		confirmWhatsAppOrder();
 	}

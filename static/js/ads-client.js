@@ -420,6 +420,7 @@
   _previewEndedHandler: null,
   _previewFullscreenScrollHandler: null,
   _reelsFullscreenOpenTriggered: false,
+  _reelsAutoOpenSuppressed: false,
   _lastReelsPreviewScrollProgress: 0,
   _previewFullscreenScrollTicking: false,
   _previewFullscreenObserver: null,
@@ -489,8 +490,17 @@
 
     this.updateReelsPreviewScrollProgressBar();
 
+    if (this.isHomeSmoothNavMode() && this._reelsAutoOpenSuppressed) {
+      if (progress < 50) {
+        this._reelsAutoOpenSuppressed = false;
+      }
+      return;
+    }
+
     if (progress < 75) {
-      this._reelsFullscreenOpenTriggered = false;
+      if (!this.isHomeSmoothNavMode() || !this._reelsAutoOpenSuppressed) {
+        this._reelsFullscreenOpenTriggered = false;
+      }
       this._lastReelsPreviewScrollProgress = progress;
       return;
     }
@@ -504,7 +514,7 @@
     if (!this._reelsCatalog || !this._reelsCatalog.length) return;
 
     const idx = this.getCurrentReelsPreviewCatalogIndex();
-    this.openReelsViewer(idx, { userActivatedSound: true });
+    this.openReelsViewer(idx, { userActivatedSound: true, fromScrollAutoOpen: true });
     this._reelsFullscreenOpenTriggered = true;
   },
 
@@ -535,7 +545,36 @@
     }
     this._previewFullscreenScrollTicking = false;
     this._reelsFullscreenOpenTriggered = false;
+    this._reelsAutoOpenSuppressed = false;
     this._lastReelsPreviewScrollProgress = 0;
+  },
+
+  /**
+   * After closing fullscreen in smooth home scroll, nudge up so preview progress
+   * is not locked at 100% (which re-triggers auto-open).
+   */
+  releaseSmoothPreviewScrollLock() {
+    if (!this.isHomeSmoothNavMode()) return;
+
+    const slide =
+      document.getElementById('menu-reels-sponsored-ads') ||
+      document.querySelector('.menu-reels-slide--bottom-ads');
+    if (!slide) return;
+
+    const headerOffset = this.getHeaderScrollOffset();
+    const slideDocTop = slide.getBoundingClientRect().top + window.scrollY;
+    const releaseY = slideDocTop - headerOffset - window.innerHeight * 0.22;
+
+    window.scrollTo({
+      top: Math.max(0, releaseY),
+      left: 0,
+      behavior: 'auto',
+    });
+    this._lastReelsPreviewScrollProgress = Math.min(
+      this._lastReelsPreviewScrollProgress,
+      60
+    );
+    this.updateReelsPreviewScrollProgressBar();
   },
 
   setupReelsFullscreenAutoOpen() {
@@ -829,7 +868,7 @@
       if (previewLi != null && previewIdxRaw != null && previewIdxRaw !== '') {
         const idx = parseInt(previewIdxRaw, 10);
         if (!Number.isNaN(idx)) {
-          this.openReelsViewer(idx, { userActivatedSound: true });
+          this.openReelsViewer(idx, { userActivatedSound: true, userInitiated: true });
         }
         return;
       }
@@ -1099,6 +1138,10 @@
     const config = this._reelsConfig;
     if (!catalog || !catalog.length || !config) return;
 
+    if (options.userInitiated) {
+      this._reelsAutoOpenSuppressed = false;
+    }
+
     const overlay = this.ensureReelsOverlay();
     const track = document.getElementById('ads-reels-track');
     if (!track) return;
@@ -1187,9 +1230,22 @@
     document.body.classList.remove('ads-reels-open');
     this._reelsFullscreenOpenTriggered = true;
 
+    if (this.isHomeSmoothNavMode()) {
+      this._reelsAutoOpenSuppressed = true;
+      this._lastReelsPreviewScrollProgress = 0;
+    }
+
     // After closing reels, update the homepage preview to show the last viewed ad.
     if (this.shouldUseReelsMode()) {
       this.updateReelsPreviewToCatalogIndex(this._reelsLastCatalogIndex);
+    }
+
+    if (this.isHomeSmoothNavMode()) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.releaseSmoothPreviewScrollLock();
+        });
+      });
     }
   },
 
@@ -1204,7 +1260,7 @@
     const li = this.buildAdPanelLi(item, config, {
       primaryClick: (e) => {
         e.preventDefault();
-        this.openReelsViewer(idx, { userActivatedSound: true });
+        this.openReelsViewer(idx, { userActivatedSound: true, userInitiated: true });
       },
       videoSuffix: `-pv-${idx}`,
       reelsPreviewIndex: idx,
@@ -1217,7 +1273,7 @@
     li.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' || ev.key === ' ') {
         ev.preventDefault();
-        this.openReelsViewer(idx, { userActivatedSound: true });
+        this.openReelsViewer(idx, { userActivatedSound: true, userInitiated: true });
       }
     });
     adsList.appendChild(li);
@@ -1305,7 +1361,7 @@
         const li = this.buildAdPanelLi(item, config, {
           primaryClick: (e) => {
             e.preventDefault();
-            this.openReelsViewer(catalogIndex, { userActivatedSound: true });
+            this.openReelsViewer(catalogIndex, { userActivatedSound: true, userInitiated: true });
           },
           videoSuffix: `-pv-${catalogIndex}`,
           reelsPreviewIndex: catalogIndex,
@@ -1318,7 +1374,7 @@
         li.addEventListener('keydown', (ev) => {
           if (ev.key === 'Enter' || ev.key === ' ') {
             ev.preventDefault();
-            this.openReelsViewer(catalogIndex, { userActivatedSound: true });
+            this.openReelsViewer(catalogIndex, { userActivatedSound: true, userInitiated: true });
           }
         });
         adsList.appendChild(li);

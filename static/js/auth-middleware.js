@@ -96,6 +96,17 @@ const AuthMiddleware = {
           el.style.display = isAdmin ? '' : 'none';
           break;
         case 'admin-site':
+          if (authType === 'admin-site' && el.classList.contains('menu-item-actions__option--edit')) {
+            var showAdminSite =
+              isAdmin &&
+              window.AuthClientAccess &&
+              typeof window.AuthClientAccess.hasClientAccess === 'function' &&
+              window.AuthClientAccess.hasClientAccess();
+            el.style.display = '';
+            el.classList.toggle('is-auth-visible', showAdminSite);
+            el.hidden = !showAdminSite;
+            break;
+          }
           el.style.display =
             isAdmin &&
             window.AuthClientAccess &&
@@ -249,6 +260,10 @@ const AuthMiddleware = {
     }
 
     this.init();
+
+    if (window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.refreshVisibility === 'function') {
+      window.TTMSMenuItemActions.refreshVisibility();
+    }
 
     if (typeof window.syncBodyAuthClasses === 'function') {
       window.syncBodyAuthClasses(AuthClient.isAuthenticated());

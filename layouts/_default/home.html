@@ -10,7 +10,7 @@
     <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
   {{ end }}
   <div class="logo_container">
-    <a href="/locations/" aria-label="View {{ $siteName }} locations"><img id="logo" src="/branding/favicon192.webp" alt="{{ $siteName }} logo" width="192" height="192" fetchpriority="high" decoding="async"></a>
+    <a href="/locations/" aria-label="View {{ $siteName }} locations"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="512" height="512" fetchpriority="high" decoding="async"></a>
   </div>
   {{ with .Content }}
   <div class="hero-intro">
@@ -38,6 +38,7 @@
             <div class="main-menu {{ $title }} item">
               <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ .Section }}" data-promo-section="1" data-item-count="{{ $promoCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}">
                 <a class="menu-anchor" id="{{ $title }}"></a>
+                {{ partial "components/menu-header-actions-row.html" (dict "url" $titleurl "title" $title "sectionSlug" .Section "imageTop" (index .Params.images "top")) }}
                 <a class="menu-header__link" href="{{ $titleurl }}">
                   {{ if .Params.images.top }}
                     <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640">
@@ -77,6 +78,7 @@
                   {{ $itemCount := len .RegularPages }}
                   <section class="menu-header menu-reels-slide" data-home-menu-lazy data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-top="{{ index .Params.images "top" | default "" }}" data-images-bottom="{{ index .Params.images "bottom" | default "" }}" aria-busy="true">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
+                    {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imageTop" (index .Params.images "top")) }}
                     <a class="menu-header__link" href="{{ .RelPermalink }}">
                       {{ if .Params.images.top }}
                         <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640">

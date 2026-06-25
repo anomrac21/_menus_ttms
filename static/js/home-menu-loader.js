@@ -627,7 +627,7 @@
       '</button>' +
       '<div class="menu-item-actions__menu" role="menu" hidden>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem" disabled aria-disabled="true">Comment</button>' +
-      '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site" style="display: none;">Edit</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site" hidden>Edit</button>' +
       '</div></div>'
     );
   }

@@ -441,8 +441,8 @@ body.menu-search-active .menu-reels-track {
     width: 100%;
     max-width: min(100%, 36rem);
     margin-inline: auto;
-    margin-top: auto;
-    padding: 0.35rem 0.75rem max(0.65rem, env(safe-area-inset-bottom, 0));
+    margin-top: 0.35rem;
+    padding: 0.15rem 0.75rem 0;
     display: flex;
     justify-content: center;
 }
@@ -523,6 +523,7 @@ body.menu-search-active .menu-reels-track {
 .menu-header.menu-reels-slide {
     color: var(--main-text, #fff);
     text-align: center;
+    position: relative;
 }
 
 .menu-header.menu-reels-slide .headerstyle h2.center.title {
@@ -919,13 +920,20 @@ body.menu-reels-item-modal-open .menu-reels-track,
 }
 
 .menu-item-card.menu-reels-slide > .menu-item-title-row {
+    z-index: var(--ttms-z-reel-title-row, 5);
     flex-shrink: 0;
     display: flex;
     width: 100%;
     justify-content: center;
     align-items: center;
-    padding-inline: 0.75rem;
     box-sizing: border-box;
+    pointer-events: none;
+}
+
+.menu-item-card.menu-reels-slide > .menu-item-title-row > .menu-favorite-btn,
+.menu-item-card.menu-reels-slide > .menu-item-title-row > .menu-item-actions,
+.menu-item-card.menu-reels-slide > .menu-item-title-row > .menu-item-title {
+    pointer-events: auto;
 }
 
 .menu-item-card.menu-reels-slide > .menu-item-title-row > .menu-favorite-btn {

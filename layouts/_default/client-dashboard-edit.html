@@ -5,7 +5,7 @@
 </head>
 <body>
   <div class="dashboard-edit-page" id="dashboardEditPage">
-    <header class="dashboard-edit-header dashboard-edit-header--menu" aria-label="Menu editor toolbar">
+    <header class="dashboard-edit-header dashboard-edit-header--menu" aria-label="Theme editor toolbar">
       <div class="dashboard-edit-header-inner">
         <div class="dashboard-edit-header-start">
           <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" id="btnDashboardBack" title="Back to dashboard" aria-label="Back to dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
@@ -57,17 +57,19 @@
           <button type="button" class="btn-dash btn-dash-danger dashboard-edit-header-mark-btn" id="btnMarkForDeletion" aria-label="Mark for deletion" title="Mark for deletion (hidden in preview)" disabled><i class="fa fa-trash" aria-hidden="true"></i></button>
         </div>
         <div class="dashboard-edit-options-inner">
-          <section class="dashboard-edit-changes-panel" id="dashboardEditChangesPanel" aria-labelledby="dashboardEditChangesHeading">
-            <div class="dashboard-edit-changes-panel-header">
-              <h3 class="dashboard-edit-changes-title" id="dashboardEditChangesHeading">
-                <span class="dashboard-edit-changes-title-icon" aria-hidden="true"><i class="fa fa-list-ul"></i></span>
-                Changes
-                <span class="dashboard-edit-changes-count hidden" id="dashboardEditChangesCount" aria-hidden="true">0</span>
-              </h3>
-              <p class="dashboard-edit-changes-synced" id="dashboardEditChangesSynced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live</p>
-            </div>
-            <ul class="dashboard-edit-changes-list" id="dashboardEditChangesList" role="list"></ul>
-          </section>
+          <div id="dashboardEditChangesPanelMount" class="dashboard-edit-changes-panel-mount">
+            <section class="dashboard-edit-changes-panel" id="dashboardEditChangesPanel" aria-labelledby="dashboardEditChangesHeading">
+              <div class="dashboard-edit-changes-panel-header">
+                <h3 class="dashboard-edit-changes-title" id="dashboardEditChangesHeading">
+                  <span class="dashboard-edit-changes-title-icon" aria-hidden="true"><i class="fa fa-list-ul"></i></span>
+                  Changes
+                  <span class="dashboard-edit-changes-count hidden" id="dashboardEditChangesCount" aria-hidden="true">0</span>
+                </h3>
+                <p class="dashboard-edit-changes-synced" id="dashboardEditChangesSynced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live</p>
+              </div>
+              <ul class="dashboard-edit-changes-list" id="dashboardEditChangesList" role="list"></ul>
+            </section>
+          </div>
 
           <div id="dashboardEditPrompt" class="dashboard-edit-prompt">
             <div class="dashboard-edit-prompt-hero">
@@ -85,6 +87,7 @@
                   <div class="dashboard-menu-item-wizard-nav" role="tablist" aria-label="Section editor steps">
                     <button type="button" class="dashboard-wizard-tab dashboard-wizard-tab-active" data-section-wizard-index="0" role="tab" aria-selected="true" id="dashboardSectionWizardTab0">Icon</button>
                     <button type="button" class="dashboard-wizard-tab" data-section-wizard-index="1" role="tab" aria-selected="false" id="dashboardSectionWizardTab1">Details</button>
+                    <button type="button" class="dashboard-wizard-tab dashboard-embed-save-tab hidden" data-section-wizard-index="2" role="tab" aria-selected="false" id="dashboardSectionWizardTabSave">Save</button>
                   </div>
                   <p class="dashboard-menu-item-wizard-progress" id="dashboardSectionWizardProgress" aria-live="polite">Step 1 of 2 · Icon</p>
                   <div class="dashboard-menu-item-wizard-panels">
@@ -162,6 +165,10 @@
                         <input type="number" id="dashboardEditSectionWeight" class="dashboard-edit-input" placeholder="e.g. 12" min="0" step="1">
                       </div>
                     </div>
+                    <div class="dashboard-menu-item-wizard-panel dashboard-section-wizard-panel dashboard-embed-save-panel hidden" data-section-wizard-index="2" role="tabpanel" id="dashboardSectionWizardPanelSave" aria-hidden="true">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save a CMS menu snapshot (merges with your latest snapshot and current edits).</p>
+                      <div class="dashboard-edit-save-tab-host" data-embed-save-host="section"></div>
+                    </div>
                   </div>
                   <div class="dashboard-menu-item-wizard-footer">
                     <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionWizardPrev" disabled>Back</button>
@@ -176,6 +183,7 @@
                     <button type="button" class="dashboard-wizard-tab" data-wizard-index="3" role="tab" aria-selected="false" id="dashboardWizardTab3">Tags &amp; search</button>
                     <button type="button" class="dashboard-wizard-tab" data-wizard-index="4" role="tab" aria-selected="false" id="dashboardWizardTab4">Availability</button>
                     <button type="button" class="dashboard-wizard-tab" data-wizard-index="5" role="tab" aria-selected="false" id="dashboardWizardTab5">Promotions</button>
+                    <button type="button" class="dashboard-wizard-tab dashboard-embed-save-tab hidden" data-wizard-index="6" role="tab" aria-selected="false" id="dashboardWizardTabSave">Save</button>
                   </div>
                   <p class="dashboard-menu-item-wizard-progress" id="dashboardMenuItemWizardProgress" aria-live="polite">Step 1 of 6 · Main item</p>
                   <div class="dashboard-menu-item-wizard-panels">
@@ -278,6 +286,10 @@
                         <div id="dashboardEditMenuItemPromotionsContainer" class="dashboard-menu-item-promotions-ui"></div>
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddMenuItemPromotion">Add promotion</button>
                       </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel dashboard-embed-save-panel hidden" data-wizard-index="6" role="tabpanel" id="dashboardWizardPanelSave" aria-hidden="true">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save a CMS menu snapshot (merges with your latest snapshot and current edits).</p>
+                      <div class="dashboard-edit-save-tab-host" data-embed-save-host="menu-item"></div>
                     </div>
                   </div>
                   <div class="dashboard-menu-item-wizard-footer">
@@ -406,6 +418,7 @@
                     <button type="button" class="dashboard-wizard-tab dashboard-wizard-tab-active" data-promo-wizard-index="0" role="tab" aria-selected="true" id="dashboardPromoWizardTab0">Main</button>
                     <button type="button" class="dashboard-wizard-tab" data-promo-wizard-index="1" role="tab" aria-selected="false" id="dashboardPromoWizardTab1">Link</button>
                     <button type="button" class="dashboard-wizard-tab" data-promo-wizard-index="2" role="tab" aria-selected="false" id="dashboardPromoWizardTab2">Availability</button>
+                    <button type="button" class="dashboard-wizard-tab dashboard-embed-save-tab hidden" data-promo-wizard-index="3" role="tab" aria-selected="false" id="dashboardPromoWizardTabSave">Save</button>
                   </div>
                   <p class="dashboard-menu-item-wizard-progress" id="dashboardPromotionWizardProgress" aria-live="polite">Step 1 of 3 · Main</p>
                   <div class="dashboard-menu-item-wizard-panels">
@@ -456,6 +469,10 @@
                         <label for="dashboardEditPromoWeight">Weight</label>
                         <input type="number" id="dashboardEditPromoWeight" class="dashboard-edit-input" placeholder="e.g. 1" min="0" step="1">
                       </div>
+                    </div>
+                    <div class="dashboard-menu-item-wizard-panel dashboard-promotion-wizard-panel dashboard-embed-save-panel hidden" data-promo-wizard-index="3" role="tabpanel" id="dashboardPromoWizardPanelSave" aria-hidden="true">
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save a CMS menu snapshot (merges with your latest snapshot and current edits).</p>
+                      <div class="dashboard-edit-save-tab-host" data-embed-save-host="promotion"></div>
                     </div>
                   </div>
                   <div class="dashboard-menu-item-wizard-footer">

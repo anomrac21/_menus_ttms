@@ -47,6 +47,9 @@
   {{ partialCached "ttms-account-dashboard/dashboard.html" . }}
 
   {{ partial "modals/menu_reels_item_modal.html" . }}
+  {{- if site.Params.auth.enabled -}}
+  {{ partial "modals/menu_item_edit_modal.html" . }}
+  {{- end -}}
   {{ partial "components/cart.html" . }}
   {{ partial "modals/table_select_modal.html" . }}
   {{- if and site.Params.features.payments site.Params.paymentService.enabled -}}

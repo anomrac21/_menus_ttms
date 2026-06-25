@@ -1,0 +1,103 @@
+{{- $home := site.GetPage "/" -}}
+{{- $heroImage := default "images/demo-hero-platter.webp" $home.Params.image -}}
+{{- $siteName := partial "site-name.html" . -}}
+<section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--hero" aria-labelledby="settings-hero-heading">
+  <div class="dashboard-settings-panel-head">
+    <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-home"></i></span>
+    <div class="dashboard-settings-panel-head-text">
+      <h2 id="settings-hero-heading" class="dashboard-analytics-heading">Home hero</h2>
+    </div>
+  </div>
+  <form id="heroSettingsForm" class="dashboard-settings-form dashboard-settings-hero-form" autocomplete="off">
+    <div class="dashboard-settings-hero-layout">
+      <div class="dashboard-settings-hero-preview-col">
+        <p class="dashboard-settings-hero-preview-label">Preview</p>
+        <div class="dashboard-settings-hero-preview-scaler" aria-hidden="true">
+          <section class="hero_logo_container dashboard-settings-hero-preview item menu-reels-slide menu-reels-slide--hero" id="settingsHeroPreview">
+            <h2 class="sr-only">{{ $siteName }}</h2>
+            <img
+              id="settingsHeroPreviewBg"
+              src="{{ partial "ttms/menu-img-src.html" (dict "path" $heroImage "size" "hero") }}"
+              alt=""
+              data-src-path="{{ $heroImage }}"
+              onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)"
+            >
+            <div class="logo_container">
+              <span class="dashboard-settings-hero-preview-logo-wrap">
+                <img
+                  id="settingsHeroPreviewLogo"
+                  src="/branding/favicon512.webp"
+                  alt=""
+                  width="512"
+                  height="512"
+                >
+              </span>
+            </div>
+            <div id="settingsHeroPreviewIntro" class="hero-intro hidden"></div>
+            <ul class="hero-cta-list">
+              {{- if site.Params.notifications.enabled -}}
+              <li class="subscribe subscribe--notifications">
+                <span class="subbtn subbtn--notify contact-cta contact-cta--notify">
+                  <span class="contact-cta__icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
+                  </span>
+                  <span class="contact-cta__copy">
+                    <span class="contact-cta__title">Get menu alerts</span>
+                    <span class="contact-cta__hint">Free · specials &amp; hours</span>
+                  </span>
+                </span>
+              </li>
+              {{- end -}}
+              <li class="subscribe subscribe--install contact-cta-row">
+                <span class="contact-cta contact-cta--install">
+                  <span class="contact-cta__icon" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                  </span>
+                  <span class="contact-cta__copy">
+                    <span class="contact-cta__title">Install app</span>
+                    <span class="contact-cta__hint">Add to home screen</span>
+                  </span>
+                </span>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+      <div class="dashboard-settings-hero-fields">
+        <p class="dashboard-settings-hint dashboard-settings-hero-logo-hint">Logo uses <code>favicon512.webp</code> from <a href="#settings-branding-heading">Branding images</a> below.</p>
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <label class="dashboard-settings-label" for="settingsHeroImagePath">Background image <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
+          <div class="dashboard-settings-value">
+            <p class="dashboard-settings-hint">Front matter <code>image</code> — shown behind the logo on the home reel.</p>
+            <input type="hidden" id="settingsHeroImagePath" name="image" value="{{ $heroImage }}">
+            <div class="dashboard-settings-hero-image-row">
+              <div class="dashboard-settings-hero-thumb-wrap" id="settingsHeroThumbWrap">
+                <img id="settingsHeroThumb" class="dashboard-settings-thumb dashboard-settings-hero-thumb" alt="" width="96" height="54">
+                <span id="settingsHeroThumbLoading" class="dashboard-settings-hero-thumb-loading hidden" aria-hidden="true"><i class="fa fa-spinner fa-spin"></i></span>
+              </div>
+              <div class="dashboard-settings-hero-image-actions">
+                <label class="btn-dash btn-dash-secondary dashboard-branding-file-label">
+                  <input type="file" id="settingsHeroImageFile" class="dashboard-branding-file-input hidden" accept="image/jpeg,image/png,image/webp,image/gif">
+                  <i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose image
+                </label>
+                <button type="button" class="btn-dash btn-dash-secondary" id="btnSettingsHeroRemove" aria-label="Remove hero image"><i class="fa fa-times" aria-hidden="true"></i></button>
+              </div>
+            </div>
+            <p id="settingsHeroImageStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <label class="dashboard-settings-label" for="settingsHeroIntro">Intro text (optional)</label>
+          <div class="dashboard-settings-value dashboard-settings-value--textarea">
+            <textarea id="settingsHeroIntro" name="intro" class="dashboard-settings-input dashboard-settings-textarea dashboard-settings-textarea--autosize" rows="3" maxlength="2000" placeholder="Short markdown shown under the logo on the home hero" aria-describedby="settingsHeroIntro-count"></textarea>
+            <span id="settingsHeroIntro-count" class="dashboard-settings-char-count" aria-live="polite">0/2000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dashboard-settings-form-actions">
+      <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveHeroSettings">Save home hero</button>
+      <span id="heroSettingsSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+    </div>
+  </form>
+</section>

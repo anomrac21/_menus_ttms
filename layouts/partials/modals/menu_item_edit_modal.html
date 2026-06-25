@@ -1,0 +1,37 @@
+{{- if site.Params.auth.enabled -}}
+<div
+  id="menu-item-edit-modal"
+  class="menu-item-edit-modal"
+  hidden
+  aria-hidden="true"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="menu-item-edit-modal-title"
+  data-auth="admin-site"
+  style="display: none;"
+>
+  <div class="menu-item-edit-modal__backdrop" data-close-menu-item-edit-modal tabindex="-1" aria-hidden="true"></div>
+  <div class="menu-item-edit-modal__panel">
+    <header class="menu-item-edit-modal__header">
+      <h2 id="menu-item-edit-modal-title" class="menu-item-edit-modal__title">Edit menu item</h2>
+      <button
+        type="button"
+        class="menu-item-edit-modal__close"
+        data-close-menu-item-edit-modal
+        aria-label="Close editor"
+      >
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </header>
+    <div class="menu-item-edit-modal__body">
+      <iframe
+        id="menuItemEditModalFrame"
+        class="menu-item-edit-modal__frame"
+        title="Menu content editor"
+        src="about:blank"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </div>
+</div>
+{{- end -}}

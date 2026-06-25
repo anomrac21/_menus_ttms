@@ -501,6 +501,10 @@
 <link rel="stylesheet" href="/css/account-dashboard.css"/>
 <link rel="stylesheet" href="/css/account-dashboard-panel.css"/>
 <link rel="stylesheet" href="/css/dashboard-panel.css"/>
+{{- if eq .Layout "client-dashboard-menu-settings" -}}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero-cta.css") }}
+{{- end -}}
 {{- end -}}
 {{ if .Site.Params.notifications.enabled }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/notifications.css") }}
@@ -684,6 +688,8 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/menu-favorite-icons.js" defer></script>
 <script src="/js/menu-favorites.js" defer></script>
 <script src="/js/menu-item-actions.js" defer></script>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-edit-modal.css") }}
+<script src="/js/menu-item-edit-modal.js" defer></script>
 {{- end -}}
 {{- end -}}
 {{- if and site.Params.menuImageService.enabled $menuPublicSite -}}

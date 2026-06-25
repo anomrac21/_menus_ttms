@@ -109,7 +109,7 @@
 }
 
 .contactinfo .contact-cta__title {
-    font-size: 0.95rem;
+    font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.01em;
 }
@@ -214,7 +214,6 @@
 .location-item {
     display: flex;
     flex-direction: column;
-    gap: .5em;
     padding: .5em;
     background: rgba(255, 255, 255, 5%);
     border: 1px solid rgba(255, 255, 255, .1);
@@ -448,7 +447,7 @@
 
 /* Delivery toggle */
 .contactinfo .delivery-toggle-btn.contact-cta--delivery {
-    padding: 0.55em 0.85em;
+    padding-inline: .5em;
     min-height: 3rem;
     font-size: 0.75rem;
     background: linear-gradient(135deg, #ff7043, #f57c00);
@@ -1526,8 +1525,8 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.85rem 0.9rem 0;
+    gap: 0.25rem;
+    padding: 0.5rem 0.3rem 0;
     border: none;
     background: transparent;
     color: inherit;
@@ -1745,8 +1744,8 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     width: 100%;
     max-width: min(100%, 36rem);
     margin-inline: auto;
-    margin-top: auto;
-    padding: 0.35rem 0.75rem max(0.65rem, env(safe-area-inset-bottom, 0));
+    margin-top: 0.35rem;
+    padding: 0.15rem 0.75rem 0;
     display: flex;
     justify-content: center;
 }
@@ -1774,7 +1773,7 @@ a.location-picker-card__select:hover .location-picker-card__pin {
     gap: 0.85rem;
     width: max-content;
     margin-inline: auto;
-    padding: 0.5rem 1.15rem;
+    padding: 0.15rem 1rem;
     border-radius: 1rem;
     background: linear-gradient(
         135deg,
@@ -1811,7 +1810,7 @@ a.location-picker-card__select:hover .location-picker-card__pin {
 }
 
 .location-picker__nearby-label {
-    font-size: 0.92rem;
+    font-size: 0.62rem;
     font-weight: 800;
     letter-spacing: 0.02em;
     line-height: 1.15;

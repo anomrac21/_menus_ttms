@@ -327,6 +327,80 @@
     return { title: name, when: when || '' };
   }
 
+  function computeClientSnapshotSummaryFromMenuData(md) {
+    if (!md) return { fileLabels: [] };
+    var cats = (md.categories || md.Categories || []).length;
+    var items = (md.menuItems || md.menu_items || md.MenuItems || []).length;
+    var locs = (md.locations || md.Locations || []).length;
+    var overrides = md.themeColorOverrides || md.theme_color_overrides || {};
+    var themeCount = 0;
+    Object.keys(overrides).forEach(function (k) {
+      if (String(k).trim() && String(overrides[k]).trim()) themeCount++;
+    });
+    var layoutLabel =
+      'data/menu.json — layout (' + cats + ' categories, ' + items + ' items';
+    if (locs) layoutLabel += ', ' + locs + ' locations';
+    layoutLabel += ')';
+    var fileLabels = [layoutLabel];
+    if (themeCount) {
+      fileLabels.push('static/css/colors.css — ' + themeCount + ' theme variables');
+    }
+    return {
+      categoryCount: cats,
+      menuItemCount: items,
+      locationCount: locs,
+      themeVarCount: themeCount,
+      fileLabels: fileLabels,
+    };
+  }
+
+  function versionSummaryFromRecord(v) {
+    var s = v.summary || v.Summary;
+    if (s && s.fileLabels && s.fileLabels.length) return s;
+    var md = v.menu_data || v.menuData || v.MenuData;
+    if (md) return computeClientSnapshotSummaryFromMenuData(md);
+    return { fileLabels: ['data/menu.json — layout (details unavailable)'] };
+  }
+
+  function draftContentPathFromPreview(p) {
+    var payload = p.payload || p.Payload || {};
+    return (
+      p.content_path ||
+      p.contentPath ||
+      payload.contentPath ||
+      payload.content_path ||
+      payload.siteConfigPath ||
+      ''
+    );
+  }
+
+  function draftKindKey(p) {
+    var payload = p.payload || p.Payload || {};
+    return payload.kind || p.kind || 'content';
+  }
+
+  function draftKindPluralLabel(kind, count) {
+    if (kind === 'theme-css') return count === 1 ? 'theme file' : 'theme files';
+    if (kind === 'menu-item') return count === 1 ? 'menu item' : 'menu items';
+    if (kind === 'section-header') return count === 1 ? 'section' : 'sections';
+    if (kind === 'promotion') return count === 1 ? 'promotion' : 'promotions';
+    if (kind === 'home') return count === 1 ? 'home page' : 'home pages';
+    if (kind === 'slideshow') return count === 1 ? 'slideshow' : 'slideshows';
+    if (kind === 'location') return count === 1 ? 'location' : 'locations';
+    return count === 1 ? 'file' : 'files';
+  }
+
+  function summarizeDraftKinds(previews) {
+    var tallies = {};
+    previews.forEach(function (p) {
+      var k = draftKindKey(p);
+      tallies[k] = (tallies[k] || 0) + 1;
+    });
+    return Object.keys(tallies).map(function (k) {
+      return tallies[k] + ' ' + draftKindPluralLabel(k, tallies[k]);
+    });
+  }
+
   function createStatusStatPill(count, singular, plural) {
     var pill = document.createElement('span');
     pill.className = 'dashboard-menu-status-stat';
@@ -399,7 +473,9 @@
     var lastPublishEl = document.getElementById('dashboardLastPublishSummary');
     var publishFlashEl = document.getElementById('dashboardPublishFlash');
 
-    var SNAPSHOT_LIST_CAP = 4;
+    var SNAPSHOT_MAX = 3;
+    var SNAPSHOT_LIST_CAP = 3;
+    var selectedSnapshotId = null;
     var snapshotListExpanded = false;
 
     function showPublishFlashMessage(msg) {
@@ -443,22 +519,44 @@
         var p0 = document.createElement('p');
         p0.className = 'dashboard-menu-status-muted';
         p0.textContent =
-          'No saved menu snapshots on the CMS. In the editor, use Save → Save snapshot (CMS only), or leave the editor to auto-save one.';
+          'No saved menu snapshots on the CMS. In the theme editor, use Save → Save snapshot (CMS only), or leave the editor to auto-save one (up to ' +
+          SNAPSHOT_MAX +
+          ' kept).';
         snapshotStatusEl.appendChild(p0);
+        selectedSnapshotId = null;
         return;
+      }
+      if (
+        selectedSnapshotId &&
+        !cachedVersions.some(function (v) {
+          return versionIdFromRecord(v) === selectedSnapshotId;
+        })
+      ) {
+        selectedSnapshotId = null;
       }
       var intro = document.createElement('p');
       intro.className = 'dashboard-menu-status-intro';
       intro.appendChild(createStatusStatPill(n, 'snapshot', 'snapshots'));
       intro.appendChild(
-        document.createTextNode(' saved on the CMS — layout, items, and theme colors.')
+        document.createTextNode(
+          ' saved on the CMS (max ' +
+            SNAPSHOT_MAX +
+            ') — menu layout in data/menu.json and theme colors.'
+        )
       );
       snapshotStatusEl.appendChild(intro);
       var hint = document.createElement('p');
       hint.className = 'dashboard-menu-status-muted';
       hint.textContent =
-        'Open editor loads the live menu. Pick a snapshot below to restore layout and theme with your drafts.';
+        'Edit theme opens the live menu. Select a snapshot to see repo files it affects; click again or use Restore to load layout and theme in the editor.';
       snapshotStatusEl.appendChild(hint);
+      if (n >= SNAPSHOT_MAX) {
+        var capNote = document.createElement('p');
+        capNote.className = 'dashboard-menu-status-muted';
+        capNote.textContent =
+          'Oldest snapshots are removed automatically when a new one is saved.';
+        snapshotStatusEl.appendChild(capNote);
+      }
       var rows = [];
       for (var si = 0; si < n; si++) {
         var parts = snapshotDisplayParts(cachedVersions[si]);
@@ -468,6 +566,12 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'dashboard-menu-status-snapshot-item';
+        if (vid && vid === selectedSnapshotId) {
+          btn.classList.add('dashboard-menu-status-snapshot-item--selected');
+          btn.setAttribute('aria-pressed', 'true');
+        } else {
+          btn.setAttribute('aria-pressed', 'false');
+        }
         var titleSpan = document.createElement('span');
         titleSpan.className = 'dashboard-menu-status-snapshot-item-title';
         titleSpan.textContent = truncateMiddle(parts.title, 48);
@@ -481,7 +585,12 @@
         if (vid) {
           btn.addEventListener('click', function (id) {
             return function () {
-              navigateEditDraftsWithVersion(id);
+              if (selectedSnapshotId === id) {
+                navigateEditDraftsWithVersion(id);
+                return;
+              }
+              selectedSnapshotId = id;
+              renderSnapshotStatusSummary();
             };
           }(vid));
         }
@@ -502,6 +611,52 @@
         );
       } else {
         appendStatusRows(snapshotStatusEl, rows, cap);
+      }
+      if (selectedSnapshotId) {
+        var selectedVersion = null;
+        for (var sv = 0; sv < cachedVersions.length; sv++) {
+          if (versionIdFromRecord(cachedVersions[sv]) === selectedSnapshotId) {
+            selectedVersion = cachedVersions[sv];
+            break;
+          }
+        }
+        if (selectedVersion) {
+          var summary = versionSummaryFromRecord(selectedVersion);
+          var labels = summary.fileLabels || [];
+          var detail = document.createElement('div');
+          detail.className = 'dashboard-menu-status-snapshot-detail';
+          var detailTitle = document.createElement('p');
+          detailTitle.className = 'dashboard-menu-status-snapshot-detail-title';
+          detailTitle.textContent = 'Repo files in this snapshot';
+          detail.appendChild(detailTitle);
+          if (labels.length) {
+            var filesUl = document.createElement('ul');
+            filesUl.className = 'dashboard-menu-status-snapshot-files';
+            labels.forEach(function (label) {
+              var fileLi = document.createElement('li');
+              fileLi.className = 'dashboard-menu-status-snapshot-file';
+              fileLi.textContent = label;
+              filesUl.appendChild(fileLi);
+            });
+            detail.appendChild(filesUl);
+          } else {
+            var noFiles = document.createElement('p');
+            noFiles.className = 'dashboard-menu-status-muted';
+            noFiles.textContent = 'No file summary available for this snapshot.';
+            detail.appendChild(noFiles);
+          }
+          var restoreBtn = document.createElement('button');
+          restoreBtn.type = 'button';
+          restoreBtn.className =
+            'btn-dash btn-dash-secondary dashboard-menu-status-snapshot-restore';
+          restoreBtn.innerHTML =
+            '<i class="fa fa-paint-brush" aria-hidden="true"></i> Restore in theme editor';
+          restoreBtn.addEventListener('click', function () {
+            navigateEditDraftsWithVersion(selectedSnapshotId);
+          });
+          detail.appendChild(restoreBtn);
+          snapshotStatusEl.appendChild(detail);
+        }
       }
     }
 
@@ -536,7 +691,7 @@
         var p0 = document.createElement('p');
         p0.className = 'dashboard-menu-status-muted';
         p0.textContent =
-          'No unpublished content drafts. Edits to menu items, sections, promotions, and theme CSS files appear here after you save in the editor.';
+          'No unpublished content drafts. Edits to menu items, sections, and promotions appear here after you save from the live menu editor. Theme color drafts appear when you save from Edit theme.';
         draftStatusEl.appendChild(p0);
         return;
       }
@@ -545,21 +700,39 @@
       introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
       introD.appendChild(document.createTextNode(' ready to publish to Git.'));
       draftStatusEl.appendChild(introD);
+      var kindSummary = summarizeDraftKinds(cachedPreviews);
+      if (kindSummary.length) {
+        var kindP = document.createElement('p');
+        kindP.className = 'dashboard-menu-status-draft-kind-counts';
+        kindP.textContent = 'Includes ' + kindSummary.join(', ') + '.';
+        draftStatusEl.appendChild(kindP);
+      }
       var hintD = document.createElement('p');
       hintD.className = 'dashboard-menu-status-muted';
-      hintD.textContent = 'Use Publish below when you are ready to commit these files.';
+      hintD.textContent =
+        'Each row lists the content type, title, and repository path. Use Publish below to commit these files.';
       draftStatusEl.appendChild(hintD);
       var rowsD = [];
       for (var di = 0; di < n; di++) {
+        var preview = cachedPreviews[di];
         var liD = document.createElement('li');
         liD.className = 'dashboard-menu-status-row';
         var chip = document.createElement('span');
         chip.className = 'dashboard-menu-status-draft-chip';
-        chip.textContent = truncateMiddle(previewSummaryLabel(cachedPreviews[di]), 88);
+        chip.appendChild(
+          document.createTextNode(truncateMiddle(previewSummaryLabel(preview), 96))
+        );
+        var path = draftContentPathFromPreview(preview);
+        if (path) {
+          var pathSpan = document.createElement('span');
+          pathSpan.className = 'dashboard-menu-status-draft-chip-path';
+          pathSpan.textContent = path;
+          chip.appendChild(pathSpan);
+        }
         liD.appendChild(chip);
         rowsD.push(liD);
       }
-      appendStatusRows(draftStatusEl, rowsD, 4);
+      appendStatusRows(draftStatusEl, rowsD, n);
     }
 
     function renderLastPublishSummary() {

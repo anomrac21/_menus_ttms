@@ -1,0 +1,14 @@
+{{- $url := index . "url" | default "" -}}
+
+{{- $title := index . "title" | default "" -}}
+
+{{- $sectionSlug := index . "sectionSlug" | default "" -}}
+
+<div class="menu-header__title-row menu-item-title-row">
+
+  {{ partial "components/menu-section-favorite-btn.html" . }}
+
+  {{ partial "components/menu-item-actions-menu.html" (dict "url" $url "title" $title "actionsKind" "section-header" "sectionSlug" $sectionSlug) }}
+
+</div>
+

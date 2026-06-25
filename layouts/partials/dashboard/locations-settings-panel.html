@@ -1,0 +1,235 @@
+{{- $locations := site.Data.locations -}}
+{{- if $locations -}}
+  {{- if not (reflect.IsSlice $locations) -}}
+    {{- if $locations.locations -}}
+      {{- $locations = $locations.locations -}}
+    {{- else -}}
+      {{- $locSlice := slice -}}
+      {{- range $key, $value := site.Data.locations -}}
+        {{- $locSlice = $locSlice | append $value -}}
+      {{- end -}}
+      {{- $locations = $locSlice -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $locations -}}
+  {{- with getJSON "data/locations.yaml" -}}
+    {{- with .locations -}}{{- $locations = . -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $locations -}}
+  {{- $locations = slice -}}
+{{- end -}}
+<section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--locations" aria-labelledby="settings-locations-heading">
+  <div class="dashboard-settings-panel-head">
+    <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-map-marker"></i></span>
+    <div class="dashboard-settings-panel-head-text">
+      <h2 id="settings-locations-heading" class="dashboard-analytics-heading">Locations</h2>
+    </div>
+  </div>
+  <div class="dashboard-settings-locations-wrap">
+    <p class="dashboard-settings-hint dashboard-settings-locations-hint">Store addresses, hours, and map pins in <code>data/locations.yaml</code>.</p>
+    <div id="settingsLocationsList" class="dashboard-settings-locations-list" aria-live="polite">
+      {{- range $index, $location := $locations -}}
+      {{- $hasTakeaway := false -}}
+      {{- $hasTables := false -}}
+      {{- with $location.orderingtables -}}
+        {{- range . -}}
+          {{- $t := lower (printf "%v" .) -}}
+          {{- if or (eq $t "takeway only") (eq $t "takeaway only") -}}
+            {{- $hasTakeaway = true -}}
+          {{- else -}}
+            {{- $hasTables = true -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+      <article class="dashboard-settings-location-card">
+        <div class="dashboard-settings-location-card-main">
+          <h3 class="dashboard-settings-location-card-title">{{ default $location.address $location.city }}</h3>
+          <p class="dashboard-settings-location-card-address">{{ $location.address }}</p>
+          <p class="dashboard-settings-location-card-meta">
+            {{- with $location.island }}<span>{{ . }}</span>{{ end -}}
+            {{- with $location.subcategories }}<span>{{ delimit . ", " }}</span>{{ end -}}
+            {{- with $location.latlon }}<span>{{ index . 0 }}, {{ index . 1 }}</span>{{ end -}}
+          </p>
+          <div class="dashboard-settings-location-card-ordering" aria-label="Ordering options">
+            <div class="settings-location-ordering-switch-row settings-location-ordering-switch-row--card">
+              <span class="settings-location-ordering-switch-label">Takeaway</span>
+              <span class="dashboard-switch dashboard-switch--readonly">
+                <input type="checkbox" class="dashboard-switch-input" disabled{{ if $hasTakeaway }} checked{{ end }} aria-label="Takeaway">
+                <span class="dashboard-switch-track" aria-hidden="true"></span>
+                <span class="dashboard-switch-state" aria-hidden="true"></span>
+              </span>
+            </div>
+            <div class="settings-location-ordering-switch-row settings-location-ordering-switch-row--card">
+              <span class="settings-location-ordering-switch-label">Tables</span>
+              <span class="dashboard-switch dashboard-switch--readonly">
+                <input type="checkbox" class="dashboard-switch-input" disabled{{ if $hasTables }} checked{{ end }} aria-label="Tables">
+                <span class="dashboard-switch-track" aria-hidden="true"></span>
+                <span class="dashboard-switch-state" aria-hidden="true"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-settings-location-card-actions">
+          <button type="button" class="btn-dash btn-dash-secondary btn-settings-location-edit" data-index="{{ $index }}"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>
+          <button type="button" class="btn-dash btn-dash-secondary btn-settings-location-delete" data-index="{{ $index }}" aria-label="Remove location"><i class="fa fa-trash" aria-hidden="true"></i></button>
+        </div>
+      </article>
+      {{- end -}}
+    </div>
+    <p id="settingsLocationsEmpty" class="dashboard-settings-locations-empty{{ if gt (len $locations) 0 }} hidden{{ end }}">No locations yet. Add your first store or branch below.</p>
+    <div class="dashboard-settings-locations-actions">
+      <button type="button" class="btn-dash btn-dash-secondary" id="btnSettingsLocationAdd">
+        <i class="fa fa-plus" aria-hidden="true"></i> Add location
+      </button>
+    </div>
+    <div class="dashboard-settings-form-actions dashboard-settings-locations-save-row">
+      <button type="button" class="btn-dash btn-dash-primary" id="btnSaveLocationsSettings">Save locations</button>
+      <span id="locationsSettingsSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+    </div>
+  </div>
+</section>
+
+<div id="settingsLocationModal" class="dashboard-settings-location-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsLocationModalTitle" hidden>
+  <div class="dashboard-settings-location-modal-backdrop" data-close-location-modal></div>
+  <div class="dashboard-settings-location-modal-panel">
+    <div class="dashboard-settings-location-modal-head">
+      <h3 id="settingsLocationModalTitle" class="dashboard-settings-location-modal-title">Add location</h3>
+      <button type="button" class="dashboard-settings-location-modal-close" data-close-location-modal aria-label="Close"><i class="fa fa-times" aria-hidden="true"></i></button>
+    </div>
+    <form id="settingsLocationForm" class="dashboard-settings-location-form" autocomplete="off">
+      <input type="hidden" id="settingsLocationEditIndex" value="">
+      <div class="dashboard-settings-form-grid dashboard-settings-location-form-grid">
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <label class="dashboard-settings-label" for="settingsLocationAddress">Address <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
+          <div class="dashboard-settings-value">
+            <input type="text" id="settingsLocationAddress" class="dashboard-settings-input" required>
+          </div>
+        </div>
+        <div class="dashboard-settings-row">
+          <label class="dashboard-settings-label" for="settingsLocationCity">City <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
+          <div class="dashboard-settings-value">
+            <input type="text" id="settingsLocationCity" class="dashboard-settings-input" required>
+          </div>
+        </div>
+        <div class="dashboard-settings-row">
+          <label class="dashboard-settings-label" for="settingsLocationIsland">Island <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
+          <div class="dashboard-settings-value">
+            <select id="settingsLocationIsland" class="dashboard-settings-input dashboard-settings-select" required autocomplete="address-level1" aria-label="Island">
+              <option value="" disabled>Select island</option>
+              <option value="Trinidad">Trinidad</option>
+              <option value="Tobago">Tobago</option>
+            </select>
+          </div>
+        </div>
+        <div class="dashboard-settings-row">
+          <label class="dashboard-settings-label" for="settingsLocationLat">Latitude</label>
+          <div class="dashboard-settings-value">
+            <input type="number" id="settingsLocationLat" class="dashboard-settings-input" step="any">
+          </div>
+        </div>
+        <div class="dashboard-settings-row">
+          <label class="dashboard-settings-label" for="settingsLocationLon">Longitude</label>
+          <div class="dashboard-settings-value">
+            <input type="number" id="settingsLocationLon" class="dashboard-settings-input" step="any">
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <label class="dashboard-settings-label" for="settingsLocationSubcategories">Subcategories</label>
+          <div class="dashboard-settings-value">
+            <input type="text" id="settingsLocationSubcategories" class="dashboard-settings-input" placeholder="Restaurant, Bar">
+            <p class="dashboard-settings-hint">Comma-separated labels for filters and maps.</p>
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <span class="dashboard-settings-label" id="settingsLocationOrderingLabel">Ordering</span>
+          <div class="dashboard-settings-value">
+            <div class="settings-location-ordering-options" id="settingsLocationOrderingOptions">
+              <div class="settings-location-ordering-contact">
+                <label class="settings-location-ordering-field" for="settingsLocationPhone">
+                  <span class="settings-location-ordering-field-label">Phone</span>
+                  <input type="text" id="settingsLocationPhone" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel">
+                </label>
+                <label class="settings-location-ordering-field" for="settingsLocationWhatsapp">
+                  <span class="settings-location-ordering-field-label">WhatsApp</span>
+                  <input type="text" id="settingsLocationWhatsapp" class="dashboard-settings-input" inputmode="numeric" autocomplete="tel">
+                </label>
+              </div>
+              <div class="settings-location-ordering-switch-row">
+                <span class="settings-location-ordering-switch-label" id="settingsLocationOrderingTakeawayLabel">Takeaway</span>
+                <label class="dashboard-switch" for="settingsLocationOrderingTakeaway">
+                  <input type="checkbox" id="settingsLocationOrderingTakeaway" class="dashboard-switch-input settings-location-ordering-takeaway-cb">
+                  <span class="dashboard-switch-track" aria-hidden="true"></span>
+                  <span class="dashboard-switch-state" aria-hidden="true"></span>
+                </label>
+              </div>
+              <div class="settings-location-ordering-switch-row">
+                <span class="settings-location-ordering-switch-label" id="settingsLocationOrderingTablesLabel">Tables</span>
+                <label class="dashboard-switch" for="settingsLocationOrderingTablesEnabled">
+                  <input type="checkbox" id="settingsLocationOrderingTablesEnabled" class="dashboard-switch-input settings-location-ordering-tables-cb">
+                  <span class="dashboard-switch-track" aria-hidden="true"></span>
+                  <span class="dashboard-switch-state" aria-hidden="true"></span>
+                </label>
+              </div>
+              <div id="settingsLocationTablesList" class="settings-location-tables-list hidden">
+                <div id="settingsLocationTablesRows" class="settings-location-tables-rows"></div>
+                <button type="button" class="btn-dash btn-dash-secondary settings-location-add-table-btn" id="btnSettingsLocationAddTable">
+                  <i class="fa fa-plus" aria-hidden="true"></i> Add table
+                </button>
+              </div>
+            </div>
+            <p class="dashboard-settings-hint">Contact numbers and how customers order at this location.</p>
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <label class="dashboard-settings-label" for="settingsLocationFooddrop">FoodDrop URL</label>
+          <div class="dashboard-settings-value">
+            <input type="url" id="settingsLocationFooddrop" class="dashboard-settings-input" placeholder="https://fooddropcaribbean.com/…">
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <label class="dashboard-settings-label" for="settingsLocationHoursMode">Hours mode</label>
+          <div class="dashboard-settings-value">
+            <select id="settingsLocationHoursMode" class="dashboard-settings-input dashboard-settings-select">
+              <option value="Auto">Auto (set hours below)</option>
+              <option value="AlwaysOpen">Always open</option>
+              <option value="AlwaysClosed">Always closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-settings-row--full settings-location-hours-editor-row">
+          <div class="dashboard-settings-value dashboard-settings-value--full">
+            <div id="settingsLocationHoursEditor" class="settings-location-hours-editor">
+              <div class="settings-location-hours-quick">
+                <span class="settings-location-hours-quick-title">Set hours for all days</span>
+                <div class="settings-location-hours-quick-fields">
+                  <label class="settings-location-hours-quick-field">
+                    <span>Open</span>
+                    <input type="time" id="settingsLocationHoursQuickOpen" class="dashboard-settings-input" value="11:00">
+                  </label>
+                  <span class="settings-location-hours-quick-sep" aria-hidden="true">to</span>
+                  <label class="settings-location-hours-quick-field">
+                    <span>Close</span>
+                    <input type="time" id="settingsLocationHoursQuickClose" class="dashboard-settings-input" value="22:00">
+                  </label>
+                  <button type="button" class="btn-dash btn-dash-secondary" id="settingsLocationHoursApplyAll">Apply to all days</button>
+                </div>
+                <p class="dashboard-settings-hint settings-location-hours-quick-hint">Late night? Use a close time earlier on the clock (e.g. open 11:00, close 02:00 = until 2&nbsp;AM).</p>
+              </div>
+              <div id="settingsLocationHoursDays" class="settings-location-hours-days" aria-label="Opening hours by day"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-settings-location-modal-actions">
+        <button type="submit" class="btn-dash btn-dash-primary" id="btnSettingsLocationSave">Save location</button>
+        <button type="button" class="btn-dash btn-dash-secondary hidden" id="btnSettingsLocationRemove">Remove</button>
+        <button type="button" class="btn-dash btn-dash-secondary" data-close-location-modal>Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/dashboard-settings-location-hours.js"></script>
+<script type="application/json" id="settingsLocationsInitial">{{ $locations | jsonify }}</script>

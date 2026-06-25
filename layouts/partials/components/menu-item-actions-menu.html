@@ -19,6 +19,9 @@
   data-actions-kind="{{ $actionsKind }}"
   data-item-url="{{ $url }}"
   data-item-title="{{ $title }}"
+  {{- if eq $actionsKind "section-header" -}}
+  data-section-slug="{{ index . "sectionSlug" | default "" }}"
+  {{- end -}}
   {{- if eq $actionsKind "promotion" -}}
   data-promotion-catalog-index="{{ $catalogIndex }}"
   data-ad-id="{{ $adId }}"
@@ -49,7 +52,7 @@
       class="menu-item-actions__option menu-item-actions__option--edit"
       role="menuitem"
       data-auth="admin-site"
-      style="display: none;"
+      hidden
     >
       Edit
     </button>

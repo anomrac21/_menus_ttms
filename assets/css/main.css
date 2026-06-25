@@ -1197,6 +1197,7 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-shadow: 1px 1px 5px black;
     padding: .25rem .55rem;
     margin: 0;
     font-size: .6875rem;
