@@ -246,8 +246,12 @@
           let errorMessage = 'An unexpected error occurred. ';
           
           if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
-            errorMessage = '⚠️ Cannot connect to authentication service. Please ensure the auth service is running on http://localhost:8080';
-            console.error('🔴 Auth service not reachable. Run: cd ttms-app-cluster/services/auth-service && go run cmd/main.go');
+            if (/^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname || '')) {
+              errorMessage = '⚠️ Cannot connect to authentication service. Please ensure the auth service is running on http://localhost:8080';
+              console.error('🔴 Auth service not reachable. Run: cd ttms-app-cluster/services/auth-service && go run cmd/main.go');
+            } else {
+              errorMessage = '⚠️ Cannot connect to authentication service (https://auth.ttmenus.com). Please try again later.';
+            }
           } else if (error.message.includes('CORS')) {
             errorMessage = '⚠️ CORS error. Please check auth service CORS configuration.';
           } else if (error.message.includes('NetworkError')) {

@@ -36,7 +36,7 @@
 
     <p class="dashboard-edit-rearrange-intro" id="dashboardEditRearrangeIntro">
 
-      Sections and menu items are listed below. Use the arrow buttons to change order. Changes save as CMS drafts automatically; going back also saves a menu snapshot.
+      Use the arrow buttons to change order. Drafts are saved when you leave this page — publish from the dashboard when ready.
 
     </p>
 
@@ -46,7 +46,10 @@
 
       <div class="dashboard-rearrange-panel">
 
-        <div id="dashboardRearrangeStatus" class="dashboard-rearrange-status" aria-live="polite">Loading…</div>
+        <div class="dashboard-rearrange-toolbar">
+          <div id="dashboardRearrangeStatus" class="dashboard-rearrange-status" aria-live="polite">Loading…</div>
+          <span id="dashboardRearrangeSaveChip" class="dashboard-rearrange-save-chip hidden" aria-live="polite"></span>
+        </div>
 
         <div id="dashboardRearrangeList" class="dashboard-rearrange-list" aria-label="Menu sections and items"></div>
 

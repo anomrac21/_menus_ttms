@@ -24,6 +24,19 @@ function ttmsNormalizeAuthApiV1Base(raw) {
   return s + '/api/v1';
 }
 
+var TTMS_PRODUCTION_AUTH_API = 'https://auth.ttmenus.com/api/v1';
+var TTMS_LOCAL_AUTH_API = 'http://localhost:8080/api/v1';
+
+function ttmsIsLocalDevHost() {
+  if (typeof window === 'undefined' || !window.location) return false;
+  var h = window.location.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || /\.local$/i.test(h);
+}
+
+function ttmsDefaultAuthApiV1Base() {
+  return ttmsIsLocalDevHost() ? TTMS_LOCAL_AUTH_API : TTMS_PRODUCTION_AUTH_API;
+}
+
 var TTMS_LEGACY_TOKEN_KEYS = ['auth_token', 'ttmenus_access_token'];
 var TTMS_LEGACY_REFRESH_KEYS = ['refresh_token', 'ttmenus_refresh_token'];
 var TTMS_LEGACY_USER_KEYS = ['user_data', 'ttmenus_user'];
@@ -56,7 +69,7 @@ const AuthClient = {
         var fromSvc = ttmsNormalizeAuthApiV1Base(window.AUTH_SERVICE_URL);
         if (fromSvc) return fromSvc;
       }
-      return 'http://localhost:8080/api/v1';
+      return ttmsDefaultAuthApiV1Base();
     },
   },
 
@@ -231,7 +244,7 @@ const AuthClient = {
   },
 
   _authApiIsLocalDev() {
-    return /localhost|127\.0\.0\.1/i.test(this.config.apiUrl || '');
+    return ttmsIsLocalDevHost() || /localhost|127\.0\.0\.1/i.test(this.config.apiUrl || '');
   },
 
   _resolveLogoutReturnUrl(redirectUrl) {

@@ -161,7 +161,9 @@
           "name" .Title
           "linkTitle" .LinkTitle
           "url" .RelPermalink
+          "weight" .Weight
           "section" .Parent.Section
+          "section_weight" .Parent.Weight
           "category" .Parent.Title
           "categoryUrl" .Parent.RelPermalink
           "summary" .Summary
