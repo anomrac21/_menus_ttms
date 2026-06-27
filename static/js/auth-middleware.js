@@ -60,6 +60,7 @@ const AuthMiddleware = {
       const path = String(saved).split('?')[0] || saved;
       const wantsProtectedArea =
         path.indexOf('/dashboard') === 0 ||
+        path.indexOf('/deployments') === 0 ||
         path.indexOf('/admin') === 0 ||
         path.indexOf('/login') === 0;
       if (wantsProtectedArea && !hasAdminSiteAccess) {
@@ -279,7 +280,9 @@ const AuthMiddleware = {
 
     const path = window.location.pathname || '';
     const isDashboard =
-      path.indexOf('/dashboard') === 0 || path.indexOf('/login') === 0;
+      path.indexOf('/dashboard') === 0 ||
+      path.indexOf('/deployments') === 0 ||
+      path.indexOf('/login') === 0;
     if (
       !isDashboard &&
       window.AuthClientAccess &&

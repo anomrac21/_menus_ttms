@@ -23,6 +23,7 @@
   window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
   </script>
   <script src="/js/dashboard-control-room.js" defer></script>
+  <script src="/js/dashboard-deploy-status.js" defer></script>
   {{- if site.Params.notifications.enabled }}
   <script src="/js/dashboard-notifications.js" defer></script>
   {{- end }}
@@ -201,6 +202,10 @@
       }
       if (window.DashboardControlRoom && typeof DashboardControlRoom.init === 'function') {
         DashboardControlRoom.init();
+      }
+
+      if (window.DashboardDeployStatus && typeof DashboardDeployStatus.init === 'function') {
+        DashboardDeployStatus.init();
       }
 
       if (window.DashboardMenuStatus && typeof DashboardMenuStatus.init === 'function') {

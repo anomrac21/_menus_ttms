@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Lang }}">
+<head>
+  {{ partial "head.html" . }}
+  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <script>
+  window.SITE_DISPLAY_NAME = {{ (site.Title | default "Menu Demo") | jsonify }};
+  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}";
+  window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
+  </script>
+  <script src="/js/dashboard-control-room.js" defer></script>
+  <script src="/js/dashboard-deploy-status.js" defer></script>
+</head>
+<body>
+  <div class="dashboard-control-room" id="dashboardControlRoom">
+    <div class="dashboard-header" role="banner">
+      {{ partial "dashboard/control-room-header.html" . }}
+    </div>
+
+    <main class="dashboard-deploy-history-main" id="dashboardDeploymentsPage">
+      <div class="dashboard-deploy-history-panel">
+        <div class="dashboard-deploy-history-head">
+          <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Back to dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i> Dashboard</a>
+          <div class="dashboard-deploy-history-head-text">
+            <h2 class="dashboard-deploy-history-title">Cluster deploy history</h2>
+            <p class="dashboard-deploy-history-subtitle" id="dashboardDeployHistoryStatus">Loading…</p>
+          </div>
+        </div>
+
+        <p class="dashboard-deploy-history-note">
+          Events are reported by the Hugo Kubernetes deploy pipeline (GitHub Actions → CMS).
+          Kafka fan-out can mirror these records for analytics when enabled on the cluster.
+        </p>
+
+        <div class="dashboard-deploy-history-table-wrap">
+          <table class="dashboard-deploy-history-table" aria-label="Deploy history">
+            <thead>
+              <tr>
+                <th scope="col">Time (UTC)</th>
+                <th scope="col">Phase</th>
+                <th scope="col">Status</th>
+                <th scope="col">Commit</th>
+                <th scope="col">Message</th>
+                <th scope="col">Workflow</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardDeployHistoryBody"></tbody>
+          </table>
+          <p class="dashboard-deploy-history-empty hidden" id="dashboardDeployHistoryEmpty">No deploy events yet.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/js/auth-middleware.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+        await AuthClient.whenReady();
+      }
+      if (window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
+        await AuthClient.ensureAccessToken();
+      }
+      if (!window.AuthClientAccess || !(await AuthClientAccess.protectAdminPage({ redirectUrl: '/dashboard/', showError: true }))) {
+        return;
+      }
+      if (window.AuthMiddleware && typeof AuthMiddleware.init === 'function') {
+        AuthMiddleware.init();
+      }
+      if (window.DashboardControlRoom && typeof DashboardControlRoom.init === 'function') {
+        DashboardControlRoom.init();
+      }
+      if (window.DashboardDeployStatus && typeof DashboardDeployStatus.init === 'function') {
+        DashboardDeployStatus.init();
+      }
+    });
+  </script>
+</body>
+</html>

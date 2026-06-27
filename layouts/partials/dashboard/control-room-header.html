@@ -11,13 +11,15 @@
     <span class="dashboard-logo-frame" aria-hidden="true">
       <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
     </span>
-    <span class="dashboard-logo-live-badge">Live</span>
+    <span class="dashboard-logo-live-badge dashboard-deploy-status-badge" id="dashboardDeployStatusBadge" data-state="unknown" title="Site deploy status">Live</span>
   </a>
   <div class="dashboard-header-main">
-    <p class="dashboard-header-kicker"><span class="dashboard-header-kicker-dot" aria-hidden="true"></span>Menu control room</p>
+    <p class="dashboard-header-kicker"><span class="dashboard-header-kicker-dot dashboard-deploy-status-dot" id="dashboardDeployStatusDot" aria-hidden="true"></span>Menu control room</p>
     <h1 class="dashboard-header-site" id="dashboardHeaderSiteName">{{ $siteName }}</h1>
+    <p class="dashboard-header-deploy-detail hidden" id="dashboardDeployStatusDetail" aria-live="polite"></p>
   </div>
   <div class="dashboard-header-end">
+    <a href="/dashboard/deployments/" class="btn-dash btn-dash-secondary dashboard-header-deploy-history" id="dashboardDeployHistoryLink" data-auth="admin-site" style="display: none;" title="View cluster deploy history"><i class="fa fa-history" aria-hidden="true"></i> Deploy history</a>
     <a href="{{ $accountUrl }}" class="dashboard-header-account-wrap" id="dashboardHeaderAccountLink" aria-label="Open your TT Menus account" title="Open your TT Menus account">
       <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <span class="dashboard-header-account" id="dashboardHeaderUserName">—</span>
