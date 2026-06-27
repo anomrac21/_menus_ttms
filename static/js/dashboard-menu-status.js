@@ -14,6 +14,258 @@
   var snapshotLoadError = '';
   var draftLoadError = '';
   var refreshInFlight = null;
+  var omittedDraftIds = new Set();
+  var draftAnalyses = {};
+  var draftAnalysisInFlight = null;
+  var draftGroupCollapsed = {};
+  var statusBlockCollapsed = {};
+  var STATUS_BLOCK_KEYS = ['snapshots', 'drafts', 'publish'];
+  var STATUS_BLOCK_DEFAULT_COLLAPSED = { snapshots: true, drafts: true, publish: true };
+
+  function statusBlockCollapsedStorageKey() {
+    return 'ttmenus_menu_status_blocks_collapsed_' + CMS_CLIENT_ID;
+  }
+
+  function loadStatusBlockCollapsed() {
+    statusBlockCollapsed = Object.assign({}, STATUS_BLOCK_DEFAULT_COLLAPSED);
+    try {
+      var raw = localStorage.getItem(statusBlockCollapsedStorageKey());
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          STATUS_BLOCK_KEYS.forEach(function (key) {
+            if (parsed[key] != null) statusBlockCollapsed[key] = !!parsed[key];
+          });
+        }
+      }
+    } catch (e) {
+      statusBlockCollapsed = Object.assign({}, STATUS_BLOCK_DEFAULT_COLLAPSED);
+    }
+  }
+
+  function saveStatusBlockCollapsed() {
+    try {
+      localStorage.setItem(statusBlockCollapsedStorageKey(), JSON.stringify(statusBlockCollapsed));
+    } catch (e) {}
+  }
+
+  function isStatusBlockCollapsed(blockKey) {
+    return !!statusBlockCollapsed[blockKey];
+  }
+
+  function toggleStatusBlockCollapsed(blockKey) {
+    statusBlockCollapsed[blockKey] = !isStatusBlockCollapsed(blockKey);
+    saveStatusBlockCollapsed();
+  }
+
+  function draftGroupCollapsedStorageKey() {
+    return 'ttmenus_draft_groups_collapsed_' + CMS_CLIENT_ID;
+  }
+
+  function loadDraftGroupCollapsed() {
+    draftGroupCollapsed = {};
+    try {
+      var raw = localStorage.getItem(draftGroupCollapsedStorageKey());
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') draftGroupCollapsed = parsed;
+      }
+    } catch (e) {
+      draftGroupCollapsed = {};
+    }
+  }
+
+  function saveDraftGroupCollapsed() {
+    try {
+      localStorage.setItem(draftGroupCollapsedStorageKey(), JSON.stringify(draftGroupCollapsed));
+    } catch (e) {}
+  }
+
+  function isDraftGroupCollapsed(groupKey) {
+    return !!draftGroupCollapsed[groupKey];
+  }
+
+  function toggleDraftGroupCollapsed(groupKey) {
+    draftGroupCollapsed[groupKey] = !isDraftGroupCollapsed(groupKey);
+    saveDraftGroupCollapsed();
+  }
+
+  function previewIdFromPreview(p) {
+    if (!p) return '';
+    var id = p.id || p.preview_id || p.previewId || p.ID;
+    return id != null ? String(id).trim() : '';
+  }
+
+  function omittedDraftStorageKey() {
+    return 'ttmenus_omitted_drafts_' + CMS_CLIENT_ID;
+  }
+
+  function draftOmitKey(p) {
+    if (!p) return '';
+    var id = previewIdFromPreview(p);
+    if (id) return 'id:' + id;
+    var path = draftContentPathFromPreview(p);
+    if (path) return 'path:' + path;
+    return '';
+  }
+
+  function clearOmitKeysForPreview(p) {
+    if (!p) return;
+    var key = draftOmitKey(p);
+    if (key) omittedDraftIds.delete(key);
+    var id = previewIdFromPreview(p);
+    if (id) {
+      omittedDraftIds.delete('id:' + id);
+      omittedDraftIds.delete(id);
+    }
+    var path = draftContentPathFromPreview(p);
+    if (path) omittedDraftIds.delete('path:' + path);
+  }
+
+  function loadOmittedDraftIds() {
+    omittedDraftIds = new Set();
+    if (!CMS_CLIENT_ID) return;
+    try {
+      var raw = localStorage.getItem(omittedDraftStorageKey());
+      if (!raw) return;
+      var list = JSON.parse(raw);
+      if (!Array.isArray(list)) return;
+      list.forEach(function (entry) {
+        if (!entry) return;
+        var s = String(entry);
+        if (s.indexOf('id:') === 0 || s.indexOf('path:') === 0) {
+          omittedDraftIds.add(s);
+        } else {
+          omittedDraftIds.add('id:' + s);
+        }
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  function saveOmittedDraftIds() {
+    if (!CMS_CLIENT_ID) return;
+    try {
+      localStorage.setItem(
+        omittedDraftStorageKey(),
+        JSON.stringify(Array.from(omittedDraftIds))
+      );
+    } catch (e) { /* ignore */ }
+  }
+
+  function pruneOmittedDraftIds() {
+    if (!omittedDraftIds.size) return;
+    var validKeys = new Set();
+    cachedPreviews.forEach(function (p) {
+      var key = draftOmitKey(p);
+      if (key) validKeys.add(key);
+      var id = previewIdFromPreview(p);
+      if (id) validKeys.add('id:' + id);
+      var path = draftContentPathFromPreview(p);
+      if (path) validKeys.add('path:' + path);
+    });
+    omittedDraftIds.forEach(function (stored) {
+      if (!validKeys.has(stored)) omittedDraftIds.delete(stored);
+    });
+    saveOmittedDraftIds();
+  }
+
+  function isDraftOmitted(p) {
+    var key = draftOmitKey(p);
+    if (key && omittedDraftIds.has(key)) return true;
+    var id = previewIdFromPreview(p);
+    if (id && omittedDraftIds.has(id)) return true;
+    var path = draftContentPathFromPreview(p);
+    return !!(path && omittedDraftIds.has('path:' + path));
+  }
+
+  function getPublishablePreviews() {
+    return cachedPreviews.filter(function (p) {
+      return !isDraftOmitted(p);
+    });
+  }
+
+  function omitDraftFromPublish(p) {
+    var key = draftOmitKey(p);
+    if (!key) return;
+    omittedDraftIds.add(key);
+    saveOmittedDraftIds();
+  }
+
+  function restoreDraftToPublish(p) {
+    clearOmitKeysForPreview(p);
+    saveOmittedDraftIds();
+  }
+
+  function deleteDraftFromCms(previewId) {
+    if (!previewId) return Promise.reject(new Error('Missing draft id'));
+    var delUrl = cmsClientPath('/content/previews/' + encodeURIComponent(previewId));
+    return fetch(delUrl, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: getAuthHeaders(),
+    }).then(function (res) {
+      if (!res.ok && res.status !== 204) {
+        return res.text().then(function (t) {
+          throw new Error(t || res.statusText || 'Delete failed');
+        });
+      }
+      return res;
+    });
+  }
+
+  function createDraftManageButton(preview, opts) {
+    opts = opts || {};
+    var previewId = previewIdFromPreview(preview);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dashboard-menu-status-draft-remove';
+    btn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+
+    function syncBtnState() {
+      var omitted = isDraftOmitted(preview);
+      btn.classList.toggle('is-omitted', omitted);
+      btn.setAttribute(
+        'aria-label',
+        omitted ? 'Delete draft permanently (requires confirmation)' : 'Omit from publish'
+      );
+      btn.title = omitted ? 'Click again to delete this draft' : 'Omit from publish';
+    }
+
+    syncBtnState();
+
+    btn.addEventListener('click', function () {
+      var omitKey = draftOmitKey(preview);
+      if (!omitKey && !previewId) return;
+      if (!isDraftOmitted(preview)) {
+        omitDraftFromPublish(preview);
+        syncBtnState();
+        if (typeof opts.onOmit === 'function') opts.onOmit(preview);
+        return;
+      }
+      var label = truncateMiddle(previewSummaryLabel(preview), 72);
+      if (
+        !confirm(
+          'Delete this draft permanently? It will not be published.\n\n' + label
+        )
+      ) {
+        return;
+      }
+      btn.disabled = true;
+      deleteDraftFromCms(previewId)
+        .then(function () {
+          clearOmitKeysForPreview(preview);
+          saveOmittedDraftIds();
+          if (typeof opts.onDelete === 'function') opts.onDelete(preview);
+        })
+        .catch(function (err) {
+          console.error('Delete draft failed', err);
+          alert('Could not delete saved change: ' + (err.message || err));
+          btn.disabled = false;
+        });
+    });
+
+    return btn;
+  }
 
   /** API root (single /api segment) — avoids double /api when serviceUrl already ends with /api. */
   function cmsApiBase() {
@@ -142,24 +394,34 @@
     } catch (e) {}
   }
 
-  function previewSummaryLabel(p) {
+  function previewDisplayTitle(p) {
     var payload = p.payload || p.Payload || {};
     var kind = payload.kind || p.kind || 'content';
-    var path = payload.contentPath || p.content_path || '';
+    var path =
+      payload.contentPath ||
+      p.content_path ||
+      payload.content_path ||
+      payload.siteConfigPath ||
+      '';
     var fm = payload.frontMatter || payload.front_matter || {};
     var title =
       fm.title != null && fm.title !== ''
         ? String(fm.title)
         : path
-          ? path.replace(/^content\//, '').replace(/\.md$/, '')
+          ? path
+              .replace(/^content\//, '')
+              .replace(/\/_index\.md$/, '')
+              .replace(/\.md$/, '')
+              .split('/')
+              .pop()
           : '';
-    if (kind === 'theme-css') {
-      return 'Theme colors (' + (path || 'static/css/colors.css') + ')';
+    if (kind === 'theme-css' || path === 'static/css/colors.css') {
+      return 'Theme colors';
     }
     var kindLabel =
       kind === 'menu-item'
         ? 'Menu item'
-        : kind === 'section-header'
+        : kind === 'section-header' || kind === 'section'
           ? 'Section'
           : kind === 'promotion'
             ? 'Promotion'
@@ -168,12 +430,20 @@
               : kind === 'slideshow'
                 ? 'Slideshow'
                 : kind;
-    if (!path) return title ? kindLabel + ': ' + title : kindLabel;
-    var pathSlug = path.replace(/^content\//, '').replace(/\.md$/, '');
-    if (!title || title === path || title === pathSlug) {
-      return kindLabel + ' (' + path + ')';
+    if (!title) return kindLabel;
+    return kindLabel + ': ' + title;
+  }
+
+  function previewSummaryLabel(p) {
+    var payload = p.payload || p.Payload || {};
+    var kind = payload.kind || p.kind || 'content';
+    var path = payload.contentPath || p.content_path || '';
+    var display = previewDisplayTitle(p);
+    if (kind === 'theme-css') {
+      return display + (path ? ' (' + path + ')' : '');
     }
-    return kindLabel + ': ' + title + ' (' + path + ')';
+    if (!path) return display;
+    return display + ' (' + path + ')';
   }
 
   function normalizeStoredFileLabel(label) {
@@ -382,7 +652,7 @@
   function draftKindPluralLabel(kind, count) {
     if (kind === 'theme-css') return count === 1 ? 'theme file' : 'theme files';
     if (kind === 'menu-item') return count === 1 ? 'menu item' : 'menu items';
-    if (kind === 'section-header') return count === 1 ? 'section' : 'sections';
+    if (kind === 'section-header' || kind === 'section') return count === 1 ? 'section' : 'sections';
     if (kind === 'promotion') return count === 1 ? 'promotion' : 'promotions';
     if (kind === 'home') return count === 1 ? 'home page' : 'home pages';
     if (kind === 'slideshow') return count === 1 ? 'slideshow' : 'slideshows';
@@ -398,6 +668,651 @@
     });
     return Object.keys(tallies).map(function (k) {
       return tallies[k] + ' ' + draftKindPluralLabel(k, tallies[k]);
+    });
+  }
+
+  function analysisClientId() {
+    return CMS_CLIENT_ID || global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+  }
+
+  function overlayValueIsEmpty(v) {
+    if (v == null) return true;
+    if (typeof v === 'string') return v.trim() === '';
+    if (Array.isArray(v)) return v.length === 0;
+    if (typeof v === 'object') return Object.keys(v).length === 0;
+    return false;
+  }
+
+  function mergeFrontMatterClient(base, overlay) {
+    base = base && typeof base === 'object' ? base : {};
+    overlay = overlay && typeof overlay === 'object' ? overlay : {};
+    var out = {};
+    Object.keys(base).forEach(function (k) {
+      out[k] = base[k];
+    });
+    Object.keys(overlay).forEach(function (k) {
+      if (overlay[k] == null) return;
+      if (overlayValueIsEmpty(overlay[k]) && out[k] != null) return;
+      if (
+        out[k] &&
+        typeof out[k] === 'object' &&
+        !Array.isArray(out[k]) &&
+        typeof overlay[k] === 'object' &&
+        !Array.isArray(overlay[k])
+      ) {
+        out[k] = mergeFrontMatterClient(out[k], overlay[k]);
+      } else if (!overlayValueIsEmpty(overlay[k])) {
+        out[k] = overlay[k];
+      }
+    });
+    return out;
+  }
+
+  function yamlScalar(value) {
+    if (value == null) return '';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (typeof value === 'number') return String(value);
+    var s = String(value);
+    if (s.indexOf('\n') >= 0) return JSON.stringify(s);
+    if (/[:#\[\]{}&*!|>'"%@`,]/.test(s) || /^\s/.test(s) || /\s$/.test(s)) {
+      return JSON.stringify(s);
+    }
+    return s;
+  }
+
+  function yamlLine(key, value, indent) {
+    indent = indent || '';
+    if (value == null) return '';
+    if (Array.isArray(value)) {
+      if (!value.length) return indent + key + ': []';
+      return value
+        .map(function (v) {
+          return indent + key + ':\n' + indent + '  - ' + yamlScalar(v);
+        })
+        .join('\n');
+    }
+    if (typeof value === 'object') {
+      var lines = [indent + key + ':'];
+      Object.keys(value).forEach(function (sk) {
+        var child = yamlLine(sk, value[sk], indent + '  ');
+        if (child) lines.push(child);
+      });
+      return lines.join('\n');
+    }
+    return indent + key + ': ' + yamlScalar(value);
+  }
+
+  function frontMatterToYaml(fm) {
+    if (!fm || typeof fm !== 'object') return '';
+    return Object.keys(fm)
+      .sort()
+      .map(function (k) {
+        return yamlLine(k, fm[k], '');
+      })
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  function previewPayloadFromPreview(p) {
+    var payload = p.payload || p.Payload || {};
+    return {
+      kind: payload.kind || p.kind || 'content',
+      contentPath:
+        p.content_path ||
+        payload.contentPath ||
+        payload.content_path ||
+        payload.siteConfigPath ||
+        '',
+      frontMatter: payload.frontMatter || payload.front_matter || {},
+      body: payload.body != null ? String(payload.body) : '',
+    };
+  }
+
+  function buildMergedFileText(payload, live) {
+    if (!payload) return '';
+    if (payload.kind === 'theme-css' || payload.contentPath === 'static/css/colors.css') {
+      var body = String(payload.body || '').trim();
+      if (!body && live && live.body) body = String(live.body);
+      return body;
+    }
+    var mergedFM = mergeFrontMatterClient(live && live.frontMatter, payload.frontMatter);
+    var body = String(payload.body || '').trim();
+    if (!body && live && live.body) body = String(live.body);
+    var parts = ['---'];
+    var yaml = frontMatterToYaml(mergedFM);
+    if (yaml) parts.push(yaml);
+    parts.push('---', '');
+    if (body) parts.push(body);
+    return parts.join('\n').replace(/\n+$/, '') + '\n';
+  }
+
+  function lineDiffStats(oldText, newText) {
+    oldText = String(oldText || '');
+    newText = String(newText || '');
+    if (oldText === newText) return { added: 0, removed: 0 };
+    var oldLines = oldText.split('\n');
+    var newLines = newText.split('\n');
+    var oldCount = {};
+    var newCount = {};
+    oldLines.forEach(function (l) {
+      oldCount[l] = (oldCount[l] || 0) + 1;
+    });
+    newLines.forEach(function (l) {
+      newCount[l] = (newCount[l] || 0) + 1;
+    });
+    var removed = 0;
+    var added = 0;
+    Object.keys(oldCount).forEach(function (l) {
+      var n = newCount[l] || 0;
+      if (oldCount[l] > n) removed += oldCount[l] - n;
+    });
+    Object.keys(newCount).forEach(function (l) {
+      var o = oldCount[l] || 0;
+      if (newCount[l] > o) added += newCount[l] - o;
+    });
+    return { added: added, removed: removed };
+  }
+
+  function valuesEqual(a, b) {
+    try {
+      return JSON.stringify(a) === JSON.stringify(b);
+    } catch (e) {
+      return a === b;
+    }
+  }
+
+  var REORDER_FM_KEYS = ['title', 'weight', 'date'];
+
+  function normalizeContentFileResponse(data) {
+    if (!data) return null;
+    if (data.frontMatter != null || data.body !== undefined || data.contentPath) return data;
+    if (data.data && typeof data.data === 'object') return normalizeContentFileResponse(data.data);
+    return null;
+  }
+
+  function mergedPayloadState(payload, live) {
+    var liveFM = (live && live.frontMatter) || {};
+    var mergedFM = mergeFrontMatterClient(liveFM, payload.frontMatter || {});
+    var liveBody = String((live && live.body) || '').trim();
+    var draftBody = String(payload.body || '').trim();
+    var mergedBody = draftBody || liveBody;
+    return { liveFM: liveFM, mergedFM: mergedFM, liveBody: liveBody, mergedBody: mergedBody };
+  }
+
+  function classifyDraftChangeWithoutLive(payload) {
+    if (!payload) return 'content';
+    if (payload.kind === 'theme-css' || payload.contentPath === 'static/css/colors.css') {
+      return 'theme';
+    }
+    var fm = payload.frontMatter || {};
+    var keys = Object.keys(fm).filter(function (k) {
+      return !overlayValueIsEmpty(fm[k]);
+    });
+    if (String(payload.body || '').trim()) return 'content';
+    if (!keys.length) return 'rearrange';
+    var reorderShapeKeys = ['title', 'weight', 'date', 'icon', 'images'];
+    var hasNonReorderShape = keys.some(function (k) {
+      return reorderShapeKeys.indexOf(k) < 0;
+    });
+    if (!hasNonReorderShape) return 'rearrange';
+    // Reorder saves may still carry Hugo API metadata (prices, tags, etc.) without body edits.
+    if (keys.indexOf('weight') >= 0) {
+      var reorderBatchKeys = reorderShapeKeys.concat([
+        'prices',
+        'tags',
+        'ingredients',
+        'cookingmethods',
+        'types',
+        'events',
+        'promotions',
+        'side_categories',
+      ]);
+      var onlyReorderBatch = keys.every(function (k) {
+        return reorderBatchKeys.indexOf(k) >= 0;
+      });
+      if (onlyReorderBatch) return 'rearrange';
+    }
+    return 'content';
+  }
+
+  function classifyDraftChange(payload, live) {
+    if (!payload) return 'content';
+    if (payload.kind === 'theme-css' || payload.contentPath === 'static/css/colors.css') {
+      return 'theme';
+    }
+    if (!live) return classifyDraftChangeWithoutLive(payload);
+    var state = mergedPayloadState(payload, live);
+    var hasBodyEdit =
+      String(payload.body || '').trim() && state.mergedBody !== state.liveBody;
+    if (hasBodyEdit) return 'content';
+
+    if (!String(payload.body || '').trim()) {
+      var intentFM = {};
+      REORDER_FM_KEYS.forEach(function (k) {
+        var v = (payload.frontMatter || {})[k];
+        if (v != null && !overlayValueIsEmpty(v)) intentFM[k] = v;
+      });
+      var intentMergedFM = mergeFrontMatterClient(state.liveFM, intentFM);
+      var intentNonReorder = false;
+      var allIntentKeys = {};
+      Object.keys(state.liveFM).forEach(function (k) {
+        allIntentKeys[k] = true;
+      });
+      Object.keys(intentMergedFM).forEach(function (k) {
+        allIntentKeys[k] = true;
+      });
+      Object.keys(allIntentKeys).forEach(function (k) {
+        if (valuesEqual(state.liveFM[k], intentMergedFM[k])) return;
+        if (REORDER_FM_KEYS.indexOf(k) < 0) intentNonReorder = true;
+      });
+      if (!intentNonReorder) return 'rearrange';
+    }
+
+    var allKeySet = {};
+    Object.keys(state.liveFM).forEach(function (k) {
+      allKeySet[k] = true;
+    });
+    Object.keys(state.mergedFM).forEach(function (k) {
+      allKeySet[k] = true;
+    });
+    var nonReorderChange = false;
+    var reorderChange = false;
+    Object.keys(allKeySet).forEach(function (k) {
+      if (valuesEqual(state.liveFM[k], state.mergedFM[k])) return;
+      if (REORDER_FM_KEYS.indexOf(k) >= 0) reorderChange = true;
+      else nonReorderChange = true;
+    });
+    if (nonReorderChange) return 'content';
+    if (reorderChange) return 'rearrange';
+    return 'rearrange';
+  }
+
+  function computeDraftDiffStats(payload, live, category) {
+    if (category === 'theme') {
+      var liveBody = live ? String(live.body || '') : '';
+      var mergedBody = String(payload.body || '').trim() || liveBody;
+      return lineDiffStats(liveBody, mergedBody);
+    }
+    if (!live) return { added: 0, removed: 0 };
+    var state = mergedPayloadState(payload, live);
+    if (category === 'rearrange') {
+      var added = 0;
+      var removed = 0;
+      REORDER_FM_KEYS.forEach(function (k) {
+        if (!valuesEqual(state.liveFM[k], state.mergedFM[k])) {
+          removed += 1;
+          added += 1;
+        }
+      });
+      if (state.mergedBody !== state.liveBody) {
+        removed += 1;
+        added += 1;
+      }
+      return { added: added, removed: removed };
+    }
+    var liveText = buildMergedFileText(
+      {
+        kind: payload.kind,
+        contentPath: payload.contentPath,
+        frontMatter: state.liveFM,
+        body: state.liveBody,
+      },
+      null
+    );
+    var mergedText = buildMergedFileText(payload, live);
+    return lineDiffStats(liveText, mergedText);
+  }
+
+  function changeCategoryLabel(category) {
+    if (category === 'theme') return 'Theme';
+    if (category === 'rearrange') return 'Item Position';
+    return 'Content';
+  }
+
+  var DRAFT_GROUP_ORDER = ['rearrange', 'theme', 'content'];
+
+  function sectionSlugFromDraftPath(path) {
+    if (!path) return '';
+    var parts = String(path).split('/');
+    if (parts.length >= 2 && parts[0] === 'content') return parts[1];
+    return '';
+  }
+
+  function isSectionIndexDraftPath(path) {
+    return /\/_index\.md$/i.test(String(path || ''));
+  }
+
+  function isMenuItemDraftPath(path) {
+    if (!path || isSectionIndexDraftPath(path)) return false;
+    if (path === 'static/css/colors.css') return false;
+    return /^content\/[^/]+\/.+\.md$/i.test(String(path));
+  }
+
+  function draftWeightFromPreview(p) {
+    var payload = previewPayloadFromPreview(p);
+    var fm = payload.frontMatter || {};
+    var w = fm.weight;
+    if (typeof w === 'number') return w;
+    var n = parseInt(w, 10);
+    return isNaN(n) ? 9999 : n;
+  }
+
+  function buildSectionWeightMapFromPreviews(previews) {
+    var map = {};
+    previews.forEach(function (p) {
+      var path = draftContentPathFromPreview(p);
+      if (!path || !isSectionIndexDraftPath(path)) return;
+      var slug = sectionSlugFromDraftPath(path);
+      if (slug) map[slug] = draftWeightFromPreview(p);
+    });
+    return map;
+  }
+
+  function comparePreviewsByMenuPublishOrder(a, b, sectionWeights) {
+    var pathA = draftContentPathFromPreview(a);
+    var pathB = draftContentPathFromPreview(b);
+    var slugA = sectionSlugFromDraftPath(pathA);
+    var slugB = sectionSlugFromDraftPath(pathB);
+    var secWA =
+      sectionWeights[slugA] != null
+        ? sectionWeights[slugA]
+        : isSectionIndexDraftPath(pathA)
+          ? draftWeightFromPreview(a)
+          : 9999;
+    var secWB =
+      sectionWeights[slugB] != null
+        ? sectionWeights[slugB]
+        : isSectionIndexDraftPath(pathB)
+          ? draftWeightFromPreview(b)
+          : 9999;
+    if (secWA !== secWB) return secWA - secWB;
+    var isSecA = isSectionIndexDraftPath(pathA);
+    var isSecB = isSectionIndexDraftPath(pathB);
+    if (isSecA && !isSecB) return -1;
+    if (!isSecA && isSecB) return 1;
+    var wA = draftWeightFromPreview(a);
+    var wB = draftWeightFromPreview(b);
+    if (wA !== wB) return wA - wB;
+    return String(pathA || '').localeCompare(String(pathB || ''));
+  }
+
+  function sortDraftRowElementsByMenuOrder(rowElements, sectionWeights) {
+    return rowElements.slice().sort(function (liA, liB) {
+      var idxA = parseInt(liA.getAttribute('data-draft-index') || '', 10);
+      var idxB = parseInt(liB.getAttribute('data-draft-index') || '', 10);
+      if (isNaN(idxA) || isNaN(idxB)) return 0;
+      return comparePreviewsByMenuPublishOrder(
+        cachedPreviews[idxA],
+        cachedPreviews[idxB],
+        sectionWeights
+      );
+    });
+  }
+
+  function formatFieldLabel(key) {
+    var labels = {
+      weight: 'Position',
+      title: 'Title',
+      date: 'Date',
+      prices: 'Prices',
+      images: 'Images',
+      tags: 'Tags',
+      icon: 'Icon',
+      ingredients: 'Ingredients',
+      cookingmethods: 'Cooking methods',
+      types: 'Types',
+      events: 'Events',
+      promotions: 'Promotions',
+      side_categories: 'Side categories',
+    };
+    return labels[key] || String(key).replace(/_/g, ' ');
+  }
+
+  function formatChangeValue(v) {
+    if (v == null) return '—';
+    if (typeof v === 'string') {
+      var t = v.trim();
+      return t.length > 44 ? t.slice(0, 41) + '…' : t;
+    }
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    try {
+      var s = JSON.stringify(v);
+      return s.length > 52 ? s.slice(0, 49) + '…' : s;
+    } catch (e) {
+      return String(v);
+    }
+  }
+
+  function computeProvisionalChangeDetails(payload, category) {
+    var details = [];
+    var fm = payload.frontMatter || {};
+    if (category === 'theme') {
+      details.push('Theme colors updated');
+      return details;
+    }
+    if (category !== 'rearrange') {
+      if (String(payload.body || '').trim()) details.push('Description edited');
+      Object.keys(fm).forEach(function (k) {
+        if (overlayValueIsEmpty(fm[k])) return;
+        if (REORDER_FM_KEYS.indexOf(k) >= 0) return;
+        details.push(formatFieldLabel(k) + ' updated');
+      });
+      return details.length ? details : ['Content updated'];
+    }
+    REORDER_FM_KEYS.forEach(function (k) {
+      if (fm[k] == null || overlayValueIsEmpty(fm[k])) return;
+      if (k === 'weight') {
+        details.push('Position → weight ' + formatChangeValue(fm[k]));
+      } else {
+        details.push(formatFieldLabel(k) + ': ' + formatChangeValue(fm[k]));
+      }
+    });
+    return details.length ? details : ['Position updated'];
+  }
+
+  function computeDraftChangeDetails(payload, live, category) {
+    if (category === 'theme') {
+      var draftBody = String(payload.body || '').trim();
+      if (live && draftBody && draftBody !== String(live.body || '')) {
+        return ['Theme CSS: ' + formatDiffStats(lineDiffStats(live.body, draftBody))];
+      }
+      return draftBody ? ['Theme colors updated'] : ['Theme unchanged'];
+    }
+    if (!live) return computeProvisionalChangeDetails(payload, category);
+
+    var state = mergedPayloadState(payload, live);
+    var details = [];
+    if (String(payload.body || '').trim() && state.mergedBody !== state.liveBody) {
+      details.push(
+        'Description: ' + formatDiffStats(lineDiffStats(state.liveBody, state.mergedBody))
+      );
+    }
+    REORDER_FM_KEYS.forEach(function (k) {
+      if (valuesEqual(state.liveFM[k], state.mergedFM[k])) return;
+      if (k === 'weight') {
+        details.push(
+          'Position: ' +
+            formatChangeValue(state.liveFM[k]) +
+            ' → ' +
+            formatChangeValue(state.mergedFM[k])
+        );
+      } else {
+        details.push(
+          formatFieldLabel(k) +
+            ': ' +
+            formatChangeValue(state.liveFM[k]) +
+            ' → ' +
+            formatChangeValue(state.mergedFM[k])
+        );
+      }
+    });
+    if (category === 'content') {
+      var skip = { title: true, date: true, weight: true };
+      var seen = {};
+      Object.keys(state.liveFM).forEach(function (k) {
+        seen[k] = true;
+      });
+      Object.keys(state.mergedFM).forEach(function (k) {
+        seen[k] = true;
+      });
+      Object.keys(seen).forEach(function (k) {
+        if (skip[k]) return;
+        if (valuesEqual(state.liveFM[k], state.mergedFM[k])) return;
+        details.push(formatFieldLabel(k) + ' updated');
+      });
+    }
+    return details.length
+      ? details
+      : category === 'rearrange'
+        ? ['No position change vs Git']
+        : ['Updated'];
+  }
+
+  function buildDraftAnalysis(payload, live) {
+    var category = classifyDraftChange(payload, live);
+    var diff = computeDraftDiffStats(payload, live, category);
+    var changes = live
+      ? computeDraftChangeDetails(payload, live, category)
+      : computeProvisionalChangeDetails(payload, category);
+    return {
+      category: category,
+      diff: diff,
+      changes: changes,
+    };
+  }
+
+  function formatDiffStats(diff) {
+    if (!diff) return '';
+    if (!diff.added && !diff.removed) return 'no line changes';
+    return '+' + diff.added + ' \u2212' + diff.removed + ' lines';
+  }
+
+  function summarizeChangeCategories(previews) {
+    var counts = { rearrange: 0, theme: 0, content: 0 };
+    var pending = 0;
+    previews.forEach(function (p) {
+      var path = draftContentPathFromPreview(p);
+      if (!path) {
+        pending += 1;
+        return;
+      }
+      var analysis = draftAnalyses[path];
+      if (!analysis) {
+        pending += 1;
+        return;
+      }
+      var cat = analysis.category || 'content';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    var parts = [];
+    if (counts.rearrange) parts.push(counts.rearrange + ' item position');
+    if (counts.theme) parts.push(counts.theme + ' theme');
+    if (counts.content) parts.push(counts.content + ' content');
+    if (pending && !parts.length) return [];
+    return parts;
+  }
+
+  function cmsPostJsonWithAuth(url, body) {
+    return ensureAccessTokenForCms().then(function () {
+      return fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeaders()),
+        body: JSON.stringify(body || {}),
+      }).then(function (res) {
+        return res.text().then(function (text) {
+          var data = null;
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (e) {
+            if (!res.ok) {
+              throw new Error(
+                (res.status ? res.status + ' ' : '') + (text || '').slice(0, 120) || res.statusText
+              );
+            }
+          }
+          return { ok: res.ok, status: res.status, data: data, text: text };
+        });
+      });
+    }).then(function (res) {
+      if (res.ok || (res.status !== 401 && res.status !== 403)) return res;
+      var ac = global.AuthClient;
+      if (!ac || typeof ac.refreshToken !== 'function') return res;
+      return ac.refreshToken().then(function (rr) {
+        if (!rr || !rr.success) return res;
+        return fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeaders()),
+          body: JSON.stringify(body || {}),
+        }).then(function (res2) {
+          return res2.text().then(function (text) {
+            var data = null;
+            try {
+              data = text ? JSON.parse(text) : null;
+            } catch (e2) {
+              /* ignore */
+            }
+            return { ok: res2.ok, status: res2.status, data: data, text: text };
+          });
+        });
+      });
+    });
+  }
+
+  function applyProvisionalDraftAnalyses() {
+    cachedPreviews.forEach(function (p) {
+      var path = draftContentPathFromPreview(p);
+      if (!path) return;
+      var payload = previewPayloadFromPreview(p);
+      payload.contentPath = path;
+      var built = buildDraftAnalysis(payload, null);
+      draftAnalyses[path] = {
+        category: built.category,
+        diff: built.diff,
+        changes: built.changes,
+        provisional: true,
+      };
+    });
+  }
+
+  function applyDraftAnalysesFromLiveMap(liveByPath) {
+    liveByPath = liveByPath || {};
+    cachedPreviews.forEach(function (p) {
+      var path = draftContentPathFromPreview(p);
+      if (!path) return;
+      var payload = previewPayloadFromPreview(p);
+      payload.contentPath = path;
+      var live = liveByPath[path];
+      var built = buildDraftAnalysis(payload, live);
+      draftAnalyses[path] = {
+        category: built.category,
+        diff: built.diff,
+        changes: built.changes,
+        provisional: false,
+      };
+    });
+  }
+
+  function fetchLiveContentFilesBatch(paths) {
+    if (!paths.length) return Promise.resolve({});
+    var url =
+      cmsApiBase() +
+      '/clients/' +
+      encodeURIComponent(analysisClientId()) +
+      '/content/files/batch';
+    return cmsPostJsonWithAuth(url, { paths: paths }).then(function (res) {
+      if (!res.ok) {
+        console.warn('Batch content file read failed', res.status);
+        return {};
+      }
+      var files = (res.data && res.data.files) || {};
+      var liveByPath = {};
+      paths.forEach(function (path) {
+        var entry = files[path];
+        liveByPath[path] = entry ? normalizeContentFileResponse(entry) : null;
+      });
+      return liveByPath;
     });
   }
 
@@ -444,17 +1359,17 @@
     if (versionId) {
       sessionStorage.setItem('editMenuVersionId', versionId);
       global.location.href =
-        '/edit-menu/?load=drafts&menu_version=' + encodeURIComponent(versionId);
+        '/edit-menu-colors/?load=drafts&menu_version=' + encodeURIComponent(versionId);
     } else {
       sessionStorage.removeItem('editMenuVersionId');
-      global.location.href = '/edit-menu/?load=drafts';
+      global.location.href = '/edit-menu-colors/?load=drafts';
     }
   }
 
   function navigateEditLive() {
     sessionStorage.setItem('editPreviewMode', 'live');
     sessionStorage.removeItem('editMenuVersionId');
-    global.location.href = '/edit-menu/';
+    global.location.href = '/edit-menu-colors/';
   }
 
   function init(cfg) {
@@ -465,13 +1380,82 @@
     );
     CMS_API_URL = (cfg.cmsApiUrl || global.CMS_API_URL || '').replace(/\/+$/, '');
     CMS_CLIENT_ID = cfg.clientId || global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+    loadOmittedDraftIds();
+    loadDraftGroupCollapsed();
+    loadStatusBlockCollapsed();
+
+    var draftStatusClickBound = false;
+    function bindDraftStatusClick() {
+      if (!draftStatusEl || draftStatusClickBound) return;
+      draftStatusClickBound = true;
+      draftStatusEl.addEventListener('click', function (ev) {
+        var groupToggle = ev.target.closest('[data-draft-group-toggle]');
+        if (groupToggle) {
+          ev.preventDefault();
+          var groupKey = groupToggle.getAttribute('data-draft-group-toggle');
+          if (!groupKey) return;
+          toggleDraftGroupCollapsed(groupKey);
+          renderDraftStatusSummary();
+          return;
+        }
+        var restoreBtn = ev.target.closest('[data-draft-action="restore"]');
+        if (!restoreBtn) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        var idx = parseInt(restoreBtn.getAttribute('data-draft-index') || '', 10);
+        if (isNaN(idx) || idx < 0 || idx >= cachedPreviews.length) return;
+        restoreDraftToPublish(cachedPreviews[idx]);
+        syncPublishButton();
+        renderDraftStatusSummary();
+      });
+    }
 
     var editLink = document.getElementById('cardEditMenu');
+    var contentLink = document.getElementById('cardEditMenuContent');
     var publishBtn = document.getElementById('cardPublishDrafts');
     var snapshotStatusEl = document.getElementById('dashboardSnapshotStatusSummary');
     var draftStatusEl = document.getElementById('dashboardDraftStatusSummary');
     var lastPublishEl = document.getElementById('dashboardLastPublishSummary');
     var publishFlashEl = document.getElementById('dashboardPublishFlash');
+
+    function setStatusBlockSummary(blockKey, text) {
+      var id =
+        blockKey === 'snapshots'
+          ? 'dashboardSnapshotBlockSummary'
+          : blockKey === 'drafts'
+            ? 'dashboardDraftBlockSummary'
+            : 'dashboardLastPublishBlockSummary';
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text || '';
+    }
+
+    function syncStatusBlockUI(blockKey) {
+      var block = document.querySelector('[data-menu-status-block="' + blockKey + '"]');
+      if (!block) return;
+      var collapsed = isStatusBlockCollapsed(blockKey);
+      block.classList.toggle('is-collapsed', collapsed);
+      var toggle = block.querySelector('[data-menu-status-block-toggle="' + blockKey + '"]');
+      if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    }
+
+    function syncAllStatusBlockUI() {
+      STATUS_BLOCK_KEYS.forEach(syncStatusBlockUI);
+    }
+
+    function bindStatusBlockToggles() {
+      STATUS_BLOCK_KEYS.forEach(function (blockKey) {
+        var toggle = document.querySelector(
+          '[data-menu-status-block-toggle="' + blockKey + '"]'
+        );
+        if (!toggle || toggle.__ttmsStatusBlockBound) return;
+        toggle.__ttmsStatusBlockBound = true;
+        toggle.addEventListener('click', function () {
+          toggleStatusBlockCollapsed(blockKey);
+          syncStatusBlockUI(blockKey);
+        });
+      });
+    }
 
     var SNAPSHOT_MAX = 3;
     var SNAPSHOT_LIST_CAP = 3;
@@ -492,6 +1476,7 @@
       if (!snapshotStatusEl) return;
       snapshotStatusEl.textContent = '';
       if (snapshotLoadState === 'loading' || snapshotLoadState === 'idle') {
+        setStatusBlockSummary('snapshots', 'Loading…');
         var pLoad = document.createElement('p');
         pLoad.className = 'dashboard-menu-status-muted dashboard-menu-status-loading';
         pLoad.textContent = 'Loading menu snapshots…';
@@ -499,6 +1484,10 @@
         return;
       }
       if (snapshotLoadState === 'auth') {
+        setStatusBlockSummary(
+          'snapshots',
+          snapshotLoadError ? truncateMiddle(snapshotLoadError, 72) : 'Sign in required'
+        );
         var pAuth = document.createElement('p');
         pAuth.className = 'dashboard-menu-status-error';
         pAuth.textContent =
@@ -507,6 +1496,10 @@
         return;
       }
       if (snapshotLoadState === 'error') {
+        setStatusBlockSummary(
+          'snapshots',
+          snapshotLoadError ? truncateMiddle(snapshotLoadError, 72) : 'Could not load snapshots'
+        );
         var pErr = document.createElement('p');
         pErr.className = 'dashboard-menu-status-error';
         pErr.textContent =
@@ -516,6 +1509,7 @@
       }
       var n = cachedVersions.length;
       if (n === 0) {
+        setStatusBlockSummary('snapshots', 'No snapshots saved');
         var p0 = document.createElement('p');
         p0.className = 'dashboard-menu-status-muted';
         p0.textContent =
@@ -526,6 +1520,10 @@
         selectedSnapshotId = null;
         return;
       }
+      setStatusBlockSummary(
+        'snapshots',
+        n + ' snapshot' + (n === 1 ? '' : 's') + ' saved (max ' + SNAPSHOT_MAX + ')'
+      );
       if (
         selectedSnapshotId &&
         !cachedVersions.some(function (v) {
@@ -660,10 +1658,28 @@
       }
     }
 
+    function draftBlockSummaryText(n, publishableCount) {
+      if (n === 0) return 'No unpublished drafts';
+      if (publishableCount === n) {
+        return n + ' draft' + (n === 1 ? '' : 's') + ' ready to publish';
+      }
+      if (publishableCount === 0) {
+        return n + ' draft' + (n === 1 ? '' : 's') + ' saved — all omitted';
+      }
+      return (
+        n +
+        ' saved · ' +
+        publishableCount +
+        ' ready to publish'
+      );
+    }
+
     function renderDraftStatusSummary() {
       if (!draftStatusEl) return;
+      bindDraftStatusClick();
       draftStatusEl.textContent = '';
       if (draftLoadState === 'loading' || draftLoadState === 'idle') {
+        setStatusBlockSummary('drafts', 'Loading…');
         var pLoadD = document.createElement('p');
         pLoadD.className = 'dashboard-menu-status-muted dashboard-menu-status-loading';
         pLoadD.textContent = 'Loading content drafts…';
@@ -671,6 +1687,10 @@
         return;
       }
       if (draftLoadState === 'auth') {
+        setStatusBlockSummary(
+          'drafts',
+          draftLoadError ? truncateMiddle(draftLoadError, 72) : 'Sign in required'
+        );
         var pAuthD = document.createElement('p');
         pAuthD.className = 'dashboard-menu-status-error';
         pAuthD.textContent =
@@ -679,6 +1699,10 @@
         return;
       }
       if (draftLoadState === 'error') {
+        setStatusBlockSummary(
+          'drafts',
+          draftLoadError ? truncateMiddle(draftLoadError, 72) : 'Could not load drafts'
+        );
         var pErrD = document.createElement('p');
         pErrD.className = 'dashboard-menu-status-error';
         pErrD.textContent =
@@ -687,6 +1711,9 @@
         return;
       }
       var n = cachedPreviews.length;
+      var publishable = getPublishablePreviews();
+      var publishableCount = publishable.length;
+      setStatusBlockSummary('drafts', draftBlockSummaryText(n, publishableCount));
       if (n === 0) {
         var p0 = document.createElement('p');
         p0.className = 'dashboard-menu-status-muted';
@@ -697,46 +1724,214 @@
       }
       var introD = document.createElement('p');
       introD.className = 'dashboard-menu-status-intro';
-      introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
-      introD.appendChild(document.createTextNode(' ready to publish to Git.'));
-      draftStatusEl.appendChild(introD);
-      var kindSummary = summarizeDraftKinds(cachedPreviews);
-      if (kindSummary.length) {
-        var kindP = document.createElement('p');
-        kindP.className = 'dashboard-menu-status-draft-kind-counts';
-        kindP.textContent = 'Includes ' + kindSummary.join(', ') + '.';
-        draftStatusEl.appendChild(kindP);
+      if (publishableCount === n) {
+        introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
+        introD.appendChild(document.createTextNode(' ready to publish.'));
+      } else if (publishableCount === 0) {
+        introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
+        introD.appendChild(document.createTextNode(' saved — all omitted from publish.'));
+      } else {
+        introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
+        introD.appendChild(document.createTextNode(' saved · '));
+        introD.appendChild(createStatusStatPill(publishableCount, 'draft', 'drafts'));
+        introD.appendChild(document.createTextNode(' ready to publish.'));
       }
+      draftStatusEl.appendChild(introD);
       var hintD = document.createElement('p');
       hintD.className = 'dashboard-menu-status-muted';
       hintD.textContent =
-        'Each row lists the content type, title, and repository path. Use Publish below to commit these files.';
+        'Click × to omit from publish. Use Include to restore an omitted draft. Click × again on an omitted draft to delete (with confirmation).';
       draftStatusEl.appendChild(hintD);
-      var rowsD = [];
+      var groupedRows = { rearrange: [], theme: [], content: [] };
       for (var di = 0; di < n; di++) {
         var preview = cachedPreviews[di];
         var liD = document.createElement('li');
-        liD.className = 'dashboard-menu-status-row';
-        var chip = document.createElement('span');
+        liD.className = 'dashboard-menu-status-row dashboard-menu-status-draft-row';
+        liD.setAttribute('data-draft-index', String(di));
+        if (isDraftOmitted(preview)) {
+          liD.classList.add('is-omitted-from-publish');
+        }
+        var chip = document.createElement('div');
         chip.className = 'dashboard-menu-status-draft-chip';
-        chip.appendChild(
-          document.createTextNode(truncateMiddle(previewSummaryLabel(preview), 96))
-        );
+        if (isDraftOmitted(preview)) {
+          chip.classList.add('is-omitted-from-publish');
+        }
         var path = draftContentPathFromPreview(preview);
+        var analysis = path && draftAnalyses[path];
+        if (isMenuItemDraftPath(path)) {
+          liD.classList.add('dashboard-menu-status-draft-row--nested');
+        }
+        var titleSpan = document.createElement('span');
+        titleSpan.className = 'dashboard-menu-status-draft-chip-title';
+        titleSpan.textContent = truncateMiddle(previewDisplayTitle(preview), 96);
+        chip.appendChild(titleSpan);
         if (path) {
           var pathSpan = document.createElement('span');
           pathSpan.className = 'dashboard-menu-status-draft-chip-path';
           pathSpan.textContent = path;
           chip.appendChild(pathSpan);
         }
+        if (analysis && analysis.changes && analysis.changes.length) {
+          var changesSpan = document.createElement('span');
+          changesSpan.className = 'dashboard-menu-status-draft-chip-changes';
+          changesSpan.textContent = analysis.changes.join(' · ');
+          chip.appendChild(changesSpan);
+        }
+        if (analysis && !analysis.provisional) {
+          var diffSpan = document.createElement('span');
+          diffSpan.className = 'dashboard-menu-status-draft-chip-diff';
+          diffSpan.textContent = formatDiffStats(analysis.diff);
+          chip.appendChild(diffSpan);
+        }
+        if (isDraftOmitted(preview)) {
+          var omittedNote = document.createElement('span');
+          omittedNote.className = 'dashboard-menu-status-draft-omitted-note';
+          omittedNote.textContent = 'Omitted from publish';
+          chip.appendChild(omittedNote);
+        }
         liD.appendChild(chip);
-        rowsD.push(liD);
+
+        var actions = document.createElement('div');
+        actions.className = 'dashboard-menu-status-draft-actions';
+        if (isDraftOmitted(preview)) {
+          var restoreBtn = document.createElement('button');
+          restoreBtn.type = 'button';
+          restoreBtn.className = 'dashboard-menu-status-draft-restore';
+          restoreBtn.setAttribute('data-draft-action', 'restore');
+          restoreBtn.setAttribute('data-draft-index', String(di));
+          restoreBtn.setAttribute('aria-label', 'Include in publish');
+          restoreBtn.title = 'Include in publish';
+          restoreBtn.innerHTML = '<i class="fa fa-undo" aria-hidden="true"></i>';
+          actions.appendChild(restoreBtn);
+        }
+        actions.appendChild(
+          createDraftManageButton(preview, {
+            onOmit: function () {
+              syncPublishButton();
+              renderDraftStatusSummary();
+            },
+            onDelete: function () {
+              fetchPreviews();
+            },
+          })
+        );
+        liD.appendChild(actions);
+        var groupKey =
+          analysis && analysis.category && groupedRows[analysis.category]
+            ? analysis.category
+            : 'content';
+        groupedRows[groupKey].push(liD);
       }
-      appendStatusRows(draftStatusEl, rowsD, n);
+      var sectionWeightMap = buildSectionWeightMapFromPreviews(cachedPreviews);
+      if (groupedRows.rearrange.length) {
+        groupedRows.rearrange = sortDraftRowElementsByMenuOrder(
+          groupedRows.rearrange,
+          sectionWeightMap
+        );
+      }
+      var rowsD = [];
+      DRAFT_GROUP_ORDER.forEach(function (groupKey) {
+        var items = groupedRows[groupKey];
+        if (!items.length) return;
+        var collapsed = isDraftGroupCollapsed(groupKey);
+        var headerLi = document.createElement('li');
+        headerLi.className =
+          'dashboard-menu-status-draft-group-header dashboard-menu-status-draft-group-header--' +
+          groupKey +
+          (collapsed ? ' is-collapsed' : '');
+        var toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'dashboard-menu-status-draft-group-toggle';
+        toggleBtn.setAttribute('data-draft-group-toggle', groupKey);
+        toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        var chevron = document.createElement('span');
+        chevron.className = 'dashboard-menu-status-draft-group-toggle-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.innerHTML = '<i class="fa fa-chevron-down"></i>';
+        toggleBtn.appendChild(chevron);
+        var headerBadge = document.createElement('span');
+        headerBadge.className =
+          'dashboard-menu-status-draft-chip-badge dashboard-menu-status-draft-chip-badge--' +
+          groupKey;
+        headerBadge.textContent = changeCategoryLabel(groupKey);
+        toggleBtn.appendChild(headerBadge);
+        var countSpan = document.createElement('span');
+        countSpan.className = 'dashboard-menu-status-draft-group-count';
+        countSpan.textContent =
+          items.length + ' file' + (items.length === 1 ? '' : 's');
+        toggleBtn.appendChild(countSpan);
+        headerLi.appendChild(toggleBtn);
+        rowsD.push(headerLi);
+        items.forEach(function (row) {
+          row.setAttribute('data-draft-group', groupKey);
+          if (collapsed) row.classList.add('dashboard-menu-status-draft-row--collapsed');
+          rowsD.push(row);
+        });
+      });
+      appendStatusRows(draftStatusEl, rowsD, rowsD.length);
+    }
+
+    function analyzeDraftsAgainstLive() {
+      if (draftAnalysisInFlight) return draftAnalysisInFlight;
+      draftAnalyses = {};
+      var paths = [];
+      var seen = {};
+      cachedPreviews.forEach(function (p) {
+        var path = draftContentPathFromPreview(p);
+        if (!path || seen[path]) return;
+        seen[path] = true;
+        paths.push(path);
+      });
+      if (!paths.length) return Promise.resolve();
+      applyProvisionalDraftAnalyses();
+      renderDraftStatusSummary();
+      draftAnalysisInFlight = fetchLiveContentFilesBatch(paths)
+        .then(function (liveByPath) {
+          applyDraftAnalysesFromLiveMap(liveByPath);
+          renderDraftStatusSummary();
+        })
+        .catch(function (err) {
+          console.warn('Draft analysis failed', err);
+        })
+        .finally(function () {
+          draftAnalysisInFlight = null;
+          renderDraftStatusSummary();
+        });
+      return draftAnalysisInFlight;
+    }
+
+    function lastPublishBlockSummaryText() {
+      var raw = null;
+      try {
+        raw = localStorage.getItem(lastPublishStorageKey());
+      } catch (e) {}
+      if (!raw) return 'No publish record yet';
+      var data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        data = null;
+      }
+      if (!data || !data.at) return 'No publish record yet';
+      var when = data.at;
+      try {
+        when = new Date(data.at).toLocaleString(undefined, {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        });
+      } catch (e2) {}
+      var ok = data.ok !== false;
+      var parts = [(ok ? 'Publish succeeded' : 'Publish failed') + ' · ' + when];
+      if (data.count != null) {
+        parts.push(data.count + ' file' + (data.count === 1 ? '' : 's'));
+      }
+      if (data.commitHash) parts.push('Git ' + String(data.commitHash).slice(0, 7));
+      return parts.join(' · ');
     }
 
     function renderLastPublishSummary() {
       if (!lastPublishEl) return;
+      setStatusBlockSummary('publish', lastPublishBlockSummaryText());
       lastPublishEl.textContent = '';
       var raw = null;
       try {
@@ -808,15 +2003,19 @@
 
     function syncPublishButton() {
       if (!publishBtn) return;
+      var publishable = getPublishablePreviews();
       if (cachedPreviews.length > 0) {
         publishBtn.classList.remove('hidden');
         publishBtn.classList.add('btn-dash-publish');
+        publishBtn.disabled = publishable.length === 0;
         var label = publishBtn.querySelector('.card-publish-btn-label');
         var countText =
-          'Publish' + (cachedPreviews.length > 1 ? ' (' + cachedPreviews.length + ')' : '');
+          'Publish' +
+          (publishable.length > 1 ? ' (' + publishable.length + ')' : publishable.length === 0 ? ' (0)' : '');
         if (label) label.textContent = countText;
         else publishBtn.textContent = countText;
       } else {
+        publishBtn.disabled = false;
         publishBtn.classList.add('hidden');
       }
     }
@@ -870,10 +2069,12 @@
           }
           var raw = normalizePreviewsPayload(res.data);
           cachedPreviews = dedupePreviewsByContentPath(raw);
+          pruneOmittedDraftIds();
           draftLoadState = 'ok';
           draftLoadError = '';
           syncPublishButton();
           renderDraftStatusSummary();
+          analyzeDraftsAgainstLive();
           return cachedPreviews;
         })
         .catch(function (err) {
@@ -942,17 +2143,28 @@
 
     if (publishBtn) {
       publishBtn.addEventListener('click', function () {
-        if (cachedPreviews.length === 0) return;
-        var pending = dedupePreviewsByContentPath(cachedPreviews.slice());
+        var publishable = getPublishablePreviews();
+        if (publishable.length === 0) {
+          if (cachedPreviews.length > 0) {
+            alert(
+              'No drafts selected for publish. Restore omitted drafts with × or save new edits.'
+            );
+          }
+          return;
+        }
+        var pending = publishable.slice();
         function renderSummary() {
           if (!publishSummaryList || !publishSummaryCount) return;
           publishSummaryList.innerHTML = '';
-          publishSummaryCount.textContent =
+          var countBase =
             pending.length === 0
               ? 'No files selected'
               : pending.length === 1
                 ? '1 file ready to publish to Git'
                 : pending.length + ' files ready to publish to Git';
+          var catParts = summarizeChangeCategories(pending);
+          publishSummaryCount.textContent =
+            catParts.length ? countBase + ' (' + catParts.join(' · ') + ')' : countBase;
           if (publishSummaryConfirm) {
             publishSummaryConfirm.disabled = pending.length === 0;
             if (pending.length === 0) {
@@ -963,51 +2175,59 @@
             }
           }
           pending.forEach(function (p) {
-            var rowId = p.id || '';
+            var rowId = previewIdFromPreview(p);
             var li = document.createElement('li');
             li.className = 'dashboard-publish-summary-item';
+            if (isDraftOmitted(p)) {
+              li.classList.add('is-omitted-from-publish');
+            }
             var label = document.createElement('span');
             label.className = 'dashboard-publish-summary-label';
-            label.textContent = previewSummaryLabel(p);
-            var removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'dashboard-publish-summary-revert';
-            removeBtn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
-            removeBtn.setAttribute('aria-label', 'Remove draft from publish list');
-            removeBtn.addEventListener('click', function () {
-              var idx = pending.findIndex(function (x) {
-                return (x.id || '') === rowId;
-              });
-              if (idx === -1) return;
-              var previewId = pending[idx].id;
-              function removeFromList() {
-                pending.splice(idx, 1);
+            var path = draftContentPathFromPreview(p);
+            var analysis = path && draftAnalyses[path];
+            if (analysis) {
+              var badge = document.createElement('span');
+              badge.className =
+                'dashboard-menu-status-draft-chip-badge dashboard-menu-status-draft-chip-badge--' +
+                analysis.category;
+              badge.textContent = changeCategoryLabel(analysis.category);
+              label.appendChild(badge);
+              label.appendChild(document.createTextNode(' '));
+            }
+            label.appendChild(document.createTextNode(previewDisplayTitle(p)));
+            if (analysis) {
+              var meta = document.createElement('span');
+              meta.className = 'dashboard-publish-summary-meta';
+              var metaParts = [];
+              if (path) metaParts.push(path);
+              if (analysis.changes && analysis.changes.length) {
+                metaParts.push(analysis.changes.join(' · '));
+              }
+              if (!analysis.provisional) metaParts.push(formatDiffStats(analysis.diff));
+              meta.textContent = metaParts.join(' · ');
+              label.appendChild(meta);
+            }
+            var removeBtn = createDraftManageButton(p, {
+              onOmit: function (preview) {
+                var idx = pending.findIndex(function (x) {
+                  return previewIdFromPreview(x) === previewIdFromPreview(preview);
+                });
+                if (idx !== -1) pending.splice(idx, 1);
+                renderSummary();
+                syncPublishButton();
+                renderDraftStatusSummary();
+              },
+              onDelete: function (preview) {
+                var idx = pending.findIndex(function (x) {
+                  return previewIdFromPreview(x) === previewIdFromPreview(preview);
+                });
+                if (idx !== -1) pending.splice(idx, 1);
                 renderSummary();
                 fetchPreviews();
                 if (pending.length === 0) closePublishSummaryModal();
-              }
-              if (previewId) {
-                var delUrl = cmsClientPath('/content/previews/' + encodeURIComponent(previewId));
-                fetch(delUrl, {
-                  method: 'DELETE',
-                  credentials: 'include',
-                  headers: getAuthHeaders(),
-                })
-                  .then(function (res) {
-                    if (!res.ok && res.status !== 204)
-                      return res.text().then(function (t) {
-                        throw new Error(t);
-                      });
-                    removeFromList();
-                  })
-                  .catch(function (err) {
-                    console.error('Delete draft failed', err);
-                    alert('Could not delete saved change: ' + (err.message || err));
-                  });
-              } else {
-                removeFromList();
-              }
+              },
             });
+            removeBtn.classList.add('dashboard-publish-summary-revert');
             li.appendChild(label);
             li.appendChild(removeBtn);
             publishSummaryList.appendChild(li);
@@ -1058,6 +2278,10 @@
               })
               .then(function (resp) {
                 var hash = resp && resp.commit && resp.commit.hash ? String(resp.commit.hash) : '';
+                pending.forEach(function (p) {
+                  clearOmitKeysForPreview(p);
+                });
+                saveOmittedDraftIds();
                 var labels = pending.map(previewSummaryLabel);
                 persistLastPublishRecord({
                   at: new Date().toISOString(),
@@ -1101,6 +2325,8 @@
       }, 350);
     }
 
+    bindStatusBlockToggles();
+    syncAllStatusBlockUI();
     renderLastPublishSummary();
     refreshMenuCard();
 
@@ -1111,6 +2337,14 @@
     });
 
     global.addEventListener('ttms:auth-ready', scheduleRefreshMenuCard);
+
+    if (contentLink) {
+      contentLink.addEventListener('click', function () {
+        try {
+          sessionStorage.setItem('editMenuLiveMode', 'content');
+        } catch (e) { /* ignore */ }
+      });
+    }
 
     global.__ttmsMenuStatusRefresh = refreshMenuCard;
 

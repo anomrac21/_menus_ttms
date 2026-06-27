@@ -10,13 +10,47 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   var embedPanelMode = (function () {
     try {
-      return new URLSearchParams(window.location.search).get('embed') === 'panel';
+      var path = window.location.pathname.replace(/\/+$/, '');
+      if (path.endsWith('/edit-menu-colors/panel') || path.endsWith('/edit-menu/panel')) return true;
+      return new URLSearchParams(window.location.search).get('embed') === 'panel' &&
+        (path.endsWith('/edit-menu-colors') || path.endsWith('/edit-menu'));
     } catch (e) {
       return false;
     }
   })();
-  /** Full /edit-menu/ page is theme-only; content edits use ?embed=panel from the live menu. */
-  var themeOnlyMode = !embedPanelMode;
+
+  if (!embedPanelMode) {
+    try {
+      var legacyEmbed = new URLSearchParams(window.location.search).get('embed') === 'panel';
+      var pathNorm = window.location.pathname.replace(/\/+$/, '');
+      var onLegacyThemePath = pathNorm.endsWith('/edit-menu');
+      var onLegacyPanelPath = pathNorm.endsWith('/edit-menu/panel');
+      if (legacyEmbed && onLegacyThemePath) {
+        var qs = window.location.search || '?embed=panel';
+        window.location.replace('/edit-menu-colors/panel/' + (qs.charAt(0) === '?' ? qs : '?' + qs));
+        return;
+      }
+      if (legacyEmbed && onLegacyPanelPath) {
+        var panelQs = window.location.search || '';
+        window.location.replace('/edit-menu-colors/panel/' + (panelQs.charAt(0) === '?' ? panelQs : panelQs ? '?' + panelQs : ''));
+        return;
+      }
+      if (!legacyEmbed && onLegacyThemePath) {
+        window.location.replace('/edit-menu-colors/' + (window.location.search || '') + (window.location.hash || ''));
+        return;
+      }
+    } catch (e) { /* ignore */ }
+  }
+  /** Theme and rearrange shell pages use an iframe preview; content edits use ?embed=panel from the live menu. */
+  var editorShellPath = (function () {
+    try {
+      return window.location.pathname.replace(/\/+$/, '');
+    } catch (e) {
+      return '';
+    }
+  })();
+  var themeOnlyMode = !embedPanelMode && editorShellPath.endsWith('/edit-menu-colors');
+  var rearrangeOnlyMode = !embedPanelMode && editorShellPath.endsWith('/edit-menu-rearrange');
   var parentMenuWindow =
     embedPanelMode && window.parent && window.parent !== window ? window.parent : null;
 
@@ -444,8 +478,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   if (themeOnlyMode) {
     document.body.classList.add('dashboard-edit-theme-only');
-    var themeHeader = document.querySelector('.dashboard-edit-header--menu');
+    var themeHeader = document.querySelector('.dashboard-edit-header--theme');
     if (themeHeader) themeHeader.setAttribute('aria-label', 'Theme editor toolbar');
+  }
+
+  if (rearrangeOnlyMode) {
+    document.body.classList.add('dashboard-edit-rearrange-only');
+    var rearrangeHeader = document.querySelector('.dashboard-edit-header--rearrange');
+    if (rearrangeHeader) rearrangeHeader.setAttribute('aria-label', 'Rearrange menu toolbar');
   }
 
   function expandColorAsidePanel() {
@@ -716,16 +756,19 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function promotionSlugFromElement(el) {
     if (!el) return '';
-    var url = el.getAttribute('data-ad-url') || el.getAttribute('data-ad-link') || '';
-    var slug = promotionSlugFromLink(url);
-    if (slug) return slug;
     var id = el.getAttribute('data-ad-id') || '';
     if (id.indexOf('menu-ad-') === 0) {
-      slug = id.replace(/^menu-ad-/, '').replace(/-\d+$/, '');
+      var slug = id.replace(/^menu-ad-/, '').replace(/-\d+$/, '');
       if (slug) return slug;
     }
     var title = el.getAttribute('data-ad-title') || '';
-    return title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
+    if (title) {
+      var titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (titleSlug) return titleSlug;
+    }
+    var url = el.getAttribute('data-ad-url') || el.getAttribute('data-ad-link') || '';
+    slug = promotionSlugFromLink(url);
+    return slug;
   }
 
   function getReelsCatalog(win, doc) {
@@ -1142,15 +1185,22 @@ document.addEventListener('DOMContentLoaded', async function() {
       clientId: CMS_CLIENT_ID,
       contentPath: 'content/' + slug + '/_index.md',
       siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
-      frontMatter: {
-        title: title || 'Section',
-        weight: weightVal,
-        icon: (header.getAttribute('data-icon') || '').trim(),
-        images: {
-          top: (header.getAttribute('data-images-top') || '').trim(),
-          bottom: (header.getAttribute('data-images-bottom') || '').trim()
+      frontMatter: (function () {
+        var fm = {
+          title: title || 'Section',
+          weight: weightVal,
+        };
+        var icon = (header.getAttribute('data-icon') || '').trim();
+        if (icon) fm.icon = icon;
+        var top = (header.getAttribute('data-images-top') || '').trim();
+        var bottom = (header.getAttribute('data-images-bottom') || '').trim();
+        if (top || bottom) {
+          fm.images = {};
+          if (top) fm.images.top = top;
+          if (bottom) fm.images.bottom = bottom;
         }
-      },
+        return fm;
+      })(),
       body: ''
     };
   }
@@ -2600,26 +2650,34 @@ document.addEventListener('DOMContentLoaded', async function() {
   function setEditMode(on) {
     editMode = !!on;
     page.setAttribute('data-edit-mode', editMode ? 'edit' : 'preview');
-    btnPreview.classList.toggle('active', !editMode);
-    btnPreview.setAttribute('aria-pressed', !editMode);
-    btnEdit.classList.toggle('active', editMode);
-    btnEdit.setAttribute('aria-pressed', editMode);
+    if (btnPreview) {
+      btnPreview.classList.toggle('active', !editMode);
+      btnPreview.setAttribute('aria-pressed', !editMode);
+    }
+    if (btnEdit) {
+      btnEdit.classList.toggle('active', editMode);
+      btnEdit.setAttribute('aria-pressed', editMode);
+    }
     if (submodeWrap) submodeWrap.classList.toggle('hidden', !editMode);
     if (!editMode) {
       editSubmode = 'content';
       page.setAttribute('data-edit-submode', 'content');
-      btnSubmodeContent.classList.add('active');
-      btnSubmodeContent.setAttribute('aria-pressed', 'true');
+      if (btnSubmodeContent) {
+        btnSubmodeContent.classList.add('active');
+        btnSubmodeContent.setAttribute('aria-pressed', 'true');
+      }
       if (btnSubmodeMove) {
         btnSubmodeMove.classList.remove('active');
         btnSubmodeMove.setAttribute('aria-pressed', 'false');
       }
-      btnSubmodeColor.classList.remove('active');
-      btnSubmodeColor.setAttribute('aria-pressed', 'false');
+      if (btnSubmodeColor) {
+        btnSubmodeColor.classList.remove('active');
+        btnSubmodeColor.setAttribute('aria-pressed', 'false');
+      }
       updateEditPromptForSubmode();
       clearSelection();
       showColorSectionList();
-      colorForm.classList.add('hidden');
+      if (colorForm) colorForm.classList.add('hidden');
       closeAllMoveToolbarsInDoc(iframe && iframe.contentDocument);
     }
     setupIframeEditMode(iframeEditOverlayActive());
@@ -2638,20 +2696,24 @@ document.addEventListener('DOMContentLoaded', async function() {
   function setEditSubmode(mode) {
     editSubmode = mode;
     page.setAttribute('data-edit-submode', mode);
-    btnSubmodeContent.classList.toggle('active', mode === 'content');
-    btnSubmodeContent.setAttribute('aria-pressed', mode === 'content');
+    if (btnSubmodeContent) {
+      btnSubmodeContent.classList.toggle('active', mode === 'content');
+      btnSubmodeContent.setAttribute('aria-pressed', mode === 'content');
+    }
     if (btnSubmodeMove) {
       btnSubmodeMove.classList.toggle('active', mode === 'move');
       btnSubmodeMove.setAttribute('aria-pressed', mode === 'move');
     }
-    btnSubmodeColor.classList.toggle('active', mode === 'color');
-    btnSubmodeColor.setAttribute('aria-pressed', mode === 'color');
+    if (btnSubmodeColor) {
+      btnSubmodeColor.classList.toggle('active', mode === 'color');
+      btnSubmodeColor.setAttribute('aria-pressed', mode === 'color');
+    }
     if (mode === 'content' || mode === 'move') {
       clearSelection();
       if (asideEl) asideEl.classList.remove('hidden');
       if (colorAsideEl) colorAsideEl.classList.add('hidden');
-      promptEl.classList.remove('hidden');
-      formEl.classList.add('hidden');
+      if (promptEl) promptEl.classList.remove('hidden');
+      if (formEl) formEl.classList.add('hidden');
       updateEditPromptForSubmode();
     } else {
       if (asideEl) asideEl.classList.add('hidden');
@@ -2659,9 +2721,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         colorAsideEl.classList.remove('hidden');
         colorAsideEl.classList.add('dashboard-edit-color-aside-collapsed');
       }
-      colorPrompt.classList.remove('hidden');
+      if (colorPrompt) colorPrompt.classList.remove('hidden');
       showColorSectionList();
-      colorForm.classList.add('hidden');
+      if (colorForm) colorForm.classList.add('hidden');
       if (btnToggleColorPanel) {
         btnToggleColorPanel.setAttribute('aria-expanded', 'false');
         btnToggleColorPanel.setAttribute('aria-label', 'Expand color panel');
@@ -2687,9 +2749,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       var colorIntro = colorPrompt.querySelector('.dashboard-edit-color-intro');
       if (colorIntro) {
         colorIntro.textContent =
-          'Pick a section to adjust CSS variables. Changes preview live in the menu. Save a snapshot or publish theme colors to Git.';
+          'Pick a section to adjust CSS variables. Changes preview live in the menu and are saved automatically when you go back to the dashboard.';
       }
     }
+  }
+
+  if (rearrangeOnlyMode) {
+    setEditMode(true);
+    setEditSubmode('move');
   }
 
   function exitColorSectionEdit() {
@@ -2700,6 +2767,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function showColorSectionList() {
+    if (!colorSectionsEl) return;
     selectedColorSectionId = null;
     setColorAsideHeaderTitle('Theme colors', null);
     if (btnCloseColorSection) btnCloseColorSection.classList.add('hidden');
@@ -2980,6 +3048,27 @@ document.addEventListener('DOMContentLoaded', async function() {
       _themePersistTimer = null;
       persistThemeDraftToCMS();
     }, 1000);
+  }
+
+  function hasThemeColorChanges() {
+    if (Object.keys(COLOR_OVERRIDE_VALUES).length > 0) return true;
+    if (draftContentPaths.has(THEME_COLORS_CONTENT_PATH)) return true;
+    return hasPendingMenuChanges();
+  }
+
+  function flushThemeDraftPersist() {
+    if (_themePersistTimer) {
+      clearTimeout(_themePersistTimer);
+      _themePersistTimer = null;
+    }
+    if (!Object.keys(COLOR_OVERRIDE_VALUES).length) return Promise.resolve(true);
+    return persistThemeDraftToCMS();
+  }
+
+  function saveThemeChangesBeforeLeave() {
+    return flushThemeDraftPersist().then(function() {
+      return saveMenuSnapshotOnLeave();
+    });
   }
 
   function persistThemeDraftToCMS() {
@@ -5571,8 +5660,145 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn('populateEditFormFromInfo', err);
         if (selectedTypeEl) selectedTypeEl.textContent = 'Editing: ' + info.type;
       }
-      scheduleEndEditFormLoad();
+      hydrateEditFormFromCmsPreview(info.contentPath).finally(function() {
+        scheduleEndEditFormLoad();
+      });
     });
+  }
+
+  function pathsFromFmImages(images) {
+    if (!Array.isArray(images)) return [];
+    var paths = [];
+    images.forEach(function(x) {
+      if (!x) return;
+      if (typeof x === 'string') {
+        paths.push(x.replace(/^\//, ''));
+        return;
+      }
+      if (x.image) paths.push(String(x.image).replace(/^\//, ''));
+    });
+    return paths;
+  }
+
+  function hydrateEditFormFromCmsPreview(contentPath, options) {
+    options = options || {};
+    if (!contentPath || contentPath.indexOf('...') !== -1) return Promise.resolve(false);
+    function applyPreview(preview) {
+      if (!preview || !selectedInfo) return false;
+      var p = preview.payload || preview.Payload || {};
+      var fm = p.frontMatter || p.front_matter || {};
+      var kind = p.kind || preview.kind;
+      var contentType = selectedInfo.contentType || 'menu-item';
+      var pid = preview.previewId != null ? preview.previewId : preview.preview_id;
+      if (pid) savedDraftPreviewId = pid;
+      if (contentPath) draftContentPaths.add(contentPath);
+
+      if (contentType === 'menu-item' || kind === 'menu-item') {
+        if (inputTitle && fm.title != null) inputTitle.value = fm.title;
+        if (inputDesc && p.body != null) inputDesc.value = p.body;
+        if (pricesContainer && Array.isArray(fm.prices)) {
+          var pricesFlat = [];
+          fm.prices.forEach(function(pr) {
+            pricesFlat.push(pr.variable1 != null ? pr.variable1 : '-', pr.variable2 != null ? pr.variable2 : '-', Number(pr.price));
+          });
+          renderPricesUI(pricesContainer, pricesFlat);
+        }
+        var imagesArr = pathsFromFmImages(fm.images);
+        if (menuItemImagesContainer) renderMenuItemImagesUI(imagesArr, true);
+        else if (inputMenuItemImages) {
+          inputMenuItemImages.value = imagesArr.join('\n');
+          renderMenuItemImagesUI(imagesArr, true);
+        }
+        if (fm.side_categories != null || fm.sideCategories != null) {
+          var sc = fm.side_categories != null ? fm.side_categories : fm.sideCategories;
+          if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, Array.isArray(sc) ? sc : []);
+        }
+        if (fm.modifications != null && modificationsContainer) {
+          renderPairsUI(modificationsContainer, frontMatterModsToFlat(fm.modifications));
+        }
+        if (fm.additions != null && additionsContainer) {
+          renderPairsUI(additionsContainer, frontMatterModsToFlat(fm.additions));
+        }
+        if (fm.tags != null && tagsContainer) renderStringListUI(tagsContainer, Array.isArray(fm.tags) ? fm.tags : []);
+        if (fm.ingredients != null && ingredientsContainer) renderStringListUI(ingredientsContainer, Array.isArray(fm.ingredients) ? fm.ingredients : []);
+        if (fm.cookingmethods != null && cookingmethodsContainer) renderStringListUI(cookingmethodsContainer, Array.isArray(fm.cookingmethods) ? fm.cookingmethods : []);
+        if (fm.types != null && typesContainer) renderStringListUI(typesContainer, Array.isArray(fm.types) ? fm.types : []);
+        if (fm.events != null && eventsContainer) renderStringListUI(eventsContainer, Array.isArray(fm.events) ? fm.events : []);
+        if (fm.promotions != null && menuItemPromotionsContainer) {
+          renderMenuItemPromotionsUI(menuItemPromotionsContainer, Array.isArray(fm.promotions) ? fm.promotions : []);
+        }
+        if (fm.availability != null) populateMenuItemAvailabilityFromObject(fm.availability);
+        setEditStatus('Loaded CMS draft');
+        return true;
+      }
+
+      if (contentType === 'section-header' || kind === 'section-header') {
+        if (inputSectionTitle && fm.title != null) inputSectionTitle.value = fm.title;
+        if (inputSectionDesc && p.body != null) inputSectionDesc.value = p.body;
+        if (inputSectionWeight && fm.weight != null) inputSectionWeight.value = String(fm.weight);
+        if (inputSectionIcon && fm.icon != null) inputSectionIcon.value = String(fm.icon);
+        if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
+          window.DashboardSectionIconPicker.syncFromInput();
+        }
+        var topSrc = (fm.imagesTop != null ? fm.imagesTop : fm.images_top) != null ? String(fm.imagesTop || fm.images_top).trim() : '';
+        var bottomSrc = (fm.imagesBottom != null ? fm.imagesBottom : fm.images_bottom) != null ? String(fm.imagesBottom || fm.images_bottom).trim() : '';
+        if (inputSectionImageTop) {
+          inputSectionImageTop.value = topSrc;
+          inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (inputSectionImageBottom) {
+          inputSectionImageBottom.value = bottomSrc;
+          inputSectionImageBottom.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        setEditStatus('Loaded CMS draft');
+        return true;
+      }
+
+      if (contentType === 'promotion' || kind === 'promotion') {
+        if (inputPromoTitle && fm.title != null) inputPromoTitle.value = fm.title;
+        if (inputPromoDescription && p.body != null) inputPromoDescription.value = p.body;
+        if (inputPromoLink && fm.link != null) inputPromoLink.value = fm.link;
+        var promoImages = pathsFromFmImages(fm.images);
+        if (promoImagesContainer) renderPromoImagesUI(promoImages, true);
+        else if (inputPromoImages) inputPromoImages.value = promoImages.join('\n');
+        if (inputPromoRecurring) inputPromoRecurring.checked = !!fm.recurring;
+        if (promoDaysofweekContainer && fm.daysofweek != null) {
+          renderStringListUI(promoDaysofweekContainer, Array.isArray(fm.daysofweek) ? fm.daysofweek : []);
+        }
+        if (inputPromoWeight && fm.weight != null) inputPromoWeight.value = String(fm.weight);
+        setEditStatus('Loaded CMS draft');
+        return true;
+      }
+
+      return false;
+    }
+
+    if (
+      !options.force &&
+      window.TTMSContentDrafts &&
+      typeof window.TTMSContentDrafts.getPreview === 'function'
+    ) {
+      var cached = window.TTMSContentDrafts.getPreview(contentPath);
+      if (cached) return Promise.resolve(applyPreview(cached));
+    }
+
+    var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+    var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
+    var headers = { Accept: 'application/json' };
+    if (token) headers.Authorization = 'Bearer ' + token;
+    return fetch(url, { method: 'GET', credentials: 'include', headers: headers })
+      .then(function(res) { return res.ok ? res.json() : { previews: [] }; })
+      .catch(function() { return { previews: [] }; })
+      .then(function(data) {
+        var list = dedupePreviewsByContentPath(data && data.previews ? data.previews : []);
+        var match = null;
+        list.forEach(function(p) {
+          var payload = p.payload || p.Payload || {};
+          var cp = p.content_path || payload.contentPath || '';
+          if (cp === contentPath) match = p;
+        });
+        return applyPreview(match);
+      });
   }
 
   function dedupePreviewsByContentPath(previews) {
@@ -5600,19 +5826,6 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     });
     return out;
-  }
-  function pathsFromFmImages(images) {
-    if (!Array.isArray(images)) return [];
-    var paths = [];
-    images.forEach(function(x) {
-      if (!x) return;
-      if (typeof x === 'string') {
-        paths.push(x.replace(/^\//, ''));
-        return;
-      }
-      if (x.image) paths.push(String(x.image).replace(/^\//, ''));
-    });
-    return paths;
   }
 
   var _loadDraftsInFlight = null;
@@ -7216,11 +7429,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
-  btnPreview.addEventListener('click', function() { setEditMode(false); });
-  btnEdit.addEventListener('click', function() {
-    ensurePreviewIframeLoaded();
-    setEditMode(true);
-  });
+  if (btnPreview) btnPreview.addEventListener('click', function() { setEditMode(false); });
+  if (btnEdit) {
+    btnEdit.addEventListener('click', function() {
+      ensurePreviewIframeLoaded();
+      setEditMode(true);
+    });
+  }
   if (btnSubmodeContent) btnSubmodeContent.addEventListener('click', function() { setEditSubmode('content'); });
   if (btnSubmodeMove) btnSubmodeMove.addEventListener('click', function() { setEditSubmode('move'); });
   if (btnSubmodeColor) btnSubmodeColor.addEventListener('click', function() { setEditSubmode('color'); });
@@ -8385,6 +8600,34 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         return;
       }
+      if (rearrangeOnlyMode) {
+        if (!hasPendingMenuChanges() && !editFormDirty) {
+          goDashboard();
+          return;
+        }
+        btnDashboardBack.classList.add('dashboard-edit-header-back--saving');
+        btnDashboardBack.setAttribute('aria-busy', 'true');
+        saveMenuSnapshotOnLeave().then(function () {
+          goDashboard();
+        }).catch(function () {
+          goDashboard();
+        });
+        return;
+      }
+      if (themeOnlyMode) {
+        if (!hasThemeColorChanges()) {
+          goDashboard();
+          return;
+        }
+        btnDashboardBack.classList.add('dashboard-edit-header-back--saving');
+        btnDashboardBack.setAttribute('aria-busy', 'true');
+        saveThemeChangesBeforeLeave().then(function() {
+          goDashboard();
+        }).catch(function() {
+          goDashboard();
+        });
+        return;
+      }
       setEditStatus('Saving menu snapshot…');
       saveMenuSnapshotOnLeave().then(function(snapshotOk) {
         if (snapshotOk) {
@@ -8439,6 +8682,53 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   if (embedPanelMode) {
+    window.addEventListener('message', function (event) {
+      if (!event || event.data == null || event.origin !== window.location.origin) return;
+      var data = event.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          return;
+        }
+      }
+      if (!data || !data.type) return;
+
+      if (data.type === 'ttms:embed-panel-load-cms-draft') {
+        var draftPath = data.contentPath;
+        if (!draftPath || draftPath.indexOf('...') !== -1) return;
+        if (!selectedInfo || selectedInfo.contentPath !== draftPath) return;
+        setEditFormLoading(true, 'Loading CMS draft…');
+        hydrateEditFormFromCmsPreview(draftPath, { force: true }).finally(function () {
+          scheduleEndEditFormLoad();
+        });
+        return;
+      }
+
+      if (data.type !== 'ttms:embed-panel-close-request') return;
+
+      function notifyParent(reload) {
+        try {
+          window.parent.postMessage(
+            { type: 'ttms:embed-panel-close-complete', reload: !!reload },
+            window.location.origin
+          );
+        } catch (err) { /* ignore */ }
+      }
+
+      if (!editFormDirty) {
+        notifyParent(false);
+        return;
+      }
+      persistCurrentDraftToCMS()
+        .then(function () {
+          notifyParent(true);
+        })
+        .catch(function () {
+          notifyParent(true);
+        });
+    });
+
     setTimeout(function() {
       prefetchEmbedDraftPaths();
       focusEditTargetInParentMenu();

@@ -13,7 +13,19 @@
   <div class="menu-item-edit-modal__backdrop" data-close-menu-item-edit-modal tabindex="-1" aria-hidden="true"></div>
   <div class="menu-item-edit-modal__panel">
     <header class="menu-item-edit-modal__header">
-      <h2 id="menu-item-edit-modal-title" class="menu-item-edit-modal__title">Edit menu item</h2>
+      <div class="menu-item-edit-modal__title-wrap">
+        <h2 id="menu-item-edit-modal-title" class="menu-item-edit-modal__title">Edit menu item</h2>
+        <button
+          type="button"
+          class="menu-content-draft-badge menu-content-draft-badge--modal hidden"
+          id="menuItemEditModalDraftBadge"
+          title="Load unpublished CMS draft"
+          aria-label="Load unpublished CMS draft"
+          hidden
+        >
+          <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+        </button>
+      </div>
       <button
         type="button"
         class="menu-item-edit-modal__close"

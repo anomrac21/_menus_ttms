@@ -690,6 +690,10 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/menu-item-actions.js" defer></script>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-edit-modal.css") }}
 <script src="/js/menu-item-edit-modal.js" defer></script>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-live-menu-hint.css") }}
+<script src="/js/dashboard-live-menu-hint.js" defer></script>
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-content-draft-indicators.css") }}
+<script src="/js/dashboard-content-draft-indicators.js" defer></script>
 {{- end -}}
 {{- end -}}
 {{- if and site.Params.menuImageService.enabled $menuPublicSite -}}

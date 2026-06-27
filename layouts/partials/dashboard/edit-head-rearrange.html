@@ -1,0 +1,26 @@
+{{- /* Lean head for /edit-menu-rearrange/ — list-based reorder (no live menu iframe) */ -}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
+<link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
+<link rel="stylesheet" href="/css/auth.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+{{- if site.Params.auth.enabled -}}
+<script>
+window.AUTH_CONFIG = { apiUrl: "{{ site.Params.auth.apiUrl }}" };
+window.AUTH_SERVICE_URL = window.AUTH_SERVICE_URL || "{{ site.Params.auth.apiUrl }}";
+window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
+{{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
+{{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
+window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
+window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
+</script>
+<script src="/js/auth-client.js"></script>
+<script src="/js/auth-client-access.js"></script>
+{{- end -}}
+<script src="/js/cdn-config.js"></script>
+<script src="/js/dashboard-menu-rearrange.js" defer></script>

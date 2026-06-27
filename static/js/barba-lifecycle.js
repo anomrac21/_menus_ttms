@@ -12,6 +12,8 @@
   var FULL_PAGE_PATH_PREFIXES = [
     '/dashboard',
     '/login',
+    '/edit-menu-colors',
+    '/edit-menu-rearrange',
     '/edit-menu',
     '/analytics',
     '/notifications',

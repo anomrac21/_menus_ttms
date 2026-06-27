@@ -288,7 +288,7 @@
     } catch (err) {
       /* ignore */
     }
-    window.location.href = '/edit-menu/';
+    window.location.href = '/edit-menu-colors/panel/?embed=panel';
   }
 
   function onDocumentClick(e) {

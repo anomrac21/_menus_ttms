@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="{{ site.Language.Lang }}">
+
+<head>
+
+  {{ partial "dashboard/edit-head-rearrange.html" . }}
+
+</head>
+
+<body class="dashboard-edit-rearrange-only">
+
+  <div class="dashboard-edit-page" id="dashboardEditPage" data-edit-submode="move" data-edit-mode="edit">
+
+    <header class="dashboard-edit-header dashboard-edit-header--rearrange" aria-label="Rearrange menu toolbar">
+
+      <div class="dashboard-edit-header-inner">
+
+        <div class="dashboard-edit-header-start">
+
+          <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" id="btnDashboardBack" title="Back to dashboard" aria-label="Back to dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+
+        </div>
+
+        <div class="dashboard-edit-header-center dashboard-edit-header-center--theme">
+
+          <h1 class="dashboard-edit-header-theme-title"><i class="fa fa-arrows" aria-hidden="true"></i> Rearrange menu</h1>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+
+    <p class="dashboard-edit-rearrange-intro" id="dashboardEditRearrangeIntro">
+
+      Sections and menu items are listed below. Use the arrow buttons to change order. Changes save as CMS drafts automatically; going back also saves a menu snapshot.
+
+    </p>
+
+
+
+    <div class="dashboard-edit-layout dashboard-edit-layout--rearrange">
+
+      <div class="dashboard-rearrange-panel">
+
+        <div id="dashboardRearrangeStatus" class="dashboard-rearrange-status" aria-live="polite">Loading…</div>
+
+        <div id="dashboardRearrangeList" class="dashboard-rearrange-list" aria-label="Menu sections and items"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+
+</html>
+

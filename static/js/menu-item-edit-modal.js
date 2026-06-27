@@ -1,16 +1,20 @@
 /**
- * Admin-only modal shell for the menu item / promotion editor (/edit-menu/?embed=panel).
+ * Admin-only modal shell for the menu item / promotion editor (/edit-menu-colors/panel/?embed=panel).
  */
 (function () {
   'use strict';
 
   var MODAL_ID = 'menu-item-edit-modal';
   var FRAME_ID = 'menuItemEditModalFrame';
-  var EDIT_EMBED_PATH = '/edit-menu/?embed=panel';
+  var DRAFT_BADGE_ID = 'menuItemEditModalDraftBadge';
+  var EDIT_EMBED_PATH = '/edit-menu-colors/panel/?embed=panel';
   var FOCUS_ITEM_KEY = 'editMenuFocusItemUrl';
   var FOCUS_SECTION_SLUG_KEY = 'editMenuFocusSectionSlug';
   var FOCUS_PROMO_CATALOG_KEY = 'editMenuFocusPromoCatalogIndex';
   var FOCUS_PROMO_ID_KEY = 'editMenuFocusPromoId';
+
+  var currentMenuRoot = null;
+  var currentContentPath = '';
 
   function getModal() {
     return document.getElementById(MODAL_ID);
@@ -18,6 +22,10 @@
 
   function getFrame() {
     return document.getElementById(FRAME_ID);
+  }
+
+  function getDraftBadge() {
+    return document.getElementById(DRAFT_BADGE_ID);
   }
 
   function hasAdminSiteAccess() {
@@ -36,6 +44,101 @@
     if (!trimmed) return '';
     if (trimmed.charAt(0) !== '/') trimmed = '/' + trimmed;
     return trimmed.replace(/\/+$/, '') + '/';
+  }
+
+  function editableElementForMenuRoot(menuRoot) {
+    if (!menuRoot) return null;
+    var kind = menuRoot.getAttribute('data-actions-kind') || 'menu-item';
+    if (kind === 'promotion') {
+      return menuRoot.closest('article.ads-reels-slide') || menuRoot;
+    }
+    if (kind === 'section-header') {
+      return menuRoot.closest('.menu-header') || menuRoot;
+    }
+    return menuRoot.closest('.menu-item-card') || menuRoot;
+  }
+
+  function contentPathForMenuRoot(menuRoot) {
+    var el = editableElementForMenuRoot(menuRoot);
+    if (!el) return '';
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.contentPathForElement === 'function') {
+      return window.TTMSContentDrafts.contentPathForElement(el) || '';
+    }
+    if (el.classList && el.classList.contains('menu-item-card')) {
+      var itemUrl = el.getAttribute('data-item-url') || '';
+      return itemUrl ? 'content' + itemUrl.replace(/\/$/, '') + '.md' : '';
+    }
+    if (el.classList && el.classList.contains('menu-header')) {
+      var sectionSlug = el.getAttribute('data-section-slug') || '';
+      return sectionSlug ? 'content/' + sectionSlug + '/_index.md' : '';
+    }
+    if (el.classList && el.classList.contains('ads-reels-slide')) {
+      var promoSlug =
+        window.TTMSContentDrafts && typeof window.TTMSContentDrafts.promotionSlugFromElement === 'function'
+          ? window.TTMSContentDrafts.promotionSlugFromElement(el)
+          : '';
+      if (!promoSlug) {
+        var adId = el.getAttribute('data-ad-id') || '';
+        if (adId.indexOf('menu-ad-') === 0) {
+          promoSlug = adId.replace(/^menu-ad-/, '').replace(/-\d+$/, '');
+        }
+      }
+      return promoSlug ? 'content/promotions/' + promoSlug + '.md' : '';
+    }
+    return '';
+  }
+
+  function syncModalDraftBadge() {
+    var badge = getDraftBadge();
+    if (!badge) return;
+    if (!hasAdminSiteAccess() || !currentContentPath) {
+      badge.hidden = true;
+      badge.classList.add('hidden');
+      badge.removeAttribute('data-content-path');
+      return;
+    }
+    var hasDraft =
+      window.TTMSContentDrafts &&
+      typeof window.TTMSContentDrafts.has === 'function' &&
+      window.TTMSContentDrafts.has(currentContentPath);
+    badge.hidden = !hasDraft;
+    badge.classList.toggle('hidden', !hasDraft);
+    badge.setAttribute('data-content-path', currentContentPath);
+  }
+
+  function refreshDraftBadgeState() {
+    if (!hasAdminSiteAccess() || !currentMenuRoot) {
+      syncModalDraftBadge();
+      return;
+    }
+    currentContentPath = contentPathForMenuRoot(currentMenuRoot);
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
+      window.TTMSContentDrafts.refresh().finally(syncModalDraftBadge);
+      return;
+    }
+    syncModalDraftBadge();
+  }
+
+  function loadCmsDraftIntoFrame() {
+    if (!currentContentPath) return;
+    var frame = getFrame();
+    var badge = getDraftBadge();
+    if (!frame || !frame.contentWindow) return;
+    if (badge) badge.classList.add('is-loading');
+    try {
+      frame.contentWindow.postMessage(
+        {
+          type: 'ttms:embed-panel-load-cms-draft',
+          contentPath: currentContentPath,
+        },
+        window.location.origin
+      );
+    } catch (err) {
+      /* ignore */
+    }
+    setTimeout(function () {
+      if (badge) badge.classList.remove('is-loading');
+    }, 1200);
   }
 
   function setModalTitle(menuRoot) {
@@ -119,8 +222,12 @@
     var frame = getFrame();
     if (!modal || !frame) return false;
 
+    currentMenuRoot = menuRoot;
+    currentContentPath = contentPathForMenuRoot(menuRoot);
+
     storeFocusKeys(menuRoot);
     setModalTitle(menuRoot);
+    refreshDraftBadgeState();
 
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
@@ -140,7 +247,32 @@
     return true;
   }
 
-  function close() {
+  function close(opts) {
+    opts = opts || {};
+    var modal = getModal();
+    var frame = getFrame();
+    if (!modal) return;
+
+    if (
+      !opts.skipPersist &&
+      frame &&
+      frame.contentWindow &&
+      frame.getAttribute('src') &&
+      frame.getAttribute('src') !== 'about:blank'
+    ) {
+      try {
+        frame.contentWindow.postMessage({ type: 'ttms:embed-panel-close-request' }, window.location.origin);
+        return;
+      } catch (err) {
+        /* ignore */
+      }
+    }
+
+    closeImmediately();
+  }
+
+  function closeImmediately(opts) {
+    opts = opts || {};
     var modal = getModal();
     var frame = getFrame();
     if (!modal) return;
@@ -149,12 +281,25 @@
     modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('menu-item-edit-modal-open');
 
+    currentMenuRoot = null;
+    currentContentPath = '';
+    syncModalDraftBadge();
+
     if (frame) {
       frame.setAttribute('src', 'about:blank');
+    }
+
+    if (opts.reload) {
+      window.location.reload();
     }
   }
 
   function onDocumentClick(e) {
+    if (e.target.closest('#' + DRAFT_BADGE_ID)) {
+      e.preventDefault();
+      loadCmsDraftIntoFrame();
+      return;
+    }
     if (e.target.closest('[data-close-menu-item-edit-modal]')) {
       e.preventDefault();
       close();
@@ -178,10 +323,28 @@
       }
     }
     if (!data || data.type !== 'ttms:close-menu-item-edit-modal') return;
-    close();
-    if (data.reload) {
-      window.location.reload();
+    closeImmediately({ reload: data.reload });
+  }
+
+  function onEmbedCloseRequest(event) {
+    if (!event || event.data == null) return;
+    var data = event.data;
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (err) {
+        return;
+      }
     }
+    if (!data || data.type !== 'ttms:embed-panel-close-complete') return;
+    closeImmediately({ reload: data.reload });
+  }
+
+  function onEmbedFrameLoad() {
+    var frame = getFrame();
+    if (!frame || frame.getAttribute('src') === 'about:blank') return;
+    if (!getModal() || getModal().hidden) return;
+    syncModalDraftBadge();
   }
 
   function init() {
@@ -191,6 +354,16 @@
     document.addEventListener('keydown', onDocumentKeydown, true);
     window.removeEventListener('message', onMessage);
     window.addEventListener('message', onMessage);
+    window.removeEventListener('message', onEmbedCloseRequest);
+    window.addEventListener('message', onEmbedCloseRequest);
+    window.removeEventListener('ttms:content-drafts-ready', syncModalDraftBadge);
+    window.addEventListener('ttms:content-drafts-ready', syncModalDraftBadge);
+
+    var frame = getFrame();
+    if (frame) {
+      frame.removeEventListener('load', onEmbedFrameLoad);
+      frame.addEventListener('load', onEmbedFrameLoad);
+    }
 
     if (window.AuthMiddleware && typeof AuthMiddleware.toggleAuthElements === 'function') {
       AuthMiddleware.toggleAuthElements();
@@ -217,6 +390,8 @@
   window.TTMSMenuItemEditModal = {
     open: open,
     close: close,
+    closeImmediately: closeImmediately,
     hasAccess: hasAdminSiteAccess,
+    syncDraftBadge: syncModalDraftBadge,
   };
 })();
