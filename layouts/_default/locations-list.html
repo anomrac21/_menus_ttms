@@ -104,11 +104,11 @@
                         {{ if and $openTime $closeTime }}
                           {{ $openParts := split $openTime ":" }}
                           {{ $closeParts := split $closeTime ":" }}
-                          {{ $openHour := int (index $openParts 0) }}
+                          {{ $openHour := int (float (index $openParts 0)) }}
                           {{ $openMin := index $openParts 1 }}
                           {{ $openAMPM := cond (ge $openHour 12) "PM" "AM" }}
                           {{ $open12 := mod $openHour 12 | default 12 }}
-                          {{ $closeHour := int (index $closeParts 0) }}
+                          {{ $closeHour := int (float (index $closeParts 0)) }}
                           {{ $closeMin := index $closeParts 1 }}
                           {{ $closeAMPM := cond (ge $closeHour 12) "PM" "AM" }}
                           {{ $close12 := mod $closeHour 12 | default 12 }}
