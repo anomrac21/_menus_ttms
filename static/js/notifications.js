@@ -19,6 +19,17 @@ function resolveNotifyConfig() {
   return window.NOTIFY_CONFIG || {};
 }
 
+function ttmsIsLocalDevHost() {
+  if (typeof window === 'undefined' || !window.location) return false;
+  const h = window.location.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || /\.local$/i.test(h);
+}
+
+/** True for localhost / loopback URLs — blocked on public sites (Chrome LNA prompt). */
+function ttmsIsLoopbackUrl(url) {
+  return /^(https?|wss?):\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(String(url || ''));
+}
+
 const NotificationService = {
   VAPID_KEY_STORAGE: 'ttmenus_vapid_public_key',
   VAPID_RESYNC_STORAGE: 'ttmenus_vapid_resynced_for',
@@ -83,15 +94,18 @@ const NotificationService = {
       return;
     }
 
-    // Register service worker first
-    await this.registerServiceWorker();
-    
-    // Setup service worker message handler
     this.setupServiceWorkerMessageHandler();
-    
     this.checkSubscriptionStatus();
     this.loadSubscriptionFromStorage();
-    
+
+    // Defer service worker / push / WebSocket until user has subscribed.
+    // Avoids Local Network Access prompts on first visit (Chrome/Edge).
+    if (!this.subscriptionId) {
+      return;
+    }
+
+    await this.registerServiceWorker();
+
     // Verify push subscription is still valid and sync keys to server
     if (this.subscriptionId && this.serviceWorkerRegistration) {
       await this.verifyPushSubscription();
@@ -1059,7 +1073,12 @@ const NotificationService = {
       }
       
       const wsPath = `${wsUrl}?client_domain=${encodeURIComponent(clientDomain)}&connection_id=${encodeURIComponent(connectionId)}`;
-      
+
+      if (!ttmsIsLocalDevHost() && ttmsIsLoopbackUrl(wsPath)) {
+        console.warn('Skipping notification WebSocket — loopback URL on public site');
+        return;
+      }
+
       console.log('Connecting to WebSocket:', wsPath);
       this.wsConnection = new WebSocket(wsPath);
 

@@ -537,23 +537,7 @@
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"/></noscript>
 
-{{- if site.Params.notifications.enabled -}}
-<script>
-    // Register service worker from site root (avoids 404 when page is under /login/ etc.)
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            var swUrl = new URL('/sw.js', window.location.origin).href;
-            navigator.serviceWorker.register(swUrl)
-                .then(function(registration) {
-                    console.log('✅ Service Worker registered with scope:', registration.scope);
-                })
-                .catch(function(error) {
-                    console.error('❌ Service Worker registration failed:', error);
-                });
-        });
-    }
-</script>
-{{- end -}}
+{{/* Notification service worker is registered by notifications.js only after the user subscribes — avoids eager SW setup on first visit. */}}
 <!-- Matomo Tag Manager - menu/public pages only (avoids Tag Manager errors on admin dashboard) -->
 {{- if $menuPublicSite -}}
 <script>

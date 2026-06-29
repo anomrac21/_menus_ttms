@@ -18,7 +18,10 @@ const MenuEditor = {
 
   // API Configuration
   apiConfig: {
-    baseUrl: window.UPDATE_API_URL || 'http://localhost:8083/api',
+    baseUrl:
+      window.UPDATE_API_URL ||
+      window.CMS_API_URL ||
+      'https://cms.ttmenus.com/api',
     clientId: window.CLIENT_ID || '_ttms_menudemo',
     getClientUrl: function() {
       return `${this.baseUrl}/clients/${this.clientId}`;

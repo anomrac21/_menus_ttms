@@ -37,6 +37,15 @@ function ttmsDefaultAuthApiV1Base() {
   return ttmsIsLocalDevHost() ? TTMS_LOCAL_AUTH_API : TTMS_PRODUCTION_AUTH_API;
 }
 
+/** Never use loopback auth URLs on public menu domains (triggers Chrome/Edge LNA prompt). */
+function ttmsSanitizeAuthApiUrl(url) {
+  if (!url) return url;
+  if (!ttmsIsLocalDevHost() && /localhost|127\.0\.0\.1/i.test(url)) {
+    return TTMS_PRODUCTION_AUTH_API;
+  }
+  return url;
+}
+
 var TTMS_LEGACY_TOKEN_KEYS = ['auth_token', 'ttmenus_access_token'];
 var TTMS_LEGACY_REFRESH_KEYS = ['refresh_token', 'ttmenus_refresh_token'];
 var TTMS_LEGACY_USER_KEYS = ['user_data', 'ttmenus_user'];
@@ -60,13 +69,15 @@ const AuthClient = {
     sessionPollMs: 45000,
     get apiUrl() {
       if (typeof window !== 'undefined') {
-        var fromApp = ttmsNormalizeAuthApiV1Base(
-          window.APP_CONFIG && window.APP_CONFIG.authServiceUrl
+        var fromApp = ttmsSanitizeAuthApiUrl(
+          ttmsNormalizeAuthApiV1Base(window.APP_CONFIG && window.APP_CONFIG.authServiceUrl)
         );
         if (fromApp) return fromApp;
-        var fromAuth = ttmsNormalizeAuthApiV1Base(window.AUTH_CONFIG && window.AUTH_CONFIG.apiUrl);
+        var fromAuth = ttmsSanitizeAuthApiUrl(
+          ttmsNormalizeAuthApiV1Base(window.AUTH_CONFIG && window.AUTH_CONFIG.apiUrl)
+        );
         if (fromAuth) return fromAuth;
-        var fromSvc = ttmsNormalizeAuthApiV1Base(window.AUTH_SERVICE_URL);
+        var fromSvc = ttmsSanitizeAuthApiUrl(ttmsNormalizeAuthApiV1Base(window.AUTH_SERVICE_URL));
         if (fromSvc) return fromSvc;
       }
       return ttmsDefaultAuthApiV1Base();

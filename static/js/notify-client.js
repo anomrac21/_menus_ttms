@@ -19,9 +19,19 @@ const NotifyClient = {
     } else {
       cfg = {};
     }
+    var apiUrl = cfg.apiUrl || 'https://notify.ttmenus.com/api/v1';
+    var websocketUrl = cfg.websocketUrl || 'wss://notify.ttmenus.com/api/v1/ws/connect';
+    if (typeof window !== 'undefined' && window.location) {
+      var h = window.location.hostname || '';
+      var localDev = h === 'localhost' || h === '127.0.0.1' || /\.local$/i.test(h);
+      if (!localDev && /localhost|127\.0\.0\.1/i.test(apiUrl + websocketUrl)) {
+        apiUrl = 'https://notify.ttmenus.com/api/v1';
+        websocketUrl = 'wss://notify.ttmenus.com/api/v1/ws/connect';
+      }
+    }
     return {
-      apiUrl: cfg.apiUrl || 'http://localhost:8080/api/v1',
-      websocketUrl: cfg.websocketUrl || 'ws://localhost:8080/api/v1/ws/connect',
+      apiUrl: apiUrl,
+      websocketUrl: websocketUrl,
       clientDomain: cfg.clientDomain || window.location.hostname,
       enabled: cfg.enabled !== false,
     };
@@ -183,6 +193,13 @@ const NotifyClient = {
 
     try {
       const wsUrl = `${this.config.websocketUrl}?client_domain=${encodeURIComponent(this.config.clientDomain)}`;
+      if (/^(wss?):\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(this.config.websocketUrl || '')) {
+        var host = (window.location && window.location.hostname) || '';
+        if (host !== 'localhost' && host !== '127.0.0.1' && !/\.local$/i.test(host)) {
+          console.warn('Skipping notification WebSocket — loopback URL on public site');
+          return;
+        }
+      }
       this.state.ws = new WebSocket(wsUrl);
 
       this.state.ws.onopen = () => {
