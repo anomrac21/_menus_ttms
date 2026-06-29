@@ -506,7 +506,7 @@
         title: sec.title,
         url: sec.url,
         summary: sec.summary || '',
-        image: sec.imageSecondary || '',
+        image: sec.imagePrimary || '',
         icon: sec.icon || '',
         imageSecondary: sec.imageSecondary || '',
         imagePrimary: sec.imagePrimary || '',
@@ -560,10 +560,10 @@
     }
     if (fm.icon) sec.icon = String(fm.icon);
     var imgs = fm.images;
-    if (fm.image && !(imgs && imgs.secondary)) sec.imageSecondary = String(fm.image);
+    if (fm.image && !(imgs && imgs.primary)) sec.imagePrimary = String(fm.image);
     if (imgs && typeof imgs === 'object') {
-      if (imgs.secondary) sec.imageSecondary = String(imgs.secondary);
       if (imgs.primary) sec.imagePrimary = String(imgs.primary);
+      if (imgs.secondary) sec.imageSecondary = String(imgs.secondary);
     }
     if (body && String(body).trim()) sec.summary = String(body).trim();
     else if (fm.summary) sec.summary = String(fm.summary);
@@ -1188,7 +1188,7 @@
         url: sec.url,
         weight: sec.weight,
         summary: sec.summary || '',
-        image: sec.imageSecondary || '',
+        image: sec.imagePrimary || '',
       };
     });
     var menuItems = [];

@@ -1134,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       title: title || 'Section',
       weight: weightVal,
       icon: icon || '',
-      images: { secondary: topImg || '', primary: bottomImg || '' }
+      images: { primary: bottomImg || '', secondary: topImg || '' }
     };
     return {
       kind: 'section',
@@ -2534,7 +2534,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (isNaN(w)) w = index;
       var sumEl = header.querySelector('.menu-summary');
       var catSummary = sumEl ? (sumEl.textContent || '').trim() : '';
-      var topImg = (header.getAttribute('data-images-secondary') || '').trim();
+      var topImg = (header.getAttribute('data-images-primary') || '').trim();
       categories.push({
         title: catTitle,
         url: catUrl,
@@ -5734,9 +5734,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
       }
       var topImg = headerEl.querySelector('a img.food, img.food.item, .food.item');
-      var secondaryPath = topImg ? (topImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-secondary') || '');
+      var primaryPath = topImg ? (topImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-primary') || '');
       var bottomImg = headerEl.querySelector('.slideinimg');
-      var primaryPath = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-primary') || '');
+      var secondaryPath = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-secondary') || '');
       applySectionImagePathsToForm(secondaryPath, primaryPath);
     } else if (contentType === 'menu-item') {
       var cardEl = info.element;
@@ -5887,7 +5887,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     return paths;
   }
 
-  /** Section _index.md: images.secondary (top) and images.primary (bottom). */
+  /** Section _index.md: images.primary (main) and images.secondary (decoration). */
   function sectionImagePathsFromFrontMatter(fm) {
     fm = fm || {};
     var secondary = '';
@@ -5896,10 +5896,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (fm.images.secondary != null) secondary = String(fm.images.secondary).trim();
       if (fm.images.primary != null) primary = String(fm.images.primary).trim();
     }
-    if (!secondary && fm.imagesTop != null) secondary = String(fm.imagesTop).trim();
-    if (!secondary && fm.images_top != null) secondary = String(fm.images_top).trim();
-    if (!primary && fm.imagesBottom != null) primary = String(fm.imagesBottom).trim();
-    if (!primary && fm.images_bottom != null) primary = String(fm.images_bottom).trim();
+    if (!primary && fm.imagesTop != null) primary = String(fm.imagesTop).trim();
+    if (!primary && fm.images_top != null) primary = String(fm.images_top).trim();
+    if (!secondary && fm.imagesBottom != null) secondary = String(fm.imagesBottom).trim();
+    if (!secondary && fm.images_bottom != null) secondary = String(fm.images_bottom).trim();
     return { secondary: secondary, primary: primary };
   }
 
@@ -6490,10 +6490,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (fm.weight != null) header.setAttribute('data-weight', String(fm.weight));
             if (fm.icon != null) header.setAttribute('data-icon', String(fm.icon));
             var sectionPaths = sectionImagePathsFromFrontMatter(fm);
-            var topSrc = sectionPaths.secondary;
-            var bottomSrc = sectionPaths.primary;
-            header.setAttribute('data-images-secondary', topSrc);
-            header.setAttribute('data-images-primary', bottomSrc);
+            var topSrc = sectionPaths.primary;
+            var bottomSrc = sectionPaths.secondary;
+            header.setAttribute('data-images-primary', topSrc);
+            header.setAttribute('data-images-secondary', bottomSrc);
             if (topSrc) {
               topSrc = topSrc.indexOf('/') === 0 ? topSrc : '/' + topSrc;
               var topImg = header.querySelector('a img.food, img.food.item');
@@ -6944,15 +6944,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (desc !== domDesc) {
       details.push('Description → ' + truncateChangeDetail(desc));
     }
-    var secImg = inputSectionImageTop ? inputSectionImageTop.value.trim() : '';
-    var domSec = (headerEl.getAttribute('data-images-secondary') || '').trim();
-    if (secImg !== domSec) {
-      details.push('Secondary image → ' + (secImg || '(removed)'));
-    }
     var priImg = inputSectionImageBottom ? inputSectionImageBottom.value.trim() : '';
     var domPri = (headerEl.getAttribute('data-images-primary') || '').trim();
     if (priImg !== domPri) {
       details.push('Primary image → ' + (priImg || '(removed)'));
+    }
+    var secImg = inputSectionImageTop ? inputSectionImageTop.value.trim() : '';
+    var domSec = (headerEl.getAttribute('data-images-secondary') || '').trim();
+    if (secImg !== domSec) {
+      details.push('Secondary image → ' + (secImg || '(removed)'));
     }
     return details;
   }
@@ -9314,10 +9314,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (contentType === 'section-header') {
           if (inputSectionWeight) selectedElement.setAttribute('data-weight', inputSectionWeight.value.trim());
           if (inputSectionIcon) selectedElement.setAttribute('data-icon', inputSectionIcon.value.trim());
-          selectedElement.setAttribute('data-images-secondary', (inputSectionImageTop && inputSectionImageTop.value) ? inputSectionImageTop.value.trim() : '');
           selectedElement.setAttribute('data-images-primary', (inputSectionImageBottom && inputSectionImageBottom.value) ? inputSectionImageBottom.value.trim() : '');
+          selectedElement.setAttribute('data-images-secondary', (inputSectionImageTop && inputSectionImageTop.value) ? inputSectionImageTop.value.trim() : '');
           var topImg = selectedElement.querySelector('a img.food, img.food.item');
-          var topSrc = inputSectionImageTop && inputSectionImageTop.value.trim();
+          var topSrc = inputSectionImageBottom && inputSectionImageBottom.value.trim();
           if (topSrc) {
             topSrc = topSrc.indexOf('/') === 0 ? topSrc : '/' + topSrc;
             if (topImg) topImg.setAttribute('src', topSrc);
@@ -9341,7 +9341,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
           } else if (topImg) topImg.remove();
           var bottomImg = selectedElement.querySelector('.slideinimg');
-          var bottomSrc = inputSectionImageBottom && inputSectionImageBottom.value.trim();
+          var bottomSrc = inputSectionImageTop && inputSectionImageTop.value.trim();
           if (bottomSrc) {
             bottomSrc = bottomSrc.indexOf('/') === 0 ? bottomSrc : '/' + bottomSrc;
             var h2 = selectedElement.querySelector('h2');

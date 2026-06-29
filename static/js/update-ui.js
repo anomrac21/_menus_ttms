@@ -1659,17 +1659,17 @@ const MenuEditor = {
         title: cat.title,
         url: cat.url,
         weight: cat.weight || 0,
-        image: cat.image || cat.params?.images?.secondary || null,
+        image: cat.image || cat.params?.images?.primary || null,
         summary: cat.summary || '',
         images: {
-          secondary: cat.params?.images?.secondary || cat.image || null,
-          primary: cat.params?.images?.primary || cat.params?.slidein?.slideinimage || null
+          primary: cat.params?.images?.primary || cat.image || null,
+          secondary: cat.params?.images?.secondary || cat.params?.slidein?.slideinimage || null
         },
         params: {
           ...cat.params,
           images: {
-            secondary: cat.params?.images?.secondary || cat.image,
-            primary: cat.params?.images?.primary || cat.params?.slidein?.slideinimage
+            primary: cat.params?.images?.primary || cat.image,
+            secondary: cat.params?.images?.secondary || cat.params?.slidein?.slideinimage
           }
         }
       })),
@@ -1730,13 +1730,13 @@ const MenuEditor = {
         title: cat.title,
         url: cat.url,
         weight: cat.weight || 0,
-        image: cat.image || cat.params?.images?.secondary || cat.params?.image,
+        image: cat.image || cat.params?.images?.primary || cat.params?.image,
         summary: cat.summary || '',
         params: {
           ...cat.params,
           images: {
-            secondary: cat.params?.images?.secondary || cat.image || cat.params?.image,
-            primary: cat.params?.images?.primary || cat.params?.slidein?.slideinimage
+            primary: cat.params?.images?.primary || cat.image || cat.params?.image,
+            secondary: cat.params?.images?.secondary || cat.params?.slidein?.slideinimage
           }
         }
       }));
@@ -1879,17 +1879,17 @@ const MenuEditor = {
           <div class="main-menu ${category.title} item">
             <div class="menu-header">
               <a class="menu-anchor" id="${category.title}"></a>
-              ${(category.images?.secondary || category.image) ? `
+              ${(category.images?.primary || category.image) ? `
                 <a href="${category.url}">
-                  <img class="food item" src="${category.images?.secondary || category.image}" alt="${category.title}" loading="lazy">
+                  <img class="food item" src="${category.images?.primary || category.image}" alt="${category.title}" loading="lazy">
                 </a>
               ` : ''}
               <div class="headerstyle item">
                 <h2 class="center title">
                   <a href="${category.url}">${category.title}</a>
-                  ${(category.images?.primary || category.params?.slidein?.slideinimage) ? `
+                  ${(category.images?.secondary || category.params?.slidein?.slideinimage) ? `
                     <img class="slideinimg" 
-                         src="${category.images?.primary || category.params?.slidein?.slideinimage}" 
+                         src="${category.images?.secondary || category.params?.slidein?.slideinimage}" 
                          alt="${category.title} decoration" 
                          loading="lazy">
                   ` : ''}

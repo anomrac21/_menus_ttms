@@ -277,8 +277,8 @@
 {{- $ogImage := "/branding/favicon152.webp" -}}
 {{- $images := slice -}}
 {{- if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") -}}
-  {{- with index .Params.images "secondary" }}{{ $images = $images | append . }}{{ end -}}
   {{- with index .Params.images "primary" }}{{ $images = $images | append . }}{{ end -}}
+  {{- with index .Params.images "secondary" }}{{ $images = $images | append . }}{{ end -}}
 {{- else if .Params.images -}}
   {{- range .Params.images -}}
     {{- if .image }}{{ $images = $images | append .image }}{{ end -}}

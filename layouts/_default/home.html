@@ -38,16 +38,16 @@
             <div class="main-menu {{ $title }} item">
               <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ .Section }}" data-promo-section="1" data-item-count="{{ $promoCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
                 <a class="menu-anchor" id="{{ $title }}"></a>
-                {{ partial "components/menu-header-actions-row.html" (dict "url" $titleurl "title" $title "sectionSlug" .Section "imageSecondary" (index .Params.images "secondary")) }}
+                {{ partial "components/menu-header-actions-row.html" (dict "url" $titleurl "title" $title "sectionSlug" .Section "imagePrimary" (index .Params.images "primary")) }}
                 <a class="menu-header__link" href="{{ $titleurl }}">
-                  {{ if .Params.images.secondary }}
-                    <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640">
+                  {{ if .Params.images.primary }}
+                    <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640">
                   {{ end }}
                   <div class="headerstyle item">
                     <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
                       {{ $title }}
-                      {{ if .Params.images.primary }}
-                        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "decoration") }}" alt="{{ $title }} decoration" loading="lazy" width="160" height="200">
+                      {{ if .Params.images.secondary }}
+                        <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "decoration") }}" alt="{{ $title }} decoration" loading="lazy" width="160" height="200">
                       {{ end }}
                     </h2>
                     <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">{{ $promoCount }}</span> <span class="menu-header__item-count__suffix">{{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</span></p>
@@ -78,16 +78,16 @@
                   {{ $itemCount := len .RegularPages }}
                   <section class="menu-header menu-reels-slide" data-home-menu-lazy data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ .Section }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}" aria-busy="true">
                     <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
-                    {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imageSecondary" (index .Params.images "secondary")) }}
+                    {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imagePrimary" (index .Params.images "primary")) }}
                     <a class="menu-header__link" href="{{ .RelPermalink }}">
-                      {{ if .Params.images.secondary }}
-                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640">
+                      {{ if .Params.images.primary }}
+                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640">
                       {{ end }}
                       <div class="headerstyle item">
                         <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
                           {{ .LinkTitle }}
-                          {{ if .Params.images.primary }}
-                            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "decoration") }}" alt="{{ .LinkTitle }} decoration" loading="lazy" width="160" height="200">
+                          {{ if .Params.images.secondary }}
+                            <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "decoration") }}" alt="{{ .LinkTitle }} decoration" loading="lazy" width="160" height="200">
                           {{ end }}
                         </h2>
                         <p class="menu-header__item-count is-count-pending" aria-live="polite"><span class="menu-header__item-count__value">0</span> <span class="menu-header__item-count__suffix">{{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</span></p>
