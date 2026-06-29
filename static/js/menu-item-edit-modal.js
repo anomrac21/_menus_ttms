@@ -7,6 +7,7 @@
   var MODAL_ID = 'menu-item-edit-modal';
   var FRAME_ID = 'menuItemEditModalFrame';
   var DRAFT_BADGE_ID = 'menuItemEditModalDraftBadge';
+  var LOADING_ID = 'menuItemEditModalLoading';
   var EDIT_EMBED_PATH = '/edit-menu-colors/panel/?embed=panel';
   var FOCUS_ITEM_KEY = 'editMenuFocusItemUrl';
   var FOCUS_SECTION_SLUG_KEY = 'editMenuFocusSectionSlug';
@@ -15,6 +16,7 @@
 
   var currentMenuRoot = null;
   var currentContentPath = '';
+  var modalLoadingFallbackTimer = null;
 
   function getModal() {
     return document.getElementById(MODAL_ID);
@@ -26,6 +28,31 @@
 
   function getDraftBadge() {
     return document.getElementById(DRAFT_BADGE_ID);
+  }
+
+  function getLoadingEl() {
+    return document.getElementById(LOADING_ID);
+  }
+
+  function setModalLoading(on, message) {
+    var loadingEl = getLoadingEl();
+    if (!loadingEl) return;
+    loadingEl.hidden = !on;
+    loadingEl.setAttribute('aria-hidden', on ? 'false' : 'true');
+    loadingEl.setAttribute('aria-busy', on ? 'true' : 'false');
+    if (message) {
+      var label = loadingEl.querySelector('.menu-item-edit-modal__loading-label');
+      if (label) label.textContent = message;
+    }
+    if (on) {
+      if (modalLoadingFallbackTimer) clearTimeout(modalLoadingFallbackTimer);
+      modalLoadingFallbackTimer = setTimeout(function () {
+        setModalLoading(false);
+      }, 20000);
+    } else if (modalLoadingFallbackTimer) {
+      clearTimeout(modalLoadingFallbackTimer);
+      modalLoadingFallbackTimer = null;
+    }
   }
 
   function hasAdminSiteAccess() {
@@ -228,6 +255,7 @@
     storeFocusKeys(menuRoot);
     setModalTitle(menuRoot);
     refreshDraftBadgeState();
+    setModalLoading(true, 'Loading editor…');
 
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
@@ -280,6 +308,7 @@
     modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('menu-item-edit-modal-open');
+    setModalLoading(false);
 
     currentMenuRoot = null;
     currentContentPath = '';
@@ -290,7 +319,9 @@
     }
 
     if (opts.reload) {
-      window.location.reload();
+      if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
+        window.TTMSContentDrafts.refresh();
+      }
     }
   }
 
@@ -340,6 +371,20 @@
     closeImmediately({ reload: data.reload });
   }
 
+  function onEmbedFormReady(event) {
+    if (!event || event.data == null) return;
+    var data = event.data;
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (err) {
+        return;
+      }
+    }
+    if (!data || data.type !== 'ttms:embed-panel-form-ready') return;
+    setModalLoading(false);
+  }
+
   function onEmbedFrameLoad() {
     var frame = getFrame();
     if (!frame || frame.getAttribute('src') === 'about:blank') return;
@@ -356,6 +401,8 @@
     window.addEventListener('message', onMessage);
     window.removeEventListener('message', onEmbedCloseRequest);
     window.addEventListener('message', onEmbedCloseRequest);
+    window.removeEventListener('message', onEmbedFormReady);
+    window.addEventListener('message', onEmbedFormReady);
     window.removeEventListener('ttms:content-drafts-ready', syncModalDraftBadge);
     window.addEventListener('ttms:content-drafts-ready', syncModalDraftBadge);
 

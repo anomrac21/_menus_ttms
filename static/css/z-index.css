@@ -30,6 +30,7 @@
     --ttms-z-header-leading: 101;
 
     /* Page overlays (above header) */
+    --ttms-z-live-menu-hint: 150;
     --ttms-z-search: 200;
     --ttms-z-card-controls: 8;
 

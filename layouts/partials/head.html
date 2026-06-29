@@ -151,7 +151,7 @@
   {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
 {{- end -}}
 <link rel="canonical" href="{{ $canonical }}">
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 
 <!-- Preload critical loader resources FIRST -->
@@ -277,8 +277,8 @@
 {{- $ogImage := "/branding/favicon152.webp" -}}
 {{- $images := slice -}}
 {{- if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") -}}
-  {{- with index .Params.images "top" }}{{ $images = $images | append . }}{{ end -}}
-  {{- with index .Params.images "bottom" }}{{ $images = $images | append . }}{{ end -}}
+  {{- with index .Params.images "secondary" }}{{ $images = $images | append . }}{{ end -}}
+  {{- with index .Params.images "primary" }}{{ $images = $images | append . }}{{ end -}}
 {{- else if .Params.images -}}
   {{- range .Params.images -}}
     {{- if .image }}{{ $images = $images | append .image }}{{ end -}}
@@ -554,7 +554,8 @@
     }
 </script>
 {{- end -}}
-<!-- Matomo Tag Manager - queue early; load after DOM ready -->
+<!-- Matomo Tag Manager - menu/public pages only (avoids Tag Manager errors on admin dashboard) -->
+{{- if $menuPublicSite -}}
 <script>
   window._mtm = window._mtm || [];
   window._paq = window._paq || [];
@@ -607,6 +608,7 @@
 </script>
 <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="//analytics.ttmenus.com/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 <!-- End Matomo -->
+{{- end -}}
 
 <!-- TTMS Analytics Tracking - Deferred -->
 <script src="/js/analytics-tracking.js" defer></script>

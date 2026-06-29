@@ -986,12 +986,20 @@
     }
 
     /**
-     * Close shop/order modal (deprecated - modal removed)
+     * Close legacy order UI (reels modal, optional order modal, cart).
      * @global
      */
     function closeShop() {
-        // Modal has been removed - function kept for backward compatibility
-        console.log('closeShop called but modal is no longer used');
+        if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+            window.ensureMenuReelsItemModalClosed();
+        }
+
+        const orderModal = document.getElementById('orderModal');
+        if (orderModal) {
+            orderModal.classList.add('order-hidden');
+        }
+
+        closeCart();
     }
 
     /**

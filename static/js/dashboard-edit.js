@@ -79,13 +79,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     return baseLabels[step] || '';
   }
 
+  var embedChangesFilterKind = null;
+
   function mountChangesPanelToEmbedSaveHost(kind) {
     var host = document.querySelector('.dashboard-edit-save-tab-host[data-embed-save-host="' + kind + '"]');
     var mount = document.getElementById('dashboardEditChangesPanelMount');
     if (!host || !mount) return;
+    embedChangesFilterKind = kind || null;
     host.appendChild(mount);
     mount.classList.remove('hidden');
     syncPendingChangesPanel();
+  }
+
+  function clearEmbedChangesFilterIfKind(kind) {
+    if (embedChangesFilterKind !== kind) return;
+    embedChangesFilterKind = null;
+    syncPendingChangesPanelScopeNote(null, 0);
   }
 
   function syncEmbedWizardNextButton(btn, step, baseLabels) {
@@ -93,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!embedPanelMode) {
       btn.disabled = step >= baseLabels.length - 1;
       btn.textContent = 'Next';
-      btn.classList.remove('dashboard-btn-primary');
+      btn.classList.remove('dashboard-btn-primary', 'dashboard-wizard-save-btn', 'dashboard-wizard-save-btn--pending');
       btn.classList.add('dashboard-btn-secondary');
       btn.removeAttribute('aria-label');
       return;
@@ -101,17 +110,39 @@ document.addEventListener('DOMContentLoaded', async function() {
     var onSave = isEmbedWizardSaveStep(step, baseLabels);
     if (onSave) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Save';
-      btn.classList.add('dashboard-btn-primary');
+      btn.innerHTML =
+        '<i class="fa fa-cloud-upload" aria-hidden="true"></i>' +
+        '<span class="dashboard-wizard-save-btn-label">Save snapshot</span>';
+      btn.classList.add('dashboard-btn-primary', 'dashboard-wizard-save-btn');
       btn.classList.remove('dashboard-btn-secondary');
       btn.setAttribute('aria-label', 'Save draft and menu snapshot');
+      syncEmbedWizardSaveButtonPendingState(btn);
     } else {
       btn.textContent = 'Next';
-      btn.classList.remove('dashboard-btn-primary');
+      btn.classList.remove('dashboard-btn-primary', 'dashboard-wizard-save-btn', 'dashboard-wizard-save-btn--pending');
       btn.classList.add('dashboard-btn-secondary');
       btn.disabled = false;
       btn.removeAttribute('aria-label');
     }
+  }
+
+  function syncEmbedWizardSaveButtonPendingState(btn) {
+    if (!btn || !btn.classList.contains('dashboard-wizard-save-btn')) return;
+    var pending = collectPendingMenuChanges().length > 0;
+    if (embedChangesFilterKind) {
+      pending = filterChangesForEmbedHost(collectPendingMenuChanges(), embedChangesFilterKind).length > 0;
+    }
+    btn.classList.toggle('dashboard-wizard-save-btn--pending', pending);
+    btn.setAttribute(
+      'aria-label',
+      pending ? 'Save draft and menu snapshot — pending changes' : 'Save draft and menu snapshot'
+    );
+  }
+
+  function syncAllEmbedWizardSaveButtons() {
+    syncEmbedWizardSaveButtonPendingState(btnMenuItemWizardNext);
+    syncEmbedWizardSaveButtonPendingState(btnSectionWizardNext);
+    syncEmbedWizardSaveButtonPendingState(btnPromoWizardNext);
   }
 
   var _embedSaveInFlight = null;
@@ -163,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
           if (parentMenuWindow) {
             parentMenuWindow.postMessage(
-              { type: 'ttms:close-menu-item-edit-modal', reload: true },
+              { type: 'ttms:close-menu-item-edit-modal', reload: false },
               window.location.origin
             );
           }
@@ -236,6 +267,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   var inputTitle = document.getElementById('dashboardEditTitle');
   var inputDesc = document.getElementById('dashboardEditDescription');
   var inputSectionTitle = document.getElementById('dashboardEditSectionTitle');
+  var sectionTitleWrapEl = document.getElementById('dashboardEditSectionTitleWrap');
   var inputSectionDesc = document.getElementById('dashboardEditSectionDescription');
   var inputSectionWeight = document.getElementById('dashboardEditSectionWeight');
   var inputSectionIcon = document.getElementById('dashboardEditSectionIcon');
@@ -298,6 +330,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   var editFormFieldsEl = document.getElementById('dashboardEditFormFields');
   var editFormLoadingEl = document.getElementById('dashboardEditFormLoading');
   var editFormLoadingLabel = editFormLoadingEl ? editFormLoadingEl.querySelector('.dashboard-edit-form-loading-label') : null;
+  var embedLoadingEl = document.getElementById('dashboardEditEmbedLoading');
+  var embedLoadingLabel = embedLoadingEl ? embedLoadingEl.querySelector('.dashboard-edit-embed-loading-label') : null;
   var fieldsGeneric = document.getElementById('dashboardEditFieldsGeneric');
   var fieldsLocation = document.getElementById('dashboardEditFieldsLocation');
   var fieldsPromotion = document.getElementById('dashboardEditFieldsPromotion');
@@ -316,6 +350,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   var heroSiteImageError = document.getElementById('dashboardHeroSiteImageError');
   var heroSiteImageEmpty = document.getElementById('dashboardHeroSiteImageEmpty');
   var siteImagesListCache = null;
+  var draftAssetsListCache = null;
   /** Set when opening site-image modal; invoked with relative path (e.g. images/foo.webp). Cleared on close. */
   var siteImagePickerOnPick = null;
   var dashboardHeroImageRow = document.getElementById('dashboardHeroImageRow');
@@ -384,13 +419,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   var btnAddSlideshowImage = document.getElementById('btnAddSlideshowImage');
   var btnBrowseSiteSlideshowImages = document.getElementById('btnBrowseSiteSlideshowImages');
   var btnAddSlideshowImageFile = document.getElementById('btnAddSlideshowImageFile');
-  var btnSectionImageTopBrowse = document.getElementById('btnSectionImageTopBrowse');
-  var btnSectionImageTopUpload = document.getElementById('btnSectionImageTopUpload');
-  var btnSectionImageTopFile = document.getElementById('btnSectionImageTopFile');
-  var btnSectionImageTopRemove = document.getElementById('btnSectionImageTopRemove');
-  var sectionImageTopThumb = document.getElementById('dashboardSectionImageTopThumb');
-  var sectionImageTopThumbWrap = document.getElementById('dashboardSectionImageTopThumbWrap');
-  var sectionImageTopRow = document.getElementById('dashboardSectionImageTopRow');
+  var btnSectionSecondaryImageBrowse = document.getElementById('btnSectionSecondaryImageBrowse');
+  var btnSectionSecondaryImageUpload = document.getElementById('btnSectionSecondaryImageUpload');
+  var btnSectionSecondaryImageFile = document.getElementById('btnSectionSecondaryImageFile');
+  var sectionSecondaryImageUploadStatusEl = document.getElementById('dashboardSectionSecondaryImageUploadStatus');
   var btnSectionImageBottomBrowse = document.getElementById('btnSectionImageBottomBrowse');
   var btnSectionImageBottomUpload = document.getElementById('btnSectionImageBottomUpload');
   var btnSectionImageBottomFile = document.getElementById('btnSectionImageBottomFile');
@@ -398,6 +430,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   var sectionImageBottomThumb = document.getElementById('dashboardSectionImageBottomThumb');
   var sectionImageBottomThumbWrap = document.getElementById('dashboardSectionImageBottomThumbWrap');
   var sectionImageBottomRow = document.getElementById('dashboardSectionImageBottomRow');
+  var btnSectionIconUpload = document.getElementById('btnSectionIconUpload');
+  var btnSectionIconBrowse = document.getElementById('btnSectionIconBrowse');
+  var btnSectionIconFile = document.getElementById('btnSectionIconFile');
+  var sectionIconUploadStatusEl = document.getElementById('dashboardSectionIconUploadStatus');
   var btnPromoBrowseSiteImages = document.getElementById('btnPromoBrowseSiteImages');
   var slideshowImagesUploadStatusEl = document.getElementById('dashboardSlideshowImagesUploadStatus');
   var asideEl = document.getElementById('dashboardEditAside');
@@ -474,6 +510,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     var changesMount = document.getElementById('dashboardEditChangesPanelMount');
     if (changesMount) changesMount.classList.add('hidden');
+    setEmbedPanelLoading(true, 'Loading editor…');
   }
 
   if (themeOnlyMode) {
@@ -530,6 +567,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   var editFormDirty = false;
   var savedDraftPreviewId = null;
   var draftContentPaths = new Set();
+  var draftPreviewRecordsByPath = {};
+  var draftChangeDetailsCache = {};
+  var draftChangeDetailsProvisionalPaths = new Set();
   var markedForDeletionContentPaths = new Set();
   var loadDraftsOnLoad = (function() {
     var p = new URLSearchParams(window.location.search);
@@ -599,6 +639,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     syncPendingChangesPanel();
   }
 
+  function setEmbedPanelLoading(on, message) {
+    if (!embedPanelMode) return;
+    document.body.classList.toggle('dashboard-edit-embed-loading-active', !!on);
+    if (!embedLoadingEl) return;
+    embedLoadingEl.classList.toggle('hidden', !on);
+    embedLoadingEl.setAttribute('aria-busy', on ? 'true' : 'false');
+    if (embedLoadingLabel && message) embedLoadingLabel.textContent = message;
+  }
+
+  function notifyEmbedPanelFormReady() {
+    if (!embedPanelMode) return;
+    try {
+      window.parent.postMessage({ type: 'ttms:embed-panel-form-ready' }, window.location.origin);
+    } catch (e) { /* ignore */ }
+  }
+
   function setEditFormLoading(on, message) {
     if (!editFormLoadingEl) return;
     if (on) {
@@ -616,6 +672,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   function scheduleEndEditFormLoad() {
     var finish = function() {
       setEditFormLoading(false);
+      setEmbedPanelLoading(false);
+      notifyEmbedPanelFormReady();
       if (window.DashboardEditFieldPrompts) {
         window.DashboardEditFieldPrompts.invalidate();
         window.DashboardEditFieldPrompts.enable();
@@ -1019,12 +1077,55 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
   }
 
+  function sectionSlugFromHeaderEl(headerEl) {
+    if (!headerEl) return '';
+    return (headerEl.getAttribute('data-section-slug') || '').trim().toLowerCase();
+  }
+
+  function isPromotionsSectionHeader(headerEl) {
+    return sectionSlugFromHeaderEl(headerEl) === 'promotions';
+  }
+
+  function lockedSectionTitleFromHeader(headerEl) {
+    if (!headerEl) return '';
+    var titleEl = headerEl.querySelector('.headerstyle h2 a, h2.center.title a, h2 a, h1, h2');
+    return titleEl ? (titleEl.textContent || '').trim() : '';
+  }
+
+  function sectionTitleForPayload(headerEl) {
+    if (isPromotionsSectionHeader(headerEl)) {
+      return lockedSectionTitleFromHeader(headerEl);
+    }
+    return inputSectionTitle ? (inputSectionTitle.value || '').trim() : '';
+  }
+
+  function syncSectionTitleFieldLock(headerEl) {
+    var locked = isPromotionsSectionHeader(headerEl);
+    if (sectionTitleWrapEl) {
+      sectionTitleWrapEl.classList.toggle('hidden', locked);
+    }
+    if (inputSectionTitle) {
+      inputSectionTitle.disabled = locked;
+      inputSectionTitle.required = !locked;
+      if (locked) {
+        var lockedTitle = lockedSectionTitleFromHeader(headerEl);
+        if (lockedTitle) inputSectionTitle.value = lockedTitle;
+      }
+    }
+    if (window.DashboardEditFieldPrompts && typeof window.DashboardEditFieldPrompts.refresh === 'function') {
+      window.DashboardEditFieldPrompts.refresh();
+    }
+  }
+
   function buildSectionPayloadFromState() {
     if (!selectedInfo || !selectedElement) return null;
     var contentPath = (selectedInfo.contentPath || '').trim();
     if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || contentPath.slice(-'_index.md'.length) !== '_index.md') return null;
-    var title = inputSectionTitle ? (inputSectionTitle.value || '').trim() : '';
-    var weightVal = inputSectionWeight ? parseInt((inputSectionWeight.value || '').trim(), 10) : 0;
+    var title = sectionTitleForPayload(selectedElement);
+    var weightRaw = inputSectionWeight
+      ? (inputSectionWeight.value || '').trim()
+      : (selectedElement ? selectedElement.getAttribute('data-weight') : '') || '0';
+    var weightVal = parseInt(weightRaw, 10);
     if (isNaN(weightVal)) weightVal = 0;
     var icon = inputSectionIcon ? (inputSectionIcon.value || '').trim() : '';
     var topImg = inputSectionImageTop ? (inputSectionImageTop.value || '').trim() : '';
@@ -1033,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       title: title || 'Section',
       weight: weightVal,
       icon: icon || '',
-      images: { top: topImg || '', bottom: bottomImg || '' }
+      images: { secondary: topImg || '', primary: bottomImg || '' }
     };
     return {
       kind: 'section',
@@ -1192,12 +1293,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         };
         var icon = (header.getAttribute('data-icon') || '').trim();
         if (icon) fm.icon = icon;
-        var top = (header.getAttribute('data-images-top') || '').trim();
-        var bottom = (header.getAttribute('data-images-bottom') || '').trim();
-        if (top || bottom) {
+        var secondary = (header.getAttribute('data-images-secondary') || '').trim();
+        var primary = (header.getAttribute('data-images-primary') || '').trim();
+        if (secondary || primary) {
           fm.images = {};
-          if (top) fm.images.top = top;
-          if (bottom) fm.images.bottom = bottom;
+          if (secondary) fm.images.secondary = secondary;
+          if (primary) fm.images.primary = primary;
         }
         return fm;
       })(),
@@ -2433,7 +2534,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (isNaN(w)) w = index;
       var sumEl = header.querySelector('.menu-summary');
       var catSummary = sumEl ? (sumEl.textContent || '').trim() : '';
-      var topImg = (header.getAttribute('data-images-top') || '').trim();
+      var topImg = (header.getAttribute('data-images-secondary') || '').trim();
       categories.push({
         title: catTitle,
         url: catUrl,
@@ -3122,6 +3223,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (inputTitle) inputTitle.value = '';
     if (inputDesc) inputDesc.value = '';
     if (inputSectionTitle) inputSectionTitle.value = '';
+    syncSectionTitleFieldLock(null);
     if (inputSectionDesc) inputSectionDesc.value = '';
     if (inputLocationAddress) inputLocationAddress.value = '';
     if (inputLocationCity) inputLocationCity.value = '';
@@ -3141,8 +3243,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
       window.DashboardSectionIconPicker.syncFromInput();
     }
-    if (inputSectionImageTop) inputSectionImageTop.value = '';
-    if (inputSectionImageBottom) inputSectionImageBottom.value = '';
+    applySectionImagePathsToForm('', '');
     if (inputHomeHeroImage) inputHomeHeroImage.value = '';
     homeHeroIndexCache = { frontMatter: null, body: '' };
     updateHeroImageThumbDisplay('', null);
@@ -3784,6 +3885,83 @@ document.addEventListener('DOMContentLoaded', async function() {
     return p.indexOf('/') === 0 ? p : '/' + p;
   }
 
+  window.DashboardEditImagePreview = window.DashboardEditImagePreview || {};
+  window.DashboardEditImagePreview.resolve = resolveMenuItemImageSrcForPreview;
+
+  function setSectionIconUploadStatus(text, isError) {
+    if (!sectionIconUploadStatusEl) return;
+    sectionIconUploadStatusEl.textContent = text || '';
+    sectionIconUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--error', !!isError);
+  }
+
+  function setSectionSecondaryImageUploadStatus(text, isError) {
+    if (!sectionSecondaryImageUploadStatusEl) return;
+    sectionSecondaryImageUploadStatusEl.textContent = text || '';
+    sectionSecondaryImageUploadStatusEl.classList.toggle('dashboard-menu-item-images-upload-status--error', !!isError);
+  }
+
+  function rememberDraftAssetPath(path) {
+    var p = (path || '').trim();
+    if (!p || p.indexOf('draft-assets/') !== 0) return;
+    if (!draftAssetsListCache) draftAssetsListCache = [];
+    if (draftAssetsListCache.indexOf(p) < 0) draftAssetsListCache.push(p);
+    draftAssetsListCache.sort();
+  }
+
+  function cmsJsonAuthHeaders() {
+    var headers = { Accept: 'application/json' };
+    var token =
+      typeof AuthClient !== 'undefined' && AuthClient.getAccessToken
+        ? AuthClient.getAccessToken()
+        : typeof localStorage !== 'undefined'
+          ? localStorage.getItem('ttmenus_access_token')
+          : null;
+    if (token) headers.Authorization = 'Bearer ' + token;
+    return headers;
+  }
+
+  function fetchSiteImagePathsFromApi() {
+    if (siteImagesListCache) return Promise.resolve(siteImagesListCache);
+    var url =
+      CMS_SERVICE_URL.replace(/\/+$/, '') +
+      '/api/clients/' +
+      encodeURIComponent(CMS_CLIENT_ID) +
+      '/site-images';
+    return fetch(url, { method: 'GET', credentials: 'include', headers: cmsJsonAuthHeaders() })
+      .then(function (res) {
+        return res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status));
+      })
+      .then(function (data) {
+        siteImagesListCache = data && data.paths && Array.isArray(data.paths) ? data.paths : [];
+        return siteImagesListCache;
+      })
+      .catch(function () {
+        siteImagesListCache = [];
+        return siteImagesListCache;
+      });
+  }
+
+  function fetchDraftAssetPathsFromApi() {
+    if (draftAssetsListCache) return Promise.resolve(draftAssetsListCache);
+    var url =
+      CMS_SERVICE_URL.replace(/\/+$/, '') +
+      '/api/clients/' +
+      encodeURIComponent(CMS_CLIENT_ID) +
+      '/content/draft-assets';
+    return fetch(url, { method: 'GET', credentials: 'include', headers: cmsJsonAuthHeaders() })
+      .then(function (res) {
+        return res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status));
+      })
+      .then(function (data) {
+        draftAssetsListCache = data && data.paths && Array.isArray(data.paths) ? data.paths : [];
+        return draftAssetsListCache;
+      })
+      .catch(function () {
+        draftAssetsListCache = [];
+        return draftAssetsListCache;
+      });
+  }
+
   function cmsAuthHeadersForImageThumb() {
     var h = {};
     var token =
@@ -4046,6 +4224,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     var useHeroStatus = !!opts.useHeroStatus;
     var useSlideshowStatus = !!opts.useSlideshowStatus;
     var usePromoStatus = !!opts.usePromoStatus;
+    var useSectionIconStatus = !!opts.useSectionIconStatus;
+    var useSectionSecondaryImageStatus = !!opts.useSectionSecondaryImageStatus;
     var statusLabel = opts.statusLabel || 'Uploading image…';
     var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/draft-assets';
     var fd = new FormData();
@@ -4059,6 +4239,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       setSlideshowImagesUploadStatus(statusLabel, false);
     } else if (usePromoStatus) {
       setPromoImagesUploadStatus(statusLabel, false);
+    } else if (useSectionIconStatus) {
+      setSectionIconUploadStatus(statusLabel, false);
+    } else if (useSectionSecondaryImageStatus) {
+      setSectionSecondaryImageUploadStatus(statusLabel, false);
     } else {
       setMenuItemImagesUploadStatus(statusLabel, false);
     }
@@ -4088,6 +4272,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         cmsLogJson('draft-assets POST ←', url, data);
         var path = data.path != null ? data.path : data.Path;
         if (!path) throw new Error('No path in upload response');
+        rememberDraftAssetPath(path);
         if (inp) inp.value = path;
         if (typeof updateThumbFn === 'function') updateThumbFn(path, file);
         if (inp && inp !== inputHomeHeroImage) {
@@ -4102,6 +4287,10 @@ document.addEventListener('DOMContentLoaded', async function() {
           setSlideshowImagesUploadStatus('Image uploaded.', false);
         } else if (usePromoStatus) {
           setPromoImagesUploadStatus('Image uploaded.', false);
+        } else if (useSectionIconStatus) {
+          setSectionIconUploadStatus('Image uploaded.', false);
+        } else if (useSectionSecondaryImageStatus) {
+          setSectionSecondaryImageUploadStatus('Image uploaded.', false);
         } else {
           setMenuItemImagesUploadStatus('Image uploaded.', false);
         }
@@ -4111,6 +4300,8 @@ document.addEventListener('DOMContentLoaded', async function() {
           if (useHeroStatus) setHeroImageUploadStatus('', false);
           else if (useSlideshowStatus) setSlideshowImagesUploadStatus('', false);
           else if (usePromoStatus) setPromoImagesUploadStatus('', false);
+          else if (useSectionIconStatus) setSectionIconUploadStatus('', false);
+          else if (useSectionSecondaryImageStatus) setSectionSecondaryImageUploadStatus('', false);
           else setMenuItemImagesUploadStatus('', false);
         }, 2200);
       })
@@ -4124,6 +4315,10 @@ document.addEventListener('DOMContentLoaded', async function() {
           setSlideshowImagesUploadStatus('Upload failed: ' + errMsg, true);
         } else if (usePromoStatus) {
           setPromoImagesUploadStatus('Upload failed: ' + errMsg, true);
+        } else if (useSectionIconStatus) {
+          setSectionIconUploadStatus('Upload failed: ' + errMsg, true);
+        } else if (useSectionSecondaryImageStatus) {
+          setSectionSecondaryImageUploadStatus('Upload failed: ' + errMsg, true);
         } else {
           setMenuItemImagesUploadStatus('Upload failed: ' + errMsg, true);
         }
@@ -4133,6 +4328,8 @@ document.addEventListener('DOMContentLoaded', async function() {
           if (useHeroStatus) setHeroImageUploadStatus('', false);
           else if (useSlideshowStatus) setSlideshowImagesUploadStatus('', false);
           else if (usePromoStatus) setPromoImagesUploadStatus('', false);
+          else if (useSectionIconStatus) setSectionIconUploadStatus('', false);
+          else if (useSectionSecondaryImageStatus) setSectionSecondaryImageUploadStatus('', false);
           else setMenuItemImagesUploadStatus('', false);
         }, 6000);
       })
@@ -5336,6 +5533,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if (isEmbedWizardSaveStep(menuItemWizardStep, MENU_ITEM_WIZARD_LABELS)) {
       mountChangesPanelToEmbedSaveHost('menu-item');
+    } else {
+      clearEmbedChangesFilterIfKind('menu-item');
     }
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
@@ -5397,8 +5596,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (sectionWizardStep === 0 && window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.ensureLoaded === 'function') {
       window.DashboardSectionIconPicker.ensureLoaded();
     }
+    if (sectionWizardStep === 1 && window.DashboardSectionSecondaryImagePicker && typeof window.DashboardSectionSecondaryImagePicker.ensureLoaded === 'function') {
+      Promise.resolve(window.DashboardSectionSecondaryImagePicker.ensureLoaded()).then(function () {
+        syncSectionSecondaryImagePickerFromInput();
+        syncSectionPrimaryImageThumbFromInput();
+      });
+    }
     if (isEmbedWizardSaveStep(sectionWizardStep, SECTION_WIZARD_LABELS)) {
       mountChangesPanelToEmbedSaveHost('section');
+    } else {
+      clearEmbedChangesFilterIfKind('section');
     }
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
@@ -5467,6 +5674,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if (isEmbedWizardSaveStep(promoWizardStep, PROMO_WIZARD_LABELS)) {
       mountChangesPanelToEmbedSaveHost('promotion');
+    } else {
+      clearEmbedChangesFilterIfKind('promotion');
     }
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
@@ -5506,6 +5715,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       } else {
         if (inputSectionTitle) inputSectionTitle.value = titleSrc;
         if (inputSectionDesc) inputSectionDesc.value = descSrc;
+        syncSectionTitleFieldLock(info.element);
       }
     }
     if (contentType === 'section-header') {
@@ -5524,15 +5734,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
       }
       var topImg = headerEl.querySelector('a img.food, img.food.item, .food.item');
-      if (inputSectionImageTop) {
-        inputSectionImageTop.value = topImg ? (topImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-top') || '');
-        inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
-      }
+      var secondaryPath = topImg ? (topImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-secondary') || '');
       var bottomImg = headerEl.querySelector('.slideinimg');
-      if (inputSectionImageBottom) {
-        inputSectionImageBottom.value = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-bottom') || '');
-        inputSectionImageBottom.dispatchEvent(new Event('input', { bubbles: true }));
-      }
+      var primaryPath = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-primary') || '');
+      applySectionImagePathsToForm(secondaryPath, primaryPath);
     } else if (contentType === 'menu-item') {
       var cardEl = info.element;
       if (pricesContainer) renderPricesUI(pricesContainer, parseJsonAttr(cardEl, 'data-prices-array'));
@@ -5651,7 +5856,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     formEl.classList.remove('hidden');
     if (selectedTypeEl) selectedTypeEl.textContent = 'Loading: ' + (info.type || 'Content');
     if (contentSourceEl) contentSourceEl.textContent = info.contentPath ? 'Source: ' + info.contentPath : '';
-    setEditFormLoading(true, 'Loading editor…');
+    var loadLabel = info.title ? 'Loading ' + info.title + '…' : 'Loading editor…';
+    setEmbedPanelLoading(true, loadLabel);
+    setEditFormLoading(true, loadLabel);
     requestAnimationFrame(function() {
       try {
         populateEditFormFromInfo(info);
@@ -5678,6 +5885,53 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (x.image) paths.push(String(x.image).replace(/^\//, ''));
     });
     return paths;
+  }
+
+  /** Section _index.md: images.secondary (top) and images.primary (bottom). */
+  function sectionImagePathsFromFrontMatter(fm) {
+    fm = fm || {};
+    var secondary = '';
+    var primary = '';
+    if (fm.images && typeof fm.images === 'object' && !Array.isArray(fm.images)) {
+      if (fm.images.secondary != null) secondary = String(fm.images.secondary).trim();
+      if (fm.images.primary != null) primary = String(fm.images.primary).trim();
+    }
+    if (!secondary && fm.imagesTop != null) secondary = String(fm.imagesTop).trim();
+    if (!secondary && fm.images_top != null) secondary = String(fm.images_top).trim();
+    if (!primary && fm.imagesBottom != null) primary = String(fm.imagesBottom).trim();
+    if (!primary && fm.images_bottom != null) primary = String(fm.images_bottom).trim();
+    return { secondary: secondary, primary: primary };
+  }
+
+  function sectionFrontMatterHasImageFields(fm) {
+    fm = fm || {};
+    if (fm.images != null && typeof fm.images === 'object' && !Array.isArray(fm.images)) return true;
+    return fm.imagesTop != null || fm.images_top != null || fm.imagesBottom != null || fm.images_bottom != null;
+  }
+
+  function syncSectionSecondaryImagePickerFromInput() {
+    if (window.DashboardSectionSecondaryImagePicker && typeof window.DashboardSectionSecondaryImagePicker.syncFromInput === 'function') {
+      window.DashboardSectionSecondaryImagePicker.syncFromInput();
+    } else if (inputSectionImageTop) {
+      inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  function syncSectionPrimaryImageThumbFromInput() {
+    if (inputSectionImageBottom) {
+      inputSectionImageBottom.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  function applySectionImagePathsToForm(secondary, primary) {
+    if (inputSectionImageTop) {
+      inputSectionImageTop.value = secondary || '';
+      syncSectionSecondaryImagePickerFromInput();
+    }
+    if (inputSectionImageBottom) {
+      inputSectionImageBottom.value = primary || '';
+      syncSectionPrimaryImageThumbFromInput();
+    }
   }
 
   function hydrateEditFormFromCmsPreview(contentPath, options) {
@@ -5733,22 +5987,32 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
 
       if (contentType === 'section-header' || kind === 'section-header') {
-        if (inputSectionTitle && fm.title != null) inputSectionTitle.value = fm.title;
+        if (inputSectionTitle && fm.title != null && !isPromotionsSectionHeader(selectedElement)) {
+          inputSectionTitle.value = fm.title;
+        }
         if (inputSectionDesc && p.body != null) inputSectionDesc.value = p.body;
         if (inputSectionWeight && fm.weight != null) inputSectionWeight.value = String(fm.weight);
+        else if (fm.weight != null && selectedElement && selectedElement.classList && selectedElement.classList.contains('menu-header')) {
+          selectedElement.setAttribute('data-weight', String(fm.weight));
+        }
         if (inputSectionIcon && fm.icon != null) inputSectionIcon.value = String(fm.icon);
         if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
           window.DashboardSectionIconPicker.syncFromInput();
         }
-        var topSrc = (fm.imagesTop != null ? fm.imagesTop : fm.images_top) != null ? String(fm.imagesTop || fm.images_top).trim() : '';
-        var bottomSrc = (fm.imagesBottom != null ? fm.imagesBottom : fm.images_bottom) != null ? String(fm.imagesBottom || fm.images_bottom).trim() : '';
-        if (inputSectionImageTop) {
-          inputSectionImageTop.value = topSrc;
-          inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        if (inputSectionImageBottom) {
-          inputSectionImageBottom.value = bottomSrc;
-          inputSectionImageBottom.dispatchEvent(new Event('input', { bubbles: true }));
+        if (sectionFrontMatterHasImageFields(fm)) {
+          var sectionPaths = sectionImagePathsFromFrontMatter(fm);
+          if (sectionPaths.secondary) {
+            if (inputSectionImageTop) {
+              inputSectionImageTop.value = sectionPaths.secondary;
+              syncSectionSecondaryImagePickerFromInput();
+            }
+          }
+          if (sectionPaths.primary) {
+            if (inputSectionImageBottom) {
+              inputSectionImageBottom.value = sectionPaths.primary;
+              syncSectionPrimaryImageThumbFromInput();
+            }
+          }
         }
         setEditStatus('Loaded CMS draft');
         return true;
@@ -5928,20 +6192,39 @@ document.addEventListener('DOMContentLoaded', async function() {
     return getFromCMS(base).then(function(data) {
       var list = dedupePreviewsByContentPath(data && data.previews ? data.previews : []);
       list.forEach(function(p) {
+        storeDraftPreviewRecord(p);
         var payload = p.payload || p.Payload || {};
         var cp = p.content_path || payload.contentPath || payload.content_path || '';
         if (cp) draftContentPaths.add(cp);
       });
+      try {
+        var pw = parentMenuWindow;
+        if (pw && pw.DashboardMenuStatus && typeof pw.DashboardMenuStatus.registerDraftPreviewsForAnalysis === 'function') {
+          pw.DashboardMenuStatus.registerDraftPreviewsForAnalysis(list);
+        }
+      } catch (ePw) { /* ignore */ }
+      ensureDraftChangeDetails(list.map(function(p) {
+        var payload = p.payload || p.Payload || {};
+        return p.content_path || payload.contentPath || payload.content_path || '';
+      }).filter(Boolean));
       applyEditHighlights();
       syncPendingChangesPanel();
     }).catch(function() { /* ignore */ });
   }
 
   function focusEditTargetInParentMenu() {
-    if (!embedPanelMode || !parentMenuWindow) return;
+    if (!embedPanelMode || !parentMenuWindow) {
+      setEmbedPanelLoading(false);
+      notifyEmbedPanelFormReady();
+      return;
+    }
     try {
       var doc = parentMenuWindow.document;
-      if (!doc) return;
+      if (!doc) {
+        setEmbedPanelLoading(false);
+        notifyEmbedPanelFormReady();
+        return;
+      }
 
       var promoCatalogIndex = '';
       var promoId = '';
@@ -5962,7 +6245,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             slide = el;
           }
         });
-        if (!slide) return;
+        if (!slide) {
+          setEmbedPanelLoading(false);
+          notifyEmbedPanelFormReady();
+          return;
+        }
         ensureEditPanelExpanded();
         syncPromotionDataset(slide, parentMenuWindow, doc);
         if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
@@ -5989,7 +6276,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (sectionSlug) {
         var escSlug = sectionSlug.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         var sectionHeader = doc.querySelector('.menu-header[data-section-slug="' + escSlug + '"]');
-        if (!sectionHeader) return;
+        if (!sectionHeader) {
+          setEmbedPanelLoading(false);
+          notifyEmbedPanelFormReady();
+          return;
+        }
         ensureEditPanelExpanded();
         if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
         sectionHeader.classList.add('dashboard-edit-selected');
@@ -6015,7 +6306,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         itemUrl = sessionStorage.getItem('editMenuFocusItemUrl') || '';
         if (itemUrl) sessionStorage.removeItem('editMenuFocusItemUrl');
       } catch (e1) { /* ignore */ }
-      if (!itemUrl) return;
+      if (!itemUrl) {
+        setEmbedPanelLoading(false);
+        notifyEmbedPanelFormReady();
+        return;
+      }
 
       var targetNorm = normalizeItemUrlForMatch(itemUrl);
       var card = null;
@@ -6024,7 +6319,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         var du = el.getAttribute('data-item-url') || '';
         if (normalizeItemUrlForMatch(du) === targetNorm) card = el;
       });
-      if (!card) return;
+      if (!card) {
+        setEmbedPanelLoading(false);
+        notifyEmbedPanelFormReady();
+        return;
+      }
 
       ensureEditPanelExpanded();
       if (selectedElement && selectedElement.classList) selectedElement.classList.remove('dashboard-edit-selected');
@@ -6041,7 +6340,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         title: title,
         description: desc,
       });
-    } catch (err) { /* ignore */ }
+    } catch (err) {
+      setEmbedPanelLoading(false);
+      notifyEmbedPanelFormReady();
+    }
   }
 
   function findMenuItemsContainerForSectionSlug(doc, sectionSlug) {
@@ -6181,16 +6483,17 @@ document.addEventListener('DOMContentLoaded', async function() {
             var header = doc.querySelector('.menu-header[data-section-slug="' + sectionSlug.replace(/"/g, '\\"') + '"]');
             if (!header) return;
             var titleEl = header.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
-            if (titleEl) {
+            if (titleEl && sectionSlug.toLowerCase() !== 'promotions') {
               var a = titleEl.querySelector('a');
               if (a) a.textContent = title; else titleEl.textContent = title;
             }
             if (fm.weight != null) header.setAttribute('data-weight', String(fm.weight));
             if (fm.icon != null) header.setAttribute('data-icon', String(fm.icon));
-            var topSrc = (fm.imagesTop != null ? fm.imagesTop : fm.images_top) != null ? String(fm.imagesTop || fm.images_top).trim() : '';
-            var bottomSrc = (fm.imagesBottom != null ? fm.imagesBottom : fm.images_bottom) != null ? String(fm.imagesBottom || fm.images_bottom).trim() : '';
-            header.setAttribute('data-images-top', topSrc);
-            header.setAttribute('data-images-bottom', bottomSrc);
+            var sectionPaths = sectionImagePathsFromFrontMatter(fm);
+            var topSrc = sectionPaths.secondary;
+            var bottomSrc = sectionPaths.primary;
+            header.setAttribute('data-images-secondary', topSrc);
+            header.setAttribute('data-images-primary', bottomSrc);
             if (topSrc) {
               topSrc = topSrc.indexOf('/') === 0 ? topSrc : '/' + topSrc;
               var topImg = header.querySelector('a img.food, img.food.item');
@@ -6234,7 +6537,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         if (applied > 0) setEditStatus('Loaded ' + applied + ' draft(s)');
         draftContentPaths.clear();
+        draftChangeDetailsCache = {};
+        draftChangeDetailsProvisionalPaths.clear();
         list.forEach(function(p) {
+          storeDraftPreviewRecord(p);
           var payload = p.payload || p.Payload || {};
           var cp = payload.contentPath || p.content_path || '';
           if (cp) draftContentPaths.add(cp);
@@ -6358,6 +6664,524 @@ document.addEventListener('DOMContentLoaded', async function() {
     return null;
   }
 
+  function currentSectionSlugFromEdit() {
+    if (selectedInfo && selectedInfo.contentPath) {
+      var m = String(selectedInfo.contentPath).match(/^content\/([^/]+)\/_index\.md$/i);
+      if (m) return m[1].toLowerCase();
+    }
+    if (selectedElement && selectedElement.classList && selectedElement.classList.contains('menu-header')) {
+      return sectionSlugFromHeaderEl(selectedElement);
+    }
+    return '';
+  }
+
+  function contentPathInSection(contentPath, sectionSlug) {
+    if (!contentPath || !sectionSlug || contentPath === '__unsaved__') return false;
+    var slug = String(sectionSlug).toLowerCase();
+    var p = String(contentPath).replace(/\\/g, '/');
+    if (p === 'content/' + slug + '/_index.md') return true;
+    if (p.indexOf('content/' + slug + '/') === 0 && p.endsWith('.md') && !p.endsWith('/_index.md')) return true;
+    return false;
+  }
+
+  function sectionHeaderDescriptionText(headerEl) {
+    if (!headerEl) return '';
+    var descEl = headerEl.querySelector('.menu-item-description, .menu-summary');
+    if (!descEl) return '';
+    var p = descEl.querySelector('p');
+    return (p ? p.textContent : descEl.textContent || '').trim();
+  }
+
+  function fetchLiveContentFilesBatch(paths) {
+    if (!paths || !paths.length) return Promise.resolve({});
+    var url = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/files/batch';
+    return postToCMS(url, { paths: paths }).then(function(data) {
+      var files = (data && data.files) || {};
+      var out = {};
+      paths.forEach(function(p) {
+        if (files[p]) out[p] = files[p];
+      });
+      return out;
+    }).catch(function() {
+      return {};
+    });
+  }
+
+  function overlayFmValueEmpty(v) {
+    if (v == null) return true;
+    if (typeof v === 'string' && !v.trim()) return true;
+    if (Array.isArray(v) && !v.length) return true;
+    return false;
+  }
+
+  function mergeDraftFrontMatter(liveFm, draftFm) {
+    var live = liveFm || {};
+    var merged = Object.assign({}, live);
+    Object.keys(draftFm || {}).forEach(function(k) {
+      var v = draftFm[k];
+      if (!overlayFmValueEmpty(v)) merged[k] = v;
+    });
+    return merged;
+  }
+
+  function formatDraftFieldLabel(key) {
+    var labels = {
+      weight: 'Position',
+      title: 'Title',
+      icon: 'Icon',
+      images: 'Images',
+      prices: 'Prices',
+      tags: 'Tags',
+      ingredients: 'Ingredients',
+      cookingmethods: 'Cooking methods',
+      types: 'Types',
+      events: 'Events',
+      promotions: 'Promotions',
+      side_categories: 'Side categories'
+    };
+    return labels[key] || String(key).replace(/_/g, ' ');
+  }
+
+  function lineDiffSummary(oldText, newText) {
+    oldText = String(oldText || '');
+    newText = String(newText || '');
+    if (oldText === newText) return 'no line changes';
+    var oldLines = oldText.split('\n');
+    var newLines = newText.split('\n');
+    var oldCount = {};
+    var newCount = {};
+    var added = 0;
+    var removed = 0;
+    oldLines.forEach(function(l) { oldCount[l] = (oldCount[l] || 0) + 1; });
+    newLines.forEach(function(l) { newCount[l] = (newCount[l] || 0) + 1; });
+    Object.keys(oldCount).forEach(function(l) {
+      var n = newCount[l] || 0;
+      if (oldCount[l] > n) removed += oldCount[l] - n;
+    });
+    Object.keys(newCount).forEach(function(l) {
+      var o = oldCount[l] || 0;
+      if (newCount[l] > o) added += newCount[l] - o;
+    });
+    if (!added && !removed) return 'updated';
+    return '+' + added + ' \u2212' + removed + ' lines';
+  }
+
+  function describeImagesFmChange(liveImg, mergedImg) {
+    var o = liveImg || {};
+    var n = mergedImg || {};
+    var parts = [];
+    if (o.primary !== n.primary) {
+      parts.push('Primary: ' + truncateChangeDetail(o.primary) + ' \u2192 ' + truncateChangeDetail(n.primary || '(removed)'));
+    }
+    if (o.secondary !== n.secondary) {
+      parts.push('Secondary: ' + truncateChangeDetail(o.secondary) + ' \u2192 ' + truncateChangeDetail(n.secondary || '(removed)'));
+    }
+    return parts;
+  }
+
+  function provisionalDraftDetailsFromPayload(payload) {
+    var details = [];
+    var fm = payload.frontMatter || {};
+    if (String(payload.body || '').trim()) details.push('Description edited');
+    Object.keys(fm).forEach(function(k) {
+      if (overlayFmValueEmpty(fm[k])) return;
+      if (k === 'images' && fm.images) {
+        if (fm.images.primary) details.push('Primary image \u2192 ' + truncateChangeDetail(fm.images.primary));
+        if (fm.images.secondary) details.push('Secondary image \u2192 ' + truncateChangeDetail(fm.images.secondary));
+      } else if (k === 'icon') details.push('Icon \u2192 ' + truncateChangeDetail(fm.icon));
+      else if (k === 'title') details.push('Title \u2192 ' + truncateChangeDetail(fm.title));
+      else if (k === 'weight') details.push('Position \u2192 weight ' + truncateChangeDetail(String(fm[k])));
+      else if (k === 'prices') {
+        details.push('Prices \u2192 ' + (Array.isArray(fm.prices) ? fm.prices.length + ' variant(s)' : 'updated'));
+      } else details.push(formatDraftFieldLabel(k) + ' updated');
+    });
+    return details.length ? details : ['Content updated in draft'];
+  }
+
+  function describeDraftChanges(payload, live) {
+    var details = [];
+    var draftFm = payload.frontMatter || {};
+    var liveFm = (live && live.frontMatter) || (live && live.front_matter) || {};
+    var mergedFm = mergeDraftFrontMatter(liveFm, draftFm);
+    var liveBody = String((live && live.body) || '').trim();
+    var draftBody = String(payload.body || '').trim();
+    var mergedBody = draftBody || liveBody;
+    var reorderKeys = ['title', 'weight', 'date'];
+
+    if (draftBody && mergedBody !== liveBody) {
+      details.push('Description: ' + lineDiffSummary(liveBody, mergedBody));
+    }
+    reorderKeys.forEach(function(k) {
+      if (jsonArraysEqual(liveFm[k], mergedFm[k])) return;
+      details.push(
+        formatDraftFieldLabel(k) + ': ' + truncateChangeDetail(liveFm[k]) + ' \u2192 ' + truncateChangeDetail(mergedFm[k])
+      );
+    });
+    if (!jsonArraysEqual(liveFm.icon, mergedFm.icon)) {
+      details.push('Icon: ' + truncateChangeDetail(liveFm.icon) + ' \u2192 ' + truncateChangeDetail(mergedFm.icon));
+    }
+    if (!jsonArraysEqual(liveFm.images, mergedFm.images)) {
+      describeImagesFmChange(liveFm.images, mergedFm.images).forEach(function(line) {
+        details.push(line);
+      });
+    }
+    var skip = { title: 1, weight: 1, date: 1, icon: 1, images: 1 };
+    var seen = {};
+    Object.keys(liveFm).forEach(function(k) { seen[k] = 1; });
+    Object.keys(mergedFm).forEach(function(k) { seen[k] = 1; });
+    Object.keys(seen).forEach(function(k) {
+      if (skip[k]) return;
+      if (jsonArraysEqual(liveFm[k], mergedFm[k])) return;
+      if (k === 'prices') {
+        var n = Array.isArray(mergedFm.prices) ? mergedFm.prices.length : 0;
+        var o = Array.isArray(liveFm.prices) ? liveFm.prices.length : 0;
+        details.push('Prices: ' + o + ' \u2192 ' + n + ' variant(s)');
+      } else {
+        details.push(
+          formatDraftFieldLabel(k) + ': ' + truncateChangeDetail(liveFm[k]) + ' \u2192 ' + truncateChangeDetail(mergedFm[k])
+        );
+      }
+    });
+    if (!details.length && live) return ['No field changes vs published'];
+    if (!details.length) return provisionalDraftDetailsFromPayload(payload);
+    return details;
+  }
+
+  function previewPayloadFromRecord(p) {
+    var payload = p.payload || p.Payload || {};
+    return {
+      kind: payload.kind || 'content',
+      contentPath: p.content_path || payload.contentPath || payload.content_path || '',
+      frontMatter: payload.frontMatter || payload.front_matter || {},
+      body: payload.body != null ? String(payload.body) : ''
+    };
+  }
+
+  function storeDraftPreviewRecord(p) {
+    if (!p) return;
+    var payload = p.payload || p.Payload || {};
+    var cp = p.content_path || payload.contentPath || payload.content_path || '';
+    if (cp) {
+      draftPreviewRecordsByPath[cp] = p;
+      delete draftChangeDetailsCache[cp];
+      draftChangeDetailsProvisionalPaths.delete(cp);
+    }
+  }
+
+  function draftChangeDetailsForPath(path) {
+    if (!path) return null;
+    if (draftChangeDetailsCache[path]) return draftChangeDetailsCache[path];
+    try {
+      var pw = parentMenuWindow;
+      if (pw && pw.DashboardMenuStatus && typeof pw.DashboardMenuStatus.getDraftChangeDetails === 'function') {
+        var fromParent = pw.DashboardMenuStatus.getDraftChangeDetails(path);
+        if (fromParent && fromParent.length) return fromParent;
+      }
+    } catch (e) { /* ignore */ }
+    var rec = draftPreviewRecordsByPath[path];
+    if (rec) return provisionalDraftDetailsFromPayload(previewPayloadFromRecord(rec));
+    return null;
+  }
+
+  function draftDetailsForChange(change) {
+    if (!change || change.status !== 'draft' || !change.path) return change && change.details;
+    var details = draftChangeDetailsCache[change.path] || draftChangeDetailsForPath(change.path);
+    return details && details.length ? details : (change.details || ['CMS draft pending']);
+  }
+
+  var draftChangeDetailsInFlight = null;
+
+  function ensureDraftChangeDetails(paths) {
+    paths = (paths || []).filter(function(p) { return p && draftContentPaths.has(p); });
+    var todo = paths.filter(function(p) {
+      return !draftChangeDetailsCache[p] || draftChangeDetailsProvisionalPaths.has(p);
+    });
+    if (!todo.length) return Promise.resolve();
+
+    todo.forEach(function(p) {
+      var rec = draftPreviewRecordsByPath[p];
+      if (rec) {
+        draftChangeDetailsCache[p] = provisionalDraftDetailsFromPayload(previewPayloadFromRecord(rec));
+        draftChangeDetailsProvisionalPaths.add(p);
+      }
+    });
+    syncPendingChangesPanel();
+
+    if (draftChangeDetailsInFlight) return draftChangeDetailsInFlight;
+
+    draftChangeDetailsInFlight = fetchLiveContentFilesBatch(todo).then(function(liveByPath) {
+      todo.forEach(function(p) {
+        var rec = draftPreviewRecordsByPath[p];
+        if (!rec) return;
+        var payload = previewPayloadFromRecord(rec);
+        draftChangeDetailsCache[p] = describeDraftChanges(payload, liveByPath[p]);
+        draftChangeDetailsProvisionalPaths.delete(p);
+      });
+    }).catch(function() { /* ignore */ }).finally(function() {
+      draftChangeDetailsInFlight = null;
+      syncPendingChangesPanel();
+    });
+    return draftChangeDetailsInFlight;
+  }
+
+  function collectSectionUnsavedFieldDetails(headerEl) {
+    var details = [];
+    if (!headerEl) return details;
+    var icon = inputSectionIcon ? inputSectionIcon.value.trim() : '';
+    var domIcon = (headerEl.getAttribute('data-icon') || '').trim();
+    if (icon !== domIcon) {
+      details.push('Icon → ' + (icon || '(removed)'));
+    }
+    if (!isPromotionsSectionHeader(headerEl)) {
+      var title = sectionTitleForPayload(headerEl);
+      var domTitle = lockedSectionTitleFromHeader(headerEl);
+      if (title !== domTitle) {
+        details.push('Title → ' + (title || '(empty)'));
+      }
+    }
+    var desc = inputSectionDesc ? inputSectionDesc.value.trim() : '';
+    var domDesc = sectionHeaderDescriptionText(headerEl);
+    if (desc !== domDesc) {
+      details.push('Description → ' + truncateChangeDetail(desc));
+    }
+    var secImg = inputSectionImageTop ? inputSectionImageTop.value.trim() : '';
+    var domSec = (headerEl.getAttribute('data-images-secondary') || '').trim();
+    if (secImg !== domSec) {
+      details.push('Secondary image → ' + (secImg || '(removed)'));
+    }
+    var priImg = inputSectionImageBottom ? inputSectionImageBottom.value.trim() : '';
+    var domPri = (headerEl.getAttribute('data-images-primary') || '').trim();
+    if (priImg !== domPri) {
+      details.push('Primary image → ' + (priImg || '(removed)'));
+    }
+    return details;
+  }
+
+  function truncateChangeDetail(text, maxLen) {
+    maxLen = maxLen || 56;
+    var t = String(text || '').trim();
+    if (!t) return '(empty)';
+    return t.length > maxLen ? t.slice(0, maxLen) + '…' : t;
+  }
+
+  function jsonArraysEqual(a, b) {
+    try {
+      return JSON.stringify(a || []) === JSON.stringify(b || []);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function collectMenuItemUnsavedFieldDetails(cardEl) {
+    var details = [];
+    if (!cardEl) return details;
+    var titleVal = inputTitle ? inputTitle.value.trim() : '';
+    var titleEl = cardEl.querySelector('.menu-item-title a, .menu-item-title');
+    var domTitle = titleEl ? (titleEl.textContent || '').trim() : '';
+    if (titleVal !== domTitle) {
+      details.push('Title → ' + truncateChangeDetail(titleVal));
+    }
+    var descVal = inputDesc ? inputDesc.value.trim() : '';
+    var descEl = cardEl.querySelector('.menu-item-description, .menu-summary');
+    var domDesc = descEl ? (descEl.textContent || '').trim() : '';
+    if (descVal !== domDesc) {
+      details.push('Description → ' + truncateChangeDetail(descVal));
+    }
+    var pricesArr = pricesContainer ? getPricesFromUI(pricesContainer) : [];
+    var domPrices = parseJsonAttr(cardEl, 'data-prices-array');
+    if (!jsonArraysEqual(pricesArr, domPrices)) {
+      details.push('Prices → ' + (pricesArr.length ? pricesArr.length + ' variant(s)' : '(removed)'));
+    }
+    var imagesArr = inputMenuItemImages ? hoursParseStringList(inputMenuItemImages.value) : [];
+    var domImages = parseJsonAttr(cardEl, 'data-images-array');
+    if (!jsonArraysEqual(imagesArr, domImages)) {
+      details.push('Images → ' + (imagesArr.length ? imagesArr.length + ' image(s)' : '(removed)'));
+    }
+    var sides = sideCategoriesContainer ? getSideCategoriesFromUI(sideCategoriesContainer) : [];
+    if (!jsonArraysEqual(sides, parseJsonAttr(cardEl, 'data-side-categories'))) {
+      details.push('Side categories updated');
+    }
+    var mods = modificationsContainer ? getPairsFromUI(modificationsContainer) : [];
+    if (!jsonArraysEqual(mods, parseJsonAttr(cardEl, 'data-modifications'))) {
+      details.push('Modifications updated');
+    }
+    var adds = additionsContainer ? getPairsFromUI(additionsContainer) : [];
+    if (!jsonArraysEqual(adds, parseJsonAttr(cardEl, 'data-additions'))) {
+      details.push('Additions updated');
+    }
+    var tags = tagsContainer ? getStringListFromUI(tagsContainer) : [];
+    if (!jsonArraysEqual(tags, parseJsonAttr(cardEl, 'data-tags'))) {
+      details.push('Tags updated');
+    }
+    var ingredients = ingredientsContainer ? getStringListFromUI(ingredientsContainer) : [];
+    if (!jsonArraysEqual(ingredients, parseJsonAttr(cardEl, 'data-ingredients'))) {
+      details.push('Ingredients updated');
+    }
+    var avail = getMenuItemAvailabilityFromState();
+    if (!jsonArraysEqual(avail, parseJsonObjectAttr(cardEl, 'data-availability'))) {
+      details.push('Availability updated');
+    }
+    var promos = menuItemPromotionsContainer ? getMenuItemPromotionsFromUI(menuItemPromotionsContainer) : [];
+    if (!jsonArraysEqual(promos, parseJsonAttr(cardEl, 'data-promotions'))) {
+      details.push('Promotions updated');
+    }
+    return details;
+  }
+
+  function enrichMenuItemEmbedChanges(changes, contentPath) {
+    return changes.map(function(change) {
+      var copy = Object.assign({}, change);
+      copy.kind = 'Menu item';
+      if (change.path === contentPath || (change.path === '__unsaved__' && selectedInfo && selectedInfo.contentType === 'menu-item')) {
+        copy.label = (inputTitle && inputTitle.value.trim()) || change.label;
+        if (change.status === 'unsaved' && selectedElement) {
+          copy.details = collectMenuItemUnsavedFieldDetails(selectedElement);
+          if (!copy.details.length) copy.details = ['Pending editor changes'];
+        } else if (change.status === 'draft') {
+          copy.details = draftDetailsForChange(change);
+        } else if (change.status === 'new') {
+          copy.details = ['New menu item file'];
+        } else if (change.status === 'delete') {
+          copy.details = ['Marked for deletion'];
+        }
+      }
+      return copy;
+    });
+  }
+
+  function enrichSectionEmbedChanges(changes, sectionSlug) {
+    var sectionPath = 'content/' + sectionSlug + '/_index.md';
+    return changes.map(function(change) {
+      var copy = Object.assign({}, change);
+      if (change.path === sectionPath || (change.path === '__unsaved__' && selectedInfo && selectedInfo.contentType === 'section-header')) {
+        copy.kind = 'Section';
+        copy.label = sectionTitleForPayload(selectedElement) || change.label;
+        if (change.status === 'unsaved' && selectedElement) {
+          copy.details = collectSectionUnsavedFieldDetails(selectedElement);
+          if (!copy.details.length) copy.details = ['Pending editor changes'];
+        } else if (change.status === 'draft') {
+          copy.details = draftDetailsForChange(change);
+        } else if (change.status === 'new') {
+          copy.details = ['New section file'];
+        } else if (change.status === 'delete') {
+          copy.details = ['Marked for deletion'];
+        }
+      } else if (contentPathInSection(change.path, sectionSlug)) {
+        copy.kind = 'Menu item';
+        var rel = change.path.replace(/^content\/[^/]+\//, '');
+        if (change.status === 'draft') {
+          copy.details = draftDetailsForChange(change);
+        } else {
+          copy.details = [rel];
+          if (change.status === 'new') copy.details.push('New item in this section');
+          if (change.status === 'delete') copy.details.push('Marked for deletion');
+        }
+      }
+      return copy;
+    });
+  }
+
+  function filterChangesForEmbedHost(changes, kind) {
+    if (kind === 'section') {
+      var slug = currentSectionSlugFromEdit();
+      if (!slug) return [];
+      var sectionPath = 'content/' + slug + '/_index.md';
+      var filtered = changes.filter(function(c) {
+        if (c.path === '__unsaved__') {
+          return editFormDirty && selectedInfo && selectedInfo.contentType === 'section-header';
+        }
+        return contentPathInSection(c.path, slug);
+      }).map(function(c) {
+        if (c.path === '__unsaved__') {
+          return Object.assign({}, c, {
+            path: sectionPath,
+            kind: 'Section',
+            label: sectionTitleForPayload(selectedElement) || titleLabelFromContentPath(getEditorPreviewDocument(), sectionPath)
+          });
+        }
+        return c;
+      });
+      return enrichSectionEmbedChanges(filtered, slug);
+    }
+    if (kind === 'menu-item') {
+      var cp = selectedInfo && selectedInfo.contentPath ? String(selectedInfo.contentPath).trim() : '';
+      if (!cp || cp.indexOf('...') !== -1) return [];
+      var filtered = changes.filter(function(c) {
+        if (c.path === '__unsaved__') {
+          return editFormDirty && selectedInfo && selectedInfo.contentType === 'menu-item';
+        }
+        return c.path === cp;
+      }).map(function(c) {
+        if (c.path === '__unsaved__') {
+          return Object.assign({}, c, {
+            path: cp,
+            kind: 'Menu item',
+            label: (inputTitle && inputTitle.value.trim()) || titleLabelFromContentPath(getEditorPreviewDocument(), cp)
+          });
+        }
+        return c;
+      });
+      return enrichMenuItemEmbedChanges(filtered, cp);
+    }
+    if (kind === 'promotion') {
+      var promoPath = selectedInfo && selectedInfo.contentPath ? String(selectedInfo.contentPath).trim() : '';
+      if (!promoPath || promoPath.indexOf('...') !== -1) return [];
+      return changes.filter(function(c) {
+        if (c.path === '__unsaved__') {
+          return editFormDirty && selectedInfo && selectedInfo.contentType === 'promotion';
+        }
+        return c.path === promoPath;
+      }).map(function(c) {
+        var copy = Object.assign({}, c);
+        if (c.path === '__unsaved__') {
+          copy.path = promoPath;
+          copy.kind = 'Promotion';
+          copy.label = (inputTitle && inputTitle.value.trim()) || titleLabelFromContentPath(getEditorPreviewDocument(), promoPath);
+        }
+        if (copy.status === 'draft') copy.details = ['CMS draft for ' + promoPath];
+        if (copy.status === 'unsaved') copy.details = ['Pending editor changes'];
+        if (copy.status === 'new') copy.details = ['New promotion'];
+        if (copy.status === 'delete') copy.details = ['Marked for deletion'];
+        return copy;
+      });
+    }
+    return changes;
+  }
+
+  function syncPendingChangesPanelScopeNote(kind, count) {
+    var scopeNote = document.getElementById('dashboardEditChangesScopeNote');
+    if (!scopeNote) return;
+    if (kind === 'section') {
+      var slug = currentSectionSlugFromEdit();
+      var title = sectionTitleForPayload(selectedElement) || slug.replace(/-/g, ' ');
+      scopeNote.textContent = slug
+        ? 'This section only (“' + title + '”). ' + (count ? count + ' change' + (count === 1 ? '' : 's') + '.' : 'No pending changes.')
+        : '';
+      scopeNote.classList.toggle('hidden', !slug);
+      return;
+    }
+    if (kind === 'menu-item') {
+      var cp = selectedInfo && selectedInfo.contentPath ? String(selectedInfo.contentPath).trim() : '';
+      var itemTitle = (inputTitle && inputTitle.value.trim()) || (cp ? titleLabelFromContentPath(getEditorPreviewDocument(), cp) : '');
+      scopeNote.textContent = cp
+        ? 'This menu item only (“' + itemTitle + '”). ' + (count ? count + ' change' + (count === 1 ? '' : 's') + '.' : 'No pending changes.')
+        : '';
+      scopeNote.classList.toggle('hidden', !cp);
+      return;
+    }
+    if (kind === 'promotion') {
+      var promoCp = selectedInfo && selectedInfo.contentPath ? String(selectedInfo.contentPath).trim() : '';
+      var promoTitle = (inputTitle && inputTitle.value.trim()) || (promoCp ? titleLabelFromContentPath(getEditorPreviewDocument(), promoCp) : 'Promotion');
+      scopeNote.textContent = promoCp
+        ? 'This promotion only (“' + promoTitle + '”). ' + (count ? count + ' change' + (count === 1 ? '' : 's') + '.' : 'No pending changes.')
+        : '';
+      scopeNote.classList.toggle('hidden', !promoCp);
+      return;
+    }
+    scopeNote.textContent = '';
+    scopeNote.classList.add('hidden');
+  }
+
   function collectPendingMenuChanges() {
     var changes = [];
     var seen = new Set();
@@ -6458,6 +7282,16 @@ document.addEventListener('DOMContentLoaded', async function() {
       status.textContent = PENDING_CHANGE_STATUS_LABELS[change.status] || change.status;
       body.appendChild(title);
       body.appendChild(status);
+      if (change.details && change.details.length) {
+        var detailsEl = document.createElement('ul');
+        detailsEl.className = 'dashboard-edit-changes-item-details';
+        change.details.forEach(function(line) {
+          var dli = document.createElement('li');
+          dli.textContent = line;
+          detailsEl.appendChild(dli);
+        });
+        body.appendChild(detailsEl);
+      }
       li.appendChild(kind);
       li.appendChild(body);
       if (clickable && change.path && change.path !== '__unsaved__' && doc) {
@@ -6516,6 +7350,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!panel || !listEl) return;
 
     var changes = collectPendingMenuChanges();
+    if (embedChangesFilterKind) {
+      changes = filterChangesForEmbedHost(changes, embedChangesFilterKind);
+    }
+    syncPendingChangesPanelScopeNote(embedChangesFilterKind, changes.length);
     var count = changes.length;
     var pending = count > 0;
 
@@ -6535,9 +7373,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     listEl.innerHTML = '';
-    if (!pending) return;
-
-    appendPendingChangeItems(listEl, changes, { clickable: true });
+    if (pending) {
+      changes = changes.map(function(c) {
+        if (c.status === 'draft' && c.path) {
+          return Object.assign({}, c, { details: draftDetailsForChange(c) });
+        }
+        return c;
+      });
+      appendPendingChangeItems(listEl, changes, { clickable: true });
+      ensureDraftChangeDetails(changes.filter(function(c) { return c.status === 'draft'; }).map(function(c) { return c.path; }));
+    }
+    syncAllEmbedWizardSaveButtons();
   }
 
   function applyEditHighlights() {
@@ -7120,8 +7966,8 @@ document.addEventListener('DOMContentLoaded', async function() {
               reelHeader.setAttribute('data-reel-section', title);
               reelHeader.setAttribute('data-weight', '0');
               reelHeader.setAttribute('data-icon', '');
-              reelHeader.setAttribute('data-images-top', '');
-              reelHeader.setAttribute('data-images-bottom', '');
+              reelHeader.setAttribute('data-images-secondary', '');
+              reelHeader.setAttribute('data-images-primary', '');
               reelHeader.setAttribute('data-item-count', '0');
               reelHeader.innerHTML = '<a class="menu-anchor" id="' + safeSlug + '"></a>' +
                 '<div class="headerstyle item"><h2 class="center title"><a href="/' + safeSlug + '/">' + safeTitle + '</a></h2>' +
@@ -7133,7 +7979,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             outer.className = 'main-menu-bg ' + safeTitle.replace(/\s+/g, ' ');
             outer.setAttribute('data-dashboard-edit-new-section', '1');
             var html = '<div class="main-menu ' + safeTitle.replace(/\s+/g, ' ') + ' item">' +
-              '<div class="menu-header" data-section-slug="' + safeSlug + '" data-weight="0" data-icon="" data-images-top="" data-images-bottom="">' +
+              '<div class="menu-header" data-section-slug="' + safeSlug + '" data-weight="0" data-icon="" data-images-secondary="" data-images-primary="">' +
               '<a class="menu-anchor" id="' + safeSlug + '"></a>' +
               '<div class="headerstyle item"><h2 class="center title"><a href="/' + safeSlug + '/">' + safeTitle + '</a></h2></div>' +
               '<div class="menu-summary item"></div>' +
@@ -7591,6 +8437,66 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     });
   }
+  function applySectionIconPath(path) {
+    if (!inputSectionIcon) return;
+    inputSectionIcon.value = (path || '').trim();
+    if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
+      window.DashboardSectionIconPicker.syncFromInput();
+    } else {
+      inputSectionIcon.dispatchEvent(new Event('input', { bubbles: true }));
+      inputSectionIcon.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    editFormDirty = true;
+    setEditStatus('Unsaved changes (not yet published)');
+  }
+  if (btnSectionIconUpload && btnSectionIconFile && inputSectionIcon) {
+    btnSectionIconUpload.addEventListener('click', function() { btnSectionIconFile.click(); });
+    btnSectionIconFile.addEventListener('change', function() {
+      var f = btnSectionIconFile.files && btnSectionIconFile.files[0];
+      btnSectionIconFile.value = '';
+      if (!f) return;
+      uploadMenuItemDraftImage(f, inputSectionIcon, function(path) {
+        applySectionIconPath(path);
+      }, { statusLabel: 'Uploading section icon…', useSectionIconStatus: true });
+    });
+  }
+  if (btnSectionIconBrowse && inputSectionIcon) {
+    btnSectionIconBrowse.addEventListener('click', function() {
+      openSiteImagePickerModal(function(rel) {
+        applySectionIconPath(rel);
+      });
+    });
+  }
+  function applySectionSecondaryImagePath(path) {
+    if (!inputSectionImageTop) return;
+    inputSectionImageTop.value = (path || '').trim();
+    if (window.DashboardSectionSecondaryImagePicker && typeof window.DashboardSectionSecondaryImagePicker.syncFromInput === 'function') {
+      window.DashboardSectionSecondaryImagePicker.syncFromInput();
+    } else {
+      inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
+      inputSectionImageTop.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    editFormDirty = true;
+    setEditStatus('Unsaved changes (not yet published)');
+  }
+  if (btnSectionSecondaryImageUpload && btnSectionSecondaryImageFile && inputSectionImageTop) {
+    btnSectionSecondaryImageUpload.addEventListener('click', function() { btnSectionSecondaryImageFile.click(); });
+    btnSectionSecondaryImageFile.addEventListener('change', function() {
+      var f = btnSectionSecondaryImageFile.files && btnSectionSecondaryImageFile.files[0];
+      btnSectionSecondaryImageFile.value = '';
+      if (!f) return;
+      uploadMenuItemDraftImage(f, inputSectionImageTop, function(path) {
+        applySectionSecondaryImagePath(path);
+      }, { statusLabel: 'Uploading secondary image…', useSectionSecondaryImageStatus: true });
+    });
+  }
+  if (btnSectionSecondaryImageBrowse && inputSectionImageTop) {
+    btnSectionSecondaryImageBrowse.addEventListener('click', function() {
+      openSiteImagePickerModal(function(rel) {
+        applySectionSecondaryImagePath(rel);
+      });
+    });
+  }
   function wireSectionSingleImageField(cfg) {
     if (!cfg || !cfg.input) return;
     var thumbState = { seq: 0, blobUrl: null };
@@ -7639,16 +8545,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     updateThumb(cfg.input.value.trim(), null);
   }
-  wireSectionSingleImageField({
-    input: inputSectionImageTop,
-    thumb: sectionImageTopThumb,
-    thumbWrap: sectionImageTopThumbWrap,
-    row: sectionImageTopRow,
-    uploadBtn: btnSectionImageTopUpload,
-    fileInput: btnSectionImageTopFile,
-    browseBtn: btnSectionImageTopBrowse,
-    removeBtn: btnSectionImageTopRemove,
-  });
   wireSectionSingleImageField({
     input: inputSectionImageBottom,
     thumb: sectionImageBottomThumb,
@@ -7711,39 +8607,56 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (heroSiteImageError) { heroSiteImageError.classList.add('hidden'); heroSiteImageError.textContent = ''; }
     if (heroSiteImageEmpty) heroSiteImageEmpty.classList.add('hidden');
     if (heroSiteImageGrid) heroSiteImageGrid.innerHTML = '';
-    if (siteImagesListCache && siteImagesListCache.length) {
+    if (siteImagesListCache !== null && draftAssetsListCache !== null) {
       if (heroSiteImageLoading) heroSiteImageLoading.classList.add('hidden');
-      renderHeroSiteImageGrid(siteImagesListCache);
+      renderHeroSiteImagePickerGrid(draftAssetsListCache, siteImagesListCache);
+      if (!draftAssetsListCache.length && !siteImagesListCache.length && heroSiteImageEmpty) {
+        heroSiteImageEmpty.classList.remove('hidden');
+      }
       return;
     }
     if (heroSiteImageLoading) heroSiteImageLoading.classList.remove('hidden');
-    var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/site-images';
-    var headers = { 'Accept': 'application/json' };
-    var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    fetch(url, { method: 'GET', credentials: 'include', headers: headers })
-      .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status)); })
-      .then(function(data) {
+    Promise.all([fetchSiteImagePathsFromApi(), fetchDraftAssetPathsFromApi()])
+      .then(function(results) {
         if (heroSiteImageLoading) heroSiteImageLoading.classList.add('hidden');
-        var paths = (data && data.paths && Array.isArray(data.paths)) ? data.paths : [];
-        siteImagesListCache = paths;
-        if (!paths.length) {
+        var sitePaths = results[0] || [];
+        var draftPaths = results[1] || [];
+        if (!sitePaths.length && !draftPaths.length) {
           if (heroSiteImageEmpty) heroSiteImageEmpty.classList.remove('hidden');
           return;
         }
-        renderHeroSiteImageGrid(paths);
+        renderHeroSiteImagePickerGrid(draftPaths, sitePaths);
       })
       .catch(function(err) {
         if (heroSiteImageLoading) heroSiteImageLoading.classList.add('hidden');
         if (heroSiteImageError) {
           heroSiteImageError.classList.remove('hidden');
-          heroSiteImageError.textContent = 'Could not load site images. ' + (err && err.message ? err.message : 'Check your connection or try again.');
+          heroSiteImageError.textContent = 'Could not load images. ' + (err && err.message ? err.message : 'Check your connection or try again.');
         }
       });
   }
-  function renderHeroSiteImageGrid(paths) {
+  function renderHeroSiteImagePickerGrid(draftPaths, sitePaths) {
     if (!heroSiteImageGrid) return;
     heroSiteImageGrid.innerHTML = '';
+    draftPaths = draftPaths || [];
+    sitePaths = sitePaths || [];
+    if (draftPaths.length) {
+      var draftHeading = document.createElement('h3');
+      draftHeading.className = 'dashboard-site-image-grid-section-title';
+      draftHeading.textContent = 'Uploaded drafts';
+      heroSiteImageGrid.appendChild(draftHeading);
+      appendHeroSiteImagePickButtons(draftPaths);
+    }
+    if (sitePaths.length) {
+      var siteHeading = document.createElement('h3');
+      siteHeading.className = 'dashboard-site-image-grid-section-title';
+      siteHeading.textContent = 'Site repository';
+      heroSiteImageGrid.appendChild(siteHeading);
+      appendHeroSiteImagePickButtons(sitePaths);
+    }
+  }
+  function appendHeroSiteImagePickButtons(paths) {
+    if (!heroSiteImageGrid || !paths || !paths.length) return;
     paths.forEach(function(rel) {
       var btn = document.createElement('button');
       btn.type = 'button';
@@ -7770,6 +8683,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
       heroSiteImageGrid.appendChild(btn);
     });
+  }
+  function renderHeroSiteImageGrid(paths) {
+    if (!heroSiteImageGrid) return;
+    heroSiteImageGrid.innerHTML = '';
+    appendHeroSiteImagePickButtons(paths);
   }
   (function setupHeroImageUI() {
     if (btnHeroImageReplace && btnHeroImageFile) {
@@ -8354,7 +9272,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           titleVal = inputTitle && inputTitle.value !== undefined ? inputTitle.value : '';
           descVal = inputDesc && inputDesc.value !== undefined ? inputDesc.value : '';
         } else {
-          titleVal = inputSectionTitle && inputSectionTitle.value !== undefined ? inputSectionTitle.value : '';
+          titleVal = sectionTitleForPayload(selectedElement);
           descVal = inputSectionDesc && inputSectionDesc.value !== undefined ? inputSectionDesc.value : '';
         }
         if (contentType === 'menu-item') {
@@ -8373,7 +9291,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           }
         }
         var titleEl = selectedElement.querySelector('.menu-item-title a, .menu-item-title, h1, h2');
-        if (titleEl && titleVal !== '') {
+        if (titleEl && titleVal !== '' && !(contentType === 'section-header' && isPromotionsSectionHeader(selectedElement))) {
           var innerLink = titleEl.querySelector('a');
           if (innerLink) innerLink.textContent = titleVal;
           else titleEl.textContent = titleVal;
@@ -8396,8 +9314,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (contentType === 'section-header') {
           if (inputSectionWeight) selectedElement.setAttribute('data-weight', inputSectionWeight.value.trim());
           if (inputSectionIcon) selectedElement.setAttribute('data-icon', inputSectionIcon.value.trim());
-          selectedElement.setAttribute('data-images-top', (inputSectionImageTop && inputSectionImageTop.value) ? inputSectionImageTop.value.trim() : '');
-          selectedElement.setAttribute('data-images-bottom', (inputSectionImageBottom && inputSectionImageBottom.value) ? inputSectionImageBottom.value.trim() : '');
+          selectedElement.setAttribute('data-images-secondary', (inputSectionImageTop && inputSectionImageTop.value) ? inputSectionImageTop.value.trim() : '');
+          selectedElement.setAttribute('data-images-primary', (inputSectionImageBottom && inputSectionImageBottom.value) ? inputSectionImageBottom.value.trim() : '');
           var topImg = selectedElement.querySelector('a img.food, img.food.item');
           var topSrc = inputSectionImageTop && inputSectionImageTop.value.trim();
           if (topSrc) {
@@ -8417,7 +9335,7 @@ document.addEventListener('DOMContentLoaded', async function() {
               img.className = 'food item aos-init aos-animate';
               img.setAttribute('data-aos', 'zoom-out');
               img.src = topSrc;
-              img.alt = inputSectionTitle ? inputSectionTitle.value : '';
+              img.alt = sectionTitleForPayload(selectedElement) || (inputSectionTitle ? inputSectionTitle.value : '');
               img.loading = 'lazy';
               wrap.appendChild(img);
             }
@@ -8433,7 +9351,7 @@ document.addEventListener('DOMContentLoaded', async function() {
               slideImg.className = 'slideinimg aos-init aos-animate';
               slideImg.setAttribute('data-aos', 'zoom-out-right');
               slideImg.src = bottomSrc;
-              slideImg.alt = (inputSectionTitle ? inputSectionTitle.value : '') + ' decoration';
+              slideImg.alt = (sectionTitleForPayload(selectedElement) || (inputSectionTitle ? inputSectionTitle.value : '')) + ' decoration';
               slideImg.loading = 'lazy';
               h2.appendChild(slideImg);
             }
@@ -8618,7 +9536,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           }
           try {
             if (parentMenuWindow) {
-              parentMenuWindow.postMessage({ type: 'ttms:close-menu-item-edit-modal', reload: true }, window.location.origin);
+              parentMenuWindow.postMessage({ type: 'ttms:close-menu-item-edit-modal', reload: false }, window.location.origin);
             }
           } catch (msgErr) { /* ignore */ }
           closeEmbedPanelEditor();
@@ -8749,10 +9667,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       persistCurrentDraftToCMS()
         .then(function () {
-          notifyParent(true);
+          notifyParent(false);
         })
         .catch(function () {
-          notifyParent(true);
+          notifyParent(false);
         });
     });
 

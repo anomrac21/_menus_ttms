@@ -5,20 +5,80 @@
   'use strict';
 
   var STORAGE_KEY = 'editMenuLiveMode';
+  var LAUNCH_KEY = 'editMenuLiveHintLaunch';
+  var DISMISSED_KEY = 'editMenuLiveHintDismissed';
   var PARAM_KEY = 'edit';
+  var hintResizeObserver = null;
+  var activeLaunchId = null;
+
+  function readLaunchId() {
+    try {
+      return sessionStorage.getItem(LAUNCH_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function isLaunchDismissed(launchId) {
+    if (!launchId) return false;
+    try {
+      return sessionStorage.getItem(DISMISSED_KEY) === launchId;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** Fresh ?edit=content or dashboard click starts a new launch id (once per page load). */
+  function ensureLaunchId() {
+    try {
+      var fromUrl = new URLSearchParams(window.location.search).get(PARAM_KEY) === 'content';
+      var fromStorage = sessionStorage.getItem(STORAGE_KEY) === 'content';
+      if (fromUrl || fromStorage) {
+        if (!activeLaunchId) {
+          activeLaunchId = String(Date.now());
+          sessionStorage.setItem(LAUNCH_KEY, activeLaunchId);
+        }
+        return activeLaunchId;
+      }
+      activeLaunchId = readLaunchId();
+      return activeLaunchId;
+    } catch (e) {
+      return '';
+    }
+  }
 
   function shouldShowContentHint() {
+    var launchId = ensureLaunchId();
+    if (!launchId || isLaunchDismissed(launchId)) return false;
+    return true;
+  }
+
+  function stripContentHintFromUrl() {
     try {
-      if (new URLSearchParams(window.location.search).get(PARAM_KEY) === 'content') return true;
-      if (sessionStorage.getItem(STORAGE_KEY) === 'content') return true;
+      var url = new URL(window.location.href);
+      if (url.searchParams.get(PARAM_KEY) !== 'content') return;
+      url.searchParams.delete(PARAM_KEY);
+      var next = url.pathname + url.search + url.hash;
+      window.history.replaceState(window.history.state, '', next);
     } catch (e) { /* ignore */ }
-    return false;
   }
 
   function clearContentHintFlag() {
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch (e) { /* ignore */ }
+    stripContentHintFromUrl();
+  }
+
+  function markHintDismissed() {
+    var launchId = readLaunchId() || activeLaunchId;
+    try {
+      if (launchId) sessionStorage.setItem(DISMISSED_KEY, launchId);
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(LAUNCH_KEY);
+    } catch (e) { /* ignore */ }
+    activeLaunchId = null;
+    stripContentHintFromUrl();
   }
 
   function hasAdminSiteAccess() {
@@ -28,6 +88,33 @@
       typeof AuthClientAccess.hasClientAccess === 'function' &&
       AuthClientAccess.hasClientAccess()
     );
+  }
+
+  function syncHintLayout() {
+    var banner = document.querySelector('.dashboard-live-menu-hint');
+    var root = document.documentElement;
+    if (!banner) {
+      root.classList.remove('has-dashboard-live-menu-hint');
+      root.style.removeProperty('--dashboard-live-menu-hint-height');
+      if (hintResizeObserver) {
+        hintResizeObserver.disconnect();
+        hintResizeObserver = null;
+      }
+      return;
+    }
+    root.classList.add('has-dashboard-live-menu-hint');
+    root.style.setProperty('--dashboard-live-menu-hint-height', banner.getBoundingClientRect().height + 'px');
+  }
+
+  function observeHintLayout(banner) {
+    syncHintLayout();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', syncHintLayout);
+      return;
+    }
+    if (hintResizeObserver) hintResizeObserver.disconnect();
+    hintResizeObserver = new ResizeObserver(syncHintLayout);
+    hintResizeObserver.observe(banner);
   }
 
   function mountBanner() {
@@ -52,24 +139,35 @@
     var closeBtn = banner.querySelector('.dashboard-live-menu-hint__close');
     if (closeBtn) {
       closeBtn.addEventListener('click', function () {
+        markHintDismissed();
         banner.remove();
+        syncHintLayout();
       });
     }
 
-    var mount = document.body;
-    if (mount.firstChild) mount.insertBefore(banner, mount.firstChild);
-    else mount.appendChild(banner);
+    var header = document.querySelector('header');
+    if (header && header.parentNode) {
+      header.parentNode.insertBefore(banner, header.nextSibling);
+    } else if (document.body.firstChild) {
+      document.body.insertBefore(banner, document.body.firstChild);
+    } else {
+      document.body.appendChild(banner);
+    }
+
+    observeHintLayout(banner);
+    requestAnimationFrame(syncHintLayout);
   }
 
   function boot() {
-    if (!shouldShowContentHint()) return;
     if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
       AuthClient.whenReady().then(function () {
+        if (!shouldShowContentHint()) return;
         if (hasAdminSiteAccess()) mountBanner();
         else clearContentHintFlag();
       });
       return;
     }
+    if (!shouldShowContentHint()) return;
     if (hasAdminSiteAccess()) mountBanner();
     else clearContentHintFlag();
   }

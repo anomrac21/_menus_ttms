@@ -1,14 +1,14 @@
 {{ define "main" }}
   <div class="main-content">
     <div class="menu-header list-page-header" data-section-slug="{{ .Section }}" data-reel-section="{{ .LinkTitle }}">
-      {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imageTop" (index .Params.images "top")) }}
-      {{ if .Params.images.top }}
-        <img class="food item listpageimage" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.top "size" "section") }}" alt="{{ .Title }}" loading="lazy">
+      {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imageSecondary" (index .Params.images "secondary")) }}
+      {{ if .Params.images.secondary }}
+        <img class="food item listpageimage" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "section") }}" alt="{{ .Title }}" loading="lazy">
       {{ end }}
       <div class="headerstyle item">
         <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}
-        {{ if .Params.images.bottom }}
-          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.bottom "size" "decoration") }}" alt="{{ .Title }} decoration" loading="lazy" width="160" height="200">
+        {{ if .Params.images.primary }}
+          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "decoration") }}" alt="{{ .Title }} decoration" loading="lazy" width="160" height="200">
         {{ end }}
         </h1>
       </div>

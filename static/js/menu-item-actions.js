@@ -110,7 +110,7 @@
       var url = link ? link.getAttribute('href') || '' : '';
       var title = header.getAttribute('data-reel-section') || '';
       var sectionSlug = header.getAttribute('data-section-slug') || '';
-      var image = header.getAttribute('data-images-top') || '';
+      var image = header.getAttribute('data-images-secondary') || '';
       var favHtml =
         window.TTMSMenuFavorites && typeof window.TTMSMenuFavorites.buildSectionFavoriteMarkup === 'function'
           ? window.TTMSMenuFavorites.buildSectionFavoriteMarkup({

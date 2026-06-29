@@ -36,6 +36,19 @@
       </button>
     </header>
     <div class="menu-item-edit-modal__body">
+      <div
+        id="menuItemEditModalLoading"
+        class="menu-item-edit-modal__loading"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        hidden
+      >
+        <div class="menu-item-edit-modal__loading-inner">
+          <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+          <span class="menu-item-edit-modal__loading-label">Loading editor…</span>
+        </div>
+      </div>
       <iframe
         id="menuItemEditModalFrame"
         class="menu-item-edit-modal__frame"

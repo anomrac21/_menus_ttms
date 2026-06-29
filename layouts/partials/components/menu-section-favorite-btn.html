@@ -3,7 +3,7 @@
 {{- $url := index . "url" | default "" -}}
 {{- $title := index . "title" | default "" -}}
 {{- $sectionSlug := index . "sectionSlug" | default "" -}}
-{{- $imageTop := index . "imageTop" | default "" -}}
+{{- $imageSecondary := index . "imageSecondary" | default "" -}}
 {{- $path := strings.TrimPrefix "/" $url -}}
 {{- $itemKey := printf "%s|%s" $clientId $path -}}
 <button
@@ -13,7 +13,7 @@
   data-favorite-key="{{ $itemKey }}"
   data-favorite-title="{{ $title }}"
   data-favorite-url="{{ $url }}"
-  data-favorite-image="{{ $imageTop }}"
+  data-favorite-image="{{ $imageSecondary }}"
   data-favorite-section="{{ $sectionSlug }}"
   aria-pressed="false"
   aria-label="Save {{ $title }} to favorites"

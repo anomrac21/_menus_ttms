@@ -1,4 +1,4 @@
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
 {{- if $dashboardLayout -}}
 <!DOCTYPE html>
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">

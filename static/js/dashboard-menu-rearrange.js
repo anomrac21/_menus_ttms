@@ -506,10 +506,10 @@
         title: sec.title,
         url: sec.url,
         summary: sec.summary || '',
-        image: sec.image || '',
+        image: sec.imageSecondary || '',
         icon: sec.icon || '',
-        imageTop: sec.imageTop || '',
-        imageBottom: sec.imageBottom || '',
+        imageSecondary: sec.imageSecondary || '',
+        imagePrimary: sec.imagePrimary || '',
         weight: sec.weight,
         items: sec.items.map(function (item) {
           return {
@@ -559,11 +559,11 @@
       sec.weight = parseWeightValue(fm.weight, sec.weight);
     }
     if (fm.icon) sec.icon = String(fm.icon);
-    if (fm.image) sec.image = String(fm.image);
     var imgs = fm.images;
+    if (fm.image && !(imgs && imgs.secondary)) sec.imageSecondary = String(fm.image);
     if (imgs && typeof imgs === 'object') {
-      if (imgs.top) sec.imageTop = String(imgs.top);
-      if (imgs.bottom) sec.imageBottom = String(imgs.bottom);
+      if (imgs.secondary) sec.imageSecondary = String(imgs.secondary);
+      if (imgs.primary) sec.imagePrimary = String(imgs.primary);
     }
     if (body && String(body).trim()) sec.summary = String(body).trim();
     else if (fm.summary) sec.summary = String(fm.summary);
@@ -685,9 +685,22 @@
   }
 
   function reindexWeights(list) {
-    var ordered = ensurePinnedSectionOrder(list);
+    var pinned = [];
+    var movable = [];
+    list.forEach(function (sec) {
+      if (isPinnedSection(sec)) pinned.push(sec);
+      else movable.push(sec);
+    });
+    pinned.sort(function (a, b) {
+      if (a.slug === 'promotions') return -1;
+      if (b.slug === 'promotions') return 1;
+      return (a.weight || 0) - (b.weight || 0);
+    });
     list.length = 0;
-    ordered.forEach(function (sec) {
+    pinned.forEach(function (sec) {
+      list.push(sec);
+    });
+    movable.forEach(function (sec) {
       list.push(sec);
     });
     var nextMovableWeight = MIN_MOVABLE_SECTION_WEIGHT;
@@ -781,12 +794,12 @@
       weight: sec.weight,
     };
     if (sec.icon) fm.icon = sec.icon;
-    var top = sec.imageTop || sec.image || '';
-    var bottom = sec.imageBottom || '';
-    if (top || bottom) {
+    var secondary = sec.imageSecondary || '';
+    var primary = sec.imagePrimary || '';
+    if (secondary || primary) {
       fm.images = {};
-      if (top) fm.images.top = top;
-      if (bottom) fm.images.bottom = bottom;
+      if (secondary) fm.images.secondary = secondary;
+      if (primary) fm.images.primary = primary;
     }
     return {
       payload: {
@@ -1175,7 +1188,7 @@
         url: sec.url,
         weight: sec.weight,
         summary: sec.summary || '',
-        image: sec.image || '',
+        image: sec.imageSecondary || '',
       };
     });
     var menuItems = [];

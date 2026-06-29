@@ -112,9 +112,9 @@
 {{- $json := dict "items" $items -}}
 
 {{- /* Add section's own frontmatter data (for category landing pages) */ -}}
-{{- $top := default .Params.image (index .Params.images "top") -}}
-{{- $bottom := default "" (index .Params.images "bottom") -}}
-{{- $images := dict "top" $top "bottom" $bottom -}}
+{{- $secondary := index .Params.images "secondary" | default "" -}}
+{{- $primary := default "" (index .Params.images "primary") -}}
+{{- $images := dict "secondary" $secondary "primary" $primary -}}
 {{- $json = merge $json (dict
     "title" .Title
     "icon" (.Params.icon | default "")

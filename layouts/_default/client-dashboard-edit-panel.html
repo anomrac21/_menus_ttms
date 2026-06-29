@@ -57,6 +57,12 @@
           <button type="button" class="btn-dash btn-dash-danger dashboard-edit-header-mark-btn" id="btnMarkForDeletion" aria-label="Mark for deletion" title="Mark for deletion (hidden in preview)" disabled><i class="fa fa-trash" aria-hidden="true"></i></button>
         </div>
         <div class="dashboard-edit-options-inner">
+          <div id="dashboardEditEmbedLoading" class="dashboard-edit-embed-loading hidden" role="status" aria-live="polite" aria-busy="false">
+            <div class="dashboard-edit-form-loading-inner">
+              <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+              <span class="dashboard-edit-embed-loading-label">Loading editor…</span>
+            </div>
+          </div>
           <div id="dashboardEditChangesPanelMount" class="dashboard-edit-changes-panel-mount">
             <section class="dashboard-edit-changes-panel" id="dashboardEditChangesPanel" aria-labelledby="dashboardEditChangesHeading">
               <div class="dashboard-edit-changes-panel-header">
@@ -66,6 +72,7 @@
                   <span class="dashboard-edit-changes-count hidden" id="dashboardEditChangesCount" aria-hidden="true">0</span>
                 </h3>
                 <p class="dashboard-edit-changes-synced" id="dashboardEditChangesSynced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live</p>
+                <p class="dashboard-edit-changes-scope-note hidden" id="dashboardEditChangesScopeNote" aria-live="polite"></p>
               </div>
               <ul class="dashboard-edit-changes-list" id="dashboardEditChangesList" role="list"></ul>
             </section>
@@ -95,14 +102,23 @@
                       <div class="dashboard-edit-field" id="dashboardEditSectionIconWrap" data-dashboard-composite="section-icon" data-dashboard-required="true">
                         <label for="dashboardSectionIconSearch">Section icon <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
                         <input type="hidden" id="dashboardEditSectionIcon" value="" required>
-                        <div class="dashboard-section-icon-category-tabs" id="dashboardSectionIconCategoryTabs" role="tablist" aria-label="Icon categories"></div>
-                        <input type="search" id="dashboardSectionIconSearch" class="dashboard-edit-input dashboard-section-icon-search" placeholder="Search in category…" autocomplete="off" aria-controls="dashboardSectionIconGrid" aria-label="Search icons in category">
                         <div class="dashboard-section-icon-selected" id="dashboardSectionIconSelected">
                           <div class="dashboard-section-icon-selected-preview dashboard-section-icon-selected-preview--empty" id="dashboardSectionIconSelectedPreview" aria-hidden="true">
                             <img id="dashboardSectionIconPreviewImg" class="dashboard-section-icon-preview-img" alt="" width="48" height="48">
                           </div>
-                          <p class="dashboard-section-icon-selected-label" id="dashboardSectionIconSelectedLabel">Select an icon below</p>
+                          <p class="dashboard-section-icon-selected-label" id="dashboardSectionIconSelectedLabel">Select an icon below or add your own image</p>
                         </div>
+                        <p class="dashboard-edit-field-note dashboard-section-icon-source-note">Use <strong>Add image</strong> to upload, <strong>Browse images</strong> for drafts and repo images, or pick a TTMenus CDN icon below.</p>
+                        <div class="dashboard-image-add-actions dashboard-section-icon-image-actions">
+                          <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionIconUpload">Add image</button>
+                          <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionIconBrowse" aria-label="Browse images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse images</button>
+                        </div>
+                        <input type="file" id="btnSectionIconFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+                        <p id="dashboardSectionIconUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <hr class="dashboard-section-icon-divider" aria-hidden="true">
+                        <p class="dashboard-edit-field-note dashboard-section-icon-cdn-note">Or choose from the TTMenus icon library:</p>
+                        <div class="dashboard-section-icon-category-tabs" id="dashboardSectionIconCategoryTabs" role="tablist" aria-label="Icon categories"></div>
+                        <input type="search" id="dashboardSectionIconSearch" class="dashboard-edit-input dashboard-section-icon-search" placeholder="Search in category…" autocomplete="off" aria-controls="dashboardSectionIconGrid" aria-label="Search icons in category">
                         <p id="dashboardSectionIconStatus" class="dashboard-section-icon-status" role="status" aria-live="polite"></p>
                         <div class="dashboard-section-icon-grid-wrap">
                           <div id="dashboardSectionIconGrid" class="dashboard-section-icon-grid" role="listbox" aria-label="TTMenus icon library"></div>
@@ -115,32 +131,10 @@
                       </div>
                     </div>
                     <div class="dashboard-menu-item-wizard-panel dashboard-section-wizard-panel hidden" data-section-wizard-index="1" role="tabpanel" id="dashboardSectionWizardPanel1" aria-hidden="true">
-                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>images</code>, <code>title</code>, summary, and <code>weight</code> in the section <code>_index.md</code>.</p>
-                      <div class="dashboard-edit-field" id="dashboardEditSectionImageTopWrap" data-dashboard-composite="section-image-top">
-                        <label>Image (top)</label>
-                        <p class="dashboard-edit-field-note">Upload a draft or browse <code>static/images</code>.</p>
-                        <div id="dashboardSectionImageTopRow" class="dashboard-hero-image-row dashboard-menu-item-image-row">
-                          <div class="dashboard-menu-item-image-thumb-wrap" id="dashboardSectionImageTopThumbWrap">
-                            <img id="dashboardSectionImageTopThumb" class="dashboard-menu-item-image-thumb" alt="">
-                          </div>
-                          <div class="dashboard-menu-item-image-path-col">
-                            <input type="hidden" id="dashboardEditSectionImageTop" value="">
-                            <div class="dashboard-menu-item-image-path-actions">
-                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageTopUpload" aria-label="Choose image file"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose image</button>
-                              <input type="file" id="btnSectionImageTopFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
-                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageTopBrowse" aria-label="Browse site images" title="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse</button>
-                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageTopRemove" aria-label="Remove image"><i class="fa fa-times" aria-hidden="true"></i></button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="dashboard-edit-field">
-                        <label for="dashboardEditSectionTitle">Title / Name <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
-                        <input type="text" id="dashboardEditSectionTitle" class="dashboard-edit-input" placeholder="Section name" required>
-                      </div>
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>images</code>, <code>title</code>, and summary in the section <code>_index.md</code>. Section order (<code>weight</code>) is set on the rearrange page.</p>
                       <div class="dashboard-edit-field" id="dashboardEditSectionImageBottomWrap" data-dashboard-composite="section-image-bottom">
-                        <label>Image (bottom)</label>
-                        <p class="dashboard-edit-field-note">Upload a draft or browse <code>static/images</code>.</p>
+                        <label>Image (primary)</label>
+                        <p class="dashboard-edit-field-note">Use <strong>Add image</strong> to upload, <strong>Browse images</strong> for drafts and repo <code>static/images</code>.</p>
                         <div id="dashboardSectionImageBottomRow" class="dashboard-hero-image-row dashboard-menu-item-image-row">
                           <div class="dashboard-menu-item-image-thumb-wrap" id="dashboardSectionImageBottomThumbWrap">
                             <img id="dashboardSectionImageBottomThumb" class="dashboard-menu-item-image-thumb" alt="">
@@ -148,21 +142,51 @@
                           <div class="dashboard-menu-item-image-path-col">
                             <input type="hidden" id="dashboardEditSectionImageBottom" value="">
                             <div class="dashboard-menu-item-image-path-actions">
-                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageBottomUpload" aria-label="Choose image file"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose image</button>
+                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageBottomUpload" aria-label="Add image">Add image</button>
                               <input type="file" id="btnSectionImageBottomFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
-                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageBottomBrowse" aria-label="Browse site images" title="Browse site images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse</button>
+                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageBottomBrowse" aria-label="Browse images" title="Browse images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse images</button>
                               <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionImageBottomRemove" aria-label="Remove image"><i class="fa fa-times" aria-hidden="true"></i></button>
                             </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="dashboard-edit-field" id="dashboardEditSectionTitleWrap">
+                        <label for="dashboardEditSectionTitle">Title / Name <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
+                        <input type="text" id="dashboardEditSectionTitle" class="dashboard-edit-input" placeholder="Section name" required>
+                      </div>
+                      <div class="dashboard-edit-field" id="dashboardEditSectionImageTopWrap" data-dashboard-composite="section-image-top">
+                        <label for="dashboardSectionSecondaryImageSearch">Image (secondary)</label>
+                        <input type="hidden" id="dashboardEditSectionImageTop" value="">
+                        <div class="dashboard-section-icon-selected" id="dashboardSectionSecondaryImageSelected">
+                          <div class="dashboard-section-icon-selected-preview dashboard-section-icon-selected-preview--empty" id="dashboardSectionSecondaryImageSelectedPreview" aria-hidden="true">
+                            <img id="dashboardSectionSecondaryImagePreviewImg" class="dashboard-section-icon-preview-img" alt="" width="48" height="48">
+                          </div>
+                          <p class="dashboard-section-icon-selected-label" id="dashboardSectionSecondaryImageSelectedLabel">Select an icon below or add your own image</p>
+                        </div>
+                        <p class="dashboard-edit-field-note dashboard-section-icon-source-note">Use <strong>Add image</strong> to upload, <strong>Browse images</strong> for drafts and repo images, or pick a TTMenus CDN icon below.</p>
+                        <div class="dashboard-image-add-actions dashboard-section-icon-image-actions">
+                          <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionSecondaryImageUpload">Add image</button>
+                          <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnSectionSecondaryImageBrowse" aria-label="Browse images"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse images</button>
+                        </div>
+                        <input type="file" id="btnSectionSecondaryImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+                        <p id="dashboardSectionSecondaryImageUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
+                        <hr class="dashboard-section-icon-divider" aria-hidden="true">
+                        <p class="dashboard-edit-field-note dashboard-section-icon-cdn-note">Or choose from the TTMenus icon library:</p>
+                        <div class="dashboard-section-icon-category-tabs" id="dashboardSectionSecondaryImageCategoryTabs" role="tablist" aria-label="Icon categories"></div>
+                        <input type="search" id="dashboardSectionSecondaryImageSearch" class="dashboard-edit-input dashboard-section-icon-search" placeholder="Search in category…" autocomplete="off" aria-controls="dashboardSectionSecondaryImageGrid" aria-label="Search icons in category">
+                        <p id="dashboardSectionSecondaryImageStatus" class="dashboard-section-icon-status" role="status" aria-live="polite"></p>
+                        <div class="dashboard-section-icon-grid-wrap">
+                          <div id="dashboardSectionSecondaryImageGrid" class="dashboard-section-icon-grid" role="listbox" aria-label="TTMenus icon library"></div>
+                          <div class="dashboard-section-icon-pager hidden" id="dashboardSectionSecondaryImagePager" aria-label="Icon pages">
+                            <button type="button" class="dashboard-section-icon-pager-btn" id="dashboardSectionSecondaryImagePagerPrev" aria-label="Previous page">Previous</button>
+                            <span class="dashboard-section-icon-pager-label" id="dashboardSectionSecondaryImagePagerLabel">Page 1 of 1</span>
+                            <button type="button" class="dashboard-section-icon-pager-btn" id="dashboardSectionSecondaryImagePagerNext" aria-label="Next page">Next</button>
                           </div>
                         </div>
                       </div>
                       <div class="dashboard-edit-field">
                         <label for="dashboardEditSectionDescription">Description / Summary</label>
                         <textarea id="dashboardEditSectionDescription" class="dashboard-edit-input dashboard-edit-textarea" placeholder="Section summary" rows="3"></textarea>
-                      </div>
-                      <div class="dashboard-edit-field" id="dashboardEditSectionOnlyFields">
-                        <label for="dashboardEditSectionWeight">Weight</label>
-                        <input type="number" id="dashboardEditSectionWeight" class="dashboard-edit-input" placeholder="e.g. 12" min="0" step="1">
                       </div>
                     </div>
                     <div class="dashboard-menu-item-wizard-panel dashboard-section-wizard-panel dashboard-embed-save-panel hidden" data-section-wizard-index="2" role="tabpanel" id="dashboardSectionWizardPanelSave" aria-hidden="true">
@@ -555,14 +579,14 @@
     <div class="dashboard-draft-modal-backdrop" id="dashboardHeroSiteImageModalBackdrop"></div>
     <div class="dashboard-draft-modal-dialog dashboard-site-image-modal-dialog">
       <div class="dashboard-site-image-modal-head">
-        <h2 id="dashboardHeroSiteImageModalTitle" class="dashboard-draft-modal-title">Site images</h2>
+        <h2 id="dashboardHeroSiteImageModalTitle" class="dashboard-draft-modal-title">Choose image</h2>
         <button type="button" class="dashboard-site-image-modal-close" id="dashboardHeroSiteImageModalClose" aria-label="Close">×</button>
       </div>
-      <p class="dashboard-draft-modal-text dashboard-site-image-modal-hint">Images under <code>static/images</code> in your site repository (and theme <code>static/images</code>).</p>
-      <div id="dashboardHeroSiteImageLoading" class="dashboard-site-image-modal-loading" aria-live="polite">Loading from repository…</div>
+      <p class="dashboard-draft-modal-text dashboard-site-image-modal-hint">Uploaded drafts and images under <code>static/images</code> in your site repository (and theme <code>static/images</code>).</p>
+      <div id="dashboardHeroSiteImageLoading" class="dashboard-site-image-modal-loading" aria-live="polite">Loading images…</div>
       <p id="dashboardHeroSiteImageError" class="dashboard-site-image-modal-error hidden" role="alert"></p>
-      <p id="dashboardHeroSiteImageEmpty" class="dashboard-site-image-modal-empty hidden" role="status">No images found. Add files under <code>static/images</code> in the repo, or use <strong>Choose image</strong> to upload a draft.</p>
-      <div id="dashboardHeroSiteImageGrid" class="dashboard-site-image-grid" role="listbox" aria-label="Site images"></div>
+      <p id="dashboardHeroSiteImageEmpty" class="dashboard-site-image-modal-empty hidden" role="status">No images found. Use <strong>Add image</strong> to upload a draft, or add files under <code>static/images</code> in the repo.</p>
+      <div id="dashboardHeroSiteImageGrid" class="dashboard-site-image-grid" role="listbox" aria-label="Choose image"></div>
     </div>
   </div>
   <div id="dashboardSaveOptionsModal" class="dashboard-draft-modal dashboard-save-options-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardSaveOptionsTitle" aria-hidden="true">
@@ -635,6 +659,16 @@
           });
         } else if (typeof p.init === 'function') {
           p.init();
+        }
+        if (window.DashboardSectionSecondaryImagePicker) {
+          var s = window.DashboardSectionSecondaryImagePicker;
+          if (typeof s.ensureLoaded === 'function') {
+            Promise.resolve(s.ensureLoaded()).then(function () {
+              if (typeof s.syncFromInput === 'function') s.syncFromInput();
+            });
+          } else if (typeof s.init === 'function') {
+            s.init();
+          }
         }
         return true;
       } catch (err) {

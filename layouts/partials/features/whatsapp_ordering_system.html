@@ -649,15 +649,24 @@ let currentoptions;
 let sizePrice=0;
 
 function showShop(){
-	// Modal removed - function kept for backward compatibility
-	console.log('showShop called but modal is no longer used');
+	var orderModal = document.getElementById('orderModal');
+	if (orderModal) {
+		orderModal.classList.remove('order-hidden');
+	}
 }
 function closeShop(){
-	// Modal removed - function kept for backward compatibility
+	if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
+		window.ensureMenuReelsItemModalClosed();
+	}
+	var orderModal = document.getElementById('orderModal');
+	if (orderModal) {
+		orderModal.classList.add('order-hidden');
+	}
 	var cart = document.getElementById("cart");
   var footerBtns = document.getElementById("footerBtns");
   if (cart) cart.classList.add('cart-hidden');
   if (typeof setCartModalOpen === 'function') setCartModalOpen(false);
+  else if (typeof window.closeCart === 'function') window.closeCart();
   if (footerBtns) {
   footerBtns.classList.add('grad2');
   footerBtns.classList.remove('grad1');

@@ -632,6 +632,83 @@
     return { fileLabels: ['data/menu.json — layout (details unavailable)'] };
   }
 
+  function normalizeMenuUrl(url) {
+    var u = String(url || '').trim();
+    if (!u) return '';
+    if (u.charAt(0) !== '/') u = '/' + u;
+    return u.replace(/\/+$/, '') + '/';
+  }
+
+  function slugFromMenuUrl(url) {
+    var parts = normalizeMenuUrl(url).split('/').filter(Boolean);
+    return parts[0] || '';
+  }
+
+  function menuItemUrlToContentPath(url) {
+    var norm = normalizeMenuUrl(url);
+    if (!norm || norm === '/') return '';
+    return 'content' + norm.replace(/\/$/, '') + '.md';
+  }
+
+  function themeOverridesToCssBody(overrides) {
+    if (!overrides || typeof overrides !== 'object') return '';
+    var keys = Object.keys(overrides).filter(function (k) {
+      return String(k).trim() && String(overrides[k]).trim();
+    });
+    if (!keys.length) return '';
+    return (
+      ':root {\n' +
+      keys
+        .map(function (k) {
+          var name = k.indexOf('--') === 0 ? k : '--' + k;
+          return '  ' + name + ': ' + String(overrides[k]).trim() + ';';
+        })
+        .join('\n') +
+      '\n}\n'
+    );
+  }
+
+  function buildSnapshotLiveMapFromMenuData(md) {
+    var map = {};
+    if (!md) return map;
+    var overrides = md.themeColorOverrides || md.theme_color_overrides || {};
+    var cssBody = themeOverridesToCssBody(overrides);
+    if (cssBody) {
+      map['static/css/colors.css'] = {
+        contentPath: 'static/css/colors.css',
+        frontMatter: {},
+        body: cssBody,
+      };
+    }
+    var cats = md.categories || md.Categories || [];
+    cats.forEach(function (cat) {
+      var slug = slugFromMenuUrl(cat.url || cat.URL);
+      if (!slug) return;
+      var fm = { title: cat.title || cat.Title || slug };
+      var w = cat.weight != null ? cat.weight : cat.Weight;
+      if (w != null) fm.weight = w;
+      map['content/' + slug + '/_index.md'] = {
+        contentPath: 'content/' + slug + '/_index.md',
+        frontMatter: fm,
+        body: String(cat.summary || cat.Summary || '').trim(),
+      };
+    });
+    var items = md.menuItems || md.menu_items || md.MenuItems || [];
+    items.forEach(function (item) {
+      var path = menuItemUrlToContentPath(item.url || item.URL);
+      if (!path) return;
+      var fm = { title: item.title || item.Title || 'Item' };
+      var iw = item.weight != null ? item.weight : item.Weight;
+      if (iw != null) fm.weight = iw;
+      map[path] = {
+        contentPath: path,
+        frontMatter: fm,
+        body: String(item.summary || item.Summary || '').trim(),
+      };
+    });
+    return map;
+  }
+
   function draftContentPathFromPreview(p) {
     var payload = p.payload || p.Payload || {};
     return (
@@ -1316,6 +1393,65 @@
     });
   }
 
+  function getDraftChangeDetails(path) {
+    var a = draftAnalyses[path];
+    return a && a.changes ? a.changes.slice() : null;
+  }
+
+  function findPreviewForPath(path) {
+    for (var i = 0; i < cachedPreviews.length; i++) {
+      if (draftContentPathFromPreview(cachedPreviews[i]) === path) return cachedPreviews[i];
+    }
+    return null;
+  }
+
+  function registerDraftPreviewsForAnalysis(previews) {
+    if (!previews || !previews.length) return Promise.resolve();
+    cachedPreviews = dedupePreviewsByContentPath(cachedPreviews.concat(previews));
+    var paths = [];
+    var seen = {};
+    previews.forEach(function (p) {
+      var path = draftContentPathFromPreview(p);
+      if (!path || seen[path]) return;
+      seen[path] = true;
+      paths.push(path);
+    });
+    if (!paths.length) return Promise.resolve();
+    paths.forEach(function (path) {
+      var p = findPreviewForPath(path);
+      if (!p) return;
+      var payload = previewPayloadFromPreview(p);
+      payload.contentPath = path;
+      var built = buildDraftAnalysis(payload, null);
+      draftAnalyses[path] = {
+        category: built.category,
+        diff: built.diff,
+        changes: built.changes,
+        provisional: true,
+      };
+    });
+    return ensureAccessTokenForCms().then(function () {
+      return fetchLiveContentFilesBatch(paths).then(function (liveByPath) {
+        paths.forEach(function (path) {
+          var p = findPreviewForPath(path);
+          if (!p) return;
+          var payload = previewPayloadFromPreview(p);
+          payload.contentPath = path;
+          var live = liveByPath[path];
+          var built = buildDraftAnalysis(payload, live);
+          draftAnalyses[path] = {
+            category: built.category,
+            diff: built.diff,
+            changes: built.changes,
+            provisional: !live,
+          };
+        });
+      });
+    }).catch(function (err) {
+      console.warn('registerDraftPreviewsForAnalysis', err);
+    });
+  }
+
   function createStatusStatPill(count, singular, plural) {
     var pill = document.createElement('span');
     pill.className = 'dashboard-menu-status-stat';
@@ -1462,6 +1598,114 @@
     var selectedSnapshotId = null;
     var snapshotListExpanded = false;
 
+    function snapshotSelectionStorageKey() {
+      return 'ttmenus_active_snapshot_' + CMS_CLIENT_ID;
+    }
+
+    function loadPersistedSnapshotSelection() {
+      try {
+        var v = localStorage.getItem(snapshotSelectionStorageKey());
+        if (!v || v === 'live') return null;
+        return String(v).trim();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function persistSnapshotSelection() {
+      try {
+        localStorage.setItem(
+          snapshotSelectionStorageKey(),
+          selectedSnapshotId || 'live'
+        );
+      } catch (e) {}
+    }
+
+    function getSelectedSnapshotVersion() {
+      if (!selectedSnapshotId) return null;
+      for (var i = 0; i < cachedVersions.length; i++) {
+        if (versionIdFromRecord(cachedVersions[i]) === selectedSnapshotId) {
+          return cachedVersions[i];
+        }
+      }
+      return null;
+    }
+
+    function getSnapshotSlotIndex(versionId) {
+      for (var si = 0; si < cachedVersions.length; si++) {
+        if (versionIdFromRecord(cachedVersions[si]) === versionId) return si + 1;
+      }
+      return 0;
+    }
+
+    function activeSnapshotSlotLabel() {
+      if (!selectedSnapshotId) return 'Live menu';
+      var idx = getSnapshotSlotIndex(selectedSnapshotId);
+      var ver = getSelectedSnapshotVersion();
+      var parts = ver ? snapshotDisplayParts(ver) : { title: 'Snapshot' };
+      return 'Slot ' + idx + ' · ' + parts.title;
+    }
+
+    function syncEditorLinks() {
+      var rearrangeLink = document.getElementById('cardRearrangeMenu');
+      try {
+        if (selectedSnapshotId) {
+          sessionStorage.setItem('editPreviewMode', 'drafts');
+          sessionStorage.setItem('editMenuVersionId', selectedSnapshotId);
+        } else {
+          sessionStorage.setItem('editPreviewMode', 'live');
+          sessionStorage.removeItem('editMenuVersionId');
+        }
+      } catch (e) {}
+      if (editLink) {
+        editLink.classList.toggle(
+          'dashboard-menu-status-editor-linked',
+          !!selectedSnapshotId
+        );
+        editLink.setAttribute(
+          'title',
+          selectedSnapshotId
+            ? 'Open theme editor with ' + activeSnapshotSlotLabel()
+            : 'Open live menu in theme editor'
+        );
+      }
+      if (rearrangeLink) {
+        rearrangeLink.classList.toggle(
+          'dashboard-menu-status-editor-linked',
+          !!selectedSnapshotId
+        );
+        rearrangeLink.setAttribute(
+          'title',
+          selectedSnapshotId
+            ? 'Rearrange menu from ' + activeSnapshotSlotLabel()
+            : 'Rearrange live menu order'
+        );
+      }
+      if (contentLink) {
+        contentLink.classList.toggle(
+          'dashboard-menu-status-editor-linked',
+          !!selectedSnapshotId
+        );
+      }
+    }
+
+    function applySnapshotSelection(versionId) {
+      selectedSnapshotId = versionId || null;
+      if (
+        selectedSnapshotId &&
+        !cachedVersions.some(function (v) {
+          return versionIdFromRecord(v) === selectedSnapshotId;
+        })
+      ) {
+        selectedSnapshotId = null;
+      }
+      persistSnapshotSelection();
+      syncEditorLinks();
+      renderSnapshotStatusSummary();
+      renderDraftStatusSummary();
+      analyzeDraftsAgainstBaseline();
+    }
+
     function showPublishFlashMessage(msg) {
       if (!publishFlashEl) return;
       publishFlashEl.textContent = msg;
@@ -1522,7 +1766,9 @@
       }
       setStatusBlockSummary(
         'snapshots',
-        n + ' snapshot' + (n === 1 ? '' : 's') + ' saved (max ' + SNAPSHOT_MAX + ')'
+        selectedSnapshotId
+          ? activeSnapshotSlotLabel() + ' active'
+          : n + ' snapshot' + (n === 1 ? '' : 's') + ' saved (max ' + SNAPSHOT_MAX + ')'
       );
       if (
         selectedSnapshotId &&
@@ -1546,7 +1792,7 @@
       var hint = document.createElement('p');
       hint.className = 'dashboard-menu-status-muted';
       hint.textContent =
-        'Edit theme opens the live menu. Select a snapshot to see repo files it affects; click again or use Restore to load layout and theme in the editor.';
+        'Pick a save slot to load that snapshot on the dashboard. Edit theme, rearrange, and draft comparisons use the active slot until you switch back to Live.';
       snapshotStatusEl.appendChild(hint);
       if (n >= SNAPSHOT_MAX) {
         var capNote = document.createElement('p');
@@ -1555,61 +1801,76 @@
           'Oldest snapshots are removed automatically when a new one is saved.';
         snapshotStatusEl.appendChild(capNote);
       }
-      var rows = [];
-      for (var si = 0; si < n; si++) {
-        var parts = snapshotDisplayParts(cachedVersions[si]);
-        var vid = versionIdFromRecord(cachedVersions[si]);
-        var li = document.createElement('li');
-        li.className = 'dashboard-menu-status-row';
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'dashboard-menu-status-snapshot-item';
-        if (vid && vid === selectedSnapshotId) {
-          btn.classList.add('dashboard-menu-status-snapshot-item--selected');
-          btn.setAttribute('aria-pressed', 'true');
+
+      var slotGrid = document.createElement('div');
+      slotGrid.className = 'dashboard-menu-status-slot-grid';
+      slotGrid.setAttribute('role', 'listbox');
+      slotGrid.setAttribute('aria-label', 'Menu save slots');
+
+      var liveBtn = document.createElement('button');
+      liveBtn.type = 'button';
+      liveBtn.className = 'dashboard-menu-status-slot dashboard-menu-status-slot--live';
+      liveBtn.setAttribute('role', 'option');
+      if (!selectedSnapshotId) {
+        liveBtn.classList.add('dashboard-menu-status-slot--active');
+        liveBtn.setAttribute('aria-selected', 'true');
+      } else {
+        liveBtn.setAttribute('aria-selected', 'false');
+      }
+      liveBtn.innerHTML =
+        '<span class="dashboard-menu-status-slot-label">Live</span>' +
+        '<span class="dashboard-menu-status-slot-title">Published menu</span>' +
+        '<span class="dashboard-menu-status-slot-when">Git + live site</span>';
+      liveBtn.addEventListener('click', function () {
+        applySnapshotSelection(null);
+      });
+      slotGrid.appendChild(liveBtn);
+
+      for (var slotNum = 1; slotNum <= SNAPSHOT_MAX; slotNum++) {
+        var version = cachedVersions[slotNum - 1];
+        var slotBtn = document.createElement('button');
+        slotBtn.type = 'button';
+        slotBtn.className = 'dashboard-menu-status-slot';
+        slotBtn.setAttribute('role', 'option');
+        if (!version) {
+          slotBtn.classList.add('dashboard-menu-status-slot--empty');
+          slotBtn.disabled = true;
+          slotBtn.setAttribute('aria-selected', 'false');
+          slotBtn.innerHTML =
+            '<span class="dashboard-menu-status-slot-label">Slot ' +
+            slotNum +
+            '</span>' +
+            '<span class="dashboard-menu-status-slot-title">Empty</span>' +
+            '<span class="dashboard-menu-status-slot-when">No snapshot saved</span>';
         } else {
-          btn.setAttribute('aria-pressed', 'false');
-        }
-        var titleSpan = document.createElement('span');
-        titleSpan.className = 'dashboard-menu-status-snapshot-item-title';
-        titleSpan.textContent = truncateMiddle(parts.title, 48);
-        btn.appendChild(titleSpan);
-        if (parts.when) {
-          var whenSpan = document.createElement('span');
-          whenSpan.className = 'dashboard-menu-status-snapshot-item-when';
-          whenSpan.textContent = parts.when;
-          btn.appendChild(whenSpan);
-        }
-        if (vid) {
-          btn.addEventListener('click', function (id) {
+          var parts = snapshotDisplayParts(version);
+          var vid = versionIdFromRecord(version);
+          if (vid && vid === selectedSnapshotId) {
+            slotBtn.classList.add('dashboard-menu-status-slot--active');
+            slotBtn.setAttribute('aria-selected', 'true');
+          } else {
+            slotBtn.setAttribute('aria-selected', 'false');
+          }
+          slotBtn.innerHTML =
+            '<span class="dashboard-menu-status-slot-label">Slot ' +
+            slotNum +
+            '</span>' +
+            '<span class="dashboard-menu-status-slot-title">' +
+            truncateMiddle(parts.title, 42) +
+            '</span>' +
+            (parts.when
+              ? '<span class="dashboard-menu-status-slot-when">' + parts.when + '</span>'
+              : '');
+          slotBtn.addEventListener('click', function (id) {
             return function () {
-              if (selectedSnapshotId === id) {
-                navigateEditDraftsWithVersion(id);
-                return;
-              }
-              selectedSnapshotId = id;
-              renderSnapshotStatusSummary();
+              applySnapshotSelection(id);
             };
           }(vid));
         }
-        li.appendChild(btn);
-        rows.push(li);
+        slotGrid.appendChild(slotBtn);
       }
-      var cap = snapshotListExpanded ? n : SNAPSHOT_LIST_CAP;
-      if (n > SNAPSHOT_LIST_CAP) {
-        appendStatusRows(
-          snapshotStatusEl,
-          rows,
-          cap,
-          function () {
-            snapshotListExpanded = !snapshotListExpanded;
-            renderSnapshotStatusSummary();
-          },
-          snapshotListExpanded ? 'Show fewer snapshots' : 'View all ' + n + ' snapshots…'
-        );
-      } else {
-        appendStatusRows(snapshotStatusEl, rows, cap);
-      }
+      snapshotStatusEl.appendChild(slotGrid);
+
       if (selectedSnapshotId) {
         var selectedVersion = null;
         for (var sv = 0; sv < cachedVersions.length; sv++) {
@@ -1648,7 +1909,7 @@
           restoreBtn.className =
             'btn-dash btn-dash-secondary dashboard-menu-status-snapshot-restore';
           restoreBtn.innerHTML =
-            '<i class="fa fa-paint-brush" aria-hidden="true"></i> Restore in theme editor';
+            '<i class="fa fa-paint-brush" aria-hidden="true"></i> Open in theme editor';
           restoreBtn.addEventListener('click', function () {
             navigateEditDraftsWithVersion(selectedSnapshotId);
           });
@@ -1737,6 +1998,21 @@
         introD.appendChild(document.createTextNode(' ready to publish.'));
       }
       draftStatusEl.appendChild(introD);
+      if (selectedSnapshotId) {
+        var snapBanner = document.createElement('p');
+        snapBanner.className = 'dashboard-menu-status-snapshot-active-banner';
+        snapBanner.textContent =
+          'Drafts compared against ' +
+          activeSnapshotSlotLabel() +
+          '. Publish still updates live Git.';
+        draftStatusEl.appendChild(snapBanner);
+      } else {
+        var liveBanner = document.createElement('p');
+        liveBanner.className = 'dashboard-menu-status-muted';
+        liveBanner.textContent =
+          'Drafts compared against the live published menu. Select a snapshot slot to compare against a saved layout instead.';
+        draftStatusEl.appendChild(liveBanner);
+      }
       var hintD = document.createElement('p');
       hintD.className = 'dashboard-menu-status-muted';
       hintD.textContent =
@@ -1871,7 +2147,7 @@
       appendStatusRows(draftStatusEl, rowsD, rowsD.length);
     }
 
-    function analyzeDraftsAgainstLive() {
+    function analyzeDraftsAgainstBaseline() {
       if (draftAnalysisInFlight) return draftAnalysisInFlight;
       draftAnalyses = {};
       var paths = [];
@@ -1883,11 +2159,22 @@
         paths.push(path);
       });
       if (!paths.length) return Promise.resolve();
+      var snapVer = getSelectedSnapshotVersion();
+      var md =
+        snapVer && (snapVer.menu_data || snapVer.menuData || snapVer.MenuData);
+      var snapshotMap = buildSnapshotLiveMapFromMenuData(md);
       applyProvisionalDraftAnalyses();
       renderDraftStatusSummary();
       draftAnalysisInFlight = fetchLiveContentFilesBatch(paths)
         .then(function (liveByPath) {
-          applyDraftAnalysesFromLiveMap(liveByPath);
+          var merged = {};
+          Object.keys(liveByPath || {}).forEach(function (p) {
+            merged[p] = liveByPath[p];
+          });
+          Object.keys(snapshotMap).forEach(function (p) {
+            merged[p] = snapshotMap[p];
+          });
+          applyDraftAnalysesFromLiveMap(merged);
           renderDraftStatusSummary();
         })
         .catch(function (err) {
@@ -2040,6 +2327,18 @@
           });
           snapshotLoadState = 'ok';
           snapshotLoadError = '';
+          var persisted = loadPersistedSnapshotSelection();
+          if (
+            persisted &&
+            cachedVersions.some(function (v) {
+              return versionIdFromRecord(v) === persisted;
+            })
+          ) {
+            selectedSnapshotId = persisted;
+          } else {
+            selectedSnapshotId = null;
+          }
+          syncEditorLinks();
           renderSnapshotStatusSummary();
           return cachedVersions;
         })
@@ -2074,7 +2373,6 @@
           draftLoadError = '';
           syncPublishButton();
           renderDraftStatusSummary();
-          analyzeDraftsAgainstLive();
           return cachedPreviews;
         })
         .catch(function (err) {
@@ -2099,7 +2397,9 @@
       refreshInFlight = ensureAccessTokenForCms()
         .then(function () {
           if (redirectToLoginIfUnauthenticated()) return;
-          return Promise.all([fetchMenuVersions(), fetchPreviews()]);
+          return Promise.all([fetchMenuVersions(), fetchPreviews()]).then(function () {
+            analyzeDraftsAgainstBaseline();
+          });
         })
         .finally(function () {
           refreshInFlight = null;
@@ -2110,7 +2410,22 @@
     if (editLink) {
       editLink.addEventListener('click', function (ev) {
         ev.preventDefault();
-        navigateEditLive();
+        if (selectedSnapshotId) navigateEditDraftsWithVersion(selectedSnapshotId);
+        else navigateEditLive();
+      });
+    }
+
+    var rearrangeLink = document.getElementById('cardRearrangeMenu');
+    if (rearrangeLink) {
+      rearrangeLink.addEventListener('click', function (ev) {
+        if (selectedSnapshotId) {
+          ev.preventDefault();
+          try {
+            sessionStorage.setItem('editPreviewMode', 'drafts');
+            sessionStorage.setItem('editMenuVersionId', selectedSnapshotId);
+          } catch (e) {}
+          global.location.href = '/edit-menu-rearrange/';
+        }
       });
     }
 
@@ -2342,6 +2657,13 @@
       contentLink.addEventListener('click', function () {
         try {
           sessionStorage.setItem('editMenuLiveMode', 'content');
+          if (selectedSnapshotId) {
+            sessionStorage.setItem('editPreviewMode', 'drafts');
+            sessionStorage.setItem('editMenuVersionId', selectedSnapshotId);
+          } else {
+            sessionStorage.setItem('editPreviewMode', 'live');
+            sessionStorage.removeItem('editMenuVersionId');
+          }
         } catch (e) { /* ignore */ }
       });
     }
@@ -2351,8 +2673,13 @@
     return { refresh: refreshMenuCard };
   }
 
-  global.DashboardMenuStatus = { init: init, refresh: function () {
-    if (typeof global.__ttmsMenuStatusRefresh === 'function') return global.__ttmsMenuStatusRefresh();
-    return Promise.resolve();
-  } };
+  global.DashboardMenuStatus = {
+    init: init,
+    refresh: function () {
+      if (typeof global.__ttmsMenuStatusRefresh === 'function') return global.__ttmsMenuStatusRefresh();
+      return Promise.resolve();
+    },
+    getDraftChangeDetails: getDraftChangeDetails,
+    registerDraftPreviewsForAnalysis: registerDraftPreviewsForAnalysis,
+  };
 })(typeof window !== 'undefined' ? window : this);
