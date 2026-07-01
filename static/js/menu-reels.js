@@ -951,6 +951,17 @@
           if (hashSlide) {
             requestAnimationFrame(function () {
               scrollToSlide(hashSlide, 'auto');
+              if (typeof window.loadHomeMenuForSectionId === 'function') {
+                var deferLoad =
+                  typeof requestIdleCallback === 'function'
+                    ? requestIdleCallback
+                    : function (cb) {
+                        setTimeout(cb, 1);
+                      };
+                deferLoad(function () {
+                  window.loadHomeMenuForSectionId(hashId);
+                });
+              }
             });
           }
         } else if (!track._ttmsReelsScrolledToStart) {

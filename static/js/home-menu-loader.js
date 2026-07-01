@@ -1031,6 +1031,13 @@
     return loadSectionBySlug(slug, loaderConfig);
   }
 
+  function preloadFromLocationHash() {
+    if (!loaderConfig || !window.location.hash) return;
+    var hashId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+    if (!hashId) return;
+    loadHomeMenuForSectionId(hashId);
+  }
+
   function startHomeMenuLoader(config) {
     loaderConfig = config;
     if (loaderStarted) {
@@ -1039,6 +1046,7 @@
       observeHeaderCounts();
       observeSectionHeaders(config);
       scheduleProximityCheck();
+      preloadFromLocationHash();
       return;
     }
     loaderStarted = true;
@@ -1050,6 +1058,7 @@
     bindTrackProximity(config);
     bindMenublockPreload(config);
     scheduleProximityCheck();
+    preloadFromLocationHash();
   }
 
   function initHomeMenuLoader() {
