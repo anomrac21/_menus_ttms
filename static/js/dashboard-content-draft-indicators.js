@@ -21,7 +21,15 @@
   }
 
   function cmsApiBase() {
-    var base = (global.CMS_API_URL || global.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+    var raw = global.CMS_API_URL || global.CMS_SERVICE_URL || 'https://cms.ttmenus.com';
+    if (global.TTMSNetworkGuard && global.TTMSNetworkGuard.ttmsSanitizeRemoteUrl) {
+      raw =
+        global.TTMSNetworkGuard.ttmsSanitizeRemoteUrl(
+          raw,
+          global.TTMSNetworkGuard.DEFAULTS.cmsApi
+        ) || global.TTMSNetworkGuard.DEFAULTS.cmsApi;
+    }
+    var base = String(raw).replace(/\/+$/, '');
     if (base.endsWith('/api')) return base;
     return base + '/api';
   }

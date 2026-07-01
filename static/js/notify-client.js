@@ -21,7 +21,18 @@ const NotifyClient = {
     }
     var apiUrl = cfg.apiUrl || 'https://notify.ttmenus.com/api/v1';
     var websocketUrl = cfg.websocketUrl || 'wss://notify.ttmenus.com/api/v1/ws/connect';
-    if (typeof window !== 'undefined' && window.location) {
+    if (window.TTMSNetworkGuard) {
+      apiUrl =
+        window.TTMSNetworkGuard.ttmsSanitizeRemoteUrl(
+          apiUrl,
+          window.TTMSNetworkGuard.DEFAULTS.notifyApiV1
+        ) || window.TTMSNetworkGuard.DEFAULTS.notifyApiV1;
+      websocketUrl =
+        window.TTMSNetworkGuard.ttmsSanitizeRemoteUrl(
+          websocketUrl,
+          window.TTMSNetworkGuard.DEFAULTS.notifyWs
+        ) || window.TTMSNetworkGuard.DEFAULTS.notifyWs;
+    } else if (typeof window !== 'undefined' && window.location) {
       var h = window.location.hostname || '';
       var localDev = h === 'localhost' || h === '127.0.0.1' || /\.local$/i.test(h);
       if (!localDev && /localhost|127\.0\.0\.1/i.test(apiUrl + websocketUrl)) {

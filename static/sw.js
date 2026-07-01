@@ -3,13 +3,43 @@
  * Handles background notification delivery and WebSocket connection management
  */
 
-const CACHE_NAME = 'ttmenus-notifications-v1';
+const CACHE_NAME = 'ttmenus-notifications-v2';
 const SUB_META_CACHE = 'ttmenus-notify-meta-v1';
 let NOTIFY_SERVICE_URL = 'https://notify.ttmenus.com';
 const DEFAULT_NOTIFY_ICON = 'https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif';
+const PRODUCTION_NOTIFY_SERVICE = 'https://notify.ttmenus.com';
+
+function isLocalNetworkUrl(url) {
+  const s = String(url || '').trim();
+  if (!s) return false;
+  if (/^(https?):\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(s)) return true;
+  try {
+    const u = new URL(s);
+    const host = (u.hostname || '').toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || /\.local$/i.test(host)) {
+      return true;
+    }
+    const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+    if (m) {
+      const a = +m[1];
+      const b = +m[2];
+      if (a === 10 || a === 127 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)) {
+        return true;
+      }
+    }
+  } catch (e) {
+    /* ignore */
+  }
+  return false;
+}
+
+function sanitizeNotifyServiceUrl(url) {
+  if (isLocalNetworkUrl(url)) return PRODUCTION_NOTIFY_SERVICE;
+  return String(url || PRODUCTION_NOTIFY_SERVICE).replace(/\/+$/, '') || PRODUCTION_NOTIFY_SERVICE;
+}
 
 function getNotifyApiBase() {
-  const base = String(NOTIFY_SERVICE_URL || 'https://notify.ttmenus.com').replace(/\/+$/, '');
+  const base = sanitizeNotifyServiceUrl(NOTIFY_SERVICE_URL);
   return base + '/api/v1';
 }
 
@@ -177,7 +207,7 @@ self.addEventListener('message', (event) => {
 
   if (event.data && event.data.type === 'SET_NOTIFY_CONFIG') {
     if (event.data.serviceUrl) {
-      NOTIFY_SERVICE_URL = event.data.serviceUrl;
+      NOTIFY_SERVICE_URL = sanitizeNotifyServiceUrl(event.data.serviceUrl);
     }
   }
 

@@ -13,6 +13,9 @@ function resolveNotifyConfig() {
     }
   }
   if (cfg && typeof cfg === 'object') {
+    if (window.TTMSNetworkGuard && window.TTMSNetworkGuard.ttmsSanitizeNotifyConfig) {
+      window.TTMSNetworkGuard.ttmsSanitizeNotifyConfig(cfg);
+    }
     window.NOTIFY_CONFIG = cfg;
     return cfg;
   }
@@ -20,13 +23,19 @@ function resolveNotifyConfig() {
 }
 
 function ttmsIsLocalDevHost() {
+  if (window.TTMSNetworkGuard && window.TTMSNetworkGuard.ttmsIsLocalDevHost) {
+    return window.TTMSNetworkGuard.ttmsIsLocalDevHost();
+  }
   if (typeof window === 'undefined' || !window.location) return false;
   const h = window.location.hostname || '';
   return h === 'localhost' || h === '127.0.0.1' || /\.local$/i.test(h);
 }
 
-/** True for localhost / loopback URLs — blocked on public sites (Chrome LNA prompt). */
+/** True for localhost / LAN URLs — blocked on public sites (Chrome LNA prompt). */
 function ttmsIsLoopbackUrl(url) {
+  if (window.TTMSNetworkGuard && window.TTMSNetworkGuard.ttmsIsLocalNetworkUrl) {
+    return window.TTMSNetworkGuard.ttmsIsLocalNetworkUrl(url);
+  }
   return /^(https?|wss?):\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(String(url || ''));
 }
 
@@ -97,6 +106,11 @@ const NotificationService = {
     this.setupServiceWorkerMessageHandler();
     this.checkSubscriptionStatus();
     this.loadSubscriptionFromStorage();
+
+    // Re-point any stale service worker away from dev loopback URLs (LNA).
+    if (window.TTMSNetworkGuard && window.TTMSNetworkGuard.ttmsSyncNotifyUrlToServiceWorker) {
+      window.TTMSNetworkGuard.ttmsSyncNotifyUrlToServiceWorker(this.notifyServiceUrl);
+    }
 
     // Defer service worker / push / WebSocket until user has subscribed.
     // Avoids Local Network Access prompts on first visit (Chrome/Edge).
@@ -310,7 +324,14 @@ const NotificationService = {
       resolveNotifyConfig().serviceUrl ||
       window.SiteConfig?.notifyServiceUrl ||
       'https://notify.ttmenus.com';
-    const payload = { type: 'SET_NOTIFY_CONFIG', serviceUrl };
+    const sanitized =
+      window.TTMSNetworkGuard && window.TTMSNetworkGuard.ttmsSanitizeRemoteUrl
+        ? window.TTMSNetworkGuard.ttmsSanitizeRemoteUrl(
+            serviceUrl,
+            window.TTMSNetworkGuard.DEFAULTS.notifyService
+          ) || window.TTMSNetworkGuard.DEFAULTS.notifyService
+        : serviceUrl;
+    const payload = { type: 'SET_NOTIFY_CONFIG', serviceUrl: sanitized };
 
     const send = (worker) => {
       if (worker) worker.postMessage(payload);

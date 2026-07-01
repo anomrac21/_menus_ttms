@@ -623,6 +623,7 @@ window.POS_CONFIG = {
 <script src="/js/pos-integration.js" defer></script>
 {{- end -}}
 
+<script src="/js/ttms-network-guard.js"></script>
 {{- if site.Params.auth.enabled -}}
 <script>
 // Auth Service Configuration
@@ -743,3 +744,8 @@ window.SiteConfig.paymentsEnabled = true;
 </script>
 <script src="/js/payment-integration.js" defer></script>
 {{- end -}}
+<script>
+if (window.TTMSNetworkGuard && window.TTMSNetworkGuard.ttmsSanitizePageServiceConfigs) {
+  window.TTMSNetworkGuard.ttmsSanitizePageServiceConfigs();
+}
+</script>
