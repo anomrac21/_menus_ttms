@@ -54,6 +54,12 @@
       backdrop.hidden = !open;
       backdrop.classList.toggle('is-visible', open);
       backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+      // Android Chrome: force remove from compositor when closed
+      if (!open) {
+        backdrop.style.display = 'none';
+      } else {
+        backdrop.style.display = '';
+      }
     }
   }
 

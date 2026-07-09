@@ -59,6 +59,10 @@ html,body {
     pointer-events: none!important
 }
 
+html.ttms-android #loader[class*="loader-hide-"] {
+    display: none!important
+}
+
 [data-barba=wrapper],[data-barba=container] {
     margin: 0;
     padding: 0;

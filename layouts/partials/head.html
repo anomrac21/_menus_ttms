@@ -2,6 +2,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>
 (function (doc) {
+  if (/Android/i.test(navigator.userAgent || '')) {
+    doc.documentElement.classList.add('ttms-android');
+  }
   var mq = window.matchMedia(
     '(max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse))'
   );
@@ -244,6 +247,11 @@
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
+  }
+
+  /* Android Chrome: opacity:0 alone can leave a composited layer blocking taps */
+  html.ttms-android #loader[class*="loader-hide-"] {
+    display: none !important;
   }
 
   #loader.loader-hide-up { transform: translateY(-100%); }

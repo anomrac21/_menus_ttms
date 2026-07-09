@@ -2,6 +2,29 @@
 let isAdsLoading = false;
 let adManagerCheckCount = 0;
 let maxLoaderTimeout = null;
+let globalLoaderKillTimeout = null;
+let loaderHasHiddenOnce = false;
+
+function forceHideLoaderElement(loader) {
+    if (!loader) return;
+    loader.style.pointerEvents = 'none';
+    loader.style.visibility = 'hidden';
+    loader.style.opacity = '0';
+    loader.style.display = 'none';
+}
+
+function recoverStuckUiState() {
+    if (typeof window.forceClearNavigationUiState === 'function') {
+        window.forceClearNavigationUiState();
+        return;
+    }
+    if (typeof window.closeAllPanelsBeforeNavigation === 'function') {
+        window.closeAllPanelsBeforeNavigation();
+    }
+    if (window.TTMSViewport && typeof window.TTMSViewport.forceClearScrollLock === 'function') {
+        window.TTMSViewport.forceClearScrollLock();
+    }
+}
 
 // Fallback hide if Barba never initializes (very slow networks)
 (function () {
@@ -9,6 +32,8 @@ let maxLoaderTimeout = null;
         if (typeof window.hideLoader === 'function') {
             window.hideLoader();
         }
+        forceHideLoaderElement(document.getElementById('loader'));
+        recoverStuckUiState();
     }, 12000);
 })();
 
@@ -165,16 +190,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function showLoader() {
         if (!loader) return;
         isHidingLoader = false;
+        loaderHasHiddenOnce = false;
         resetLoaderVisible();
+        scheduleLoaderFallback();
     }
 
     function hideLoader() {
-        if (!loader || isHidingLoader) return;
+        if (!loader) return;
+        if (isHidingLoader && loaderHasHiddenOnce) return;
         isHidingLoader = true;
+        loaderHasHiddenOnce = true;
 
         if (maxLoaderTimeout) {
             clearTimeout(maxLoaderTimeout);
             maxLoaderTimeout = null;
+        }
+        if (globalLoaderKillTimeout) {
+            clearTimeout(globalLoaderKillTimeout);
+            globalLoaderKillTimeout = null;
         }
 
         animations.forEach(function (anim) {
@@ -184,19 +217,26 @@ document.addEventListener('DOMContentLoaded', function() {
         randomAnim = animations[Math.floor(Math.random() * animations.length)];
         loader.classList.add(randomAnim);
 
+        // Android Chrome can keep a composited overlay that still blocks taps
+        // even after opacity:0 — force display:none after the hide animation.
+        setTimeout(function () {
+            forceHideLoaderElement(loader);
+            isHidingLoader = false;
+        }, 520);
+
         const footerBtns = document.getElementById('footerBtns');
         if (footerBtns) {
             footerBtns.classList.add('visible');
         }
-
-        setTimeout(function () {
-            isHidingLoader = false;
-        }, 500);
     }
 
     window.showLoader = showLoader;
     window.hideLoader = hideLoader;
     window.allowLoaderHide = hideLoader;
+    window.forceHideLoader = function () {
+        forceHideLoaderElement(loader || document.getElementById('loader'));
+        recoverStuckUiState();
+    };
 
     function scheduleLoaderFallback() {
         if (maxLoaderTimeout) {
@@ -205,7 +245,17 @@ document.addEventListener('DOMContentLoaded', function() {
         maxLoaderTimeout = setTimeout(function () {
             console.log('Maximum loader timeout reached, force hiding loader...');
             hideLoader();
-        }, 10000);
+            forceHideLoaderElement(loader);
+            recoverStuckUiState();
+        }, 8000);
+
+        if (globalLoaderKillTimeout) {
+            clearTimeout(globalLoaderKillTimeout);
+        }
+        globalLoaderKillTimeout = setTimeout(function () {
+            forceHideLoaderElement(loader || document.getElementById('loader'));
+            recoverStuckUiState();
+        }, 15000);
     }
 
     function waitMs(ms) {
@@ -292,7 +342,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return true;
             }
             if (typeof window.TTMSBarbaShouldPrevent === 'function') {
-                return window.TTMSBarbaShouldPrevent(href);
+                return window.TTMSBarbaShouldPrevent(href, el);
+            }
+            // Fallback if barba-lifecycle has not loaded yet
+            if (!href || href === '#' || href === '' || (typeof href === 'string' && href.charAt(0) === '#')) {
+                return true;
+            }
+            if (el) {
+                if (el.getAttribute('role') === 'button') return true;
+                if (el.hasAttribute('data-dashboard-toggle')) return true;
             }
             return false;
         },

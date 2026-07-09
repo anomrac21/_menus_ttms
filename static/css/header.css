@@ -1013,15 +1013,22 @@
         z-index: var(--ttms-z-header-dropdown-backdrop, 205);
         background: rgba(0, 0, 0, 0.45);
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
-        transition: opacity 0.22s ease;
+        transition: opacity 0.22s ease, visibility 0.22s ease;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
     }
 
     .header-menublock-backdrop.is-visible {
         opacity: 1;
+        visibility: visible;
         pointer-events: auto;
+    }
+
+    /* Android Chrome: opacity:0 fixed layers can still composite as a black sheet */
+    html.ttms-android .header-menublock-backdrop:not(.is-visible) {
+        display: none;
     }
 
     body.menublock-dropdown-open {
