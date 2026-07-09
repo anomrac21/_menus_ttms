@@ -277,19 +277,6 @@ const AuthMiddleware = {
     document.querySelectorAll('.client-access-warning').forEach((el) => {
       el.remove();
     });
-
-    const path = window.location.pathname || '';
-    const isDashboard =
-      path.indexOf('/dashboard') === 0 ||
-      path.indexOf('/deployments') === 0 ||
-      path.indexOf('/login') === 0;
-    if (
-      !isDashboard &&
-      window.AuthClientAccess &&
-      typeof AuthClientAccess.showAccessWarning === 'function'
-    ) {
-      AuthClientAccess.showAccessWarning();
-    }
   },
 };
 

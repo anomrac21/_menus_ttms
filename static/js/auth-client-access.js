@@ -192,46 +192,6 @@ const AuthClientAccess = {
     return true;
   },
 
-  /**
-   * Show warning if admin is on unauthorized site
-   */
-  showAccessWarning() {
-    if (!AuthClient.isAdmin() || AuthClient.isSuperadmin()) {
-      return;
-    }
-
-    if (!this.hasClientAccess()) {
-      const currentClientID = this.getCurrentClientID();
-      const user = AuthClient.getCurrentUser();
-      const assignedClients = (user.client_id || '').split(',').map((id) => id.trim());
-
-      const warningDiv = document.createElement('div');
-      warningDiv.className = 'client-access-warning';
-      warningDiv.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: #ff9800;
-        color: white;
-        padding: 12px;
-        text-align: center;
-        z-index: 10000;
-        font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      `;
-      warningDiv.innerHTML = `
-        ⚠️ Access Restricted: You are not authorized to manage ${currentClientID || 'this site'}.
-        Your access is limited to: ${assignedClients.join(', ')}
-      `;
-
-      document.body.prepend(warningDiv);
-
-      document.querySelectorAll('[data-auth="admin"], [data-auth="admin-site"]').forEach((el) => {
-        el.style.display = 'none';
-      });
-    }
-  },
 };
 
 window.AuthClientAccess = AuthClientAccess;
