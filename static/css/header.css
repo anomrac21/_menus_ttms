@@ -995,7 +995,7 @@
         flex-direction: column;
         align-items: flex-end;
         width: 100%;
-        max-height: min(26rem, calc(100svh - var(--ttms-header-height, 5em) - var(--ttms-safe-bottom, 0px)));
+        max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
         overflow-x: hidden;
         overflow-y: scroll;
         overscroll-behavior: contain;

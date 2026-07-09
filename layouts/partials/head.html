@@ -46,7 +46,7 @@
       overflow: visible;
     }
     .main-header.menublock-dropdown-open #menublock {
-      max-height: min(26rem, calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
+      max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
       overflow-y: scroll;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
@@ -88,7 +88,7 @@
     overflow: visible;
   }
   html.ttms-mobile-menublock .main-header.menublock-dropdown-open #menublock {
-    max-height: min(26rem, calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
+    max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
     overflow-y: scroll;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
