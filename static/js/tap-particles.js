@@ -1,11 +1,19 @@
 /**
  * Canvas touch particles — site-wide, minimal CPU/GPU.
+ * Disabled on Android: full-screen canvas + draw triggers Chrome compositor black flash.
  */
 (function () {
   'use strict';
 
   if (window.__ttmsTapParticlesLoaded) return;
   window.__ttmsTapParticlesLoaded = true;
+
+  // Android Chrome: fixed fullscreen canvas paints as a black modal over the page on tap.
+  if (/Android/i.test(navigator.userAgent || '')) {
+    window.reinitTTMSTouchParticles = function () {};
+    window.resetTTMSTouchParticles = function () {};
+    return;
+  }
 
   var TAU = Math.PI * 2;
   var TAP_COUNT = 7;

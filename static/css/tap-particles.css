@@ -13,3 +13,8 @@
     display: none !important;
   }
 }
+
+/* Android Chrome: compositor flash / black overlay on tap */
+html.ttms-android .ttms-touch-particles {
+  display: none !important;
+}

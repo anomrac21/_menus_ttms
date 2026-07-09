@@ -815,16 +815,31 @@ const AuthClient = {
 
   _normalizeRoles(roles) {
     if (!roles) return [];
-    if (Array.isArray(roles)) return roles;
-    if (typeof roles === 'string') {
-      return roles.split(',').map(function (r) { return r.trim(); }).filter(Boolean);
+    var list = [];
+    if (Array.isArray(roles)) {
+      list = roles;
+    } else if (typeof roles === 'string') {
+      list = roles.split(',');
+    } else {
+      return [];
     }
-    return [];
+    return list
+      .map(function (r) {
+        return String(r == null ? '' : r)
+          .trim()
+          .toLowerCase();
+      })
+      .filter(Boolean);
   },
 
   hasRole(role) {
     const user = this.getCurrentUser();
-    return user && this._normalizeRoles(user.roles).includes(role);
+    if (!user) return false;
+    var target = String(role || '')
+      .trim()
+      .toLowerCase();
+    if (!target) return false;
+    return this._normalizeRoles(user.roles).indexOf(target) !== -1;
   },
 
   isAdmin() {
