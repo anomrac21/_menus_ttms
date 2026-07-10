@@ -13,6 +13,7 @@
   var lastDominantSlide = null;
   var lastSyncedMenublockSectionId = null;
   var lastMenublockActiveId = null;
+  var pendingSectionNavToken = 0;
 
   function isSmoothNavMode() {
     return (
@@ -225,20 +226,40 @@
     var track = getTrack();
     if (!track || !id) return null;
     var targetId = normalizeMenublockSectionId(id);
+    var targetNorm = String(targetId).trim().toLowerCase();
+
+    // Always prefer the section title slide — never a dish card with the same data-reel-section.
+    var headers = track.querySelectorAll('.menu-header.menu-reels-slide');
+    var i;
+    var header;
+    var headerId;
+    var slug;
+    for (i = 0; i < headers.length; i++) {
+      header = headers[i];
+      headerId = normalizeMenublockSectionId(header.getAttribute('data-reel-section') || '');
+      if (headerId && String(headerId).trim().toLowerCase() === targetNorm) {
+        return header;
+      }
+      slug = String(header.getAttribute('data-section-slug') || '')
+        .trim()
+        .toLowerCase();
+      if (slug && (slug === targetNorm || slug.replace(/-/g, '_') === targetNorm.replace(/-/g, '_'))) {
+        return header;
+      }
+    }
+
     var anchor = document.getElementById(targetId);
     if (anchor) {
-      var fromAnchor = anchor.closest('.menu-reels-slide, .menu-header.menu-reels-slide, .ads-reels-slide');
+      var fromAnchor = anchor.closest('.menu-header.menu-reels-slide, .ads-reels-slide');
       if (fromAnchor) return fromAnchor;
+      // Ignore dish cards that merely wrap an unrelated #id.
     }
-    var slides = getSlides(track);
-    for (var i = 0; i < slides.length; i++) {
-      if (normalizeMenublockSectionId(sectionIdFromSlide(slides[i])) === targetId) {
-        return slides[i];
-      }
-      if (normalizeMenublockSectionId(resolveSectionIdForSlide(slides[i], slides)) === targetId) {
-        return slides[i];
-      }
+
+    if (targetNorm === 'promotions' || targetNorm === 'sponsored') {
+      var ads = track.querySelector('.ads-reels-slide:not(.ads-loading), .menu-reels-slide[data-reel-section="Sponsored"]');
+      if (ads) return ads;
     }
+
     return null;
   }
 
@@ -591,18 +612,50 @@
   }
 
   function scrollToSectionId(id) {
-    scrollToSlide(findSlideForSectionId(id), 'smooth');
-    var deferLoad =
-      typeof requestIdleCallback === 'function'
-        ? requestIdleCallback
-        : function (cb) {
-            setTimeout(cb, 1);
-          };
-    deferLoad(function () {
-      if (typeof window.loadHomeMenuForSectionId === 'function') {
-        window.loadHomeMenuForSectionId(id);
+    var targetId = normalizeMenublockSectionId(id);
+    if (!targetId) return;
+
+    pendingSectionNavToken += 1;
+    var navToken = pendingSectionNavToken;
+
+    function realignToSection(behavior) {
+      if (navToken !== pendingSectionNavToken) return;
+      var slide = findSlideForSectionId(targetId);
+      if (!slide) return;
+      scrollToSlide(slide, behavior || 'auto');
+      setMenublockActive(targetId);
+      lastSyncedMenublockSectionId = targetId;
+      lastMenublockActiveId = targetId;
+    }
+
+    // First paint alignment (layout may still be incomplete while lazy sections load).
+    realignToSection('smooth');
+
+    var loadPromise = Promise.resolve();
+    if (typeof window.loadHomeMenuForSectionId === 'function') {
+      try {
+        loadPromise = Promise.resolve(window.loadHomeMenuForSectionId(targetId));
+      } catch (err) {
+        loadPromise = Promise.resolve();
       }
-    });
+    }
+
+    loadPromise
+      .catch(function () {
+        /* still realign with whatever is in the DOM */
+      })
+      .then(function () {
+        function settle() {
+          if (navToken !== pendingSectionNavToken) return;
+          realignToSection('auto');
+        }
+        requestAnimationFrame(function () {
+          settle();
+          requestAnimationFrame(settle);
+        });
+        window.setTimeout(settle, 120);
+        window.setTimeout(settle, 360);
+      });
   }
 
   function scrollTrackToTop(behavior) {

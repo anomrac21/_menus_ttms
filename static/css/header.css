@@ -440,7 +440,6 @@
     display: flex;
     flex-shrink: 0;
     min-width: 4.35rem;
-    max-width: 20em;
     height: auto;
     margin: 0;
     padding: 0;
@@ -940,8 +939,9 @@
         position: fixed;
         top: var(--ttms-header-height, 5em);
         right: 0;
-        left: 0;
+        left: auto;
         width: 100%;
+        max-width: 400px;
         z-index: var(--ttms-z-header-dropdown, 210);
         flex: none;
         max-height: 0;
@@ -995,6 +995,7 @@
         flex-direction: column;
         align-items: flex-end;
         width: 100%;
+        max-width: 400px;
         max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
         overflow-x: hidden;
         overflow-y: scroll;

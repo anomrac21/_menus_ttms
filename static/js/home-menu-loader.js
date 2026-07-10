@@ -17,6 +17,7 @@
   var headerCountObserver = null;
   var headerCountSeen = new WeakSet();
   var headerCountAnimated = new WeakSet();
+  var sectionLoadPromises = Object.create(null);
 
   function isPromoSectionHeader(section) {
     if (!section) return false;
@@ -859,7 +860,12 @@
     var parent = header.parentElement;
     if (!parent) return;
 
-    var preserveScrollY = isSmoothNavMode() ? window.scrollY : null;
+    var track = getTrack();
+    var preserveScrollY = isSmoothNavMode()
+      ? window.scrollY
+      : track
+        ? track.scrollTop
+        : null;
 
     var fragment = document.createDocumentFragment();
     items.forEach(function (item) {
@@ -880,7 +886,11 @@
     finalizeSectionItemCount(header, items.length);
     if (preserveScrollY != null) {
       requestAnimationFrame(function () {
-        window.scrollTo({ top: preserveScrollY, left: 0, behavior: 'auto' });
+        if (isSmoothNavMode()) {
+          window.scrollTo({ top: preserveScrollY, left: 0, behavior: 'auto' });
+        } else if (track) {
+          track.scrollTop = preserveScrollY;
+        }
       });
     }
     scheduleReelsRefresh();
@@ -898,19 +908,29 @@
     }
     if (isPromoSectionHeader(header)) return Promise.resolve();
 
+    if (sectionLoadPromises[slug]) {
+      return sectionLoadPromises[slug];
+    }
+
     beginSectionLoadFeedback(header);
 
-    return fetchMenuItems(config.apiUrl).then(function (grouped) {
-      var items = grouped[slug] || [];
-      header.setAttribute('data-item-count', String(items.length));
-      if (!items.length) {
-        header.removeAttribute('aria-busy');
-        header.dataset.homeMenuLoaded = '1';
-        finalizeSectionItemCount(header, 0);
-        return;
-      }
-      renderSectionAfterHeader(header, items, config);
-    });
+    sectionLoadPromises[slug] = fetchMenuItems(config.apiUrl)
+      .then(function (grouped) {
+        var items = grouped[slug] || [];
+        header.setAttribute('data-item-count', String(items.length));
+        if (!items.length) {
+          header.removeAttribute('aria-busy');
+          header.dataset.homeMenuLoaded = '1';
+          finalizeSectionItemCount(header, 0);
+          return;
+        }
+        renderSectionAfterHeader(header, items, config);
+      })
+      .finally(function () {
+        delete sectionLoadPromises[slug];
+      });
+
+    return sectionLoadPromises[slug];
   }
 
   function isHeaderNearViewport(header, track) {
@@ -1014,15 +1034,38 @@
 
     var track = getTrack();
     var header = null;
+    var targetId = String(sectionId);
+    try {
+      targetId = decodeURIComponent(targetId.replace(/\+/g, ' '));
+    } catch (_) {}
+    var targetNorm = targetId.trim().toLowerCase();
+
     if (track) {
-      var anchor = document.getElementById(sectionId);
-      if (anchor) {
-        header = anchor.closest('.menu-header.menu-reels-slide');
+      // Prefer section title slide only (never a dish card).
+      var headers = track.querySelectorAll('.menu-header.menu-reels-slide');
+      for (var i = 0; i < headers.length; i++) {
+        var candidate = headers[i];
+        var reelSection = String(candidate.getAttribute('data-reel-section') || '')
+          .trim()
+          .toLowerCase();
+        var slugAttr = String(candidate.getAttribute('data-section-slug') || '')
+          .trim()
+          .toLowerCase();
+        if (
+          reelSection === targetNorm ||
+          slugAttr === targetNorm ||
+          slugAttr.replace(/-/g, '_') === targetNorm.replace(/-/g, '_')
+        ) {
+          header = candidate;
+          break;
+        }
       }
+
       if (!header) {
-        header = track.querySelector(
-          '.menu-header.menu-reels-slide[data-reel-section="' + cssEscape(sectionId) + '"]'
-        );
+        var anchor = document.getElementById(targetId);
+        if (anchor) {
+          header = anchor.closest('.menu-header.menu-reels-slide');
+        }
       }
     }
 
