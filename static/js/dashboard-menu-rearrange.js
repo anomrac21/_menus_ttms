@@ -1216,9 +1216,23 @@
 
   function saveSnapshotOnLeave() {
     var now = new Date();
-    var name =
-      'Rearrange · ' +
-      now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    var stamp;
+    try {
+      stamp = now.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      try {
+        stamp = now.toLocaleString();
+      } catch (e2) {
+        stamp = now.toISOString();
+      }
+    }
+    var name = 'Rearrange · ' + stamp;
     return cmsPost('/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/menu-versions', {
       name: name,
       description: 'Automatic snapshot when leaving the rearrange menu page.',

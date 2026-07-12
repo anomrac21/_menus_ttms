@@ -147,6 +147,106 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   var _embedSaveInFlight = null;
 
+  /** Safe snapshot label timestamp — avoids mobile WebKit stack overflows from dateStyle/timeStyle. */
+  function formatSnapshotTimestamp(date) {
+    var d = date instanceof Date ? date : new Date(date || Date.now());
+    if (isNaN(d.getTime())) d = new Date();
+    try {
+      return d.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch (e1) {
+      try {
+        return d.toLocaleString();
+      } catch (e2) {
+        return d.toISOString();
+      }
+    }
+  }
+
+  /** Clone plain JSON without blowing the stack on pathological nesting / non-JSON values. */
+  function cloneJsonSafe(value, maxDepth) {
+    maxDepth = typeof maxDepth === 'number' ? maxDepth : 40;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+      function walk(v, depth, seen) {
+        if (v == null || typeof v !== 'object') return v;
+        if (depth >= maxDepth) return Array.isArray(v) ? [] : {};
+        if (seen.has(v)) return Array.isArray(v) ? [] : {};
+        seen.add(v);
+        if (Array.isArray(v)) {
+          var arr = [];
+          for (var i = 0; i < v.length; i++) arr.push(walk(v[i], depth + 1, seen));
+          return arr;
+        }
+        var out = {};
+        Object.keys(v).forEach(function (k) {
+          out[k] = walk(v[k], depth + 1, seen);
+        });
+        return out;
+      }
+      return walk(value, 0, typeof WeakSet !== 'undefined' ? new WeakSet() : { has: function () { return false; }, add: function () {} });
+    }
+  }
+
+  /** Prefer repo/content image paths; unwrap Thumbor display URLs and accidental /https:// prefixes. */
+  function normalizeStoredImagePath(path) {
+    var p = String(path || '').trim();
+    if (!p) return '';
+    if (/^\/https?:\/\//i.test(p)) p = p.slice(1);
+    var guard = 0;
+    while (guard++ < 8) {
+      var m = p.match(/^(?:https?:)?\/\/[^/]*thumbor\.ttmenus\.com\/(?:unsafe\/)?(?:fit-in\/\d+x\d+\/)?(.+)$/i);
+      if (!m) break;
+      try {
+        p = decodeURIComponent(m[1]);
+      } catch (e) {
+        p = m[1];
+        break;
+      }
+      p = String(p || '').trim();
+      if (/^\/https?:\/\//i.test(p)) p = p.slice(1);
+    }
+    if (
+      /^https?:\/\/([^/]*\.)?cdn\.ttmenus\.com\//i.test(p) ||
+      /^https?:\/\/ct\.ttmenus\.com\/icons\//i.test(p) ||
+      /^draft-assets\//i.test(p)
+    ) {
+      return p;
+    }
+    try {
+      var origin = String(window.location.origin || '').replace(/\/+$/, '');
+      if (origin && p.indexOf(origin + '/') === 0) p = p.slice(origin.length + 1);
+    } catch (e2) { /* ignore */ }
+    if (/^https?:\/\/[^/]+\.ttmenus\.com\//i.test(p)) {
+      try {
+        var u = new URL(p);
+        p = (u.pathname || '').replace(/^\/+/, '');
+      } catch (e3) { /* ignore */ }
+    }
+    return p.replace(/^\/+/, '');
+  }
+
+  function unwrapMenuDataPayload(data) {
+    var cur = data;
+    var guard = 0;
+    while (cur && typeof cur === 'object' && !Array.isArray(cur) && guard++ < 8) {
+      var nested = cur.menu_data || cur.menuData;
+      if (!nested || typeof nested !== 'object' || Array.isArray(nested)) break;
+      if (Array.isArray(nested.categories) || Array.isArray(nested.menuItems) || nested.version || nested.metadata) {
+        cur = nested;
+        continue;
+      }
+      break;
+    }
+    return cur && typeof cur === 'object' ? cur : {};
+  }
+
   function fetchLatestMenuVersionMenuData() {
     var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
     return getFromCMS(base + '/menu-versions').then(function(data) {
@@ -160,7 +260,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       var vid = sorted[0].id || sorted[0].ID;
       if (!vid) return getFromCMS(base + '/menu');
       return getFromCMS(base + '/menu-versions/' + encodeURIComponent(vid)).then(function(v) {
-        if (v && (v.menu_data || v.menuData)) return v.menu_data || v.menuData;
+        if (v && (v.menu_data || v.menuData)) return unwrapMenuDataPayload(v.menu_data || v.menuData);
         return getFromCMS(base + '/menu');
       });
     }).catch(function() {
@@ -180,9 +280,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return saveMenuSnapshotToCMS({
           updateLiveMenu: false,
           mergeLatestSnapshot: true,
-          name:
-            'Live menu edit · ' +
-            new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
+          name: 'Live menu edit · ' + formatSnapshotTimestamp(new Date()),
           description:
             'Menu snapshot from live menu editor — merges latest CMS snapshot with current layout and drafts.',
         });
@@ -1127,9 +1225,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       : (selectedElement ? selectedElement.getAttribute('data-weight') : '') || '0';
     var weightVal = parseInt(weightRaw, 10);
     if (isNaN(weightVal)) weightVal = 0;
-    var icon = inputSectionIcon ? (inputSectionIcon.value || '').trim() : '';
-    var topImg = inputSectionImageTop ? (inputSectionImageTop.value || '').trim() : '';
-    var bottomImg = inputSectionImageBottom ? (inputSectionImageBottom.value || '').trim() : '';
+    var icon = inputSectionIcon ? normalizeStoredImagePath(inputSectionIcon.value || '') : '';
+    var topImg = inputSectionImageTop ? normalizeStoredImagePath(inputSectionImageTop.value || '') : '';
+    var bottomImg = inputSectionImageBottom ? normalizeStoredImagePath(inputSectionImageBottom.value || '') : '';
     var frontMatter = {
       title: title || 'Section',
       weight: weightVal,
@@ -2303,11 +2401,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     var headers = { 'Content-Type': 'application/json' };
     var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('ttmenus_access_token') : null);
     if (token) headers['Authorization'] = 'Bearer ' + token;
+    var bodyText;
+    try {
+      bodyText = JSON.stringify(payload);
+    } catch (serErr) {
+      throw new Error(
+        'Could not serialize save payload: ' +
+          (serErr && serErr.message ? serErr.message : String(serErr))
+      );
+    }
     return fetch(url, {
       method: 'POST',
       credentials: 'include',
       headers: headers,
-      body: JSON.stringify(payload)
+      body: bodyText
     }).then(function (res) {
       if (!res.ok) {
         return res.text().then(function (txt) {
@@ -2648,7 +2755,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         ? fetchLatestMenuVersionMenuData()
         : getFromCMS(base + '/menu');
     return menuPromise.then(function(menuData) {
-      menuData = JSON.parse(JSON.stringify(menuData || {}));
+      menuData = cloneJsonSafe(unwrapMenuDataPayload(menuData || {}));
       try {
         var idoc = getEditorPreviewDocument();
         if (idoc && idoc.body) {
@@ -2684,7 +2791,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
     return buildMenuDataForSnapshot({ mergeLatestSnapshot: opts.mergeLatestSnapshot }).then(function(menuData) {
       var now = new Date();
-      var name = opts.name || ('Editor · ' + now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }));
+      var name = opts.name || ('Editor · ' + formatSnapshotTimestamp(now));
       var desc = opts.description || 'Menu snapshot from editor';
       var body = {
         name: name,
@@ -2701,9 +2808,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   /** Saves current server menu.json as a new version (POST /menu-versions). Used when leaving the editor. */
   function saveMenuSnapshotOnLeave() {
     var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
-    return buildMenuDataForSnapshot({ mergeLatestSnapshot: opts.mergeLatestSnapshot }).then(function(menuData) {
+    return buildMenuDataForSnapshot({}).then(function(menuData) {
       var now = new Date();
-      var name = 'Editor exit · ' + now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+      var name = 'Editor exit · ' + formatSnapshotTimestamp(now);
       var desc = themeOnlyMode
         ? 'Automatic theme snapshot when leaving the theme editor.'
         : 'Automatic snapshot when leaving the menu editor (back to dashboard).';
@@ -5721,7 +5828,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (contentType === 'section-header') {
       var headerEl = info.element;
       if (inputSectionWeight) inputSectionWeight.value = headerEl.getAttribute('data-weight') || '';
-      if (inputSectionIcon) inputSectionIcon.value = headerEl.getAttribute('data-icon') || '';
+      if (inputSectionIcon) inputSectionIcon.value = normalizeStoredImagePath(headerEl.getAttribute('data-icon') || '');
       if (window.DashboardSectionIconPicker) {
         var pickerReady =
           typeof window.DashboardSectionIconPicker.ensureLoaded === 'function'
@@ -5733,10 +5840,12 @@ document.addEventListener('DOMContentLoaded', async function() {
           }
         });
       }
+      var attrPrimary = normalizeStoredImagePath(headerEl.getAttribute('data-images-primary') || '');
+      var attrSecondary = normalizeStoredImagePath(headerEl.getAttribute('data-images-secondary') || '');
       var topImg = headerEl.querySelector('a img.food, img.food.item, .food.item');
-      var primaryPath = topImg ? (topImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-primary') || '');
       var bottomImg = headerEl.querySelector('.slideinimg');
-      var secondaryPath = bottomImg ? (bottomImg.getAttribute('src') || '').replace(/^\//, '') : (headerEl.getAttribute('data-images-secondary') || '');
+      var primaryPath = attrPrimary || normalizeStoredImagePath(topImg ? (topImg.getAttribute('data-src-path') || topImg.getAttribute('src') || '') : '');
+      var secondaryPath = attrSecondary || normalizeStoredImagePath(bottomImg ? (bottomImg.getAttribute('data-src-path') || bottomImg.getAttribute('src') || '') : '');
       applySectionImagePathsToForm(secondaryPath, primaryPath);
     } else if (contentType === 'menu-item') {
       var cardEl = info.element;
@@ -5925,11 +6034,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function applySectionImagePathsToForm(secondary, primary) {
     if (inputSectionImageTop) {
-      inputSectionImageTop.value = secondary || '';
+      inputSectionImageTop.value = normalizeStoredImagePath(secondary) || '';
       syncSectionSecondaryImagePickerFromInput();
     }
     if (inputSectionImageBottom) {
-      inputSectionImageBottom.value = primary || '';
+      inputSectionImageBottom.value = normalizeStoredImagePath(primary) || '';
       syncSectionPrimaryImageThumbFromInput();
     }
   }
@@ -5995,7 +6104,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         else if (fm.weight != null && selectedElement && selectedElement.classList && selectedElement.classList.contains('menu-header')) {
           selectedElement.setAttribute('data-weight', String(fm.weight));
         }
-        if (inputSectionIcon && fm.icon != null) inputSectionIcon.value = String(fm.icon);
+        if (inputSectionIcon && fm.icon != null) inputSectionIcon.value = normalizeStoredImagePath(String(fm.icon));
         if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
           window.DashboardSectionIconPicker.syncFromInput();
         }
@@ -6003,13 +6112,13 @@ document.addEventListener('DOMContentLoaded', async function() {
           var sectionPaths = sectionImagePathsFromFrontMatter(fm);
           if (sectionPaths.secondary) {
             if (inputSectionImageTop) {
-              inputSectionImageTop.value = sectionPaths.secondary;
+              inputSectionImageTop.value = normalizeStoredImagePath(sectionPaths.secondary);
               syncSectionSecondaryImagePickerFromInput();
             }
           }
           if (sectionPaths.primary) {
             if (inputSectionImageBottom) {
-              inputSectionImageBottom.value = sectionPaths.primary;
+              inputSectionImageBottom.value = normalizeStoredImagePath(sectionPaths.primary);
               syncSectionPrimaryImageThumbFromInput();
             }
           }
@@ -9313,15 +9422,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         if (contentType === 'section-header') {
           if (inputSectionWeight) selectedElement.setAttribute('data-weight', inputSectionWeight.value.trim());
-          if (inputSectionIcon) selectedElement.setAttribute('data-icon', inputSectionIcon.value.trim());
-          selectedElement.setAttribute('data-images-primary', (inputSectionImageBottom && inputSectionImageBottom.value) ? inputSectionImageBottom.value.trim() : '');
-          selectedElement.setAttribute('data-images-secondary', (inputSectionImageTop && inputSectionImageTop.value) ? inputSectionImageTop.value.trim() : '');
+          if (inputSectionIcon) selectedElement.setAttribute('data-icon', normalizeStoredImagePath(inputSectionIcon.value || ''));
+          var sectionPrimaryPath = normalizeStoredImagePath(inputSectionImageBottom && inputSectionImageBottom.value ? inputSectionImageBottom.value : '');
+          var sectionSecondaryPath = normalizeStoredImagePath(inputSectionImageTop && inputSectionImageTop.value ? inputSectionImageTop.value : '');
+          selectedElement.setAttribute('data-images-primary', sectionPrimaryPath);
+          selectedElement.setAttribute('data-images-secondary', sectionSecondaryPath);
           var topImg = selectedElement.querySelector('a img.food, img.food.item');
-          var topSrc = inputSectionImageBottom && inputSectionImageBottom.value.trim();
+          var topSrc = sectionPrimaryPath;
           if (topSrc) {
-            topSrc = topSrc.indexOf('/') === 0 ? topSrc : '/' + topSrc;
-            if (topImg) topImg.setAttribute('src', topSrc);
-            else {
+            var topPreview = resolveMenuItemImageSrcForPreview(topSrc);
+            if (topImg) {
+              topImg.setAttribute('data-src-path', topSrc);
+              topImg.setAttribute('src', topPreview);
+            } else {
               var wrap = selectedElement.querySelector('a[href]:not(.menu-anchor)');
               if (!wrap) {
                 var sectionLink = selectedElement.querySelector('h2 a');
@@ -9334,23 +9447,27 @@ document.addEventListener('DOMContentLoaded', async function() {
               var img = selectedElement.ownerDocument.createElement('img');
               img.className = 'food item aos-init aos-animate';
               img.setAttribute('data-aos', 'zoom-out');
-              img.src = topSrc;
+              img.setAttribute('data-src-path', topSrc);
+              img.src = topPreview;
               img.alt = sectionTitleForPayload(selectedElement) || (inputSectionTitle ? inputSectionTitle.value : '');
               img.loading = 'lazy';
               wrap.appendChild(img);
             }
           } else if (topImg) topImg.remove();
           var bottomImg = selectedElement.querySelector('.slideinimg');
-          var bottomSrc = inputSectionImageTop && inputSectionImageTop.value.trim();
+          var bottomSrc = sectionSecondaryPath;
           if (bottomSrc) {
-            bottomSrc = bottomSrc.indexOf('/') === 0 ? bottomSrc : '/' + bottomSrc;
+            var bottomPreview = resolveMenuItemImageSrcForPreview(bottomSrc);
             var h2 = selectedElement.querySelector('h2');
-            if (bottomImg) bottomImg.setAttribute('src', bottomSrc);
-            else if (h2) {
+            if (bottomImg) {
+              bottomImg.setAttribute('data-src-path', bottomSrc);
+              bottomImg.setAttribute('src', bottomPreview);
+            } else if (h2) {
               var slideImg = selectedElement.ownerDocument.createElement('img');
               slideImg.className = 'slideinimg aos-init aos-animate';
               slideImg.setAttribute('data-aos', 'zoom-out-right');
-              slideImg.src = bottomSrc;
+              slideImg.setAttribute('data-src-path', bottomSrc);
+              slideImg.src = bottomPreview;
               slideImg.alt = (sectionTitleForPayload(selectedElement) || (inputSectionTitle ? inputSectionTitle.value : '')) + ' decoration';
               slideImg.loading = 'lazy';
               h2.appendChild(slideImg);

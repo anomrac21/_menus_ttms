@@ -579,9 +579,19 @@
       v.CreatedAt;
     if (!t) return '';
     try {
-      return new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+      return new Date(t).toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
     } catch (e) {
-      return String(t);
+      try {
+        return new Date(t).toLocaleString();
+      } catch (e2) {
+        return String(t);
+      }
     }
   }
 

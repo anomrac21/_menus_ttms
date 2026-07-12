@@ -195,6 +195,8 @@
     var iconPageIndex = 0;
     var searchTimer = null;
     var eventsBound = false;
+    var updatingSelectedUi = false;
+    var syncingFromInput = false;
 
     var inputUrl;
     var inputSearch;
@@ -345,59 +347,69 @@
     }
 
     function updateSelectedUi() {
-      bind();
-      var url = normalizeUrl(inputUrl ? inputUrl.value : '');
-      var has = !!url;
-      var displayUrl = has ? resolveDisplayUrl(url) : '';
-      if (previewWrap) {
-        previewWrap.classList.toggle('dashboard-section-icon-selected-preview--empty', !has);
-        previewWrap.setAttribute('aria-hidden', has ? 'false' : 'true');
-      }
-      if (previewImg) {
-        if (has && displayUrl) {
-          previewImg.alt = '';
-          if (isCdnIconLibraryUrl(url)) {
-            wireIconImage(previewImg, displayUrl, iconFilename(url), function (resolved) {
-              if (!resolved) {
+      if (updatingSelectedUi) return;
+      updatingSelectedUi = true;
+      try {
+        if (!inputUrl || !previewWrap || !gridEl) bind();
+        var url = normalizeUrl(inputUrl ? inputUrl.value : '');
+        var has = !!url;
+        var displayUrl = has ? resolveDisplayUrl(url) : '';
+        if (previewWrap) {
+          previewWrap.classList.toggle('dashboard-section-icon-selected-preview--empty', !has);
+          previewWrap.setAttribute('aria-hidden', has ? 'false' : 'true');
+        }
+        if (previewImg) {
+          if (has && displayUrl) {
+            previewImg.alt = '';
+            if (isCdnIconLibraryUrl(url)) {
+              wireIconImage(previewImg, displayUrl, iconFilename(url), function (resolved) {
+                if (!resolved) {
+                  previewImg.removeAttribute('src');
+                  if (selectedLabel) selectedLabel.textContent = 'Icon unavailable on CDN';
+                }
+              });
+            } else {
+              previewImg.src = displayUrl;
+              previewImg.onerror = function () {
                 previewImg.removeAttribute('src');
-                if (selectedLabel) selectedLabel.textContent = 'Icon unavailable on CDN';
-              }
-            });
+                if (selectedLabel) selectedLabel.textContent = 'Image preview unavailable';
+              };
+            }
           } else {
-            previewImg.src = displayUrl;
-            previewImg.onerror = function () {
-              previewImg.removeAttribute('src');
-              if (selectedLabel) selectedLabel.textContent = 'Image preview unavailable';
-            };
+            previewImg.removeAttribute('src');
+            previewImg.alt = '';
           }
-        } else {
-          previewImg.removeAttribute('src');
-          previewImg.alt = '';
         }
-      }
-      if (selectedLabel) {
-        if (!has) {
-          selectedLabel.textContent = 'Select an icon below or add your own image';
-        } else if (
-          selectedLabel.textContent !== 'Icon unavailable on CDN' &&
-          selectedLabel.textContent !== 'Image preview unavailable'
-        ) {
-          var match = findIconByUrl(url);
-          selectedLabel.textContent = match ? match.name + ' (' + match.category + ')' : url;
+        if (selectedLabel) {
+          if (!has) {
+            selectedLabel.textContent = 'Select an icon below or add your own image';
+          } else if (
+            selectedLabel.textContent !== 'Icon unavailable on CDN' &&
+            selectedLabel.textContent !== 'Image preview unavailable'
+          ) {
+            var match = findIconByUrl(url);
+            selectedLabel.textContent = match ? match.name + ' (' + match.category + ')' : url;
+          }
         }
-      }
-      if (gridEl && shared.iconsAll.length) {
-        var buttons = gridEl.querySelectorAll('.dashboard-section-icon-option');
-        for (var b = 0; b < buttons.length; b++) {
-          var btn = buttons[b];
-          var btnUrl = btn.getAttribute('data-icon-url') || '';
-          var on = has && iconUrlsMatch(btnUrl, url);
-          btn.classList.toggle('dashboard-section-icon-option--selected', on);
-          btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        if (gridEl && shared.iconsAll.length) {
+          var buttons = gridEl.querySelectorAll('.dashboard-section-icon-option');
+          for (var b = 0; b < buttons.length; b++) {
+            var btn = buttons[b];
+            var btnUrl = btn.getAttribute('data-icon-url') || '';
+            var on = has && iconUrlsMatch(btnUrl, url);
+            btn.classList.toggle('dashboard-section-icon-option--selected', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+          }
         }
-      }
-      if (window.DashboardEditFieldPrompts && typeof window.DashboardEditFieldPrompts.refresh === 'function') {
-        window.DashboardEditFieldPrompts.refresh();
+        if (window.DashboardEditFieldPrompts && typeof window.DashboardEditFieldPrompts.refresh === 'function') {
+          window.setTimeout(function () {
+            try {
+              window.DashboardEditFieldPrompts.refresh();
+            } catch (e) { /* ignore */ }
+          }, 0);
+        }
+      } finally {
+        updatingSelectedUi = false;
       }
     }
 
@@ -422,23 +434,29 @@
     }
 
     function syncFromInput() {
-      bind();
-      var raw = normalizeUrl(inputUrl ? inputUrl.value : '');
-      if (raw && inputUrl && isCdnIconLibraryUrl(raw)) {
-        raw = normalizeIconCdnUrl(raw);
-        if (raw !== inputUrl.value) inputUrl.value = raw;
-        var match = findIconByUrl(raw);
-        if (match) {
-          if (match.url !== raw) inputUrl.value = match.url;
-          activeCategory = match.category || activeCategory;
-        } else if (raw.indexOf('/icons/') >= 0) {
-          var parts = raw.split('/icons/');
-          if (parts[1]) activeCategory = parts[1].split('/')[0] || activeCategory;
+      if (syncingFromInput) return;
+      syncingFromInput = true;
+      try {
+        bind();
+        var raw = normalizeUrl(inputUrl ? inputUrl.value : '');
+        if (raw && inputUrl && isCdnIconLibraryUrl(raw)) {
+          raw = normalizeIconCdnUrl(raw);
+          if (raw !== inputUrl.value) inputUrl.value = raw;
+          var match = findIconByUrl(raw);
+          if (match) {
+            if (match.url !== raw) inputUrl.value = match.url;
+            activeCategory = match.category || activeCategory;
+          } else if (raw.indexOf('/icons/') >= 0) {
+            var parts = raw.split('/icons/');
+            if (parts[1]) activeCategory = parts[1].split('/')[0] || activeCategory;
+          }
+          renderCategoryTabs();
         }
-        renderCategoryTabs();
+        updateSelectedUi();
+        if (shared.iconsAll.length) applyFilters(true);
+      } finally {
+        syncingFromInput = false;
       }
-      updateSelectedUi();
-      if (shared.iconsAll.length) applyFilters(true);
     }
 
     function renderCategoryTabs() {
