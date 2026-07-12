@@ -41,7 +41,7 @@
                 {{ partial "components/menu-header-actions-row.html" (dict "url" $titleurl "title" $title "sectionSlug" .Section "imagePrimary" (index .Params.images "primary")) }}
                 <a class="menu-header__link" href="{{ $titleurl }}">
                   {{ if .Params.images.primary }}
-                    <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640">
+                    <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640" data-src-path="{{ .Params.images.primary }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
                   {{ end }}
                   <div class="headerstyle item">
                     <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
@@ -81,7 +81,7 @@
                     {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imagePrimary" (index .Params.images "primary")) }}
                     <a class="menu-header__link" href="{{ .RelPermalink }}">
                       {{ if .Params.images.primary }}
-                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640">
+                        <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640" data-src-path="{{ .Params.images.primary }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
                       {{ end }}
                       <div class="headerstyle item">
                         <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">

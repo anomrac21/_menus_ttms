@@ -16,14 +16,8 @@
   {{- if findRE `(?i)thumbor\.ttmenus\.com` $path -}}{{- $skip = true -}}{{- end -}}
   {{- if or (hasPrefix $path "/branding") (hasPrefix $path "branding/") (hasPrefix $path "/main/") (hasPrefix $path "main/") -}}{{- $skip = true -}}{{- end -}}
   {{- $out := $path -}}
-  {{- if hasPrefix $path "draft-assets/" -}}
-    {{- $cmsBase := site.Params.contentManagement.serviceUrl | default "" -}}
-    {{- if not $cmsBase -}}{{- $cmsBase = strings.TrimSuffix "/api" (site.Params.contentManagement.apiUrl | default "") -}}{{- end -}}
-    {{- $cid := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
-    {{- if and $cmsBase $cid -}}
-      {{- $name := strings.TrimPrefix "draft-assets/" $path -}}
-      {{- $out = printf "%s/api/clients/%s/preview/draft-assets/%s" (strings.TrimSuffix "/" $cmsBase) $cid $name -}}
-    {{- end -}}
+  {{- /* draft-assets/* stay site-relative; CMS preview URLs need auth and break public pages */ -}}
+  {{- if or (hasPrefix $path "draft-assets/") (hasPrefix $path "/draft-assets/") -}}
     {{- $skip = true -}}
   {{- end -}}
   {{- if not $skip -}}
