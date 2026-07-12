@@ -348,22 +348,28 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function saveEmbedPanelSnapshot() {
     if (_embedSaveInFlight) return _embedSaveInFlight;
+    var step = 'start';
     setEditStatus('Saving draft and snapshot…');
     _embedSaveInFlight = Promise.resolve()
       .then(function() {
-        if (editFormDirty) applyEditToPreview();
-        return persistCurrentDraftToCMS({ skipHighlights: true });
+        step = 'draft';
+        // Form state is enough for the draft — avoid touching the live parent DOM on mobile.
+        return persistCurrentDraftToCMS({ skipHighlights: true, skipApplyPreview: true, force: true });
       })
       .then(function() {
+        step = 'snapshot';
+        // Never merge latest CMS snapshot in embed mode: parsing a nested/corrupt
+        // menu_data blob via res.json() overflows the call stack on mobile Safari.
         return saveMenuSnapshotToCMS({
           updateLiveMenu: false,
-          mergeLatestSnapshot: true,
+          domOnly: true,
           name: 'Live menu edit · ' + formatSnapshotTimestamp(new Date()),
           description:
-            'Menu snapshot from live menu editor — merges latest CMS snapshot with current layout and drafts.',
+            'Menu snapshot from live menu editor (layout from current page + drafts).',
         });
       })
       .then(function() {
+        step = 'ui';
         editFormDirty = false;
         setEditStatus('Saved to menu snapshot');
         try { applyEditHighlights(); } catch (hlErr) { console.warn('applyEditHighlights', hlErr); }
@@ -380,9 +386,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       })
       .catch(function(err) {
         setEditStatus('Save failed');
-        console.warn('saveEmbedPanelSnapshot', err);
+        console.warn('saveEmbedPanelSnapshot', step, err);
         var msg = err && err.message ? err.message : String(err);
-        alert('Could not save: ' + msg);
+        alert('Could not save [' + step + ']: ' + msg);
       })
       .finally(function() {
         _embedSaveInFlight = null;
@@ -2492,7 +2498,15 @@ document.addEventListener('DOMContentLoaded', async function() {
           throw new Error('CMS error ' + res.status + ': ' + t);
         });
       }
-      return res.json();
+      return res.text().then(function(text) {
+        if (!text) return {};
+        try {
+          return JSON.parse(text);
+        } catch (parseErr) {
+          var msg = parseErr && parseErr.message ? parseErr.message : String(parseErr);
+          throw new Error('CMS JSON parse failed for ' + path + ': ' + msg);
+        }
+      });
     }).then(function(data) {
       cmsLogJson('GET ←', path, data);
       return data;
@@ -2850,9 +2864,37 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
+  function buildDomOnlyMenuSnapshot() {
+    var menuData = {
+      version: '1.0.0',
+      exportDate: new Date().toISOString(),
+      metadata: { siteTitle: '', baseURL: '' },
+      categories: [],
+      menuItems: [],
+      locations: []
+    };
+    try {
+      var idoc = getEditorPreviewDocument();
+      if (idoc && idoc.body) {
+        var collected = collectDashboardNewMenuItemsFromIframe(idoc);
+        var domSnap = collectMenuStructureFromIframe(idoc);
+        menuData.categories = domSnap.categories || [];
+        menuData.menuItems = domSnap.menuItems || [];
+        mergeDashboardNewItemsIntoMenuData(menuData, collected);
+      }
+    } catch (e) {
+      console.warn('buildDomOnlyMenuSnapshot', e);
+    }
+    mergeThemeColorOverridesIntoMenuData(menuData);
+    return menuData;
+  }
+
   /** Merge iframe / live menu DOM into server menu JSON for POST /menu-versions. */
   function buildMenuDataForSnapshot(opts) {
     opts = opts || {};
+    if (opts.domOnly || (embedPanelMode && opts.mergeLatestSnapshot)) {
+      return Promise.resolve(buildDomOnlyMenuSnapshot());
+    }
     var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
     var menuPromise =
       opts.mergeLatestSnapshot && embedPanelMode
@@ -2894,7 +2936,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   function saveMenuSnapshotToCMS(opts) {
     opts = opts || {};
     var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
-    return buildMenuDataForSnapshot({ mergeLatestSnapshot: opts.mergeLatestSnapshot }).then(function(menuData) {
+    return buildMenuDataForSnapshot({
+      mergeLatestSnapshot: opts.mergeLatestSnapshot,
+      domOnly: opts.domOnly
+    }).then(function(menuData) {
       var now = new Date();
       var name = opts.name || ('Editor · ' + formatSnapshotTimestamp(now));
       var desc = opts.description || 'Menu snapshot from editor';
@@ -9717,10 +9762,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function persistCurrentDraftToCMS(opts) {
     opts = opts || {};
-    if (!editFormDirty || !selectedInfo || !selectedElement) {
+    if (!selectedInfo || !selectedElement) {
       return Promise.resolve(true);
     }
-    applyEditToPreview();
+    // Embed save can skip dirty check when we always want the current form posted;
+    // otherwise require dirty to avoid no-op posts.
+    if (!opts.force && !editFormDirty) {
+      return Promise.resolve(true);
+    }
+    if (!opts.skipApplyPreview) applyEditToPreview();
     var draftPayload = buildContentEditPayload();
     if (!draftPayload) {
       cmsLogJson('save draft skipped', 'persistCurrentDraftToCMS', { reason: 'buildContentEditPayload returned null (e.g. slideshow/location or unsupported type)' });
