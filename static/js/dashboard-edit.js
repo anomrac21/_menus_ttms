@@ -6317,7 +6317,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return p.content_path || payload.contentPath || payload.content_path || '';
       }).filter(Boolean));
       applyEditHighlights();
-      syncPendingChangesPanel();
+      // applyEditHighlights already syncs the pending panel via syncSaveButtonAppearance.
     }).catch(function() { /* ignore */ });
   }
 
@@ -6999,22 +6999,40 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   var draftChangeDetailsInFlight = null;
+  var _syncPendingChangesPanelDepth = 0;
+  var _draftDetailsPanelRefreshQueued = false;
+
+  function queuePendingChangesPanelRefresh() {
+    if (_draftDetailsPanelRefreshQueued) return;
+    _draftDetailsPanelRefreshQueued = true;
+    var schedule = typeof queueMicrotask === 'function'
+      ? queueMicrotask
+      : function (fn) { window.setTimeout(fn, 0); };
+    schedule(function () {
+      _draftDetailsPanelRefreshQueued = false;
+      syncPendingChangesPanel();
+    });
+  }
 
   function ensureDraftChangeDetails(paths) {
     paths = (paths || []).filter(function(p) { return p && draftContentPaths.has(p); });
+    if (!paths.length) return Promise.resolve();
+
+    // Fill provisional details synchronously (no panel re-entry here).
+    paths.forEach(function(p) {
+      if (draftChangeDetailsCache[p]) return;
+      var rec = draftPreviewRecordsByPath[p];
+      if (!rec) return;
+      draftChangeDetailsCache[p] = provisionalDraftDetailsFromPayload(previewPayloadFromRecord(rec));
+      draftChangeDetailsProvisionalPaths.add(p);
+    });
+
+    // Only fetch live comparison for paths that still need an upgrade and have a preview record.
     var todo = paths.filter(function(p) {
+      if (!draftPreviewRecordsByPath[p]) return false;
       return !draftChangeDetailsCache[p] || draftChangeDetailsProvisionalPaths.has(p);
     });
     if (!todo.length) return Promise.resolve();
-
-    todo.forEach(function(p) {
-      var rec = draftPreviewRecordsByPath[p];
-      if (rec) {
-        draftChangeDetailsCache[p] = provisionalDraftDetailsFromPayload(previewPayloadFromRecord(rec));
-        draftChangeDetailsProvisionalPaths.add(p);
-      }
-    });
-    syncPendingChangesPanel();
 
     if (draftChangeDetailsInFlight) return draftChangeDetailsInFlight;
 
@@ -7028,7 +7046,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     }).catch(function() { /* ignore */ }).finally(function() {
       draftChangeDetailsInFlight = null;
-      syncPendingChangesPanel();
+      queuePendingChangesPanelRefresh();
     });
     return draftChangeDetailsInFlight;
   }
@@ -7451,48 +7469,58 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function syncPendingChangesPanel() {
-    var panel = document.getElementById('dashboardEditChangesPanel');
-    var listEl = document.getElementById('dashboardEditChangesList');
-    var countEl = document.getElementById('dashboardEditChangesCount');
-    var syncedEl = document.getElementById('dashboardEditChangesSynced');
-    var panelBadge = document.getElementById('dashboardEditPanelPendingBadge');
-    if (!panel || !listEl) return;
+    if (_syncPendingChangesPanelDepth > 0) return;
+    _syncPendingChangesPanelDepth++;
+    try {
+      var panel = document.getElementById('dashboardEditChangesPanel');
+      var listEl = document.getElementById('dashboardEditChangesList');
+      var countEl = document.getElementById('dashboardEditChangesCount');
+      var syncedEl = document.getElementById('dashboardEditChangesSynced');
+      var panelBadge = document.getElementById('dashboardEditPanelPendingBadge');
+      if (!panel || !listEl) return;
 
-    var changes = collectPendingMenuChanges();
-    if (embedChangesFilterKind) {
-      changes = filterChangesForEmbedHost(changes, embedChangesFilterKind);
-    }
-    syncPendingChangesPanelScopeNote(embedChangesFilterKind, changes.length);
-    var count = changes.length;
-    var pending = count > 0;
+      var changes = collectPendingMenuChanges();
+      if (embedChangesFilterKind) {
+        changes = filterChangesForEmbedHost(changes, embedChangesFilterKind);
+      }
+      syncPendingChangesPanelScopeNote(embedChangesFilterKind, changes.length);
+      var count = changes.length;
+      var pending = count > 0;
 
-    panel.classList.toggle('dashboard-edit-changes-panel--pending', pending);
-    panel.classList.toggle('dashboard-edit-changes-panel--synced', !pending);
+      panel.classList.toggle('dashboard-edit-changes-panel--pending', pending);
+      panel.classList.toggle('dashboard-edit-changes-panel--synced', !pending);
 
-    if (countEl) {
-      countEl.textContent = String(count);
-      countEl.classList.toggle('hidden', !pending);
-      countEl.setAttribute('aria-hidden', pending ? 'false' : 'true');
-    }
-    if (syncedEl) syncedEl.classList.toggle('hidden', pending);
-    if (panelBadge) {
-      panelBadge.textContent = pending ? String(count) : '';
-      panelBadge.classList.toggle('hidden', !pending);
-      panelBadge.setAttribute('aria-hidden', pending ? 'false' : 'true');
-    }
+      if (countEl) {
+        countEl.textContent = String(count);
+        countEl.classList.toggle('hidden', !pending);
+        countEl.setAttribute('aria-hidden', pending ? 'false' : 'true');
+      }
+      if (syncedEl) syncedEl.classList.toggle('hidden', pending);
+      if (panelBadge) {
+        panelBadge.textContent = pending ? String(count) : '';
+        panelBadge.classList.toggle('hidden', !pending);
+        panelBadge.setAttribute('aria-hidden', pending ? 'false' : 'true');
+      }
 
-    listEl.innerHTML = '';
-    if (pending) {
-      changes = changes.map(function(c) {
-        if (c.status === 'draft' && c.path) {
-          return Object.assign({}, c, { details: draftDetailsForChange(c) });
-        }
-        return c;
-      });
-      appendPendingChangeItems(listEl, changes, { clickable: true });
-      ensureDraftChangeDetails(changes.filter(function(c) { return c.status === 'draft'; }).map(function(c) { return c.path; }));
+      listEl.innerHTML = '';
+      if (pending) {
+        var draftPaths = changes
+          .filter(function(c) { return c.status === 'draft' && c.path; })
+          .map(function(c) { return c.path; });
+        // Populate provisional details before rendering; network upgrade is async.
+        ensureDraftChangeDetails(draftPaths);
+        changes = changes.map(function(c) {
+          if (c.status === 'draft' && c.path) {
+            return Object.assign({}, c, { details: draftDetailsForChange(c) });
+          }
+          return c;
+        });
+        appendPendingChangeItems(listEl, changes, { clickable: true });
+      }
+      syncAllEmbedWizardSaveButtons();
+    } finally {
+      _syncPendingChangesPanelDepth--;
     }
-    syncAllEmbedWizardSaveButtons();
   }
 
   function applyEditHighlights() {
@@ -9599,6 +9627,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (pid) {
         savedDraftPreviewId = pid;
         if (draftPayload.contentPath) {
+          storeDraftPreviewRecord({
+            id: pid,
+            previewId: pid,
+            preview_id: pid,
+            content_path: draftPayload.contentPath,
+            payload: draftPayload,
+            status: 'draft'
+          });
           draftContentPaths.add(draftPayload.contentPath);
           applyEditHighlights();
         }
