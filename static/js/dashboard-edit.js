@@ -147,51 +147,129 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   var _embedSaveInFlight = null;
 
-  /** Safe snapshot label timestamp — avoids mobile WebKit stack overflows from dateStyle/timeStyle. */
+  /** Safe snapshot label timestamp — avoid locale APIs that can overflow on some mobile WebKits. */
   function formatSnapshotTimestamp(date) {
     var d = date instanceof Date ? date : new Date(date || Date.now());
     if (isNaN(d.getTime())) d = new Date();
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+    return (
+      d.getFullYear() +
+      '-' +
+      pad(d.getMonth() + 1) +
+      '-' +
+      pad(d.getDate()) +
+      ' ' +
+      pad(d.getHours()) +
+      ':' +
+      pad(d.getMinutes())
+    );
+  }
+
+  /** Iterative JSON-safe clone (no recursive stringify — safer on mobile call stacks). */
+  function cloneJsonSafe(value, maxDepth) {
+    maxDepth = typeof maxDepth === 'number' ? maxDepth : 20;
+    if (vIsPrimitive(value)) return value;
+    var root;
     try {
-      return d.toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-    } catch (e1) {
-      try {
-        return d.toLocaleString();
-      } catch (e2) {
-        return d.toISOString();
+      var seen = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+      var stack = [{ src: value, depth: 0, parent: null, key: null, isRoot: true }];
+      while (stack.length) {
+        var frame = stack.pop();
+        var src = frame.src;
+        var depth = frame.depth;
+        var copy;
+        if (src == null || typeof src !== 'object') {
+          copy = src;
+        } else if (seen && seen.has(src)) {
+          copy = seen.get(src);
+        } else if (depth >= maxDepth) {
+          copy = Array.isArray(src) ? [] : {};
+        } else if (Array.isArray(src)) {
+          copy = [];
+          if (seen) seen.set(src, copy);
+          for (var i = src.length - 1; i >= 0; i--) {
+            stack.push({ src: src[i], depth: depth + 1, parent: copy, key: i, isRoot: false });
+          }
+        } else {
+          copy = {};
+          if (seen) seen.set(src, copy);
+          var keys = Object.keys(src);
+          for (var k = keys.length - 1; k >= 0; k--) {
+            var key = keys[k];
+            stack.push({ src: src[key], depth: depth + 1, parent: copy, key: key, isRoot: false });
+          }
+        }
+        if (frame.isRoot) root = copy;
+        else if (frame.parent != null) frame.parent[frame.key] = copy;
       }
+      return root;
+    } catch (e) {
+      return Array.isArray(value) ? [] : {};
     }
   }
 
-  /** Clone plain JSON without blowing the stack on pathological nesting / non-JSON values. */
-  function cloneJsonSafe(value, maxDepth) {
-    maxDepth = typeof maxDepth === 'number' ? maxDepth : 40;
-    try {
-      return JSON.parse(JSON.stringify(value));
-    } catch (e) {
-      function walk(v, depth, seen) {
-        if (v == null || typeof v !== 'object') return v;
-        if (depth >= maxDepth) return Array.isArray(v) ? [] : {};
-        if (seen.has(v)) return Array.isArray(v) ? [] : {};
-        seen.add(v);
-        if (Array.isArray(v)) {
-          var arr = [];
-          for (var i = 0; i < v.length; i++) arr.push(walk(v[i], depth + 1, seen));
-          return arr;
+  function vIsPrimitive(v) {
+    return v == null || (typeof v !== 'object' && typeof v !== 'function');
+  }
+
+  function slimMenuDataForSnapshot(raw) {
+    raw = unwrapMenuDataPayload(raw || {}) || {};
+    var cats = Array.isArray(raw.categories) ? raw.categories : [];
+    var items = Array.isArray(raw.menuItems) ? raw.menuItems : [];
+    var out = {
+      version: raw.version || '1.0.0',
+      exportDate: raw.exportDate || new Date().toISOString(),
+      metadata: {
+        siteTitle: (raw.metadata && raw.metadata.siteTitle) || '',
+        baseURL: (raw.metadata && raw.metadata.baseURL) || '',
+      },
+      categories: cats.map(function (c) {
+        if (!c || typeof c !== 'object') return { title: '', url: '', weight: 0 };
+        return {
+          title: c.title != null ? String(c.title) : '',
+          url: c.url != null ? String(c.url) : '',
+          weight: typeof c.weight === 'number' ? c.weight : parseInt(c.weight, 10) || 0,
+          image: c.image != null ? String(c.image) : '',
+          summary: c.summary != null ? String(c.summary) : '',
+          slidein: c.slidein != null ? String(c.slidein) : '',
+        };
+      }),
+      menuItems: items.map(function (mi) {
+        if (!mi || typeof mi !== 'object') return { id: '', title: '', url: '', category: '', categoryUrl: '', weight: 0 };
+        var row = {
+          id: mi.id != null ? String(mi.id) : '',
+          title: mi.title != null ? String(mi.title) : '',
+          url: mi.url != null ? String(mi.url) : '',
+          category: mi.category != null ? String(mi.category) : '',
+          categoryUrl: mi.categoryUrl != null ? String(mi.categoryUrl) : '',
+          weight: typeof mi.weight === 'number' ? mi.weight : parseInt(mi.weight, 10) || 0,
+          summary: mi.summary != null ? String(mi.summary) : '',
+        };
+        if (Array.isArray(mi.prices) && mi.prices.length) {
+          row.prices = mi.prices.map(function (pr) {
+            if (!pr || typeof pr !== 'object') return { size: '', flavour: '', price: 0 };
+            return {
+              size: pr.size != null ? String(pr.size) : '',
+              flavour: pr.flavour != null ? String(pr.flavour) : '',
+              price: typeof pr.price === 'number' ? pr.price : parseFloat(pr.price) || 0,
+            };
+          });
         }
-        var out = {};
-        Object.keys(v).forEach(function (k) {
-          out[k] = walk(v[k], depth + 1, seen);
-        });
-        return out;
-      }
-      return walk(value, 0, typeof WeakSet !== 'undefined' ? new WeakSet() : { has: function () { return false; }, add: function () {} });
+        return row;
+      }),
+    };
+    if (Array.isArray(raw.locations) && raw.locations.length) {
+      out.locations = cloneJsonSafe(raw.locations, 6);
+    } else {
+      out.locations = [];
     }
+    if (raw.themeColorOverrides && typeof raw.themeColorOverrides === 'object') {
+      out.themeColorOverrides = {};
+      Object.keys(raw.themeColorOverrides).forEach(function (k) {
+        out.themeColorOverrides[k] = String(raw.themeColorOverrides[k]);
+      });
+    }
+    return out;
   }
 
   /** Prefer repo/content image paths; unwrap Thumbor display URLs and accidental /https:// prefixes. */
@@ -274,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     _embedSaveInFlight = Promise.resolve()
       .then(function() {
         if (editFormDirty) applyEditToPreview();
-        return persistCurrentDraftToCMS();
+        return persistCurrentDraftToCMS({ skipHighlights: true });
       })
       .then(function() {
         return saveMenuSnapshotToCMS({
@@ -288,7 +366,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       .then(function() {
         editFormDirty = false;
         setEditStatus('Saved to menu snapshot');
-        syncPendingChangesPanel();
+        try { applyEditHighlights(); } catch (hlErr) { console.warn('applyEditHighlights', hlErr); }
+        try { syncPendingChangesPanel(); } catch (syncErr) { console.warn('syncPendingChangesPanel', syncErr); }
         try {
           if (parentMenuWindow) {
             parentMenuWindow.postMessage(
@@ -302,7 +381,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       .catch(function(err) {
         setEditStatus('Save failed');
         console.warn('saveEmbedPanelSnapshot', err);
-        alert('Could not save: ' + (err && err.message ? err.message : String(err)));
+        var msg = err && err.message ? err.message : String(err);
+        alert('Could not save: ' + msg);
       })
       .finally(function() {
         _embedSaveInFlight = null;
@@ -2361,14 +2441,38 @@ document.addEventListener('DOMContentLoaded', async function() {
       console.log(tag, phase, pathOrUrl);
       return;
     }
+    // Never pretty-print huge menu snapshots on mobile — stringify can overflow the stack.
+    if (detail && typeof detail === 'object') {
+      if (detail.menu_data || detail.menuData) {
+        var md = detail.menu_data || detail.menuData;
+        console.log(tag, phase, pathOrUrl, {
+          name: detail.name,
+          description: detail.description,
+          update_live_menu: detail.update_live_menu,
+          menu_data: {
+            categories: md && md.categories && md.categories.length,
+            menuItems: md && md.menuItems && md.menuItems.length,
+          },
+        });
+        return;
+      }
+      if (Array.isArray(detail.categories) || Array.isArray(detail.menuItems)) {
+        console.log(tag, phase, pathOrUrl, {
+          categories: detail.categories && detail.categories.length,
+          menuItems: detail.menuItems && detail.menuItems.length,
+          version: detail.version,
+        });
+        return;
+      }
+    }
     var s;
     try {
-      s = typeof detail === 'string' ? detail : JSON.stringify(detail, null, 2);
+      s = typeof detail === 'string' ? detail : JSON.stringify(detail);
     } catch (e) {
-      console.log(tag, phase, pathOrUrl, detail);
+      console.log(tag, phase, pathOrUrl, '(unserializable)');
       return;
     }
-    var max = 14000;
+    var max = 8000;
     if (s.length > max) {
       s = s.slice(0, max) + '\n… [truncated; expand in Network tab if needed]';
     }
@@ -2755,11 +2859,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         ? fetchLatestMenuVersionMenuData()
         : getFromCMS(base + '/menu');
     return menuPromise.then(function(menuData) {
-      menuData = cloneJsonSafe(unwrapMenuDataPayload(menuData || {}));
+      menuData = slimMenuDataForSnapshot(menuData || {});
       try {
         var idoc = getEditorPreviewDocument();
         if (idoc && idoc.body) {
-          syncSectionWeightsFromDom(idoc);
+          // In embed mode the preview is the live parent menu — avoid mutating it during save.
+          if (!embedPanelMode) syncSectionWeightsFromDom(idoc);
           var collected = collectDashboardNewMenuItemsFromIframe(idoc);
           var domSnap = collectMenuStructureFromIframe(idoc);
           if (isMenuDataEmpty(menuData)) {
@@ -9610,7 +9715,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
-  function persistCurrentDraftToCMS() {
+  function persistCurrentDraftToCMS(opts) {
+    opts = opts || {};
     if (!editFormDirty || !selectedInfo || !selectedElement) {
       return Promise.resolve(true);
     }
@@ -9636,7 +9742,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             status: 'draft'
           });
           draftContentPaths.add(draftPayload.contentPath);
-          applyEditHighlights();
+          if (!opts.skipHighlights) applyEditHighlights();
         }
         editFormDirty = false;
         setEditStatus('Draft saved (not yet published)');
