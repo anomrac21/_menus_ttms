@@ -14,6 +14,8 @@
 
     {{ partial "dashboard/locations-settings-panel.html" . }}
 
+    {{ partial "dashboard/pos-settings-panel.html" . }}
+
     {{- $os := .Site.Params.orderingsystem | default dict -}}
     <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--ordering" aria-labelledby="settings-orderingsystem-heading">
       <div class="dashboard-settings-panel-head">

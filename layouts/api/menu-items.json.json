@@ -20,14 +20,21 @@
         {{- end -}}
       {{- end -}}
 
-      {{- /* Build prices array */ -}}
+      {{- /* Build prices array (include optional loyverse_variant_id per price row) */ -}}
       {{- $prices := slice -}}
+      {{- $priceMeta := slice -}}
       {{- range .Params.prices -}}
         {{- $price := slice -}}
         {{- $price = $price | append .variable1 -}}
         {{- $price = $price | append .variable2 -}}
         {{- $price = $price | append .price -}}
         {{- $prices = $prices | append $price -}}
+        {{- $priceMeta = $priceMeta | append (dict
+          "variable1" .variable1
+          "variable2" .variable2
+          "price" .price
+          "loyverse_variant_id" (.loyverse_variant_id | default "")
+        ) -}}
       {{- end -}}
 
       {{- /* Build side categories array (new structure) */ -}}
@@ -170,6 +177,9 @@
           "variable1_values" $variable1Values
           "variable2_values" (sort $variable2Values)
           "prices" $prices
+          "price_meta" $priceMeta
+          "loyverse_item_id" (.Params.loyverse_item_id | default "")
+          "loyverse_variant_id" (.Params.loyverse_variant_id | default "")
           "side_categories" $sideCategories
           "sides" $sides
           "sideconfig" $sideconfig

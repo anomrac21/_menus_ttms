@@ -716,6 +716,9 @@ async function openItem(ele, options) {
 			sizes: itemData.variable1_values || itemData.sizes || [],
 			flavours: itemData.variable2_values || itemData.flavours || [],
 			items: itemData.prices || [],
+			price_meta: itemData.price_meta || [],
+			loyverse_item_id: itemData.loyverse_item_id || '',
+			loyverse_variant_id: itemData.loyverse_variant_id || '',
 			side_categories: itemData.side_categories || [],
 			sides: itemData.sides || [],
 			sideoptions: itemData.sideconfig || [],
@@ -1715,6 +1718,28 @@ function toggleCart(){
   console.log('📦 Adding to cart:', {item, sidesData, adds: addsArray, mods: modsArray, promoData});
   
   const orderEntry = {"item":item,"size":size,"sides":sidesData,"adds":addsArray, "mods":modsArray, "amt":amt,"cost":cost};
+  // Carry Loyverse variant mapping from the open item (front matter / price_meta) when present.
+  try {
+    if (typeof currentoptions === 'object' && currentoptions) {
+      var lv = currentoptions.loyverse_variant_id || '';
+      if (!lv && Array.isArray(currentoptions.price_meta)) {
+        for (var pi = 0; pi < currentoptions.price_meta.length; pi++) {
+          var pm = currentoptions.price_meta[pi];
+          if (!pm) continue;
+          var v1 = String(pm.variable1 || '-');
+          if (String(size || '-') === v1 || String(size) === String(pm.variable1)) {
+            if (pm.loyverse_variant_id) { lv = pm.loyverse_variant_id; break; }
+          }
+        }
+        if (!lv && currentoptions.price_meta.length === 1 && currentoptions.price_meta[0].loyverse_variant_id) {
+          lv = currentoptions.price_meta[0].loyverse_variant_id;
+        }
+      }
+      if (lv) orderEntry.loyverse_variant_id = lv;
+      if (currentoptions.loyverse_item_id) orderEntry.loyverse_item_id = currentoptions.loyverse_item_id;
+      if (currentoptions.url) orderEntry.url = currentoptions.url;
+    }
+  } catch (e) {}
   if (promoData && (promoData.promotions || promoData.pricesArray !== undefined || promoData.availability)) {
     orderEntry.promotions = promoData.promotions;
     orderEntry.pricesArray = promoData.pricesArray;

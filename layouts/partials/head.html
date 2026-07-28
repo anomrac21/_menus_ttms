@@ -617,17 +617,28 @@
 {{- end -}}
 
 {{- if site.Params.posintegration.enabled -}}
+{{- $posClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+{{- $posMap := dict -}}
+{{- with site.Data.pos_mapping -}}
+  {{- with .loyverse -}}
+    {{- with .items -}}
+      {{- $posMap = . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 <script>
-// POS Integration Configuration
+// POS Integration Configuration (no Loyverse secrets — proxy uses stored OAuth tokens server-side)
 window.POS_CONFIG = {
     enabled: {{ site.Params.posintegration.enabled }},
     provider: "{{ site.Params.posintegration.provider }}",
-    apiUrl: "{{ site.Params.posintegration.api_url }}",
-    accessToken: "{{ site.Params.posintegration.access_token }}",
+    apiUrl: "{{ site.Params.posintegration.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
+    oauthUrl: "{{ site.Params.posintegration.oauth_url | default site.Params.posintegration.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
+    clientId: "{{ $posClient }}",
     storeId: "{{ site.Params.posintegration.store_id }}",
-    syncMenu: {{ site.Params.posintegration.sync_menu }},
-    autoProcessOrders: {{ site.Params.posintegration.auto_process_orders }},
-    fallbackToWhatsapp: {{ site.Params.posintegration.fallback_to_whatsapp }}
+    syncMenu: {{ site.Params.posintegration.sync_menu | default false }},
+    autoProcessOrders: {{ site.Params.posintegration.auto_process_orders | default false }},
+    fallbackToWhatsapp: {{ site.Params.posintegration.fallback_to_whatsapp | default true }},
+    itemMapping: {{ $posMap | jsonify }}
 };
 </script>
 <script src="/js/pos-integration.js" defer></script>

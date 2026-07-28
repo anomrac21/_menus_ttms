@@ -1,0 +1,39 @@
+{{- /* POS / Loyverse connect panel for menu settings dashboard */ -}}
+<section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--pos" aria-labelledby="settings-pos-heading" id="posIntegrationPanel">
+  <div class="dashboard-settings-panel-head">
+    <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-cash-register"></i></span>
+    <div class="dashboard-settings-panel-head-text">
+      <h2 id="settings-pos-heading" class="dashboard-analytics-heading">POS / Loyverse</h2>
+      <p class="dashboard-analytics-subtitle">Connect Loyverse OAuth. Menu catalog stays in Hugo/CMS; map variant IDs on items or in <code>data/pos-mapping.yaml</code>.</p>
+    </div>
+  </div>
+  <div class="dashboard-settings-form-grid" style="padding: 0 0 1rem;">
+    <div class="dashboard-settings-row dashboard-settings-row--full">
+      <span class="dashboard-settings-label">Connection</span>
+      <div class="dashboard-settings-value">
+        <p id="posConnectStatus" class="dashboard-ordering-contact-hint" role="status">Checking…</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;">
+          <button type="button" class="btn-dash btn-dash-primary" id="btnPosConnectLoyverse">Connect Loyverse</button>
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosRefreshStatus">Refresh status</button>
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadStores" hidden>Load stores</button>
+        </div>
+      </div>
+    </div>
+    <div class="dashboard-settings-row dashboard-settings-row--full" id="posStoresRow" hidden>
+      <label class="dashboard-settings-label" for="posStoreSelect">Stores</label>
+      <div class="dashboard-settings-value">
+        <select id="posStoreSelect" class="dashboard-settings-input"></select>
+        <p class="dashboard-ordering-contact-hint">Copy the store id into <code>hugo.toml</code> <code>params.posintegration.store_id</code> (or leave blank to use the first store).</p>
+      </div>
+    </div>
+    <div class="dashboard-settings-row dashboard-settings-row--full">
+      <span class="dashboard-settings-label">Mapping</span>
+      <div class="dashboard-settings-value">
+        <p class="dashboard-ordering-contact-hint">Set <code>loyverse_variant_id</code> on each price row (or item), or fill <code>data/pos-mapping.yaml</code> keys like <code>Item Title|Size</code>. Use <strong>Load Loyverse items</strong> after connect to copy UUIDs.</p>
+        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems" hidden>Load Loyverse items</button>
+        <pre id="posItemsPreview" class="dashboard-settings-input" style="max-height:12rem;overflow:auto;white-space:pre-wrap;margin-top:0.5rem;" hidden></pre>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="/js/pos-connect-dashboard.js" defer></script>
