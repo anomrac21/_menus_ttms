@@ -100,6 +100,22 @@
     return lines;
   }
 
+  function withClientQuery(path) {
+    var id = clientId();
+    if (!id) return path;
+    var sep = path.indexOf('?') >= 0 ? '&' : '?';
+    return path + sep + 'client_id=' + encodeURIComponent(id);
+  }
+
+  function authHeaders() {
+    var headers = { Accept: 'application/json' };
+    var token = getAuthToken();
+    if (token) headers.Authorization = 'Bearer ' + token;
+    var id = clientId();
+    if (id) headers['X-TTMenus-Client-Id'] = id;
+    return headers;
+  }
+
   var posIntegration = {
     get isPOSEnabled() {
       var c = cfg();
@@ -148,8 +164,8 @@
     getStatus: function () {
       var token = getAuthToken();
       if (!token) return Promise.reject(new Error('not authenticated'));
-      return fetch(apiBase() + '/api/v1/loyverse/status', {
-        headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+      return fetch(apiBase() + withClientQuery('/api/v1/loyverse/status'), {
+        headers: authHeaders(),
       }).then(function (r) {
         return r.json().then(function (d) {
           if (!r.ok) throw new Error((d && d.error) || 'status failed');
@@ -161,10 +177,11 @@
     connect: function (returnTo) {
       var token = getAuthToken();
       if (!token) return Promise.reject(new Error('not authenticated'));
-      var url = apiBase() + '/api/v1/loyverse/connect';
-      if (returnTo) url += '?return_to=' + encodeURIComponent(returnTo);
-      return fetch(url, {
-        headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+      var path = '/api/v1/loyverse/connect';
+      if (returnTo) path += '?return_to=' + encodeURIComponent(returnTo);
+      path = withClientQuery(path);
+      return fetch(apiBase() + path, {
+        headers: authHeaders(),
       }).then(function (r) {
         return r.json().then(function (d) {
           if (!r.ok) throw new Error((d && d.error) || 'connect failed');
@@ -176,8 +193,8 @@
     listStores: function () {
       var token = getAuthToken();
       if (!token) return Promise.reject(new Error('not authenticated'));
-      return fetch(apiBase() + '/api/v1/loyverse/stores', {
-        headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+      return fetch(apiBase() + withClientQuery('/api/v1/loyverse/stores'), {
+        headers: authHeaders(),
       }).then(function (r) {
         return r.json().then(function (d) {
           if (!r.ok) throw new Error((d && d.error) || 'stores failed');
@@ -189,10 +206,11 @@
     listItems: function (cursor) {
       var token = getAuthToken();
       if (!token) return Promise.reject(new Error('not authenticated'));
-      var url = apiBase() + '/api/v1/loyverse/items';
-      if (cursor) url += '?cursor=' + encodeURIComponent(cursor);
-      return fetch(url, {
-        headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+      var path = '/api/v1/loyverse/items';
+      if (cursor) path += '?cursor=' + encodeURIComponent(cursor);
+      path = withClientQuery(path);
+      return fetch(apiBase() + path, {
+        headers: authHeaders(),
       }).then(function (r) {
         return r.json().then(function (d) {
           if (!r.ok) throw new Error((d && d.error) || 'items failed');
