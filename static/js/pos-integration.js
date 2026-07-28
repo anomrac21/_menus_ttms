@@ -122,8 +122,9 @@
       return !!(c.enabled && (c.provider || '').toLowerCase() === 'loyverse' && apiBase());
     },
 
-    processOrderWithPOS: function () {
+    processOrderWithPOS: function (opts) {
       if (!this.isPOSEnabled) return Promise.resolve({ skipped: true });
+      opts = opts || {};
       var orderArr = global.order;
       if (!Array.isArray(orderArr) || !orderArr.length) {
         return Promise.resolve({ skipped: true, reason: 'empty_cart' });
@@ -131,7 +132,7 @@
       var lines = buildLinesFromOrder(orderArr);
       var body = {
         client_id: clientId(),
-        store_id: cfg().storeId || '',
+        store_id: opts.storeId || cfg().storeId || '',
         order_ref: 'TTM-' + Date.now(),
         note: 'TTmenus web order',
         lines: lines,

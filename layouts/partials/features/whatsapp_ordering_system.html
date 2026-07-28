@@ -517,6 +517,7 @@ function getCurrentLocationData() {
 		const lat = selectedOption.getAttribute('data-lat');
 		const lng = selectedOption.getAttribute('data-lng');
 		const orderingtables = selectedOption.getAttribute('data-orderingtables');
+		const loyverseStoreId = selectedOption.getAttribute('data-loyverse-store-id') || '';
 		
 		// If address exists, use this location (even if WhatsApp is empty, we'll use fallback)
 		if (address) {
@@ -535,7 +536,8 @@ function getCurrentLocationData() {
 				whatsapp: whatsapp,
 				lat: lat,
 				lng: lng,
-				orderingtables: parsedOrderingTables
+				orderingtables: parsedOrderingTables,
+				loyverse_store_id: loyverseStoreId
 			};
 		}
 	}
@@ -2364,9 +2366,12 @@ function confirmSendOrder(){
 	
 	window.open(message, "_blank" );
 	
-	// Process order with POS system if enabled
+	// Process order with POS system if enabled (store from selected location mapping)
 	if (window.posIntegration && window.posIntegration.isPOSEnabled) {
-		window.posIntegration.processOrderWithPOS();
+		var posLoc = getCurrentLocationData();
+		window.posIntegration.processOrderWithPOS({
+			storeId: (posLoc && posLoc.loyverse_store_id) || ''
+		});
 	}
 	
 	// Clear the order type variables after sending the order

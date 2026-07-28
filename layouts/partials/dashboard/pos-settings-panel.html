@@ -1,13 +1,31 @@
-{{- /* POS / Loyverse connect panel for menu settings dashboard */ -}}
+{{- /* POS / Loyverse connect + per-location store mapping (CMS persists locations / hugo.toml) */ -}}
 <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--pos" aria-labelledby="settings-pos-heading" id="posIntegrationPanel">
   <div class="dashboard-settings-panel-head">
     <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-cash-register"></i></span>
     <div class="dashboard-settings-panel-head-text">
       <h2 id="settings-pos-heading" class="dashboard-analytics-heading">POS / Loyverse</h2>
-      <p class="dashboard-analytics-subtitle">Connect Loyverse OAuth. Menu catalog stays in Hugo/CMS; map variant IDs on items or in <code>data/pos-mapping.yaml</code>.</p>
+      <p class="dashboard-analytics-subtitle">One OAuth connect per site. Map each menu location to a Loyverse store; CMS writes <code>data/locations.yaml</code> and <code>params.posintegration</code>.</p>
     </div>
   </div>
   <div class="dashboard-settings-form-grid" style="padding: 0 0 1rem;">
+    <div class="dashboard-settings-row dashboard-settings-row--full">
+      <span class="dashboard-settings-label">Settings</span>
+      <div class="dashboard-settings-value">
+        <label class="dashboard-ordering-contact-hint" style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
+          <input type="checkbox" id="posEnabledCb" /> Enable Loyverse POS on this menu
+        </label>
+        <label class="dashboard-ordering-contact-hint" style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
+          <input type="checkbox" id="posFallbackWhatsappCb" checked /> Keep WhatsApp order flow (POS runs in parallel)
+        </label>
+        <label class="dashboard-ordering-contact-hint" style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
+          <input type="checkbox" id="posAutoProcessCb" /> Auto-process orders when connected
+        </label>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;align-items:center;">
+          <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveSettings">Save POS settings</button>
+          <span id="posSettingsSaveStatus" class="dashboard-ordering-contact-hint" role="status"></span>
+        </div>
+      </div>
+    </div>
     <div class="dashboard-settings-row dashboard-settings-row--full">
       <span class="dashboard-settings-label">Connection</span>
       <div class="dashboard-settings-value">
@@ -20,10 +38,22 @@
       </div>
     </div>
     <div class="dashboard-settings-row dashboard-settings-row--full" id="posStoresRow" hidden>
-      <label class="dashboard-settings-label" for="posStoreSelect">Stores</label>
+      <label class="dashboard-settings-label" for="posStoreSelect">Default store</label>
       <div class="dashboard-settings-value">
         <select id="posStoreSelect" class="dashboard-settings-input"></select>
-        <p class="dashboard-ordering-contact-hint">Copy the store id into <code>hugo.toml</code> <code>params.posintegration.store_id</code> (or leave blank to use the first store).</p>
+        <p class="dashboard-ordering-contact-hint">Fallback when a location has no mapped store. Prefer mapping each location below.</p>
+      </div>
+    </div>
+    <div class="dashboard-settings-row dashboard-settings-row--full" id="posLocationMapRow" hidden>
+      <span class="dashboard-settings-label">Locations → stores</span>
+      <div class="dashboard-settings-value">
+        <p class="dashboard-ordering-contact-hint">Assign a Loyverse store to each Hugo location. Saves via CMS to <code>loyverse_store_id</code> on each location.</p>
+        <div id="posLocationMapList" style="display:flex;flex-direction:column;gap:0.5rem;margin:0.5rem 0;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoAssignStores">Auto-match by name</button>
+          <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveLocationStores">Save store mapping</button>
+          <span id="posLocationMapStatus" class="dashboard-ordering-contact-hint" role="status"></span>
+        </div>
       </div>
     </div>
     <div class="dashboard-settings-row dashboard-settings-row--full">

@@ -1085,6 +1085,8 @@
           opening_hours: loc.opening_hours && typeof loc.opening_hours === 'object' ? loc.opening_hours : {}
         };
         out.latlon = [out.latlon.lat || 0, out.latlon.lon || 0];
+        var loyverseStoreId = locStr(loc.loyverse_store_id);
+        if (loyverseStoreId) out.loyverse_store_id = loyverseStoreId;
         return out;
       }
       function locationPayloadFromForm() {
@@ -1107,6 +1109,11 @@
         };
         var fooddrop = locStr(document.getElementById('settingsLocationFooddrop').value);
         if (fooddrop) payload.delivery.fooddrop = fooddrop;
+        var editIdx = editIndexEl ? parseInt(editIndexEl.value, 10) : -1;
+        if (!isNaN(editIdx) && editIdx >= 0 && locationsState[editIdx]) {
+          var existingStore = locStr(locationsState[editIdx].loyverse_store_id);
+          if (existingStore) payload.loyverse_store_id = existingStore;
+        }
         return payload;
       }
       function parseLocationsInitialText(raw) {
