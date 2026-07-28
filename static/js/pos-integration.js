@@ -111,8 +111,8 @@
     var headers = { Accept: 'application/json' };
     var token = getAuthToken();
     if (token) headers.Authorization = 'Bearer ' + token;
-    var id = clientId();
-    if (id) headers['X-TTMenus-Client-Id'] = id;
+    // client_id is passed via query string (withClientQuery) to avoid CORS
+    // preflight rejecting custom headers before Access-Control-Allow-Headers is updated.
     return headers;
   }
 
