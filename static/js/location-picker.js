@@ -29,6 +29,10 @@
       island: card.getAttribute('data-island') || '',
       whatsapp: card.getAttribute('data-whatsapp') || '',
       phone: card.getAttribute('data-phone') || '',
+      slug: card.getAttribute('data-slug') || (locBtn ? locBtn.getAttribute('data-slug') || '' : ''),
+      loyverse_store_id:
+        card.getAttribute('data-loyverse-store-id') ||
+        (locBtn ? locBtn.getAttribute('data-loyverse-store-id') || '' : ''),
       lat: card.getAttribute('data-lat') || (locBtn ? locBtn.getAttribute('data-lat') || '' : ''),
       lng: card.getAttribute('data-lng') || (locBtn ? locBtn.getAttribute('data-lng') || '' : ''),
       orderingtables: parseOrderingTables(card.getAttribute('data-orderingtables')),
@@ -111,6 +115,26 @@
     return null;
   }
 
+  function findCardBySlug(cards, slug) {
+    if (!slug) return null;
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].getAttribute('data-slug') === slug) return cards[i];
+    }
+    return null;
+  }
+
+  function urlLocationSlug() {
+    var cfg = window.MENU_CONFIG || {};
+    if (!cfg.multiLocationMenus) return '';
+    var slugs = cfg.locationSlugs || [];
+    var parts = String(window.location.pathname || '')
+      .replace(/^\/+|\/+$/g, '')
+      .split('/')
+      .filter(Boolean);
+    if (!parts.length) return '';
+    return slugs.indexOf(parts[0]) >= 0 ? parts[0] : '';
+  }
+
   function findCardByLocationIndex(cards, index) {
     if (isNaN(index)) return null;
     for (var i = 0; i < cards.length; i++) {
@@ -130,6 +154,12 @@
 
   function getSavedLocationCard(cards) {
     if (!cards.length) return null;
+
+    var urlSlug = urlLocationSlug();
+    if (urlSlug) {
+      var bySlug = findCardBySlug(cards, urlSlug);
+      if (bySlug) return bySlug;
+    }
 
     try {
       var savedAddress = localStorage.getItem(ADDRESS_KEY);
@@ -375,7 +405,7 @@
     setScrollSelectSuppressed(true);
     setProgrammaticScroll(true);
     scrollCardToCenter(track, realCard, 'auto');
-    selectLocationCard(realCard, { scroll: false });
+    selectLocationCard(realCard, { scroll: false, source: 'scroll' });
 
     setTimeout(function () {
       setProgrammaticScroll(false);
@@ -388,6 +418,13 @@
   function selectLocationCard(card, options) {
     if (!card) return;
     options = options || {};
+    var source = options.source || 'picker';
+    var multiMenus = !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
+    // When per-location menus are on, carousel scroll must not change the active
+    // store/menu — only explicit user actions (click, arrows, nearby) should.
+    if (multiMenus && source === 'scroll') {
+      return;
+    }
 
     var picker = getPicker();
     card = resolveRealCard(card, picker);
@@ -418,9 +455,11 @@
             name: data.address || '',
             address: data.address || '',
             whatsapp: data.whatsapp || '',
+            slug: data.slug || '',
+            loyverse_store_id: data.loyverse_store_id || '',
             lat: data.lat,
             lng: data.lng,
-            source: options.source || 'picker',
+            source: source,
           },
         })
       );
@@ -480,7 +519,7 @@
     }
 
     if (edgeClone) {
-      selectLocationCard(cards[nextIndex], { scroll: false });
+      selectLocationCard(cards[nextIndex], { scroll: false, source: 'user' });
       scrollCardToCenter(track, edgeClone, 'smooth');
       setTimeout(function () {
         jumpFromClone(track, edgeClone, picker);
@@ -489,7 +528,7 @@
       return;
     }
 
-    selectLocationCard(cards[nextIndex]);
+    selectLocationCard(cards[nextIndex], { source: 'user' });
     setTimeout(finishNav, 350);
   }
 
@@ -501,7 +540,7 @@
     var target = getSavedLocationCard(cards);
     if (!target) return null;
 
-    selectLocationCard(target, { scroll: false });
+    selectLocationCard(target, { scroll: false, source: 'restore' });
 
     if (options.align && track) {
       scrollCardToCenter(track, target, 'auto');
@@ -670,7 +709,7 @@
           if (selectedAddress && selectedAddress === resolvedAddress) return;
         }
 
-        selectLocationCard(resolved || centered, { scroll: false });
+        selectLocationCard(resolved || centered, { scroll: false, source: 'scroll' });
       }, 180);
     }
 
@@ -873,7 +912,7 @@
 
         setNearbyButtonState(btn, 'idle');
         markClosestLocation(result.card, result.distanceKm);
-        selectLocationCard(result.card, { behavior: 'smooth' });
+        selectLocationCard(result.card, { behavior: 'smooth', source: 'nearby' });
         setTimeout(function () {
           setScrollSelectSuppressed(false);
           updateNavButtons(picker);
@@ -939,7 +978,7 @@
             return;
           }
           e.preventDefault();
-          selectLocationCard(card, { scroll: false });
+          selectLocationCard(card, { scroll: false, source: 'user' });
           return;
         }
 
@@ -948,7 +987,7 @@
         if (card.getAttribute('data-picker-clone')) return;
         if (isInteractivePickerTarget(e.target)) return;
         e.preventDefault();
-        selectLocationCard(card, { scroll: false });
+        selectLocationCard(card, { scroll: false, source: 'user' });
       },
       { signal: signal }
     );
@@ -973,7 +1012,7 @@
         if (e.key !== 'Enter' && e.key !== ' ') return;
         if (isInteractivePickerTarget(e.target)) return;
         e.preventDefault();
-        selectLocationCard(card);
+        selectLocationCard(card, { source: 'user' });
       },
       { signal: signal }
     );

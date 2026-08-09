@@ -32,7 +32,7 @@
 				<select id="locationSelect" class="cart-location-select-hidden" onchange="selectLocation(this.value)" aria-hidden="true" tabindex="-1">
 					<option value="">Select a location...</option>
 					{{ range $index, $location := site.Data.locations.locations }}
-					<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }} {{ if eq $index 0 }}selected{{ end }}>
+					<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.slug }} data-slug="{{ . }}"{{ end }}{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }} {{ if eq $index 0 }}selected{{ end }}>
 						{{ $location.address }}
 					</option>
 					{{ end }}

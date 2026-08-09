@@ -9,6 +9,7 @@
   data-city="{{ $location.city }}"
   data-island="{{ $location.island }}"
   data-whatsapp="{{ $location.whatsapp }}"
+  {{ with $location.slug }}data-slug="{{ . }}"{{ end }}
   {{ with $location.phone }}data-phone="{{ . }}"{{ end }}
   {{ if $location.subcategories }}data-subcategories="{{ if reflect.IsSlice $location.subcategories }}{{ delimit $location.subcategories "," }}{{ else }}{{ $location.subcategories }}{{ end }}"{{ end }}
   {{ if $location.orderingtables }}data-orderingtables="{{ if reflect.IsSlice $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ else }}{{ $location.orderingtables }}{{ end }}"{{ end }}
@@ -17,7 +18,7 @@
   {{ if $location.opening_hours }}data-opening-hours="{{ $location.opening_hours | jsonify | safeHTMLAttr }}"{{ end }}
   {{- if $hasCoords }} data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-map-client="{{ $siteName }}"{{ end }}>
   {{- if $hasCoords -}}
-  <button type="button" class="location-picker-card__select locbtn" data-whatsapp="{{ $location.whatsapp }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }} title="Select {{ $location.address }}" aria-label="Select {{ $location.address }} for ordering">
+  <button type="button" class="location-picker-card__select locbtn" data-whatsapp="{{ $location.whatsapp }}"{{ with $location.slug }} data-slug="{{ . }}"{{ end }} data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }} title="Select {{ $location.address }}" aria-label="Select {{ $location.address }} for ordering">
     <span class="location-picker-card__pin" aria-hidden="true">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
     </span>
