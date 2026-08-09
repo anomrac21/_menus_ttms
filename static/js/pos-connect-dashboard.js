@@ -1,11 +1,15 @@
 /**
- * Menu settings: Connect Loyverse, POS hugo.toml flags, per-location store map via CMS.
+ * Menu settings: Connect Loyverse, POS hugo.toml flags,
+ * per-location store map + item variant map via CMS.
  */
 (function () {
   'use strict';
 
   var cachedStores = [];
   var cachedLocations = [];
+  var cachedLoyverseItems = [];
+  var proposedItemMapping = {};
+  var menuTitleHints = [];
 
   function $(id) {
     return document.getElementById(id);
@@ -79,6 +83,20 @@
     if (!el) return;
     el.textContent = text || '';
     el.style.color = isError ? '#b42318' : '';
+  }
+
+  function setItemMapStatus(text, isError) {
+    var el = $('posItemMapStatus');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? '#b42318' : '';
+  }
+
+  function showItemMapButtons(show) {
+    var a = $('btnPosAutoMapItems');
+    var s = $('btnPosSaveItemMapping');
+    if (a) a.hidden = !show;
+    if (s) s.hidden = !show;
   }
 
   function pos() {
@@ -213,32 +231,34 @@
   }
 
   function loadPosSettings() {
-    return ensureAuth().then(function (token) {
-      var url =
-        cmsApiBase() +
-        '/clients/' +
-        encodeURIComponent(clientId()) +
-        '/config/hugo-posintegration';
-      return fetch(url, { credentials: 'include', headers: authHeaders(token) }).then(parseCms);
-    }).then(function (d) {
-      var en = $('posEnabledCb');
-      var fb = $('posFallbackWhatsappCb');
-      var ap = $('posAutoProcessCb');
-      if (en) en.checked = !!d.enabled;
-      if (fb) fb.checked = d.fallback_to_whatsapp !== false;
-      if (ap) ap.checked = !!d.auto_process_orders;
-      return d;
-    }).catch(function (err) {
-      // Fallback to in-page POS_CONFIG if CMS endpoint not deployed yet
-      var c = window.POS_CONFIG || {};
-      var en = $('posEnabledCb');
-      var fb = $('posFallbackWhatsappCb');
-      var ap = $('posAutoProcessCb');
-      if (en) en.checked = !!c.enabled;
-      if (fb) fb.checked = c.fallbackToWhatsapp !== false;
-      if (ap) ap.checked = !!c.autoProcessOrders;
-      console.warn('[POS dashboard] load settings', err);
-    });
+    return ensureAuth()
+      .then(function (token) {
+        var url =
+          cmsApiBase() +
+          '/clients/' +
+          encodeURIComponent(clientId()) +
+          '/config/hugo-posintegration';
+        return fetch(url, { credentials: 'include', headers: authHeaders(token) }).then(parseCms);
+      })
+      .then(function (d) {
+        var en = $('posEnabledCb');
+        var fb = $('posFallbackWhatsappCb');
+        var ap = $('posAutoProcessCb');
+        if (en) en.checked = !!d.enabled;
+        if (fb) fb.checked = d.fallback_to_whatsapp !== false;
+        if (ap) ap.checked = !!d.auto_process_orders;
+        return d;
+      })
+      .catch(function (err) {
+        var c = window.POS_CONFIG || {};
+        var en = $('posEnabledCb');
+        var fb = $('posFallbackWhatsappCb');
+        var ap = $('posAutoProcessCb');
+        if (en) en.checked = !!c.enabled;
+        if (fb) fb.checked = c.fallbackToWhatsapp !== false;
+        if (ap) ap.checked = !!c.autoProcessOrders;
+        console.warn('[POS dashboard] load settings', err);
+      });
   }
 
   function savePosSettings() {
@@ -278,17 +298,19 @@
   }
 
   function fetchLocations() {
-    return ensureAuth().then(function (token) {
-      var url =
-        cmsApiBase() +
-        '/clients/' +
-        encodeURIComponent(clientId()) +
-        '/config/data-locations';
-      return fetch(url, { credentials: 'include', headers: authHeaders(token) }).then(parseCms);
-    }).then(function (d) {
-      cachedLocations = Array.isArray(d.locations) ? d.locations : [];
-      return cachedLocations;
-    });
+    return ensureAuth()
+      .then(function (token) {
+        var url =
+          cmsApiBase() +
+          '/clients/' +
+          encodeURIComponent(clientId()) +
+          '/config/data-locations';
+        return fetch(url, { credentials: 'include', headers: authHeaders(token) }).then(parseCms);
+      })
+      .then(function (d) {
+        cachedLocations = Array.isArray(d.locations) ? d.locations : [];
+        return cachedLocations;
+      });
   }
 
   function saveLocationMapping() {
@@ -311,11 +333,6 @@
       .then(function (data) {
         var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
         setMapStatus(h ? 'Saved · commit ' + h + ' (redeploy menu to apply)' : 'Saved.');
-        // Keep default store in sync with first mapped / selected default
-        var def = $('posStoreSelect');
-        if (def && def.value) {
-          // optional: also persist default store_id via POS settings without forcing enabled toggle
-        }
       })
       .catch(function (err) {
         setMapStatus(String(err.message || err), true);
@@ -406,29 +423,233 @@
       });
   }
 
+  function listAllLoyverseItems() {
+    var all = [];
+    var guard = 0;
+    function page(cursor) {
+      guard += 1;
+      if (guard > 40) return Promise.resolve(all);
+      return pos().listItems(cursor).then(function (d) {
+        var items = (d && d.items) || [];
+        all = all.concat(items);
+        var next = (d && (d.cursor || d.next_cursor)) || '';
+        if (next && items.length) return page(next);
+        return all;
+      });
+    }
+    return page('');
+  }
+
+  function loadMenuTitleHints() {
+    return fetch('/menu-items.json', { credentials: 'same-origin' })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (data) {
+        var titles = [];
+        function walk(node) {
+          if (!node) return;
+          if (Array.isArray(node)) {
+            node.forEach(walk);
+            return;
+          }
+          if (typeof node !== 'object') return;
+          if (node.title) titles.push(String(node.title));
+          if (node.name) titles.push(String(node.name));
+          Object.keys(node).forEach(function (k) {
+            if (k === 'title' || k === 'name') return;
+            walk(node[k]);
+          });
+        }
+        walk(data);
+        menuTitleHints = Array.from(new Set(titles.filter(Boolean)));
+        return menuTitleHints;
+      })
+      .catch(function () {
+        menuTitleHints = [];
+        return menuTitleHints;
+      });
+  }
+
+  function bestMenuTitleMatch(loyverseName) {
+    var n = normalizeName(loyverseName);
+    if (!n) return '';
+    var best = '';
+    var bestScore = 0;
+    var pool = menuTitleHints.slice();
+    var existingMap = (window.POS_CONFIG && window.POS_CONFIG.itemMapping) || {};
+    Object.keys(existingMap).forEach(function (k) {
+      pool.push(k.split('|')[0]);
+    });
+    pool = Array.from(new Set(pool));
+    pool.forEach(function (title) {
+      var tn = normalizeName(title);
+      if (!tn) return;
+      var score = 0;
+      if (tn === n) score = 100;
+      else if (tn.indexOf(n) >= 0 || n.indexOf(tn) >= 0) score = 75;
+      else {
+        var parts = n.split(' ');
+        var hits = parts.filter(function (p) {
+          return p.length > 2 && tn.indexOf(p) >= 0;
+        }).length;
+        score = hits * 18;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = title;
+      }
+    });
+    return bestScore >= 60 ? best : loyverseName;
+  }
+
+  function buildProposedMapping(items) {
+    var map = {};
+    (items || []).forEach(function (it) {
+      var name = String(it.item_name || it.name || '').trim();
+      if (!name) return;
+      var hugoTitle = bestMenuTitleMatch(name);
+      var variants = it.variants || [];
+      if (!variants.length) return;
+      var multi = variants.length > 1;
+      variants.forEach(function (v) {
+        var vid = String(v.variant_id || v.id || '').trim();
+        if (!vid) return;
+        var o1 = String(v.option1_value || '').trim();
+        var o2 = String(v.option2_value || '').trim();
+        var key = hugoTitle;
+        if (multi || o1) {
+          key = hugoTitle;
+          if (o1) key += '|' + o1;
+          if (o2) key += '|' + o2;
+        }
+        map[key] = { variant_id: vid };
+        // Also map bare title when single default variant
+        if (!multi && !o1 && !o2) {
+          map[hugoTitle] = { variant_id: vid };
+        }
+      });
+      // Single-variant with empty option: also expose bare title
+      if (variants.length === 1) {
+        var only = variants[0];
+        var onlyId = String(only.variant_id || only.id || '').trim();
+        if (onlyId) map[hugoTitle] = { variant_id: onlyId };
+      }
+    });
+    return map;
+  }
+
+  function renderItemMapPreview(map) {
+    var el = $('posItemMapPreview');
+    if (!el) return;
+    var keys = Object.keys(map || {}).sort();
+    if (!keys.length) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    var rows = keys
+      .map(function (k) {
+        var v = map[k];
+        var id = typeof v === 'string' ? v : (v && v.variant_id) || '';
+        return (
+          '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;border-bottom:1px solid rgba(0,0,0,0.08);padding:0.25rem 0;">' +
+          '<code style="flex:1;min-width:10rem;">' +
+          escapeHtml(k) +
+          '</code>' +
+          '<span style="opacity:0.8;">' +
+          escapeHtml(id) +
+          '</span></div>'
+        );
+      })
+      .join('');
+    el.innerHTML = rows;
+    el.hidden = false;
+  }
+
   function loadItems() {
     var preview = $('posItemsPreview');
+    setItemMapStatus('Loading items…');
     return ensureAuth()
       .then(function () {
-        return pos().listItems();
+        return Promise.all([listAllLoyverseItems(), loadMenuTitleHints()]);
       })
-      .then(function (d) {
-        var items = (d && d.items) || [];
+      .then(function (results) {
+        cachedLoyverseItems = results[0] || [];
         var lines = [];
-        items.forEach(function (it) {
+        cachedLoyverseItems.forEach(function (it) {
           var name = it.item_name || it.name || '';
           (it.variants || []).forEach(function (v) {
-            lines.push(name + (v.option1_value ? '|' + v.option1_value : '') + ' => ' + (v.variant_id || v.id || ''));
+            var opt = '';
+            if (v.option1_value) opt += '|' + v.option1_value;
+            if (v.option2_value) opt += '|' + v.option2_value;
+            lines.push(name + opt + ' => ' + (v.variant_id || v.id || ''));
           });
         });
         if (preview) {
           preview.hidden = false;
-          preview.textContent = lines.length ? lines.join('\n') : JSON.stringify(d, null, 2).slice(0, 4000);
+          preview.textContent = lines.length
+            ? lines.join('\n')
+            : 'No Loyverse items found.';
         }
-        setStatus('Loaded Loyverse items — copy variant ids into front matter or pos-mapping.yaml');
+        showItemMapButtons(cachedLoyverseItems.length > 0);
+        setStatus('Loaded ' + cachedLoyverseItems.length + ' Loyverse item(s).');
+        setItemMapStatus(
+          cachedLoyverseItems.length
+            ? 'Ready — Auto-map, then Save item mapping.'
+            : 'No items to map.'
+        );
       })
       .catch(function (err) {
         setStatus(String(err.message || err), true);
+        setItemMapStatus(String(err.message || err), true);
+      });
+  }
+
+  function autoMapItems() {
+    if (!cachedLoyverseItems.length) {
+      setItemMapStatus('Load Loyverse items first.', true);
+      return;
+    }
+    proposedItemMapping = buildProposedMapping(cachedLoyverseItems);
+    renderItemMapPreview(proposedItemMapping);
+    var n = Object.keys(proposedItemMapping).length;
+    setItemMapStatus(n ? 'Proposed ' + n + ' mapping key(s) — review and Save.' : 'No mappings produced.', !n);
+  }
+
+  function saveItemMapping() {
+    if (!Object.keys(proposedItemMapping).length) {
+      setItemMapStatus('Auto-map items first (or load + auto-map).', true);
+      return;
+    }
+    setItemMapStatus('Saving…');
+    return ensureAuth()
+      .then(function (token) {
+        var url =
+          cmsApiBase() +
+          '/clients/' +
+          encodeURIComponent(clientId()) +
+          '/config/data-pos-mapping';
+        return fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: authHeaders(token),
+          body: JSON.stringify({ loyverse_items: proposedItemMapping }),
+        }).then(parseCms);
+      })
+      .then(function (data) {
+        var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
+        setItemMapStatus(h ? 'Saved · commit ' + h + ' (redeploy menu to apply)' : 'Saved.');
+        if (window.POS_CONFIG) {
+          window.POS_CONFIG.itemMapping = Object.assign(
+            {},
+            window.POS_CONFIG.itemMapping || {},
+            proposedItemMapping
+          );
+        }
+      })
+      .catch(function (err) {
+        setItemMapStatus(String(err.message || err), true);
       });
   }
 
@@ -448,6 +669,8 @@
     var saveSet = $('btnPosSaveSettings');
     var autoBtn = $('btnPosAutoAssignStores');
     var saveMap = $('btnPosSaveLocationStores');
+    var autoItems = $('btnPosAutoMapItems');
+    var saveItems = $('btnPosSaveItemMapping');
     if (c) c.addEventListener('click', connect);
     if (r) r.addEventListener('click', refreshStatus);
     if (s) s.addEventListener('click', loadStores);
@@ -455,6 +678,8 @@
     if (saveSet) saveSet.addEventListener('click', savePosSettings);
     if (autoBtn) autoBtn.addEventListener('click', autoMatchByName);
     if (saveMap) saveMap.addEventListener('click', saveLocationMapping);
+    if (autoItems) autoItems.addEventListener('click', autoMapItems);
+    if (saveItems) saveItems.addEventListener('click', saveItemMapping);
 
     loadPosSettings();
     setTimeout(refreshStatus, 400);

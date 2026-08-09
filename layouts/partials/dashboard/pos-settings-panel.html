@@ -57,10 +57,16 @@
       </div>
     </div>
     <div class="dashboard-settings-row dashboard-settings-row--full">
-      <span class="dashboard-settings-label">Mapping</span>
+      <span class="dashboard-settings-label">Item mapping</span>
       <div class="dashboard-settings-value">
-        <p class="dashboard-ordering-contact-hint">Set <code>loyverse_variant_id</code> on each price row (or item), or fill <code>data/pos-mapping.yaml</code> keys like <code>Item Title|Size</code>. Use <strong>Load Loyverse items</strong> after connect to copy UUIDs.</p>
-        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems" hidden>Load Loyverse items</button>
+        <p class="dashboard-ordering-contact-hint">Load Loyverse items, auto-match to menu titles (<code>Title</code> or <code>Title|Size</code>), then save via CMS to <code>data/pos-mapping.yaml</code>.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;align-items:center;">
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems" hidden>Load Loyverse items</button>
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoMapItems" hidden>Auto-map items</button>
+          <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveItemMapping" hidden>Save item mapping</button>
+          <span id="posItemMapStatus" class="dashboard-ordering-contact-hint" role="status"></span>
+        </div>
+        <div id="posItemMapPreview" class="dashboard-settings-input" style="max-height:14rem;overflow:auto;margin-top:0.5rem;font-size:0.85rem;" hidden></div>
         <pre id="posItemsPreview" class="dashboard-settings-input" style="max-height:12rem;overflow:auto;white-space:pre-wrap;margin-top:0.5rem;" hidden></pre>
       </div>
     </div>

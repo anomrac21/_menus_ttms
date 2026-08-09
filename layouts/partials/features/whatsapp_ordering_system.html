@@ -518,6 +518,7 @@ function getCurrentLocationData() {
 		const lng = selectedOption.getAttribute('data-lng');
 		const orderingtables = selectedOption.getAttribute('data-orderingtables');
 		const loyverseStoreId = selectedOption.getAttribute('data-loyverse-store-id') || '';
+		const slug = selectedOption.getAttribute('data-slug') || '';
 		
 		// If address exists, use this location (even if WhatsApp is empty, we'll use fallback)
 		if (address) {
@@ -537,7 +538,8 @@ function getCurrentLocationData() {
 				lat: lat,
 				lng: lng,
 				orderingtables: parsedOrderingTables,
-				loyverse_store_id: loyverseStoreId
+				loyverse_store_id: loyverseStoreId,
+				slug: slug
 			};
 		}
 	}
@@ -3563,6 +3565,8 @@ window.testTablePopulation = function() {
             const lat = selectedOption.getAttribute('data-lat');
             const lng = selectedOption.getAttribute('data-lng');
             const orderingTables = selectedOption.getAttribute('data-orderingtables');
+            const loyverseStoreId = selectedOption.getAttribute('data-loyverse-store-id') || '';
+            const slug = selectedOption.getAttribute('data-slug') || '';
             
             // If address exists, use this location (even if WhatsApp is empty, we'll use fallback)
             if (address) {
@@ -3581,7 +3585,9 @@ window.testTablePopulation = function() {
                     whatsapp: whatsapp,
                     lat: lat,
                     lng: lng,
-                    orderingtables: parsedOrderingTables
+                    orderingtables: parsedOrderingTables,
+                    loyverse_store_id: loyverseStoreId,
+                    slug: slug
                 };
             }
         }

@@ -39,9 +39,22 @@
     return cfg().itemMapping || global.POS_ITEM_MAPPING || {};
   }
 
+  function isBlankSize(size) {
+    var s = String(size || '').trim();
+    return !s || s === '-' || s === '—' || s === '–';
+  }
+
+  function lookupMapValue(keyed) {
+    if (!keyed) return '';
+    if (typeof keyed === 'string') return keyed;
+    if (keyed.variant_id) return String(keyed.variant_id);
+    return '';
+  }
+
   /**
    * Resolve Loyverse variant_id from cart line + mapping / front-matter fields.
-   * Mapping keys: exact item title, or "Title|size".
+   * Mapping keys: exact item title, or "Title|size" (and optional "Title|size|opt2").
+   * Dash / empty size falls back to bare title key.
    */
   function resolveVariantId(line) {
     if (line && line.variant_id) return String(line.variant_id).trim();
@@ -50,13 +63,25 @@
     var item = String((line && (line.item || line.name)) || '').trim();
     var size = String((line && line.size) || '').trim();
     if (!item) return '';
-    var keyed = map[item + '|' + size] || map[item];
-    if (!keyed) return '';
-    if (typeof keyed === 'string') return keyed;
-    if (keyed.variant_id) return String(keyed.variant_id);
-    if (keyed.variants && size && keyed.variants[size]) return String(keyed.variants[size]);
-    if (keyed.variants && keyed.variants['-']) return String(keyed.variants['-']);
-    if (keyed.variants && keyed.variants['']) return String(keyed.variants['']);
+
+    var candidates = [];
+    if (!isBlankSize(size)) {
+      candidates.push(item + '|' + size);
+    }
+    candidates.push(item);
+
+    for (var i = 0; i < candidates.length; i++) {
+      var keyed = map[candidates[i]];
+      var direct = lookupMapValue(keyed);
+      if (direct) return direct;
+      if (keyed && keyed.variants) {
+        if (!isBlankSize(size) && keyed.variants[size]) {
+          return String(keyed.variants[size]);
+        }
+        if (keyed.variants['-']) return String(keyed.variants['-']);
+        if (keyed.variants['']) return String(keyed.variants['']);
+      }
+    }
     return '';
   }
 
@@ -68,9 +93,11 @@
       if (typeof line.sides === 'object' && line.sides.categories) {
         Object.keys(line.sides.categories).forEach(function (cat) {
           var items = line.sides.categories[cat] || [];
-          var names = items.map(function (it) {
-            return typeof it === 'object' && it ? it.name || '' : String(it);
-          }).filter(Boolean);
+          var names = items
+            .map(function (it) {
+              return typeof it === 'object' && it ? it.name || '' : String(it);
+            })
+            .filter(Boolean);
           if (names.length) parts.push(cat + ': ' + names.join(', '));
         });
       } else if (Array.isArray(line.sides) && line.sides.length) {
@@ -111,9 +138,19 @@
     var headers = { Accept: 'application/json' };
     var token = getAuthToken();
     if (token) headers.Authorization = 'Bearer ' + token;
-    // client_id is passed via query string (withClientQuery) to avoid CORS
-    // preflight rejecting custom headers before Access-Control-Allow-Headers is updated.
     return headers;
+  }
+
+  function resolveStoreId(opts) {
+    opts = opts || {};
+    if (opts.storeId) return String(opts.storeId).trim();
+    try {
+      if (typeof global.getCurrentLocationData === 'function') {
+        var loc = global.getCurrentLocationData();
+        if (loc && loc.loyverse_store_id) return String(loc.loyverse_store_id).trim();
+      }
+    } catch (_) {}
+    return String(cfg().storeId || '').trim();
   }
 
   var posIntegration = {
@@ -130,9 +167,22 @@
         return Promise.resolve({ skipped: true, reason: 'empty_cart' });
       }
       var lines = buildLinesFromOrder(orderArr);
+      var missing = lines.filter(function (l) {
+        return !l.variant_id;
+      });
+      if (missing.length) {
+        console.warn(
+          '[POS] ' +
+            missing.length +
+            ' cart line(s) missing variant_id — map items in menu-settings or set loyverse_variant_id',
+          missing.map(function (l) {
+            return (l.item || '') + (l.size ? '|' + l.size : '');
+          })
+        );
+      }
       var body = {
         client_id: clientId(),
-        store_id: opts.storeId || cfg().storeId || '',
+        store_id: resolveStoreId(opts),
         order_ref: 'TTM-' + Date.now(),
         note: 'TTmenus web order',
         lines: lines,
@@ -140,6 +190,9 @@
       if (!body.client_id) {
         console.warn('[POS] missing client_id');
         return Promise.resolve({ ok: false, error: 'missing_client_id' });
+      }
+      if (!body.store_id) {
+        console.warn('[POS] no store_id on location or POS_CONFIG — Loyverse may use first store');
       }
       return fetch(apiBase() + '/api/v1/loyverse/orders', {
         method: 'POST',
