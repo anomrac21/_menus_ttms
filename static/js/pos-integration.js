@@ -273,6 +273,22 @@
       });
     },
 
+    listCategories: function (cursor) {
+      var token = getAuthToken();
+      if (!token) return Promise.reject(new Error('not authenticated'));
+      var path = '/api/v1/loyverse/categories';
+      if (cursor) path += '?cursor=' + encodeURIComponent(cursor);
+      path = withClientQuery(path);
+      return fetch(apiBase() + path, {
+        headers: authHeaders(),
+      }).then(function (r) {
+        return r.json().then(function (d) {
+          if (!r.ok) throw new Error((d && d.error) || 'categories failed');
+          return d;
+        });
+      });
+    },
+
     resolveVariantId: resolveVariantId,
   };
 

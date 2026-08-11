@@ -653,6 +653,105 @@
       });
   }
 
+  function setReplaceStatus(text, isError) {
+    var el = $('posReplaceCatalogStatus');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? '#b42318' : '';
+  }
+
+  function syncReplaceButton() {
+    var btn = $('btnPosReplaceCatalog');
+    var input = $('posReplaceConfirmInput');
+    if (!btn || !input) return;
+    btn.disabled = String(input.value || '').trim() !== 'REPLACE';
+  }
+
+  function listAllLoyverseCategories() {
+    if (!pos() || !pos().listCategories) {
+      return Promise.resolve([]);
+    }
+    var all = [];
+    var guard = 0;
+    function page(cursor) {
+      guard += 1;
+      if (guard > 40) return Promise.resolve(all);
+      return pos().listCategories(cursor).then(function (d) {
+        var cats = (d && d.categories) || [];
+        all = all.concat(cats);
+        var next = (d && (d.cursor || d.next_cursor)) || '';
+        if (next && cats.length) return page(next);
+        return all;
+      });
+    }
+    return page('').catch(function () {
+      return [];
+    });
+  }
+
+  function replaceCatalogFromLoyverse() {
+    var input = $('posReplaceConfirmInput');
+    if (!input || String(input.value || '').trim() !== 'REPLACE') {
+      setReplaceStatus('Type REPLACE to confirm.', true);
+      return;
+    }
+    if (
+      !window.confirm(
+        'This will delete shared sellable menu items and import from Loyverse. Locations, promotions, and branding are kept. Continue?'
+      )
+    ) {
+      return;
+    }
+    var btn = $('btnPosReplaceCatalog');
+    if (btn) btn.disabled = true;
+    setReplaceStatus('Loading Loyverse catalog…');
+    return ensureAuth()
+      .then(function () {
+        if (!pos() || !pos().listItems) throw new Error('POS client not loaded');
+        return Promise.all([listAllLoyverseItems(), listAllLoyverseCategories()]);
+      })
+      .then(function (results) {
+        var items = results[0] || [];
+        var categories = results[1] || [];
+        if (!items.length) throw new Error('No Loyverse items found');
+        setReplaceStatus('Importing ' + items.length + ' item(s)…');
+        return ensureAuth().then(function (token) {
+          var url =
+            cmsApiBase() +
+            '/clients/' +
+            encodeURIComponent(clientId()) +
+            '/loyverse/replace-catalog';
+          return fetch(url, {
+            method: 'POST',
+            credentials: 'include',
+            headers: authHeaders(token),
+            body: JSON.stringify({
+              confirm: 'REPLACE',
+              categories: categories.map(function (c) {
+                return { id: c.id || '', name: c.name || c.category_name || '' };
+              }),
+              items: items,
+            }),
+          }).then(parseCms);
+        });
+      })
+      .then(function (data) {
+        var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
+        var n = data && data.items_written != null ? data.items_written : '?';
+        var m = data && data.categories_written != null ? data.categories_written : '?';
+        setReplaceStatus(
+          (h ? 'Imported ' + n + ' items / ' + m + ' categories · commit ' + h : 'Imported.') +
+            ' Redeploy menu to apply.'
+        );
+        if (input) input.value = '';
+        syncReplaceButton();
+      })
+      .catch(function (err) {
+        setReplaceStatus(String(err.message || err), true);
+        syncReplaceButton();
+      });
+  }
+
   function init() {
     if (!$('posIntegrationPanel')) return;
     var params = new URLSearchParams(window.location.search);
@@ -671,6 +770,8 @@
     var saveMap = $('btnPosSaveLocationStores');
     var autoItems = $('btnPosAutoMapItems');
     var saveItems = $('btnPosSaveItemMapping');
+    var replaceConfirm = $('posReplaceConfirmInput');
+    var replaceBtn = $('btnPosReplaceCatalog');
     if (c) c.addEventListener('click', connect);
     if (r) r.addEventListener('click', refreshStatus);
     if (s) s.addEventListener('click', loadStores);
@@ -680,6 +781,11 @@
     if (saveMap) saveMap.addEventListener('click', saveLocationMapping);
     if (autoItems) autoItems.addEventListener('click', autoMapItems);
     if (saveItems) saveItems.addEventListener('click', saveItemMapping);
+    if (replaceConfirm) {
+      replaceConfirm.addEventListener('input', syncReplaceButton);
+      syncReplaceButton();
+    }
+    if (replaceBtn) replaceBtn.addEventListener('click', replaceCatalogFromLoyverse);
 
     loadPosSettings();
     setTimeout(refreshStatus, 400);
