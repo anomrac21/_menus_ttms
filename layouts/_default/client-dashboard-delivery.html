@@ -1,0 +1,38 @@
+{{ define "main" }}
+<div class="dashboard-analytics-page" id="dashboardDeliveryPage">
+  <div class="dashboard-edit-header">
+    <div class="dashboard-edit-header-inner">
+      <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+      <h1 class="dashboard-edit-title">Delivery orders</h1>
+    </div>
+  </div>
+
+  <main class="dashboard-analytics-main">
+    {{- if not (default false site.Params.features.delivery) }}
+    <p class="dashboard-notify-banner">Delivery is not enabled for this venue. Set <code>params.features.delivery = true</code> and configure <code>params.deliveryService</code>.</p>
+    {{- else }}
+    <p class="dashboard-analytics-subtitle">Platform fleet inbox — accept orders after a customer picks a driver, mark ready, then scan the driver’s order QR at pickup.</p>
+    <div id="ttms-delivery-orders" class="ttms-delivery-orders"></div>
+    {{- end }}
+  </main>
+</div>
+
+{{- if default false site.Params.features.delivery }}
+{{- $ds := site.Params.deliveryService | default dict -}}
+<link rel="stylesheet" href="{{ "css/delivery.css" | relURL }}">
+<script>
+window.DELIVERY_CONFIG = {
+  enabled: true,
+  apiUrl: {{ ($ds.apiUrl | default "https://delivery.ttmenus.com/api/v1") | jsonify }},
+  wsUrl: {{ ($ds.wsUrl | default "wss://delivery.ttmenus.com/api/v1") | jsonify }},
+  clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "") | jsonify }},
+  clientDomain: {{ (site.Params.notifications.clientDomain | default "") | jsonify }},
+  restaurantName: {{ site.Title | jsonify }},
+  currency: {{ ($ds.currency | default "TTD") | jsonify }},
+  deliveryFee: {{ default 30 $ds.deliveryFee }}
+};
+</script>
+<script src="{{ "js/delivery-client.js" | relURL }}"></script>
+<script src="{{ "js/delivery-dashboard.js" | relURL }}"></script>
+{{- end }}
+{{ end }}

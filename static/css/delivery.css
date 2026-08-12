@@ -1,0 +1,86 @@
+.ttms-delivery-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: end center;
+}
+.ttms-delivery-panel[hidden] { display: none !important; }
+.ttms-delivery-panel__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+.ttms-delivery-panel__sheet {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #111;
+  color: #f5f5f5;
+  padding: 1.25rem;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.35);
+}
+.ttms-delivery-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.ttms-delivery-panel__close {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.ttms-delivery-form label {
+  display: block;
+  margin: 0.65rem 0;
+}
+.ttms-delivery-form input,
+.ttms-delivery-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+}
+.ttms-driver-offers {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.ttms-driver-offers li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.ttms-live-map {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9rem;
+}
+.ttms-delivery-order-card {
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 0.75rem 0;
+}
+.ttms-delivery-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.ttms-delivery-checkout-btn {
+  margin-top: 0.75rem;
+  width: 100%;
+}

@@ -1,0 +1,25 @@
+/**
+ * Table modal — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    #tableNumberModal.table-modal-panel .table-modal-container {
+        max-width: min(100%, 28rem);
+    }
+
+    #tableNumberModal.table-modal-panel .table-buttons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    }
+
+    #tableNumberModal.table-modal-panel .table-modal-actions {
+        flex-direction: row;
+    }
+
+    #tableNumberModal.table-modal-panel .btn-cancel-table {
+        width: auto;
+    }
+
+    #tableNumberModal.table-modal-panel .btn-confirm-table {
+        width: auto;
+    }
+}

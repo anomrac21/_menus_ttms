@@ -190,6 +190,8 @@
 
 .expanded-item-details--no-carousel .menu-image-actions--standalone .menu-image-add-btn,
 .single-page-content.expanded-item-details--no-carousel .menu-image-actions--standalone .menu-image-add-btn {
+  --chip-accent: var(--selected-button-color3, #fcd000);
+  --chip-accent-deep: var(--selected-button-color2, #b56024);
   width: auto;
   height: auto;
   min-height: 2.25rem;
@@ -198,15 +200,24 @@
   font-size: 0.85rem;
   line-height: 1.2;
   border-radius: 999px;
-  background: rgba(102, 126, 234, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--chip-accent-deep) 88%, #fff) 0%,
+    color-mix(in srgb, var(--chip-accent) 75%, #fff) 100%
+  );
+  border: 1.5px solid color-mix(in srgb, var(--chip-accent) 55%, #fff);
+  color: #1a1208;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--chip-accent-deep) 35%, transparent);
 }
 
 .expanded-item-details--no-carousel .menu-image-actions--standalone .menu-image-add-btn:hover,
 .single-page-content.expanded-item-details--no-carousel .menu-image-actions--standalone .menu-image-add-btn:hover {
-  background: rgba(102, 126, 234, 0.65);
-  color: #fff;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--chip-accent-deep) 78%, #fff) 0%,
+    color-mix(in srgb, var(--chip-accent) 88%, #fff) 100%
+  );
+  color: #1a1208;
   transform: none;
 }
 

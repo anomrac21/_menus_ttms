@@ -1,6 +1,11 @@
 {{ define "main" }}
-{{- $tier := default "free" site.Params.tier -}}
-{{- $isPaid := ne $tier "free" -}}
+{{- $tier := lower (default "free" site.Params.tier) -}}
+{{- /* Tier 1+ only — free / free_verified must not unlock analytics via Matomo id alone */ -}}
+{{- $analyticsAccess := false -}}
+{{- with site.Params.features -}}
+  {{- $analyticsAccess = or (default false .analytics_access) (default false .analytics) -}}
+{{- end -}}
+{{- $isPaid := $analyticsAccess -}}
 {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
 {{- $hubClientId := $dashClient -}}
 {{- if not (hasPrefix $hubClientId "ttms_") -}}

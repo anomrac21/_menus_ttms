@@ -12,6 +12,7 @@
   var PINNED_SECTION_WEIGHT = 1;
   var MIN_MOVABLE_SECTION_WEIGHT = 2;
   var sections = [];
+  var multiLocationMenus = false;
   var dirty = false;
   var reordered = false;
   var saving = false;
@@ -108,8 +109,51 @@
     return parts[0] || '';
   }
 
-  function itemContentPath(url) {
+  function fileSlugFromUrl(url) {
+    var parts = normalizeUrl(url).split('/').filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : '';
+  }
+
+  function humanizeSlug(slug) {
+    return String(slug || '')
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map(function (part) {
+        return part.charAt(0).toUpperCase() + part.slice(1);
+      })
+      .join(' ');
+  }
+
+  function sharedItemContentPath(sectionSlug, fileSlug) {
+    return 'content/_shared/' + sectionSlug + '/' + fileSlug + '.md';
+  }
+
+  function locationItemContentPath(locationSlug, sectionSlug, fileSlug) {
+    return 'content/locations/' + locationSlug + '/' + sectionSlug + '/' + fileSlug + '.md';
+  }
+
+  function legacyItemContentPath(sectionSlug, fileSlug) {
+    return 'content/' + sectionSlug + '/' + fileSlug + '.md';
+  }
+
+  function itemContentPathFromUrl(url) {
     return 'content' + normalizeUrl(url).replace(/\/$/, '') + '.md';
+  }
+
+  /** Prefer authoring contentPath on the item; fall back to URL-derived path. */
+  function itemContentPath(itemOrUrl) {
+    if (itemOrUrl && typeof itemOrUrl === 'object') {
+      var cp = normalizeContentPath(itemOrUrl.contentPath || '');
+      if (cp) return cp;
+      return itemContentPathFromUrl(itemOrUrl.url);
+    }
+    return itemContentPathFromUrl(itemOrUrl);
+  }
+
+  function fileExistsInMap(filesMap, path) {
+    if (!filesMap || !path) return false;
+    var file = filesMap[path];
+    return !!(file && (file.frontMatter || file.FrontMatter || file.body != null));
   }
 
   function hasAdminAccess() {
@@ -143,19 +187,40 @@
   function setStatus(msg, kind) {
     var el = document.getElementById('dashboardRearrangeStatus');
     if (!el) return;
-    el.textContent = msg || '';
     el.className =
       'dashboard-rearrange-status' +
       (kind === 'error' ? ' dashboard-rearrange-status--error' : '') +
       (kind === 'success' ? ' dashboard-rearrange-status--success' : '') +
       (kind === 'loading' ? ' dashboard-rearrange-status--loading' : '');
+    if (kind === 'loading') {
+      el.innerHTML =
+        '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i><span></span>';
+      var span = el.querySelector('span');
+      if (span) span.textContent = msg || 'Loading…';
+    } else {
+      el.textContent = msg || '';
+    }
+  }
+
+  function setListLoading(isLoading) {
+    var wrap = document.querySelector('.dashboard-rearrange-list-wrap');
+    var el = document.getElementById('dashboardRearrangeLoading');
+    if (wrap) wrap.classList.toggle('is-loading', !!isLoading);
+    if (!el) return;
+    if (isLoading) {
+      el.classList.remove('hidden');
+      el.setAttribute('aria-busy', 'true');
+    } else {
+      el.classList.add('hidden');
+      el.setAttribute('aria-busy', 'false');
+    }
   }
 
   function captureOrderSnapshot(list) {
     var itemsBySection = {};
     list.forEach(function (sec) {
       itemsBySection[sec.slug] = sec.items.map(function (item) {
-        return itemContentPath(item.url);
+        return itemContentPath(item);
       });
     });
     return {
@@ -222,7 +287,7 @@
     var n = 0;
     if (!sec || !sec.items || !sessionDiff || !sessionDiff.items) return 0;
     sec.items.forEach(function (item) {
-      if (sessionDiff.items[itemContentPath(item.url)]) n += 1;
+      if (sessionDiff.items[itemContentPath(item)]) n += 1;
     });
     return n;
   }
@@ -290,7 +355,7 @@
     list.forEach(function (sec) {
       map[sectionContentPath(sec.slug)] = sec.weight;
       sec.items.forEach(function (item) {
-        map[itemContentPath(item.url)] = item.weight;
+        map[itemContentPath(item)] = item.weight;
       });
     });
     return map;
@@ -398,7 +463,16 @@
       setSaveChip('', null);
     }
 
+    var variantCount = 0;
+    sections.forEach(function (sec) {
+      sec.items.forEach(function (item) {
+        if (item.variantKind === 'location') variantCount += 1;
+      });
+    });
     var parts = [sections.length + ' sections'];
+    if (multiLocationMenus && variantCount) {
+      parts.push(variantCount + ' location variant' + (variantCount === 1 ? '' : 's'));
+    }
     if (sessionSectionMoves || sessionItemMoves) {
       var moveParts = [];
       if (sessionSectionMoves) {
@@ -438,19 +512,32 @@
     return pinned.concat(movable);
   }
 
-  function hugoItemToState(raw, weightHint) {
+  function hugoItemToState(raw, weightHint, extras) {
+    extras = extras || {};
     var url = normalizeUrl(raw.url || raw.RelPermalink);
     var title = String(raw.name || raw.title || raw.linkTitle || 'Untitled').trim();
+    var locationSlug = String(
+      extras.locationSlug != null ? extras.locationSlug : raw.location_slug || ''
+    ).trim();
     return {
-      id: raw.id || url,
+      id: extras.contentPath || raw.id || url,
       title: title,
       url: url,
       weight: typeof raw.weight === 'number' ? raw.weight : weightHint,
       raw: raw,
+      contentPath: extras.contentPath || '',
+      locationSlug: locationSlug,
+      locationLabel: extras.locationLabel || (locationSlug ? humanizeSlug(locationSlug) : ''),
+      variantKind: extras.variantKind || (locationSlug ? 'location' : 'shared'),
+      fileSlug: extras.fileSlug || fileSlugFromUrl(url),
     };
   }
 
   function sectionContentPath(slug) {
+    return 'content/_shared/' + slug + '/_index.md';
+  }
+
+  function legacySectionContentPath(slug) {
     return 'content/' + slug + '/_index.md';
   }
 
@@ -518,6 +605,11 @@
             url: item.url,
             weight: item.weight,
             raw: item.raw,
+            contentPath: item.contentPath || '',
+            locationSlug: item.locationSlug || '',
+            locationLabel: item.locationLabel || '',
+            variantKind: item.variantKind || 'shared',
+            fileSlug: item.fileSlug || '',
           };
         }),
       };
@@ -526,10 +618,18 @@
 
   function collectContentPaths(list) {
     var paths = [];
+    var seen = {};
+    function addPath(p) {
+      p = normalizeContentPath(p) || String(p || '').trim();
+      if (!p || seen[p]) return;
+      seen[p] = true;
+      paths.push(p);
+    }
     list.forEach(function (sec) {
-      paths.push(sectionContentPath(sec.slug));
+      addPath(sectionContentPath(sec.slug));
+      addPath(legacySectionContentPath(sec.slug));
       sec.items.forEach(function (item) {
-        paths.push(itemContentPath(item.url));
+        addPath(itemContentPath(item));
       });
     });
     return paths;
@@ -571,12 +671,13 @@
 
   function applyLiveFileWeights(list, filesMap) {
     list.forEach(function (sec) {
-      var secFile = filesMap[sectionContentPath(sec.slug)];
+      var secFile =
+        filesMap[sectionContentPath(sec.slug)] || filesMap[legacySectionContentPath(sec.slug)];
       if (secFile) {
         applySectionFrontMatter(sec, secFile.frontMatter || secFile.FrontMatter, secFile.body);
       }
       sec.items.forEach(function (item, idx) {
-        var ip = itemContentPath(item.url);
+        var ip = itemContentPath(item);
         var itemFile = filesMap[ip];
         if (!itemFile) return;
         var ifm = itemFile.frontMatter || itemFile.FrontMatter || {};
@@ -604,35 +705,216 @@
     });
   }
 
-  function buildSkeletonFromHugo(hugoApi) {
+  function collectAuthoringCandidatePaths(hugoApi) {
+    var paths = [];
+    var seen = {};
+    function addPath(p) {
+      if (!p || seen[p]) return;
+      seen[p] = true;
+      paths.push(p);
+    }
+    var hugoItems = (hugoApi && hugoApi.menu_items) || [];
+    var sectionSlugs = {};
+    hugoItems.forEach(function (raw) {
+      var sectionSlug = String(raw.section || slugFromUrl(raw.categoryUrl || raw.url) || '').trim();
+      var fileSlug = fileSlugFromUrl(raw.url || raw.RelPermalink);
+      var locSlug = String(raw.location_slug || '').trim();
+      if (!sectionSlug || !fileSlug) return;
+      sectionSlugs[sectionSlug] = true;
+      addPath(sharedItemContentPath(sectionSlug, fileSlug));
+      addPath(legacyItemContentPath(sectionSlug, fileSlug));
+      if (locSlug) addPath(locationItemContentPath(locSlug, sectionSlug, fileSlug));
+    });
+    Object.keys(sectionSlugs).forEach(function (slug) {
+      addPath(sectionContentPath(slug));
+      addPath(legacySectionContentPath(slug));
+    });
+    return paths;
+  }
+
+  function authoringKind(raw) {
+    return String((raw && (raw.ttms_authoring || raw.authoring)) || '')
+      .trim()
+      .toLowerCase();
+  }
+
+  function authoringLocationSlug(raw) {
+    var fromParam = String((raw && (raw.ttms_location || raw.authoring_location)) || '').trim();
+    if (fromParam) return fromParam;
+    return String((raw && raw.location_slug) || '').trim();
+  }
+
+  function locationEntryKey(sectionSlug, fileSlug, locSlug) {
+    return sectionSlug + '\0' + fileSlug + '\0' + locSlug;
+  }
+
+  function buildAuthoringLookup(authoringIndex) {
+    var lookup = { shared: {}, location: {} };
+    if (!authoringIndex) return lookup;
+    (authoringIndex.shared || []).forEach(function (row) {
+      if (!row || !row.section || !row.file) return;
+      lookup.shared[row.section + '\0' + row.file] = row;
+    });
+    (authoringIndex.location || []).forEach(function (row) {
+      if (!row || !row.section || !row.file || !row.location_slug) return;
+      lookup.location[locationEntryKey(row.section, row.file, row.location_slug)] = row;
+    });
+    return lookup;
+  }
+
+  /**
+   * Collapse per-location copies of shared items into one row, while keeping
+   * location overrides / location-only extras as separate reorderable variants.
+   */
+  function buildSkeletonFromHugo(hugoApi, filesMap, authoringIndex) {
+    filesMap = filesMap || {};
+    multiLocationMenus = !!(hugoApi && hugoApi.multi_location_menus);
+    var authoringLookup = buildAuthoringLookup(authoringIndex);
     var hugoItems = (hugoApi && hugoApi.menu_items) || [];
     var grouped = {};
+
     hugoItems.forEach(function (raw) {
-      var slug = String(raw.section || slugFromUrl(raw.categoryUrl || raw.url) || '').trim();
-      if (!slug) return;
-      if (!grouped[slug]) {
+      var sectionSlug = String(raw.section || slugFromUrl(raw.categoryUrl || raw.url) || '').trim();
+      if (!sectionSlug) return;
+      var fileSlug = fileSlugFromUrl(raw.url || raw.RelPermalink);
+      if (!fileSlug) return;
+      var locSlug = String(raw.location_slug || '').trim();
+
+      if (!grouped[sectionSlug]) {
         var secWeight =
           typeof raw.section_weight === 'number'
             ? raw.section_weight
             : MIN_MOVABLE_SECTION_WEIGHT;
-        grouped[slug] = {
-          slug: slug,
-          title: String(raw.category || slug).trim(),
-          url: normalizeUrl(raw.categoryUrl || '/' + slug + '/'),
+        var catUrl = normalizeUrl(raw.categoryUrl || '/' + sectionSlug + '/');
+        if (multiLocationMenus && locSlug) {
+          catUrl = normalizeUrl('/' + sectionSlug + '/');
+        }
+        grouped[sectionSlug] = {
+          slug: sectionSlug,
+          title: String(raw.category || sectionSlug).trim(),
+          url: catUrl,
           summary: '',
           image: '',
-          weight: slug === 'promotions' ? PINNED_SECTION_WEIGHT : secWeight,
-          items: [],
+          weight: sectionSlug === 'promotions' ? PINNED_SECTION_WEIGHT : secWeight,
+          itemGroups: {},
         };
       }
-      var itemWeight =
-        typeof raw.weight === 'number'
-          ? raw.weight
-          : MIN_ITEM_WEIGHT + grouped[slug].items.length;
-      grouped[slug].items.push(hugoItemToState(raw, itemWeight));
+
+      var sec = grouped[sectionSlug];
+      if (!sec.itemGroups[fileSlug]) {
+        sec.itemGroups[fileSlug] = { fileSlug: fileSlug, byLocation: {}, anyRaw: raw };
+      }
+      var g = sec.itemGroups[fileSlug];
+      g.anyRaw = raw;
+      g.byLocation[locSlug || '_'] = raw;
     });
-    return Object.keys(grouped).map(function (k) {
-      return grouped[k];
+
+    return Object.keys(grouped).map(function (sectionSlug) {
+      var sec = grouped[sectionSlug];
+      var items = [];
+      Object.keys(sec.itemGroups).forEach(function (fileSlug) {
+        var g = sec.itemGroups[fileSlug];
+        var sharedPath = sharedItemContentPath(sectionSlug, fileSlug);
+        var legacyPath = legacyItemContentPath(sectionSlug, fileSlug);
+        var locKeys = Object.keys(g.byLocation).filter(function (k) {
+          return k !== '_';
+        });
+        var hasSharedFile =
+          fileExistsInMap(filesMap, sharedPath) ||
+          !!authoringLookup.shared[sectionSlug + '\0' + fileSlug];
+        var hasLegacyFile = fileExistsInMap(filesMap, legacyPath);
+        var locationEntries = [];
+        var seenLoc = {};
+
+        function addLocationEntry(locKey, rawHint) {
+          if (!locKey || seenLoc[locKey]) return;
+          seenLoc[locKey] = true;
+          locationEntries.push({
+            locationSlug: locKey,
+            raw: rawHint || g.byLocation[locKey] || g.anyRaw,
+            contentPath: locationItemContentPath(locKey, sectionSlug, fileSlug),
+          });
+        }
+
+        locKeys.forEach(function (locKey) {
+          var raw = g.byLocation[locKey];
+          var locPath = locationItemContentPath(locKey, sectionSlug, fileSlug);
+          var fromStamp = authoringKind(raw) === 'location';
+          var fromIndex = !!authoringLookup.location[locationEntryKey(sectionSlug, fileSlug, locKey)];
+          var fromCms = fileExistsInMap(filesMap, locPath);
+          if (fromStamp || fromIndex || fromCms) {
+            addLocationEntry(locKey, raw);
+          }
+        });
+
+        /* Location-only extras: appear under one outlet and have no shared authoring file */
+        if (
+          multiLocationMenus &&
+          locKeys.length === 1 &&
+          !hasSharedFile &&
+          !hasLegacyFile &&
+          !locationEntries.length
+        ) {
+          addLocationEntry(locKeys[0], g.byLocation[locKeys[0]]);
+        }
+
+        var sharedContentPath = hasSharedFile ? sharedPath : hasLegacyFile ? legacyPath : sharedPath;
+        var isLocationOnly = locationEntries.length > 0 && !hasSharedFile && !hasLegacyFile && locKeys.length <= 1;
+        var shouldAddShared = !isLocationOnly && (hasSharedFile || hasLegacyFile || locKeys.length > 1);
+
+        if (!shouldAddShared && !locationEntries.length && Object.keys(g.byLocation).length > 0) {
+          shouldAddShared = true;
+        }
+
+        if (shouldAddShared) {
+          var sharedRaw = g.anyRaw;
+          var pickKeys = Object.keys(g.byLocation);
+          for (var pi = 0; pi < pickKeys.length; pi++) {
+            if (authoringKind(g.byLocation[pickKeys[pi]]) !== 'location') {
+              sharedRaw = g.byLocation[pickKeys[pi]];
+              break;
+            }
+            sharedRaw = g.byLocation[pickKeys[pi]];
+          }
+          var sharedWeight =
+            typeof sharedRaw.weight === 'number' ? sharedRaw.weight : MIN_ITEM_WEIGHT + items.length;
+          items.push(
+            hugoItemToState(sharedRaw, sharedWeight, {
+              contentPath: sharedContentPath,
+              variantKind: 'shared',
+              locationSlug: '',
+              locationLabel: '',
+              fileSlug: fileSlug,
+            })
+          );
+        }
+
+        locationEntries.forEach(function (entry) {
+          var locWeight =
+            typeof entry.raw.weight === 'number'
+              ? entry.raw.weight
+              : MIN_ITEM_WEIGHT + items.length;
+          items.push(
+            hugoItemToState(entry.raw, locWeight, {
+              contentPath: entry.contentPath,
+              variantKind: 'location',
+              locationSlug: entry.locationSlug,
+              locationLabel: humanizeSlug(entry.locationSlug),
+              fileSlug: fileSlug,
+            })
+          );
+        });
+      });
+
+      return {
+        slug: sec.slug,
+        title: sec.title,
+        url: sec.url,
+        summary: '',
+        image: '',
+        weight: sec.weight,
+        items: items,
+      };
     });
   }
 
@@ -644,8 +926,9 @@
     var itemByPath = {};
     list.forEach(function (sec) {
       secByPath[sectionContentPath(sec.slug)] = sec;
+      secByPath[legacySectionContentPath(sec.slug)] = sec;
       sec.items.forEach(function (item) {
-        itemByPath[itemContentPath(item.url)] = item;
+        itemByPath[itemContentPath(item)] = item;
       });
     });
     previews.forEach(function (p) {
@@ -718,6 +1001,7 @@
   }
 
   function loadStructure() {
+    setListLoading(true);
     setStatus('Loading menu structure…', 'loading');
     return ensureAccessToken()
       .then(function () {
@@ -734,20 +1018,37 @@
               return { previews: [] };
             }
           ),
+          fetch('/menu-authoring.json', { credentials: 'same-origin' })
+            .then(function (r) {
+              return r.ok ? r.json() : null;
+            })
+            .catch(function () {
+              return null;
+            }),
         ]);
       })
       .then(function (results) {
         var hugoApi = results[0];
         var previews = dedupePreviewsByContentPath(normalizePreviewsList(results[1]));
-        var skeleton = buildSkeletonFromHugo(hugoApi);
-        if (!skeleton.length) {
-          sections = [];
-          setStatus('No menu sections found. Add menu content first, then return here.', 'error');
-          renderList();
-          return;
+        var authoringIndex = results[2];
+        multiLocationMenus = !!(hugoApi && hugoApi.multi_location_menus);
+        var candidatePaths = collectAuthoringCandidatePaths(hugoApi);
+        if (authoringIndex) {
+          (authoringIndex.shared || []).forEach(function (row) {
+            if (row && row.content_path) candidatePaths.push(row.content_path);
+          });
+          (authoringIndex.location || []).forEach(function (row) {
+            if (row && row.content_path) candidatePaths.push(row.content_path);
+          });
         }
-        var paths = collectContentPaths(skeleton);
-        return batchFetchContentFiles(paths).then(function (filesMap) {
+        return batchFetchContentFiles(candidatePaths).then(function (filesMap) {
+          var skeleton = buildSkeletonFromHugo(hugoApi, filesMap, authoringIndex);
+          if (!skeleton.length) {
+            sections = [];
+            setStatus('No menu sections found. Add menu content first, then return here.', 'error');
+            renderList();
+            return;
+          }
           var liveSections = cloneSectionList(skeleton);
           applyLiveFileWeights(liveSections, filesMap);
           liveOrderSnapshot = captureOrderSnapshot(liveSections);
@@ -770,6 +1071,10 @@
       .catch(function (err) {
         console.error(err);
         setStatus('Could not load menu: ' + (err.message || err), 'error');
+        renderList();
+      })
+      .finally(function () {
+        setListLoading(false);
       });
   }
 
@@ -805,7 +1110,7 @@
       payload: {
         kind: 'section',
         clientId: CMS_CLIENT_ID,
-        contentPath: 'content/' + sec.slug + '/_index.md',
+        contentPath: sectionContentPath(sec.slug),
         siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
         frontMatter: fm,
         body: sec.summary || '',
@@ -830,7 +1135,7 @@
       payload: {
         kind: 'menu-item',
         clientId: CMS_CLIENT_ID,
-        contentPath: itemContentPath(item.url),
+        contentPath: itemContentPath(item),
         siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
         frontMatter: fm,
         body: '',
@@ -863,7 +1168,7 @@
         });
       }
       sec.items.forEach(function (item) {
-        var ip = itemContentPath(item.url);
+        var ip = itemContentPath(item);
         if (diff.items[ip]) {
           jobs.push(function () {
             return cmsPost(path, itemPayload(item));
@@ -1152,18 +1457,31 @@
       var list = document.createElement('ul');
       list.className = 'dashboard-rearrange-items';
       sec.items.forEach(function (item, ii) {
-        var itemPath = itemContentPath(item.url);
+        var itemPath = itemContentPath(item);
         var itemMoved = !!highlightDiff.items[itemPath];
         var li = document.createElement('li');
         li.className = 'dashboard-rearrange-item';
         if (itemMoved) li.classList.add('dashboard-rearrange-item--changed');
+        if (item.variantKind === 'location') {
+          li.classList.add('dashboard-rearrange-item--location');
+        }
 
         var main = document.createElement('div');
         main.className = 'dashboard-rearrange-item-main';
+        var labelRow = document.createElement('div');
+        labelRow.className = 'dashboard-rearrange-item-label-row';
         var label = document.createElement('span');
         label.className = 'dashboard-rearrange-item-label';
         label.textContent = item.title;
-        main.appendChild(label);
+        labelRow.appendChild(label);
+        if (item.variantKind === 'location' && item.locationLabel) {
+          var locBadge = document.createElement('span');
+          locBadge.className = 'dashboard-rearrange-location-badge';
+          locBadge.textContent = item.locationLabel;
+          locBadge.title = 'Location variant · ' + (item.contentPath || item.locationSlug);
+          labelRow.appendChild(locBadge);
+        }
+        main.appendChild(labelRow);
         main.appendChild(createPositionMeta(ii + 1, item.weight));
         li.appendChild(main);
 
@@ -1201,13 +1519,16 @@
           category: sec.title,
           categoryUrl: sec.url,
           weight: item.weight,
+          contentPath: itemContentPath(item),
+          location_slug: item.locationSlug || '',
+          variant_kind: item.variantKind || 'shared',
         });
       });
     });
     return {
       version: '1.0.0',
       exportDate: new Date().toISOString(),
-      metadata: { siteTitle: '', baseURL: '' },
+      metadata: { siteTitle: '', baseURL: '', multiLocationMenus: multiLocationMenus },
       categories: categories,
       menuItems: menuItems,
       locations: [],

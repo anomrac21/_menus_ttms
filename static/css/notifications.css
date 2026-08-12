@@ -1,4 +1,4 @@
-/* Stacked Notification System */
+/* Stacked Notification System — mobile-first (see notifications.lg.css) */
 
 @keyframes slideInRight {
     from {
@@ -25,20 +25,13 @@
 #notification-container {
     position: fixed;
     top: 80px;
-    right: 20px;
+    left: 10px;
+    right: 10px;
     z-index: var(--ttms-z-notification, 10100);
-    max-width: 400px;
+    max-width: calc(100% - 20px);
     display: flex;
     flex-direction: column;
     gap: 10px;
-}
-
-@media (max-width: 768px) {
-    #notification-container {
-        left: 10px;
-        right: 10px;
-        max-width: calc(100% - 20px);
-    }
 }
 
 /* Enhanced Notification Styles */
@@ -52,7 +45,7 @@
   transform: translateX(400px);
   transition: all 0.3s ease;
   overflow: hidden;
-  max-width: 400px;
+  max-width: calc(100% - 20px);
 }
 
 .notification.show {
@@ -68,7 +61,7 @@
 .notification-content {
   display: flex;
   align-items: flex-start;
-  padding: 16px;
+  padding: 12px;
   gap: 12px;
 }
 
@@ -84,13 +77,13 @@
 
 .notification-title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   margin-bottom: 4px;
   color: #1a1a1a;
 }
 
 .notification-message {
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
   line-height: 1.4;
 }
@@ -172,25 +165,3 @@
 .notification[data-type="system"] .notification-message {
   color: white;
 }
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .notification {
-    max-width: calc(100% - 20px);
-  }
-
-  .notification-content {
-    padding: 12px;
-  }
-
-  .notification-title {
-    font-size: 13px;
-  }
-
-  .notification-message {
-    font-size: 12px;
-  }
-}
-
-
-

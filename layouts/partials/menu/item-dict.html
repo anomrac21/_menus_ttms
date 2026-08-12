@@ -1,0 +1,169 @@
+{{- $p := .page -}}
+{{- $secSlug := .sectionSlug -}}
+{{- $locSlug := .locationSlug | default "" -}}
+{{- $cat := .category -}}
+
+{{- $variable1Values := slice -}}
+{{- range $p.Params.prices -}}
+  {{- if not (in $variable1Values .variable1) -}}
+    {{- $variable1Values = $variable1Values | append .variable1 -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $variable2Values := slice -}}
+{{- range $p.Params.prices -}}
+  {{- if not (in $variable2Values .variable2) -}}
+    {{- $variable2Values = $variable2Values | append .variable2 -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $prices := slice -}}
+{{- $priceMeta := slice -}}
+{{- range $p.Params.prices -}}
+  {{- $price := slice -}}
+  {{- $price = $price | append .variable1 -}}
+  {{- $price = $price | append .variable2 -}}
+  {{- $price = $price | append .price -}}
+  {{- $prices = $prices | append $price -}}
+  {{- $priceMeta = $priceMeta | append (dict
+    "variable1" .variable1
+    "variable2" .variable2
+    "price" .price
+    "loyverse_variant_id" (.loyverse_variant_id | default "")
+  ) -}}
+{{- end -}}
+
+{{- $sideCategories := slice -}}
+{{- if $p.Params.side_categories -}}
+  {{- range $p.Params.side_categories -}}
+    {{- $category := dict -}}
+    {{- $category = merge $category (dict "category_name" .category_name) -}}
+    {{- $category = merge $category (dict "display_name" .display_name) -}}
+    {{- $items := slice -}}
+    {{- range .items -}}
+      {{- if .name -}}
+        {{- $item := dict -}}
+        {{- $item = merge $item (dict "name" .name) -}}
+        {{- $item = merge $item (dict "type" (.type | default "Regular")) -}}
+        {{- $item = merge $item (dict "price" (.price | default 0)) -}}
+        {{- if .image -}}
+          {{- $item = merge $item (dict "image" .image) -}}
+        {{- end -}}
+        {{- $items = $items | append $item -}}
+      {{- else -}}
+        {{- $item := slice -}}
+        {{- $item = $item | append . -}}
+        {{- $items = $items | append $item -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $category = merge $category (dict "items" $items) -}}
+    {{- if .config -}}
+      {{- $config := dict -}}
+      {{- $config = merge $config (dict "minimum" (.config.minimum | default 0)) -}}
+      {{- $config = merge $config (dict "maximum" (.config.maximum | default 99)) -}}
+      {{- $category = merge $category (dict "config" $config) -}}
+    {{- end -}}
+    {{- $sideCategories = $sideCategories | append $category -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $sides := slice -}}
+{{- range $p.Params.sides -}}
+  {{- $side := slice -}}
+  {{- $side = $side | append .name -}}
+  {{- $side = $side | append .type -}}
+  {{- $side = $side | append .price -}}
+  {{- $sides = $sides | append $side -}}
+{{- end -}}
+
+{{- $sideconfig := slice -}}
+{{- if $p.Params.side_config -}}
+  {{- $config := slice -}}
+  {{- $config = $config | append $p.Params.side_config.all_max -}}
+  {{- $config = $config | append $p.Params.side_config.all_valuecount -}}
+  {{- $config = $config | append $p.Params.side_config.all_value -}}
+  {{- $config = $config | append $p.Params.side_config.regular_max -}}
+  {{- $config = $config | append $p.Params.side_config.regular_valuecount -}}
+  {{- $config = $config | append $p.Params.side_config.regular_value -}}
+  {{- $config = $config | append $p.Params.side_config.premium_max -}}
+  {{- $config = $config | append $p.Params.side_config.premium_valuecount -}}
+  {{- $config = $config | append $p.Params.side_config.premium_value -}}
+  {{- $sideconfig = $sideconfig | append $config -}}
+{{- end -}}
+
+{{- $additions := slice -}}
+{{- range $p.Params.additions -}}
+  {{- $addition := slice -}}
+  {{- $addition = $addition | append .name -}}
+  {{- $addition = $addition | append .price -}}
+  {{- $additions = $additions | append $addition -}}
+{{- end -}}
+
+{{- $modifications := slice -}}
+{{- range $p.Params.modifications -}}
+  {{- $modification := slice -}}
+  {{- $modification = $modification | append .name -}}
+  {{- $modification = $modification | append .price -}}
+  {{- $modifications = $modifications | append $modification -}}
+{{- end -}}
+
+{{- $images := slice -}}
+{{- range $p.Params.images -}}
+  {{- $images = $images | append .image -}}
+{{- end -}}
+
+{{- $tags := slice -}}
+{{- with $p.Params.tags -}}{{- $tags = . -}}{{- end -}}
+{{- $ingredients := slice -}}
+{{- with $p.Params.ingredients -}}{{- $ingredients = . -}}{{- end -}}
+{{- $cookingmethods := slice -}}
+{{- with $p.Params.cookingmethods -}}{{- $cookingmethods = . -}}{{- end -}}
+{{- $types := slice -}}
+{{- with $p.Params.types -}}{{- $types = . -}}{{- end -}}
+{{- $events := slice -}}
+{{- with $p.Params.events -}}{{- $events = . -}}{{- end -}}
+
+{{- $availability := $p.Params.availability | default $p.CurrentSection.Params.availability -}}
+
+{{- $uid := "" -}}
+{{- with $p.File -}}{{- $uid = .UniqueID -}}{{- end -}}
+{{- $ttmsAuthoring := $p.Params.ttms_authoring | default "" -}}
+{{- $ttmsLocation := $p.Params.ttms_location | default "" -}}
+{{- if and (eq $ttmsAuthoring "location") (not $ttmsLocation) -}}
+  {{- $ttmsLocation = $locSlug -}}
+{{- end -}}
+
+{{- return (dict
+  "id" $uid
+  "name" $p.Title
+  "linkTitle" $p.LinkTitle
+  "url" $p.RelPermalink
+  "weight" $p.Weight
+  "section" $secSlug
+  "section_weight" $cat.Weight
+  "category" $cat.Title
+  "categoryUrl" $cat.RelPermalink
+  "location_slug" $locSlug
+  "ttms_authoring" $ttmsAuthoring
+  "ttms_location" $ttmsLocation
+  "summary" $p.Summary
+  "variable1_values" $variable1Values
+  "variable2_values" (sort $variable2Values)
+  "prices" $prices
+  "price_meta" $priceMeta
+  "loyverse_item_id" ($p.Params.loyverse_item_id | default "")
+  "loyverse_variant_id" ($p.Params.loyverse_variant_id | default "")
+  "side_categories" $sideCategories
+  "sides" $sides
+  "sideconfig" $sideconfig
+  "additions" $additions
+  "modifications" $modifications
+  "images" $images
+  "tags" $tags
+  "ingredients" $ingredients
+  "cookingmethods" $cookingmethods
+  "types" $types
+  "events" $events
+  "availability" $availability
+  "promotions" ($p.Params.promotions | default slice)
+) -}}

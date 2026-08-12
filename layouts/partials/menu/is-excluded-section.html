@@ -1,0 +1,16 @@
+{{- /* True if path/section should be excluded from menu nav and home reels. */ -}}
+{{- $url := . | default "" -}}
+{{- return (or
+  (in $url "tags")
+  (in $url "categories")
+  (in $url "subcategories")
+  (in $url "types")
+  (in $url "events")
+  (in $url "ingredients")
+  (in $url "cookingmethods")
+  (in $url "admins")
+  (in $url "admin")
+  (in $url "payment")
+  (in $url "locations")
+  (eq $url "_shared")
+) -}}

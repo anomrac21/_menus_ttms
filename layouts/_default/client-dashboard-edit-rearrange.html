@@ -1,65 +1,57 @@
 <!DOCTYPE html>
-
 <html lang="{{ site.Language.Lang }}">
-
 <head>
-
   {{ partial "dashboard/edit-head-rearrange.html" . }}
-
 </head>
-
-<body class="dashboard-edit-rearrange-only">
-
+{{- $siteName := site.Title | default "Menu Demo" -}}
+{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
+<body class="dashboard-edit-rearrange-only dashboard-control-room">
   <div class="dashboard-edit-page" id="dashboardEditPage" data-edit-submode="move" data-edit-mode="edit">
-
-    <header class="dashboard-edit-header dashboard-edit-header--rearrange" aria-label="Rearrange menu toolbar">
-
-      <div class="dashboard-edit-header-inner">
-
-        <div class="dashboard-edit-header-start">
-
-          <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" id="btnDashboardBack" title="Back to dashboard" aria-label="Back to dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-
-        </div>
-
-        <div class="dashboard-edit-header-center dashboard-edit-header-center--theme">
-
-          <h1 class="dashboard-edit-header-theme-title"><i class="fa fa-arrows" aria-hidden="true"></i> Rearrange menu</h1>
-
-        </div>
-
+    <header class="dashboard-edit-header dashboard-edit-header--rearrange dashboard-header-bar dashboard-subpage-header-bar" aria-label="Rearrange menu toolbar">
+      <a href="/" class="dashboard-logo-link" aria-label="{{ $siteName }} — view live menu" title="View {{ $siteName }} menu site">
+        <span class="dashboard-logo-frame" aria-hidden="true">
+          <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
+        </span>
+        <span class="dashboard-logo-live-badge">Rearrange</span>
+      </a>
+      <div class="dashboard-header-main">
+        <p class="dashboard-header-kicker">
+          <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
+          Rearrange menu
+        </p>
+        <h1 class="dashboard-header-site">{{ $siteName }}</h1>
       </div>
-
+      <div class="dashboard-header-end">
+        <a href="/dashboard/" class="dashboard-header-close" id="btnDashboardBack" title="Close rearrange menu" aria-label="Close rearrange menu">
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </a>
+      </div>
     </header>
 
-
-
     <p class="dashboard-edit-rearrange-intro" id="dashboardEditRearrangeIntro">
-
-      Use the arrow buttons to change order. Drafts are saved when you leave this page — publish from the dashboard when ready.
-
+      Use the arrow buttons to change order. Shared items appear once; location overrides and location-only dishes show with a location badge. Drafts save when you leave — publish from the dashboard when ready.
     </p>
 
-
-
     <div class="dashboard-edit-layout dashboard-edit-layout--rearrange">
-
       <div class="dashboard-rearrange-panel">
-
         <div class="dashboard-rearrange-toolbar">
-          <div id="dashboardRearrangeStatus" class="dashboard-rearrange-status" aria-live="polite">Loading…</div>
+          <div id="dashboardRearrangeStatus" class="dashboard-rearrange-status dashboard-rearrange-status--loading" aria-live="polite">
+            <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+            <span>Loading menu structure…</span>
+          </div>
           <span id="dashboardRearrangeSaveChip" class="dashboard-rearrange-save-chip hidden" aria-live="polite"></span>
         </div>
-
-        <div id="dashboardRearrangeList" class="dashboard-rearrange-list" aria-label="Menu sections and items"></div>
-
+        <div class="dashboard-rearrange-list-wrap is-loading">
+          <div id="dashboardRearrangeLoading" class="dashboard-rearrange-loading" role="status" aria-live="polite" aria-busy="true">
+            <div class="dashboard-rearrange-loading-inner">
+              <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+              <span>Loading menu…</span>
+            </div>
+          </div>
+          <div id="dashboardRearrangeList" class="dashboard-rearrange-list" aria-label="Menu sections and items"></div>
+        </div>
       </div>
-
     </div>
-
   </div>
-
 </body>
-
 </html>
-

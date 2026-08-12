@@ -1,5 +1,5 @@
 <ul class="hero-cta-list">
-	{{- if site.Params.notifications.enabled -}}
+	{{- if default false site.Params.features.notifications -}}
 	<li class="subscribe subscribe--notifications">
 		{{ partial "components/notification-subscribe-btn.html" (dict) }}
 	</li>

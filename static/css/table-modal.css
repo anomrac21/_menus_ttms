@@ -18,7 +18,7 @@
 }
 
 #tableNumberModal.table-modal-panel .table-modal-container {
-    max-width: min(100%, 28rem);
+    max-width: 100%;
     transform: translateY(12px) scale(0.98);
     transition:
         transform 0.28s ease,
@@ -167,7 +167,7 @@
 
 #tableNumberModal.table-modal-panel .table-buttons-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.55rem;
     margin-top: 0;
 }
@@ -270,10 +270,12 @@
 
 #tableNumberModal.table-modal-panel .table-modal-actions {
     gap: 0.55rem;
+    flex-direction: column-reverse;
 }
 
 #tableNumberModal.table-modal-panel .btn-confirm-table {
     flex: 1 1 auto;
+    width: 100%;
     min-height: 3rem;
     padding: 0.7rem 1.15rem;
     border-radius: 999px;
@@ -301,6 +303,7 @@
 
 #tableNumberModal.table-modal-panel .btn-cancel-table {
     flex: 0 0 auto;
+    width: 100%;
     min-height: 3rem;
     padding: 0.7rem 1.1rem;
     border-radius: 999px;
@@ -309,7 +312,6 @@
     color: var(--table-modal-ink-muted);
     font-size: 0.88rem;
     font-weight: 600;
-    width: auto;
 }
 
 #tableNumberModal.table-modal-panel .btn-cancel-table:hover,
@@ -318,25 +320,6 @@
     border-color: rgba(255, 255, 255, 0.24);
     color: var(--table-modal-ink);
     outline: none;
-}
-
-@media (max-width: 480px) {
-    #tableNumberModal.table-modal-panel .table-modal-container {
-        max-width: 100%;
-    }
-
-    #tableNumberModal.table-modal-panel .table-buttons-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    #tableNumberModal.table-modal-panel .table-modal-actions {
-        flex-direction: column-reverse;
-    }
-
-    #tableNumberModal.table-modal-panel .btn-cancel-table,
-    #tableNumberModal.table-modal-panel .btn-confirm-table {
-        width: 100%;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

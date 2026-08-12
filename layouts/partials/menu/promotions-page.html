@@ -1,0 +1,26 @@
+{{- /*
+  Resolve the Promotions section for the current context.
+  Flat: /promotions/
+  Multi-location: /{slug}/promotions/
+*/ -}}
+{{- $promo := false -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- if $locSlug -}}
+  {{- $promo = site.GetPage (printf "/%s/promotions" $locSlug) -}}
+{{- end -}}
+{{- if not $promo -}}
+  {{- with site.GetPage "/promotions" -}}
+    {{- $promo = . -}}
+  {{- else -}}
+    {{- /* Fallback: first unambiguous match among sections titled Promotions */ -}}
+    {{- range site.Sections -}}
+      {{- if and (not $promo) (eq .LinkTitle "Promotions") (eq (partial "menu/section-slug.html" .) "promotions") -}}
+        {{- $loc := partial "menu/location-slug.html" . -}}
+        {{- if not $loc -}}
+          {{- $promo = . -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $promo -}}

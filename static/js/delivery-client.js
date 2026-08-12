@@ -1,0 +1,165 @@
+/**
+ * TTMenus Delivery API client — platform fleet flow.
+ * Expects AuthClient.getAccessToken() and window.DELIVERY_CONFIG.
+ */
+(function (global) {
+  'use strict';
+
+  function cfg() {
+    return global.DELIVERY_CONFIG || {};
+  }
+
+  function apiBase() {
+    return (cfg().apiUrl || 'https://delivery.ttmenus.com/api/v1').replace(/\/$/, '');
+  }
+
+  function wsBase() {
+    var u = cfg().wsUrl || '';
+    if (u) return u.replace(/\/$/, '');
+    var http = apiBase().replace(/\/api\/v1$/, '');
+    return http.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:') + '/api/v1';
+  }
+
+  function getToken() {
+    if (global.AuthClient && global.AuthClient.getAccessToken) {
+      return global.AuthClient.getAccessToken();
+    }
+    try {
+      return localStorage.getItem('ttmenus_access_token');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function request(method, path, body) {
+    var token = getToken();
+    if (!token) {
+      throw new Error('Sign in required for delivery');
+    }
+    var opts = {
+      method: method,
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/json',
+      },
+    };
+    if (body !== undefined) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    var res = await fetch(apiBase() + path, opts);
+    var data = null;
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = null;
+    }
+    if (!res.ok) {
+      var msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  var DeliveryClient = {
+    enabled: function () {
+      // DELIVERY_CONFIG is only emitted when features.delivery AND deliveryService.enabled.
+      return !!cfg().enabled;
+    },
+    applyDriver: function (payload) {
+      return request('POST', '/drivers/apply', payload || {});
+    },
+    getDriverProfile: function () {
+      return request('GET', '/drivers/me');
+    },
+    setOnline: function (online, lat, lng, heading) {
+      return request('POST', '/drivers/online', {
+        online: !!online,
+        lat: lat || 0,
+        lng: lng || 0,
+        heading: heading || 0,
+      });
+    },
+    postLocation: function (lat, lng, heading, orderId) {
+      return request('POST', '/drivers/location', {
+        lat: lat,
+        lng: lng,
+        heading: heading || 0,
+        order_id: orderId || '',
+      });
+    },
+    listDriverOffers: function () {
+      return request('GET', '/drivers/offers');
+    },
+    listDriverJobs: function () {
+      return request('GET', '/drivers/jobs');
+    },
+    requestJob: function (orderId) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/request', {});
+    },
+    createOrder: function (payload) {
+      return request('POST', '/orders', payload);
+    },
+    getOrder: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId));
+    },
+    listMyOrders: function () {
+      return request('GET', '/orders/mine');
+    },
+    listOffers: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId) + '/offers');
+    },
+    acceptDriver: function (orderId, driverId) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/accept-driver', {
+        driver_id: driverId,
+      });
+    },
+    listClientOrders: function (status) {
+      var q = status ? '?status=' + encodeURIComponent(status) : '';
+      return request('GET', '/client/orders' + q);
+    },
+    clientAccept: function (orderId, accept, reason) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/client-accept', {
+        accept: accept !== false,
+        reason: reason || '',
+      });
+    },
+    clientReject: function (orderId, reason) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/client-reject', {
+        reason: reason || '',
+      });
+    },
+    markReady: function (orderId) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/ready', {});
+    },
+    scanPickup: function (token) {
+      return request('POST', '/orders/scan-pickup', { token: token });
+    },
+    scanDelivery: function (token) {
+      return request('POST', '/orders/scan-delivery', { token: token });
+    },
+    getPickupQR: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId) + '/pickup-qr');
+    },
+    getDeliveryQR: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId) + '/delivery-qr');
+    },
+    track: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId) + '/track');
+    },
+    connectTrackWS: function (orderId, onMessage) {
+      var url = wsBase() + '/orders/' + encodeURIComponent(orderId) + '/ws';
+      var ws = new WebSocket(url);
+      ws.onmessage = function (ev) {
+        try {
+          onMessage(JSON.parse(ev.data));
+        } catch (e) {
+          onMessage(ev.data);
+        }
+      };
+      return ws;
+    },
+  };
+
+  global.DeliveryClient = DeliveryClient;
+})(typeof window !== 'undefined' ? window : this);

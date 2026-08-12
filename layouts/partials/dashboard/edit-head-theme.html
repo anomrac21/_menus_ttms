@@ -5,8 +5,11 @@
 <link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"/></noscript>
+<link rel="stylesheet" href="/css/typography.css">
 <link rel="stylesheet" href="/css/auth.css">
-<link rel="stylesheet" href="/css/dashboard.css">
+<link rel="stylesheet" href="/css/dashboard.css?v={{ now.Unix }}">
 {{- if site.Params.auth.enabled -}}
 <script>
 window.AUTH_CONFIG = { apiUrl: "{{ site.Params.auth.apiUrl }}" };
@@ -23,4 +26,4 @@ window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 <script src="/js/auth-client-access.js"></script>
 {{- end -}}
 <script src="/js/cdn-config.js"></script>
-<script src="/js/dashboard-edit.js" defer></script>
+<script src="/js/dashboard-edit.js?v={{ now.Unix }}" defer></script>

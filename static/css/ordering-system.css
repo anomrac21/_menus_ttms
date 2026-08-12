@@ -172,9 +172,7 @@
     background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
 }
 
-/* Main sides modal container */
-#itemSides {
-}
+/* Main sides modal container — styles shared via sibling selectors below */
 
 /* Modifications modal container */
 #itemMods {
@@ -268,26 +266,5 @@
     scrollbar-width: thin;
     scrollbar-color: #888 #f1f1f1;
     height: -webkit-fill-available;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    #itemSides,
-    #itemMods,
-    #itemAddMods {
-    }
-    
-    .side-items-scrollable {
-    }
-}
-
-@media (max-width: 480px) {
-    #itemSides,
-    #itemMods,
-    #itemAddMods {
-    }
-    
-    .side-items-scrollable {
-    }
 }
 

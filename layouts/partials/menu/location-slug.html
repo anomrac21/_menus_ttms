@@ -1,0 +1,15 @@
+{{- /* Location slug from page URL when multi-location menus are on; else empty. */ -}}
+{{- $slug := "" -}}
+{{- if partial "menu/multi-location-enabled.html" . -}}
+  {{- $path := strings.TrimPrefix "/" .RelPermalink -}}
+  {{- $parts := split $path "/" -}}
+  {{- if gt (len $parts) 0 -}}
+    {{- $cand := index $parts 0 -}}
+    {{- range site.Data.locations.locations -}}
+      {{- if and .slug (eq .slug $cand) -}}
+        {{- $slug = $cand -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $slug -}}

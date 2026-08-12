@@ -1,0 +1,33 @@
+{{- /*
+  Menu category section pages for home/header.
+  Context: current page.
+  Flat mode: top-level sections with RegularPages.
+  Multi mode on location home: .Sections of that location.
+  Multi mode on site home: empty (chooser only).
+*/ -}}
+{{- $out := slice -}}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
+{{- if $multi -}}
+  {{- $locSlug := partial "menu/location-slug.html" . -}}
+  {{- if $locSlug -}}
+    {{- $locPage := site.GetPage (printf "/%s" $locSlug) -}}
+    {{- with $locPage -}}
+      {{- range .Sections -}}
+        {{- $titleurl := .RelPermalink -}}
+        {{- if and .RegularPages (not (partial "menu/is-excluded-section.html" $titleurl)) -}}
+          {{- $out = $out | append . -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- else -}}
+  {{- range site.Pages.ByWeight -}}
+    {{- if and (not .IsPage) (not .IsHome) .RegularPages -}}
+      {{- $titleurl := .RelPermalink -}}
+      {{- if not (partial "menu/is-excluded-section.html" $titleurl) -}}
+        {{- $out = $out | append . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $out -}}

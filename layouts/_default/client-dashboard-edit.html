@@ -3,16 +3,28 @@
 <head>
   {{ partial "dashboard/edit-head-theme.html" . }}
 </head>
-<body class="dashboard-edit-theme-only">
+{{- $siteName := site.Title | default "Menu Demo" -}}
+{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
+<body class="dashboard-edit-theme-only dashboard-control-room">
   <div class="dashboard-edit-page" id="dashboardEditPage" data-edit-submode="color" data-edit-mode="edit">
-    <header class="dashboard-edit-header dashboard-edit-header--theme" aria-label="Theme editor toolbar">
-      <div class="dashboard-edit-header-inner">
-        <div class="dashboard-edit-header-start">
-          <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" id="btnDashboardBack" title="Back to dashboard" aria-label="Back to dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-        </div>
-        <div class="dashboard-edit-header-center dashboard-edit-header-center--theme">
-          <h1 class="dashboard-edit-header-theme-title"><i class="fa fa-paint-brush" aria-hidden="true"></i> Theme colors</h1>
-        </div>
+    <header class="dashboard-edit-header dashboard-edit-header--theme dashboard-header-bar dashboard-subpage-header-bar dashboard-edit-theme-header-bar" id="dashboardEditThemeHeader" aria-label="Theme editor toolbar">
+      <a href="/" class="dashboard-logo-link" id="dashboardEditThemeLogoLink" aria-label="{{ $siteName }} — view live menu" title="View {{ $siteName }} menu site">
+        <span class="dashboard-logo-frame" aria-hidden="true">
+          <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
+        </span>
+        <span class="dashboard-logo-live-badge">Theme</span>
+      </a>
+      <div class="dashboard-header-main">
+        <p class="dashboard-header-kicker">
+          <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
+          Theme colors
+        </p>
+        <h1 class="dashboard-header-site" id="dashboardEditThemeSiteName">{{ $siteName }}</h1>
+      </div>
+      <div class="dashboard-header-end">
+        <a href="/dashboard/" class="dashboard-header-close" id="btnDashboardBack" title="Close theme editor" aria-label="Close theme editor">
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </a>
       </div>
     </header>
 
@@ -30,35 +42,45 @@
         </div>
       </section>
 
-      <aside class="dashboard-edit-color-aside" id="dashboardEditColorAside" aria-label="Edit theme colors">
-        <div class="dashboard-edit-color-aside-inner">
-          <div class="dashboard-edit-color-aside-header">
+      <aside class="dashboard-edit-color-aside dashboard-edit-color-painter" id="dashboardEditColorAside" aria-label="Edit theme colors" data-anchor="br">
+        <div class="dashboard-edit-color-painter-stage" id="dashboardEditColorPainterStage">
+          <div class="dashboard-edit-color-wheel hidden" id="dashboardEditColorWheel" aria-label="Color palette wheel">
+            <div class="dashboard-edit-color-wheel-track" aria-hidden="true"></div>
+            <div class="dashboard-edit-color-wheel-focus" aria-hidden="true"></div>
+            <div class="dashboard-edit-color-ring dashboard-edit-color-ring--sections hidden" id="dashboardEditColorSections" role="menu" aria-label="Color sections"></div>
+            <div class="dashboard-edit-color-ring dashboard-edit-color-ring--vars hidden" id="dashboardEditColorVarRing" role="menu" aria-label="Color variables"></div>
+            <div class="dashboard-edit-color-ring dashboard-edit-color-ring--edit hidden" id="dashboardEditColorEditRing" role="menu" aria-label="Edit color value"></div>
+            <p class="dashboard-edit-color-wheel-label hidden" id="dashboardEditColorWheelLabel" aria-live="polite"></p>
+          </div>
+          <button type="button" class="dashboard-edit-color-orb" id="btnColorPainterOrb" aria-expanded="false" aria-haspopup="menu" aria-label="Open theme color palette" title="Theme colors — drag to a corner">
+            <span class="dashboard-edit-color-orb-glow" aria-hidden="true"></span>
+            <span class="dashboard-edit-color-orb-icon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
+          </button>
+          <div id="dashboardEditColorWheelFields" class="dashboard-edit-color-wheel-fields hidden" aria-live="polite"></div>
+        </div>
+        <div id="dashboardEditColorForm" class="dashboard-edit-color-form dashboard-edit-color-editor hidden" role="dialog" aria-labelledby="dashboardEditColorAsideTitle">
+          <div class="dashboard-edit-color-editor-header">
+            <button type="button" class="dashboard-edit-color-aside-close" id="btnCloseColorSection" aria-label="Back to sections" title="Back to sections">
+              <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </button>
             <div class="dashboard-edit-color-aside-title-block">
               <span class="dashboard-edit-color-aside-title-icon" id="dashboardEditColorAsideTitleIcon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
-              <p class="dashboard-edit-color-aside-title" id="dashboardEditColorAsideTitle">Theme colors</p>
-            </div>
-            <div class="dashboard-edit-color-aside-header-actions">
-              <button type="button" class="dashboard-edit-color-aside-close hidden" id="btnCloseColorSection" aria-label="Back to sections" title="Back to sections">
-                <i class="fa fa-arrow-left" aria-hidden="true"></i>
-              </button>
-              <button type="button" class="dashboard-edit-color-aside-toggle" id="btnToggleColorPanel" aria-expanded="true" aria-label="Collapse color panel">
-                <span class="dashboard-edit-color-aside-toggle-icon" aria-hidden="true"><i class="fa fa-chevron-left" aria-hidden="true"></i></span>
-                <span class="dashboard-edit-color-aside-toggle-text">Collapse</span>
-              </button>
+              <div class="dashboard-edit-color-aside-title-stack">
+                <p class="dashboard-edit-color-aside-eyebrow" id="dashboardEditColorAsideEyebrow">Theme colors</p>
+                <p class="dashboard-edit-color-aside-title" id="dashboardEditColorAsideTitle">Theme colors</p>
+              </div>
             </div>
           </div>
-          <div id="dashboardEditColorPrompt" class="dashboard-edit-color-prompt">
-            <p class="dashboard-edit-color-intro">Pick a section to adjust CSS variables. Changes preview live in the menu and are saved automatically when you go back to the dashboard.</p>
-            <div class="dashboard-edit-color-sections" id="dashboardEditColorSections" role="list"></div>
-          </div>
-          <div id="dashboardEditColorForm" class="dashboard-edit-color-form hidden">
-            <div id="dashboardEditColorFields" class="dashboard-edit-color-fields"></div>
-            <div class="dashboard-edit-color-actions">
-              <button type="button" class="btn-dash btn-dash-primary" id="btnApplyColor">Apply to preview</button>
-              <button type="button" class="btn-dash btn-dash-secondary" id="btnBackColorSections"><i class="fa fa-arrow-left" aria-hidden="true"></i> Sections</button>
-            </div>
+          <div id="dashboardEditColorFields" class="dashboard-edit-color-fields"></div>
+          <div class="dashboard-edit-color-actions">
+            <button type="button" class="btn-dash btn-dash-primary" id="btnApplyColor">Apply to preview</button>
+            <button type="button" class="btn-dash btn-dash-secondary" id="btnBackColorSections"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button>
           </div>
         </div>
+        <div id="dashboardEditColorPrompt" class="dashboard-edit-color-prompt hidden" hidden>
+          <p class="dashboard-edit-color-intro">Drag the brush to a corner, then click it — section options fan out in a circle. Changes preview live and save when you leave.</p>
+        </div>
+        <button type="button" class="dashboard-edit-color-aside-toggle hidden" id="btnToggleColorPanel" aria-expanded="false" aria-label="Close color palette" tabindex="-1"></button>
       </aside>
     </div>
   </div>

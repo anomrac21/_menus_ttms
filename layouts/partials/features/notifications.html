@@ -1,4 +1,4 @@
-{{ if .Site.Params.notifications.enabled }}
-{{/* NOTIFY_CONFIG is in head.html; notifications.js handles subscribe UI, Web Push, and WebSocket. */}}
+{{ if default false site.Params.features.notifications }}
+{{/* Plan entitlement: features.notifications (CPS). NOTIFY_CONFIG is in head.html. */}}
 <div id="notification-container"></div>
 {{ end }}

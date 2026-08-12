@@ -1,0 +1,132 @@
+/**
+ * Header — larger screens (min-width: 769px)
+ * Restores horizontal category chips; hides mobile dropdown chrome
+ * unless html.ttms-mobile-menublock (coarse pointer / touch tablet).
+ */
+@media (min-width: 769px) {
+    :root {
+        --ttms-dashboard-btn-slot: 4.5em;
+    }
+
+    html:not(.ttms-mobile-menublock) .header-menublock-toggle,
+    html:not(.ttms-mobile-menublock) .header-menublock-backdrop {
+        display: none !important;
+    }
+
+    html:not(.ttms-mobile-menublock) .header-leading {
+        flex: 0 0 auto;
+        width: auto;
+        max-width: none;
+    }
+
+    html:not(.ttms-mobile-menublock) .header-notify-btn-wrap {
+        margin-inline-start: 0;
+    }
+
+    html:not(.ttms-mobile-menublock) .header-nav {
+        position: relative;
+        top: auto;
+        right: auto;
+        left: auto;
+        width: auto;
+        max-width: none;
+        z-index: auto;
+        flex: 1 1 auto;
+        max-height: none;
+        height: auto;
+        overflow: hidden;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: none;
+        -webkit-transform: none;
+        transition: none;
+        border-bottom: none;
+        box-shadow: none;
+    }
+
+    html:not(.ttms-mobile-menublock) .header-nav::before,
+    html:not(.ttms-mobile-menublock) .header-nav::after {
+        display: block;
+    }
+
+    html:not(.ttms-mobile-menublock) .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
+        flex-basis: 0;
+        width: 0;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    html:not(.ttms-mobile-menublock) .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap #dashboardBtn {
+        transform: translate3d(-100%, 0, 0);
+    }
+
+    html:not(.ttms-mobile-menublock) .main-header.menublock-scrolled-right .header-leading .logo-container.header-logo {
+        overflow: visible;
+    }
+
+    html:not(.ttms-mobile-menublock) body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-logo {
+        display: flex !important;
+        opacity: 1;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock {
+        flex-direction: row;
+        align-items: center;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x pinch-zoom;
+        -webkit-overflow-scrolling: touch;
+        max-height: none;
+        padding: 0.45em 0.55em;
+        padding-inline-end: 0.85em;
+        gap: 0.4em;
+        scroll-snap-type: none;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-item,
+    html:not(.ttms-mobile-menublock) #menublock li {
+        min-width: 4.35rem;
+        max-width: none;
+        width: auto;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 4.1rem;
+        padding: 0.45em 0.35em 0.4em;
+        gap: 0.28em;
+        touch-action: auto;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link__label,
+    html:not(.ttms-mobile-menublock) #menublock span {
+        font-size: 0.58rem;
+        text-align: center;
+        -webkit-line-clamp: 2;
+    }
+
+    html:not(.ttms-mobile-menublock) #dashboardBtn img {
+        height: auto;
+        max-width: none;
+    }
+
+    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo .logo,
+    html:not(.ttms-mobile-menublock) .header-leading .logo-container img.logo {
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+    }
+
+    @media (min-width: 1025px) {
+        html:not(.ttms-mobile-menublock) #menublock .menublock-link__label,
+        html:not(.ttms-mobile-menublock) #menublock span {
+            font-size: 0.62rem;
+        }
+    }
+}

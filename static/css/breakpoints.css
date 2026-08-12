@@ -1,0 +1,15 @@
+/**
+ * TTMenus breakpoints (documentation + CSS custom props for JS/docs).
+ * Media queries must use numeric values — CSS vars are not valid in @media
+ * without a build step.
+ *
+ * Primary larger-screen breakpoint: 769px (matches header.lg.css)
+ * Common companions: 1024px, 1440px (nested inside *.lg.css when needed)
+ */
+:root {
+  --ttms-bp-sm: 480px;
+  --ttms-bp-md: 640px;
+  --ttms-bp-lg: 769px;
+  --ttms-bp-xl: 1024px;
+  --ttms-bp-xxl: 1440px;
+}

@@ -1,0 +1,19 @@
+/**
+ * Hero / slideshow CTAs — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    .client-tour-slideshow .slideshow-nav.contact-cta--nav {
+        width: 3rem;
+        height: 3rem;
+        min-width: 3rem;
+    }
+
+    .client-tour-slideshow .slideshow-nav.prev {
+        left: 1rem;
+    }
+
+    .client-tour-slideshow .slideshow-nav.next {
+        right: 1rem;
+    }
+}

@@ -1,0 +1,191 @@
+/* Multi-location menu chooser (site home when params.menu.multiLocationMenus = true) */
+.multi-loc-home {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      ellipse 120% 80% at 50% -20%,
+      color-mix(in srgb, var(--selected-button-color3, #fcd000) 18%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--button-color1, #1a1a2e) 92%, #000),
+      var(--main-bg, #0a0a0a)
+    );
+  color: var(--hero-text-color, #fff);
+}
+
+.multi-loc-chooser-hero {
+  position: relative;
+  min-height: 42vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.multi-loc-chooser-hero .hero-cta-list {
+  position: relative;
+  z-index: 1;
+}
+
+.multi-loc-chooser-hero #bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.multi-loc-chooser-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    color-mix(in srgb, var(--main-bg, #0a0a0a) 88%, transparent) 100%
+  );
+  pointer-events: none;
+}
+
+.multi-loc-chooser-hero .logo_container,
+.menu-reels-slide--hero .logo_container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem 0;
+  max-width: min(100%, 36rem);
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Hero brand mark — primary focal point; chips collapse to icon badges */
+.menu-reels-slide--hero #logo,
+.multi-loc-chooser-hero #logo {
+  width: auto;
+  height: auto;
+  max-width: min(16.5rem, 58vw, 40dvh);
+  max-height: min(16.5rem, 58vw, 40dvh);
+  min-width: 8rem;
+  min-height: 8rem;
+  animation: none;
+}
+
+/* Hero feature chips: shared delightful styles in feature-chips.css */
+.hero_logo_container .hero-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0 0.25rem;
+  list-style: none;
+  width: auto;
+  max-width: none;
+}
+
+@media (max-height: 740px) {
+  .menu-reels-slide--hero .logo_container,
+  .multi-loc-chooser-hero .logo_container {
+    gap: 0.65rem;
+  }
+
+  .menu-reels-slide--hero #logo,
+  .multi-loc-chooser-hero #logo {
+    max-width: min(13rem, 48vw, 32dvh);
+    max-height: min(13rem, 48vw, 32dvh);
+    min-width: 6.5rem;
+    min-height: 6.5rem;
+  }
+}
+
+@media (min-width: 769px) and (min-height: 800px) {
+  .menu-reels-slide--hero #logo,
+  .multi-loc-chooser-hero #logo {
+    max-width: min(18rem, 36vw, 42dvh);
+    max-height: min(18rem, 36vw, 42dvh);
+  }
+}
+
+.multi-loc-chooser {
+  position: relative;
+  z-index: 1;
+  padding: 1.5rem 1.25rem calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  max-width: 40rem;
+  margin: 0 auto;
+  color: var(--hero-text-color, #fff);
+}
+
+.multi-loc-chooser__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--hero-text-color, #fff);
+}
+
+.multi-loc-chooser__hint {
+  margin: 0 0 1.5rem;
+  text-align: center;
+  color: color-mix(in srgb, var(--hero-text-color, #fff) 72%, transparent);
+  line-height: 1.45;
+}
+
+.multi-loc-chooser__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.multi-loc-chooser__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 1.15rem;
+  text-decoration: none;
+  color: var(--hero-text-color, #fff);
+  border: 1px solid color-mix(in srgb, var(--selected-button-color3, #fcd000) 28%, rgba(255, 255, 255, 0.14));
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--button-color1, #1a1a2e) 55%, rgba(0, 0, 0, 0.45));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.multi-loc-chooser__link:hover,
+.multi-loc-chooser__link:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, rgba(255, 255, 255, 0.22));
+  background: color-mix(in srgb, var(--button-color1, #1a1a2e) 42%, rgba(255, 255, 255, 0.08));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.36);
+  outline: none;
+}
+
+.multi-loc-chooser__city {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--hero-text-color, #fff);
+}
+
+.multi-loc-chooser__address {
+  color: color-mix(in srgb, var(--hero-text-color, #fff) 70%, transparent);
+  font-size: 0.95rem;
+}

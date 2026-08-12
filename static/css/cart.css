@@ -94,8 +94,8 @@ body.cart-open #footerSettings {
     grid-template-columns: 2.75rem 1fr 2.75rem;
     align-items: center;
     gap: 0.5rem;
-    min-height: 4rem;
-    padding: 0.65rem 0.85rem 0.55rem;
+    min-height: 3.65rem;
+    padding: 0.65rem 0.65rem 0.55rem;
 }
 
 .cart-title {
@@ -105,7 +105,7 @@ body.cart-open #footerSettings {
     gap: 0.55rem;
     margin: 0;
     min-width: 0;
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 700;
     color: var(--cart-ink);
     letter-spacing: 0.01em;
@@ -174,7 +174,7 @@ body.cart-open #footerSettings {
    ============================================ */
 
 .cart-location-row {
-    padding: 0 0.85rem 0.85rem;
+    padding: 0 0.65rem 0.85rem;
 }
 
 .cart-location-select-hidden {
@@ -290,7 +290,7 @@ body.cart-open #footerSettings {
    ============================================ */
 
 .cart-dining-mode-section {
-    padding: 0 0.85rem 0.85rem;
+    padding: 0 0.65rem 0.85rem;
 }
 
 .dining-mode-toggle-modern {
@@ -309,9 +309,9 @@ body.cart-open #footerSettings {
     align-items: center;
     gap: 0.35rem;
     color: var(--cart-ink-muted);
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    min-width: 4.75rem;
+    min-width: 4rem;
 }
 
 .toggle-switch-modern {
@@ -371,7 +371,7 @@ body.cart-open #footerSettings {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding: 0.35rem 0.75rem 0;
+    padding: 0.35rem 0.55rem 0;
 }
 
 .cart-empty-state {
@@ -740,33 +740,8 @@ body.cart-open #footerSettings {
 }
 
 /* ============================================
-   RESPONSIVE
+   ACCESSIBILITY
    ============================================ */
-
-@media (max-width: 480px) {
-    .cart-title-bar {
-        min-height: 3.65rem;
-        padding-inline: 0.65rem;
-    }
-
-    .cart-title {
-        font-size: 0.98rem;
-    }
-
-    .toggle-label {
-        min-width: 4rem;
-        font-size: 0.72rem;
-    }
-
-    .cart-items-wrapper {
-        padding-inline: 0.55rem;
-    }
-
-    .cart-location-row,
-    .cart-dining-mode-section {
-        padding-inline: 0.65rem;
-    }
-}
 
 @media (prefers-reduced-motion: reduce) {
     #cart,

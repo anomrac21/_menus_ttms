@@ -1,0 +1,8 @@
+{{- /* Returns true when per-location URL trees are enabled. */ -}}
+{{- $v := false -}}
+{{- with site.Params.menu -}}
+  {{- if .multiLocationMenus -}}
+    {{- $v = true -}}
+  {{- end -}}
+{{- end -}}
+{{- return $v -}}

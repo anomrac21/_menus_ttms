@@ -11,7 +11,11 @@ const name = '{{ site.Params.title }}'
 const hastables = {{ default false site.Params.orderingsystem.hastables }};
 const orderingEnabled = {{ default true site.Params.orderingsystem.enabled }};
 const orderingDisabledMessage = {{ (site.Params.orderingsystem.orderingDisabledMessage | default "Ordering is currently unavailable.") | jsonify }};
-const usephonecall = {{ site.Params.orderingsystem.usephonecall }};
+{{- $usePhoneCall := true -}}
+{{- with site.Params.orderingsystem -}}
+  {{- if isset . "usephonecall" -}}{{- $usePhoneCall = .usephonecall -}}{{- end -}}
+{{- end -}}
+const usephonecall = {{ $usePhoneCall }};
 const orderPhone = '{{ site.Params.orderingsystem.phone }}';
 const paymentsEnabled = {{ and site.Params.features.payments site.Params.paymentService.enabled }};
 

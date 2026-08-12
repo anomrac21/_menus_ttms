@@ -1,0 +1,18 @@
+/**
+ * Contact — larger screens (min-width: 769px+)
+ */
+@media (min-width: 769px) {
+    .locations-wrapper {
+        max-width: 600px;
+    }
+
+    @media (min-width: 1440px) {
+        .locations-wrapper {
+            max-width: 900px;
+        }
+        .location-item {
+            min-width: calc(33.333% - 1.34em);
+            width: calc(33.333% - 1.34em);
+        }
+    }
+}

@@ -1,28 +1,32 @@
 <!-- HEADER -->
 {{ $pagetitle:= .LinkTitle }}
 {{ $onTagsPage := or (eq .Section "tags") (eq .Type "tags") }}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- $menuSections := partial "menu/category-sections.html" . -}}
+{{- $isMenuHome := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
 <div class="main-header">
 	<div class="container">
 		<div class="header-leading">
 			{{ partialCached "ttms-dashboard/button.html" . }}
 			<!-- MENU LOGO (stays on screen when category nav scrolls) -->
 			{{- $siteName := partial "site-name.html" . -}}
-			{{ if and (not .IsHome)}}
-				<a class="logo-container header-logo" href="/" onclick="closeCart();" title="{{ $siteName }}" aria-label="{{ $siteName }} — home">
+			{{ if and (not .IsHome) (not $isMenuHome) }}
+				<a class="logo-container header-logo" href="{{ if $locSlug }}/{{ $locSlug }}/{{ else }}/{{ end }}" onclick="closeCart();" title="{{ $siteName }}" aria-label="{{ $siteName }} — home">
 					<span class="header-logo__frame" aria-hidden="true">
 						<img class="logo center" src="/branding/favicon192.webp" alt="{{ $siteName }}" width="192" height="192" loading="lazy" decoding="async">
 						{{ partialCached "ttms-account-dashboard/badge.html" (dict "class" "account-badge--on-logo") "account-badge-on-logo" }}
 					</span>
 				</a>
 			{{ else }}
-				<a href="#" class="logo-container header-logo" onclick="return headerLogoActivate(event);" title="{{ $siteName }}" aria-label="{{ $siteName }} — scroll to top">
+				<a href="{{ if and $multi (not $locSlug) }}/{{ else if $locSlug }}/{{ $locSlug }}/{{ else }}#{{ end }}" class="logo-container header-logo" onclick="{{ if $isMenuHome }}return headerLogoActivate(event);{{ else }}closeCart();{{ end }}" title="{{ $siteName }}" aria-label="{{ $siteName }} — scroll to top">
 					<span class="header-logo__frame" aria-hidden="true">
 						<img class="logo center" src="/branding/favicon192.webp" alt="{{ $siteName }}" width="192" height="192" loading="lazy" decoding="async">
 						{{ partialCached "ttms-account-dashboard/badge.html" (dict "class" "account-badge--on-logo") "account-badge-on-logo" }}
 					</span>
 				</a>
 			{{ end }}
-			{{- if site.Params.notifications.enabled -}}
+			{{- if default false site.Params.features.notifications -}}
 			<span class="header-notify-btn-wrap">
 				{{ partial "components/notification-subscribe-btn.html" (dict "id" "subBtnHeader" "class" "header-notify-subscribe" "iconOnly" true) }}
 			</span>
@@ -34,13 +38,19 @@
 		<div class="header-menublock-backdrop" id="menublockBackdrop" hidden aria-hidden="true"></div>
 		<nav class="header-nav" aria-label="Menu categories">
 		<ul id="menublock" class="menublock">
-		{{- if and (not .IsHome) -}}
-			{{- range site.Pages.ByWeight -}}
-				{{- if .RegularPages -}}
-					{{- if and (not .IsPage) (not .IsHome) -}}
-						{{- $title:= .LinkTitle -}}
-						{{- $titleurl := .RelPermalink -}}
-						{{- if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods") (in $titleurl "admins") (in $titleurl "admin") (in $titleurl "payment")) -}}
+		{{- if $multi -}}
+			{{- if $locSlug -}}
+				<li class="item menublock-item">
+					<a href="/" class="menublock-link" onclick="closeCart();" title="All locations">
+						<span class="menublock-link__label">Locations</span>
+					</a>
+				</li>
+			{{- end -}}
+		{{- end -}}
+		{{- if not $isMenuHome -}}
+			{{- range $menuSections -}}
+				{{- $title:= .LinkTitle -}}
+				{{- $titleurl := .RelPermalink -}}
 			<li class="item menublock-item{{ if eq $title $pagetitle }} active{{ end }}">
 				{{- if eq $title $pagetitle -}}
 				<a href="#" class="menublock-link is-active" aria-current="page">
@@ -53,17 +63,9 @@
 					<span class="menublock-link__label">{{ .LinkTitle }}</span>
 				</a>
 			</li>
-						{{- end -}}
-					{{- end -}}
-				{{- end -}}
 			{{- end -}}
 		{{- else -}}
-			{{- range site.Pages.ByWeight -}}
-				{{- if .RegularPages -}}
-					{{- if and (not .IsPage) (not .IsHome) -}}
-						{{- $title:= .LinkTitle -}}
-						{{- $titleurl := .RelPermalink -}}
-						{{- if not (or (in $titleurl "tags") (in $titleurl "categories") (in $titleurl "subcategories") (in $titleurl "types") (in $titleurl "events") (in $titleurl "ingredients") (in $titleurl "cookingmethods") (in $titleurl "admins") (in $titleurl "admin") (in $titleurl "payment")) -}}
+			{{- range $menuSections -}}
 			<li class="item menublock-item">
 				<a href="#{{ .LinkTitle }}" class="menublock-link" onclick="closeCart();">
 					{{- if .Params.icon -}}
@@ -72,9 +74,6 @@
 					<span class="menublock-link__label">{{ .LinkTitle }}</span>
 				</a>
 			</li>
-						{{- end -}}
-					{{- end -}}
-				{{- end -}}
 			{{- end -}}
 		{{- end -}}
 			{{ partial "layout/menublock-actions.html" (dict "onTagsPage" $onTagsPage) }}

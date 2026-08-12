@@ -1,0 +1,35 @@
+{{- /*
+  Menu category slug (welcome, beverages, item-promotions).
+  Uses the last non-empty path segment so nested /{location}/{category}/ works.
+*/ -}}
+{{- $raw := "" -}}
+{{- with .File -}}
+  {{- $raw = .Dir -}}
+{{- end -}}
+{{- if not $raw -}}
+  {{- with .Path -}}{{- $raw = . -}}{{- end -}}
+{{- end -}}
+{{- if not $raw -}}
+  {{- if .IsSection -}}
+    {{- $raw = .RelPermalink -}}
+  {{- else -}}
+    {{- with .CurrentSection -}}{{- $raw = .RelPermalink -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $norm := replaceRE `\\` "/" $raw -}}
+{{- $norm = replaceRE `^/+` "" $norm -}}
+{{- $norm = replaceRE `/+$` "" $norm -}}
+
+{{- $slug := "" -}}
+{{- $parts := split $norm "/" -}}
+{{- range $parts -}}
+  {{- if . -}}
+    {{- $slug = . -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if not $slug -}}
+  {{- $slug = .Section -}}
+{{- end -}}
+{{- return $slug -}}

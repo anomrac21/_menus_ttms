@@ -1,0 +1,27 @@
+/**
+ * Notifications — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    #notification-container {
+        left: auto;
+        right: 20px;
+        max-width: 400px;
+    }
+
+    .notification {
+        max-width: 400px;
+    }
+
+    .notification-content {
+        padding: 16px;
+    }
+
+    .notification-title {
+        font-size: 14px;
+    }
+
+    .notification-message {
+        font-size: 13px;
+    }
+}

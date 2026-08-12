@@ -1,7 +1,7 @@
 <a class="menu-anchor" id="ads-section"></a>
 {{/* Homepage promo reels — built at compile time (same slides as /promotions/). JS only binds clicks + optional day filter. */}}
 <div id="homepage-ads-container" class="frontpageads item client-ads-reels">
-  {{- $advertisements := site.GetPage "Promotions" -}}
+  {{- $advertisements := partial "menu/promotions-page.html" . -}}
   {{- if $advertisements -}}
     {{- range $catalogIndex, $page := $advertisements.RegularPages.ByWeight -}}
       {{- $adstitle := .LinkTitle -}}

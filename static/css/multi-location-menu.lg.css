@@ -1,0 +1,14 @@
+/**
+ * Multi-location menu chooser — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+  .multi-loc-chooser {
+    max-width: 48rem;
+    padding: 2rem 1.5rem calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .multi-loc-chooser__title {
+    font-size: 2rem;
+  }
+}

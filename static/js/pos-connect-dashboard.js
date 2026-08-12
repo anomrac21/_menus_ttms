@@ -55,12 +55,32 @@
   }
 
   function parseCms(res) {
-    return res.json().then(function (data) {
+    return res.text().then(function (text) {
+      var data = null;
+      var raw = String(text || '').trim();
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          if (!res.ok) {
+            // Gin often returns plain "404 page not found" for missing routes.
+            throw new Error(
+              'CMS HTTP ' +
+                res.status +
+                (raw.length < 160 ? ': ' + raw : '') +
+                (res.status === 404
+                  ? ' — redeploy content-management-service if replace-catalog is missing'
+                  : '')
+            );
+          }
+          throw new Error('CMS returned non-JSON (' + res.status + ')');
+        }
+      }
       if (!res.ok) {
         var msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
         throw new Error(msg);
       }
-      return data;
+      return data || {};
     });
   }
 

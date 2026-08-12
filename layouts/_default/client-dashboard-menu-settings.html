@@ -1,13 +1,27 @@
 {{ define "main" }}
-<div class="dashboard-analytics-page dashboard-settings-page" id="dashboardMenuSettingsPage">
-  <div class="dashboard-edit-header dashboard-settings-header">
-    <div class="dashboard-edit-header-inner">
-      <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-      <div class="dashboard-settings-header-text">
-        <h1 class="dashboard-edit-title">Menu settings</h1>
-      </div>
+{{- $siteName := site.Title | default "Menu Demo" -}}
+{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
+<div class="dashboard-analytics-page dashboard-settings-page dashboard-control-room" id="dashboardMenuSettingsPage">
+  <header class="dashboard-edit-header dashboard-settings-header dashboard-header-bar dashboard-subpage-header-bar" aria-label="Menu settings toolbar">
+    <a href="/" class="dashboard-logo-link" aria-label="{{ $siteName }} — view live menu" title="View {{ $siteName }} menu site">
+      <span class="dashboard-logo-frame" aria-hidden="true">
+        <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
+      </span>
+      <span class="dashboard-logo-live-badge">Settings</span>
+    </a>
+    <div class="dashboard-header-main">
+      <p class="dashboard-header-kicker">
+        <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
+        Menu settings
+      </p>
+      <h1 class="dashboard-header-site">{{ $siteName }}</h1>
     </div>
-  </div>
+    <div class="dashboard-header-end">
+      <a href="/dashboard/" class="dashboard-header-close" title="Close menu settings" aria-label="Close menu settings">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
 
   <main class="dashboard-analytics-main dashboard-settings-main">
     {{ partial "dashboard/hero-settings-panel.html" . }}
@@ -17,16 +31,19 @@
     {{ partial "dashboard/pos-settings-panel.html" . }}
 
     {{- $os := .Site.Params.orderingsystem | default dict -}}
-    <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--ordering" aria-labelledby="settings-orderingsystem-heading">
-      <div class="dashboard-settings-panel-head">
+    <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--ordering is-collapsed" data-settings-panel="ordering" aria-labelledby="settings-orderingsystem-heading">
+      <button type="button" class="dashboard-settings-panel-head dashboard-settings-panel-toggle" data-settings-panel-toggle aria-expanded="false" aria-controls="settings-ordering-body">
         <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-shopping-cart"></i></span>
         <div class="dashboard-settings-panel-head-text">
           <h2 id="settings-orderingsystem-heading" class="dashboard-analytics-heading">Ordering system</h2>
           <p class="dashboard-analytics-subtitle">Cart, checkout, and ordering behaviour.</p>
         </div>
-      </div>
+        <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+      </button>
+      <div class="dashboard-settings-panel-body" id="settings-ordering-body">
       <form id="orderingSystemForm" class="dashboard-settings-form dashboard-ordering-form" autocomplete="off" data-os-hastables="{{ if default true $os.hastables }}true{{ else }}false{{ end }}">
-        {{- $usePhone := default false $os.usephonecall -}}
+        {{- $usePhone := true -}}
+        {{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
         <div class="dashboard-ordering-layout">
           <fieldset class="dashboard-ordering-group">
             <legend class="dashboard-ordering-group-title">Availability</legend>
@@ -74,11 +91,11 @@
             <p class="dashboard-ordering-group-hint">How customers send orders from the cart.</p>
             <div class="dashboard-ordering-channel">
               <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="Order via">
-                <button type="button" class="dashboard-ordering-channel-btn{{ if not $usePhone }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if not $usePhone }}true{{ else }}false{{ end }}">
-                  <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
-                </button>
                 <button type="button" class="dashboard-ordering-channel-btn{{ if $usePhone }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if $usePhone }}true{{ else }}false{{ end }}">
                   <i class="fa fa-phone" aria-hidden="true"></i><span>Phone call</span>
+                </button>
+                <button type="button" class="dashboard-ordering-channel-btn{{ if not $usePhone }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if not $usePhone }}true{{ else }}false{{ end }}">
+                  <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
                 </button>
               </div>
               <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if $usePhone }}true{{ else }}false{{ end }}">
@@ -100,16 +117,19 @@
           <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
         </div>
       </form>
+      </div>
     </section>
 
     {{- $soc := .Site.Params.social | default dict -}}
-    <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--social" aria-labelledby="settings-social-heading">
-      <div class="dashboard-settings-panel-head">
+    <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--social is-collapsed" data-settings-panel="social" aria-labelledby="settings-social-heading">
+      <button type="button" class="dashboard-settings-panel-head dashboard-settings-panel-toggle" data-settings-panel-toggle aria-expanded="false" aria-controls="settings-social-body">
         <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-share-alt"></i></span>
         <div class="dashboard-settings-panel-head-text">
           <h2 id="settings-social-heading" class="dashboard-analytics-heading">Social &amp; contact</h2>
         </div>
-      </div>
+        <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+      </button>
+      <div class="dashboard-settings-panel-body" id="settings-social-body">
       <form id="socialForm" class="dashboard-settings-form" autocomplete="off" data-social-phone="{{ with $soc.phone }}{{ printf "%v" . }}{{ end }}">
         <div class="dashboard-settings-grid dashboard-settings-form-grid">
           <div class="dashboard-settings-row">
@@ -148,6 +168,7 @@
           <span id="socialSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
         </div>
       </form>
+      </div>
     </section>
 
     {{- $brandingDir := "static/branding" -}}
@@ -169,14 +190,16 @@
     {{- $brandingScratch := newScratch -}}
     {{- $brandingScratch.Set "shown" slice -}}
     {{- $brandingScratch.Set "n" 0 -}}
-    <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--branding" aria-labelledby="settings-branding-heading">
-      <div class="dashboard-settings-panel-head">
+    <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--branding is-collapsed" data-settings-panel="branding" aria-labelledby="settings-branding-heading">
+      <button type="button" class="dashboard-settings-panel-head dashboard-settings-panel-toggle" data-settings-panel-toggle aria-expanded="false" aria-controls="settings-branding-body">
         <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-picture-o"></i></span>
         <div class="dashboard-settings-panel-head-text">
           <h2 id="settings-branding-heading" class="dashboard-analytics-heading">Branding images</h2>
           <p class="dashboard-analytics-subtitle">Logos, favicons, and share images under <code>static/branding/</code>. Choose files and pin colors, then save.</p>
         </div>
-      </div>
+        <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+      </button>
+      <div class="dashboard-settings-panel-body" id="settings-branding-body">
       <div class="dashboard-settings-branding dashboard-settings-branding-grid">
         {{- if fileExists $brandingDir -}}
           {{- range $brandingOrder -}}
@@ -237,9 +260,11 @@
         <button type="button" class="btn-dash btn-dash-primary" id="btnSaveBranding">Save branding</button>
         <span id="brandingSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
       </div>
+      </div>
     </section>
   </main>
 </div>
+<script src="/js/dashboard-settings-panels.js" defer></script>
 
 <script>
   {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}

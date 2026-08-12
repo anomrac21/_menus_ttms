@@ -1,6 +1,12 @@
 {{ define "main" }}
+{{- $notifyFeature := default false site.Params.features.notifications -}}
 {{- $notifyApiUrl := site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" -}}
 {{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $hubClientId := $dashClient -}}
+{{- if not (hasPrefix $hubClientId "ttms_") -}}
+  {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
+{{- end -}}
 {{- if site.Params.menuImageService.enabled }}
 <script>
 window.MENU_IMAGE_CONFIG = {
@@ -11,7 +17,7 @@ window.MENU_IMAGE_CONFIG = {
 </script>
 {{- end }}
 
-<div class="dashboard-analytics-page dashboard-notify-page" id="dashboardNotificationsPage" data-notify-api-url="{{ $notifyApiUrl }}" data-notify-client-domain="{{ $notifyClientDomain }}">
+<div class="dashboard-analytics-page dashboard-notify-page" id="dashboardNotificationsPage" data-notify-api-url="{{ $notifyApiUrl }}" data-notify-client-domain="{{ $notifyClientDomain }}" data-notify-feature="{{ $notifyFeature }}">
 
   <div class="dashboard-edit-header dashboard-notify-header">
 
@@ -29,6 +35,10 @@ window.MENU_IMAGE_CONFIG = {
 
       </div>
 
+      {{- if not $notifyFeature -}}
+      <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-primary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Renew / upgrade</a>
+      {{- end -}}
+
     </div>
 
   </div>
@@ -36,6 +46,13 @@ window.MENU_IMAGE_CONFIG = {
 
 
   <main class="dashboard-analytics-main dashboard-notify-main">
+
+    {{- if not $notifyFeature -}}
+    <p class="dashboard-notify-banner dashboard-notify-banner-warn" role="status">
+      <i class="fa fa-lock" aria-hidden="true"></i>
+      <span>Push notifications are a Free verified+ entitlement. Renew free listing or upgrade on Account to restore them.</span>
+    </p>
+    {{- end -}}
 
     <p id="dashboardNotifyConfigError" class="dashboard-notify-banner" hidden>
 
@@ -47,7 +64,7 @@ window.MENU_IMAGE_CONFIG = {
 
     <p id="dashboardNotifyLoadError" class="dashboard-notify-banner dashboard-notify-banner-warn" hidden role="alert"></p>
 
-
+    {{- if $notifyFeature -}}
 
     <div class="dashboard-notify-tabs" id="dashboardNotifyTabs">
 
@@ -874,6 +891,8 @@ window.MENU_IMAGE_CONFIG = {
 
     </div>
 
+    {{- end -}}
+
 
 
   </main>
@@ -882,6 +901,7 @@ window.MENU_IMAGE_CONFIG = {
 
 
 
+{{- if $notifyFeature -}}
 <script src="/js/dashboard-notifications.js" defer></script>
 
 <script>
@@ -927,6 +947,7 @@ window.MENU_IMAGE_CONFIG = {
   });
 
 </script>
+{{- end -}}
 
 {{ end }}
 

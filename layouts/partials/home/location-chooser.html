@@ -1,0 +1,33 @@
+{{- /* Site home location chooser when multiLocationMenus is on. */ -}}
+{{- $locations := site.Data.locations.locations | default slice -}}
+{{- $siteName := partial "site-name.html" . -}}
+<section class="hero_logo_container item multi-loc-chooser-hero">
+  <h1 class="sr-only">{{ $siteName }} — choose a location</h1>
+  {{ if .Params.image }}
+    <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high" data-src-path="{{ .Params.image }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+  {{ else }}
+    <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
+  {{ end }}
+  <div class="logo_container">
+    <img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="264" height="264" fetchpriority="high" decoding="async">
+    {{ partial "layout/feature-chips.html" (dict "class" "hero-features" "visible" true "expandable" true) }}
+  </div>
+  {{ partial "components/hero_ctas.html" . }}
+</section>
+<section class="multi-loc-chooser">
+  <h2 class="multi-loc-chooser__title">Choose a location</h2>
+  <p class="multi-loc-chooser__hint">Each outlet has its own menu. Ordering and Loyverse store follow the location you open.</p>
+  <ul class="multi-loc-chooser__list">
+    {{- range $locations -}}
+      {{- $loc := . -}}
+      {{- with $loc.slug -}}
+      <li class="multi-loc-chooser__item">
+        <a class="multi-loc-chooser__link" href="/{{ . }}/" data-location-slug="{{ . }}">
+          <span class="multi-loc-chooser__city">{{ $loc.city | default . }}</span>
+          <span class="multi-loc-chooser__address">{{ $loc.address }}</span>
+        </a>
+      </li>
+      {{- end -}}
+    {{- end -}}
+  </ul>
+</section>

@@ -61,7 +61,7 @@ p,
 /* Header category nav */
 .menublock-link__label {
     font-family: inherit;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: var(--ttms-font-weight-semibold);
     line-height: 1.15;
     letter-spacing: 0.02em;
@@ -216,12 +216,6 @@ h2.center.title a,
 .share-notification {
     font-family: inherit;
     font-weight: var(--ttms-font-weight-medium);
-}
-
-@media (max-width: 768px) {
-    .menublock-link__label {
-        font-size: 0.58rem;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

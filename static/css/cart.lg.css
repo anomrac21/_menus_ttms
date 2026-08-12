@@ -1,0 +1,28 @@
+/**
+ * Cart — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    .cart-title-bar {
+        min-height: 4rem;
+        padding: 0.65rem 0.85rem 0.55rem;
+    }
+
+    .cart-title {
+        font-size: 1.05rem;
+    }
+
+    .toggle-label {
+        min-width: 4.75rem;
+        font-size: 0.78rem;
+    }
+
+    .cart-items-wrapper {
+        padding: 0.35rem 0.75rem 0;
+    }
+
+    .cart-location-row,
+    .cart-dining-mode-section {
+        padding-inline: 0.85rem;
+    }
+}

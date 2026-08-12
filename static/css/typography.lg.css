@@ -1,0 +1,9 @@
+/**
+ * Typography — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    .menublock-link__label {
+        font-size: 0.62rem;
+    }
+}

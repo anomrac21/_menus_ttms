@@ -179,14 +179,27 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: var(--background-color, #000);
+    height: 100dvh;
+    max-height: 100dvh;
+    box-sizing: border-box;
+    padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+    overflow: hidden;
+    background: #fff;
+    color: #0f172a;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
+    gap: 0;
     z-index: var(--ttms-z-loader, 99999);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition:
+      opacity 0.72s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.78s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.78s linear;
+  }
+
+  #loader.loader-ready {
+    gap: 1.1rem;
   }
   
   #loader img {
@@ -199,18 +212,375 @@
   }
   
   #loaderImage {
-    max-width: calc(100% - 2rem);
-    max-height: min(360px, 70dvh);
+    max-width: min(calc(100% - 0.5rem), 34rem);
+    max-height: min(20rem, 48dvh);
     width: auto;
     height: auto;
+    will-change: transform, opacity, max-height, max-width;
+    transition:
+      max-height 1s cubic-bezier(0.22, 1, 0.36, 1),
+      max-width 1s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.7s ease,
+      transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.7s ease;
   }
 
   #menuImage {
-    width: 120px;
-    height: 120px;
-    max-width: 120px;
-    max-height: 120px;
-    filter: drop-shadow(1px 1px 0px #000);
+    width: 4.25rem;
+    height: 4.25rem;
+    max-width: min(4.25rem, 18vw);
+    max-height: min(4.25rem, 12dvh);
+    filter: none;
+    will-change: transform, width, height;
+    transition:
+      width 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      height 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      max-width 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.65s ease,
+      transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.65s ease,
+      border-radius 0.7s ease,
+      box-shadow 0.7s ease;
+  }
+
+  .loader-brand-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    min-height: min(70dvh, 36rem);
+    flex: 1 1 auto;
+    width: min(100%, 42rem);
+    max-height: min(86dvh, 44rem);
+    transition:
+      gap 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 0.9s ease,
+      min-height 0.9s ease;
+  }
+
+  /* Status stays fully collapsed until loader-ready */
+  .loader-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    max-width: min(22rem, 100%);
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    text-align: center;
+    color: #0f172a;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(0.75rem);
+    flex: 0 0 auto;
+    min-height: 0;
+    transition:
+      opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.55s linear,
+      gap 0.45s ease,
+      padding 0.45s ease;
+  }
+
+  #loader.loader-ready .loader-status {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    max-height: 12rem;
+    gap: 0.55rem;
+    padding: 0 0.75rem;
+    transform: translateY(0);
+  }
+
+  /* Safety: never leave chips invisible if JS stagger fails */
+  #loader.loader-ready .loader-feature:not(.is-in) {
+    animation: loaderFeatureIn 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) 1.4s forwards;
+  }
+
+  #loader.loader-force-hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .loader-location {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    opacity: 0;
+    transform: translateY(0.85rem) scale(0.94);
+  }
+
+  #loader.loader-ready .loader-location {
+    animation: loaderLocationIn 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+  }
+
+  .loader-location-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 0.35rem;
+  }
+
+  .loader-location-pin {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex: 0 0 auto;
+  }
+
+  .loader-location-pin::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 999px;
+    border: 2px solid rgba(16, 185, 129, 0.35);
+    opacity: 0;
+    transform: scale(0.55);
+  }
+
+  #loader.loader-ready .loader-location-pin::before {
+    animation: loaderPinRing 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  }
+
+  .loader-location-icon {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    color: #059669;
+  }
+
+  #loader.loader-ready .loader-location-icon {
+    animation: loaderPinDrop 0.7s cubic-bezier(0.34, 1.55, 0.64, 1) both;
+  }
+
+  .loader-location-value {
+    display: block;
+    font-weight: 800;
+    font-size: 1.15rem;
+    line-height: 1.15;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+
+  .loader-location.is-ready .loader-location-value {
+    color: #047857;
+  }
+
+  #loader.loader-ready .loader-location-value {
+    animation: loaderLocationValueIn 0.7s cubic-bezier(0.34, 1.45, 0.64, 1) 0.12s both;
+  }
+
+  @keyframes loaderLocationIn {
+    0% {
+      opacity: 0;
+      transform: translateY(0.85rem) scale(0.94);
+    }
+    65% {
+      opacity: 1;
+      transform: translateY(-0.1rem) scale(1.03);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes loaderLocationValueIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.82);
+      filter: blur(2px);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(1.06);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: none;
+    }
+  }
+
+  @keyframes loaderPinDrop {
+    0% {
+      opacity: 0;
+      transform: translateY(-0.85rem) scale(0.6);
+    }
+    55% {
+      opacity: 1;
+      transform: translateY(0.12rem) scale(1.18);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes loaderPinRing {
+    0% {
+      opacity: 0.75;
+      transform: scale(0.55);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.85);
+    }
+  }
+
+  /* Feature chips: base look lives in /css/feature-chips.css.
+     Keep critical loader hide/entrance here so chips never flash wrong. */
+  #loader .loader-features {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: min(22rem, 100%);
+  }
+
+  #loader .loader-feature {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.88);
+  }
+
+  #loader .loader-feature-badge {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  #loader .loader-feature-icon {
+    width: 13px;
+    height: 13px;
+  }
+
+  @keyframes loaderFeatureIn {
+    0% { opacity: 0; transform: translateY(0.75rem) scale(0.88); }
+    65% { opacity: 1; transform: translateY(-0.12rem) scale(1.04); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Free unverified: keep both logos as-is (no morph) */
+  #loader.loader--free #loaderImage,
+  #loader.loader--free #menuImage {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Verified / paid: TTMenus recedes; client logo dominates the screen */
+  #loader.loader--verified.loader-morph .loader-brand-stage {
+    gap: 0.4rem;
+    min-height: min(58dvh, 32rem);
+    max-height: min(74dvh, 42rem);
+  }
+
+  #loader.loader--verified.loader-morph #loaderImage {
+    max-height: min(2.5rem, 6.5dvh);
+    max-width: min(6.5rem, 34vw);
+    opacity: 0.58;
+    filter: none;
+    transform: translateY(-0.1rem) scale(0.45);
+  }
+
+  #loader.loader--verified.loader-morph #menuImage {
+    width: min(20rem, 74vw, 52dvh);
+    height: min(20rem, 74vw, 52dvh);
+    max-width: min(20rem, 74vw, 52dvh);
+    max-height: min(20rem, 74vw, 52dvh);
+    transform: scale(1);
+    filter: none;
+  }
+
+  #loader.loader--paid.loader-morph #menuImage {
+    width: min(21rem, 78vw, 54dvh);
+    height: min(21rem, 78vw, 54dvh);
+    max-width: min(21rem, 78vw, 54dvh);
+    max-height: min(21rem, 78vw, 54dvh);
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.5);
+    border-radius: 1.25rem;
+    filter: none;
+  }
+
+  @media (max-height: 700px) {
+    #loader.loader-ready {
+      gap: 0.7rem;
+    }
+    .loader-brand-stage {
+      gap: 0.85rem;
+      min-height: min(62dvh, 28rem);
+      max-height: min(78dvh, 32rem);
+    }
+    #loaderImage {
+      max-height: min(14rem, 36dvh);
+      max-width: min(26rem, 92vw);
+    }
+    #loader.loader--verified.loader-morph #menuImage,
+    #loader.loader--paid.loader-morph #menuImage {
+      width: min(15.5rem, 64vw, 44dvh);
+      height: min(15.5rem, 64vw, 44dvh);
+      max-width: min(15.5rem, 64vw, 44dvh);
+      max-height: min(15.5rem, 64vw, 44dvh);
+    }
+    .loader-location-value {
+      font-size: 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #loaderImage,
+    #menuImage,
+    .loader-status,
+    .loader-feature {
+      transition-duration: 0.01ms !important;
+      animation: none !important;
+    }
+    #loader .loader-status,
+    #loader .loader-location,
+    #loader .loader-location-value,
+    #loader .loader-location-icon,
+    #loader .loader-feature.is-in,
+    #loader .loader-feature {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      filter: none;
+      animation: none !important;
+    }
+    #loader .loader-status {
+      max-height: none;
+      gap: 0.55rem;
+      padding: 0 0.75rem;
+      pointer-events: auto;
+    }
+    #loader .loader-location-pin::before {
+      display: none;
+    }
   }
   
   /* Loader hide states — must cover every class used in loader.js */
@@ -256,15 +626,47 @@
     display: none !important;
   }
 
-  #loader.loader-hide-up { transform: translateY(-100%); }
-  #loader.loader-hide-down { transform: translateY(100%); }
-  #loader.loader-hide-left { transform: translateX(-100%); }
-  #loader.loader-hide-right { transform: translateX(100%); }
+  /* Soft exits: fade + glide (not a hard fly-off) */
+  #loader.loader-hide-up { transform: translate3d(0, -18%, 0) scale(0.97); }
+  #loader.loader-hide-down { transform: translate3d(0, 18%, 0) scale(0.97); }
+  #loader.loader-hide-left { transform: translate3d(-16%, 0, 0) scale(0.97); }
+  #loader.loader-hide-right { transform: translate3d(16%, 0, 0) scale(0.97); }
+  #loader.loader-hide-up-right { transform: translate3d(14%, -16%, 0) scale(0.96); }
+  #loader.loader-hide-down-right { transform: translate3d(14%, 16%, 0) scale(0.96); }
+  #loader.loader-hide-down-left { transform: translate3d(-14%, 16%, 0) scale(0.96); }
+  #loader.loader-hide-up-left { transform: translate3d(-14%, -16%, 0) scale(0.96); }
+
+  #loader.loader-hide-up-rotate-left { transform: translate3d(0, -16%, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-up-right-rotate-left { transform: translate3d(12%, -14%, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-right-rotate-left { transform: translate3d(15%, 0, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-down-right-rotate-left { transform: translate3d(12%, 14%, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-down-rotate-left { transform: translate3d(0, 16%, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-down-left-rotate-left { transform: translate3d(-12%, 14%, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-left-rotate-left { transform: translate3d(-15%, 0, 0) rotate(-7deg) scale(0.95); }
+  #loader.loader-hide-up-left-rotate-left { transform: translate3d(-12%, -14%, 0) rotate(-7deg) scale(0.95); }
+
+  #loader.loader-hide-up-rotate-right { transform: translate3d(0, -16%, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-up-right-rotate-right { transform: translate3d(12%, -14%, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-right-rotate-right { transform: translate3d(15%, 0, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-down-right-rotate-right { transform: translate3d(12%, 14%, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-down-rotate-right { transform: translate3d(0, 16%, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-down-left-rotate-right { transform: translate3d(-12%, 14%, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-left-rotate-right { transform: translate3d(-15%, 0, 0) rotate(7deg) scale(0.95); }
+  #loader.loader-hide-up-left-rotate-right { transform: translate3d(-12%, -14%, 0) rotate(7deg) scale(0.95); }
+
+  #loader.loader-hide-up-rotate-scale { transform: translate3d(0, -12%, 0) rotate(-5deg) scale(0.86); }
+  #loader.loader-hide-up-right-rotate-scale { transform: translate3d(10%, -12%, 0) rotate(5deg) scale(0.86); }
+  #loader.loader-hide-right-rotate-scale { transform: translate3d(12%, 0, 0) rotate(5deg) scale(0.86); }
+  #loader.loader-hide-down-right-rotate-scale { transform: translate3d(10%, 12%, 0) rotate(5deg) scale(0.86); }
+  #loader.loader-hide-down-rotate-scale { transform: translate3d(0, 12%, 0) rotate(5deg) scale(0.86); }
+  #loader.loader-hide-down-left-rotate-scale { transform: translate3d(-10%, 12%, 0) rotate(-5deg) scale(0.86); }
+  #loader.loader-hide-left-rotate-scale { transform: translate3d(-12%, 0, 0) rotate(-5deg) scale(0.86); }
+  #loader.loader-hide-up-left-rotate-scale { transform: translate3d(-10%, -12%, 0) rotate(-5deg) scale(0.86); }
 </style>
 
 <!-- Preconnect sparingly (Lighthouse: max ~4); dns-prefetch for the rest -->
 <link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
-{{- if site.Params.notifications.enabled -}}
+{{- if default false site.Params.features.notifications -}}
 <link rel="preconnect" href="https://notify.ttmenus.com" crossorigin>
 {{- else -}}
 <link rel="dns-prefetch" href="https://notify.ttmenus.com">
@@ -321,21 +723,44 @@
 <meta name="theme-color" content="#000000"/>
 
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
+{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") -}}
+{{- $multiLocationMenus := site.Params.menu.multiLocationMenus | default false -}}
+<link rel="stylesheet" href="/css/breakpoints.css"/>
 <link rel="stylesheet" href="/css/z-index.css"/>
 <link rel="stylesheet" href="/css/ios-viewport.css"/>
 <script src="/js/ios-viewport.js"></script>
 <link rel="stylesheet" href="/css/colors.css"/>
-<link rel="stylesheet" href="/css/typography.css"/>
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/typography.css" "sync" true) }}
 <link rel="stylesheet" href="/css/custom.css"/>
-<link rel="stylesheet" href="/css/header.css"/>
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/cart.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/table-modal.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/header.css" "sync" true) }}
+{{- if $menuPublicSite -}}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/feature-chips.css" "sync" true) }}
+{{- end -}}
+{{- if and $menuPublicSite $multiLocationMenus -}}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/multi-location-menu.css" "sync" true) }}
+{{- end -}}
+{{- if and $menuPublicSite $isMenuReelsPage -}}
+<link rel="stylesheet" href="/css/menu-reels.css"/>
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/menu-cards.css" "sync" true) }}
+{{- end -}}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/cart.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/table-modal.css") }}
 {{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
 <link rel="stylesheet" href="/css/payment.css"/>
 {{- end -}}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/footer.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/contact.css") }}
-{{- if .IsHome -}}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/footer.css" "sync" true) }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/contact.css" "sync" true) }}
+{{- $menuLocSlugs := slice -}}
+{{- range site.Data.locations.locations -}}
+  {{- with .slug -}}{{- $menuLocSlugs = $menuLocSlugs | append . -}}{{- end -}}
+{{- end -}}
+<script>
+window.MENU_CONFIG = {
+  multiLocationMenus: {{ $multiLocationMenus }},
+  locationSlugs: {{ $menuLocSlugs | jsonify }}
+};
+</script>
+{{- if $isMenuReelsPage -}}
 <script>
 (function () {
   try {
@@ -441,17 +866,20 @@
     height: calc(100dvh - var(--ttms-header-height, 5em));
   }
   .main--home .logo_container {
-    min-height: 12rem;
+    min-height: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.85rem;
   }
   .main--home #logo {
-    width: 192px;
-    height: 192px;
-    max-width: min(192px, 66dvh);
-    max-height: min(192px, 66dvh);
+    width: auto;
+    height: auto;
+    max-width: min(16.5rem, 58vw, 40dvh);
+    max-height: min(16.5rem, 58vw, 40dvh);
     object-fit: contain;
+    animation: none;
   }
   #footer { min-height: 4.5rem; }
 </style>
@@ -494,16 +922,16 @@
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard-panel.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-panel.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero-cta.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/slideshow.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/expanded-carousel.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css" "sync" true) }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero-cta.css" "sync" true) }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/slideshow.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/expanded-carousel.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/adsbase.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/apple.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/ordering-system.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "https://cdn.ttmenus.com/css/animations.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "https://cdn.ttmenus.com/css/dinein_select.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/search.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/search.css" "sync" true) }}
 {{- if site.Params.menuImageService.enabled -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-smash-pass.css") }}
 {{- end -}}
@@ -512,12 +940,12 @@
 <link rel="stylesheet" href="/css/account-dashboard-panel.css"/>
 <link rel="stylesheet" href="/css/dashboard-panel.css"/>
 {{- if eq .Layout "client-dashboard-menu-settings" -}}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/hero-cta.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css") }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero-cta.css") }}
 {{- end -}}
 {{- end -}}
-{{ if .Site.Params.notifications.enabled }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/notifications.css") }}
+{{ if default false site.Params.features.notifications }}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/notifications.css") }}
 {{ end }}
 
 <!-- MANIFEST -->
@@ -546,6 +974,29 @@
 <!-- Menu UI font (non-blocking; dns-prefetch only — avoid unused preconnect) -->
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"/></noscript>
+<script>
+/* Promote any remaining preload stylesheets (cached preload can skip onload). */
+(function () {
+  function promote(link) {
+    if (!link || link.rel !== 'preload' || link.getAttribute('as') !== 'style') return;
+    link.onload = null;
+    link.rel = 'stylesheet';
+  }
+  function promoteAll() {
+    document.querySelectorAll('link[rel="preload"][as="style"]').forEach(promote);
+  }
+  document.querySelectorAll('link[rel="preload"][as="style"]').forEach(function (link) {
+    if (link.sheet) promote(link);
+    else link.addEventListener('load', function () { promote(link); });
+  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', promoteAll);
+  } else {
+    promoteAll();
+  }
+  requestAnimationFrame(promoteAll);
+})();
+</script>
 
 {{/* Notification service worker is registered by notifications.js only after the user subscribes — avoids eager SW setup on first visit. */}}
 <!-- Matomo Tag Manager - menu/public pages only (avoids Tag Manager errors on admin dashboard) -->
@@ -686,11 +1137,8 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 {{- if $menuPublicSite -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-favorites.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-actions.css") }}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-cards.css") }}
-{{- if .IsHome -}}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reels.css") }}
-{{- else -}}
-{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reels.css") }}
+{{- if not $isMenuReelsPage -}}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/menu-cards.css") }}
 {{- end -}}
 <script src="/js/menu-favorite-icons.js" defer></script>
 <script src="/js/menu-favorites.js" defer></script>
@@ -714,20 +1162,21 @@ window.MENU_IMAGE_CONFIG = {
 <script src="/js/menu-image-integration.js" defer></script>
 {{- end -}}
 {{- if $menuPublicSite -}}
+<script src="/js/feature-chips.js" defer></script>
 <script src="/js/share-buttons.js" defer></script>
 <script src="/js/single-page-init.js" defer></script>
 <script src="/js/menu-account-dashboard.js" defer></script>
 <script src="/js/header-menublock-scroll.js" defer></script>
 {{- end -}}
 
-{{- if site.Params.notifications.enabled -}}
+{{- if default false site.Params.features.notifications -}}
 {{- $notifyApiUrl := site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" -}}
 {{- $notifyWsUrl := site.Params.notifications.websocketUrl | default "wss://notify.ttmenus.com/api/v1/ws/connect" -}}
 {{- $notifyServiceUrl := site.Params.notifications.serviceUrl | default "https://notify.ttmenus.com" -}}
 {{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
 <script>
 window.NOTIFY_CONFIG = {
-  enabled: {{ site.Params.notifications.enabled }},
+  enabled: true,
   apiUrl: "{{ $notifyApiUrl }}",
   websocketUrl: "{{ $notifyWsUrl }}",
   serviceUrl: "{{ $notifyServiceUrl }}",

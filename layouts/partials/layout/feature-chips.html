@@ -1,0 +1,108 @@
+{{- /* Entitlement feature chips (loader + public heroes). Pass dict: id, class, visible, expandable. */ -}}
+{{- $f := site.Params.features | default dict -}}
+{{- $os := site.Params.orderingsystem | default dict -}}
+{{- $pay := site.Params.paymentService | default dict -}}
+{{- $del := site.Params.deliveryService | default dict -}}
+{{- $ordering := default false $os.enabled -}}
+{{- $notifications := default false $f.notifications -}}
+{{- $payments := and (default false $f.payments) (default false $pay.enabled) -}}
+{{- $delivery := and (default false $f.delivery) (default false $del.enabled) -}}
+{{- $visible := false -}}
+{{- $expandable := false -}}
+{{- $chipClass := "" -}}
+{{- $listId := "" -}}
+{{- if reflect.IsMap . -}}
+  {{- $visible = default false .visible -}}
+  {{- $expandable = default false .expandable -}}
+  {{- $chipClass = default "" .class -}}
+  {{- $listId = default "" .id -}}
+{{- end -}}
+{{- $inClass := cond $visible " is-in" "" -}}
+
+{{- /* Detail copy from live client config (hero expandable chips only) */ -}}
+{{- $payProvider := $pay.provider | default "card" -}}
+{{- $payCurrency := $pay.currency | default "TTD" -}}
+{{- $paymentsDetail := printf "Pay securely online%s. Checkout in %s." (cond (ne $payProvider "") (printf " via %s" $payProvider) "") $payCurrency -}}
+
+{{- $orderChannels := slice -}}
+{{- with $os.whatsapp -}}{{- $orderChannels = $orderChannels | append "WhatsApp" -}}{{- end -}}
+{{- if and (default false $os.usephonecall) $os.phone -}}
+  {{- $orderChannels = $orderChannels | append "phone" -}}
+{{- end -}}
+{{- $orderingDetail := "Add items from the menu and place your order." -}}
+{{- if gt (len $orderChannels) 0 -}}
+  {{- $orderingDetail = printf "Order via %s — add items, then send your cart." (delimit $orderChannels " or ") -}}
+{{- end -}}
+
+{{- $deliveryDetail := "Delivery available for this menu." -}}
+{{- with $del.deliveryFee -}}
+  {{- $deliveryDetail = printf "Delivery available · from %s %v." ($del.currency | default "TTD") . -}}
+{{- end -}}
+
+{{- $menuDetail := "Browse the full menu and search for dishes." -}}
+
+<ul class="loader-features{{ with $chipClass }} {{ . }}{{ end }}{{ if $expandable }} loader-features--expandable is-titles-in{{ end }}"{{ with $listId }} id="{{ . }}"{{ end }} aria-label="Available features">
+  {{- if $expandable -}}
+    {{- if $payments -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="payments">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Payments" title="Payments — tap for details">
+        <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "payments" }}</span>
+        <span class="loader-feature-copy">
+          <span class="loader-feature-label">Payments</span>
+          <span class="loader-feature-detail">{{ $paymentsDetail }}</span>
+        </span>
+      </button>
+    </li>
+    {{- end -}}
+    {{- if $ordering -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="ordering">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Ordering" title="Ordering — tap for details">
+        <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "ordering" }}</span>
+        <span class="loader-feature-copy">
+          <span class="loader-feature-label">Ordering</span>
+          <span class="loader-feature-detail">{{ $orderingDetail }}</span>
+        </span>
+      </button>
+    </li>
+    {{- end -}}
+    {{- if $delivery -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="delivery">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Delivery" title="Delivery — tap for details">
+        <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "delivery" }}</span>
+        <span class="loader-feature-copy">
+          <span class="loader-feature-label">Delivery</span>
+          <span class="loader-feature-detail">{{ $deliveryDetail }}</span>
+        </span>
+      </button>
+    </li>
+    {{- end -}}
+    {{- /* Alerts chip omitted on hero — #subBtn / Get menu alerts CTA already covers it. */ -}}
+    {{- if and (not $payments) (not $ordering) (not $delivery) -}}
+    <li class="loader-feature is-muted{{ $inClass }}" data-feature="menu">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Menu and search" title="Menu &amp; search — tap for details">
+        <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "menu" }}</span>
+        <span class="loader-feature-copy">
+          <span class="loader-feature-label">Menu &amp; search</span>
+          <span class="loader-feature-detail">{{ $menuDetail }}</span>
+        </span>
+      </button>
+    </li>
+    {{- end -}}
+  {{- else -}}
+    {{- if $payments -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="payments"><span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "payments" }}</span><span class="loader-feature-label">Payments</span></li>
+    {{- end -}}
+    {{- if $ordering -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="ordering"><span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "ordering" }}</span><span class="loader-feature-label">Ordering</span></li>
+    {{- end -}}
+    {{- if $delivery -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="delivery"><span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "delivery" }}</span><span class="loader-feature-label">Delivery</span></li>
+    {{- end -}}
+    {{- if $notifications -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="notifications"><span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "notifications" }}</span><span class="loader-feature-label">Alerts</span></li>
+    {{- end -}}
+    {{- if and (not $payments) (not $ordering) (not $delivery) (not $notifications) -}}
+    <li class="loader-feature is-muted{{ $inClass }}" data-feature="menu"><span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "menu" }}</span><span class="loader-feature-label">Menu &amp; search</span></li>
+    {{- end -}}
+  {{- end -}}
+</ul>

@@ -1,0 +1,22 @@
+{{- $ds := site.Params.deliveryService | default dict -}}
+{{- $deliveryEnabled := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
+{{- if $deliveryEnabled -}}
+{{- $loc := site.Params.location | default dict -}}
+<link rel="stylesheet" href="{{ "css/delivery.css" | relURL }}">
+<script>
+window.DELIVERY_CONFIG = {
+  enabled: true,
+  apiUrl: {{ ($ds.apiUrl | default "https://delivery.ttmenus.com/api/v1") | jsonify }},
+  wsUrl: {{ ($ds.wsUrl | default "wss://delivery.ttmenus.com/api/v1") | jsonify }},
+  clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "") | jsonify }},
+  clientDomain: {{ (site.Params.notifications.clientDomain | default "") | jsonify }},
+  restaurantName: {{ site.Title | jsonify }},
+  restaurantLat: {{ default 0 $loc.lat }},
+  restaurantLng: {{ default 0 $loc.lng }},
+  currency: {{ ($ds.currency | default site.Params.paymentService.currency | default "TTD") | jsonify }},
+  deliveryFee: {{ default 30 $ds.deliveryFee }}
+};
+</script>
+<script src="{{ "js/delivery-client.js" | relURL }}" defer></script>
+<script src="{{ "js/delivery-ui.js" | relURL }}" defer></script>
+{{- end -}}

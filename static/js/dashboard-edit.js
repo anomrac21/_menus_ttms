@@ -624,6 +624,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   var btnTogglePanel = document.getElementById('btnToggleEditPanel');
   var colorAsideEl = document.getElementById('dashboardEditColorAside');
   var btnToggleColorPanel = document.getElementById('btnToggleColorPanel');
+  var btnColorPainterOrb = document.getElementById('btnColorPainterOrb');
+  var colorPainterStage = document.getElementById('dashboardEditColorPainterStage');
+  var colorAsideEyebrow = document.getElementById('dashboardEditColorAsideEyebrow');
+  var colorWheelEl = document.getElementById('dashboardEditColorWheel');
+  var colorWheelLabelEl = document.getElementById('dashboardEditColorWheelLabel');
   var submodeWrap = document.getElementById('dashboardEditSubmodeWrap');
   var btnSubmodeContent = document.getElementById('btnSubmodeContent');
   var btnSubmodeMove = document.getElementById('btnSubmodeMove');
@@ -631,28 +636,128 @@ document.addEventListener('DOMContentLoaded', async function() {
   var colorPrompt = document.getElementById('dashboardEditColorPrompt');
 
   var colorSectionsEl = document.getElementById('dashboardEditColorSections');
+  var colorVarRingEl = document.getElementById('dashboardEditColorVarRing');
+  var colorEditRingEl = document.getElementById('dashboardEditColorEditRing');
+  var colorWheelFieldsEl = document.getElementById('dashboardEditColorWheelFields');
   var colorForm = document.getElementById('dashboardEditColorForm');
   var colorAsideTitle = document.getElementById('dashboardEditColorAsideTitle');
   var colorAsideTitleIcon = document.getElementById('dashboardEditColorAsideTitleIcon');
   var btnCloseColorSection = document.getElementById('btnCloseColorSection');
+  var colorFieldsEl = document.getElementById('dashboardEditColorFields');
+  var btnApplyColor = document.getElementById('btnApplyColor');
+  var btnBackColorSections = document.getElementById('btnBackColorSections');
+
+  function getActiveColorFieldsRoot() {
+    if (
+      colorWheelFieldsEl &&
+      !colorWheelFieldsEl.classList.contains('hidden') &&
+      colorWheelFieldsEl.querySelector('input[data-var]')
+    ) {
+      return colorWheelFieldsEl;
+    }
+    return colorFieldsEl;
+  }
+
+  function setColorWheelFieldsOpen(open) {
+    if (!colorWheelFieldsEl) return;
+    colorWheelFieldsEl.classList.toggle('hidden', !open);
+    if (!open) {
+      colorWheelFieldsEl.innerHTML = '';
+      colorWheelFieldsEl.style.left = '';
+      colorWheelFieldsEl.style.top = '';
+      colorWheelFieldsEl.style.right = '';
+      colorWheelFieldsEl.style.bottom = '';
+      colorWheelFieldsEl.style.transform = '';
+      colorWheelFieldsEl.style.removeProperty('--wheel-field-x');
+      colorWheelFieldsEl.style.removeProperty('--wheel-field-y');
+    } else {
+      requestAnimationFrame(function() { layoutColorWheelFieldsDock(); });
+    }
+  }
+  var colorPainterLevel = 'idle'; // idle | sections | vars | editor
+  var selectedColorVarName = null;
+  var COLOR_PAINTER_ANCHOR_KEY = 'ttmsColorPainterAnchor';
+  var COLOR_PAINTER_MENU_KEY = 'ttmsColorPainterMenu';
+  var COLOR_PAINTER_DRAG_THRESHOLD = 8;
+  var COLOR_WHEEL_STEP_DEG = 26;
+  var COLOR_WHEEL_VISIBLE = 2.05; // slots each side of focus
+  var colorPainterDrag = null;
+  var colorWheelScroll = 0; // float index
+  var colorWheelLayout = null; // { cx, cy, radius, start, n, step }
+  var colorWheelScrub = null;
+  var colorWheelSectionScroll = null;
+  var colorWheelVarScroll = 0;
+  var colorWheelEditScroll = 0;
+  var colorEditApplyLock = false;
+  var colorWheelReduceMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function readColorPainterMenuState() {
+    try {
+      var raw = sessionStorage.getItem(COLOR_PAINTER_MENU_KEY);
+      return raw ? (JSON.parse(raw) || {}) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function persistColorPainterMenuState() {
+    try {
+      var prev = readColorPainterMenuState();
+      var next = {
+        sectionId: selectedColorSectionId || prev.sectionId || '',
+        sectionScroll:
+          colorPainterLevel === 'sections'
+            ? Math.round(colorWheelScroll)
+            : (typeof colorWheelSectionScroll === 'number'
+              ? colorWheelSectionScroll
+              : (typeof prev.sectionScroll === 'number' ? prev.sectionScroll : null)),
+        varScroll:
+          colorPainterLevel === 'vars'
+            ? Math.round(colorWheelScroll)
+            : (typeof colorWheelVarScroll === 'number' ? colorWheelVarScroll : (prev.varScroll || 0))
+      };
+      if (colorPainterLevel === 'sections') colorWheelSectionScroll = next.sectionScroll;
+      if (colorPainterLevel === 'vars') colorWheelVarScroll = next.varScroll;
+      sessionStorage.setItem(COLOR_PAINTER_MENU_KEY, JSON.stringify(next));
+    } catch (e) { /* ignore */ }
+  }
+
+  function getColorSectionWheelOrder() {
+    return COLOR_SECTIONS.slice().reverse();
+  }
+
+  function sectionWheelIndexForId(sectionId) {
+    if (!sectionId) return -1;
+    var order = getColorSectionWheelOrder();
+    for (var i = 0; i < order.length; i++) {
+      if (order[i].id === sectionId) return i;
+    }
+    return -1;
+  }
+
+  function getColorSectionById(sectionId) {
+    return COLOR_SECTIONS.find(function(s) { return s.id === sectionId; }) || null;
+  }
 
   function setColorAsideHeaderTitle(label, sectionId) {
     if (colorAsideTitle) colorAsideTitle.textContent = label;
+    if (colorAsideEyebrow) {
+      var section = sectionId ? getColorSectionById(sectionId) : null;
+      colorAsideEyebrow.textContent = section ? ('Editing ' + section.label) : 'Theme colors';
+    }
     if (!colorAsideTitleIcon) return;
     var iconClass = sectionId ? (COLOR_SECTION_ICONS[sectionId] || 'fa-paint-brush') : 'fa-paint-brush';
     colorAsideTitleIcon.innerHTML = '<i class="fa ' + iconClass + '" aria-hidden="true"></i>';
   }
 
-  function setColorAsideToggleIcon(expanded) {
-    if (!btnToggleColorPanel) return;
-    var iconWrap = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-icon');
-    if (!iconWrap) return;
-    var chevron = expanded ? 'fa-chevron-left' : 'fa-chevron-right';
-    iconWrap.innerHTML = '<i class="fa ' + chevron + '" aria-hidden="true"></i>';
+  function setColorPainterContext(label) {
+    if (colorAsideEyebrow && colorPainterLevel === 'editor') {
+      // Editor header carries section context; keep eyebrow in sync.
+      colorAsideEyebrow.textContent = label || 'Theme colors';
+    }
   }
-  var colorFieldsEl = document.getElementById('dashboardEditColorFields');
-  var btnApplyColor = document.getElementById('btnApplyColor');
-  var btnBackColorSections = document.getElementById('btnBackColorSections');
 
   var editMode = false;
   var editSubmode = 'content'; // 'content' | 'move' | 'color'
@@ -712,24 +817,50 @@ document.addEventListener('DOMContentLoaded', async function() {
   function expandColorAsidePanel() {
     if (!colorAsideEl) return;
     colorAsideEl.classList.remove('hidden', 'dashboard-edit-color-aside-collapsed');
-    if (btnToggleColorPanel) {
-      btnToggleColorPanel.setAttribute('aria-expanded', 'true');
-      btnToggleColorPanel.setAttribute('aria-label', 'Collapse color panel');
-      setColorAsideToggleIcon(true);
-      var textEl = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-text');
-      if (textEl) textEl.textContent = 'Collapse';
+    showColorPainterOrb();
+  }
+
+  function playColorPainterEntrance() {
+    if (!colorAsideEl) return;
+    var reduceMotion = false;
+    try {
+      reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) { /* ignore */ }
+    if (reduceMotion) {
+      colorAsideEl.classList.remove('is-entering');
+      return;
     }
+    colorAsideEl.classList.remove('is-entering');
+    void colorAsideEl.offsetWidth;
+    colorAsideEl.classList.add('is-entering');
+    var onEnd = function (ev) {
+      if (ev && ev.target !== colorAsideEl && !ev.target.classList.contains('dashboard-edit-color-orb')) {
+        return;
+      }
+      colorAsideEl.classList.remove('is-entering');
+      colorAsideEl.removeEventListener('animationend', onEnd);
+    };
+    colorAsideEl.addEventListener('animationend', onEnd);
+  }
+
+  function showColorPainterOrb() {
+    if (!colorAsideEl) return;
+    colorAsideEl.classList.remove('hidden');
+    closeColorRings({ keepOrb: true });
+    initColorPainterCanvas();
+    restoreColorPainterAnchor();
+    playColorPainterEntrance();
   }
 
   function iframeEditOverlayActive() {
-    return editMode && (editSubmode === 'content' || editSubmode === 'move');
+    return editMode && editSubmode === 'content';
   }
 
   function updateEditPromptForSubmode() {
     if (!promptEl) return;
     var intro = promptEl.querySelector('.dashboard-edit-options-intro');
     if (!intro) return;
-    intro.innerHTML = editSubmode === 'move' ? EDIT_PROMPT_MOVE_HTML : EDIT_PROMPT_CONTENT_HTML;
+    intro.innerHTML = EDIT_PROMPT_CONTENT_HTML;
   }
 
   function syncIframeMoveModeFromSubmode() {
@@ -1096,6 +1227,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     return slug ? 'content/promotions/' + slug + '.md' : null;
   }
 
+  function stripMoveToolbarFromWrap(wrap) {
+    if (!wrap) return;
+    wrap.querySelectorAll('.dashboard-edit-move-wrap, .dashboard-edit-drag-handle').forEach(function (el) {
+      el.remove();
+    });
+  }
+
   function injectPromotionEditButton(doc, el, win, opts) {
     opts = opts || {};
     var adWrapClass = 'dashboard-edit-ad-btn-wrap';
@@ -1103,13 +1241,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     syncPromotionDataset(el, win, doc);
     el.classList.add('dashboard-edit-ad-wrap');
     if (existingWrap) {
-      if (opts.showMove) dashboardInjectMoveToolbarIntoWrap(existingWrap, doc, { promotion: true });
+      stripMoveToolbarFromWrap(existingWrap);
       return;
     }
     var div = doc.createElement('div');
     div.className = adWrapClass;
     div.setAttribute('data-dashboard-edit', '1');
-    if (opts.showMove) div.appendChild(createDashboardMoveToolbar(doc, { promotion: true }));
     var editBtn = doc.createElement('button');
     editBtn.type = 'button';
     editBtn.className = 'dashboard-edit-btn';
@@ -3052,6 +3189,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   fetchEditorSnapshotBootstrap();
 
   function setEditSubmode(mode) {
+    /* Inline move mode retired — dedicated /edit-menu-rearrange/ page handles order. */
+    if (mode === 'move' && !rearrangeOnlyMode) {
+      window.location.href = '/edit-menu-rearrange/';
+      return;
+    }
+    if (mode === 'move' && rearrangeOnlyMode) {
+      mode = 'content';
+    }
     editSubmode = mode;
     page.setAttribute('data-edit-submode', mode);
     if (btnSubmodeContent) {
@@ -3059,14 +3204,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       btnSubmodeContent.setAttribute('aria-pressed', mode === 'content');
     }
     if (btnSubmodeMove) {
-      btnSubmodeMove.classList.toggle('active', mode === 'move');
-      btnSubmodeMove.setAttribute('aria-pressed', mode === 'move');
+      btnSubmodeMove.classList.toggle('active', false);
+      btnSubmodeMove.setAttribute('aria-pressed', 'false');
     }
     if (btnSubmodeColor) {
       btnSubmodeColor.classList.toggle('active', mode === 'color');
       btnSubmodeColor.setAttribute('aria-pressed', mode === 'color');
     }
-    if (mode === 'content' || mode === 'move') {
+    if (mode === 'content') {
       clearSelection();
       if (asideEl) asideEl.classList.remove('hidden');
       if (colorAsideEl) colorAsideEl.classList.add('hidden');
@@ -3075,175 +3220,1393 @@ document.addEventListener('DOMContentLoaded', async function() {
       updateEditPromptForSubmode();
     } else {
       if (asideEl) asideEl.classList.add('hidden');
-      if (colorAsideEl) {
-        colorAsideEl.classList.remove('hidden');
-        colorAsideEl.classList.add('dashboard-edit-color-aside-collapsed');
-      }
-      if (colorPrompt) colorPrompt.classList.remove('hidden');
-      showColorSectionList();
-      if (colorForm) colorForm.classList.add('hidden');
-      if (btnToggleColorPanel) {
-        btnToggleColorPanel.setAttribute('aria-expanded', 'false');
-        btnToggleColorPanel.setAttribute('aria-label', 'Expand color panel');
-        setColorAsideToggleIcon(false);
-        var textEl = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-text');
-        if (textEl) textEl.textContent = 'Expand';
-      }
+      showColorPainterOrb();
     }
     setupIframeEditMode(iframeEditOverlayActive());
     syncIframeMoveModeFromSubmode();
-    if (mode !== 'move') {
-      try {
-        closeAllMoveToolbarsInDoc(iframe && iframe.contentDocument);
-      } catch (e) { /* ignore */ }
-    }
+    try {
+      closeAllMoveToolbarsInDoc(iframe && iframe.contentDocument);
+    } catch (e) { /* ignore */ }
   }
 
   if (themeOnlyMode) {
     setEditMode(true);
     setEditSubmode('color');
     expandColorAsidePanel();
-    if (colorPrompt) {
-      var colorIntro = colorPrompt.querySelector('.dashboard-edit-color-intro');
-      if (colorIntro) {
-        colorIntro.textContent =
-          'Pick a section to adjust CSS variables. Changes preview live in the menu and are saved automatically when you go back to the dashboard.';
-      }
-    }
+    initColorPainterCanvas();
   }
 
   if (rearrangeOnlyMode) {
     setEditMode(true);
-    setEditSubmode('move');
+    setEditSubmode('content');
+  }
+
+  function getColorPainterInsets() {
+    var header = document.querySelector('.dashboard-edit-header');
+    var headerH = header ? header.getBoundingClientRect().height : 56;
+    var safeTop = 0;
+    var safeRight = 0;
+    var safeBottom = 0;
+    var safeLeft = 0;
+    try {
+      var cs = getComputedStyle(document.documentElement);
+      safeTop = parseFloat(cs.getPropertyValue('--ttms-safe-top')) || 0;
+      safeRight = parseFloat(cs.getPropertyValue('--ttms-safe-right')) || 0;
+      safeBottom = parseFloat(cs.getPropertyValue('--ttms-safe-bottom')) || 0;
+      safeLeft = parseFloat(cs.getPropertyValue('--ttms-safe-left')) || 0;
+    } catch (e) { /* ignore */ }
+    return {
+      top: Math.max(headerH, 48) + 12 + safeTop,
+      right: 16 + safeRight,
+      bottom: 16 + safeBottom,
+      left: 16 + safeLeft
+    };
+  }
+
+  function getColorPainterOrbSize() {
+    return (btnColorPainterOrb && btnColorPainterOrb.offsetWidth) || 56;
+  }
+
+  function getColorPainterAnchors() {
+    var inset = getColorPainterInsets();
+    var size = getColorPainterOrbSize();
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var midX = Math.round((vw - size) / 2);
+    var midY = Math.round(inset.top + (vh - inset.top - inset.bottom - size) / 2);
+    var left = inset.left;
+    var right = Math.max(left, vw - inset.right - size);
+    var top = inset.top;
+    var bottom = Math.max(top, vh - inset.bottom - size);
+    return {
+      tl: { x: left, y: top },
+      tc: { x: midX, y: top },
+      tr: { x: right, y: top },
+      ml: { x: left, y: midY },
+      mr: { x: right, y: midY },
+      bl: { x: left, y: bottom },
+      bc: { x: midX, y: bottom },
+      br: { x: right, y: bottom }
+    };
+  }
+
+  function setColorPainterPosition(x, y) {
+    if (!colorAsideEl) return;
+    colorAsideEl.style.left = Math.round(x) + 'px';
+    colorAsideEl.style.top = Math.round(y) + 'px';
+    colorAsideEl.style.right = 'auto';
+    colorAsideEl.style.bottom = 'auto';
+  }
+
+  function nearestColorPainterAnchor(x, y) {
+    var anchors = getColorPainterAnchors();
+    var best = 'br';
+    var bestDist = Infinity;
+    Object.keys(anchors).forEach(function(id) {
+      var a = anchors[id];
+      var dx = a.x - x;
+      var dy = a.y - y;
+      var d = dx * dx + dy * dy;
+      if (d < bestDist) {
+        bestDist = d;
+        best = id;
+      }
+    });
+    return best;
+  }
+
+  function snapColorPainterToAnchor(anchorId, animate) {
+    if (!colorAsideEl) return;
+    var anchors = getColorPainterAnchors();
+    var id = anchors[anchorId] ? anchorId : 'br';
+    var pos = anchors[id];
+    colorAsideEl.setAttribute('data-anchor', id);
+    colorAsideEl.classList.toggle('is-snapping', !!animate);
+    setColorPainterPosition(pos.x, pos.y);
+    try {
+      sessionStorage.setItem(COLOR_PAINTER_ANCHOR_KEY, id);
+    } catch (e) { /* ignore */ }
+    if (animate) {
+      window.setTimeout(function() {
+        if (colorAsideEl) colorAsideEl.classList.remove('is-snapping');
+      }, 220);
+    }
+    layoutColorPainterRings();
+    layoutColorPainterEditor();
+  }
+
+  function restoreColorPainterAnchor() {
+    var saved = null;
+    try { saved = sessionStorage.getItem(COLOR_PAINTER_ANCHOR_KEY); } catch (e) { /* ignore */ }
+    snapColorPainterToAnchor(saved || (colorAsideEl && colorAsideEl.getAttribute('data-anchor')) || 'br', false);
+  }
+
+  function getColorPainterOpenSector() {
+    var anchor = (colorAsideEl && colorAsideEl.getAttribute('data-anchor')) || 'br';
+    // Compact iOS-style wheel arc into free space (0=right, 90=down).
+    if (anchor === 'tl') return { start: 10, sweep: 100 };
+    if (anchor === 'tc') return { start: 35, sweep: 110 };
+    if (anchor === 'tr') return { start: 90, sweep: 100 };
+    if (anchor === 'ml') return { start: -45, sweep: 100 };
+    if (anchor === 'mr') return { start: 135, sweep: 100 };
+    if (anchor === 'bl') return { start: -90, sweep: 100 };
+    if (anchor === 'bc') return { start: 215, sweep: 110 };
+    return { start: 180, sweep: 100 }; // br
+  }
+
+  function getActiveColorWheelRing() {
+    // Editor level: the color field panel is the third wheel (no scrub chip ring).
+    if (colorPainterLevel === 'editor') return null;
+    if (colorPainterLevel === 'vars' && colorVarRingEl && !colorVarRingEl.classList.contains('hidden')) {
+      return colorVarRingEl;
+    }
+    if (colorPainterLevel === 'sections' && colorSectionsEl && !colorSectionsEl.classList.contains('hidden')) {
+      return colorSectionsEl;
+    }
+    return null;
+  }
+
+  function getColorPainterRoom() {
+    if (!colorAsideEl) return 80;
+    var orb = getColorPainterOrbSize();
+    var rect = colorAsideEl.getBoundingClientRect();
+    var cx = rect.left + orb / 2;
+    var cy = rect.top + orb / 2;
+    var inset = getColorPainterInsets();
+    var pad = 16;
+    var roomL = Math.max(40, cx - pad);
+    var roomR = Math.max(40, window.innerWidth - cx - pad);
+    var roomU = Math.max(40, cy - inset.top);
+    var roomD = Math.max(40, window.innerHeight - cy - pad);
+    var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
+    if (anchor === 'tl') return Math.min(roomR, roomD);
+    if (anchor === 'tr') return Math.min(roomL, roomD);
+    if (anchor === 'bl') return Math.min(roomR, roomU);
+    if (anchor === 'br') return Math.min(roomL, roomU);
+    if (anchor === 'ml') return Math.min(roomR, Math.min(roomU, roomD));
+    if (anchor === 'mr') return Math.min(roomL, Math.min(roomU, roomD));
+    if (anchor === 'tc') return Math.min(roomD, Math.min(roomL, roomR));
+    return Math.min(roomU, Math.min(roomL, roomR));
+  }
+
+  function getColorPainterWheelRadius(layer) {
+    // sections (inner) → vars (mid/outer) → edit palette (outermost).
+    var room = getColorPainterRoom();
+    var kind = layer;
+    if (kind == null) {
+      if (colorPainterLevel === 'editor') kind = 'editor';
+      else if (colorPainterLevel === 'vars') kind = 'vars';
+      else kind = 'sections';
+    }
+    if (kind === 'editor') {
+      return Math.max(96, Math.min(118, room * 0.62));
+    }
+    if (kind === 'vars-mid') {
+      return Math.max(66, Math.min(78, room * 0.44));
+    }
+    if (kind === 'vars') {
+      return Math.max(70, Math.min(88, room * 0.52));
+    }
+    return Math.max(44, Math.min(58, room * 0.34));
+  }
+
+  function placeColorWheelLabel(focusX, focusY, radius) {
+    // Absolute position on the focus ray, fully outside the chip so the pill
+    // cannot cover the selected item or the brush.
+    var len = Math.sqrt(focusX * focusX + focusY * focusY) || 1;
+    var ux = focusX / len;
+    var uy = focusY / len;
+    var chipOuter = 24;
+    var gap = 14;
+    var labelHalf = 52;
+    var dist = (radius || len) + chipOuter + gap + labelHalf;
+    return { x: ux * dist, y: uy * dist };
+  }
+
+  function layoutColorWheelFieldsDock() {
+    // Fixed-dock the color field beside the orb on the side opposite the open
+    // wheel arc so it cannot cover chips or steal scrub/navigation.
+    if (!colorWheelFieldsEl || colorWheelFieldsEl.classList.contains('hidden') || !colorAsideEl) {
+      return;
+    }
+    var orb = getColorPainterOrbSize();
+    var rect = colorAsideEl.getBoundingClientRect();
+    var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
+    var inset = getColorPainterInsets();
+    var gap = 10;
+    var panelW = colorWheelFieldsEl.offsetWidth || 200;
+    var panelH = colorWheelFieldsEl.offsetHeight || 148;
+    var left = rect.left + (orb - panelW) / 2;
+    var top;
+
+    // Prefer stacking on the "home" side of the orb (edge / away from fan).
+    if (anchor === 'tl' || anchor === 'tc' || anchor === 'tr') {
+      top = rect.bottom + gap;
+    } else if (anchor === 'bl' || anchor === 'bc' || anchor === 'br') {
+      top = rect.top - gap - panelH;
+    } else if (anchor === 'ml') {
+      left = rect.right + gap;
+      top = rect.top + (orb - panelH) / 2;
+    } else {
+      // mr and fallback: keep panel on the right edge side, below/above orb.
+      left = Math.min(rect.left + orb - panelW, window.innerWidth - panelW - 8 - inset.right);
+      top = rect.bottom + gap;
+      if (top + panelH > window.innerHeight - 8 - inset.bottom) {
+        top = rect.top - gap - panelH;
+      }
+    }
+
+    left = Math.min(
+      Math.max(left, 8 + inset.left),
+      window.innerWidth - panelW - 8 - inset.right
+    );
+    top = Math.min(
+      Math.max(top, 8 + inset.top),
+      window.innerHeight - panelH - 8 - inset.bottom
+    );
+
+    colorWheelFieldsEl.style.left = Math.round(left) + 'px';
+    colorWheelFieldsEl.style.top = Math.round(top) + 'px';
+    colorWheelFieldsEl.style.right = 'auto';
+    colorWheelFieldsEl.style.bottom = 'auto';
+    colorWheelFieldsEl.style.transform = 'none';
+    colorWheelFieldsEl.style.removeProperty('--wheel-field-x');
+    colorWheelFieldsEl.style.removeProperty('--wheel-field-y');
+  }
+
+  function clampColorWheelScroll(value, n) {
+    if (n <= 1) return 0;
+    return Math.max(0, Math.min(n - 1, value));
+  }
+
+  function colorWheelAngleAt(clientX, clientY) {
+    if (!colorWheelLayout) return 0;
+    return (Math.atan2(clientY - colorWheelLayout.cy, clientX - colorWheelLayout.cx) * 180) / Math.PI;
+  }
+
+  function shortestAngleDelta(from, to) {
+    var d = to - from;
+    while (d > 180) d -= 360;
+    while (d < -180) d += 360;
+    return d;
+  }
+
+  function setColorWheelOpen(open) {
+    if (!colorWheelEl) return;
+    colorWheelEl.classList.toggle('hidden', !open);
+    if (!open) {
+      colorWheelEl.classList.remove(
+        'is-scrubbing',
+        'is-vars-layer',
+        'is-dual-layer',
+        'is-editor-layer',
+        'is-triple-layer'
+      );
+      colorWheelScrub = null;
+      colorWheelLayout = null;
+      if (colorWheelLabelEl) {
+        colorWheelLabelEl.textContent = '';
+        colorWheelLabelEl.classList.add('hidden');
+      }
+    }
+  }
+
+  function updateColorWheelLabel(idx) {
+    var ring = getActiveColorWheelRing();
+    if (!colorWheelLabelEl) return;
+    if (!ring || colorPainterLevel === 'idle') {
+      colorWheelLabelEl.textContent = '';
+      colorWheelLabelEl.classList.add('hidden');
+      return;
+    }
+    var items = ring.querySelectorAll('.dashboard-edit-color-ring-item');
+    var item = items[idx];
+    var label = item && item.getAttribute('data-label');
+    colorWheelLabelEl.textContent = label || '';
+    colorWheelLabelEl.classList.toggle('hidden', !label);
+  }
+
+  function layoutWheelItems(ringEl, radius, scroll, opts) {
+    opts = opts || {};
+    if (!ringEl) return 0;
+    var items = Array.prototype.slice.call(ringEl.querySelectorAll('.dashboard-edit-color-ring-item'));
+    var n = items.length;
+    if (!n) return 0;
+    var sector = getColorPainterOpenSector();
+    var step = opts.step || COLOR_WHEEL_STEP_DEG;
+    var focusAngle = sector.start + sector.sweep / 2;
+    var focusIdx = Math.round(clampColorWheelScroll(scroll, n));
+    var interactive = opts.interactive !== false;
+    var compact = !!opts.compact;
+
+    items.forEach(function(item, i) {
+      var delta = i - scroll;
+      var abs = Math.abs(delta);
+      var deg = focusAngle + delta * step;
+      var rad = (deg * Math.PI) / 180;
+      var visible = compact ? true : abs <= COLOR_WHEEL_VISIBLE;
+      var scale;
+      var opacity;
+      if (compact) {
+        // Compact inner/mid layers: keep all chips, dim non-active.
+        var activeAttr = opts.activeAttr || 'data-section-id';
+        var activeValue = opts.activeValue != null ? opts.activeValue : selectedColorSectionId;
+        var active = item.getAttribute(activeAttr) === activeValue;
+        item.classList.toggle('is-section-active', activeAttr === 'data-section-id' && active);
+        item.classList.toggle('is-var-active', activeAttr === 'data-var' && active);
+        scale = active ? 0.92 : 0.7;
+        opacity = active ? 0.95 : 0.42;
+        // Park evenly around the arc (not scrub-windowed).
+        deg = sector.start + (n === 1 ? 0 : sector.sweep * (i / (n - 1)));
+        rad = (deg * Math.PI) / 180;
+        visible = true;
+      } else if (abs < 0.5) {
+        scale = 1.1;
+        opacity = 1;
+      } else if (abs < 1.5) {
+        scale = 0.88;
+        opacity = 0.78;
+      } else if (abs < 2.5) {
+        scale = 0.7;
+        opacity = 0.4;
+      } else {
+        scale = 0.5;
+        opacity = 0;
+      }
+      item.classList.toggle('is-focus', !compact && i === focusIdx);
+      item.classList.toggle('is-near', !compact && abs > 0.5 && abs < 1.5);
+      item.classList.toggle('is-far', !compact && abs >= 1.5 && visible);
+      item.classList.toggle('is-offscreen', !visible);
+      item.style.setProperty('--ring-x', (Math.cos(rad) * radius).toFixed(1) + 'px');
+      item.style.setProperty('--ring-y', (Math.sin(rad) * radius).toFixed(1) + 'px');
+      item.style.setProperty('--ring-scale', String(scale));
+      item.style.setProperty('--ring-opacity', String(opacity));
+      item.style.setProperty('--ring-i', String(i));
+      item.style.zIndex = String((compact ? 12 : 30) - Math.round(abs * 4));
+      item.style.pointerEvents = interactive && visible && (compact || abs < 1.2) ? 'auto' : 'none';
+      item.tabIndex = !compact && i === focusIdx ? 0 : -1;
+      item.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    });
+    return n;
+  }
+
+  function layoutColorPainterRings() {
+    if (!colorWheelEl || colorWheelEl.classList.contains('hidden')) return;
+    var sector = getColorPainterOpenSector();
+    var focusAngle = sector.start + sector.sweep / 2;
+    var orb = getColorPainterOrbSize();
+    var orbRect = colorAsideEl.getBoundingClientRect();
+    var cx = orbRect.left + orb / 2;
+    var cy = orbRect.top + orb / 2;
+    var triple = colorPainterLevel === 'editor';
+    var dual = colorPainterLevel === 'vars' || triple;
+    var activeRing = getActiveColorWheelRing();
+    if (!activeRing && !triple) return;
+
+    var sectionRadius = getColorPainterWheelRadius('sections');
+    var midRadius = getColorPainterWheelRadius(triple ? 'vars-mid' : 'vars');
+    var activeRadius = triple
+      ? getColorPainterWheelRadius('editor')
+      : (dual ? midRadius : sectionRadius);
+
+    if (activeRing) {
+      colorWheelScroll = clampColorWheelScroll(
+        colorWheelScroll,
+        activeRing.querySelectorAll('.dashboard-edit-color-ring-item').length
+      );
+    }
+
+    colorWheelLayout = {
+      cx: cx,
+      cy: cy,
+      radius: activeRadius,
+      start: sector.start,
+      sweep: sector.sweep,
+      focus: focusAngle,
+      step: COLOR_WHEEL_STEP_DEG,
+      n: activeRing
+        ? activeRing.querySelectorAll('.dashboard-edit-color-ring-item').length
+        : 0
+    };
+
+    colorWheelEl.classList.toggle('is-vars-layer', dual && !triple);
+    colorWheelEl.classList.toggle('is-dual-layer', dual && !triple);
+    colorWheelEl.classList.toggle('is-editor-layer', triple);
+    colorWheelEl.classList.toggle('is-triple-layer', triple);
+
+    if ((dual || triple) && colorSectionsEl && !colorSectionsEl.classList.contains('hidden')) {
+      layoutWheelItems(colorSectionsEl, sectionRadius, 0, {
+        compact: true,
+        interactive: true,
+        step: 18,
+        activeAttr: 'data-section-id',
+        activeValue: selectedColorSectionId
+      });
+    }
+
+    if (triple && colorVarRingEl && !colorVarRingEl.classList.contains('hidden')) {
+      layoutWheelItems(colorVarRingEl, midRadius, 0, {
+        compact: true,
+        interactive: true,
+        step: 18,
+        activeAttr: 'data-var',
+        activeValue: selectedColorVarName
+      });
+    }
+
+    if (activeRing) {
+      var n = layoutWheelItems(activeRing, activeRadius, colorWheelScroll, {
+        compact: false,
+        interactive: true
+      });
+      if (!n && !triple) return;
+    }
+
+    var focusRad = (focusAngle * Math.PI) / 180;
+    var focusX = Math.cos(focusRad) * activeRadius;
+    var focusY = Math.sin(focusRad) * activeRadius;
+    var labelPos = placeColorWheelLabel(focusX, focusY, activeRadius);
+
+    colorWheelEl.style.setProperty('--wheel-focus-x', focusX.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-focus-y', focusY.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-label-x', labelPos.x.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-label-y', labelPos.y.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-radius', activeRadius.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-inner-radius', sectionRadius.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-mid-radius', midRadius.toFixed(1) + 'px');
+    colorWheelEl.style.setProperty('--wheel-start', sector.start + 'deg');
+    colorWheelEl.style.setProperty('--wheel-sweep', sector.sweep + 'deg');
+
+    var wheelFieldsOpen = !!(
+      triple &&
+      colorWheelFieldsEl &&
+      !colorWheelFieldsEl.classList.contains('hidden')
+    );
+    if (wheelFieldsOpen) {
+      layoutColorWheelFieldsDock();
+    }
+    // Field panel carries the name while editing; hide the ray label then.
+    if (wheelFieldsOpen || colorPainterLevel === 'editor') {
+      if (colorWheelLabelEl) {
+        colorWheelLabelEl.textContent = '';
+        colorWheelLabelEl.classList.add('hidden');
+      }
+    } else if (colorWheelLabelEl) {
+      colorWheelLabelEl.classList.remove('hidden');
+      updateColorWheelLabel(Math.round(colorWheelScroll));
+    } else {
+      updateColorWheelLabel(Math.round(colorWheelScroll));
+    }
+  }
+
+  function snapColorWheel(animate) {
+    var n = colorWheelLayout ? colorWheelLayout.n : 0;
+    if (!n) return Math.round(colorWheelScroll);
+    var next = Math.round(clampColorWheelScroll(colorWheelScroll, n));
+    colorWheelScroll = next;
+    if (colorPainterLevel === 'sections') {
+      var order = getColorSectionWheelOrder();
+      if (order[next]) selectedColorSectionId = order[next].id;
+      colorWheelSectionScroll = next;
+    } else if (colorPainterLevel === 'vars') {
+      colorWheelVarScroll = next;
+    } else if (colorPainterLevel === 'editor') {
+      colorWheelEditScroll = next;
+    }
+    persistColorPainterMenuState();
+    if (colorWheelEl) {
+      colorWheelEl.classList.toggle('is-snapping', !!animate && !colorWheelReduceMotion);
+    }
+    layoutColorPainterRings();
+    if (animate && colorWheelEl) {
+      window.setTimeout(function() {
+        if (colorWheelEl) colorWheelEl.classList.remove('is-snapping');
+      }, 180);
+    }
+    return next;
+  }
+
+  function nudgeColorWheel(dir) {
+    if (!colorWheelLayout) return;
+    colorWheelScroll = clampColorWheelScroll(colorWheelScroll + dir, colorWheelLayout.n);
+    snapColorWheel(true);
+  }
+
+  function activateFocusedColorWheelItem() {
+    var ring = getActiveColorWheelRing();
+    var idx = snapColorWheel(false);
+    var items = ring && ring.querySelectorAll('.dashboard-edit-color-ring-item');
+    var item = items && items[idx];
+    if (!item) return;
+    var sectionId = item.getAttribute('data-section-id');
+    if (sectionId) {
+      openColorVarCircle(sectionId);
+      return;
+    }
+    var varName = item.getAttribute('data-var');
+    if (varName) {
+      var section = getColorSectionById(selectedColorSectionId);
+      var v = section && section.vars.find(function(x) { return x.name === varName; });
+      if (v) openColorVarEditor(v);
+      return;
+    }
+    if (item.getAttribute('data-edit-hex')) {
+      applyFocusedEditorWheelColor();
+    }
+  }
+
+  function layoutColorPainterEditor() {
+    if (!colorAsideEl) return;
+    colorAsideEl.classList.remove(
+      'dashboard-edit-color-painter--editor-above',
+      'dashboard-edit-color-painter--editor-sheet',
+      'dashboard-edit-color-painter--editor-compact',
+      'dashboard-edit-color-painter--editor-end',
+      'dashboard-edit-color-painter--editor-start'
+    );
+    // Color vars edit on the third wheel; only non-color fields use the form card.
+    if (!colorForm || colorForm.classList.contains('hidden')) return;
+    var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
+    if (window.innerWidth < 640) {
+      colorAsideEl.classList.add('dashboard-edit-color-painter--editor-sheet');
+      return;
+    }
+    if (anchor.indexOf('b') === 0 || anchor === 'bl' || anchor === 'br' || anchor === 'bc') {
+      colorAsideEl.classList.add('dashboard-edit-color-painter--editor-above');
+    }
+  }
+
+  function setColorPainterOrbExpanded(expanded) {
+    if (!btnColorPainterOrb) return;
+    btnColorPainterOrb.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    btnColorPainterOrb.setAttribute(
+      'aria-label',
+      expanded ? 'Back one level' : 'Open theme color palette'
+    );
+    if (colorAsideEl) {
+      colorAsideEl.classList.toggle('dashboard-edit-color-painter--open', !!expanded);
+    }
+  }
+
+  function closeColorRings(opts) {
+    opts = opts || {};
+    if (colorPainterLevel === 'sections') {
+      colorWheelSectionScroll = Math.round(colorWheelScroll);
+      var orderClose = getColorSectionWheelOrder();
+      if (orderClose[colorWheelSectionScroll]) {
+        selectedColorSectionId = orderClose[colorWheelSectionScroll].id;
+      }
+    } else if (colorPainterLevel === 'vars') {
+      colorWheelVarScroll = Math.round(colorWheelScroll);
+    } else if (colorPainterLevel === 'editor') {
+      colorWheelEditScroll = Math.round(colorWheelScroll);
+    }
+    persistColorPainterMenuState();
+    colorPainterLevel = 'idle';
+    if (!opts.keepSection) selectedColorSectionId = null;
+    selectedColorVarName = null;
+    if (colorSectionsEl) colorSectionsEl.classList.add('hidden');
+    if (colorVarRingEl) {
+      colorVarRingEl.classList.add('hidden');
+      colorVarRingEl.innerHTML = '';
+    }
+    if (colorEditRingEl) {
+      colorEditRingEl.classList.add('hidden');
+      colorEditRingEl.innerHTML = '';
+    }
+    setColorWheelFieldsOpen(false);
+    setColorWheelOpen(false);
+    if (colorForm) colorForm.classList.add('hidden');
+    if (colorAsideEl) {
+      colorAsideEl.classList.remove(
+        'dashboard-edit-color-aside--section-open',
+        'dashboard-edit-color-painter--editor-above',
+        'dashboard-edit-color-painter--editor-sheet',
+        'dashboard-edit-color-painter--editor-compact',
+        'dashboard-edit-color-painter--editor-end',
+        'dashboard-edit-color-painter--editor-start'
+      );
+    }
+    setColorPainterOrbExpanded(false);
+  }
+
+  function openColorSectionCircle() {
+    colorPainterLevel = 'sections';
+    selectedColorVarName = null;
+    if (colorForm) colorForm.classList.add('hidden');
+    setColorWheelFieldsOpen(false);
+    if (colorVarRingEl) {
+      colorVarRingEl.classList.add('hidden');
+      colorVarRingEl.innerHTML = '';
+    }
+    if (colorEditRingEl) {
+      colorEditRingEl.classList.add('hidden');
+      colorEditRingEl.innerHTML = '';
+    }
+    if (colorAsideEl) {
+      colorAsideEl.classList.remove(
+        'dashboard-edit-color-aside--section-open',
+        'dashboard-edit-color-painter--editor-above',
+        'dashboard-edit-color-painter--editor-sheet',
+        'dashboard-edit-color-painter--editor-compact',
+        'dashboard-edit-color-painter--editor-end',
+        'dashboard-edit-color-painter--editor-start'
+      );
+    }
+    renderColorSectionRing();
+    var saved = readColorPainterMenuState();
+    var order = getColorSectionWheelOrder();
+    var idx = sectionWheelIndexForId(saved.sectionId);
+    if (idx < 0 && typeof saved.sectionScroll === 'number') idx = saved.sectionScroll;
+    if (idx < 0 && typeof colorWheelSectionScroll === 'number') idx = colorWheelSectionScroll;
+    if (idx < 0) idx = Math.max(0, order.length - 1);
+    colorWheelScroll = clampColorWheelScroll(idx, order.length);
+    colorWheelSectionScroll = Math.round(colorWheelScroll);
+    if (order[colorWheelSectionScroll]) selectedColorSectionId = order[colorWheelSectionScroll].id;
+    if (colorSectionsEl) colorSectionsEl.classList.remove('hidden');
+    setColorWheelOpen(true);
+    setColorPainterOrbExpanded(true);
+    persistColorPainterMenuState();
+    layoutColorPainterRings();
+    requestAnimationFrame(function() { layoutColorPainterRings(); });
+  }
+
+  function openColorVarCircle(sectionId) {
+    var section = getColorSectionById(sectionId);
+    if (!section) return;
+    if (colorPainterLevel === 'sections') {
+      colorWheelSectionScroll = Math.round(colorWheelScroll);
+      persistColorPainterMenuState();
+    }
+    var prevSectionId = selectedColorSectionId;
+    selectedColorSectionId = sectionId;
+    colorPainterLevel = 'vars';
+    var saved = readColorPainterMenuState();
+    colorWheelScroll =
+      prevSectionId === sectionId || saved.sectionId === sectionId
+        ? (typeof saved.varScroll === 'number' ? saved.varScroll : colorWheelVarScroll || 0)
+        : 0;
+    colorWheelVarScroll = Math.round(colorWheelScroll);
+    selectedColorVarName = null;
+    if (colorForm) colorForm.classList.add('hidden');
+    setColorWheelFieldsOpen(false);
+    if (colorEditRingEl) {
+      colorEditRingEl.classList.add('hidden');
+      colorEditRingEl.innerHTML = '';
+    }
+    // Keep section chips on the inner radial; colors use the outer radial.
+    if (colorSectionsEl) {
+      if (!colorSectionsEl.querySelector('.dashboard-edit-color-ring-item')) {
+        renderColorSectionRing();
+      }
+      colorSectionsEl.classList.remove('hidden');
+    }
+    if (colorAsideEl) {
+      colorAsideEl.classList.remove(
+        'dashboard-edit-color-aside--section-open',
+        'dashboard-edit-color-painter--editor-above',
+        'dashboard-edit-color-painter--editor-sheet',
+        'dashboard-edit-color-painter--editor-compact',
+        'dashboard-edit-color-painter--editor-end',
+        'dashboard-edit-color-painter--editor-start'
+      );
+    }
+    renderColorVarRing(sectionId);
+    colorWheelScroll = clampColorWheelScroll(colorWheelScroll, section.vars.length);
+    colorWheelVarScroll = Math.round(colorWheelScroll);
+    if (colorVarRingEl) colorVarRingEl.classList.remove('hidden');
+    setColorWheelOpen(true);
+    setColorPainterOrbExpanded(true);
+    persistColorPainterMenuState();
+    layoutColorPainterRings();
+    requestAnimationFrame(function() { layoutColorPainterRings(); });
+  }
+
+  function painterStepBack() {
+    if (colorPainterLevel === 'editor') {
+      openColorVarCircle(selectedColorSectionId);
+      return;
+    }
+    if (colorPainterLevel === 'vars') {
+      openColorSectionCircle();
+      return;
+    }
+    closeColorRings({ keepOrb: true });
   }
 
   function exitColorSectionEdit() {
-    if (colorForm) colorForm.classList.add('hidden');
-    if (colorPrompt) colorPrompt.classList.remove('hidden');
-    if (colorAsideEl) colorAsideEl.classList.remove('dashboard-edit-color-aside--section-open');
-    showColorSectionList();
+    painterStepBack();
   }
 
   function showColorSectionList() {
+    closeColorRings({ keepOrb: true });
+  }
+
+  function renderColorSectionRing() {
     if (!colorSectionsEl) return;
-    selectedColorSectionId = null;
-    setColorAsideHeaderTitle('Theme colors', null);
-    if (btnCloseColorSection) btnCloseColorSection.classList.add('hidden');
-    if (colorForm) colorForm.classList.add('hidden');
-    if (colorPrompt) colorPrompt.classList.remove('hidden');
     colorSectionsEl.innerHTML = '';
-    COLOR_SECTIONS.forEach(function(section) {
+    getColorSectionWheelOrder().forEach(function(section, idx) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'dashboard-edit-color-section-btn';
+      btn.className = 'dashboard-edit-color-ring-item dashboard-edit-color-ring-item--section';
       btn.setAttribute('data-section-id', section.id);
-      btn.setAttribute('role', 'listitem');
+      btn.setAttribute('data-label', section.label);
+      btn.setAttribute('role', 'menuitem');
       btn.setAttribute('aria-label', 'Edit ' + section.label + ' colors');
+      btn.style.setProperty('--ring-i', String(idx));
       var iconClass = COLOR_SECTION_ICONS[section.id] || 'fa-paint-brush';
       btn.innerHTML =
-        '<span class="dashboard-edit-color-section-btn-icon" aria-hidden="true"><i class="fa ' + iconClass + '"></i></span>' +
-        '<span class="dashboard-edit-color-section-btn-text">' + section.label + '</span>' +
-        '<span class="dashboard-edit-color-section-btn-chevron" aria-hidden="true"><i class="fa fa-chevron-right"></i></span>';
-      btn.addEventListener('click', function() {
-        selectedColorSectionId = section.id;
-        if (colorAsideEl) colorAsideEl.classList.remove('dashboard-edit-color-aside-collapsed');
-        if (btnToggleColorPanel) {
-          btnToggleColorPanel.setAttribute('aria-expanded', 'true');
-          btnToggleColorPanel.setAttribute('aria-label', 'Collapse color panel');
-          setColorAsideToggleIcon(true);
-        }
-        if (colorAsideEl) colorAsideEl.classList.add('dashboard-edit-color-aside--section-open');
-        setColorAsideHeaderTitle(section.label, section.id);
-        if (btnCloseColorSection) btnCloseColorSection.classList.remove('hidden');
-        if (colorPrompt) colorPrompt.classList.add('hidden');
-        colorFieldsEl.innerHTML = '';
-        section.vars.forEach(function(v) {
-          var val = getIframeRootVar(v.name);
-          var isColor = isColorVar(v.name, val);
-          var wrap = document.createElement('div');
-          wrap.className = 'dashboard-edit-color-field' + (isColor ? ' dashboard-edit-color-field--swatch' : ' dashboard-edit-color-field--text');
-          var label = document.createElement('label');
-          label.textContent = v.label;
-          var varHint = document.createElement('span');
-          varHint.className = 'dashboard-edit-color-var-hint';
-          varHint.textContent = v.name;
-          wrap.appendChild(label);
-          wrap.appendChild(varHint);
-          if (isColor) {
-            var hex6 = toHex6(val);
-            if (!hex6) hex6 = '#000000';
-            var row = document.createElement('div');
-            row.className = 'dashboard-edit-color-field-row';
-            var colorInp = document.createElement('input');
-            colorInp.type = 'color';
-            colorInp.className = 'dashboard-edit-color-picker';
-            colorInp.value = hex6;
-            colorInp.setAttribute('data-var', v.name);
-            colorInp.setAttribute('aria-label', v.label + ' color');
-            var textInp = document.createElement('input');
-            textInp.type = 'text';
-            textInp.className = 'dashboard-edit-input dashboard-edit-color-value-input';
-            textInp.placeholder = v.name;
-            textInp.setAttribute('data-var', v.name);
-            textInp.value = val || hex6;
-            var alpha = getAlphaFromValue(val);
-            var sliderWrap = document.createElement('div');
-            sliderWrap.className = 'dashboard-edit-color-slider-wrap';
-            var sliderLabel = document.createElement('span');
-            sliderLabel.className = 'dashboard-edit-color-slider-label';
-            sliderLabel.textContent = 'Opacity';
-            var sliderVal = document.createElement('span');
-            sliderVal.className = 'dashboard-edit-color-slider-value';
-            sliderVal.textContent = alpha + '%';
-            var slider = document.createElement('input');
-            slider.type = 'range';
-            slider.className = 'dashboard-edit-color-slider';
-            slider.min = 0;
-            slider.max = 100;
-            slider.value = alpha;
-            slider.setAttribute('data-var', v.name);
-            slider.setAttribute('aria-label', v.label + ' opacity');
-            function syncAlphaLabel() {
-              sliderVal.textContent = parseInt(slider.value, 10) + '%';
-            }
-            colorInp.addEventListener('input', function() {
-              textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
-              syncAlphaLabel();
-              scheduleApplyColorOverrides();
-            });
-            slider.addEventListener('input', function() {
-              textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
-              syncAlphaLabel();
-              scheduleApplyColorOverrides();
-            });
-            textInp.addEventListener('input', function() {
-              var h = toHex6(textInp.value);
-              if (h) { colorInp.value = h; slider.value = getAlphaFromValue(textInp.value); }
-              syncAlphaLabel();
-              scheduleApplyColorOverrides();
-            });
-            sliderWrap.appendChild(sliderLabel);
-            sliderWrap.appendChild(slider);
-            sliderWrap.appendChild(sliderVal);
-            row.appendChild(colorInp);
-            row.appendChild(textInp);
-            row.appendChild(sliderWrap);
-            wrap.appendChild(row);
-          } else {
-            var input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'dashboard-edit-input';
-            input.placeholder = v.name;
-            input.setAttribute('data-var', v.name);
-            input.value = val;
-            input.addEventListener('input', scheduleApplyColorOverrides);
-            wrap.appendChild(input);
-          }
-          colorFieldsEl.appendChild(wrap);
-        });
-        colorForm.classList.remove('hidden');
+        '<span class="dashboard-edit-color-ring-item-icon" aria-hidden="true"><i class="fa ' + iconClass + '"></i></span>';
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (colorWheelScrub && colorWheelScrub.moved) return;
+        var items = colorSectionsEl.querySelectorAll('.dashboard-edit-color-ring-item');
+        var i = Array.prototype.indexOf.call(items, btn);
+        if (i >= 0) colorWheelScroll = i;
+        snapColorWheel(true);
+        openColorVarCircle(section.id);
       });
       colorSectionsEl.appendChild(btn);
+    });
+  }
+
+  function cssColorToSwatch(val) {
+    var hex = toHex6(val);
+    if (hex) {
+      var a = getAlphaFromValue(val);
+      if (a >= 100) return hex;
+      return hexWithAlpha(hex, a);
+    }
+    return val || 'transparent';
+  }
+
+  function hslToHex(h, s, l) {
+    var hh = ((h % 360) + 360) % 360;
+    var ss = Math.max(0, Math.min(100, s)) / 100;
+    var ll = Math.max(0, Math.min(100, l)) / 100;
+    var c = (1 - Math.abs(2 * ll - 1)) * ss;
+    var x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+    var m = ll - c / 2;
+    var r = 0;
+    var g = 0;
+    var b = 0;
+    if (hh < 60) { r = c; g = x; }
+    else if (hh < 120) { r = x; g = c; }
+    else if (hh < 180) { g = c; b = x; }
+    else if (hh < 240) { g = x; b = c; }
+    else if (hh < 300) { r = x; b = c; }
+    else { r = c; b = x; }
+    function toByte(n) {
+      var v = Math.round((n + m) * 255);
+      var hex = Math.max(0, Math.min(255, v)).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    }
+    return '#' + toByte(r) + toByte(g) + toByte(b);
+  }
+
+  function hexToHsl(hex6) {
+    var h = toHex6(hex6 || '');
+    if (!h) return { h: 210, s: 70, l: 55 };
+    var r = parseInt(h.slice(1, 3), 16) / 255;
+    var g = parseInt(h.slice(3, 5), 16) / 255;
+    var b = parseInt(h.slice(5, 7), 16) / 255;
+    var max = Math.max(r, g, b);
+    var min = Math.min(r, g, b);
+    var l = (max + min) / 2;
+    var s = 0;
+    var hue = 0;
+    if (max !== min) {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) hue = ((b - r) / d + 2) / 6;
+      else hue = ((r - g) / d + 4) / 6;
+    }
+    return {
+      h: Math.round(hue * 360),
+      s: Math.round(s * 100),
+      l: Math.round(l * 100)
+    };
+  }
+
+  function getColorEditorPalette(currentHex) {
+    // Third-wheel chips = color picker spectrum for the active field.
+    var cur = toHex6(currentHex || '') || '#64748b';
+    var base = hexToHsl(cur);
+    var sat = Math.max(42, Math.min(88, base.s || 70));
+    var light = Math.max(28, Math.min(72, base.l || 55));
+    var items = [
+      { label: 'White', hex: '#ffffff' },
+      { label: 'Light', hex: hslToHex(base.h, Math.max(8, sat * 0.2), 90) },
+      { label: 'Soft', hex: hslToHex(base.h, Math.max(12, sat * 0.35), 78) }
+    ];
+    for (var step = 0; step < 24; step++) {
+      var hue = (step * 15) % 360;
+      items.push({
+        label: hue + '°',
+        hex: hslToHex(hue, sat, light)
+      });
+    }
+    items.push(
+      { label: 'Dim', hex: hslToHex(base.h, Math.max(10, sat * 0.4), 32) },
+      { label: 'Dark', hex: hslToHex(base.h, Math.max(8, sat * 0.35), 16) },
+      { label: 'Black', hex: '#0f172a' }
+    );
+    var matched = items.some(function(it) {
+      return it.hex.toLowerCase() === cur.toLowerCase();
+    });
+    if (!matched) items.unshift({ label: 'Current', hex: cur });
+    return items;
+  }
+
+  function nearestEditorPaletteIndex(hex, palette) {
+    var target = toHex6(hex || '');
+    if (!target || !palette || !palette.length) return 0;
+    var best = 0;
+    var bestDist = Infinity;
+    function channel(h, i) {
+      return parseInt(h.slice(i, i + 2), 16);
+    }
+    var tr = channel(target, 1);
+    var tg = channel(target, 3);
+    var tb = channel(target, 5);
+    palette.forEach(function(it, idx) {
+      var h = toHex6(it.hex);
+      if (!h) return;
+      var dr = channel(h, 1) - tr;
+      var dg = channel(h, 3) - tg;
+      var db = channel(h, 5) - tb;
+      var dist = dr * dr + dg * dg + db * db;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = idx;
+      }
+    });
+    return best;
+  }
+
+  function applyEditorWheelHex(hex6, opts) {
+    opts = opts || {};
+    var fieldsRoot = getActiveColorFieldsRoot();
+    if (!hex6 || !fieldsRoot) return;
+    var colorInp = fieldsRoot.querySelector('input.dashboard-edit-color-picker');
+    var textInp = fieldsRoot.querySelector(
+      'input.dashboard-edit-color-value-input, input.dashboard-edit-input[data-var]'
+    );
+    var slider = fieldsRoot.querySelector('input.dashboard-edit-color-slider');
+    if (!colorInp && !textInp) return;
+    var alpha = slider ? parseInt(slider.value, 10) : 100;
+    if (isNaN(alpha)) alpha = 100;
+    var nextVal = hexWithAlpha(hex6, alpha);
+    colorEditApplyLock = true;
+    if (colorInp) colorInp.value = hex6;
+    if (textInp) textInp.value = nextVal;
+    if (selectedColorVarName) COLOR_OVERRIDE_VALUES[selectedColorVarName] = nextVal;
+    colorEditApplyLock = false;
+    if (selectedColorVarName && colorVarRingEl) {
+      var node = colorVarRingEl.querySelector(
+        '.dashboard-edit-color-ring-item[data-var="' + selectedColorVarName + '"]'
+      );
+      if (node) node.style.setProperty('--ring-swatch', cssColorToSwatch(nextVal));
+    }
+    if (!opts.skipApply) {
+      if (opts.immediate) applyColorOverrides();
+      else scheduleApplyColorOverrides();
+    }
+  }
+
+  function applyFocusedEditorWheelColor(opts) {
+    if (!colorEditRingEl || colorPainterLevel !== 'editor') return;
+    var items = colorEditRingEl.querySelectorAll('.dashboard-edit-color-ring-item');
+    var idx = Math.round(clampColorWheelScroll(colorWheelScroll, items.length));
+    var item = items[idx];
+    var hex = item && item.getAttribute('data-edit-hex');
+    if (hex) applyEditorWheelHex(hex, opts);
+  }
+
+  function renderColorEditRing(v) {
+    if (!colorEditRingEl || !v) return;
+    colorEditRingEl.innerHTML = '';
+    var val = getThemeColorValue(v.name) || getIframeRootVar(v.name);
+    var palette = getColorEditorPalette(val);
+    colorWheelEditScroll = nearestEditorPaletteIndex(val, palette);
+    palette.forEach(function(swatch, idx) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dashboard-edit-color-ring-item dashboard-edit-color-ring-item--edit';
+      btn.setAttribute('data-edit-hex', swatch.hex);
+      btn.setAttribute('data-label', swatch.label);
+      btn.setAttribute('role', 'menuitem');
+      btn.setAttribute('aria-label', 'Use ' + swatch.label);
+      btn.title = swatch.label + ' (' + swatch.hex + ')';
+      btn.style.setProperty('--ring-i', String(idx));
+      btn.style.setProperty('--ring-swatch', swatch.hex);
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (colorWheelScrub && colorWheelScrub.moved) return;
+        var items = colorEditRingEl.querySelectorAll('.dashboard-edit-color-ring-item');
+        var i = Array.prototype.indexOf.call(items, btn);
+        if (i >= 0) colorWheelScroll = i;
+        snapColorWheel(true);
+        applyEditorWheelHex(swatch.hex, { immediate: true });
+      });
+      colorEditRingEl.appendChild(btn);
+    });
+  }
+
+  function renderColorVarRing(sectionId) {
+    if (!colorVarRingEl) return;
+    colorVarRingEl.innerHTML = '';
+    var section = getColorSectionById(sectionId);
+    if (!section) return;
+    section.vars.forEach(function(v, idx) {
+      var val = getThemeColorValue(v.name) || getIframeRootVar(v.name);
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dashboard-edit-color-ring-item dashboard-edit-color-ring-item--var';
+      btn.setAttribute('data-var', v.name);
+      btn.setAttribute('data-label', v.label);
+      btn.setAttribute('role', 'menuitem');
+      btn.setAttribute('aria-label', 'Edit ' + v.label);
+      btn.title = v.label + ' (' + v.name + ')';
+      btn.style.setProperty('--ring-i', String(idx));
+      btn.style.setProperty('--ring-swatch', cssColorToSwatch(val));
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (colorWheelScrub && colorWheelScrub.moved) return;
+        var items = colorVarRingEl.querySelectorAll('.dashboard-edit-color-ring-item');
+        var i = Array.prototype.indexOf.call(items, btn);
+        if (i >= 0) colorWheelScroll = i;
+        snapColorWheel(true);
+        openColorVarEditor(v);
+      });
+      colorVarRingEl.appendChild(btn);
+    });
+  }
+
+  function buildColorVarField(v, append, targetEl) {
+    var root = targetEl || colorFieldsEl;
+    if (!root) return;
+    if (!append) root.innerHTML = '';
+    var val = getThemeColorValue(v.name) || getIframeRootVar(v.name);
+    var isColor = isColorVar(v.name, val);
+    var wheelMode = root === colorWheelFieldsEl;
+    var wrap = document.createElement('div');
+    wrap.className = 'dashboard-edit-color-field' +
+      (isColor ? ' dashboard-edit-color-field--swatch' : ' dashboard-edit-color-field--text') +
+      (wheelMode ? ' dashboard-edit-color-field--wheel' : '');
+    var label = document.createElement('label');
+    label.textContent = v.label;
+    var varHint = document.createElement('span');
+    varHint.className = 'dashboard-edit-color-var-hint';
+    varHint.textContent = v.name;
+    wrap.appendChild(label);
+    wrap.appendChild(varHint);
+    if (isColor) {
+      var hex6 = toHex6(val);
+      if (!hex6) hex6 = '#000000';
+      var row = document.createElement('div');
+      row.className = 'dashboard-edit-color-field-row';
+      var colorInp = document.createElement('input');
+      colorInp.type = 'color';
+      colorInp.className = 'dashboard-edit-color-picker';
+      colorInp.value = hex6;
+      colorInp.setAttribute('data-var', v.name);
+      colorInp.setAttribute('aria-label', v.label + ' color');
+      var textInp = document.createElement('input');
+      textInp.type = 'text';
+      textInp.className = 'dashboard-edit-input dashboard-edit-color-value-input';
+      textInp.placeholder = v.name;
+      textInp.setAttribute('data-var', v.name);
+      textInp.value = val || hex6;
+      var alpha = getAlphaFromValue(val);
+      var sliderWrap = document.createElement('div');
+      sliderWrap.className = 'dashboard-edit-color-slider-wrap';
+      var sliderLabel = document.createElement('span');
+      sliderLabel.className = 'dashboard-edit-color-slider-label';
+      sliderLabel.textContent = 'Opacity';
+      var sliderVal = document.createElement('span');
+      sliderVal.className = 'dashboard-edit-color-slider-value';
+      sliderVal.textContent = alpha + '%';
+      var slider = document.createElement('input');
+      slider.type = 'range';
+      slider.className = 'dashboard-edit-color-slider';
+      slider.min = 0;
+      slider.max = 100;
+      slider.value = alpha;
+      slider.setAttribute('data-var', v.name);
+      slider.setAttribute('aria-label', v.label + ' opacity');
+      function syncAlphaLabel() {
+        sliderVal.textContent = parseInt(slider.value, 10) + '%';
+      }
+      function refreshVarRingSwatch() {
+        if (!colorVarRingEl) return;
+        var node = colorVarRingEl.querySelector(
+          '.dashboard-edit-color-ring-item[data-var="' + v.name + '"]'
+        );
+        if (node) node.style.setProperty('--ring-swatch', cssColorToSwatch(textInp.value));
+        if (!colorEditApplyLock && colorPainterLevel === 'editor' && colorEditRingEl) {
+          var hex = toHex6(textInp.value);
+          if (!hex) return;
+          var items = Array.prototype.slice.call(
+            colorEditRingEl.querySelectorAll('.dashboard-edit-color-ring-item')
+          );
+          var palette = items.map(function(it) {
+            return { hex: it.getAttribute('data-edit-hex') || '' };
+          });
+          var next = nearestEditorPaletteIndex(hex, palette);
+          if (next !== Math.round(colorWheelScroll)) {
+            colorWheelScroll = next;
+            colorWheelEditScroll = next;
+            layoutColorPainterRings();
+          }
+        }
+      }
+      colorInp.addEventListener('input', function() {
+        textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
+        syncAlphaLabel();
+        scheduleApplyColorOverrides();
+        refreshVarRingSwatch();
+      });
+      slider.addEventListener('input', function() {
+        textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
+        syncAlphaLabel();
+        scheduleApplyColorOverrides();
+        refreshVarRingSwatch();
+      });
+      textInp.addEventListener('input', function() {
+        var h = toHex6(textInp.value);
+        if (h) { colorInp.value = h; slider.value = getAlphaFromValue(textInp.value); }
+        syncAlphaLabel();
+        scheduleApplyColorOverrides();
+        refreshVarRingSwatch();
+      });
+      sliderWrap.appendChild(sliderLabel);
+      sliderWrap.appendChild(slider);
+      sliderWrap.appendChild(sliderVal);
+      row.appendChild(colorInp);
+      row.appendChild(textInp);
+      row.appendChild(sliderWrap);
+      wrap.appendChild(row);
+    } else {
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'dashboard-edit-input';
+      input.placeholder = v.name;
+      input.setAttribute('data-var', v.name);
+      input.value = val;
+      input.addEventListener('input', scheduleApplyColorOverrides);
+      wrap.appendChild(input);
+    }
+    root.appendChild(wrap);
+  }
+
+  function openColorVarEditor(v) {
+    if (!v) return;
+    if (colorPainterLevel === 'vars') {
+      colorWheelVarScroll = Math.round(colorWheelScroll);
+      persistColorPainterMenuState();
+    }
+    selectedColorVarName = v.name;
+    colorPainterLevel = 'editor';
+    var section = getColorSectionById(selectedColorSectionId);
+    var val = getThemeColorValue(v.name) || getIframeRootVar(v.name);
+    var colorOk = isColorVar(v.name, val);
+    if (colorAsideEl) colorAsideEl.classList.add('dashboard-edit-color-aside--section-open');
+    setColorAsideHeaderTitle(v.label, selectedColorSectionId);
+    setColorPainterContext(section ? ('Painting ' + section.label + ' · ' + v.label) : ('Painting ' + v.label));
+    setColorPainterOrbExpanded(true);
+
+    if (colorOk) {
+      // Color field becomes the third wheel layer (not the floating form card).
+      if (colorForm) colorForm.classList.add('hidden');
+      if (colorFieldsEl) colorFieldsEl.innerHTML = '';
+      buildColorVarField(v, false, colorWheelFieldsEl);
+      setColorWheelFieldsOpen(true);
+      if (colorSectionsEl) {
+        if (!colorSectionsEl.querySelector('.dashboard-edit-color-ring-item')) {
+          renderColorSectionRing();
+        }
+        colorSectionsEl.classList.remove('hidden');
+      }
+      if (colorVarRingEl) {
+        if (!colorVarRingEl.querySelector('.dashboard-edit-color-ring-item')) {
+          renderColorVarRing(selectedColorSectionId);
+        }
+        colorVarRingEl.classList.remove('hidden');
+      }
+      if (colorEditRingEl) {
+        colorEditRingEl.classList.add('hidden');
+        colorEditRingEl.innerHTML = '';
+      }
+      setColorWheelOpen(true);
+      layoutColorPainterRings();
+      requestAnimationFrame(function() { layoutColorPainterRings(); });
+    } else {
+      setColorWheelFieldsOpen(false);
+      if (colorSectionsEl) colorSectionsEl.classList.add('hidden');
+      if (colorVarRingEl) colorVarRingEl.classList.add('hidden');
+      if (colorEditRingEl) {
+        colorEditRingEl.classList.add('hidden');
+        colorEditRingEl.innerHTML = '';
+      }
+      setColorWheelOpen(false);
+      if (colorForm) {
+        buildColorVarField(v, false, colorFieldsEl);
+        colorForm.classList.remove('hidden');
+      }
+    }
+
+    layoutColorPainterEditor();
+    window.setTimeout(function() {
+      var root = getActiveColorFieldsRoot();
+      var focusEl = root && (
+        root.querySelector('input.dashboard-edit-color-value-input') ||
+        root.querySelector('input.dashboard-edit-input')
+      );
+      if (focusEl && !colorOk) focusEl.focus();
+    }, 30);
+  }
+
+  function initColorPainterCanvas() {
+    if (!colorAsideEl || !btnColorPainterOrb || colorAsideEl.dataset.painterReady === '1') return;
+    colorAsideEl.dataset.painterReady = '1';
+    restoreColorPainterAnchor();
+
+    function pointerPos(ev) {
+      if (ev.touches && ev.touches[0]) {
+        return { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+      }
+      return { x: ev.clientX, y: ev.clientY };
+    }
+
+    function onPointerDown(ev) {
+      if (ev.type === 'mousedown' && ev.button !== 0) return;
+      var p = pointerPos(ev);
+      var rect = colorAsideEl.getBoundingClientRect();
+      colorPainterDrag = {
+        startX: p.x,
+        startY: p.y,
+        originLeft: rect.left,
+        originTop: rect.top,
+        moved: false,
+        pointerId: ev.pointerId
+      };
+      colorAsideEl.classList.add('is-dragging');
+      if (btnColorPainterOrb.setPointerCapture && ev.pointerId != null) {
+        try { btnColorPainterOrb.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
+      }
+      ev.preventDefault();
+    }
+
+    function onPointerMove(ev) {
+      if (!colorPainterDrag) return;
+      var p = pointerPos(ev);
+      var dx = p.x - colorPainterDrag.startX;
+      var dy = p.y - colorPainterDrag.startY;
+      if (!colorPainterDrag.moved && (Math.abs(dx) > COLOR_PAINTER_DRAG_THRESHOLD || Math.abs(dy) > COLOR_PAINTER_DRAG_THRESHOLD)) {
+        colorPainterDrag.moved = true;
+        closeColorRings({ keepOrb: true });
+      }
+      if (!colorPainterDrag.moved) return;
+      var size = getColorPainterOrbSize();
+      var inset = getColorPainterInsets();
+      var nextX = colorPainterDrag.originLeft + dx;
+      var nextY = colorPainterDrag.originTop + dy;
+      nextX = Math.min(Math.max(nextX, inset.left), window.innerWidth - inset.right - size);
+      nextY = Math.min(Math.max(nextY, inset.top), window.innerHeight - inset.bottom - size);
+      setColorPainterPosition(nextX, nextY);
+      ev.preventDefault();
+    }
+
+    function onPointerUp(ev) {
+      if (!colorPainterDrag) return;
+      var wasDrag = colorPainterDrag.moved;
+      var left = parseFloat(colorAsideEl.style.left) || colorAsideEl.getBoundingClientRect().left;
+      var top = parseFloat(colorAsideEl.style.top) || colorAsideEl.getBoundingClientRect().top;
+      colorAsideEl.classList.remove('is-dragging');
+      colorPainterDrag = null;
+      if (wasDrag) {
+        snapColorPainterToAnchor(nearestColorPainterAnchor(left, top), true);
+        return;
+      }
+      if (colorPainterLevel === 'idle') openColorSectionCircle();
+      else painterStepBack();
+    }
+
+    function activateTappedColorWheelItem(item) {
+      if (!item) return false;
+      var editHex = item.getAttribute('data-edit-hex');
+      if (editHex && colorPainterLevel === 'editor' && colorEditRingEl && colorEditRingEl.contains(item)) {
+        var editItems = colorEditRingEl.querySelectorAll('.dashboard-edit-color-ring-item');
+        var editIdx = Array.prototype.indexOf.call(editItems, item);
+        if (editIdx >= 0) colorWheelScroll = editIdx;
+        snapColorWheel(true);
+        applyEditorWheelHex(editHex, { immediate: true });
+        return true;
+      }
+      var varName = item.getAttribute('data-var');
+      if (varName) {
+        var section = getColorSectionById(selectedColorSectionId);
+        var v = section && section.vars.find(function(x) { return x.name === varName; });
+        if (v) {
+          if (colorPainterLevel === 'vars' && colorVarRingEl && colorVarRingEl.contains(item)) {
+            var varItems = colorVarRingEl.querySelectorAll('.dashboard-edit-color-ring-item');
+            var varIdx = Array.prototype.indexOf.call(varItems, item);
+            if (varIdx >= 0) colorWheelScroll = varIdx;
+            snapColorWheel(true);
+          }
+          openColorVarEditor(v);
+          return true;
+        }
+      }
+      var sectionId = item.getAttribute('data-section-id');
+      if (sectionId) {
+        openColorVarCircle(sectionId);
+        return true;
+      }
+      return false;
+    }
+
+    function onWheelPointerDown(ev) {
+      if (ev.button != null && ev.button !== 0) return;
+      // Editor level uses the color field panel as the third wheel (no chip scrub).
+      if (colorPainterLevel !== 'sections' && colorPainterLevel !== 'vars') return;
+      if (ev.target.closest && ev.target.closest('.dashboard-edit-color-orb')) return;
+      layoutColorPainterRings();
+      if (!colorWheelLayout || !colorWheelLayout.n) return;
+      var onItem = !!(ev.target.closest && ev.target.closest('.dashboard-edit-color-ring-item'));
+      colorWheelScrub = {
+        pointerId: ev.pointerId,
+        startAngle: colorWheelAngleAt(ev.clientX, ev.clientY),
+        startScroll: colorWheelScroll,
+        moved: false,
+        fromItem: onItem
+      };
+      if (colorWheelEl) {
+        colorWheelEl.classList.add('is-scrubbing');
+        if (colorWheelEl.setPointerCapture && ev.pointerId != null) {
+          try { colorWheelEl.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
+        }
+      }
+      // Keep default on chips so a tap can still synthesize click; scrub track cancels scroll.
+      if (!onItem) ev.preventDefault();
+      ev.stopPropagation();
+    }
+
+    function onWheelPointerMove(ev) {
+      if (!colorWheelScrub || !colorWheelLayout) return;
+      var ang = colorWheelAngleAt(ev.clientX, ev.clientY);
+      var delta = shortestAngleDelta(colorWheelScrub.startAngle, ang);
+      if (!colorWheelScrub.moved && Math.abs(delta) > 4) colorWheelScrub.moved = true;
+      // Dragging along the arc (increasing angle) scrolls to later items.
+      // Invert angle→scroll so dragging along the arc matches expected iOS-wheel feel.
+      colorWheelScroll = clampColorWheelScroll(
+        colorWheelScrub.startScroll - delta / colorWheelLayout.step,
+        colorWheelLayout.n
+      );
+      layoutColorPainterRings();
+      ev.preventDefault();
+    }
+
+    function onWheelPointerUp(ev) {
+      if (!colorWheelScrub) return;
+      var moved = colorWheelScrub.moved;
+      var pointerId = colorWheelScrub.pointerId;
+      colorWheelScrub = null;
+      if (colorWheelEl) {
+        colorWheelEl.classList.remove('is-scrubbing');
+        try {
+          if (colorWheelEl.releasePointerCapture && pointerId != null) {
+            colorWheelEl.releasePointerCapture(pointerId);
+          }
+        } catch (err) { /* ignore */ }
+      }
+      var item = ev.target && ev.target.closest
+        ? ev.target.closest('.dashboard-edit-color-ring-item')
+        : null;
+      if (!moved && item && activateTappedColorWheelItem(item)) {
+        return;
+      }
+      snapColorWheel(true);
+      // Short tap on the wheel track (not a scrub) opens the focused item.
+      if (!moved && !item) {
+        activateFocusedColorWheelItem();
+      }
+    }
+
+    function onWheelScroll(ev) {
+      if (
+        (colorPainterLevel !== 'sections' && colorPainterLevel !== 'vars') ||
+        !colorWheelLayout ||
+        !colorWheelLayout.n
+      ) return;
+      ev.preventDefault();
+      var delta = Math.abs(ev.deltaY) > Math.abs(ev.deltaX) ? ev.deltaY : ev.deltaX;
+      colorWheelScroll = clampColorWheelScroll(
+        colorWheelScroll + (delta > 0 ? -0.55 : 0.55),
+        colorWheelLayout.n
+      );
+      layoutColorPainterRings();
+      window.clearTimeout(onWheelScroll._snapTimer);
+      onWheelScroll._snapTimer = window.setTimeout(function() { snapColorWheel(true); }, 90);
+    }
+
+    btnColorPainterOrb.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+
+    if (colorWheelEl) {
+      colorWheelEl.addEventListener('pointerdown', onWheelPointerDown);
+      colorWheelEl.addEventListener('pointermove', onWheelPointerMove);
+      colorWheelEl.addEventListener('pointerup', onWheelPointerUp);
+      colorWheelEl.addEventListener('pointercancel', onWheelPointerUp);
+      colorWheelEl.addEventListener('wheel', onWheelScroll, { passive: false });
+    }
+
+    document.addEventListener('keydown', function(ev) {
+      if (!colorAsideEl || colorAsideEl.classList.contains('hidden')) return;
+      if (colorPainterLevel === 'sections' || colorPainterLevel === 'vars') {
+        if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') {
+          ev.preventDefault();
+          nudgeColorWheel(1);
+          return;
+        }
+        if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') {
+          ev.preventDefault();
+          nudgeColorWheel(-1);
+          return;
+        }
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          activateFocusedColorWheelItem();
+          return;
+        }
+      }
+      if (ev.key !== 'Escape') return;
+      if (colorPainterLevel === 'idle') return;
+      ev.preventDefault();
+      painterStepBack();
+    });
+
+    document.addEventListener('pointerdown', function(ev) {
+      if (!colorAsideEl || colorAsideEl.classList.contains('hidden')) return;
+      if (colorPainterLevel === 'idle') return;
+      if (colorAsideEl.contains(ev.target)) return;
+      closeColorRings({ keepOrb: true });
+    }, true);
+
+    window.addEventListener('resize', function() {
+      restoreColorPainterAnchor();
+      if (
+        colorPainterLevel === 'sections' ||
+        colorPainterLevel === 'vars' ||
+        colorPainterLevel === 'editor'
+      ) {
+        layoutColorPainterRings();
+      }
+      if (colorPainterLevel === 'editor') layoutColorPainterEditor();
     });
   }
 
@@ -3310,15 +4673,23 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function syncActiveColorSectionInputs() {
-    if (!selectedColorSectionId || !colorFieldsEl) return;
-    var section = COLOR_SECTIONS.find(function(s) { return s.id === selectedColorSectionId; });
-    if (!section) return;
-    section.vars.forEach(function(v) {
-      var input = colorFieldsEl.querySelector('input.dashboard-edit-input[data-var="' + v.name + '"]') || colorFieldsEl.querySelector('input[data-var="' + v.name + '"]');
-      if (!input) return;
-      var val = (input.value || '').trim();
-      if (val) COLOR_OVERRIDE_VALUES[v.name] = val;
-      else delete COLOR_OVERRIDE_VALUES[v.name];
+    var roots = [colorWheelFieldsEl, colorFieldsEl].filter(Boolean);
+    if (!roots.length) return;
+    var seen = {};
+    roots.forEach(function(root) {
+      if (root.classList.contains('hidden')) return;
+      root.querySelectorAll('input[data-var]').forEach(function(input) {
+        var varName = input.getAttribute('data-var');
+        if (!varName || seen[varName]) return;
+        // Prefer text value inputs over the native color picker.
+        var textInput = root.querySelector('input.dashboard-edit-color-value-input[data-var="' + varName + '"]') ||
+          root.querySelector('input.dashboard-edit-input[data-var="' + varName + '"]') ||
+          input;
+        seen[varName] = true;
+        var val = (textInput.value || '').trim();
+        if (val) COLOR_OVERRIDE_VALUES[varName] = val;
+        else delete COLOR_OVERRIDE_VALUES[varName];
+      });
     });
   }
 
@@ -7967,14 +9338,13 @@ document.addEventListener('DOMContentLoaded', async function() {
               doc.querySelectorAll('.menu-item-card').forEach(function(card) {
                 var existingWrap = card.querySelector('.' + cardWrapClass);
                 if (existingWrap) {
-                  dashboardInjectMoveToolbarIntoWrap(existingWrap, doc, {});
+                  stripMoveToolbarFromWrap(existingWrap);
                   return;
                 }
                 card.classList.add('dashboard-edit-card-wrap');
                 var div = doc.createElement('div');
                 div.className = cardWrapClass;
                 div.setAttribute('data-dashboard-edit', '1');
-                div.appendChild(createDashboardMoveToolbar(doc, {}));
                 var editBtn = doc.createElement('button');
                 editBtn.type = 'button';
                 editBtn.className = 'dashboard-edit-btn';
@@ -7987,14 +9357,13 @@ document.addEventListener('DOMContentLoaded', async function() {
               doc.querySelectorAll('.menu-header').forEach(function(header) {
                 var existingWrap = header.querySelector('.' + headerWrapClass);
                 if (existingWrap) {
-                  dashboardInjectMoveToolbarIntoWrap(existingWrap, doc, { section: true });
+                  stripMoveToolbarFromWrap(existingWrap);
                   return;
                 }
                 header.classList.add('dashboard-edit-header-wrap');
                 var div = doc.createElement('div');
                 div.className = headerWrapClass;
                 div.setAttribute('data-dashboard-edit', '1');
-                div.appendChild(createDashboardMoveToolbar(doc, { section: true }));
                 var editBtn = doc.createElement('button');
                 editBtn.type = 'button';
                 editBtn.className = 'dashboard-edit-btn';
@@ -8007,17 +9376,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         syncMenublockOrderFromSections(doc);
               doc.querySelectorAll('section.ads.menu-ad').forEach(function(section) {
                 if (!isLegacyPromotionSection(section)) return;
-                injectPromotionEditButton(doc, section, win, { showMove: true });
+                injectPromotionEditButton(doc, section, win, {});
               });
-              var seenPromoCatalog = {};
-              var promoCatalogFallback = 0;
               doc.querySelectorAll('article.ads-reels-slide').forEach(function(slide) {
                 if (!isPromotionReelsSlide(slide)) return;
-                var catIdx = slide.getAttribute('data-catalog-index');
-                if (catIdx == null || catIdx === '') catIdx = 'promo-' + (promoCatalogFallback++);
-                var showMove = !Object.prototype.hasOwnProperty.call(seenPromoCatalog, catIdx);
-                seenPromoCatalog[catIdx] = true;
-                injectPromotionEditButton(doc, slide, win, { showMove: showMove });
+                injectPromotionEditButton(doc, slide, win, {});
               });
               doc.querySelectorAll('#pageadscontainer li.ad-panel').forEach(function(panel) {
                 if (!isPromotionPreviewPanel(panel)) return;
@@ -8597,11 +9960,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
   if (btnSubmodeContent) btnSubmodeContent.addEventListener('click', function() { setEditSubmode('content'); });
-  if (btnSubmodeMove) btnSubmodeMove.addEventListener('click', function() { setEditSubmode('move'); });
+  if (btnSubmodeMove) {
+    btnSubmodeMove.addEventListener('click', function() {
+      window.location.href = '/edit-menu-rearrange/';
+    });
+  }
   if (btnSubmodeColor) btnSubmodeColor.addEventListener('click', function() { setEditSubmode('color'); });
   if (btnApplyColor) btnApplyColor.addEventListener('click', applyColorOverrides);
-  if (btnCloseColorSection) btnCloseColorSection.addEventListener('click', exitColorSectionEdit);
-  if (btnBackColorSections) btnBackColorSections.addEventListener('click', exitColorSectionEdit);
+  if (btnCloseColorSection) btnCloseColorSection.addEventListener('click', function(e) {
+    e.stopPropagation();
+    painterStepBack();
+  });
+  if (btnBackColorSections) btnBackColorSections.addEventListener('click', function(e) {
+    e.stopPropagation();
+    painterStepBack();
+  });
   function updateMarkForDeletionButton() {
     if (!btnMarkForDeletion) return;
     var isNewUnpublishedItem = selectedElement && selectedElement.classList && selectedElement.classList.contains('menu-item-card') && selectedElement.hasAttribute('data-dashboard-edit-new-item');
@@ -10023,15 +11396,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
   if (colorAsideEl && btnToggleColorPanel) {
     btnToggleColorPanel.addEventListener('click', function() {
-      var isCollapsed = colorAsideEl.classList.toggle('dashboard-edit-color-aside-collapsed');
-      if (isCollapsed) {
-        exitColorSectionEdit();
-      }
-      btnToggleColorPanel.setAttribute('aria-expanded', !isCollapsed);
-      btnToggleColorPanel.setAttribute('aria-label', isCollapsed ? 'Expand color panel' : 'Collapse color panel');
-      setColorAsideToggleIcon(!isCollapsed);
-      var text = btnToggleColorPanel.querySelector('.dashboard-edit-color-aside-toggle-text');
-      if (text) text.textContent = isCollapsed ? 'Expand' : 'Collapse';
+      closeColorRings({ keepOrb: true });
     });
   }
 });

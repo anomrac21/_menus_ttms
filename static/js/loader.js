@@ -4,9 +4,13 @@ let adManagerCheckCount = 0;
 let maxLoaderTimeout = null;
 let globalLoaderKillTimeout = null;
 let loaderHasHiddenOnce = false;
+/** Minimum time loader stays visible so morph + status can be read. */
+var LOADER_MIN_VISIBLE_MS = 2800;
+var loaderShownAt = 0;
 
 function forceHideLoaderElement(loader) {
     if (!loader) return;
+    loader.classList.add('loader-force-hidden');
     loader.style.pointerEvents = 'none';
     loader.style.visibility = 'hidden';
     loader.style.opacity = '0';
@@ -119,18 +123,229 @@ function ensureAdsLoaded() {
 document.addEventListener('DOMContentLoaded', function() {
     const loader = document.getElementById('loader');
     const loaderImage = document.getElementById('loaderImage');
+    const menuImage = document.getElementById('menuImage');
 
     if (!loader) {
         return;
     }
 
+    // Markup starts visible; start the min-visible clock immediately.
+    if (!loaderShownAt) {
+        loaderShownAt = Date.now();
+    }
+
+    var ANIM_SLIDE = [
+        'loader-hide-up',
+        'loader-hide-up-right',
+        'loader-hide-right',
+        'loader-hide-down-right',
+        'loader-hide-down',
+        'loader-hide-down-left',
+        'loader-hide-left',
+        'loader-hide-up-left',
+    ];
+    var ANIM_ROTATE = [
+        'loader-hide-up-rotate-left',
+        'loader-hide-up-right-rotate-left',
+        'loader-hide-right-rotate-left',
+        'loader-hide-down-right-rotate-left',
+        'loader-hide-down-rotate-left',
+        'loader-hide-down-left-rotate-left',
+        'loader-hide-left-rotate-left',
+        'loader-hide-up-left-rotate-left',
+        'loader-hide-up-rotate-right',
+        'loader-hide-up-right-rotate-right',
+        'loader-hide-right-rotate-right',
+        'loader-hide-down-right-rotate-right',
+        'loader-hide-down-rotate-right',
+        'loader-hide-down-left-rotate-right',
+        'loader-hide-left-rotate-right',
+        'loader-hide-up-left-rotate-right',
+    ];
+    var ANIM_SCALE = [
+        'loader-hide-up-rotate-scale',
+        'loader-hide-up-right-rotate-scale',
+        'loader-hide-right-rotate-scale',
+        'loader-hide-down-right-rotate-scale',
+        'loader-hide-down-rotate-scale',
+        'loader-hide-down-left-rotate-scale',
+        'loader-hide-left-rotate-scale',
+        'loader-hide-up-left-rotate-scale',
+    ];
+    var animations = ANIM_SLIDE.concat(ANIM_ROTATE, ANIM_SCALE);
+    var morphTimer = null;
+
+    function loaderTier() {
+        var t =
+            (loader && loader.getAttribute('data-tier')) ||
+            (window.SiteConfig && window.SiteConfig.tier) ||
+            window.SITE_TIER ||
+            'free';
+        return String(t).toLowerCase();
+    }
+
+    function loaderIsVerified() {
+        if (loader && loader.getAttribute('data-verified') === 'true') return true;
+        if (window.SiteConfig && window.SiteConfig.verified === true) return true;
+        if (window.SITE_VERIFIED === true) return true;
+        var t = loaderTier();
+        return t !== 'free' && t !== '';
+    }
+
+    function animationsForTier(tier) {
+        tier = String(tier || 'free').toLowerCase();
+        if (tier === 'tier2') {
+            return ANIM_SCALE.concat(ANIM_ROTATE);
+        }
+        if (tier === 'tier1' || tier === 'tier1_4mo') {
+            return ANIM_ROTATE.concat(ANIM_SLIDE.slice(0, 4));
+        }
+        if (tier === 'free_verified') {
+            return ANIM_SLIDE.concat(ANIM_ROTATE.slice(0, 6));
+        }
+        // free unverified — simple exits only
+        return ANIM_SLIDE.slice();
+    }
+
+    function isLoaderHomePath(pathname) {
+        var path = pathname || window.location.pathname || '/';
+        try {
+            path = String(path).split('?')[0].split('#')[0];
+        } catch (e) { /* ignore */ }
+        if (!path || path === '/') return true;
+        // Trailing-slash home only
+        return path.replace(/\/+$/, '') === '';
+    }
+
+    function loaderLocationCount() {
+        var n = 0;
+        if (loader) {
+            n = parseInt(loader.getAttribute('data-location-count') || '0', 10) || 0;
+        }
+        if (!n && window.SiteConfig && window.SiteConfig.locationCount != null) {
+            n = parseInt(window.SiteConfig.locationCount, 10) || 0;
+        }
+        if (!n && window.MENU_CONFIG && Array.isArray(window.MENU_CONFIG.locationSlugs)) {
+            n = window.MENU_CONFIG.locationSlugs.length;
+        }
+        return n;
+    }
+
+    function updateLoaderLocationStatus() {
+        var valueEl = document.getElementById('loaderLocationValue');
+        var locRow = document.getElementById('loaderLocation');
+        var labelEl =
+            document.getElementById('loaderLocationLabelText') ||
+            document.getElementById('loaderLocationLabel');
+        if (!valueEl) return;
+
+        var onHome = isLoaderHomePath();
+        if (loader) {
+            loader.setAttribute('data-home', onHome ? 'true' : 'false');
+        }
+
+        // Home: show location count only — never the selected address/name.
+        if (onHome) {
+            var count = loaderLocationCount();
+            if (labelEl) labelEl.textContent = 'Locations';
+            valueEl.textContent = count === 1 ? '1 location' : count + ' locations';
+            if (locRow) locRow.classList.add('is-ready');
+            return;
+        }
+
+        if (labelEl) labelEl.textContent = 'Location';
+        var label = '';
+        try {
+            if (window.currentOrderLocation) {
+                var cur = window.currentOrderLocation;
+                label = cur.address || cur.name || cur.city || cur.slug || '';
+            }
+            if (!label) {
+                label = localStorage.getItem('ttmenus_location_picker_address') || '';
+            }
+        } catch (e) { /* ignore */ }
+        if (label) {
+            valueEl.textContent = label;
+            if (locRow) locRow.classList.add('is-ready');
+        } else {
+            valueEl.textContent = 'Selecting…';
+            if (locRow) locRow.classList.remove('is-ready');
+        }
+    }
+
+    var revealTimer = null;
+    var featureRevealTimers = [];
+
+    function clearFeatureRevealTimers() {
+        featureRevealTimers.forEach(function (id) {
+            clearTimeout(id);
+        });
+        featureRevealTimers = [];
+        var chips = loader.querySelectorAll('.loader-feature.is-in');
+        for (var i = 0; i < chips.length; i++) {
+            chips[i].classList.remove('is-in');
+        }
+    }
+
+    function clearLoaderMorph() {
+        if (morphTimer) {
+            clearTimeout(morphTimer);
+            morphTimer = null;
+        }
+        if (revealTimer) {
+            clearTimeout(revealTimer);
+            revealTimer = null;
+        }
+        clearFeatureRevealTimers();
+        loader.classList.remove('loader-morph', 'loader-ready');
+    }
+
+    function staggerLoaderFeatures() {
+        var chips = loader.querySelectorAll('.loader-features .loader-feature');
+        var gapMs = 260;
+        for (var i = 0; i < chips.length; i++) {
+            (function (chip, index) {
+                var id = setTimeout(function () {
+                    chip.classList.add('is-in');
+                }, index * gapMs);
+                featureRevealTimers.push(id);
+            })(chips[i], i);
+        }
+    }
+
+    function startLoaderMorph() {
+        clearLoaderMorph();
+        // Location fanfare first, then each feature chip one-by-one.
+        revealTimer = setTimeout(function () {
+            loader.classList.add('loader-ready');
+            var featuresDelay = setTimeout(staggerLoaderFeatures, 420);
+            featureRevealTimers.push(featuresDelay);
+        }, 480);
+        if (!loaderIsVerified()) return;
+        // Hold full TTMenus mark, then hand the stage to the client logo.
+        morphTimer = setTimeout(function () {
+            loader.classList.add('loader-morph');
+        }, 720);
+    }
+
     if (typeof barba === 'undefined') {
         console.error('Barba.js not loaded. Hiding loader without transitions.');
+        updateLoaderLocationStatus();
+        startLoaderMorph();
+        var noBarbaWait = loaderShownAt
+            ? Math.max(0, LOADER_MIN_VISIBLE_MS - (Date.now() - loaderShownAt))
+            : LOADER_MIN_VISIBLE_MS;
         setTimeout(function () {
             loader.classList.add('loader-hide-down');
+            try {
+                document.dispatchEvent(new CustomEvent('ttms:loader-hidden', { detail: { source: 'noBarba' } }));
+            } catch (err) { /* ignore */ }
             var footerBtns = document.getElementById('footerBtns');
             if (footerBtns) footerBtns.classList.add('visible');
-        }, 800);
+            setTimeout(function () {
+                forceHideLoaderElement(loader);
+            }, 820);
+        }, noBarbaWait);
         return;
     }
 
@@ -139,42 +354,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     let isHidingLoader = false;
-
-    let animations = [  'loader-hide-up',
-                        'loader-hide-up-right',
-                        'loader-hide-right',
-                        'loader-hide-down-right',
-                        'loader-hide-down',
-                        'loader-hide-down-left',
-                        'loader-hide-left',
-                        'loader-hide-up-left',
-                        'loader-hide-up-rotate-left',
-                        'loader-hide-up-right-rotate-left',
-                        'loader-hide-right-rotate-left',
-                        'loader-hide-down-right-rotate-left',
-                        'loader-hide-down-rotate-left',
-                        'loader-hide-down-left-rotate-left',
-                        'loader-hide-left-rotate-left',
-                        'loader-hide-up-left-rotate-left',
-                        'loader-hide-up-rotate-right',
-                        'loader-hide-up-right-rotate-right',
-                        'loader-hide-right-rotate-right',
-                        'loader-hide-down-right-rotate-right',
-                        'loader-hide-down-rotate-right',
-                        'loader-hide-down-left-rotate-right',
-                        'loader-hide-left-rotate-right',
-                        'loader-hide-up-left-rotate-right',
-                        'loader-hide-up-rotate-scale',
-                        'loader-hide-up-right-rotate-scale',
-                        'loader-hide-right-rotate-scale',
-                        'loader-hide-down-right-rotate-scale',
-                        'loader-hide-down-rotate-scale',
-                        'loader-hide-down-left-rotate-scale',
-                        'loader-hide-left-rotate-scale',
-                        'loader-hide-up-left-rotate-scale'];
     let randomAnim = '';
 
     function resetLoaderVisible() {
+        loader.classList.remove('loader-force-hidden');
         loader.style.display = 'flex';
         loader.style.opacity = '';
         loader.style.visibility = '';
@@ -182,9 +365,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loaderImage) {
             loaderImage.style.display = 'block';
         }
+        if (menuImage) {
+            menuImage.style.display = 'block';
+        }
         animations.forEach(function (anim) {
             loader.classList.remove(anim);
         });
+        clearLoaderMorph();
+        updateLoaderLocationStatus();
+        loaderShownAt = Date.now();
+        startLoaderMorph();
     }
 
     function showLoader() {
@@ -193,6 +383,40 @@ document.addEventListener('DOMContentLoaded', function() {
         loaderHasHiddenOnce = false;
         resetLoaderVisible();
         scheduleLoaderFallback();
+    }
+
+    function msUntilMinVisible() {
+        if (!loaderShownAt) return LOADER_MIN_VISIBLE_MS;
+        var elapsed = Date.now() - loaderShownAt;
+        return Math.max(0, LOADER_MIN_VISIBLE_MS - elapsed);
+    }
+
+    function finishHideLoader() {
+        if (!loader) return;
+        animations.forEach(function (anim) {
+            loader.classList.remove(anim);
+        });
+
+        var pool = animationsForTier(loaderTier());
+        randomAnim = pool[Math.floor(Math.random() * pool.length)];
+        loader.classList.add(randomAnim);
+
+        // Let hero chips show titles as soon as the loader starts exiting.
+        try {
+            document.dispatchEvent(new CustomEvent('ttms:loader-hidden', { detail: { source: 'finishHideLoader' } }));
+        } catch (err) { /* ignore */ }
+
+        // Android Chrome can keep a composited overlay that still blocks taps
+        // even after opacity:0 — force display:none after the hide animation.
+        setTimeout(function () {
+            forceHideLoaderElement(loader);
+            isHidingLoader = false;
+        }, 820);
+
+        const footerBtns = document.getElementById('footerBtns');
+        if (footerBtns) {
+            footerBtns.classList.add('visible');
+        }
     }
 
     function hideLoader() {
@@ -210,23 +434,11 @@ document.addEventListener('DOMContentLoaded', function() {
             globalLoaderKillTimeout = null;
         }
 
-        animations.forEach(function (anim) {
-            loader.classList.remove(anim);
-        });
-
-        randomAnim = animations[Math.floor(Math.random() * animations.length)];
-        loader.classList.add(randomAnim);
-
-        // Android Chrome can keep a composited overlay that still blocks taps
-        // even after opacity:0 — force display:none after the hide animation.
-        setTimeout(function () {
-            forceHideLoaderElement(loader);
-            isHidingLoader = false;
-        }, 520);
-
-        const footerBtns = document.getElementById('footerBtns');
-        if (footerBtns) {
-            footerBtns.classList.add('visible');
+        var wait = msUntilMinVisible();
+        if (wait > 0) {
+            setTimeout(finishHideLoader, wait);
+        } else {
+            finishHideLoader();
         }
     }
 
@@ -237,6 +449,13 @@ document.addEventListener('DOMContentLoaded', function() {
         forceHideLoaderElement(loader || document.getElementById('loader'));
         recoverStuckUiState();
     };
+    window.updateLoaderLocationStatus = updateLoaderLocationStatus;
+
+    updateLoaderLocationStatus();
+    startLoaderMorph();
+    document.addEventListener('ttms:location-selected', function () {
+        updateLoaderLocationStatus();
+    });
 
     function scheduleLoaderFallback() {
         if (maxLoaderTimeout) {
@@ -289,16 +508,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            await Promise.all([waitMs(600), bootstrap]);
+            await Promise.all([waitMs(LOADER_MIN_VISIBLE_MS), bootstrap]);
             return;
         }
 
-        await Promise.race([
-            new Promise(function (resolve) {
-                if (document.readyState === 'complete') resolve();
-                else window.addEventListener('load', resolve, { once: true });
-            }),
-            waitMs(800),
+        await Promise.all([
+            Promise.race([
+                new Promise(function (resolve) {
+                    if (document.readyState === 'complete') resolve();
+                    else window.addEventListener('load', resolve, { once: true });
+                }),
+                waitMs(1200),
+            ]),
+            waitMs(LOADER_MIN_VISIBLE_MS),
         ]);
     }
 
@@ -379,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 showLoader();
-                await new Promise(resolve => setTimeout(resolve, 366));
+                await new Promise(resolve => setTimeout(resolve, 500));
             },
             async enter(data) {
                 scheduleLoaderFallback();

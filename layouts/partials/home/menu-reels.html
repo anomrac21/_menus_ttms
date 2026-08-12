@@ -1,0 +1,113 @@
+{{- /* Menu reels body (promotions + category headers). Expects page context. */ -}}
+{{- $sections := partial "menu/category-sections.html" . -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- /* Always load full catalog; client filters by data-location-slug in real time. */ -}}
+{{- $apiUrl := "/api/menu-items.json" -}}
+<div id="menu-reels-viewport" class="menu-reels-viewport" data-home-menu-api="{{ $apiUrl }}"{{ with $locSlug }} data-location-slug="{{ . }}"{{ end }} data-auth-enabled="{{ site.Params.auth.enabled }}" data-menu-images="{{ site.Params.menuImageService.enabled }}">
+<div id="menu-reels-track" class="menu-reels-track">
+<section class="hero_logo_container item menu-reels-slide menu-reels-slide--hero" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
+{{ $siteName := partial "site-name.html" . }}
+<h1 class="sr-only">{{ $siteName }}{{ with $locSlug }} — {{ . }}{{ end }}</h1>
+{{ if .Params.image }}
+  <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high" data-src-path="{{ .Params.image }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+{{ else if $.Site.Home.Params.image }}
+  <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" $.Site.Home.Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high" data-src-path="{{ $.Site.Home.Params.image }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+{{ else }}
+  <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
+{{ end }}
+<div class="logo_container">
+  <a href="{{ if $locSlug }}/{{ else }}/locations/{{ end }}" aria-label="{{ if $locSlug }}All locations{{ else }}View {{ $siteName }} locations{{ end }}"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="264" height="264" fetchpriority="high" decoding="async"></a>
+  {{ partial "layout/feature-chips.html" (dict "class" "hero-features" "visible" true "expandable" true) }}
+</div>
+{{ with .Content }}
+<div class="hero-intro">
+  {{ . }}
+</div>
+{{ end }}
+{{ partial "components/hero_ctas.html" . }}
+</section>
+{{ partial "components/contact_info.html" . }}
+{{ $advertisementsRendered := false }}
+{{ range $sections }}
+  {{ $title:= .LinkTitle }}
+  {{ $titleurl := .RelPermalink }}
+  {{ $secSlug := partial "menu/section-slug.html" . }}
+  {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
+    {{ $promoCount := len .RegularPages }}
+    <div class="main-menu-bg {{ $title }}">
+      <div class="main-menu {{ $title }} item">
+        <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}" data-promo-section="1" data-item-count="{{ $promoCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
+          <a class="menu-anchor" id="{{ $title }}"></a>
+          {{ partial "components/menu-header-actions-row.html" (dict "url" $titleurl "title" $title "sectionSlug" $secSlug "imagePrimary" (index .Params.images "primary")) }}
+          <a class="menu-header__link" href="{{ $titleurl }}">
+            {{ if .Params.images.primary }}
+              <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640" data-src-path="{{ .Params.images.primary }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+            {{ end }}
+            <div class="headerstyle item">
+              <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+                {{ $title }}
+                {{ if .Params.images.secondary }}
+                  <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "decoration") }}" alt="{{ $title }} decoration" loading="lazy" width="160" height="200">
+                {{ end }}
+              </h2>
+              <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">{{ $promoCount }}</span> <span class="menu-header__item-count__suffix">{{ if eq $promoCount 1 }}item{{ else }}items{{ end }}</span></p>
+            </div>
+            {{ with .Summary }}
+            <div class="menu-summary item">{{ . }}</div>
+            {{ end }}
+          </a>
+        </section>
+      </div>
+    </div>
+    {{ partial "ads/homepageclientads.html" . }}
+    {{ $advertisementsRendered = true }}
+  {{ end }}
+{{ end }}
+<section class="hero-content menu-reels-slide menu-reels-slide--intro">
+  {{ partial "client/clienttourimages.html" . }}
+  {{ partial "socialmedia/share-button.html" . }}
+</section>
+<div class="main-body" id="packery-container">
+{{ range $sections }}
+  {{ $title:= .LinkTitle }}
+  {{ if ne $title ("Promotions") }}
+    {{ $itemCount := len .RegularPages }}
+    {{ $secSlug := partial "menu/section-slug.html" . }}
+    <div class="main-menu-bg {{ .LinkTitle }}">
+      <div class="main-menu {{ .LinkTitle }} item">
+        <section class="menu-header menu-reels-slide" data-home-menu-lazy data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ $secSlug }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}" aria-busy="true">
+          <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
+          {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" $secSlug "imagePrimary" (index .Params.images "primary")) }}
+          <a class="menu-header__link" href="{{ .RelPermalink }}">
+            {{ if .Params.images.primary }}
+              <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ .LinkTitle }}" loading="lazy" width="640" height="640" data-src-path="{{ .Params.images.primary }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+            {{ end }}
+            <div class="headerstyle item">
+              <h2 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+                {{ .LinkTitle }}
+                {{ if .Params.images.secondary }}
+                  <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "decoration") }}" alt="{{ .LinkTitle }} decoration" loading="lazy" width="160" height="200">
+                {{ end }}
+              </h2>
+              <p class="menu-header__item-count is-count-pending" aria-live="polite"><span class="menu-header__item-count__value">0</span> <span class="menu-header__item-count__suffix">{{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</span></p>
+            </div>
+            <div class="menu-summary item">
+              {{ .Summary }}
+            </div>
+          </a>
+        </section>
+      </div>
+    </div>
+  {{ end }}
+{{ end }}
+</div>
+{{- if site.Params.ads.enabled -}}
+<section class="menu-reels-slide menu-reels-slide--bottom-ads" id="menu-reels-sponsored-ads" data-reel-section="Sponsored">
+  <a class="menu-anchor" id="Sponsored"></a>
+  <div class="bottomads menu-reels-bottom-ads-in-track">
+    {{ partial "ads/frontpageads.html" . }}
+  </div>
+</section>
+{{- end -}}
+</div>
+</div>

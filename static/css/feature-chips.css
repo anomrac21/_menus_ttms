@@ -1,0 +1,584 @@
+/* Feature entitlement chips — loader + hero (shared look) */
+
+.loader-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loader-feature {
+  --chip-accent: #34d399;
+  --chip-accent-deep: #059669;
+  --chip-ink: #064e3b;
+  --chip-soft: #ecfdf5;
+  --chip-glow: rgba(52, 211, 153, 0.35);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.38rem 0.85rem 0.38rem 0.38rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--chip-accent) 55%, #fff 20%);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--chip-soft) 92%, #fff) 0%,
+      color-mix(in srgb, var(--chip-accent) 18%, var(--chip-soft)) 100%
+    );
+  color: var(--chip-ink);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 8px 18px color-mix(in srgb, var(--chip-accent) 22%, transparent),
+    0 2px 6px rgba(15, 23, 42, 0.08);
+  isolation: isolate;
+  transition: border-radius 0.22s ease, box-shadow 0.22s ease, transform 0.2s ease;
+}
+
+/* Expandable hero chips: collapsed = icon-only “chip logos” */
+.loader-features--expandable .loader-feature {
+  padding: 0;
+  gap: 0;
+  width: auto;
+  height: min-content;
+  max-width: none;
+  border-radius: 999px;
+}
+
+.loader-features--expandable .loader-feature:not(.is-expanded) {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.18), transparent 52%),
+    linear-gradient(160deg, var(--chip-accent) 0%, var(--chip-accent-deep) 100%);
+  border-color: color-mix(in srgb, var(--chip-accent) 55%, rgba(255, 255, 255, 0.4));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.28) inset,
+    0 6px 16px color-mix(in srgb, var(--chip-accent-deep) 35%, transparent),
+    0 0 18px color-mix(in srgb, var(--chip-glow) 45%, transparent);
+  transition:
+    border-radius 0.45s ease,
+    background 0.45s ease,
+    box-shadow 0.45s ease,
+    border-color 0.45s ease;
+}
+
+.loader-features--expandable .loader-feature.is-expanded {
+  max-width: min(100%, 18rem);
+  border-radius: 1.15rem;
+}
+
+.loader-feature__btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: auto;
+  margin: 0;
+  padding: 0.38rem 0.85rem 0.38rem 0.38rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.loader-features--expandable .loader-feature:not(.is-expanded) .loader-feature__btn {
+  padding: 0.35rem;
+  gap: 0;
+  justify-content: center;
+  transition: padding 0.4s ease, gap 0.4s ease;
+}
+
+.loader-features--expandable .loader-feature:not(.is-expanded) .loader-feature-badge {
+  width: 2.15rem;
+  height: 2.15rem;
+  background: transparent;
+  box-shadow: none;
+  transition: width 0.4s ease, height 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.loader-features--expandable .loader-feature:not(.is-expanded) .loader-feature-icon {
+  width: 18px;
+  height: 18px;
+  transition: width 0.35s ease, height 0.35s ease;
+}
+
+.loader-features--expandable .loader-feature:not(.is-expanded) .loader-feature-copy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* After loader: show titles first, then collapse to icon badges */
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) {
+  border-radius: 999px;
+  border-color: color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
+      rgba(15, 23, 42, 0.72) 100%
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 0 0 1px color-mix(in srgb, var(--chip-accent) 25%, transparent),
+    0 10px 22px rgba(0, 0, 0, 0.35),
+    0 0 24px color-mix(in srgb, var(--chip-glow) 55%, transparent);
+  transition:
+    border-radius 0.45s ease,
+    background 0.45s ease,
+    box-shadow 0.45s ease,
+    border-color 0.45s ease;
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature__btn {
+  padding: 0.38rem 0.85rem 0.38rem 0.38rem;
+  gap: 0.45rem;
+  justify-content: flex-start;
+  transition: padding 0.4s ease, gap 0.4s ease;
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature-badge {
+  width: 1.7rem;
+  height: 1.7rem;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.42), transparent 50%),
+    linear-gradient(160deg, var(--chip-accent) 0%, var(--chip-accent-deep) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.28) inset,
+    0 4px 10px color-mix(in srgb, var(--chip-accent-deep) 40%, transparent);
+  transition: width 0.4s ease, height 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature-copy {
+  position: relative;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding-right: 0.1rem;
+  overflow: visible;
+  clip: auto;
+  white-space: nowrap;
+  border: 0;
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature-label {
+  opacity: 1;
+  max-width: 12rem;
+  transition: opacity 0.35s ease, max-width 0.45s ease;
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature-detail {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  opacity: 0;
+}
+
+.loader-feature.is-expanded .loader-feature__btn {
+  width: 100%;
+}
+
+.loader-feature__btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--chip-accent) 80%, #fff);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.loader-feature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.55) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.loader-feature.is-in::before,
+.hero-features .loader-feature::before {
+  animation: featureChipSheen 2.8s ease-in-out 0.4s 1 both;
+}
+
+.loader-feature-badge,
+.loader-feature-copy,
+.loader-feature-label,
+.loader-feature-detail {
+  position: relative;
+  z-index: 1;
+}
+
+.loader-feature-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.42), transparent 50%),
+    linear-gradient(160deg, var(--chip-accent) 0%, var(--chip-accent-deep) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.28) inset,
+    0 4px 10px color-mix(in srgb, var(--chip-accent-deep) 40%, transparent);
+}
+
+.loader-feature-icon {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.loader-feature-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+  padding-right: 0.1rem;
+}
+
+.loader-feature-label {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Collapsed: keep detail out of flow so chip width matches old badges */
+.loader-feature-detail {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--chip-ink) 78%, transparent);
+}
+
+.loader-feature.is-expanded {
+  border-radius: 1.15rem;
+  z-index: 2;
+}
+
+.loader-feature.is-expanded .loader-feature__btn {
+  padding: 0.45rem 0.9rem 0.55rem 0.4rem;
+  align-items: flex-start;
+}
+
+.loader-feature.is-expanded .loader-feature-copy {
+  position: relative;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding-right: 0.1rem;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+.loader-feature.is-expanded .loader-feature-detail {
+  position: static;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  margin: 0.28rem 0 0;
+  padding: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loader-feature.is-expanded .loader-feature-badge {
+  align-self: flex-start;
+  margin-top: 0.05rem;
+}
+
+/* Per-feature accents */
+.loader-feature[data-feature="payments"] {
+  --chip-accent: #34d399;
+  --chip-accent-deep: #059669;
+  --chip-ink: #064e3b;
+  --chip-soft: #ecfdf5;
+  --chip-glow: rgba(52, 211, 153, 0.4);
+}
+
+.loader-feature[data-feature="ordering"] {
+  --chip-accent: #fbbf24;
+  --chip-accent-deep: #d97706;
+  --chip-ink: #78350f;
+  --chip-soft: #fffbeb;
+  --chip-glow: rgba(251, 191, 36, 0.4);
+}
+
+.loader-feature[data-feature="delivery"] {
+  --chip-accent: #38bdf8;
+  --chip-accent-deep: #0284c7;
+  --chip-ink: #0c4a6e;
+  --chip-soft: #f0f9ff;
+  --chip-glow: rgba(56, 189, 248, 0.4);
+}
+
+.loader-feature[data-feature="notifications"] {
+  --chip-accent: #fb7185;
+  --chip-accent-deep: #e11d48;
+  --chip-ink: #881337;
+  --chip-soft: #fff1f2;
+  --chip-glow: rgba(251, 113, 133, 0.4);
+}
+
+.loader-feature[data-feature="featured"] {
+  --chip-accent: #fcd34d;
+  --chip-accent-deep: #f59e0b;
+  --chip-ink: #78350f;
+  --chip-soft: #fffbeb;
+  --chip-glow: rgba(252, 211, 77, 0.45);
+}
+
+.loader-feature[data-feature="menu"] {
+  --chip-accent: #94a3b8;
+  --chip-accent-deep: #64748b;
+  --chip-ink: #334155;
+  --chip-soft: #f8fafc;
+  --chip-glow: rgba(148, 163, 184, 0.35);
+}
+
+.loader-feature.is-muted {
+  filter: saturate(0.75);
+  opacity: 0.9;
+}
+
+/* Loader entrance (starts hidden until .is-in) */
+#loader .loader-feature {
+  opacity: 0;
+  transform: translateY(0.75rem) scale(0.88);
+}
+
+#loader .loader-feature.is-in {
+  animation: loaderFeatureIn 0.65s cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+}
+
+#loader .loader-feature.is-in[data-feature="ordering"] {
+  animation-name: loaderFeatureInOrdering;
+}
+
+#loader .loader-feature.is-in[data-feature="notifications"] {
+  animation-name: loaderFeatureInAlerts;
+}
+
+#loader .loader-feature.is-in[data-feature="delivery"] {
+  animation-name: loaderFeatureInDelivery;
+}
+
+#loader .loader-feature.is-in[data-feature="featured"] {
+  animation-name: loaderFeatureInFeatured;
+}
+
+#loader .loader-feature.is-in[data-feature="ordering"] .loader-feature-icon {
+  animation: loaderIconCart 0.7s cubic-bezier(0.34, 1.45, 0.64, 1) 0.12s both;
+}
+
+#loader .loader-feature.is-in[data-feature="notifications"] .loader-feature-icon {
+  animation: loaderIconBell 0.75s cubic-bezier(0.34, 1.45, 0.64, 1) 0.14s both;
+}
+
+#loader .loader-feature.is-in[data-feature="payments"] .loader-feature-icon {
+  animation: loaderIconPop 0.65s cubic-bezier(0.34, 1.45, 0.64, 1) 0.1s both;
+}
+
+#loader .loader-feature.is-in[data-feature="delivery"] .loader-feature-icon {
+  animation: loaderIconDrive 0.75s cubic-bezier(0.34, 1.45, 0.64, 1) 0.12s both;
+}
+
+#loader .loader-feature.is-in[data-feature="featured"] .loader-feature-icon {
+  animation: loaderIconStar 0.8s cubic-bezier(0.34, 1.45, 0.64, 1) 0.1s both;
+}
+
+@keyframes featureChipSheen {
+  0% { transform: translateX(-120%); opacity: 0; }
+  20% { opacity: 1; }
+  55% { transform: translateX(120%); opacity: 0.85; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+@keyframes loaderFeatureIn {
+  0% { opacity: 0; transform: translateY(0.75rem) scale(0.88); }
+  65% { opacity: 1; transform: translateY(-0.12rem) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes loaderFeatureInOrdering {
+  0% { opacity: 0; transform: translateX(-1.4rem) scale(0.86); }
+  62% { opacity: 1; transform: translateX(0.22rem) scale(1.07); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes loaderFeatureInAlerts {
+  0% { opacity: 0; transform: translateX(1.4rem) scale(0.86); }
+  62% { opacity: 1; transform: translateX(-0.22rem) scale(1.07); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes loaderFeatureInDelivery {
+  0% { opacity: 0; transform: translateX(-1.1rem) translateY(0.35rem) scale(0.86); }
+  62% { opacity: 1; transform: translateX(0.15rem) translateY(-0.08rem) scale(1.05); }
+  100% { opacity: 1; transform: translateX(0) translateY(0) scale(1); }
+}
+
+@keyframes loaderFeatureInFeatured {
+  0% { opacity: 0; transform: scale(0.5) rotate(-8deg); }
+  65% { opacity: 1; transform: scale(1.08) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes loaderIconCart {
+  0% { transform: scale(0.7) rotate(-12deg); }
+  60% { transform: scale(1.2) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes loaderIconBell {
+  0% { transform: scale(0.7) rotate(0deg); }
+  30% { transform: scale(1.15) rotate(14deg); }
+  55% { transform: scale(1.15) rotate(-12deg); }
+  75% { transform: scale(1.05) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes loaderIconPop {
+  0% { transform: scale(0.5); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@keyframes loaderIconDrive {
+  0% { transform: translateX(-0.35rem) scale(0.8); }
+  55% { transform: translateX(0.12rem) scale(1.1); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+@keyframes loaderIconStar {
+  0% { transform: scale(0.4) rotate(-20deg); }
+  55% { transform: scale(1.25) rotate(12deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes featureChipFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.18rem); }
+}
+
+/* Hero / dark surfaces */
+.hero_logo_container .hero-features .loader-feature,
+.hero-features.loader-features .loader-feature {
+  opacity: 1;
+  transform: none;
+  color: #f8fafc;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: none;
+}
+
+.hero_logo_container .hero-features .loader-feature.is-expanded,
+.hero-features.loader-features .loader-feature.is-expanded {
+  border-color: color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
+      rgba(15, 23, 42, 0.72) 100%
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 0 0 1px color-mix(in srgb, var(--chip-accent) 25%, transparent),
+    0 10px 22px rgba(0, 0, 0, 0.35),
+    0 0 24px color-mix(in srgb, var(--chip-glow) 55%, transparent);
+}
+
+.hero_logo_container .hero-features .loader-feature.is-expanded .loader-feature-badge,
+.hero-features.loader-features .loader-feature.is-expanded .loader-feature-badge {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+    0 0 16px color-mix(in srgb, var(--chip-glow) 70%, transparent),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.hero_logo_container .hero-features .loader-feature.is-muted,
+.hero-features.loader-features .loader-feature.is-muted {
+  opacity: 0.88;
+  filter: saturate(0.7);
+}
+
+.hero_logo_container .hero-features .loader-feature-detail,
+.hero-features.loader-features .loader-feature-detail {
+  color: rgba(248, 250, 252, 0.78);
+}
+
+.hero_logo_container .hero-features .loader-feature.is-expanded,
+.hero-features.loader-features .loader-feature.is-expanded {
+  animation: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-feature.is-in::before,
+  .hero-features .loader-feature::before,
+  .hero_logo_container .hero-features .loader-feature,
+  .hero-features.loader-features .loader-feature,
+  #loader .loader-feature.is-in,
+  #loader .loader-feature.is-in .loader-feature-icon {
+    animation: none !important;
+  }
+
+  #loader .loader-feature.is-in,
+  #loader .loader-feature {
+    opacity: 1;
+    transform: none;
+  }
+}

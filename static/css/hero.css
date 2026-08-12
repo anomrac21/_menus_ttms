@@ -1,6 +1,7 @@
 /**
  * TTMenus v2 - Hero Section Styles
  * Modern, user-friendly hero section with logo and background
+ * Mobile-first base (see hero.lg.css for 769px+)
  */
 
 /* ============================================
@@ -10,8 +11,8 @@
    .hero_logo_container {
     position: relative;
     width: 100%;
-    min-height: 50vh;
-    max-height: 70vh;
+    min-height: 100vh;
+    max-height: 100vh;
     overflow: hidden;
     display: flex;
     padding-block-start: 5em;
@@ -82,108 +83,26 @@
     transform: scale(0.98);
 }
 
-/* Logo Image */
+/* Logo Image — reels hero size tuned in multi-location-menu.css */
 #logo {
     display: block;
     border-radius: 1em;
     width: auto;
     height: auto;
-    max-width: min(40vw, 320px);
-    max-height: min(40vh, 320px);
-    min-width: 120px;
-    min-height: 120px;
+    max-width: min(56vw, 16rem);
+    max-height: min(38dvh, 16rem);
+    min-width: 7rem;
+    min-height: 7rem;
     margin-inline: auto;
     object-fit: contain;
     filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
-    transition: all 0.3s ease;
-    animation: logoFloat 3s ease-in-out infinite;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    animation: none;
 }
 
 .logo_container a:hover #logo {
     filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.8));
-    transform: scale(1.05);
-}
-
-/* Subtle floating animation for logo */
-@keyframes logoFloat {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
-/* Smooth pulse for logo on load */
-@keyframes logoPulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.9;
-        transform: scale(1.02);
-    }
-}
-
-#logo {
-    animation: logoFloat 3s ease-in-out infinite, logoPulse 4s ease-in-out infinite;
-}
-
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-
-/* Mobile */
-@media (max-width: 480px) {
-    .hero_logo_container {
-        min-height: 40vh;
-        max-height: 50vh;
-    }
-
-    #logo {
-        max-width: min(50vw, 240px);
-        max-height: min(40vh, 240px);
-        min-width: 100px;
-        min-height: 100px;
-    }
-
-    .logo_container {
-    }
-}
-
-/* Tablet */
-@media (min-width: 481px) and (max-width: 768px) {
-    .hero_logo_container {
-        min-height: 45vh;
-        max-height: 60vh;
-    }
-
-    #logo {
-        max-width: min(35vw, 280px);
-        max-height: min(35vh, 280px);
-    }
-}
-
-/* Desktop */
-@media (min-width: 769px) {
-    .hero_logo_container {
-        min-height: 50vh;
-        max-height: 70vh;
-    }
-
-    #logo {
-        max-width: min(30vw, 400px);
-        max-height: min(40vh, 400px);
-    }
-
-    /* Larger logo on bigger screens */
-    @media (min-width: 1440px) {
-        #logo {
-            max-width: 480px;
-            max-height: 480px;
-        }
-    }
+    transform: scale(1.03);
 }
 
 /* Landscape orientation - reduce height */
@@ -201,10 +120,6 @@
 
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
-    #logo {
-        animation: none;
-    }
-
     .logo_container a:hover #logo {
         transform: none;
     }

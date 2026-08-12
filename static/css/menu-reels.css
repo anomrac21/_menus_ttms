@@ -330,10 +330,32 @@ body.menu-search-active .menu-reels-track {
 .hero_logo_container.menu-reels-slide {
     flex-direction: column;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.75rem;
     padding-block-start: 0;
-    padding-block-end: max(4rem, env(safe-area-inset-bottom));
+    padding-block-end: max(3.25rem, env(safe-area-inset-bottom));
     background: var(--hero-bg-color, #000);
+}
+
+@media (max-height: 740px) {
+    .hero_logo_container.menu-reels-slide {
+        gap: 0.55rem;
+        padding-block-end: max(2.75rem, env(safe-area-inset-bottom));
+    }
+
+    .hero_logo_container .hero-cta-list {
+        gap: 0.4rem;
+        max-width: 20rem;
+    }
+
+    .hero_logo_container .hero-intro {
+        max-width: 20rem;
+        padding-inline: 1rem;
+    }
+
+    .hero_logo_container .hero-intro p {
+        font-size: 0.88rem;
+        line-height: 1.4;
+    }
 }
 
 .hero_logo_container .hero-cta-list {
@@ -343,21 +365,23 @@ body.menu-search-active .menu-reels-track {
     margin: 0;
     padding: 0 1rem;
     width: 100%;
-    max-width: 20rem;
+    max-width: 22rem;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.65rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.55rem;
 }
 
 .hero_logo_container .hero-cta-list .subscribe {
-    width: 100%;
+    width: auto;
     padding: 0;
     margin: 0;
+    display: contents;
 }
 
 .hero_logo_container .subscribe--install {
-    width: 100%;
+    width: auto;
     justify-content: center;
 }
 
@@ -366,25 +390,12 @@ body.menu-search-active .menu-reels-track {
     display: none !important;
 }
 
-.hero_logo_container .contact-cta--install {
-    width: 100%;
+.hero_logo_container .hero-cta-list .contact-cta,
+.hero_logo_container .hero-cta-list .subbtn--notify.contact-cta {
+    width: auto;
     min-width: 0;
-    padding: 0.65em 1.1em 0.65em 0.85em;
-    background: linear-gradient(135deg, #5c6bc0, #3949ab);
-    border-color: color-mix(in srgb, #7986cb 55%, #fff);
-    color: #fff;
-    --contact-cta-ink: #fff;
-    --contact-cta-ink-muted: rgba(255, 255, 255, 0.85);
-}
-
-.hero_logo_container .contact-cta--install .contact-cta__icon {
-    background: rgba(255, 255, 255, 0.22);
-    color: #fff;
-}
-
-.hero_logo_container .subscribe .subbtn--notify.contact-cta {
-    width: 100%;
-    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .hero_logo_container .hero-intro {
@@ -418,6 +429,8 @@ body.menu-search-active .menu-reels-track {
     align-items: stretch;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+    /* Clear fixed footer dock (Home / Cart / Search / Settings) */
+    box-sizing: border-box;
     background:
         radial-gradient(ellipse 120% 80% at 50% -20%, color-mix(in srgb, var(--selected-button-color3, #fcd000) 22%, transparent), transparent 55%),
         linear-gradient(165deg, color-mix(in srgb, var(--button-color1, #1a1a2e) 92%, #000), var(--main-bg, #000));
@@ -433,7 +446,14 @@ body.menu-search-active .menu-reels-track {
     justify-content: flex-start;
     gap: 0.85rem;
     margin-inline: auto;
-    padding-block: 0.25rem;
+    padding-block: 0.25rem 0.5rem;
+}
+
+.contactinfobg.menu-reels-slide .location-picker__social {
+    position: relative;
+    z-index: 1;
+    margin-block-end: 0.35rem;
+    padding-block-end: 0.25rem;
 }
 
 .contactinfobg.menu-reels-slide .location-picker__section-footer {
@@ -448,8 +468,8 @@ body.menu-search-active .menu-reels-track {
 }
 
 .contactinfobg.menu-reels-slide .location-picker__section-footer .location-picker__nearby-btn {
-    width: 100%;
-    max-width: 22rem;
+    width: auto;
+    max-width: 100%;
 }
 
 /* Intro / hero-content slide */

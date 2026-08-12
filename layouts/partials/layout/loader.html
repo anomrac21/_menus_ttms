@@ -1,4 +1,62 @@
-<div id="loader" class="loader">
-	<img id="loaderImage" src="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" alt="TT Menus" fetchpriority="high" loading="eager" decoding="async">
-	<img id="menuImage" src="/branding/favicon192.webp" alt="Loading {{ site.Title }}" width="120" height="120" fetchpriority="high" loading="eager" decoding="async">
+{{- $tier := lower (default "free" site.Params.tier) -}}
+{{- $verified := ne $tier "free" -}}
+{{- $paid := or (eq $tier "tier1") (eq $tier "tier1_4mo") (eq $tier "tier2") -}}
+{{- $f := site.Params.features | default dict -}}
+{{- $ordering := false -}}
+{{- with site.Params.orderingsystem -}}{{- $ordering = default false .enabled -}}{{- end -}}
+{{- $notifications := default false $f.notifications -}}
+{{- $payments := and (default false $f.payments) (default false site.Params.paymentService.enabled) -}}
+{{- $delivery := and (default false $f.delivery) (default false (index (site.Params.deliveryService | default dict) "enabled")) -}}
+{{- $analytics := or (default false $f.analytics_access) (default false $f.analytics) -}}
+{{- $loyverse := default false $f.loyverse_connect -}}
+{{- $featured := default false $f.featured -}}
+{{- $siteTitle := site.Title | default "Menu" -}}
+{{- $locations := default slice (index (site.Data.locations | default dict) "locations") -}}
+{{- $locCount := len $locations -}}
+{{- $isHome := .IsHome -}}
+{{- $locCountLabel := cond (eq $locCount 1) "1 location" (printf "%d locations" $locCount) -}}
+<div id="loader" class="loader{{ if $verified }} loader--verified{{ else }} loader--free{{ end }}{{ if $paid }} loader--paid{{ end }}"
+  data-tier="{{ $tier }}"
+  data-verified="{{ $verified }}"
+  data-paid="{{ $paid }}"
+  data-site-title="{{ $siteTitle }}"
+  data-location-count="{{ $locCount }}"
+  data-home="{{ $isHome }}">
+  <div class="loader-brand-stage" id="loaderBrandStage">
+    <img id="loaderImage" src="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" alt="TT Menus" fetchpriority="high" loading="eager" decoding="async">
+    <img id="menuImage" src="/branding/favicon192.webp" alt="Loading {{ $siteTitle }}" width="192" height="192" fetchpriority="high" loading="eager" decoding="async">
+  </div>
+  <div class="loader-status" id="loaderStatus" aria-live="polite">
+    <p class="loader-location{{ if $isHome }} is-ready{{ end }}" id="loaderLocation">
+      <span class="loader-location-label" id="loaderLocationLabel">
+        <span class="loader-location-pin" aria-hidden="true">
+          <svg class="loader-location-icon" viewBox="0 0 24 24" width="20" height="20" focusable="false">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z"/>
+            <circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        <span id="loaderLocationLabelText">{{ if $isHome }}Locations{{ else }}Location{{ end }}</span>
+      </span>
+      <span class="loader-location-value" id="loaderLocationValue">{{ if $isHome }}{{ $locCountLabel }}{{ else }}Selecting…{{ end }}</span>
+    </p>
+    {{ partial "layout/feature-chips.html" (dict "id" "loaderFeatures") }}
+  </div>
 </div>
+<script>
+{{- /* Tier is always a safe slug (a-z0-9_); avoid jsonify here — it was double-encoding in Hugo 0.140. */ -}}
+window.SITE_TIER = "{{ $tier }}";
+window.SITE_VERIFIED = {{ if $verified }}true{{ else }}false{{ end }};
+window.SiteConfig = window.SiteConfig || {};
+window.SiteConfig.tier = "{{ $tier }}";
+window.SiteConfig.verified = {{ if $verified }}true{{ else }}false{{ end }};
+window.SiteConfig.features = {
+  ordering: {{ if $ordering }}true{{ else }}false{{ end }},
+  notifications: {{ if $notifications }}true{{ else }}false{{ end }},
+  payments: {{ if $payments }}true{{ else }}false{{ end }},
+  delivery: {{ if $delivery }}true{{ else }}false{{ end }},
+  analytics: {{ if $analytics }}true{{ else }}false{{ end }},
+  loyverse_connect: {{ if $loyverse }}true{{ else }}false{{ end }},
+  featured: {{ if $featured }}true{{ else }}false{{ end }}
+};
+window.SiteConfig.locationCount = {{ $locCount }};
+</script>

@@ -6,7 +6,7 @@
   {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
 {{- end -}}
 {{- $accountUrl := printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery) -}}
-<div class="dashboard-header-bar">
+<div class="dashboard-header-bar" id="dashboardHeaderBar">
   <a href="/" class="dashboard-logo-link" id="dashboardLogoLink" aria-label="{{ $siteName }} — view live menu" title="View {{ $siteName }} menu site">
     <span class="dashboard-logo-frame" aria-hidden="true">
       <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
@@ -18,11 +18,52 @@
     <h1 class="dashboard-header-site" id="dashboardHeaderSiteName">{{ $siteName }}</h1>
   </div>
   <div class="dashboard-header-end">
-    <a href="/dashboard/deployments/" class="btn-dash btn-dash-secondary dashboard-header-deploy-history" id="dashboardDeployHistoryLink" data-auth="admin-site" style="display: none;" title="View cluster deploy history"><i class="fa fa-history" aria-hidden="true"></i> Deploy history</a>
-    <a href="{{ $accountUrl }}" class="dashboard-header-account-wrap" id="dashboardHeaderAccountLink" aria-label="Open your TT Menus account" title="Open your TT Menus account">
+    <a href="/" class="dashboard-header-view-menu dashboard-header-view-menu--desktop" id="dashboardHeaderViewMenuDesktop">View live menu <i class="fa fa-external-link" aria-hidden="true"></i></a>
+    <a href="{{ $accountUrl }}" class="dashboard-header-account-wrap dashboard-header-account-wrap--desktop" id="dashboardHeaderAccountLink" aria-label="Open your TT Menus account" title="Open your TT Menus account">
       <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <span class="dashboard-header-account" id="dashboardHeaderUserName">—</span>
     </a>
-    <button type="button" class="btn-dash btn-dash-secondary dashboard-header-signout" id="btnLogout"><i class="fa fa-sign-out" aria-hidden="true"></i> Sign out</button>
+    <div class="dashboard-header-actions dashboard-header-actions--desktop" role="group" aria-label="Account actions">
+      <a href="/dashboard/deployments/" class="btn-dash btn-dash-secondary dashboard-header-deploy-history" id="dashboardDeployHistoryLink" data-auth="admin-site" style="display: none;" title="View cluster deploy history" aria-label="Deploy history">
+        <i class="fa fa-history" aria-hidden="true"></i>
+        <span class="dashboard-header-action-label">Deploy history</span>
+      </a>
+      <button type="button" class="btn-dash btn-dash-secondary dashboard-header-signout" id="btnLogout" title="Sign out" aria-label="Sign out">
+        <i class="fa fa-sign-out" aria-hidden="true"></i>
+        <span class="dashboard-header-action-label">Sign out</span>
+      </button>
+    </div>
+    <button type="button" class="dashboard-header-account-btn" id="dashboardHeaderAccountBtn" aria-expanded="false" aria-controls="dashboardHeaderTray" title="Account menu">
+      <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
+      <span class="dashboard-header-account-btn-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+      <span class="dashboard-header-action-label">Account</span>
+    </button>
+  </div>
+  <div class="dashboard-header-tray" id="dashboardHeaderTray" hidden>
+    <a href="{{ $accountUrl }}" class="dashboard-header-tray-row" id="dashboardHeaderTrayAccount">
+      <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
+      <span class="dashboard-header-tray-text">
+        <span class="dashboard-header-tray-label">Account</span>
+        <span class="dashboard-header-tray-value" id="dashboardHeaderTrayUserName">—</span>
+      </span>
+    </a>
+    <a href="/" class="dashboard-header-tray-row" id="dashboardHeaderViewMenu">
+      <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-external-link"></i></span>
+      <span class="dashboard-header-tray-text">
+        <span class="dashboard-header-tray-label">View live menu</span>
+      </span>
+    </a>
+    <a href="/dashboard/deployments/" class="dashboard-header-tray-row dashboard-header-tray-deploy" id="dashboardHeaderTrayDeploy" data-auth="admin-site" style="display: none;">
+      <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
+      <span class="dashboard-header-tray-text">
+        <span class="dashboard-header-tray-label">Deploy history</span>
+      </span>
+    </a>
+    <button type="button" class="dashboard-header-tray-row dashboard-header-tray-signout" id="btnLogoutMobile">
+      <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-sign-out"></i></span>
+      <span class="dashboard-header-tray-text">
+        <span class="dashboard-header-tray-label">Sign out</span>
+      </span>
+    </button>
   </div>
 </div>

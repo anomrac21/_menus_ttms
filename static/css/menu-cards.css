@@ -140,11 +140,11 @@
     padding-right: 0;
 }
 
-/* ── Thumbnail ── */
+/* ── Thumbnail (mobile base; see menu-cards.lg.css) ── */
 .menu-item-card--has-image .menu-item-image {
-    width: 5.25rem;
-    min-width: 5.25rem;
-    height: 5.25rem;
+    width: 4.5rem;
+    min-width: 4.5rem;
+    height: 4.5rem;
     border: 2px solid rgba(255, 255, 255, 0.18);
     background: rgba(0, 0, 0, 0.25);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
@@ -309,27 +309,8 @@
     transform: scale(1.08);
 }
 
-/* ── Expanded loading ── */
-.menu-item-expanded-loading {
-}
-
 .menu-item-card.expanded .menu-item-price {
     font-size: 1.15rem;
-}
-
-/* ── Mobile ── */
-@media (max-width: 480px) {
-    .menu-item-card--has-image .menu-item-image {
-        width: 4.5rem;
-        min-width: 4.5rem;
-        height: 4.5rem;
-    }
-
-    .menu-item-row-top {
-    }
-
-    .menu-item-price {
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,13 +1,15 @@
 {{- $home := site.GetPage "/" -}}
 {{- $heroImage := default "images/demo-hero-platter.webp" $home.Params.image -}}
 {{- $siteName := partial "site-name.html" . -}}
-<section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--hero" aria-labelledby="settings-hero-heading">
-  <div class="dashboard-settings-panel-head">
+<section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--hero is-collapsed" data-settings-panel="hero" aria-labelledby="settings-hero-heading">
+  <button type="button" class="dashboard-settings-panel-head dashboard-settings-panel-toggle" data-settings-panel-toggle aria-expanded="false" aria-controls="settings-hero-body">
     <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-home"></i></span>
     <div class="dashboard-settings-panel-head-text">
       <h2 id="settings-hero-heading" class="dashboard-analytics-heading">Home hero</h2>
     </div>
-  </div>
+    <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+  </button>
+  <div class="dashboard-settings-panel-body" id="settings-hero-body">
   <form id="heroSettingsForm" class="dashboard-settings-form dashboard-settings-hero-form" autocomplete="off">
     <div class="dashboard-settings-hero-layout">
       <div class="dashboard-settings-hero-preview-col">
@@ -35,7 +37,7 @@
             </div>
             <div id="settingsHeroPreviewIntro" class="hero-intro hidden"></div>
             <ul class="hero-cta-list">
-              {{- if site.Params.notifications.enabled -}}
+              {{- if default false site.Params.features.notifications -}}
               <li class="subscribe subscribe--notifications">
                 <span class="subbtn subbtn--notify contact-cta contact-cta--notify">
                   <span class="contact-cta__icon" aria-hidden="true">
@@ -100,4 +102,5 @@
       <span id="heroSettingsSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
     </div>
   </form>
+  </div>
 </section>

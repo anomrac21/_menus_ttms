@@ -1,0 +1,18 @@
+/**
+ * Expanded carousel — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    .expanded-image-carousel:not(.menu-item-slideshow) .expanded-image-carousel-img {
+        max-height: min(72dvh, 560px);
+    }
+
+    .menu-item-slideshow:not(.is-height-synced) .expanded-image-carousel-container.menu-item-slideshow-track {
+        height: min(72dvh, calc(100dvh - 5em));
+        min-height: 200px;
+    }
+
+    .expanded-image-nav-prev {
+        left: 0.5rem;
+    }
+}

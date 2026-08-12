@@ -1,0 +1,11 @@
+/**
+ * Menu cards — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    .menu-item-card--has-image .menu-item-image {
+        width: 5.25rem;
+        min-width: 5.25rem;
+        height: 5.25rem;
+    }
+}

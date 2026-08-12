@@ -1,200 +1,36 @@
 {{- $menuItems := slice -}}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
 
-{{- range site.Sections -}}
-  {{- if and (ne .Section "content") (ne .Section "weekly-promotions") (ne .Section "tags") (ne .Section "categories") (ne .Section "subcategories") (ne .Section "types") (ne .Section "events") (ne .Section "ingredients") (ne .Section "cookingmethods") (ne .Section "admins") (ne .Section "admin") (ne .Section "payment") -}}
-    
-    {{- range .Pages -}}
-      {{- /* Build variable1 values array */ -}}
-      {{- $variable1Values := slice -}}
-      {{- range .Params.prices -}}
-        {{- if not (in $variable1Values .variable1) -}}
-          {{- $variable1Values = $variable1Values | append .variable1 -}}
-        {{- end -}}
-      {{- end -}}
-
-      {{- /* Build variable2 values array */ -}}
-      {{- $variable2Values := slice -}}
-      {{- range .Params.prices -}}
-        {{- if not (in $variable2Values .variable2) -}}
-          {{- $variable2Values = $variable2Values | append .variable2 -}}
-        {{- end -}}
-      {{- end -}}
-
-      {{- /* Build prices array (include optional loyverse_variant_id per price row) */ -}}
-      {{- $prices := slice -}}
-      {{- $priceMeta := slice -}}
-      {{- range .Params.prices -}}
-        {{- $price := slice -}}
-        {{- $price = $price | append .variable1 -}}
-        {{- $price = $price | append .variable2 -}}
-        {{- $price = $price | append .price -}}
-        {{- $prices = $prices | append $price -}}
-        {{- $priceMeta = $priceMeta | append (dict
-          "variable1" .variable1
-          "variable2" .variable2
-          "price" .price
-          "loyverse_variant_id" (.loyverse_variant_id | default "")
-        ) -}}
-      {{- end -}}
-
-      {{- /* Build side categories array (new structure) */ -}}
-      {{- $sideCategories := slice -}}
-      {{- if .Params.side_categories -}}
-        {{- range .Params.side_categories -}}
-          {{- $category := dict -}}
-          {{- $category = merge $category (dict "category_name" .category_name) -}}
-          {{- $category = merge $category (dict "display_name" .display_name) -}}
-          
-          {{- /* Build items for this category */ -}}
-          {{- $items := slice -}}
-          {{- range .items -}}
-            {{- /* Support both object format (with image) and flat array format (backward compatible) */ -}}
-            {{- if .name -}}
-              {{- /* Object format: {name, type, price, image} */ -}}
-              {{- $item := dict -}}
-              {{- $item = merge $item (dict "name" .name) -}}
-              {{- $item = merge $item (dict "type" (.type | default "Regular")) -}}
-              {{- $item = merge $item (dict "price" (.price | default 0)) -}}
-              {{- if .image -}}
-                {{- $item = merge $item (dict "image" .image) -}}
-              {{- end -}}
-              {{- $items = $items | append $item -}}
-            {{- else -}}
-              {{- /* Flat array format: [name, type, price] - backward compatible */ -}}
-              {{- $item := slice -}}
-              {{- $item = $item | append . -}}
-              {{- $items = $items | append $item -}}
-            {{- end -}}
+{{- if $multi -}}
+  {{- range site.Sections -}}
+    {{- $locSection := . -}}
+    {{- $locSlug := .Section -}}
+    {{- $isLoc := false -}}
+    {{- range site.Data.locations.locations -}}
+      {{- if eq .slug $locSlug -}}{{- $isLoc = true -}}{{- end -}}
+    {{- end -}}
+    {{- if $isLoc -}}
+      {{- range $locSection.Sections -}}
+        {{- $cat := . -}}
+        {{- $secSlug := partial "menu/section-slug.html" $cat -}}
+        {{- if and (ne $secSlug "promotions") (not (partial "menu/is-excluded-section.html" $cat.RelPermalink)) -}}
+          {{- range $cat.RegularPages -}}
+            {{- $menuItems = $menuItems | append (partial "menu/item-dict.html" (dict "page" . "sectionSlug" $secSlug "locationSlug" $locSlug "category" $cat)) -}}
           {{- end -}}
-          {{- $category = merge $category (dict "items" $items) -}}
-          
-          {{- /* Build config for this category */ -}}
-          {{- if .config -}}
-            {{- $config := dict -}}
-            {{- $config = merge $config (dict "minimum" (.config.minimum | default 0)) -}}
-            {{- $config = merge $config (dict "maximum" (.config.maximum | default 99)) -}}
-            {{- $category = merge $category (dict "config" $config) -}}
-          {{- end -}}
-          
-          {{- $sideCategories = $sideCategories | append $category -}}
         {{- end -}}
       {{- end -}}
-      
-      {{- /* Build legacy sides array (for backward compatibility) */ -}}
-      {{- $sides := slice -}}
-      {{- range .Params.sides -}}
-        {{- $side := slice -}}
-        {{- $side = $side | append .name -}}
-        {{- $side = $side | append .type -}}
-        {{- $side = $side | append .price -}}
-        {{- $sides = $sides | append $side -}}
+    {{- end -}}
+  {{- end -}}
+{{- else -}}
+  {{- range site.Sections -}}
+    {{- if not (partial "menu/is-excluded-section.html" .RelPermalink) -}}
+      {{- $cat := . -}}
+      {{- $secSlug := partial "menu/section-slug.html" $cat -}}
+      {{- if and (ne $secSlug "promotions") (ne .Section "weekly-promotions") (ne .Section "content") -}}
+        {{- range $cat.RegularPages -}}
+          {{- $menuItems = $menuItems | append (partial "menu/item-dict.html" (dict "page" . "sectionSlug" $secSlug "locationSlug" "" "category" $cat)) -}}
+        {{- end -}}
       {{- end -}}
-
-      {{- /* Build legacy side config array (for backward compatibility) */ -}}
-      {{- $sideconfig := slice -}}
-      {{- if .Params.side_config -}}
-        {{- $config := slice -}}
-        {{- $config = $config | append .Params.side_config.all_max -}}
-        {{- $config = $config | append .Params.side_config.all_valuecount -}}
-        {{- $config = $config | append .Params.side_config.all_value -}}
-        {{- $config = $config | append .Params.side_config.regular_max -}}
-        {{- $config = $config | append .Params.side_config.regular_valuecount -}}
-        {{- $config = $config | append .Params.side_config.regular_value -}}
-        {{- $config = $config | append .Params.side_config.premium_max -}}
-        {{- $config = $config | append .Params.side_config.premium_valuecount -}}
-        {{- $config = $config | append .Params.side_config.premium_value -}}
-        {{- $sideconfig = $sideconfig | append $config -}}
-      {{- end -}}
-
-      {{- /* Build additions array */ -}}
-      {{- $additions := slice -}}
-      {{- range .Params.additions -}}
-        {{- $addition := slice -}}
-        {{- $addition = $addition | append .name -}}
-        {{- $addition = $addition | append .price -}}
-        {{- $additions = $additions | append $addition -}}
-      {{- end -}}
-
-      {{- /* Build modifications array */ -}}
-      {{- $modifications := slice -}}
-      {{- range .Params.modifications -}}
-        {{- $modification := slice -}}
-        {{- $modification = $modification | append .name -}}
-        {{- $modification = $modification | append .price -}}
-        {{- $modifications = $modifications | append $modification -}}
-      {{- end -}}
-
-      {{- /* Build images array */ -}}
-      {{- $images := slice -}}
-      {{- range .Params.images -}}
-        {{- $images = $images | append .image -}}
-      {{- end -}}
-
-      {{- /* Build tags array */ -}}
-      {{- $tags := slice -}}
-      {{- with .Params.tags -}}
-        {{- $tags = . -}}
-      {{- end -}}
-      
-      {{- /* Build ingredients array */ -}}
-      {{- $ingredients := slice -}}
-      {{- with .Params.ingredients -}}
-        {{- $ingredients = . -}}
-      {{- end -}}
-      
-      {{- /* Build cooking methods array */ -}}
-      {{- $cookingmethods := slice -}}
-      {{- with .Params.cookingmethods -}}
-        {{- $cookingmethods = . -}}
-      {{- end -}}
-      
-      {{- /* Build types array */ -}}
-      {{- $types := slice -}}
-      {{- with .Params.types -}}
-        {{- $types = . -}}
-      {{- end -}}
-      
-      {{- /* Build events array */ -}}
-      {{- $events := slice -}}
-      {{- with .Params.events -}}
-        {{- $events = . -}}
-      {{- end -}}
-
-      {{- $availability := .Params.availability | default .CurrentSection.Params.availability -}}
-
-      {{- /* Create item object with all data */ -}}
-      {{- $item := dict
-          "id" .File.UniqueID
-          "name" .Title
-          "linkTitle" .LinkTitle
-          "url" .RelPermalink
-          "weight" .Weight
-          "section" .Parent.Section
-          "section_weight" .Parent.Weight
-          "category" .Parent.Title
-          "categoryUrl" .Parent.RelPermalink
-          "summary" .Summary
-          "variable1_values" $variable1Values
-          "variable2_values" (sort $variable2Values)
-          "prices" $prices
-          "price_meta" $priceMeta
-          "loyverse_item_id" (.Params.loyverse_item_id | default "")
-          "loyverse_variant_id" (.Params.loyverse_variant_id | default "")
-          "side_categories" $sideCategories
-          "sides" $sides
-          "sideconfig" $sideconfig
-          "additions" $additions
-          "modifications" $modifications
-          "images" $images
-          "tags" $tags
-          "ingredients" $ingredients
-          "cookingmethods" $cookingmethods
-          "types" $types
-          "events" $events
-          "availability" $availability
-          "promotions" (.Params.promotions | default slice)
-      -}}
-      {{- $menuItems = $menuItems | append $item -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -202,6 +38,7 @@
 {{- $json := dict
     "menu_items" $menuItems
     "total_count" (len $menuItems)
+    "multi_location_menus" $multi
     "generated_at" now
 -}}
 

@@ -1,0 +1,20 @@
+{{- $name := . -}}
+<svg class="loader-feature-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+  {{- if eq $name "ordering" -}}
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 6h15l-1.5 9h-12z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="18" cy="20" r="1.4" fill="currentColor"/>
+  {{- else if eq $name "notifications" -}}
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10 21a2 2 0 0 0 4 0"/>
+  {{- else if eq $name "payments" -}}
+  <rect x="2.5" y="5.5" width="19" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" d="M2.5 10h19"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M7 15h4"/>
+  {{- else if eq $name "delivery" -}}
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 7h11v10H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 10h4l3 3v4h-7"/><circle cx="7.5" cy="18.5" r="1.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="18.5" r="1.5" fill="none" stroke="currentColor" stroke-width="2"/>
+  {{- else if eq $name "analytics" -}}
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 19V5"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 19h16"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 15v-3M12 15V8M16 15v-5"/>
+  {{- else if eq $name "loyverse" -}}
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 10h16v9H4z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 10V7a4 4 0 0 1 8 0v3"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 14h6"/>
+  {{- else if eq $name "featured" -}}
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m12 3.5 2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 16.8 7.2 18.4l.9-5.4L4.2 9.2l5.4-.8z"/>
+  {{- else -}}
+  <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m16 16 4 4"/>
+  {{- end -}}
+</svg>

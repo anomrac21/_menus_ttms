@@ -6,7 +6,7 @@
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
 <link rel="stylesheet" href="/css/auth.css">
-<link rel="stylesheet" href="/css/dashboard.css">
+<link rel="stylesheet" href="/css/dashboard.css?v={{ now.Unix }}">
 {{- if site.Params.auth.enabled -}}
 <script>
 window.AUTH_CONFIG = { apiUrl: "{{ site.Params.auth.apiUrl }}" };
@@ -38,4 +38,4 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/cdn-config.js"></script>
 {{ partial "dashboard/icon-picker-script.html" . }}
 <script src="/js/dashboard-edit-field-prompts.js" defer></script>
-<script src="/js/dashboard-edit.js" defer></script>
+<script src="/js/dashboard-edit.js?v={{ now.Unix }}" defer></script>

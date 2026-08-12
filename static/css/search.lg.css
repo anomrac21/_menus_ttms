@@ -1,0 +1,29 @@
+/**
+ * Search bar — larger screens (769px+)
+ */
+
+@media (min-width: 769px) {
+    .menu-search-bar {
+        top: calc(var(--ttms-header-height, 5em) + 0.55rem);
+        inset-inline: 0.75rem;
+    }
+
+    .menu-search-bar__shell {
+        min-height: 3.1rem;
+        padding: 0.35rem 0.4rem 0.35rem 0.55rem;
+    }
+
+    .menu-search-bar__input {
+        font-size: 1rem;
+    }
+
+    .menu-search-bar__leading {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .menu-search-bar__close {
+        width: 2.35rem;
+        height: 2.35rem;
+    }
+}

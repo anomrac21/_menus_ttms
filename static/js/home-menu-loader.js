@@ -6,6 +6,7 @@
   'use strict';
 
   var menuBySection = null;
+  var rawMenuItems = null;
   var fetchPromise = null;
   var headerObserver = null;
   var reelsRefreshTimer = null;
@@ -696,6 +697,9 @@
       ' data-section-slug="' +
       escapeHtml(item.section || '') +
       '"' +
+      (item.location_slug
+        ? ' data-location-slug="' + escapeHtml(item.location_slug) + '"'
+        : '') +
       ' data-item-url="' +
       escapeHtml(item.url || '') +
       '"' +
@@ -767,27 +771,61 @@
     );
   }
 
+  function activeLocationSlug() {
+    var viewport = document.getElementById('menu-reels-viewport');
+    return (viewport && viewport.getAttribute('data-location-slug')) || '';
+  }
+
+  function multiLocationMenusEnabled() {
+    return !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
+  }
+
   function groupMenuItems(items) {
     var grouped = {};
+    var locFilter = activeLocationSlug();
+    var multi = multiLocationMenusEnabled();
     (items || []).forEach(function (item) {
       if (!item || !item.section || item.section === 'promotions') return;
+      // Multi-location: only show items for the selected location (hide everything else).
+      if (multi) {
+        if (!locFilter) return;
+        if (!item.location_slug || item.location_slug !== locFilter) return;
+      } else if (locFilter && item.location_slug && item.location_slug !== locFilter) {
+        return;
+      }
       if (!grouped[item.section]) grouped[item.section] = [];
       grouped[item.section].push(item);
     });
     return grouped;
   }
 
+  function apiUrlWithoutLocationQuery(apiUrl) {
+    var url = apiUrl || '/api/menu-items.json';
+    try {
+      var u = new URL(url, window.location.origin);
+      u.searchParams.delete('location');
+      return u.pathname + (u.search || '');
+    } catch (e) {
+      return String(url).replace(/([?&])location=[^&]*&?/, '$1').replace(/[?&]$/, '') || '/api/menu-items.json';
+    }
+  }
+
   function fetchMenuItems(apiUrl) {
-    if (menuBySection) return Promise.resolve(menuBySection);
+    if (rawMenuItems) {
+      menuBySection = groupMenuItems(rawMenuItems);
+      return Promise.resolve(menuBySection);
+    }
     if (fetchPromise) return fetchPromise;
 
-    fetchPromise = fetch(apiUrl, { credentials: 'same-origin' })
+    var fetchUrl = apiUrlWithoutLocationQuery(apiUrl);
+    fetchPromise = fetch(fetchUrl, { credentials: 'same-origin' })
       .then(function (response) {
         if (!response.ok) throw new Error('Menu items fetch failed: ' + response.status);
         return response.json();
       })
       .then(function (payload) {
-        menuBySection = groupMenuItems(payload.menu_items || []);
+        rawMenuItems = payload.menu_items || [];
+        menuBySection = groupMenuItems(rawMenuItems);
         return menuBySection;
       })
       .catch(function (error) {
@@ -797,6 +835,88 @@
       });
 
     return fetchPromise;
+  }
+
+  function clearRenderedLocationMenuCards() {
+    var track = getTrack();
+    if (!track) return;
+    track.querySelectorAll('.menu-item-card.menu-reels-slide').forEach(function (card) {
+      card.remove();
+    });
+    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      stopSectionCountAnimation(header);
+      delete header.dataset.homeMenuLoaded;
+      header.removeAttribute('data-home-menu-rendered-count');
+      header.removeAttribute('aria-busy');
+      header.setAttribute('aria-busy', 'true');
+      updateSectionCountDisplay(header, 0, true);
+    });
+    sectionLoadPromises = Object.create(null);
+  }
+
+  function syncSectionVisibilityForLocation(grouped) {
+    var track = getTrack();
+    if (!track) return;
+    track.querySelectorAll('.main-menu-bg').forEach(function (bg) {
+      var header = bg.querySelector('.menu-header.menu-reels-slide[data-home-menu-lazy]');
+      if (!header) return;
+      var slug = header.getAttribute('data-section-slug') || '';
+      var count = (grouped && grouped[slug] ? grouped[slug].length : 0) || 0;
+      header.setAttribute('data-item-count', String(count));
+      bg.hidden = count === 0;
+      bg.style.display = count === 0 ? 'none' : '';
+      var title = header.getAttribute('data-reel-section') || '';
+      document.querySelectorAll('#menublock .menublock-item').forEach(function (li) {
+        var a = li.querySelector('.menublock-link');
+        if (!a) return;
+        var href = a.getAttribute('href') || '';
+        var labelEl = a.querySelector('.menublock-link__label');
+        var label = ((labelEl && labelEl.textContent) || a.textContent || '').trim();
+        if (href === '#' + title || label === title.trim()) {
+          li.hidden = count === 0;
+        }
+      });
+    });
+  }
+
+  /**
+   * Re-filter lazy home menu cards to the selected location slug (real time).
+   * When multiLocationMenus is on, items without that location_slug are hidden.
+   */
+  function applyHomeMenuLocationFilter(slug) {
+    var root = getConfigRoot();
+    if (!root) return Promise.resolve(null);
+
+    slug = String(slug || '').trim();
+    if (slug) root.setAttribute('data-location-slug', slug);
+    else root.removeAttribute('data-location-slug');
+
+    clearRenderedLocationMenuCards();
+
+    var apiUrl = root.getAttribute('data-home-menu-api') || '/api/menu-items.json';
+    if (!loaderConfig) {
+      loaderConfig = {
+        apiUrl: apiUrl,
+        authEnabled: root.getAttribute('data-auth-enabled') === 'true',
+        menuImages: root.getAttribute('data-menu-images') === 'true',
+      };
+    }
+
+    return fetchMenuItems(apiUrl).then(function (grouped) {
+      syncSectionVisibilityForLocation(grouped);
+      scheduleProximityCheck();
+      // Eager-load every visible section so the switch feels immediate
+      Object.keys(grouped || {}).forEach(function (sec) {
+        loadSectionBySlug(sec, loaderConfig);
+      });
+      scheduleReelsRefresh();
+      try {
+        window.dispatchEvent(
+          new CustomEvent('ttms:home-menu-location-filtered', { detail: { slug: slug } })
+        );
+      } catch (_) { /* ignore */ }
+      return grouped;
+    });
   }
 
   function scheduleReelsRefresh() {
@@ -1124,6 +1244,7 @@
 
   function resetHomeMenuLoader() {
     menuBySection = null;
+    rawMenuItems = null;
     fetchPromise = null;
     loaderStarted = false;
     loaderConfig = null;
@@ -1167,6 +1288,7 @@
   window.initHomeMenuLoader = initHomeMenuLoader;
   window.loadHomeMenuForSectionId = loadHomeMenuForSectionId;
   window.waitForHomeMenuBootstrap = waitForHomeMenuBootstrap;
+  window.applyHomeMenuLocationFilter = applyHomeMenuLocationFilter;
 
   window.addEventListener('menuReelsFlattened', function () {
     if (!loaderConfig) {

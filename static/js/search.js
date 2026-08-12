@@ -20,6 +20,26 @@
             .replace(/"/g, '&quot;');
     }
 
+    /** Approximate Hugo urlize for taxonomy term paths (e.g. Chicken → chicken). */
+    function slugifyTaxonomyTerm(label) {
+        var value = String(label || '').toLowerCase();
+        try {
+            if (typeof value.normalize === 'function') {
+                value = value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+            }
+        } catch (_) { /* ignore */ }
+        return value
+            .replace(/&/g, ' and ')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function taxonomyTermUrl(plural, label) {
+        var slug = slugifyTaxonomyTerm(label);
+        if (!slug) return '';
+        return '/' + plural + '/' + slug + '/';
+    }
+
     function normalizeImagePath(path) {
         if (!path) return '';
         var value = String(path);
@@ -101,7 +121,7 @@
                 type: 'tag',
                 label: label,
                 sublabel: 'Tag',
-                url: '',
+                url: taxonomyTermUrl('tags', label),
                 query: label,
                 haystack: String(label).toLowerCase(),
             });
@@ -112,7 +132,7 @@
                 type: 'ingredient',
                 label: label,
                 sublabel: 'Ingredient',
-                url: '',
+                url: taxonomyTermUrl('ingredients', label),
                 query: label,
                 haystack: String(label).toLowerCase(),
             });
@@ -559,6 +579,25 @@
         }
     }
 
+    function goToTaxonomySuggestion(suggestion) {
+        if (!suggestion) return;
+
+        var url = suggestion.url;
+        if (!url) {
+            var plural = suggestion.type === 'ingredient' ? 'ingredients' : 'tags';
+            url = taxonomyTermUrl(plural, suggestion.label);
+        }
+        if (!url) {
+            goToFilterSuggestion(suggestion);
+            return;
+        }
+
+        clearMenuSearchFilters();
+        hideSearchSuggestions();
+        closeSearchBarIfOpen();
+        navigateToMenuUrl(url);
+    }
+
     function goToFilterSuggestion(suggestion) {
         var searchInput = document.getElementById('searchbox');
         if (!searchInput || !suggestion) return;
@@ -594,7 +633,7 @@
         }
 
         if (suggestion.type === 'tag' || suggestion.type === 'ingredient') {
-            goToFilterSuggestion(suggestion);
+            goToTaxonomySuggestion(suggestion);
             return;
         }
 

@@ -31,48 +31,79 @@
   {{- end }}
 
   {{- $social := dict -}}
+  {{- with site.Params.social -}}
+    {{- with .facebook }}{{ $social = merge $social (dict "facebook" .) }}{{ end }}
+    {{- with .instagram }}{{ $social = merge $social (dict "instagram" .) }}{{ end }}
+    {{- with .youtube }}{{ $social = merge $social (dict "youtube" .) }}{{ end }}
+    {{- with .tiktok }}{{ $social = merge $social (dict "tiktok" .) }}{{ end }}
+    {{- with .email }}{{ $social = merge $social (dict "email" .) }}{{ end }}
+    {{- with .phone }}{{ $social = merge $social (dict "phone" .) }}{{ end }}
+  {{- end -}}
   {{- with .Params.facebook }}{{ $social = merge $social (dict "facebook" .) }}{{ end }}
   {{- with .Params.instagram }}{{ $social = merge $social (dict "instagram" .) }}{{ end }}
   {{- with .Params.youtube }}{{ $social = merge $social (dict "youtube" .) }}{{ end }}
   {{- with .Params.tiktok }}{{ $social = merge $social (dict "tiktok" .) }}{{ end }}
-  
+
+  {{- /* Plan matrix (CPS hugoPlanConfigReplacements):
+       free (unverified): menu app, search, unbranded pin, ordering locked, directions, social links
+       free_verified: WhatsApp ordering, branded pin, ordering unlocked, notifications
+       tier1 / tier1_4mo: analytics + Loyverse (+ verified)
+       tier2: featured (+ tier1)
+  */ -}}
   {{- $f := site.Params.features | default dict -}}
-  {{- $payments := default false $f.payments -}}
-  {{- $delivery := default false $f.delivery -}}
+  {{- /* Add-ons: feature flag + service enabled (plan matrix does not flip these). */ -}}
+  {{- $paySvc := site.Params.paymentService | default dict -}}
+  {{- $delSvc := site.Params.deliveryService | default dict -}}
+  {{- $payments := and (default false $f.payments) (default false $paySvc.enabled) -}}
+  {{- $delivery := and (default false $f.delivery) (default false $delSvc.enabled) -}}
   {{- $notifications := default false $f.notifications -}}
+  {{- $analytics := or (default false $f.analytics_access) (default false $f.analytics) -}}
+  {{- $loyverseConnect := default false $f.loyverse_connect -}}
+  {{- $featured := default false $f.featured -}}
+  {{- $exclusiveAds := default false $f.exclusive_ads -}}
+  {{- if not $exclusiveAds -}}{{- $exclusiveAds = default false $f.no_competitor_ads -}}{{- end -}}
+
   {{- $pos := false -}}
   {{- $posProvider := "" -}}
   {{- with site.Params.posintegration -}}
-    {{- if .enabled -}}
+    {{- if and $loyverseConnect .enabled -}}
       {{- $pos = true -}}
       {{- with .provider -}}{{- $posProvider = . -}}{{- end -}}
     {{- end -}}
   {{- end -}}
-  {{- $analytics := or (default false $f.analytics_access) (default false $f.analytics) -}}
-  {{- with site.Params.services -}}
-    {{- if gt (int (default 0 .analyticsid)) 0 -}}{{- $analytics = true -}}{{- end -}}
+
+  {{- $tier := lower (default "free" site.Params.tier) -}}
+  {{- /* Only Free unverified uses unbranded pin / free_menu hub treatment */ -}}
+  {{- $freeMenu := eq $tier "free" -}}
+  {{- $brandedPin := not $freeMenu -}}
+  {{- $orderingEnabled := false -}}
+  {{- with site.Params.orderingsystem -}}
+    {{- $orderingEnabled = default false .enabled -}}
   {{- end -}}
-  {{- $exclusiveAds := default false $f.exclusive_ads -}}
-  {{- if not $exclusiveAds -}}{{- $exclusiveAds = default false $f.no_competitor_ads -}}{{- end -}}
+
   {{- $features := dict
       "payments" $payments
       "delivery" $delivery
       "notifications" $notifications
+      "ordering" $orderingEnabled
       "pos" $pos
+      "loyverse_connect" $loyverseConnect
       "analytics" $analytics
+      "analytics_access" $analytics
       "exclusive_ads" $exclusiveAds
-      "featured" (default false $f.featured)
+      "featured" $featured
       "no_competitor_ads" (default false $f.no_competitor_ads)
       "unmetered_traffic" (default false $f.unmetered_traffic)
+      "branded_pin" $brandedPin
   -}}
   {{- if and $pos (ne (strings.TrimSpace $posProvider) "") -}}
     {{- $features = merge $features (dict "pos_provider" (lower (strings.TrimSpace $posProvider))) -}}
   {{- end -}}
 
-  {{- $tier := default "free" site.Params.tier -}}
-  {{- $freeMenu := eq $tier "free" -}}
-
-  {{- $mappin := site.Data.mappin | default dict -}}
+  {{- $mappin := dict -}}
+  {{- if $brandedPin -}}
+    {{- $mappin = site.Data.mappin | default dict -}}
+  {{- end -}}
   {{- $clientID := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
   {{- $logo := "/branding/favicon144.webp" -}}
 

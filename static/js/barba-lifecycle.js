@@ -106,6 +106,21 @@
     }
     bound = true;
 
+    // Barba v2 uses hooks — it does not dispatch document "barba:after" events by default.
+    if (window.barba.hooks) {
+      if (typeof window.barba.hooks.after === 'function') {
+        window.barba.hooks.after(function () {
+          runAfterTransition('barba.hooks.after');
+        });
+      }
+      if (typeof window.barba.hooks.afterEnter === 'function') {
+        window.barba.hooks.afterEnter(function () {
+          runAfterTransition('barba.hooks.afterEnter');
+        });
+      }
+    }
+
+    // Legacy / custom document events (if anything dispatches them)
     ['barba:after', 'barba:afterEnter'].forEach(function (eventName) {
       document.addEventListener(eventName, function () {
         runAfterTransition(eventName);

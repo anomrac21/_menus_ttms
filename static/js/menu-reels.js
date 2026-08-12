@@ -351,8 +351,12 @@
 
     push(track.querySelector('.menu-reels-slide--hero'));
     push(track.querySelector('.menu-reels-slide--contact'));
-    push(track.querySelector('.menu-reels-slide--intro'));
 
+    // Promotions first, then community photos / share intro, then other section titles.
+    track.querySelectorAll('.menu-reels-slide--section-title[data-promo-section]').forEach(function (el) {
+      push(el);
+    });
+    push(track.querySelector('.menu-reels-slide--intro'));
     track.querySelectorAll('.menu-reels-slide--section-title').forEach(function (el) {
       push(el);
     });

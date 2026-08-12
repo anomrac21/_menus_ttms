@@ -24,7 +24,7 @@
   </script>
   <script src="/js/dashboard-control-room.js" defer></script>
   <script src="/js/dashboard-deploy-status.js" defer></script>
-  {{- if site.Params.notifications.enabled }}
+  {{- if default false site.Params.features.notifications }}
   <script src="/js/dashboard-notifications.js" defer></script>
   {{- end }}
 </head>
@@ -34,137 +34,208 @@
       {{ partial "dashboard/control-room-header.html" . }}
     </div>
     <div class="cards">
-      <div class="card card-edit-menu">
-        <h3 class="dashboard-card-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Edit menu</h3>
-        <div class="dashboard-card-edit-menu-top dashboard-card-actions dashboard-card-actions--grid">
-          <a href="/menu-settings/" class="btn-dash btn-dash-secondary"><i class="fa fa-cog" aria-hidden="true"></i> Menu settings</a>
-          <a href="/edit-menu-colors/" class="btn-dash btn-dash-primary dashboard-menu-status-open-editor" id="cardEditMenu"><i class="fa fa-paint-brush" aria-hidden="true"></i> Edit theme</a>
-          <a href="/edit-menu-rearrange/" class="btn-dash btn-dash-secondary" id="cardRearrangeMenu"><i class="fa fa-arrows" aria-hidden="true"></i> Rearrange menu</a>
-          <a href="/?edit=content" class="btn-dash btn-dash-secondary" id="cardEditMenuContent"><i class="fa fa-pencil" aria-hidden="true"></i> Edit menu content</a>
-        </div>
-        <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
-        <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshots, content drafts, and publish status">
-          <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots is-collapsed" data-menu-status-block="snapshots">
-            <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="snapshots" aria-expanded="false">
-              <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
-              <span class="dashboard-menu-status-heading-main">
-                <span class="dashboard-menu-status-heading-text">Menu snapshots</span>
-                <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary"></span>
+      <div class="card card-edit-menu is-collapsed" data-dashboard-card="edit-menu">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="edit-menu" aria-expanded="false" aria-controls="dashboardCardBody-edit-menu">
+          <h3 class="dashboard-card-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Edit menu</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-edit-menu">
+          <nav class="dashboard-edit-menu-nav" aria-label="Menu editing tools">
+            <a href="/?edit=content" class="dashboard-edit-menu-action dashboard-edit-menu-action--primary" id="cardEditMenuContent">
+              <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-pencil"></i></span>
+              <span class="dashboard-edit-menu-action-copy">
+                <span class="dashboard-edit-menu-action-title">Edit menu content</span>
+                <span class="dashboard-edit-menu-action-desc">Update dishes, prices, descriptions, and sections on the live menu</span>
               </span>
-              <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-            </button>
-            <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
-          </div>
-          <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts is-collapsed" data-menu-status-block="drafts">
-            <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="drafts" aria-expanded="false">
-              <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
-              <span class="dashboard-menu-status-heading-main">
-                <span class="dashboard-menu-status-heading-text">Content drafts</span>
-                <span class="dashboard-menu-status-heading-summary" id="dashboardDraftBlockSummary"></span>
-              </span>
-              <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-            </button>
-            <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
-            <div class="dashboard-menu-status-block-foot dashboard-menu-status-block-foot--publish dashboard-menu-status-block-detail">
-              <button type="button" class="btn-dash btn-dash-publish hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">Publish</span></button>
+              <span class="dashboard-edit-menu-action-go" aria-hidden="true"><i class="fa fa-arrow-right"></i></span>
+            </a>
+            <div class="dashboard-edit-menu-action-grid">
+              <a href="/edit-menu-colors/" class="dashboard-edit-menu-action dashboard-menu-status-open-editor" id="cardEditMenu" title="Open live menu in theme editor">
+                <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
+                <span class="dashboard-edit-menu-action-copy">
+                  <span class="dashboard-edit-menu-action-title">Edit theme</span>
+                  <span class="dashboard-edit-menu-action-desc">Colors and look</span>
+                </span>
+              </a>
+              <a href="/edit-menu-rearrange/" class="dashboard-edit-menu-action" id="cardRearrangeMenu" title="Rearrange live menu order">
+                <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-arrows"></i></span>
+                <span class="dashboard-edit-menu-action-copy">
+                  <span class="dashboard-edit-menu-action-title">Rearrange</span>
+                  <span class="dashboard-edit-menu-action-desc">Reorder sections &amp; items</span>
+                </span>
+              </a>
+              <a href="/menu-settings/" class="dashboard-edit-menu-action">
+                <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-cog"></i></span>
+                <span class="dashboard-edit-menu-action-copy">
+                  <span class="dashboard-edit-menu-action-title">Settings</span>
+                  <span class="dashboard-edit-menu-action-desc">Ordering, locations, POS</span>
+                </span>
+              </a>
             </div>
-          </div>
-          <div class="dashboard-menu-status-block dashboard-menu-status-block--publish is-collapsed" data-menu-status-block="publish">
-            <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="publish" aria-expanded="false">
-              <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
-              <span class="dashboard-menu-status-heading-main">
-                <span class="dashboard-menu-status-heading-text">Last publish</span>
-                <span class="dashboard-menu-status-heading-summary" id="dashboardLastPublishBlockSummary"></span>
-              </span>
-              <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-            </button>
-            <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+          </nav>
+          <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
+          <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshots, content drafts, and publish status">
+            <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots is-collapsed" data-menu-status-block="snapshots">
+              <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="snapshots" aria-expanded="false">
+                <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
+                <span class="dashboard-menu-status-heading-main">
+                  <span class="dashboard-menu-status-heading-text">Menu snapshots</span>
+                  <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary"></span>
+                </span>
+                <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+              </button>
+              <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+            </div>
+            <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts is-collapsed" data-menu-status-block="drafts">
+              <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="drafts" aria-expanded="false">
+                <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
+                <span class="dashboard-menu-status-heading-main">
+                  <span class="dashboard-menu-status-heading-text">Content drafts</span>
+                  <span class="dashboard-menu-status-heading-summary" id="dashboardDraftBlockSummary"></span>
+                </span>
+                <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+              </button>
+              <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+              <div class="dashboard-menu-status-block-foot dashboard-menu-status-block-foot--publish dashboard-menu-status-block-detail">
+                <button type="button" class="btn-dash btn-dash-publish hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">Publish</span></button>
+              </div>
+            </div>
+            <div class="dashboard-menu-status-block dashboard-menu-status-block--publish is-collapsed" data-menu-status-block="publish">
+              <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="publish" aria-expanded="false">
+                <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
+                <span class="dashboard-menu-status-heading-main">
+                  <span class="dashboard-menu-status-heading-text">Last publish</span>
+                  <span class="dashboard-menu-status-heading-summary" id="dashboardLastPublishBlockSummary"></span>
+                </span>
+                <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+              </button>
+              <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+            </div>
           </div>
         </div>
       </div>
       {{- if site.Params.menuImageService.enabled }}
-      <div class="card card-dashboard-menu-images" id="dashboardCardMenuImages">
-        <h3 class="dashboard-card-title"><i class="fa fa-picture-o" aria-hidden="true"></i> Menu photo reel</h3>
-        <p class="dashboard-card-desc">Swipe or tap to approve or decline customer photos.</p>
-        <div class="dashboard-menu-images-reel-stats" aria-live="polite">
-          <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending">—</span> in queue</span>
-          <span class="dashboard-menu-images-reel-stat dashboard-menu-images-reel-stat--muted" id="dashboardMenuImagesReelProgress"></span>
-        </div>
-        <p id="dashboardMenuImagesLoading" class="dashboard-menu-images-loading">Loading reel…</p>
-        <p id="dashboardMenuImagesError" class="dashboard-menu-images-error hidden" role="alert"></p>
-        <p id="dashboardMenuImagesEmpty" class="dashboard-menu-images-empty hidden">You&apos;re all caught up — no photos waiting for review.</p>
-        <div id="dashboardMenuImagesReel" class="dashboard-menu-images-reel hidden" aria-label="Photo approval reel">
-          <div class="dashboard-menu-images-reel__stack" id="dashboardMenuImagesReelStack"></div>
-          <div class="dashboard-menu-images-reel__actions" id="dashboardMenuImagesReelActions">
-            <button type="button" class="dashboard-menu-images-reel-btn dashboard-menu-images-reel-btn--decline" id="dashboardMenuImagesDeclineBtn" aria-label="Decline photo">
-              <span class="dashboard-menu-images-reel-btn__icon" aria-hidden="true">✕</span>
-              <span class="dashboard-menu-images-reel-btn__label">Decline</span>
-            </button>
-            <button type="button" class="dashboard-menu-images-reel-btn dashboard-menu-images-reel-btn--approve" id="dashboardMenuImagesApproveBtn" aria-label="Approve photo">
-              <span class="dashboard-menu-images-reel-btn__icon" aria-hidden="true">✓</span>
-              <span class="dashboard-menu-images-reel-btn__label">Approve</span>
-            </button>
+      <div class="card card-dashboard-menu-images is-collapsed" id="dashboardCardMenuImages" data-dashboard-card="menu-images">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="menu-images" aria-expanded="false" aria-controls="dashboardCardBody-menu-images">
+          <h3 class="dashboard-card-title"><i class="fa fa-picture-o" aria-hidden="true"></i> Menu photo reel</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-menu-images">
+          <p class="dashboard-card-desc">Swipe or tap to approve or decline customer photos.</p>
+          <div class="dashboard-menu-images-reel-stats" aria-live="polite">
+            <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending">—</span> in queue</span>
+            <span class="dashboard-menu-images-reel-stat dashboard-menu-images-reel-stat--muted" id="dashboardMenuImagesReelProgress"></span>
           </div>
-        </div>
-        <div class="dashboard-card-menu-images-actions dashboard-card-actions">
-          <button type="button" class="btn-dash btn-dash-secondary" id="dashboardMenuImagesRefresh">Reload queue</button>
+          <p id="dashboardMenuImagesLoading" class="dashboard-menu-images-loading">Loading reel…</p>
+          <p id="dashboardMenuImagesError" class="dashboard-menu-images-error hidden" role="alert"></p>
+          <p id="dashboardMenuImagesEmpty" class="dashboard-menu-images-empty hidden">You&apos;re all caught up — no photos waiting for review.</p>
+          <div id="dashboardMenuImagesReel" class="dashboard-menu-images-reel hidden" aria-label="Photo approval reel">
+            <div class="dashboard-menu-images-reel__stack" id="dashboardMenuImagesReelStack"></div>
+            <div class="dashboard-menu-images-reel__actions" id="dashboardMenuImagesReelActions">
+              <button type="button" class="dashboard-menu-images-reel-btn dashboard-menu-images-reel-btn--decline" id="dashboardMenuImagesDeclineBtn" aria-label="Decline photo">
+                <span class="dashboard-menu-images-reel-btn__icon" aria-hidden="true">✕</span>
+                <span class="dashboard-menu-images-reel-btn__label">Decline</span>
+              </button>
+              <button type="button" class="dashboard-menu-images-reel-btn dashboard-menu-images-reel-btn--approve" id="dashboardMenuImagesApproveBtn" aria-label="Approve photo">
+                <span class="dashboard-menu-images-reel-btn__icon" aria-hidden="true">✓</span>
+                <span class="dashboard-menu-images-reel-btn__label">Approve</span>
+              </button>
+            </div>
+          </div>
+          <div class="dashboard-card-menu-images-actions dashboard-card-actions">
+            <button type="button" class="btn-dash btn-dash-secondary" id="dashboardMenuImagesRefresh">Reload queue</button>
+          </div>
         </div>
       </div>
       {{- end }}
-      <div class="card card-dashboard-ads">
-        <h3 class="dashboard-card-title"><i class="fa fa-bullhorn" aria-hidden="true"></i> Ads</h3>
-        <p class="dashboard-card-desc">Configure advertisements and promotions.</p>
-        <div class="dashboard-card-actions">
-        <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Ads</a>
-        </div>
-      </div>
-      <div class="card card-dashboard-analytics">
-        <h3 class="dashboard-card-title"><i class="fa fa-bar-chart" aria-hidden="true"></i> Analytics</h3>
-        <p class="dashboard-card-desc">View traffic, engagement, and menu performance.</p>
-        <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
-          <div class="dashboard-card-notify-snapshot-grid">
-            <div class="dashboard-card-notify-snapshot-cell">
-              <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
-              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews">—</span>
-            </div>
-            <div class="dashboard-card-notify-snapshot-cell">
-              <span class="dashboard-card-notify-snapshot-label">Visits (30d)</span>
-              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits">—</span>
-            </div>
+      <div class="card card-dashboard-ads is-collapsed" data-dashboard-card="ads">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="ads" aria-expanded="false" aria-controls="dashboardCardBody-ads">
+          <h3 class="dashboard-card-title"><i class="fa fa-bullhorn" aria-hidden="true"></i> Ads</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-ads">
+          <p class="dashboard-card-desc">Configure advertisements and promotions.</p>
+          <div class="dashboard-card-actions">
+            <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Ads</a>
           </div>
         </div>
-        <p id="dashboardCardAnalyticsHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
-        <div class="dashboard-card-actions">
-        <a href="/analytics/" class="btn-dash btn-dash-secondary"><i class="fa fa-line-chart" aria-hidden="true"></i> Analytics</a>
-        </div>
       </div>
-      <div class="card card-dashboard-notify">
-        <h3 class="dashboard-card-title"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</h3>
-        <p class="dashboard-card-desc">Manage push notifications and alerts for your menu.</p>
-        {{- if site.Params.notifications.enabled }}
-        <div class="dashboard-card-notify-snapshot" id="dashboardCardNotifySnapshot" aria-label="Notification snapshot, last 30 days">
-          <div class="dashboard-card-notify-snapshot-grid">
-            <div class="dashboard-card-notify-snapshot-cell">
-              <span class="dashboard-card-notify-snapshot-label">Subscribers</span>
-              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySubs">—</span>
-            </div>
-            <div class="dashboard-card-notify-snapshot-cell">
-              <span class="dashboard-card-notify-snapshot-label">Sent (30d)</span>
-              <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySent">—</span>
+      <div class="card card-dashboard-analytics is-collapsed" data-dashboard-card="analytics">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="analytics" aria-expanded="false" aria-controls="dashboardCardBody-analytics">
+          <h3 class="dashboard-card-title"><i class="fa fa-bar-chart" aria-hidden="true"></i> Analytics</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-analytics">
+          <p class="dashboard-card-desc">View traffic, engagement, and menu performance.</p>
+          <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
+            <div class="dashboard-card-notify-snapshot-grid">
+              <div class="dashboard-card-notify-snapshot-cell">
+                <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews">—</span>
+              </div>
+              <div class="dashboard-card-notify-snapshot-cell">
+                <span class="dashboard-card-notify-snapshot-label">Visits (30d)</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits">—</span>
+              </div>
             </div>
           </div>
-        </div>
-        <p id="dashboardCardNotifyHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
-        {{- end }}
-        <div class="dashboard-card-actions">
-        <a href="/notifications/" class="btn-dash btn-dash-secondary"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</a>
+          <p id="dashboardCardAnalyticsHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
+          <div class="dashboard-card-actions">
+            <a href="/analytics/" class="btn-dash btn-dash-secondary"><i class="fa fa-line-chart" aria-hidden="true"></i> Analytics</a>
+          </div>
         </div>
       </div>
-      <div class="card card-dashboard-auth">
-        <h3 class="dashboard-card-title"><i class="fa fa-lock" aria-hidden="true"></i> Auth</h3>
-        <p class="dashboard-card-desc">Manage login, users, and access for this client.</p>
-        <div class="dashboard-card-actions">
-        <a href="{{ site.Params.authServiceUrl | default "https://auth.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Auth</a>
+      <div class="card card-dashboard-notify is-collapsed" data-dashboard-card="notifications">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="notifications" aria-expanded="false" aria-controls="dashboardCardBody-notifications">
+          <h3 class="dashboard-card-title"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-notifications">
+          <p class="dashboard-card-desc">Manage push notifications and alerts for your menu.</p>
+          {{- if default false site.Params.features.notifications }}
+          <div class="dashboard-card-notify-snapshot" id="dashboardCardNotifySnapshot" aria-label="Notification snapshot, last 30 days">
+            <div class="dashboard-card-notify-snapshot-grid">
+              <div class="dashboard-card-notify-snapshot-cell">
+                <span class="dashboard-card-notify-snapshot-label">Subscribers</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySubs">—</span>
+              </div>
+              <div class="dashboard-card-notify-snapshot-cell">
+                <span class="dashboard-card-notify-snapshot-label">Sent (30d)</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySent">—</span>
+              </div>
+            </div>
+          </div>
+          <p id="dashboardCardNotifyHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
+          {{- end }}
+          <div class="dashboard-card-actions">
+            <a href="/notifications/" class="btn-dash btn-dash-secondary"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</a>
+          </div>
+        </div>
+      </div>
+      {{- if and (default false site.Params.features.delivery) (default false (index (site.Params.deliveryService | default dict) "enabled")) }}
+      <div class="card card-delivery-orders is-collapsed" data-dashboard-card="delivery">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="delivery" aria-expanded="false" aria-controls="dashboardCardBody-delivery">
+          <h3 class="dashboard-card-title"><i class="fa fa-truck" aria-hidden="true"></i> Delivery orders</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-delivery">
+          <p class="dashboard-card-desc">Accept jobs, mark ready, scan pickup QR, and track your driver.</p>
+          <div class="dashboard-card-actions">
+            <a href="/delivery-orders/" class="btn-dash btn-dash-primary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
+          </div>
+        </div>
+      </div>
+      {{- end }}
+      <div class="card card-dashboard-auth is-collapsed" data-dashboard-card="auth">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="auth" aria-expanded="false" aria-controls="dashboardCardBody-auth">
+          <h3 class="dashboard-card-title"><i class="fa fa-lock" aria-hidden="true"></i> Auth</h3>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-auth">
+          <p class="dashboard-card-desc">Manage login, users, and access for this client.</p>
+          <div class="dashboard-card-actions">
+            <a href="{{ site.Params.authServiceUrl | default "https://auth.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Auth</a>
+          </div>
         </div>
       </div>
     </div>
@@ -191,6 +262,10 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async function() {
+      // Collapse works even before auth finishes / if auth gate returns early.
+      if (window.DashboardControlRoom && typeof DashboardControlRoom.initCardCollapse === 'function') {
+        DashboardControlRoom.initCardCollapse();
+      }
       if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
         await AuthClient.whenReady();
       }
@@ -220,7 +295,7 @@
         DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 });
       }
 
-      {{- if site.Params.notifications.enabled }}
+      {{- if default false site.Params.features.notifications }}
       if (window.DashboardNotifications && DashboardNotifications.loadDashboardCard) {
         DashboardNotifications.loadDashboardCard({ days: 30 });
       }

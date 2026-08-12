@@ -15,12 +15,13 @@
 </body>
 </html>
 {{- else -}}
+{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") -}}
 <!DOCTYPE html>
-<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if .IsHome }} class="menu-reels-mode"{{ end }}>
+<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
 <head>
   {{ partial "head.html" . }}
 </head>
-<body{{ if .IsHome }} class="menu-reels-mode"{{ end }}>
+<body{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
   <a class="skip-link" href="#main">Skip to main content</a>
   {{ partial "layout/loader.html" . }}
   {{ partial "features/askofserver.html" . }}
@@ -31,11 +32,11 @@
         {{ partial "layout/header.html" . }}
       </header>
       {{ partial "components/search.html" . }}
-      <main id="main" class="{{ if .IsHome }}main--home{{ else }}main--offset{{ end }}">
+      <main id="main" class="{{ if $isMenuReelsPage }}main--home{{ else }}main--offset{{ end }}">
         {{ block "main" . }}{{ end }}
         
       </main>
-      {{- if not .IsHome -}}
+      {{- if not $isMenuReelsPage -}}
       <div class="bottomads">
           {{ partial "ads/frontpageads.html" . }}
       </div>
@@ -81,6 +82,7 @@
   <script src="/js/client-ad-manager.js" defer></script>
   {{- end -}}
   <script src="/js/location-picker.js" defer></script>
+  <script src="/js/multi-location-menu.js" defer></script>
   {{- if site.Params.menuImageService.enabled -}}
   <script src="/js/menu-smash-pass.js" defer></script>
   {{- end -}}
@@ -97,6 +99,7 @@
   
   {{ partial "features/whatsapp_ordering_system.html" . }}
   {{ partial "features/notifications.html" . }}
+  {{ partial "features/delivery_scripts.html" . }}
 
 </body>
 </html>
