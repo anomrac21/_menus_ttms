@@ -54,8 +54,21 @@
 							<i class="fa fa-credit-card" aria-hidden="true"></i>
 							<span>Pay &amp; Confirm</span>
 							{{- else -}}
+							{{- $confirmUsePhone := true -}}
+							{{- with site.Params.orderingsystem -}}
+								{{- if isset . "usephonecall" -}}{{- $confirmUsePhone = .usephonecall -}}{{- end -}}
+							{{- end -}}
+							{{- $confirmPosOn := default false site.Params.posintegration.enabled -}}
+							{{- if $confirmUsePhone -}}
+							<i class="fa fa-phone" aria-hidden="true"></i>
+							<span>Confirm Order</span>
+							{{- else if $confirmPosOn -}}
+							<i class="fa fa-cash-register" aria-hidden="true"></i>
+							<span>Confirm Order</span>
+							{{- else -}}
 							<i class="fa fa-whatsapp" aria-hidden="true"></i>
 							<span>Confirm Order</span>
+							{{- end -}}
 							{{- end -}}
 						</button>
 						<button type="button" onclick="closeTableModal();" class="btn-cancel-table">

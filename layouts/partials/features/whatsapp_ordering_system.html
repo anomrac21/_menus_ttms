@@ -2337,12 +2337,12 @@ async function confirmWhatsAppOrder(){
 	if (paymentsEnabled && window.PaymentIntegration) {
 		await window.PaymentIntegration.ensurePaidBeforeOrder(null, function () {
 			constructWAMessage();
-			confirmSendOrder();
+			return confirmSendOrder();
 		});
 		return;
 	}
 	constructWAMessage();
-	confirmSendOrder();
+	await confirmSendOrder();
 }
 
 function constructWAMessage(){
@@ -2385,7 +2385,28 @@ function constructWAMessage(){
 	message = 'https://wa.me/'+number+'?text='+encodeURIComponent(messageStart+label+'\n'+metaLines+messageBody+subTotalTxt+vatTxt+servicext+'\nTOTAL $'+(price+vatcost+servicecost)+messageEnd);
 }
 
-function confirmSendOrder(){
+function ttmsPosFailureMessage(result) {
+	var data = (result && result.data) || {};
+	var detail = data.error || data.detail || (result && result.error) || '';
+	var unmapped = data.unmapped_lines;
+	var msg = 'Could not send order to Loyverse.';
+	if (unmapped && unmapped.length) {
+		msg += '\n\nUnmapped items: ' + unmapped.join(', ');
+	} else if (detail) {
+		msg += '\n\n' + detail;
+	}
+	return msg;
+}
+
+function ttmsSetConfirmOrderBusy(busy) {
+	document.querySelectorAll('.btn-confirm-table, #whatsappOrderBtn .btn-place-order').forEach(function (btn) {
+		btn.disabled = !!busy;
+		if (busy) btn.setAttribute('aria-busy', 'true');
+		else btn.removeAttribute('aria-busy');
+	});
+}
+
+async function confirmSendOrder(){
 	// Track order submission
 	if (typeof window.trackOrderSubmission === 'function') {
 		const locationSelect = document.getElementById('locationSelect');
@@ -2403,27 +2424,41 @@ function confirmSendOrder(){
 	var openWhatsApp = ttmsShouldOpenWhatsAppCheckout();
 	var sendLoyverse = ttmsShouldSendOrderToLoyverse();
 
-	// Loyverse stands alone: push receipt even when WhatsApp is off.
+	// Finish the POS receipt before opening WhatsApp — mobile often navigates
+	// away on wa.me and cancels the in-flight Loyverse request.
 	if (sendLoyverse) {
-		ttmsSendOrderToLoyverse().then(function (result) {
-			if (openWhatsApp) return;
-			if (result && result.ok) {
+		ttmsSetConfirmOrderBusy(true);
+		var result;
+		try {
+			result = await ttmsSendOrderToLoyverse();
+		} finally {
+			ttmsSetConfirmOrderBusy(false);
+		}
+		if (result && result.ok) {
+			if (!openWhatsApp) {
 				alert('Order sent to Loyverse.');
-			} else if (result && !result.skipped) {
-				alert('Could not send order to Loyverse. Check POS connection and item mapping in Menu settings.');
-			} else if (!result || result.skipped) {
-				alert('Loyverse order was not sent (POS off or auto-process disabled).');
 			}
-		});
+		} else if (result && !result.skipped) {
+			var failMsg = ttmsPosFailureMessage(result);
+			failMsg += openWhatsApp
+				? '\n\nOpening WhatsApp as fallback.'
+				: '\n\nCheck POS connection and item mapping in Menu settings.';
+			alert(failMsg);
+		} else if (!openWhatsApp && (!result || result.skipped)) {
+			alert('Loyverse order was not sent (POS off or auto-process disabled).');
+		}
 	}
 
-	// WhatsApp is optional — open only when guest channel is WhatsApp and fallback is kept on.
 	if (openWhatsApp && message) {
 		window.open(message, '_blank');
 	} else if (!sendLoyverse && !openWhatsApp) {
 		alert('No checkout channel is available. Enable WhatsApp or Loyverse POS in Menu settings.');
 	}
-	
+
+	if (typeof closeTableModal === 'function') {
+		try { closeTableModal(); } catch (e) {}
+	}
+
 	// Clear the order type variables after sending the order
 	currentOrderType = 'takeaway';
 	currentTableNumber = '';
@@ -2657,21 +2692,15 @@ function selectTable(buttonElement) {
 }
 
 function confirmTable(state){
-	if(myTable!=''){
-		// if(	myTable.endsWith('2L')||myTable.endsWith('14R')){
-		// 	number="";
-		// }else if(	myTable.endsWith('1')||myTable.endsWith('18R')){
-		// 	number="";
-		// }else if(	myTable.endsWith('2')||myTable.endsWith('8L')){
-		// 	number="";
-		// }
-		if (state=='askforserver'){
-			askforserver();
-		}else{
-			confirmWhatsAppOrder();
-		}
-		
+	if(myTable==''){
+		alert('Select a table or takeaway before confirming your order.');
+		return;
 	}
+	if (state=='askforserver'){
+		askforserver();
+		return;
+	}
+	confirmWhatsAppOrder();
 }
 
 function askforserver(){
