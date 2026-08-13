@@ -162,7 +162,7 @@
     processOrderWithPOS: function (opts) {
       if (!this.isPOSEnabled) return Promise.resolve({ skipped: true });
       opts = opts || {};
-      var orderArr = global.order;
+      var orderArr = opts.order || global.order;
       if (!Array.isArray(orderArr) || !orderArr.length) {
         return Promise.resolve({ skipped: true, reason: 'empty_cart' });
       }

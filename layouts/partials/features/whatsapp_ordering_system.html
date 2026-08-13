@@ -629,6 +629,7 @@ let orderSize = '';
 let orderFlav = '';
 
 let order = [];
+window.order = order;
 let basePrice = 0;
 
 let orderSides = [];
@@ -1664,6 +1665,7 @@ function toggleCart(){
 		  const savedCart = localStorage.getItem('cart');
 		  if (savedCart) {
 		    order = JSON.parse(savedCart);
+		    window.order = order;
 		    console.log(order);
 		    buildOrderText(); // Refresh the cart UI with the loaded data
 		  }
@@ -1811,8 +1813,10 @@ function removeItem(i){
 }
 function removeAllItems(){
 	order=[];
+	window.order = order;
 	var c =order.index-1;
 	order=[];
+	window.order = order;
 	localStorage.removeItem('cart');  // Clear cart from localStorage
 	buildOrderText();
 	document.getElementById("cartcount").innerText= 0;
@@ -2204,11 +2208,20 @@ function ttmsShouldOpenWhatsAppCheckout() {
 
 function ttmsSendOrderToLoyverse() {
 	if (!ttmsShouldSendOrderToLoyverse()) {
-		return Promise.resolve({ skipped: true });
+		var c = window.POS_CONFIG || {};
+		var reason = !window.posIntegration
+			? 'pos_client_missing'
+			: !window.posIntegration.isPOSEnabled
+				? 'pos_off'
+				: c.autoProcessOrders === false
+					? 'auto_process_off'
+					: 'skipped';
+		return Promise.resolve({ skipped: true, reason: reason });
 	}
 	var posLoc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
 	return window.posIntegration.processOrderWithPOS({
-		storeId: (posLoc && posLoc.loyverse_store_id) || ''
+		storeId: (posLoc && posLoc.loyverse_store_id) || '',
+		order: order
 	});
 }
 
@@ -2445,7 +2458,13 @@ async function confirmSendOrder(){
 				: '\n\nCheck POS connection and item mapping in Menu settings.';
 			alert(failMsg);
 		} else if (!openWhatsApp && (!result || result.skipped)) {
-			alert('Loyverse order was not sent (POS off or auto-process disabled).');
+			var skipReason = (result && result.reason) || '';
+			var skipMsg = 'Loyverse order was not sent.';
+			if (skipReason === 'empty_cart') skipMsg += ' Cart was empty when sending to POS.';
+			else if (skipReason === 'auto_process_off') skipMsg += ' Auto-process orders is off in POS settings.';
+			else if (skipReason === 'pos_off' || skipReason === 'pos_client_missing') skipMsg += ' POS is off or not loaded.';
+			else skipMsg += ' POS off or auto-process disabled.';
+			alert(skipMsg);
 		}
 	}
 
