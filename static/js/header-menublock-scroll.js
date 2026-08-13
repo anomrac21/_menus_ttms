@@ -51,14 +51,17 @@
     }
 
     if (backdrop) {
-      backdrop.hidden = !open;
       backdrop.classList.toggle('is-visible', open);
       backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
-      // Android Chrome: force remove from compositor when closed
-      if (!open) {
-        backdrop.style.display = 'none';
-      } else {
+      if (open) {
+        backdrop.hidden = false;
         backdrop.style.display = '';
+      } else {
+        window.setTimeout(function () {
+          if (document.body.classList.contains('menublock-dropdown-open')) return;
+          backdrop.hidden = true;
+          backdrop.style.display = 'none';
+        }, 320);
       }
     }
   }

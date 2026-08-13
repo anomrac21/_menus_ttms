@@ -1,4 +1,4 @@
-{{- /* POS / Loyverse — Tier 1+ only (features.loyverse_connect) */ -}}
+{{- /* POS / Loyverse — nested in Ordering system. Tier 1+ (features.loyverse_connect). */ -}}
 {{- $loyverseConnect := false -}}
 {{- with site.Params.features -}}
   {{- $loyverseConnect = default false .loyverse_connect -}}
@@ -7,105 +7,182 @@
 {{- if and $hubClientId (not (hasPrefix $hubClientId "ttms_")) -}}
   {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
 {{- end -}}
-<section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--pos is-collapsed" data-settings-panel="pos" aria-labelledby="settings-pos-heading" id="posIntegrationPanel">
-  <button type="button" class="dashboard-settings-panel-head dashboard-settings-panel-toggle" data-settings-panel-toggle aria-expanded="false" aria-controls="settings-pos-body">
-    <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-cash-register"></i></span>
-    <div class="dashboard-settings-panel-head-text">
-      <h2 id="settings-pos-heading" class="dashboard-analytics-heading">POS / Loyverse</h2>
-      {{- if $loyverseConnect -}}
-      <p class="dashboard-analytics-subtitle">One OAuth connect per site. Map each menu location to a Loyverse store; CMS writes <code>data/locations.yaml</code> and <code>params.posintegration</code>.</p>
-      {{- end -}}
-    </div>
-    <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-  </button>
-  <div class="dashboard-settings-panel-body" id="settings-pos-body">
-  {{- if not $loyverseConnect -}}
-  <p class="dashboard-analytics-subtitle">Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a> to enable POS mapping.</p>
-  </div>
-  </section>
-  {{- else -}}
-  <div class="dashboard-settings-form-grid" style="padding: 0 0 1rem;">
-    <div class="dashboard-settings-row dashboard-settings-row--full">
-      <span class="dashboard-settings-label">Settings</span>
-      <div class="dashboard-settings-value">
-        <label class="dashboard-ordering-contact-hint" style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
-          <input type="checkbox" id="posEnabledCb" /> Enable Loyverse POS on this menu
-        </label>
-        <label class="dashboard-ordering-contact-hint" style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
-          <input type="checkbox" id="posFallbackWhatsappCb" checked /> Keep WhatsApp order flow (POS runs in parallel)
-        </label>
-        <label class="dashboard-ordering-contact-hint" style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
-          <input type="checkbox" id="posAutoProcessCb" /> Auto-process orders when connected
-        </label>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;align-items:center;">
-          <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveSettings">Save POS settings</button>
-          <span id="posSettingsSaveStatus" class="dashboard-ordering-contact-hint" role="status"></span>
-        </div>
-      </div>
-    </div>
-    <div class="dashboard-settings-row dashboard-settings-row--full">
-      <span class="dashboard-settings-label">Connection</span>
-      <div class="dashboard-settings-value">
-        <p id="posConnectStatus" class="dashboard-ordering-contact-hint" role="status">Checking…</p>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;">
-          <button type="button" class="btn-dash btn-dash-primary" id="btnPosConnectLoyverse">Connect Loyverse</button>
-          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosRefreshStatus">Refresh status</button>
-          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadStores" hidden>Load stores</button>
-        </div>
-      </div>
-    </div>
-    <div class="dashboard-settings-row dashboard-settings-row--full" id="posStoresRow" hidden>
-      <label class="dashboard-settings-label" for="posStoreSelect">Default store</label>
-      <div class="dashboard-settings-value">
-        <select id="posStoreSelect" class="dashboard-settings-input"></select>
-        <p class="dashboard-ordering-contact-hint">Fallback when a location has no mapped store. Prefer mapping each location below.</p>
-      </div>
-    </div>
-    <div class="dashboard-settings-row dashboard-settings-row--full" id="posLocationMapRow" hidden>
-      <span class="dashboard-settings-label">Locations → stores</span>
-      <div class="dashboard-settings-value">
-        <p class="dashboard-ordering-contact-hint">Assign a Loyverse store to each Hugo location. Saves via CMS to <code>loyverse_store_id</code> on each location.</p>
-        <div id="posLocationMapList" style="display:flex;flex-direction:column;gap:0.5rem;margin:0.5rem 0;"></div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
-          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoAssignStores">Auto-match by name</button>
-          <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveLocationStores">Save store mapping</button>
-          <span id="posLocationMapStatus" class="dashboard-ordering-contact-hint" role="status"></span>
-        </div>
-      </div>
-    </div>
-    <div class="dashboard-settings-row dashboard-settings-row--full">
-      <span class="dashboard-settings-label">Item mapping</span>
-      <div class="dashboard-settings-value">
-        <p class="dashboard-ordering-contact-hint">Load Loyverse items, auto-match to menu titles (<code>Title</code> or <code>Title|Size</code>), then save via CMS to <code>data/pos-mapping.yaml</code>.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;align-items:center;">
-          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems" hidden>Load Loyverse items</button>
-          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoMapItems" hidden>Auto-map items</button>
-          <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveItemMapping" hidden>Save item mapping</button>
-          <span id="posItemMapStatus" class="dashboard-ordering-contact-hint" role="status"></span>
-        </div>
-        <div id="posItemMapPreview" class="dashboard-settings-input" style="max-height:14rem;overflow:auto;margin-top:0.5rem;font-size:0.85rem;" hidden></div>
-        <pre id="posItemsPreview" class="dashboard-settings-input" style="max-height:12rem;overflow:auto;white-space:pre-wrap;margin-top:0.5rem;" hidden></pre>
-      </div>
-    </div>
-    <div class="dashboard-settings-row dashboard-settings-row--full" id="posReplaceCatalogRow">
-      <span class="dashboard-settings-label">Replace menu</span>
-      <div class="dashboard-settings-value">
-        <p class="dashboard-ordering-contact-hint" style="color:#b42318;">
-          Destructive: deletes current shared sellable menu items under <code>content/_shared</code>
-          (keeps promotions, locations, and branding), then imports the connected Loyverse catalog.
-        </p>
-        <label class="dashboard-ordering-contact-hint" for="posReplaceConfirmInput" style="display:block;margin:0.5rem 0 0.25rem;">
-          Type <strong>REPLACE</strong> to enable
-        </label>
-        <input type="text" id="posReplaceConfirmInput" class="dashboard-settings-input" autocomplete="off" placeholder="REPLACE" style="max-width:16rem;" />
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;align-items:center;">
-          <button type="button" class="btn-dash btn-dash-primary" id="btnPosReplaceCatalog" disabled>Wipe menu and import from Loyverse</button>
-          <span id="posReplaceCatalogStatus" class="dashboard-ordering-contact-hint" role="status"></span>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
-</section>
-<script src="/js/pos-connect-dashboard.js" defer></script>
+{{- $pos := site.Params.posintegration | default dict -}}
+{{- $os := site.Params.orderingsystem | default dict -}}
+{{- $orderingOn := default true $os.enabled -}}
+{{- $usePhone := true -}}
+{{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
+{{- $posOn := and $loyverseConnect $orderingOn (default false $pos.enabled) -}}
+{{- $locations := default slice (index (site.Data.locations | default dict) "locations") -}}
+{{- $mappedCount := 0 -}}
+{{- range $locations -}}
+  {{- if .loyverse_store_id -}}{{- $mappedCount = add $mappedCount 1 -}}{{- end -}}
 {{- end -}}
+<div class="dashboard-pos-embed is-collapsed" id="posIntegrationPanel"{{ if not $posOn }} hidden{{ end }}>
+  <button type="button" class="dashboard-pos-embed-toggle" id="posEmbedToggle" aria-expanded="false" aria-controls="posEmbedBody">
+    <span class="dashboard-card-title-icon dashboard-pos-loyverse-icon" aria-hidden="true">
+      <img src="/icons/loyverse-mark.svg" alt="" width="20" height="20">
+    </span>
+    <h3 class="dashboard-pos-embed-title" id="settings-pos-heading">POS / Loyverse</h3>
+    <span id="posCardTitleBadge" class="dashboard-pos-title-badge" data-state="{{ if $loyverseConnect }}unknown{{ else }}disconnected{{ end }}">{{ if $loyverseConnect }}Checking…{{ else }}Upgrade{{ end }}</span>
+    <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+  </button>
+  <div class="dashboard-pos-embed-body" id="posEmbedBody">
+  {{- if not $loyverseConnect -}}
+  <p class="dashboard-card-desc">Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a> to enable POS mapping.</p>
+  {{- else -}}
+  <p class="dashboard-card-desc">Connect once for this menu, then link each location to its Loyverse store so guest orders land in the right register.</p>
+  <div class="dashboard-pos-flow">
+
+    <section class="dashboard-pos-step" aria-labelledby="pos-step-connect-heading">
+      <div class="dashboard-pos-step-head">
+        <span class="dashboard-pos-step-num" aria-hidden="true">1</span>
+        <div>
+          <h4 id="pos-step-connect-heading" class="dashboard-pos-step-title">Connect Loyverse</h4>
+          <p class="dashboard-pos-step-hint">One login covers every location. You stay connected until you reconnect or tokens expire.</p>
+        </div>
+      </div>
+      <div class="dashboard-pos-account" id="posAccountBanner" data-state="checking">
+        <span class="dashboard-pos-account-dot" aria-hidden="true"></span>
+        <div class="dashboard-pos-account-copy">
+          <p id="posConnectStatus" class="dashboard-pos-account-status" role="status">Checking Loyverse connection…</p>
+        </div>
+        <div class="dashboard-pos-account-actions">
+          <button type="button" class="btn-dash btn-dash-primary" id="btnPosConnectLoyverse">Connect Loyverse</button>
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosRefreshStatus">Refresh</button>
+          <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadStores" hidden>Reload stores</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-pos-step" id="posLocationMapRow" data-pos-requires-connected hidden aria-labelledby="pos-step-locations-heading">
+      <div class="dashboard-pos-step-head">
+        <span class="dashboard-pos-step-num" aria-hidden="true">2</span>
+        <div>
+          <h4 id="pos-step-locations-heading" class="dashboard-pos-step-title">Connect each location</h4>
+          <p class="dashboard-pos-step-hint">Pick the Loyverse store that should receive orders from that menu location.</p>
+          <p id="posLocationSummary" class="dashboard-pos-location-summary" data-complete="{{ if and (gt (len $locations) 0) (eq $mappedCount (len $locations)) }}true{{ else }}false{{ end }}">
+            {{- if eq (len $locations) 0 -}}
+            No locations on this menu yet. Add them in Settings, or set a fallback store below.
+            {{- else if eq $mappedCount (len $locations) -}}
+            All {{ len $locations }} locations are mapped to Loyverse.
+            {{- else -}}
+            {{ $mappedCount }} of {{ len $locations }} locations mapped to Loyverse.
+            {{- end -}}
+          </p>
+        </div>
+      </div>
+      <div id="posLocationMapList" class="dashboard-pos-location-list">
+        {{- range $i, $loc := $locations -}}
+        {{- $mapped := $loc.loyverse_store_id -}}
+        <article class="dashboard-pos-location-card{{ if $mapped }} is-connected{{ else }} is-unmapped{{ end }}" data-loc-index="{{ $i }}" data-loc-slug="{{ $loc.slug }}">
+          <div class="dashboard-pos-location-card-head">
+            <div class="dashboard-pos-location-card-copy">
+              <h5 class="dashboard-pos-location-name">{{ $loc.city | default $loc.address | default (printf "Location %d" (add $i 1)) }}</h5>
+              {{- if and $loc.address $loc.city -}}
+              <p class="dashboard-pos-location-meta">{{ $loc.address }}</p>
+              {{- else if $loc.island -}}
+              <p class="dashboard-pos-location-meta">{{ $loc.island }}</p>
+              {{- end -}}
+            </div>
+            <span class="dashboard-pos-location-badge" data-connected="{{ if $mapped }}true{{ else }}false{{ end }}">
+              {{- if $mapped -}}Connected to Loyverse{{- else -}}Not connected{{- end -}}
+            </span>
+          </div>
+          <label class="dashboard-pos-location-store-label">
+            <span>Loyverse store</span>
+            <select class="dashboard-settings-input" data-loc-index="{{ $i }}">
+              <option value="">— Choose a Loyverse store —</option>
+              {{- if $mapped -}}
+              <option value="{{ $mapped }}" selected>Saved store (reload stores for name)</option>
+              {{- end -}}
+            </select>
+          </label>
+          <div class="dashboard-pos-item-match" data-state="unknown">
+            <span class="dashboard-pos-item-match-label">Menu items</span>
+            <span class="dashboard-pos-item-match-count">Checking matches…</span>
+          </div>
+        </article>
+        {{- end -}}
+      </div>
+      <div class="dashboard-pos-location-actions">
+        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoAssignStores">Auto-match by name</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveLocationStores">Save location connections</button>
+        <span id="posLocationMapStatus" class="dashboard-pos-inline-status" role="status"></span>
+      </div>
+      <div class="dashboard-pos-fallback" id="posStoresRow" hidden>
+        <label class="dashboard-settings-label" for="posStoreSelect">Fallback store</label>
+        <div class="dashboard-settings-value">
+          <select id="posStoreSelect" class="dashboard-settings-input"></select>
+          <p class="dashboard-pos-step-hint">Used only if a location has no store selected. Prefer connecting every location above.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-pos-step" data-pos-requires-connected hidden aria-labelledby="pos-step-orders-heading">
+      <div class="dashboard-pos-step-head">
+        <span class="dashboard-pos-step-num" aria-hidden="true">3</span>
+        <div>
+          <h4 id="pos-step-orders-heading" class="dashboard-pos-step-title">When guests order</h4>
+          <p class="dashboard-pos-step-hint">Create a Loyverse receipt when the guest taps Order Now.</p>
+        </div>
+      </div>
+      <div class="dashboard-pos-toggles">
+        <div class="dashboard-settings-row dashboard-ordering-switch-row">
+          <span class="dashboard-settings-label">Create receipts when guests order</span>
+          <div class="dashboard-settings-value">
+            <label class="dashboard-switch" for="posAutoProcessCb">
+              <input type="checkbox" id="posAutoProcessCb" class="dashboard-switch-input"{{ if default false $pos.auto_process_orders }} checked{{ end }}>
+              <span class="dashboard-switch-track" aria-hidden="true"></span>
+              <span class="dashboard-switch-state" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+        <div class="dashboard-settings-row dashboard-ordering-switch-row" id="posFallbackWhatsappRow">
+          <span class="dashboard-settings-label">Also open WhatsApp</span>
+          <div class="dashboard-settings-value">
+            <label class="dashboard-switch" for="posFallbackWhatsappCb">
+              <input type="checkbox" id="posFallbackWhatsappCb" class="dashboard-switch-input"{{ if default true $pos.fallback_to_whatsapp }} checked{{ end }}>
+              <span class="dashboard-switch-track" aria-hidden="true"></span>
+              <span class="dashboard-switch-state" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-pos-location-actions">
+        <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveSettings">Save POS settings</button>
+        <span id="posSettingsSaveStatus" class="dashboard-pos-inline-status" role="status"></span>
+      </div>
+    </section>
+
+    <details class="dashboard-pos-advanced" data-pos-requires-connected hidden>
+      <summary>Match menu items to Loyverse</summary>
+      <p class="dashboard-pos-step-hint">Each location uses the same item map. A dish is matched when its title (or Title|Size) has a Loyverse variant.</p>
+      <div id="posItemMatchByLocation" class="dashboard-pos-item-match-overview" hidden></div>
+      <div class="dashboard-pos-location-actions">
+        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems" hidden>Load Loyverse items</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoMapItems" hidden>Auto-map items</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveItemMapping" hidden>Save item mapping</button>
+        <span id="posItemMapStatus" class="dashboard-pos-inline-status" role="status"></span>
+      </div>
+      <div id="posItemMapPreview" class="dashboard-pos-item-preview" hidden></div>
+      <pre id="posItemsPreview" class="dashboard-settings-input dashboard-pos-item-raw" hidden></pre>
+    </details>
+
+    <details class="dashboard-pos-advanced dashboard-pos-advanced--danger" id="posReplaceCatalogRow" data-pos-requires-connected hidden>
+      <summary>Replace menu from Loyverse</summary>
+      <p class="dashboard-pos-danger-copy">
+        Destructive: deletes current shared sellable items, then imports the connected Loyverse catalog. Promotions, locations, and branding stay.
+      </p>
+      <label class="dashboard-pos-step-hint" for="posReplaceConfirmInput">Type <strong>REPLACE</strong> to enable</label>
+      <input type="text" id="posReplaceConfirmInput" class="dashboard-settings-input dashboard-pos-replace-input" autocomplete="off" placeholder="REPLACE">
+      <div class="dashboard-pos-location-actions">
+        <button type="button" class="btn-dash btn-dash-primary" id="btnPosReplaceCatalog" disabled>Wipe menu and import from Loyverse</button>
+        <span id="posReplaceCatalogStatus" class="dashboard-pos-inline-status" role="status"></span>
+      </div>
+    </details>
+  </div>
+  {{- end -}}
+  </div>
+</div>
+<script src="/js/pos-connect-dashboard.js" defer></script>

@@ -8,6 +8,7 @@
   var cachedStores = [];
   var cachedLocations = [];
   var cachedLoyverseItems = [];
+  var cachedMenuItems = [];
   var proposedItemMapping = {};
   var menuTitleHints = [];
 
@@ -31,19 +32,40 @@
     return svc + '/api';
   }
 
-  function ensureAuth() {
-    if (!window.AuthClient) return Promise.reject(new Error('AuthClient missing'));
-    if (AuthClient.getAccessToken && AuthClient.getAccessToken()) {
-      return Promise.resolve(AuthClient.getAccessToken());
-    }
-    if (AuthClient.ensureAuthenticated) {
-      return AuthClient.ensureAuthenticated().then(function (r) {
-        if (r && r.accessToken) return r.accessToken;
-        if (AuthClient.getAccessToken) return AuthClient.getAccessToken();
-        throw new Error('Sign in required');
+  function whenAuthReady() {
+    if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+      return Promise.resolve(AuthClient.whenReady()).catch(function () {
+        return null;
       });
     }
-    return Promise.reject(new Error('Sign in required'));
+    return Promise.resolve();
+  }
+
+  function ensureAuth() {
+    return whenAuthReady().then(function () {
+      if (!window.AuthClient) return Promise.reject(new Error('AuthClient missing'));
+      if (AuthClient.getAccessToken && AuthClient.getAccessToken()) {
+        return AuthClient.getAccessToken();
+      }
+      if (typeof AuthClient.ensureAccessToken === 'function') {
+        return Promise.resolve(AuthClient.ensureAccessToken()).then(function (r) {
+          var token =
+            (r && r.accessToken) ||
+            (AuthClient.getAccessToken && AuthClient.getAccessToken()) ||
+            '';
+          if (token) return token;
+          throw new Error('Sign in required');
+        });
+      }
+      if (AuthClient.ensureAuthenticated) {
+        return AuthClient.ensureAuthenticated().then(function (r) {
+          if (r && r.accessToken) return r.accessToken;
+          if (AuthClient.getAccessToken) return AuthClient.getAccessToken();
+          throw new Error('Sign in required');
+        });
+      }
+      throw new Error('Sign in required');
+    });
   }
 
   function authHeaders(token) {
@@ -84,11 +106,56 @@
     });
   }
 
-  function setStatus(text, isError) {
+  function setAccountState(state, text) {
+    var banner = $('posAccountBanner');
     var el = $('posConnectStatus');
-    if (!el) return;
-    el.textContent = text;
-    el.style.color = isError ? '#b42318' : '';
+    var badge = $('posCardTitleBadge');
+    var connectBtn = $('btnPosConnectLoyverse');
+    var prevState = banner ? banner.getAttribute('data-state') : '';
+    if (banner) banner.setAttribute('data-state', state);
+    if (el) {
+      el.textContent = text;
+      el.style.color = '';
+    }
+    if (connectBtn) {
+      var connected = state === 'connected';
+      connectBtn.textContent = connected ? 'Reconnect' : 'Connect Loyverse';
+      connectBtn.className = connected ? 'btn-dash btn-dash-secondary' : 'btn-dash btn-dash-primary';
+    }
+    if (badge) {
+      badge.setAttribute('data-state', state === 'error' ? 'disconnected' : state);
+      if (state === 'connected') {
+        updateLocationSummary();
+      } else if (state === 'checking') {
+        badge.textContent = 'Checking…';
+      } else if (state === 'error') {
+        badge.textContent = /sign in/i.test(text || '') ? 'Sign in' : 'Error';
+      } else {
+        badge.textContent = 'Not connected';
+      }
+    }
+    if (state === 'connected' && prevState !== 'connected') {
+      [banner, badge, $('posIntegrationPanel')].forEach(function (node) {
+        if (!node) return;
+        node.classList.remove('is-just-connected');
+        void node.offsetWidth;
+        node.classList.add('is-just-connected');
+      });
+    } else if (state !== 'connected') {
+      [banner, badge, $('posIntegrationPanel')].forEach(function (node) {
+        if (node) node.classList.remove('is-just-connected');
+      });
+    }
+    if (state === 'disconnected' || state === 'error') {
+      setPosEmbedCollapsed(false, false);
+    }
+    if (typeof window.syncOrderingDashboardVisibility === 'function') {
+      window.syncOrderingDashboardVisibility();
+    }
+  }
+
+  function setStatus(text, isError) {
+    setAccountState(isError ? 'error' : 'checking', text);
   }
 
   function setMapStatus(text, isError) {
@@ -130,11 +197,21 @@
       .trim();
   }
 
+  function storeById(id) {
+    if (!id) return null;
+    for (var i = 0; i < cachedStores.length; i += 1) {
+      if (String(cachedStores[i].id || '') === String(id)) return cachedStores[i];
+    }
+    return null;
+  }
+
   function storeOptionHtml(selectedId) {
-    var html = '<option value="">— Not mapped —</option>';
+    var html = '<option value="">— Choose a Loyverse store —</option>';
+    var found = false;
     cachedStores.forEach(function (s) {
       var id = s.id || '';
       var sel = id && id === selectedId ? ' selected' : '';
+      if (sel) found = true;
       html +=
         '<option value="' +
         escapeAttr(id) +
@@ -144,6 +221,12 @@
         escapeHtml(s.name || id) +
         '</option>';
     });
+    if (selectedId && !found) {
+      html +=
+        '<option value="' +
+        escapeAttr(selectedId) +
+        '" selected>Connected store (reload stores for name)</option>';
+    }
     return html;
   }
 
@@ -163,34 +246,354 @@
     return loc.city || loc.address || 'Location ' + (index + 1);
   }
 
+  function itemMappingMap() {
+    return (window.POS_CONFIG && window.POS_CONFIG.itemMapping) || {};
+  }
+
+  function mappingValue(keyed) {
+    if (!keyed) return '';
+    if (typeof keyed === 'string') return keyed;
+    if (keyed.variant_id) return String(keyed.variant_id);
+    return '';
+  }
+
+  function mappingHas(title, size) {
+    var map = itemMappingMap();
+    var item = String(title || '').trim();
+    if (!item) return false;
+    var sizeKey = String(size || '').trim();
+    if (sizeKey && sizeKey !== '-' && sizeKey !== '—' && sizeKey !== '–') {
+      if (mappingValue(map[item + '|' + sizeKey])) return true;
+    }
+    return !!mappingValue(map[item]);
+  }
+
+  function itemIsMatched(item) {
+    if (!item) return false;
+    if (item.loyverse_variant_id || item.loyverse_item_id) return true;
+    var title = String(item.name || item.linkTitle || item.title || '').trim();
+    var metas = item.price_meta || [];
+    var sizes = [];
+    var priceMapped = 0;
+    metas.forEach(function (m) {
+      if (m && m.loyverse_variant_id) priceMapped += 1;
+      var s = String((m && (m.variable1 || m.size)) || '').trim();
+      if (s && s !== '-' && s !== '—' && s !== '–') sizes.push(s);
+    });
+    if (priceMapped && priceMapped === metas.length) return true;
+    if (!sizes.length) return mappingHas(title, '');
+    return sizes.every(function (s) {
+      return mappingHas(title, s);
+    });
+  }
+
+  function itemsForLocation(slug) {
+    var key = String(slug || '').trim();
+    var locItems = cachedMenuItems.filter(function (it) {
+      return String(it.location_slug || it.ttms_location || '').trim() === key;
+    });
+    if (locItems.length) return locItems;
+    if (!key) return cachedMenuItems;
+    return cachedMenuItems.filter(function (it) {
+      return !String(it.location_slug || it.ttms_location || '').trim();
+    });
+  }
+
+  function locationItemStats(slug) {
+    var items = itemsForLocation(slug);
+    var unmatched = [];
+    var matched = 0;
+    items.forEach(function (it) {
+      if (itemIsMatched(it)) {
+        matched += 1;
+        return;
+      }
+      unmatched.push(String(it.name || it.linkTitle || 'Untitled').trim());
+    });
+    var total = items.length;
+    var state = 'unknown';
+    if (!total) state = 'empty';
+    else if (matched === total) state = 'full';
+    else if (matched > 0) state = 'partial';
+    else state = 'none';
+    return {
+      total: total,
+      matched: matched,
+      unmatched: unmatched,
+      state: state,
+    };
+  }
+
+  function itemMatchRowHtml(stats) {
+    var count = 'Checking matches…';
+    var extra = '';
+    if (stats.state === 'empty') {
+      count = 'No sellable items on this location menu';
+    } else if (stats.state !== 'unknown') {
+      count = stats.matched + ' of ' + stats.total + ' items matched';
+      if (stats.unmatched.length) {
+        var shown = stats.unmatched.slice(0, 3);
+        var more = stats.unmatched.length - shown.length;
+        extra =
+          '<p class="dashboard-pos-item-match-unmapped">Unmapped: ' +
+          escapeHtml(shown.join(', ')) +
+          (more > 0 ? ' +' + more + ' more' : '') +
+          '</p>';
+      }
+    }
+    return (
+      '<span class="dashboard-pos-item-match-label">Menu items</span>' +
+      '<span class="dashboard-pos-item-match-count">' +
+      escapeHtml(count) +
+      '</span>' +
+      extra
+    );
+  }
+
+  function paintLocationItemMatches() {
+    var list = $('posLocationMapList');
+    if (!list) return;
+    list.querySelectorAll('.dashboard-pos-location-card').forEach(function (card) {
+      var idx = parseInt(card.getAttribute('data-loc-index'), 10);
+      var loc = !isNaN(idx) ? cachedLocations[idx] || {} : {};
+      var slug = loc.slug || card.getAttribute('data-loc-slug') || '';
+      var stats = locationItemStats(slug);
+      var row = card.querySelector('.dashboard-pos-item-match');
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'dashboard-pos-item-match';
+        card.appendChild(row);
+      }
+      row.setAttribute('data-state', stats.state);
+      row.innerHTML = itemMatchRowHtml(stats);
+    });
+    var overview = $('posItemMatchByLocation');
+    if (overview) {
+      if (!cachedLocations.length) {
+        overview.hidden = true;
+        overview.innerHTML = '';
+      } else {
+        overview.hidden = false;
+        overview.innerHTML = cachedLocations
+          .map(function (loc, index) {
+            var stats = locationItemStats(loc.slug || '');
+            return (
+              '<div class="dashboard-pos-item-match" data-state="' +
+              stats.state +
+              '">' +
+              '<span class="dashboard-pos-item-match-label">' +
+              escapeHtml(locationLabel(loc, index)) +
+              '</span>' +
+              '<span class="dashboard-pos-item-match-count">' +
+              escapeHtml(
+                stats.total
+                  ? stats.matched + ' of ' + stats.total + ' items matched'
+                  : 'No items'
+              ) +
+              '</span></div>'
+            );
+          })
+          .join('');
+      }
+    }
+  }
+
+  function loadMenuCatalog() {
+    return fetch('/api/menu-items.json', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        return fetch('/menu-items.json', { credentials: 'same-origin' }).then(function (r2) {
+          return r2.ok ? r2.json() : null;
+        });
+      })
+      .then(function (data) {
+        var items = (data && (data.menu_items || data.items)) || [];
+        cachedMenuItems = Array.isArray(items) ? items : [];
+        var titles = [];
+        cachedMenuItems.forEach(function (it) {
+          if (it && it.name) titles.push(String(it.name));
+          if (it && it.linkTitle) titles.push(String(it.linkTitle));
+        });
+        if (titles.length) menuTitleHints = Array.from(new Set(titles.filter(Boolean)));
+        paintLocationItemMatches();
+        return cachedMenuItems;
+      })
+      .catch(function () {
+        cachedMenuItems = [];
+        return cachedMenuItems;
+      });
+  }
+
+  function loadLatestItemMapping() {
+    return ensureAuth()
+      .then(function (token) {
+        var url =
+          cmsApiBase() +
+          '/clients/' +
+          encodeURIComponent(clientId()) +
+          '/config/data-pos-mapping';
+        return fetch(url, { credentials: 'include', headers: authHeaders(token) }).then(parseCms);
+      })
+      .then(function (d) {
+        var items = (d && d.loyverse && d.loyverse.items) || d.items || {};
+        if (items && typeof items === 'object') {
+          window.POS_CONFIG = window.POS_CONFIG || {};
+          window.POS_CONFIG.itemMapping = items;
+        }
+        paintLocationItemMatches();
+        return items;
+      })
+      .catch(function () {
+        paintLocationItemMatches();
+      });
+  }
+
+  function connectedStoreLabel(storeId) {
+    var store = storeById(storeId);
+    if (store && store.name) return 'Connected to ' + store.name;
+    if (storeId) return 'Connected to Loyverse';
+    return 'Not connected';
+  }
+
+  function updateLocationCardState(card, storeId) {
+    if (!card) return;
+    var mapped = !!storeId;
+    card.classList.toggle('is-connected', mapped);
+    card.classList.toggle('is-unmapped', !mapped);
+    var badge = card.querySelector('.dashboard-pos-location-badge');
+    if (badge) {
+      badge.setAttribute('data-connected', mapped ? 'true' : 'false');
+      badge.textContent = connectedStoreLabel(storeId);
+    }
+  }
+
+  function updateLocationSummary() {
+    var summary = $('posLocationSummary');
+    var badge = $('posCardTitleBadge');
+    var banner = $('posAccountBanner');
+    var total = cachedLocations.length;
+    var mapped = 0;
+    cachedLocations.forEach(function (loc) {
+      if (loc && loc.loyverse_store_id) mapped += 1;
+    });
+    if (summary) {
+      var itemMatched = 0;
+      var itemTotal = 0;
+      var itemsReady = cachedMenuItems.length > 0;
+      cachedLocations.forEach(function (loc) {
+        var stats = locationItemStats(loc.slug || '');
+        itemMatched += stats.matched;
+        itemTotal += stats.total;
+      });
+      var storesDone = total > 0 && mapped === total;
+      var itemsDone = itemsReady && itemTotal > 0 && itemMatched === itemTotal;
+      summary.setAttribute('data-complete', storesDone && itemsDone ? 'true' : 'false');
+      if (!total) {
+        summary.textContent = 'No locations on this menu yet. Add them in Settings, or set a fallback store below.';
+      } else {
+        var storeLine = storesDone
+          ? 'All ' + total + ' locations are connected to Loyverse.'
+          : mapped + ' of ' + total + ' locations connected to Loyverse.';
+        var itemLine = !itemsReady
+          ? ' Checking item matches…'
+          : itemTotal
+            ? ' Items: ' + itemMatched + ' of ' + itemTotal + ' matched.'
+            : ' No sellable items found.';
+        summary.textContent = storeLine + itemLine;
+      }
+    }
+    if (badge && banner && banner.getAttribute('data-state') === 'connected') {
+      if (total && mapped === total) badge.textContent = 'Connected';
+      else if (total) badge.textContent = mapped + '/' + total + ' locations';
+      else badge.textContent = 'Connected';
+    }
+  }
+
   function renderLocationMap() {
     var list = $('posLocationMapList');
-    var row = $('posLocationMapRow');
-    if (!list || !row) return;
-    if (!cachedStores.length || !cachedLocations.length) {
-      row.hidden = true;
+    if (!list) return;
+    list.innerHTML = '';
+    if (!cachedLocations.length) {
+      updateLocationSummary();
       return;
     }
-    row.hidden = false;
-    list.innerHTML = '';
     cachedLocations.forEach(function (loc, index) {
-      var wrap = document.createElement('div');
-      wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;';
-      var label = document.createElement('span');
-      label.style.cssText = 'min-width:10rem;font-size:0.9rem;';
-      label.textContent = locationLabel(loc, index);
-      if (loc.address && loc.city) {
-        label.title = loc.address;
+      var storeId = loc.loyverse_store_id || '';
+      var card = document.createElement('article');
+      card.className =
+        'dashboard-pos-location-card' + (storeId ? ' is-connected' : ' is-unmapped');
+      card.setAttribute('data-loc-index', String(index));
+      if (loc.slug) card.setAttribute('data-loc-slug', loc.slug);
+      var meta = '';
+      if (loc.address && loc.city) meta = loc.address;
+      else if (loc.island) meta = loc.island;
+      var stats = locationItemStats(loc.slug || '');
+      card.innerHTML =
+        '<div class="dashboard-pos-location-card-head">' +
+        '<div class="dashboard-pos-location-card-copy">' +
+        '<h5 class="dashboard-pos-location-name">' +
+        escapeHtml(locationLabel(loc, index)) +
+        '</h5>' +
+        (meta ? '<p class="dashboard-pos-location-meta">' + escapeHtml(meta) + '</p>' : '') +
+        '</div>' +
+        '<span class="dashboard-pos-location-badge" data-connected="' +
+        (storeId ? 'true' : 'false') +
+        '">' +
+        escapeHtml(connectedStoreLabel(storeId)) +
+        '</span></div>' +
+        '<label class="dashboard-pos-location-store-label"><span>Loyverse store</span>' +
+        '<select class="dashboard-settings-input" data-loc-index="' +
+        index +
+        '">' +
+        storeOptionHtml(storeId) +
+        '</select></label>' +
+        '<div class="dashboard-pos-item-match" data-state="' +
+        stats.state +
+        '">' +
+        itemMatchRowHtml(stats) +
+        '</div>';
+      var sel = card.querySelector('select[data-loc-index]');
+      if (sel) {
+        sel.addEventListener('change', function () {
+          var v = (sel.value || '').trim();
+          if (v) cachedLocations[index].loyverse_store_id = v;
+          else delete cachedLocations[index].loyverse_store_id;
+          updateLocationCardState(card, v);
+          updateLocationSummary();
+        });
       }
-      var sel = document.createElement('select');
-      sel.className = 'dashboard-settings-input';
-      sel.setAttribute('data-loc-index', String(index));
-      sel.style.cssText = 'flex:1;min-width:12rem;';
-      sel.innerHTML = storeOptionHtml(loc.loyverse_store_id || '');
-      wrap.appendChild(label);
-      wrap.appendChild(sel);
-      list.appendChild(wrap);
+      list.appendChild(card);
     });
+    updateLocationSummary();
+  }
+
+  function seedLocationsFromDom() {
+    var list = $('posLocationMapList');
+    if (!list || cachedLocations.length) return;
+    var cards = list.querySelectorAll('.dashboard-pos-location-card');
+    if (!cards.length) return;
+    cachedLocations = [];
+    cards.forEach(function (card, index) {
+      var sel = card.querySelector('select[data-loc-index]');
+      var nameEl = card.querySelector('.dashboard-pos-location-name');
+      var loc = {
+        city: nameEl ? String(nameEl.textContent || '').trim() : 'Location ' + (index + 1),
+        slug: card.getAttribute('data-loc-slug') || '',
+      };
+      var storeId = sel && sel.value ? String(sel.value).trim() : '';
+      if (storeId) loc.loyverse_store_id = storeId;
+      cachedLocations.push(loc);
+      if (sel) {
+        sel.addEventListener('change', function () {
+          var v = (sel.value || '').trim();
+          if (v) cachedLocations[index].loyverse_store_id = v;
+          else delete cachedLocations[index].loyverse_store_id;
+          updateLocationCardState(card, v);
+          updateLocationSummary();
+        });
+      }
+    });
+    updateLocationSummary();
   }
 
   function applySelectionsToLocations() {
@@ -267,6 +670,9 @@
         if (en) en.checked = !!d.enabled;
         if (fb) fb.checked = d.fallback_to_whatsapp !== false;
         if (ap) ap.checked = !!d.auto_process_orders;
+        if (typeof window.syncOrderingDashboardVisibility === 'function') {
+          window.syncOrderingDashboardVisibility();
+        }
         return d;
       })
       .catch(function (err) {
@@ -277,6 +683,9 @@
         if (en) en.checked = !!c.enabled;
         if (fb) fb.checked = c.fallbackToWhatsapp !== false;
         if (ap) ap.checked = !!c.autoProcessOrders;
+        if (typeof window.syncOrderingDashboardVisibility === 'function') {
+          window.syncOrderingDashboardVisibility();
+        }
         console.warn('[POS dashboard] load settings', err);
       });
   }
@@ -311,6 +720,9 @@
       .then(function (data) {
         var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
         setSettingsStatus(h ? 'Saved · commit ' + h + ' (redeploy to apply)' : 'Saved.');
+        if (typeof window.syncOrderingDashboardVisibility === 'function') {
+          window.syncOrderingDashboardVisibility();
+        }
       })
       .catch(function (err) {
         setSettingsStatus(String(err.message || err), true);
@@ -353,14 +765,41 @@
       .then(function (data) {
         var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
         setMapStatus(h ? 'Saved · commit ' + h + ' (redeploy menu to apply)' : 'Saved.');
+        updateLocationSummary();
       })
       .catch(function (err) {
         setMapStatus(String(err.message || err), true);
       });
   }
 
+  var posStatusRefreshInFlight = false;
+
+  function needsPosStatusRetry() {
+    var banner = $('posAccountBanner');
+    var text = $('posConnectStatus');
+    var state = banner && banner.getAttribute('data-state');
+    var copy = ((text && text.textContent) || '').toLowerCase();
+    return state === 'error' || state === 'checking' || /sign in/i.test(copy);
+  }
+
+  function refreshStatusWhenReady() {
+    if (posStatusRefreshInFlight) return posStatusRefreshInFlight;
+    posStatusRefreshInFlight = whenAuthReady()
+      .then(function () {
+        return refreshStatus();
+      })
+      .then(function (d) {
+        if (d && d.connected) loadStores();
+        return d;
+      })
+      .finally(function () {
+        posStatusRefreshInFlight = false;
+      });
+    return posStatusRefreshInFlight;
+  }
+
   function refreshStatus() {
-    setStatus('Checking…');
+    setAccountState('checking', 'Checking Loyverse connection…');
     return ensureAuth()
       .then(function () {
         if (!pos() || !pos().getStatus) throw new Error('POS client not loaded (enable POS settings + redeploy)');
@@ -368,22 +807,27 @@
       })
       .then(function (d) {
         if (d.connected) {
-          setStatus(
-            'Connected' +
-              (d.external_account_id ? ' (merchant ' + d.external_account_id + ')' : '') +
-              (d.status ? ' — ' + d.status : '')
+          var detail = d.external_account_id ? 'Merchant ' + d.external_account_id : 'Account linked';
+          setAccountState(
+            'connected',
+            'Connected to Loyverse' + (d.status && d.status !== 'active' ? ' — ' + d.status : '') + ' · ' + detail
           );
           var loadStores = $('btnPosLoadStores');
           var loadItems = $('btnPosLoadItems');
           if (loadStores) loadStores.hidden = false;
           if (loadItems) loadItems.hidden = false;
         } else {
-          setStatus('Not connected — click Connect Loyverse');
+          setAccountState('disconnected', 'Not connected — connect Loyverse to map stores to each location.');
         }
         return d;
       })
       .catch(function (err) {
-        setStatus(String(err.message || err), true);
+        var msg = String(err.message || err);
+        if (/sign in required/i.test(msg)) {
+          setAccountState('error', 'Sign in to see Loyverse connection status.');
+        } else {
+          setAccountState('error', msg);
+        }
       });
   }
 
@@ -392,7 +836,7 @@
     return ensureAuth()
       .then(function () {
         if (!pos() || !pos().connect) throw new Error('POS client not loaded (enable POS + redeploy)');
-        var returnTo = window.location.origin + '/menu-settings/?loyverse=connected';
+        var returnTo = window.location.origin + '/dashboard/?loyverse=connected';
         return pos().connect(returnTo);
       })
       .then(function (d) {
@@ -432,7 +876,9 @@
         if (cfgStore) sel.value = cfgStore;
         row.hidden = cachedStores.length === 0;
         if (cachedStores.length) {
-          setStatus('Loaded ' + cachedStores.length + ' store(s). Map them to locations below.');
+          setMapStatus(cachedStores.length + ' Loyverse store(s) loaded — connect each location below.');
+        } else {
+          setMapStatus('No Loyverse stores found on this account.', true);
         }
         return fetchLocations().then(function () {
           renderLocationMap();
@@ -613,15 +1059,13 @@
             : 'No Loyverse items found.';
         }
         showItemMapButtons(cachedLoyverseItems.length > 0);
-        setStatus('Loaded ' + cachedLoyverseItems.length + ' Loyverse item(s).');
         setItemMapStatus(
           cachedLoyverseItems.length
-            ? 'Ready — Auto-map, then Save item mapping.'
+            ? 'Loaded ' + cachedLoyverseItems.length + ' Loyverse item(s). Auto-map, then save.'
             : 'No items to map.'
         );
       })
       .catch(function (err) {
-        setStatus(String(err.message || err), true);
         setItemMapStatus(String(err.message || err), true);
       });
   }
@@ -667,6 +1111,8 @@
             proposedItemMapping
           );
         }
+        paintLocationItemMatches();
+        updateLocationSummary();
       })
       .catch(function (err) {
         setItemMapStatus(String(err.message || err), true);
@@ -772,14 +1218,68 @@
       });
   }
 
+  var POS_EMBED_COLLAPSE_KEY = 'ttms-pos-embed-collapsed';
+
+  function setPosEmbedCollapsed(collapsed, persist) {
+    var panel = $('posIntegrationPanel');
+    var toggle = $('posEmbedToggle');
+    if (!panel) return;
+    panel.classList.toggle('is-collapsed', !!collapsed);
+    if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    if (persist !== false) {
+      try {
+        localStorage.setItem(POS_EMBED_COLLAPSE_KEY, collapsed ? '1' : '0');
+      } catch (e) {}
+    }
+  }
+
+  function initPosEmbedCollapse() {
+    var toggle = $('posEmbedToggle');
+    var panel = $('posIntegrationPanel');
+    if (!toggle || !panel) return;
+    var collapsed = true;
+    try {
+      var stored = localStorage.getItem(POS_EMBED_COLLAPSE_KEY);
+      if (stored === '0') collapsed = false;
+      else if (stored === '1') collapsed = true;
+    } catch (e) {}
+    setPosEmbedCollapsed(collapsed, false);
+    toggle.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      setPosEmbedCollapsed(!panel.classList.contains('is-collapsed'));
+    });
+  }
+
   function init() {
     if (!$('posIntegrationPanel')) return;
+    initPosEmbedCollapse();
+    var panel = $('posIntegrationPanel');
+    if (panel) {
+      panel.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter') return;
+        var tag = ev.target && ev.target.tagName;
+        if (tag === 'TEXTAREA' || tag === 'BUTTON') return;
+        ev.preventDefault();
+      });
+    }
     var params = new URLSearchParams(window.location.search);
     if (params.get('loyverse') === 'connected') {
-      setStatus('Loyverse connected. Refreshing status…');
+      setPosEmbedCollapsed(false);
+      setAccountState('checking', 'Loyverse connected. Refreshing status…');
+      var ordering = $('orderingSystemPanel');
+      if (ordering && ordering.classList.contains('is-collapsed')) {
+        var toggle = ordering.querySelector('[data-dashboard-card-toggle]');
+        if (toggle) toggle.click();
+      }
+      if (panel && panel.scrollIntoView) {
+        setTimeout(function () {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
     }
     if (params.get('loyverse_error')) {
-      setStatus('Loyverse error: ' + params.get('loyverse_error'), true);
+      setAccountState('error', 'Loyverse error: ' + params.get('loyverse_error'));
     }
     var c = $('btnPosConnectLoyverse');
     var r = $('btnPosRefreshStatus');
@@ -807,8 +1307,29 @@
     }
     if (replaceBtn) replaceBtn.addEventListener('click', replaceCatalogFromLoyverse);
 
+    seedLocationsFromDom();
     loadPosSettings();
-    setTimeout(refreshStatus, 400);
+    loadMenuCatalog();
+    loadLatestItemMapping();
+    fetchLocations()
+      .then(function () {
+        renderLocationMap();
+        paintLocationItemMatches();
+      })
+      .catch(function () {
+        paintLocationItemMatches();
+      });
+    refreshStatusWhenReady();
+    window.addEventListener('ttms:auth-ready', function () {
+      if (needsPosStatusRetry()) refreshStatusWhenReady();
+    });
+    window.addEventListener('auth:login', function () {
+      refreshStatusWhenReady();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) return;
+      if (needsPosStatusRetry()) refreshStatusWhenReady();
+    });
   }
 
   if (document.readyState === 'loading') {

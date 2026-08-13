@@ -55,6 +55,10 @@ html,body {
     transition: gap .9s cubic-bezier(.22,1,.36,1),max-height .9s ease,min-height .9s ease
 }
 
+#loader .loader-brand-stage.is-entering {
+    animation: loaderBrandIn .7s cubic-bezier(.34,1.45,.64,1) both
+}
+
 #loader img {
     display: block;
     max-width: 100%;
@@ -89,11 +93,12 @@ html,body {
 }
 
 #loader.loader--verified.loader-morph #loaderImage {
-    max-height: min(2.5rem,6.5dvh);
-    max-width: min(6.5rem,34vw);
-    opacity: .58;
+    max-height: min(5.25rem,14dvh);
+    max-width: min(14rem,58vw);
+    min-width: 1em;
+    opacity: .92;
     filter: none;
-    transform: translateY(-.1rem) scale(.45);
+    transform: none;
     border-radius: 1em
 }
 
@@ -105,14 +110,23 @@ html,body {
     filter: none
 }
 
+#loader.loader--verified.loader-morph #menuImage.is-popping {
+    animation: loaderClientLogoPop .95s cubic-bezier(.34,1.55,.64,1) both
+}
+
 #loader.loader--paid.loader-morph #menuImage {
     width: min(21rem,78vw,54dvh);
     height: min(21rem,78vw,54dvh);
     max-width: min(21rem,78vw,54dvh);
     max-height: min(21rem,78vw,54dvh);
-    box-shadow: 0 0 0 2px rgba(167,139,250,.5);
+    border: none;
     border-radius: 1.25rem;
-    filter: none
+    filter: none;
+    box-shadow: none
+}
+
+#loader.loader--paid.loader-morph #menuImage.is-popping {
+    animation: loaderClientLogoPop .95s cubic-bezier(.34,1.55,.64,1) both
 }
 
 #loader .loader-status {
@@ -262,6 +276,54 @@ html,body {
     animation: loaderLocationValueIn .7s cubic-bezier(.34,1.45,.64,1) .12s both
 }
 
+@keyframes loaderBrandIn {
+    0% {
+        opacity: 1;
+        transform: scale(.94) translateY(.35rem)
+    }
+    62% {
+        opacity: 1;
+        transform: scale(1.03) translateY(-.08rem)
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0)
+    }
+}
+
+@keyframes loaderClientLogoPop {
+    0% {
+        transform: scale(.28) rotate(-8deg);
+        filter: blur(8px);
+        opacity: .35
+    }
+    55% {
+        transform: scale(1.18) rotate(3deg);
+        filter: blur(0);
+        opacity: 1
+    }
+    78% {
+        transform: scale(.94) rotate(-1deg)
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        filter: none;
+        opacity: 1
+    }
+}
+
+@keyframes loaderPaidGlow {
+    0% {
+        box-shadow: 0 8px 24px rgba(15,23,42,.1),0 0 0 0 rgba(16,185,129,0)
+    }
+    55% {
+        box-shadow: 0 28px 64px rgba(15,23,42,.28),0 0 0 16px rgba(16,185,129,.18)
+    }
+    100% {
+        box-shadow: 0 22px 56px rgba(15,23,42,.2),0 0 0 10px rgba(16,185,129,.08)
+    }
+}
+
 @keyframes loaderLocationIn {
     0% {
         opacity: 0;
@@ -280,12 +342,12 @@ html,body {
 @keyframes loaderLocationValueIn {
     0% {
         opacity: 0;
-        transform: scale(.82);
-        filter: blur(2px)
+        transform: scale(.72);
+        filter: blur(3px)
     }
-    70% {
+    62% {
         opacity: 1;
-        transform: scale(1.06);
+        transform: scale(1.12);
         filter: blur(0)
     }
     100% {
@@ -459,6 +521,7 @@ html,body {
 @media (prefers-reduced-motion:reduce) {
     #loader #loaderImage,
     #loader #menuImage,
+    #loader .loader-brand-stage,
     #loader .loader-status,
     #loader .loader-feature {
         transition-duration: .01ms!important;

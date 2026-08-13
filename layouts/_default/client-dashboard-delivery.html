@@ -1,24 +1,68 @@
 {{ define "main" }}
-<div class="dashboard-analytics-page" id="dashboardDeliveryPage">
-  <div class="dashboard-edit-header">
-    <div class="dashboard-edit-header-inner">
-      <a href="/dashboard/" class="btn-dash btn-dash-secondary" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-      <h1 class="dashboard-edit-title">Delivery orders</h1>
-    </div>
-  </div>
+{{- $siteName := site.Title | default "Menu Demo" -}}
+{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $hubClientId := $dashClient -}}
+{{- if not (hasPrefix $hubClientId "ttms_") -}}
+  {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
+{{- end -}}
+{{- $ds := site.Params.deliveryService | default dict -}}
+{{- $deliveryOn := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
 
-  <main class="dashboard-analytics-main">
-    {{- if not (default false site.Params.features.delivery) }}
-    <p class="dashboard-notify-banner">Delivery is not enabled for this venue. Set <code>params.features.delivery = true</code> and configure <code>params.deliveryService</code>.</p>
-    {{- else }}
-    <p class="dashboard-analytics-subtitle">Platform fleet inbox — accept orders after a customer picks a driver, mark ready, then scan the driver’s order QR at pickup.</p>
-    <div id="ttms-delivery-orders" class="ttms-delivery-orders"></div>
-    {{- end }}
+<div class="dashboard-analytics-page dashboard-settings-page dashboard-delivery-page dashboard-control-room" id="dashboardDeliveryPage">
+  <header class="dashboard-edit-header dashboard-settings-header dashboard-header-bar dashboard-subpage-header-bar" aria-label="Delivery orders toolbar">
+    <a href="/dashboard/" class="dashboard-logo-link" aria-label="Back to dashboard" title="Back to dashboard">
+      <span class="dashboard-logo-frame" aria-hidden="true">
+        <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
+      </span>
+      <span class="dashboard-logo-live-badge">Inbox</span>
+    </a>
+    <div class="dashboard-header-main">
+      <p class="dashboard-header-kicker">
+        <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
+        Delivery orders
+      </p>
+      <h1 class="dashboard-header-site">{{ $siteName }}</h1>
+    </div>
+    <div class="dashboard-header-end">
+      {{- if not $deliveryOn -}}
+      <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-primary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade</a>
+      {{- end -}}
+      <a href="/dashboard/" class="dashboard-header-close" title="Close delivery inbox" aria-label="Close delivery inbox">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="dashboard-analytics-main dashboard-settings-main" id="main">
+    {{- if not $deliveryOn -}}
+    <p class="dashboard-notify-banner dashboard-notify-banner-warn" role="status">
+      <i class="fa fa-lock" aria-hidden="true"></i>
+      <span>Delivery is a platform add-on. Enable it on Account to open the fleet inbox — accept jobs, mark ready, scan pickup QR, and track drivers.</span>
+    </p>
+    {{- else -}}
+    <section class="dashboard-settings-panel dashboard-settings-panel--delivery" aria-labelledby="delivery-inbox-heading">
+      <div class="dashboard-settings-panel-head">
+        <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-truck"></i></span>
+        <div class="dashboard-settings-panel-head-text">
+          <h2 id="delivery-inbox-heading" class="dashboard-analytics-heading">Platform fleet inbox</h2>
+          <p class="dashboard-settings-lead">Accept orders after a customer picks a driver, mark ready, then scan the driver’s order QR at pickup.</p>
+        </div>
+        <button type="button" class="btn-dash btn-dash-primary" id="ttms-delivery-refresh"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button>
+      </div>
+      <div id="ttms-delivery-orders" class="ttms-delivery-orders">
+        <div id="ttms-delivery-orders-list" class="ttms-delivery-orders-list"></div>
+      </div>
+    </section>
+    {{- end -}}
   </main>
 </div>
 
-{{- if default false site.Params.features.delivery }}
-{{- $ds := site.Params.deliveryService | default dict -}}
+<script>
+window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
+window.SITE_DISPLAY_NAME = {{ $siteName | jsonify }};
+</script>
+{{- if $deliveryOn -}}
 <link rel="stylesheet" href="{{ "css/delivery.css" | relURL }}">
 <script>
 window.DELIVERY_CONFIG = {
@@ -35,4 +79,17 @@ window.DELIVERY_CONFIG = {
 <script src="{{ "js/delivery-client.js" | relURL }}"></script>
 <script src="{{ "js/delivery-dashboard.js" | relURL }}"></script>
 {{- end }}
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+  if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+    await AuthClient.whenReady();
+  }
+  if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
+    return;
+  }
+  if (window.DeliveryDashboard && typeof DeliveryDashboard.init === 'function') {
+    DeliveryDashboard.init();
+  }
+});
+</script>
 {{ end }}

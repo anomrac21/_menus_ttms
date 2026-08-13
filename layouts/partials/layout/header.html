@@ -40,8 +40,9 @@
 		<ul id="menublock" class="menublock">
 		{{- if $multi -}}
 			{{- if $locSlug -}}
-				<li class="item menublock-item">
-					<a href="/" class="menublock-link" onclick="closeCart();" title="All locations">
+				<li class="item menublock-item menublock-item--locations">
+					<a href="/" class="menublock-link menublock-link--locations" onclick="closeCart();" title="All locations">
+						<span class="menublock-link__icon" aria-hidden="true"><img class="icon center" src="https://cdn.ttmenus.com/icons/ui/location.svg" alt="" loading="lazy" width="32" height="32"></span>
 						<span class="menublock-link__label">Locations</span>
 					</a>
 				</li>

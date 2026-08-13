@@ -26,29 +26,43 @@
     .main-header .header-nav {
       position: fixed !important;
       top: var(--ttms-header-height, 5em);
-      right: 0;
+      right: 0.45rem;
       left: auto;
-      width: 100%;
-      max-width: 400px;
+      width: min(calc(100% - 0.9rem), 22rem);
+      max-width: 22rem;
       flex: none !important;
+      height: 0;
       max-height: 0;
       overflow: hidden;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+      transform: translate3d(0, -0.65rem, 0);
       z-index: var(--ttms-z-header-dropdown, 210);
+      transition:
+        max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease,
+        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.38s;
     }
     .main-header.menublock-dropdown-open .header-nav {
-      max-height: none;
       height: auto;
+      max-height: calc(100dvh - var(--ttms-header-height, 5em) - 0.45rem);
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      overflow: visible;
+      overflow: hidden;
+      transform: translate3d(0, 0, 0);
+      transition:
+        max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease,
+        transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0s;
     }
     .main-header.menublock-dropdown-open #menublock {
-      max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
-      overflow-y: scroll;
+      height: auto;
+      max-height: calc(100dvh - var(--ttms-header-height, 5em) - 0.45rem);
+      overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
@@ -69,29 +83,43 @@
   html.ttms-mobile-menublock .main-header .header-nav {
     position: fixed !important;
     top: var(--ttms-header-height, 5em);
-    right: 0;
+    right: 0.45rem;
     left: auto;
-    width: 100%;
-    max-width: 400px;
+    width: min(calc(100% - 0.9rem), 22rem);
+    max-width: 22rem;
     flex: none !important;
+    height: 0;
     max-height: 0;
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    transform: translate3d(0, -0.65rem, 0);
     z-index: var(--ttms-z-header-dropdown, 210);
+    transition:
+      max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.28s ease,
+      transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.38s;
   }
   html.ttms-mobile-menublock .main-header.menublock-dropdown-open .header-nav {
-    max-height: none;
     height: auto;
+    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 0.45rem);
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    overflow: visible;
+    overflow: hidden;
+    transform: translate3d(0, 0, 0);
+    transition:
+      max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.28s ease,
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0s;
   }
   html.ttms-mobile-menublock .main-header.menublock-dropdown-open #menublock {
-    max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
-    overflow-y: scroll;
+    height: auto;
+    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 0.45rem);
+    overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
@@ -156,7 +184,7 @@
   {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
 {{- end -}}
 <link rel="canonical" href="{{ $canonical }}">
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") -}}
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 
 <!-- Preload critical loader resources FIRST -->
@@ -259,6 +287,10 @@
       gap 0.9s cubic-bezier(0.22, 1, 0.36, 1),
       max-height 0.9s ease,
       min-height 0.9s ease;
+  }
+
+  .loader-brand-stage.is-entering {
+    animation: loaderBrandIn 0.7s cubic-bezier(0.34, 1.45, 0.64, 1) both;
   }
 
   /* Status stays fully collapsed until loader-ready */
@@ -409,12 +441,12 @@
   @keyframes loaderLocationValueIn {
     0% {
       opacity: 0;
-      transform: scale(0.82);
-      filter: blur(2px);
+      transform: scale(0.72);
+      filter: blur(3px);
     }
-    70% {
+    62% {
       opacity: 1;
-      transform: scale(1.06);
+      transform: scale(1.12);
       filter: blur(0);
     }
     100% {
@@ -447,6 +479,60 @@
     100% {
       opacity: 0;
       transform: scale(1.85);
+    }
+  }
+
+  @keyframes loaderBrandIn {
+    0% {
+      opacity: 1;
+      transform: scale(0.94) translateY(0.35rem);
+    }
+    62% {
+      opacity: 1;
+      transform: scale(1.03) translateY(-0.08rem);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes loaderClientLogoPop {
+    0% {
+      transform: scale(0.28) rotate(-8deg);
+      filter: blur(8px);
+      opacity: 0.35;
+    }
+    55% {
+      transform: scale(1.18) rotate(3deg);
+      filter: blur(0);
+      opacity: 1;
+    }
+    78% {
+      transform: scale(0.94) rotate(-1deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      filter: none;
+      opacity: 1;
+    }
+  }
+
+  @keyframes loaderPaidGlow {
+    0% {
+      box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.1),
+        0 0 0 0 rgba(16, 185, 129, 0);
+    }
+    55% {
+      box-shadow:
+        0 28px 64px rgba(15, 23, 42, 0.28),
+        0 0 0 16px rgba(16, 185, 129, 0.18);
+    }
+    100% {
+      box-shadow:
+        0 22px 56px rgba(15, 23, 42, 0.2),
+        0 0 0 10px rgba(16, 185, 129, 0.08);
     }
   }
 
@@ -501,11 +587,11 @@
   }
 
   #loader.loader--verified.loader-morph #loaderImage {
-    max-height: min(2.5rem, 6.5dvh);
-    max-width: min(6.5rem, 34vw);
-    opacity: 0.58;
+    max-height: min(5.25rem, 14dvh);
+    max-width: min(14rem, 58vw);
+    opacity: 0.92;
     filter: none;
-    transform: translateY(-0.1rem) scale(0.45);
+    transform: none;
   }
 
   #loader.loader--verified.loader-morph #menuImage {
@@ -517,14 +603,23 @@
     filter: none;
   }
 
+  #loader.loader--verified.loader-morph #menuImage.is-popping {
+    animation: loaderClientLogoPop 0.95s cubic-bezier(0.34, 1.55, 0.64, 1) both;
+  }
+
   #loader.loader--paid.loader-morph #menuImage {
     width: min(21rem, 78vw, 54dvh);
     height: min(21rem, 78vw, 54dvh);
     max-width: min(21rem, 78vw, 54dvh);
     max-height: min(21rem, 78vw, 54dvh);
-    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.5);
+    border: none;
     border-radius: 1.25rem;
     filter: none;
+    box-shadow: none;
+  }
+
+  #loader.loader--paid.loader-morph #menuImage.is-popping {
+    animation: loaderClientLogoPop 0.95s cubic-bezier(0.34, 1.55, 0.64, 1) both;
   }
 
   @media (max-height: 700px) {
@@ -555,6 +650,7 @@
   @media (prefers-reduced-motion: reduce) {
     #loaderImage,
     #menuImage,
+    .loader-brand-stage,
     .loader-status,
     .loader-feature {
       transition-duration: 0.01ms !important;
@@ -1067,7 +1163,11 @@ window.MENU_CONFIG = {
 <script src="/js/pull-to-refresh.js" defer></script>
 {{- end -}}
 
-{{- if site.Params.posintegration.enabled -}}
+{{- /* Load POS client whenever Loyverse is entitled or configured (enabled flag gates order posting). */ -}}
+{{- $loyverseFeature := false -}}
+{{- with site.Params.features -}}{{- $loyverseFeature = default false .loyverse_connect -}}{{- end -}}
+{{- $pos := site.Params.posintegration | default dict -}}
+{{- if or $loyverseFeature (default false $pos.enabled) -}}
 {{- $posClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 {{- $posMap := dict -}}
 {{- with site.Data.pos_mapping -}}
@@ -1080,15 +1180,15 @@ window.MENU_CONFIG = {
 <script>
 // POS Integration Configuration (no Loyverse secrets — proxy uses stored OAuth tokens server-side)
 window.POS_CONFIG = {
-    enabled: {{ site.Params.posintegration.enabled }},
-    provider: "{{ site.Params.posintegration.provider }}",
-    apiUrl: "{{ site.Params.posintegration.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
-    oauthUrl: "{{ site.Params.posintegration.oauth_url | default site.Params.posintegration.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
+    enabled: {{ default false $pos.enabled }},
+    provider: "{{ $pos.provider | default "loyverse" }}",
+    apiUrl: "{{ $pos.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
+    oauthUrl: "{{ $pos.oauth_url | default $pos.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
     clientId: "{{ $posClient }}",
-    storeId: "{{ site.Params.posintegration.store_id }}",
-    syncMenu: {{ site.Params.posintegration.sync_menu | default false }},
-    autoProcessOrders: {{ site.Params.posintegration.auto_process_orders | default false }},
-    fallbackToWhatsapp: {{ site.Params.posintegration.fallback_to_whatsapp | default true }},
+    storeId: "{{ $pos.store_id | default "" }}",
+    syncMenu: {{ default false $pos.sync_menu }},
+    autoProcessOrders: {{ default false $pos.auto_process_orders }},
+    fallbackToWhatsapp: {{ if isset $pos "fallback_to_whatsapp" }}{{ $pos.fallback_to_whatsapp }}{{ else }}true{{ end }},
     itemMapping: {{ $posMap | jsonify }}
 };
 </script>

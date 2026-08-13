@@ -101,8 +101,15 @@
 			{{- with site.Params.orderingsystem -}}
 				{{- if isset . "usephonecall" -}}{{- $cartUsePhone = .usephonecall -}}{{- end -}}
 			{{- end -}}
+			{{- $posOn := default false site.Params.posintegration.enabled -}}
+			{{- $waWithPos := true -}}
+			{{- with site.Params.posintegration -}}
+				{{- if isset . "fallback_to_whatsapp" -}}{{- $waWithPos = .fallback_to_whatsapp -}}{{- end -}}
+			{{- end -}}
 			{{- if $cartUsePhone -}}
 			<button type="button" class="placeOrder btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-phone" aria-hidden="true"></i><span>Order Now</span></button>
+			{{- else if and $posOn (not $waWithPos) -}}
+			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true" title="Send order to Loyverse"><i class="fa fa-cash-register" aria-hidden="true"></i><span>Order Now</span></button>
 			{{- else -}}
 			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-whatsapp" aria-hidden="true"></i><span>Order Now</span></button>
 			{{- end -}}

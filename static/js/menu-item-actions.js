@@ -183,6 +183,7 @@
 
   function openMenu(menuRoot) {
     if (!menuRoot) return;
+    refreshAuthVisibility();
     closeAllMenus(menuRoot);
     menuRoot.classList.add(OPEN_CLASS);
     var trigger = menuRoot.querySelector('.menu-item-actions__trigger');
@@ -352,6 +353,8 @@
   window.addEventListener('ttms:auth-ready', init);
   document.addEventListener('ttms:page-enter', init);
   window.addEventListener('adsPopulated', init);
+  window.addEventListener('ttms:home-menu-ready', refreshAuthVisibility);
+  window.addEventListener('ttms:home-menu-location-filtered', refreshAuthVisibility);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start);

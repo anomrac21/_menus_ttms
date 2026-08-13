@@ -1014,8 +1014,19 @@
       });
     }
     scheduleReelsRefresh();
+    refreshInjectedMenuAuth();
     if (config.menuImages && typeof window.refreshLazyItemSmashPass === 'function') {
       window.refreshLazyItemSmashPass();
+    }
+  }
+
+  function refreshInjectedMenuAuth() {
+    if (window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.refreshVisibility === 'function') {
+      window.TTMSMenuItemActions.refreshVisibility();
+      return;
+    }
+    if (window.AuthMiddleware && typeof AuthMiddleware.toggleAuthElements === 'function') {
+      AuthMiddleware.toggleAuthElements();
     }
   }
 

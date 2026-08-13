@@ -61,6 +61,7 @@ const AuthMiddleware = {
       const wantsProtectedArea =
         path.indexOf('/dashboard') === 0 ||
         path.indexOf('/deployments') === 0 ||
+        path.indexOf('/delivery-orders') === 0 ||
         path.indexOf('/admin') === 0 ||
         path.indexOf('/login') === 0;
       if (wantsProtectedArea && !hasAdminSiteAccess) {

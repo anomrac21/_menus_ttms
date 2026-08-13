@@ -577,13 +577,16 @@
     opacity: 1;
 }
 
-/* Search + Tags chips */
+/* Locations + Search + Tags chips */
+#menublock .menublock-item--locations .menublock-link--locations,
 #menublock .menublock-item--search .menublock-link--search,
 #menublock .menublock-item--tags .menublock-link--tags {
     border-color: color-mix(in srgb, #7986cb 50%, #fff);
     background: linear-gradient(160deg, rgba(92, 107, 192, 0.45), rgba(57, 73, 171, 0.35));
 }
 
+#menublock .menublock-item--locations .menublock-link--locations:hover,
+#menublock .menublock-item--locations .menublock-link--locations:focus-visible,
 #menublock .menublock-item--search .menublock-link--search:hover,
 #menublock .menublock-item--search .menublock-link--search:focus-visible,
 #menublock .menublock-item--tags .menublock-link--tags:hover,
@@ -592,6 +595,7 @@
     background: linear-gradient(160deg, rgba(92, 107, 192, 0.58), rgba(57, 73, 171, 0.48));
 }
 
+#menublock .menublock-item--locations .menublock-link__label,
 #menublock .menublock-item--search .menublock-link__label,
 #menublock .menublock-item--tags .menublock-link__label {
     text-transform: capitalize;
@@ -932,27 +936,29 @@ body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--
 .header-nav {
     position: fixed;
     top: var(--ttms-header-height, 5em);
-    right: 0;
+    right: 0.45rem;
     left: auto;
-    width: 100%;
-    max-width: 400px;
+    width: min(calc(100% - 0.9rem), 22rem);
+    max-width: 22rem;
     z-index: var(--ttms-z-header-dropdown, 210);
     flex: none;
+    height: 0;
     max-height: 0;
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(-0.35rem);
-    -webkit-transform: translate3d(0, -0.35rem, 0);
+    transform: translate3d(0, -0.65rem, 0);
     transition:
-        max-height 0.28s ease,
-        opacity 0.22s ease,
-        transform 0.22s ease,
-        visibility 0s linear 0.28s;
-    border-bottom: 1px solid var(--header-bordercolor-1);
+        max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease,
+        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.38s;
+    border: 1px solid var(--header-bordercolor-1);
+    border-top: none;
+    border-radius: 0 0 1.15rem 1.15rem;
     background: var(--header-bg-color);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
     -webkit-overflow-scrolling: touch;
 }
 
@@ -970,33 +976,38 @@ body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--
 }
 
 .main-header.menublock-dropdown-open .header-nav {
-    max-height: none;
+    display: flex;
+    flex-direction: column;
     height: auto;
+    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 0.45rem);
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
     visibility: visible;
-    -webkit-transform: translate3d(0, 0, 0);
-    overflow: visible;
+    overflow: hidden;
     transition:
-        opacity 0.22s ease,
-        transform 0.22s ease,
+        max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease,
+        transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
         visibility 0s linear 0s;
 }
 
 .main-header.menublock-dropdown-open #menublock {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: stretch;
+    flex: 0 1 auto;
     width: 100%;
-    max-width: 400px;
-    max-height: min(calc(100vh - 5em), calc(100svh - var(--ttms-header-height, 5em) - env(safe-area-inset-bottom, 0px)));
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 0.45rem);
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     overscroll-behavior: contain;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
-    -webkit-transform: translateZ(0);
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
 }
 
 .header-menublock-backdrop {
@@ -1036,9 +1047,9 @@ body.menublock-dropdown-open {
     overflow: visible;
     overscroll-behavior: auto;
     max-height: none;
-    padding: 0.45rem 0.55rem 0.75rem;
-    padding-inline-end: 0.55rem;
-    gap: 0.35rem;
+    padding: 0.55rem 0.6rem 0.85rem;
+    padding-inline-end: 0.6rem;
+    gap: 0.4rem;
     scroll-snap-type: none;
     touch-action: auto;
 }
@@ -1051,12 +1062,38 @@ body.menublock-dropdown-open {
     scroll-snap-align: none;
 }
 
+.main-header.menublock-dropdown-open #menublock .menublock-item {
+    animation: menublockItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(1) { animation-delay: 0.04s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(2) { animation-delay: 0.07s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(3) { animation-delay: 0.1s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(4) { animation-delay: 0.13s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(5) { animation-delay: 0.16s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(6) { animation-delay: 0.19s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(7) { animation-delay: 0.22s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(8) { animation-delay: 0.25s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(9) { animation-delay: 0.28s; }
+.main-header.menublock-dropdown-open #menublock .menublock-item:nth-child(n + 10) { animation-delay: 0.31s; }
+
+@keyframes menublockItemIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-0.45rem);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 #menublock .menublock-link {
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    min-height: 3.1rem;
-    padding: 0.55rem 0.75rem;
+    min-height: 3.15rem;
+    padding: 0.55rem 0.8rem;
     gap: 0.75rem;
     touch-action: auto;
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0.08);

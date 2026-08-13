@@ -2183,6 +2183,35 @@ async function checkCartForUnavailableItems() {
 	return unavailable;
 }
 
+function ttmsShouldSendOrderToLoyverse() {
+	if (!window.posIntegration || !window.posIntegration.isPOSEnabled) return false;
+	var c = window.POS_CONFIG || {};
+	// Auto-process off = do not push receipts from the cart (Connect/mapping still available in Settings).
+	if (c.autoProcessOrders === false) return false;
+	return true;
+}
+
+function ttmsShouldOpenWhatsAppCheckout() {
+	// Phone channel is dialer-only (never WhatsApp / never Loyverse from this path).
+	if (usephonecall) return false;
+	var c = window.POS_CONFIG || {};
+	// When Loyverse is on and "Keep WhatsApp" is off, Loyverse stands alone.
+	if (window.posIntegration && window.posIntegration.isPOSEnabled && c.fallbackToWhatsapp === false) {
+		return false;
+	}
+	return true;
+}
+
+function ttmsSendOrderToLoyverse() {
+	if (!ttmsShouldSendOrderToLoyverse()) {
+		return Promise.resolve({ skipped: true });
+	}
+	var posLoc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
+	return window.posIntegration.processOrderWithPOS({
+		storeId: (posLoc && posLoc.loyverse_store_id) || ''
+	});
+}
+
 function placeOrderClick(){
 	if (!orderingEnabled) {
 		alert(orderingDisabledMessage);
@@ -2191,6 +2220,7 @@ function placeOrderClick(){
 	if (!Array.isArray(order) || order.length === 0) {
 		return;
 	}
+	// Phone = call only (no Loyverse, no WhatsApp).
 	if (usephonecall) {
 		window.location.href = 'tel:' + orderPhone;
 		return;
@@ -2369,15 +2399,29 @@ function confirmSendOrder(){
 			tableNumber: currentTableNumber || myTable || null
 		});
 	}
-	
-	window.open(message, "_blank" );
-	
-	// Process order with POS system if enabled (store from selected location mapping)
-	if (window.posIntegration && window.posIntegration.isPOSEnabled) {
-		var posLoc = getCurrentLocationData();
-		window.posIntegration.processOrderWithPOS({
-			storeId: (posLoc && posLoc.loyverse_store_id) || ''
+
+	var openWhatsApp = ttmsShouldOpenWhatsAppCheckout();
+	var sendLoyverse = ttmsShouldSendOrderToLoyverse();
+
+	// Loyverse stands alone: push receipt even when WhatsApp is off.
+	if (sendLoyverse) {
+		ttmsSendOrderToLoyverse().then(function (result) {
+			if (openWhatsApp) return;
+			if (result && result.ok) {
+				alert('Order sent to Loyverse.');
+			} else if (result && !result.skipped) {
+				alert('Could not send order to Loyverse. Check POS connection and item mapping in Menu settings.');
+			} else if (!result || result.skipped) {
+				alert('Loyverse order was not sent (POS off or auto-process disabled).');
+			}
 		});
+	}
+
+	// WhatsApp is optional — open only when guest channel is WhatsApp and fallback is kept on.
+	if (openWhatsApp && message) {
+		window.open(message, '_blank');
+	} else if (!sendLoyverse && !openWhatsApp) {
+		alert('No checkout channel is available. Enable WhatsApp or Loyverse POS in Menu settings.');
 	}
 	
 	// Clear the order type variables after sending the order

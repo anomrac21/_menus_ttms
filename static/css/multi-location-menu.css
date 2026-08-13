@@ -86,12 +86,14 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 0.5rem;
   margin: 0;
   padding: 0 0.25rem;
   list-style: none;
   width: auto;
-  max-width: none;
+  max-width: 100%;
+  flex: 0 0 auto;
 }
 
 @media (max-height: 740px) {

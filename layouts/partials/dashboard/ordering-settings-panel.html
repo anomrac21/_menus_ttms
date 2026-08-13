@@ -1,0 +1,119 @@
+{{- $os := site.Params.orderingsystem | default dict -}}
+{{- $pos := site.Params.posintegration | default dict -}}
+{{- $usePhone := true -}}
+{{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
+{{- $orderingOn := default true $os.enabled -}}
+{{- $loyverseConnect := false -}}
+{{- with site.Params.features -}}
+  {{- $loyverseConnect = default false .loyverse_connect -}}
+{{- end -}}
+{{- $posOn := and $loyverseConnect (default false $pos.enabled) -}}
+{{- $hubClientId := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+{{- if and $hubClientId (not (hasPrefix $hubClientId "ttms_")) -}}
+  {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
+{{- end -}}
+<div class="card card-ordering is-collapsed" data-dashboard-card="ordering" id="orderingSystemPanel">
+  <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="ordering" aria-expanded="false" aria-controls="dashboardCardBody-ordering">
+    <h3 class="dashboard-card-title"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Ordering system</h3>
+    <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+  </button>
+  <div class="dashboard-card-body" id="dashboardCardBody-ordering">
+    <p class="dashboard-card-desc">Cart, checkout, and ordering behaviour.</p>
+    <form id="orderingSystemForm" class="dashboard-settings-form dashboard-ordering-form" autocomplete="off" data-os-hastables="{{ if default true $os.hastables }}true{{ else }}false{{ end }}">
+      <div class="dashboard-ordering-layout">
+        <fieldset class="dashboard-ordering-group">
+          <legend class="dashboard-ordering-group-title">Availability</legend>
+          <div class="dashboard-ordering-group-body">
+            <div class="dashboard-ordering-avail-switches">
+              <div class="dashboard-settings-row dashboard-ordering-switch-row">
+                <span class="dashboard-settings-label" id="os-enabled-label">Ordering enabled</span>
+                <div class="dashboard-settings-value">
+                  <label class="dashboard-switch" for="os-enabled">
+                    <input type="checkbox" id="os-enabled" name="enabled" class="dashboard-switch-input" data-os-key="enabled"{{ if $orderingOn }} checked{{ end }}>
+                    <span class="dashboard-switch-track" aria-hidden="true"></span>
+                    <span class="dashboard-switch-state" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="dashboard-settings-row dashboard-ordering-switch-row" id="osLoyverseSwitchRow" data-os-requires-ordering{{ if not $orderingOn }} hidden{{ end }}>
+                <span class="dashboard-settings-label" id="os-loyverse-label">
+                  <span class="dashboard-card-title-icon dashboard-pos-loyverse-icon dashboard-pos-loyverse-icon--inline" aria-hidden="true">
+                    <img src="/icons/loyverse-mark.svg" alt="" width="16" height="16">
+                  </span>
+                  Loyverse POS
+                </span>
+                <div class="dashboard-settings-value">
+                  <label class="dashboard-switch{{ if not $loyverseConnect }} is-disabled{{ end }}" for="posEnabledCb">
+                    <input type="checkbox" id="posEnabledCb" class="dashboard-switch-input"{{ if $posOn }} checked{{ end }}{{ if not $loyverseConnect }} disabled{{ end }}>
+                    <span class="dashboard-switch-track" aria-hidden="true"></span>
+                    <span class="dashboard-switch-state" aria-hidden="true"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            {{- if not $loyverseConnect -}}
+            <p class="dashboard-ordering-group-hint" id="os-loyverse-upgrade-hint" data-os-requires-ordering{{ if not $orderingOn }} hidden{{ end }}>Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a>.</p>
+            {{- end -}}
+            <div class="dashboard-settings-row dashboard-settings-row--full" id="osDisabledMsgRow" data-os-when-ordering="off"{{ if $orderingOn }} hidden{{ end }}>
+              <label class="dashboard-settings-label" for="os-disabled-msg">Disabled message</label>
+              <div class="dashboard-settings-value dashboard-settings-value--textarea">
+                <textarea id="os-disabled-msg" name="orderingDisabledMessage" class="dashboard-settings-input dashboard-settings-textarea dashboard-settings-textarea--autosize" rows="2" maxlength="255" data-os-key="orderingDisabledMessage" aria-describedby="os-disabled-msg-count">{{ default "Ordering is not available for this menu at this time." $os.orderingDisabledMessage }}</textarea>
+                <span id="os-disabled-msg-count" class="dashboard-settings-char-count" aria-live="polite"></span>
+              </div>
+            </div>
+            {{ partial "dashboard/pos-settings-panel.html" . }}
+          </div>
+        </fieldset>
+
+        <fieldset class="dashboard-ordering-group" data-os-requires-ordering data-os-requires-no-loyverse{{ if or (not $orderingOn) $posOn }} hidden{{ end }}>
+          <legend class="dashboard-ordering-group-title">Charges</legend>
+          <div class="dashboard-ordering-group-body dashboard-settings-form-grid">
+            <div class="dashboard-settings-row">
+              <label class="dashboard-settings-label" for="os-vat">VAT %</label>
+              <div class="dashboard-settings-value">
+                <input type="number" id="os-vat" name="vat" class="dashboard-settings-input" min="0" step="0.01" data-os-key="vat" value="{{ default 0 $os.vat }}">
+              </div>
+            </div>
+            <div class="dashboard-settings-row">
+              <label class="dashboard-settings-label" for="os-service">Service charge</label>
+              <div class="dashboard-settings-value">
+                <input type="number" id="os-service" name="servicecharge" class="dashboard-settings-input" min="0" step="0.01" data-os-key="servicecharge" value="{{ default 0 $os.servicecharge }}">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if or (not $orderingOn) (and $posOn (not (default true $pos.fallback_to_whatsapp))) }} hidden{{ end }}>
+          <legend class="dashboard-ordering-group-title">Guest checkout</legend>
+          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">{{ if $posOn }}Phone is dialer-only. WhatsApp is optional alongside Loyverse receipts.{{ else }}Phone opens the dialer. WhatsApp sends the order summary.{{ end }}</p>
+          <div class="dashboard-ordering-channel">
+            <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="Order via">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if $usePhone }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if $usePhone }}true{{ else }}false{{ end }}">
+                <i class="fa fa-phone" aria-hidden="true"></i><span>Phone call</span>
+              </button>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if not $usePhone }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if not $usePhone }}true{{ else }}false{{ end }}">
+                <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
+              </button>
+            </div>
+            <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if $usePhone }}true{{ else }}false{{ end }}">
+            <div class="dashboard-ordering-contact">
+              <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if $usePhone }}Phone number{{ else }}WhatsApp number{{ end }}</label>
+              <div class="dashboard-ordering-contact-field">
+                <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if $usePhone }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
+                <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if $usePhone }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
+              </div>
+              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if $usePhone }}Opens the phone dialer only{{ if $posOn }} — does not create a Loyverse order{{ end }}.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now{{ if $posOn }} (optional alongside Loyverse){{ end }}.{{ end }}</p>
+            </div>
+            <input type="hidden" id="os-whatsapp" name="whatsapp" value="{{ default "" $os.whatsapp }}">
+            <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">
+          </div>
+        </fieldset>
+      </div>
+      <div class="dashboard-settings-form-actions">
+        <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveOrderingSystem">Save ordering settings</button>
+        <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="/js/ordering-settings.js" defer></script>

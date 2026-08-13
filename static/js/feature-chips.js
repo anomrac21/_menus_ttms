@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  var TITLES_HOLD_MS = 1600;
+  var TITLES_HOLD_MS = 2200;
   var titlesTimers = [];
 
   function collapseChip(chip) {

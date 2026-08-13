@@ -4,8 +4,8 @@ let adManagerCheckCount = 0;
 let maxLoaderTimeout = null;
 let globalLoaderKillTimeout = null;
 let loaderHasHiddenOnce = false;
-/** Minimum time loader stays visible so morph + status can be read. */
-var LOADER_MIN_VISIBLE_MS = 2800;
+/** Minimum time loader stays visible so morph, chips, and logo pop can play. */
+var LOADER_MIN_VISIBLE_MS = 4200;
 var loaderShownAt = 0;
 
 function forceHideLoaderElement(loader) {
@@ -298,6 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         clearFeatureRevealTimers();
         loader.classList.remove('loader-morph', 'loader-ready');
+        if (menuImage) menuImage.classList.remove('is-popping');
     }
 
     function staggerLoaderFeatures() {
@@ -324,6 +325,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!loaderIsVerified()) return;
         // Hold full TTMenus mark, then hand the stage to the client logo.
         morphTimer = setTimeout(function () {
+            if (menuImage) {
+                menuImage.classList.remove('is-popping');
+                void menuImage.offsetWidth;
+                menuImage.classList.add('is-popping');
+            }
             loader.classList.add('loader-morph');
         }, 720);
     }
@@ -356,22 +362,43 @@ document.addEventListener('DOMContentLoaded', function() {
     let isHidingLoader = false;
     let randomAnim = '';
 
+    function restartLoaderMedia(opts) {
+        var playEnter = opts && opts.enter === true;
+        if (loaderImage) {
+            var base =
+                loaderImage.getAttribute('data-loader-src') ||
+                String(loaderImage.getAttribute('src') || '').split('?')[0];
+            if (base) {
+                loaderImage.setAttribute('data-loader-src', base);
+                // Keep the current frame until the replay URL is assigned — never blank the src.
+                loaderImage.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'replay=' + Date.now();
+            }
+            loaderImage.style.display = 'block';
+        }
+        if (menuImage) {
+            menuImage.classList.remove('is-popping');
+            void menuImage.offsetWidth;
+            menuImage.style.display = 'block';
+        }
+        var stage = document.getElementById('loaderBrandStage');
+        if (playEnter && stage) {
+            stage.classList.remove('is-entering');
+            void stage.offsetWidth;
+            stage.classList.add('is-entering');
+        }
+    }
+
     function resetLoaderVisible() {
+        animations.forEach(function (anim) {
+            loader.classList.remove(anim);
+        });
+        clearLoaderMorph();
+        restartLoaderMedia({ enter: true });
         loader.classList.remove('loader-force-hidden');
         loader.style.display = 'flex';
         loader.style.opacity = '';
         loader.style.visibility = '';
         loader.style.pointerEvents = '';
-        if (loaderImage) {
-            loaderImage.style.display = 'block';
-        }
-        if (menuImage) {
-            menuImage.style.display = 'block';
-        }
-        animations.forEach(function (anim) {
-            loader.classList.remove(anim);
-        });
-        clearLoaderMorph();
         updateLoaderLocationStatus();
         loaderShownAt = Date.now();
         startLoaderMorph();
@@ -484,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function waitForInitialPageReady(isReelsHome) {
-        resetLoaderVisible();
+        // First paint already started the show; don't restart mid-sequence.
 
         if (isReelsHome) {
             var bootstrap = Promise.resolve();
@@ -635,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
                     window.ensureMenuReelsItemModalClosed();
                 }
-                await new Promise(resolve => setTimeout(resolve, 366));
+                await waitMs(msUntilMinVisible());
                 hideLoader();
                 
                 // Ensure main element padding is correct (reset any inherited styles)
