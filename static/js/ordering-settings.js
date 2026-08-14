@@ -333,7 +333,14 @@
           });
       }
 
-      Promise.all([saveOrdering, savePos])
+      // Sequential: both writes rewrite hugo.toml and push master. Parallel
+      // clones race (remote rejected: cannot lock ref / expected stale SHA).
+      saveOrdering
+        .then(function (data) {
+          return savePos.then(function (posData) {
+            return [data, posData];
+          });
+        })
         .then(function (results) {
           var data = results[0];
           if (statusEl) {
