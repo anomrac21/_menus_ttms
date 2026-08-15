@@ -16,7 +16,8 @@
 </html>
 {{- else -}}
 {{- $locSlug := partial "menu/location-slug.html" . -}}
-{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
+{{- $multiLocHome := and .IsHome (partial "menu/multi-location-enabled.html" .) -}}
+{{- $isMenuReelsPage := and (not $multiLocHome) (or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug))) -}}
 <!DOCTYPE html>
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
 <head>
@@ -33,11 +34,11 @@
         {{ partial "layout/header.html" . }}
       </header>
       {{ partial "components/search.html" . }}
-      <main id="main" class="{{ if $isMenuReelsPage }}main--home{{ else }}main--offset{{ end }}">
+      <main id="main" class="{{ if $isMenuReelsPage }}main--home{{ else }}main--offset{{ end }}{{ if $multiLocHome }} multi-loc-page{{ end }}">
         {{ block "main" . }}{{ end }}
         
       </main>
-      {{- if not $isMenuReelsPage -}}
+      {{- if not (or $isMenuReelsPage $multiLocHome) -}}
       <div class="bottomads">
           {{ partial "ads/frontpageads.html" . }}
       </div>

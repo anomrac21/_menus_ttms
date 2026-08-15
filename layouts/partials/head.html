@@ -168,6 +168,12 @@
     padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
     box-sizing: border-box;
   }
+  /* Fixed <header> — keep chooser / offset pages below the bar on first paint. */
+  .main--offset,
+  main.multi-loc-page {
+    padding-block-start: var(--ttms-header-height, 5em);
+    padding-block-end: calc(8.5rem + var(--ttms-safe-bottom, 0px));
+  }
 </style>
 {{- $siteName := partial "site-name.html" . -}}
 {{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}

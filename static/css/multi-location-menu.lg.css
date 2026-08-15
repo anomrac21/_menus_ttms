@@ -5,7 +5,7 @@
 @media (min-width: 769px) {
   .multi-loc-chooser {
     max-width: 48rem;
-    padding: 2rem 1.5rem calc(7.5rem + env(safe-area-inset-bottom, 0px));
+    padding: 2rem 1.5rem 2rem;
   }
 
   .multi-loc-chooser__title {

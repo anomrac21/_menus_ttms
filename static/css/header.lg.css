@@ -111,16 +111,22 @@
     }
 
     html:not(.ttms-mobile-menublock) #dashboardBtn img {
-        height: auto;
-        max-width: none;
+        height: 2.75em !important;
+        width: auto !important;
+        max-width: 3.4em !important;
+        max-height: 2.75em !important;
+        object-fit: contain;
+        object-position: center;
     }
 
     html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo .logo,
     html:not(.ttms-mobile-menublock) .header-leading .logo-container img.logo {
         width: auto !important;
         height: auto !important;
-        max-width: 100% !important;
-        max-height: 100% !important;
+        max-width: 3.15rem !important;
+        max-height: 3.15rem !important;
+        object-fit: contain;
+        object-position: center;
     }
 
     @media (min-width: 1025px) {

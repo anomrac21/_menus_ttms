@@ -28,17 +28,12 @@
   text-transform: uppercase;
   padding: 0.38rem 0.85rem 0.38rem 0.38rem;
   border-radius: 999px;
-  border: 1.5px solid color-mix(in srgb, var(--chip-accent) 55%, #fff 20%);
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--chip-soft) 92%, #fff) 0%,
-      color-mix(in srgb, var(--chip-accent) 18%, var(--chip-soft)) 100%
-    );
+  border: 1.5px solid rgba(52, 211, 153, 0.55);
+  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
   color: var(--chip-ink);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.55) inset,
-    0 8px 18px color-mix(in srgb, var(--chip-accent) 22%, transparent),
+    0 8px 18px rgba(52, 211, 153, 0.22),
     0 2px 6px rgba(15, 23, 42, 0.08);
   isolation: isolate;
   transition: border-radius 0.22s ease, box-shadow 0.22s ease, transform 0.2s ease;
@@ -68,11 +63,11 @@
   background:
     radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.18), transparent 52%),
     linear-gradient(160deg, var(--chip-accent) 0%, var(--chip-accent-deep) 100%);
-  border-color: color-mix(in srgb, var(--chip-accent) 55%, rgba(255, 255, 255, 0.4));
+  border-color: rgba(255, 255, 255, 0.4);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.28) inset,
-    0 6px 16px color-mix(in srgb, var(--chip-accent-deep) 35%, transparent),
-    0 0 18px color-mix(in srgb, var(--chip-glow) 45%, transparent);
+    0 6px 16px rgba(5, 150, 105, 0.35),
+    0 0 18px rgba(52, 211, 153, 0.28);
   transition:
     border-radius 0.7s var(--chip-ease) var(--chip-stagger),
     background 0.7s var(--chip-ease) var(--chip-stagger),
@@ -190,18 +185,33 @@
 .loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) {
   flex: 0 0 auto;
   border-radius: 999px;
-  border-color: color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
-      rgba(15, 23, 42, 0.72) 100%
-    );
+  border-color: rgba(255, 255, 255, 0.35);
+  background: linear-gradient(155deg, rgba(251, 191, 36, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.14) inset,
-    0 0 0 1px color-mix(in srgb, var(--chip-accent) 25%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
     0 10px 22px rgba(0, 0, 0, 0.35),
-    0 0 24px color-mix(in srgb, var(--chip-glow) 55%, transparent);
+    0 0 24px rgba(251, 191, 36, 0.22);
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded)[data-feature="payments"] {
+  background: linear-gradient(155deg, rgba(52, 211, 153, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
+  border-color: rgba(52, 211, 153, 0.55);
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded)[data-feature="ordering"] {
+  background: linear-gradient(155deg, rgba(251, 191, 36, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded)[data-feature="delivery"] {
+  background: linear-gradient(155deg, rgba(56, 189, 248, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
+  border-color: rgba(56, 189, 248, 0.55);
+}
+
+.loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded)[data-feature="notifications"] {
+  background: linear-gradient(155deg, rgba(251, 113, 133, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
+  border-color: rgba(251, 113, 133, 0.55);
 }
 
 .loader-features--expandable.is-titles-in .loader-feature:not(.is-expanded) .loader-feature__btn {
@@ -585,25 +595,20 @@
 
 .hero_logo_container .hero-features .loader-feature.is-expanded,
 .hero-features.loader-features .loader-feature.is-expanded {
-  border-color: color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
-      rgba(15, 23, 42, 0.72) 100%
-    );
+  border-color: rgba(255, 255, 255, 0.35);
+  background: linear-gradient(155deg, rgba(251, 191, 36, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.14) inset,
-    0 0 0 1px color-mix(in srgb, var(--chip-accent) 25%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
     0 10px 22px rgba(0, 0, 0, 0.35),
-    0 0 24px color-mix(in srgb, var(--chip-glow) 55%, transparent);
+    0 0 24px rgba(251, 191, 36, 0.22);
 }
 
 .hero_logo_container .hero-features .loader-feature.is-expanded .loader-feature-badge,
 .hero-features.loader-features .loader-feature.is-expanded .loader-feature-badge {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.35) inset,
-    0 0 16px color-mix(in srgb, var(--chip-glow) 70%, transparent),
+    0 0 16px rgba(251, 191, 36, 0.35),
     0 4px 10px rgba(0, 0, 0, 0.35);
 }
 

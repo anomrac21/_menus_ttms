@@ -141,9 +141,9 @@
 
 .header-leading .header-notify-subscribe.contact-cta {
     --contact-cta-radius: 12px;
-    --contact-cta-accent-a: color-mix(in srgb, var(--selected-button-color2, #b56024) 88%, #fff);
-    --contact-cta-accent-b: color-mix(in srgb, var(--selected-button-color3, #fcd000) 75%, #fff);
-    --contact-cta-accent-border: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
+    --contact-cta-accent-a: #d4894a;
+    --contact-cta-accent-b: #fcd000;
+    --contact-cta-accent-border: #f4d36a;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -199,12 +199,8 @@
 }
 
 .header-leading .header-notify-subscribe.subscribed {
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, #22c55e 35%, rgba(255, 255, 255, 0.12)) 0%,
-        color-mix(in srgb, #16a34a 25%, rgba(255, 255, 255, 0.08)) 100%
-    );
-    border-color: color-mix(in srgb, #4ade80 70%, transparent);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.35) 0%, rgba(22, 163, 74, 0.25) 100%);
+    border-color: rgba(74, 222, 128, 0.7);
     color: var(--hero-text-color, #fff);
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
 }
@@ -245,7 +241,13 @@
 }
 
 #dashboardBtn img {
+    display: block;
+    width: auto;
+    height: 2.6em;
+    max-width: 3.2em;
+    max-height: 2.6em;
     object-fit: contain;
+    object-position: center;
     top: 0;
     transition: transform 0.3s ease;
     position: relative;
@@ -263,15 +265,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: center;
     width: 4.35rem;
     min-width: 4rem !important;
-    height: 5rem;
+    height: var(--ttms-header-bar, 5em);
+    max-height: 100%;
     margin: 0;
     border: 2px solid rgba(255, 255, 255, 0.14);
     text-decoration: none;
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
     touch-action: pan-y;
     transition:
         transform 0.2s ease,
@@ -321,6 +326,10 @@
     justify-content: center;
     width: 100%;
     height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
     background: rgba(255, 255, 255, 0.14);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
     padding: 0.2rem;
@@ -328,11 +337,12 @@
 
 .header-leading .logo-container.header-logo .logo,
 .header-leading .logo-container img.logo {
-    width: 2.85rem !important;
-    height: 2.85rem !important;
-    max-width: 2.85rem !important;
-    max-height: 2.85rem !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 3.1rem !important;
+    max-height: 3.1rem !important;
     object-fit: contain;
+    object-position: center;
     border-radius: 10px;
     transition: transform 0.2s ease, filter 0.2s ease;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
@@ -1119,16 +1129,17 @@ body.menublock-dropdown-open {
 }
 
 #dashboardBtn img {
-    height: 2.8em;
+    height: 2.45em;
     max-width: 2.8em;
+    max-height: 2.45em;
 }
 
 .header-leading .logo-container.header-logo .logo,
 .header-leading .logo-container img.logo {
-    width: 2.45rem !important;
-    height: 2.45rem !important;
-    max-width: 2.45rem !important;
-    max-height: 2.45rem !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 2.55rem !important;
+    max-height: 2.55rem !important;
 }
 
 .header-menublock-backdrop:not([hidden]) {

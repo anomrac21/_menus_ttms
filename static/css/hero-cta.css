@@ -13,7 +13,7 @@
     --chip-accent: #38bdf8;
     --chip-accent-deep: #0284c7;
     --chip-glow: rgba(56, 189, 248, 0.4);
-    --contact-cta-accent-border: color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+    --contact-cta-accent-border: rgba(56, 189, 248, 0.7);
     --contact-cta-ink: #f8fafc;
     --contact-cta-ink-muted: rgba(248, 250, 252, 0.78);
 }
@@ -40,13 +40,8 @@
     min-width: 0;
     max-width: 100%;
     border-radius: 999px;
-    border: 1.5px solid color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
-    background:
-        linear-gradient(
-            155deg,
-            color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
-            rgba(15, 23, 42, 0.72) 100%
-        );
+    border: 1.5px solid rgba(56, 189, 248, 0.7);
+    background: linear-gradient(155deg, rgba(56, 189, 248, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%);
     color: #f8fafc;
     text-decoration: none;
     font-size: 0.82rem;
@@ -55,9 +50,9 @@
     text-transform: uppercase;
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.14) inset,
-        0 0 0 1px color-mix(in srgb, var(--chip-accent) 25%, transparent),
+        0 0 0 1px rgba(56, 189, 248, 0.25),
         0 10px 22px rgba(0, 0, 0, 0.35),
-        0 0 24px color-mix(in srgb, var(--chip-glow) 55%, transparent);
+        0 0 24px rgba(56, 189, 248, 0.28);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -74,6 +69,13 @@
     --chip-accent: #fb7185;
     --chip-accent-deep: #e11d48;
     --chip-glow: rgba(251, 113, 133, 0.4);
+    border-color: rgba(251, 113, 133, 0.7);
+    background: linear-gradient(155deg, rgba(251, 113, 133, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.14) inset,
+        0 0 0 1px rgba(251, 113, 133, 0.25),
+        0 10px 22px rgba(0, 0, 0, 0.35),
+        0 0 24px rgba(251, 113, 133, 0.28);
 }
 
 .hero_logo_container .contact-cta--install {
@@ -93,12 +95,12 @@
 .client-cloud-slideshow .contact-cta:hover,
 .client-cloud-slideshow .contact-cta:focus-visible {
     transform: translateY(-2px) scale(1.02);
-    border-color: color-mix(in srgb, var(--chip-accent) 85%, #fff);
+    border-color: rgba(255, 255, 255, 0.72);
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.18) inset,
-        0 0 0 1px color-mix(in srgb, var(--chip-accent) 40%, transparent),
+        0 0 0 1px rgba(255, 255, 255, 0.18),
         var(--contact-cta-shadow-hover),
-        0 0 28px color-mix(in srgb, var(--chip-glow) 70%, transparent);
+        0 0 28px rgba(56, 189, 248, 0.35);
     outline: none;
 }
 
@@ -129,7 +131,7 @@
         linear-gradient(160deg, var(--chip-accent) 0%, var(--chip-accent-deep) 100%);
     box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.35) inset,
-        0 0 16px color-mix(in srgb, var(--chip-glow) 70%, transparent),
+        0 0 16px rgba(56, 189, 248, 0.35),
         0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
@@ -194,18 +196,13 @@
     --chip-accent-deep: #059669;
     --chip-glow: rgba(52, 211, 153, 0.4);
     color: #ecfdf5;
-    background:
-        linear-gradient(
-            155deg,
-            color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
-            rgba(15, 23, 42, 0.72) 100%
-        );
-    border-color: color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+    background: linear-gradient(155deg, rgba(52, 211, 153, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%);
+    border-color: rgba(52, 211, 153, 0.7);
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.14) inset,
-        0 0 0 1px color-mix(in srgb, var(--chip-accent) 25%, transparent),
+        0 0 0 1px rgba(52, 211, 153, 0.25),
         0 10px 22px rgba(0, 0, 0, 0.35),
-        0 0 24px color-mix(in srgb, var(--chip-glow) 55%, transparent);
+        0 0 24px rgba(52, 211, 153, 0.28);
 }
 
 .hero_logo_container .subscribe .subbtn--notify.subscribed .contact-cta__icon,
@@ -280,7 +277,7 @@
     color: #fff;
     padding: 1rem 1.5rem;
     border-radius: 14px;
-    border: 1.5px solid color-mix(in srgb, var(--chip-accent, #38bdf8) 55%, transparent);
+    border: 1.5px solid rgba(56, 189, 248, 0.55);
     box-shadow: var(--contact-cta-shadow);
     z-index: var(--ttms-z-toast, 10100);
     opacity: 0;
@@ -303,18 +300,21 @@
     }
 }
 
-/* iOS: contact.css + apple.css used to keep the old gold subscribe banner */
+/* iOS: keep dark-glass chips even when contact.css gold rules still load */
 html.ttms-ios .hero_logo_container .contact-cta,
 html.ttms-ios .hero_logo_container .hero-cta-list .contact-cta,
 html.ttms-ios .hero_logo_container .subscribe .subbtn--notify,
 html.ttms-ios .hero_logo_container .subscribe .subbtn--notify.contact-cta,
 html.ttms-ios .hero_logo_container .subscribe .subbtn--notify.btn {
-    background:
-        linear-gradient(
-            155deg,
-            color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
-            rgba(15, 23, 42, 0.72) 100%
-        );
-    border: 1.5px solid color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+    background: linear-gradient(155deg, rgba(56, 189, 248, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%);
+    border: 1.5px solid rgba(56, 189, 248, 0.7);
     color: #f8fafc;
+}
+
+html.ttms-ios .hero_logo_container .contact-cta--notify,
+html.ttms-ios .hero_logo_container .subscribe .subbtn--notify,
+html.ttms-ios .hero_logo_container .subscribe .subbtn--notify.contact-cta,
+html.ttms-ios .hero_logo_container .subscribe .subbtn--notify.btn {
+    background: linear-gradient(155deg, rgba(251, 113, 133, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%);
+    border-color: rgba(251, 113, 133, 0.7);
 }
