@@ -837,13 +837,13 @@
 {{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
 {{- $multiLocationMenus := site.Params.menu.multiLocationMenus | default false -}}
-<link rel="stylesheet" href="/css/breakpoints.css"/>
-<link rel="stylesheet" href="/css/z-index.css"/>
-<link rel="stylesheet" href="/css/ios-viewport.css"/>
-<script src="/js/ios-viewport.js"></script>
-<link rel="stylesheet" href="/css/colors.css"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/breakpoints.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/z-index.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/ios-viewport.css" }}"/>
+<script src="{{ partial "head/asset-url.html" "/js/ios-viewport.js" }}"></script>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/colors.css" }}"/>
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/typography.css" "sync" true) }}
-<link rel="stylesheet" href="/css/custom.css"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/custom.css" }}"/>
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/header.css" "sync" true) }}
 {{- if $menuPublicSite -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/feature-chips.css" "sync" true) }}
@@ -853,7 +853,7 @@
 {{- end -}}
 {{- if $menuPublicSite -}}
 {{/* Always load reels CSS on public pages — Barba does not swap <head>, so item→location navigations would otherwise keep the hero in a row. */}}
-<link rel="stylesheet" href="/css/menu-reels.css"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/menu-reels.css" }}"/>
 {{- end -}}
 {{- if and $menuPublicSite $isMenuReelsPage -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/menu-cards.css" "sync" true) }}
@@ -861,7 +861,7 @@
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/cart.css") }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/table-modal.css") }}
 {{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
-<link rel="stylesheet" href="/css/payment.css"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/payment.css" }}"/>
 {{- end -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/footer.css" "sync" true) }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/contact.css" "sync" true) }}
@@ -870,9 +870,16 @@
   {{- with .slug -}}{{- $menuLocSlugs = $menuLocSlugs | append . -}}{{- end -}}
 {{- end -}}
 <script>
+window.TTMS_ASSET_V = {{ partial "head/asset-version.html" . | jsonify }};
+window.ttmsAssetUrl = function (path) {
+  var v = window.TTMS_ASSET_V || '';
+  if (!path || !v || /^(https?:)?\/\//.test(path)) return path;
+  return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(v);
+};
 window.MENU_CONFIG = {
   multiLocationMenus: {{ $multiLocationMenus }},
-  locationSlugs: {{ $menuLocSlugs | jsonify }}
+  locationSlugs: {{ $menuLocSlugs | jsonify }},
+  assetVersion: window.TTMS_ASSET_V
 };
 </script>
 {{- if $isMenuReelsPage -}}
@@ -1083,9 +1090,9 @@ window.MENU_CONFIG = {
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-smash-pass.css") }}
 {{- end -}}
 {{- else -}}
-<link rel="stylesheet" href="/css/account-dashboard.css"/>
-<link rel="stylesheet" href="/css/account-dashboard-panel.css"/>
-<link rel="stylesheet" href="/css/dashboard-panel.css"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/account-dashboard.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/account-dashboard-panel.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard-panel.css" }}"/>
 {{- if eq .Layout "client-dashboard-menu-settings" -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css") }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero-cta.css") }}
@@ -1094,6 +1101,9 @@ window.MENU_CONFIG = {
 {{ if default false site.Params.features.notifications }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/notifications.css") }}
 {{ end }}
+{{- if $menuPublicSite -}}
+{{ partial "head/hero-chips-critical.html" . }}
+{{- end -}}
 
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />

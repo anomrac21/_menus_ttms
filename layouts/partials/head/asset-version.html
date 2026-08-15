@@ -1,0 +1,8 @@
+{{- /*
+  Cache-bust token for /css/* and /js/* (those paths are Cache-Control: immutable).
+  One token per Hugo build so iPhone cannot keep a year-old stylesheet.
+*/ -}}
+{{- if not (site.Scratch.Get "ttmsAssetVersion") -}}
+  {{- site.Scratch.Set "ttmsAssetVersion" (printf "20260815e-%d" now.Unix) -}}
+{{- end -}}
+{{- return (site.Scratch.Get "ttmsAssetVersion") -}}

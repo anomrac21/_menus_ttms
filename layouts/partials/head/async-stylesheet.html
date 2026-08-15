@@ -1,3 +1,9 @@
 {{- $href := .href -}}
+{{- if or (hasPrefix $href "http://") (hasPrefix $href "https://") (hasPrefix $href "//") -}}
 <link rel="preload" href="{{ $href }}" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="{{ $href }}"/></noscript>
+{{- else -}}
+{{- $hrefV := partial "head/asset-url.html" $href -}}
+<link rel="preload" href="{{ $hrefV }}" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="{{ $hrefV }}"/></noscript>
+{{- end -}}

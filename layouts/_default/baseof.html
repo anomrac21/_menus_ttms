@@ -4,8 +4,8 @@
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
 <head>
   {{ partial "head.html" . }}
-  <link rel="stylesheet" href="/css/auth.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/auth.css" }}">
+  <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard.css" }}">
   <script src="/js/dashboard-analytics-snapshot.js" defer></script>
   <script src="/js/analytics-integrations.js" defer></script>
 </head>

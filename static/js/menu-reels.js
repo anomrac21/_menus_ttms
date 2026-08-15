@@ -963,7 +963,7 @@
     if (document.querySelector('link[href*="menu-reels.css"]')) return;
     var link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/css/menu-reels.css';
+    link.href = typeof window.ttmsAssetUrl === 'function' ? window.ttmsAssetUrl('/css/menu-reels.css') : '/css/menu-reels.css';
     document.head.appendChild(link);
   }
 
