@@ -4359,6 +4359,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     layoutColorPainterEditor();
     window.setTimeout(function() {
+      var coarse = window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+      if (coarse) return;
       var root = getActiveColorFieldsRoot();
       var focusEl = root && (
         root.querySelector('input.dashboard-edit-color-value-input') ||

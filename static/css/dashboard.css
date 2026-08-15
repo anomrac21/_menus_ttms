@@ -602,6 +602,14 @@ html:has(.dashboard-control-room) body {
   font-family: inherit;
 }
 
+.dashboard-control-room button,
+.dashboard-control-room .dashboard-edit-menu-action {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 .dashboard-control-room .dashboard-header {
   max-width: 1000px;
   margin: 0 auto 1.35rem;
@@ -1240,6 +1248,9 @@ html:has(.dashboard-control-room) body {
   cursor: pointer;
   text-align: left;
   border-radius: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 0;
 }
 
 .dashboard-control-room .dashboard-card-toggle:focus-visible {
@@ -1434,6 +1445,7 @@ html:has(.dashboard-control-room) body {
   flex: 1 1 auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  align-items: start;
   align-content: start;
   gap: 1rem;
 }
@@ -2228,13 +2240,20 @@ html:has(.dashboard-control-room) body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-self: start;
+  width: 100%;
   min-width: 0;
+  min-height: 0;
+  height: auto;
   padding: 0.8rem 0.9rem;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(15, 23, 42, 0.45);
   color: #f8fafc;
   text-decoration: none;
+  line-height: 1.25;
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
@@ -2279,15 +2298,30 @@ html:has(.dashboard-control-room) body {
   flex-shrink: 0;
   width: 2.35rem;
   height: 2.35rem;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  max-width: 2.35rem;
+  max-height: 2.35rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
   color: #c7d2fe;
   font-size: 1rem;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.dashboard-edit-menu-action-icon .fa {
+  font-size: inherit;
+  line-height: 1;
 }
 
 .dashboard-edit-menu-action--primary .dashboard-edit-menu-action-icon {
   width: 2.65rem;
   height: 2.65rem;
+  min-width: 2.65rem;
+  min-height: 2.65rem;
+  max-width: 2.65rem;
+  max-height: 2.65rem;
   background: rgba(99, 102, 241, 0.35);
   color: #eef2ff;
   font-size: 1.1rem;
@@ -2334,6 +2368,7 @@ html:has(.dashboard-control-room) body {
 .dashboard-edit-menu-action-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
   gap: 0.55rem;
 }
 
@@ -2342,7 +2377,8 @@ html:has(.dashboard-control-room) body {
   align-items: flex-start;
   gap: 0.55rem;
   padding: 0.8rem 0.85rem;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .dashboard-edit-menu-action-grid .dashboard-edit-menu-action-title {
@@ -2356,12 +2392,50 @@ html:has(.dashboard-control-room) body {
 @media (max-width: 720px) {
   .dashboard-edit-menu-action-grid {
     grid-template-columns: 1fr;
+    align-items: start;
   }
 
   .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
     flex-direction: row;
     align-items: center;
+    height: auto;
+    min-height: 0;
+    max-height: none;
   }
+
+  .dashboard-edit-menu-action-icon,
+  .dashboard-edit-menu-action--primary .dashboard-edit-menu-action-icon {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    max-width: 2rem;
+    max-height: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .dashboard-edit-menu-action,
+  .dashboard-edit-menu-action--primary,
+  .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
+    padding: 0.7rem 0.8rem;
+  }
+}
+
+html.ttms-ios .dashboard-control-room .card-edit-menu,
+html.ttms-ios .dashboard-control-room .dashboard-card-body,
+html.ttms-ios .dashboard-edit-menu-nav,
+html.ttms-ios .dashboard-edit-menu-action-grid {
+  height: auto;
+  min-height: 0;
+  align-self: start;
+}
+
+html.ttms-ios .dashboard-edit-menu-action,
+html.ttms-ios .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none;
+  flex: 0 0 auto;
 }
 
 .dashboard-card-notify-snapshot {
@@ -2818,6 +2892,9 @@ html:has(.dashboard-control-room) body {
   text-align: left;
   font: inherit;
   line-height: 1.35;
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 0;
 }
 
 .dashboard-menu-status-heading-toggle:hover,
@@ -3578,6 +3655,24 @@ html:has(.dashboard-control-room) body {
 }
 
 /* ========== Edit menu colors page (/edit-menu-colors/) ========== */
+
+/* iOS Safari zooms the page when a focused field is under 16px. */
+body.dashboard-edit-theme-only input[type="text"],
+body.dashboard-edit-theme-only input[type="search"],
+body.dashboard-edit-theme-only input[type="email"],
+body.dashboard-edit-theme-only input[type="url"],
+body.dashboard-edit-theme-only input[type="tel"],
+body.dashboard-edit-theme-only input[type="number"],
+body.dashboard-edit-theme-only input[type="color"],
+body.dashboard-edit-theme-only textarea,
+body.dashboard-edit-theme-only select {
+  font-size: 16px;
+}
+
+body.dashboard-edit-theme-only {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
 body.dashboard-edit-embed-panel .dashboard-edit-changes-panel-mount.hidden {
   display: none !important;
@@ -5565,7 +5660,7 @@ body.menu-item-edit-modal-open {
 .dashboard-edit-color-wheel-fields .dashboard-edit-color-value-input {
   min-width: 0;
   width: 100%;
-  font-size: 0.78rem;
+  font-size: 16px;
 }
 
 .dashboard-edit-color-wheel-fields .dashboard-edit-color-slider-wrap {
@@ -5992,7 +6087,7 @@ body.menu-item-edit-modal-open {
   border-radius: 7px;
   background: rgba(28, 25, 23, 0.75);
   color: #f8fafc;
-  font-size: 0.72rem;
+  font-size: 16px;
 }
 
 .dashboard-edit-color-fields .dashboard-edit-input:focus,
@@ -6014,6 +6109,7 @@ body.menu-item-edit-modal-open {
   grid-row: 1 / span 2;
   width: 2.75rem;
   height: 2.75rem;
+  font-size: 16px;
   padding: 3px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
