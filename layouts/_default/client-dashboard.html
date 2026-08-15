@@ -2,8 +2,8 @@
 <html lang="{{ site.Language.Lang }}">
 <head>
   {{ partial "head.html" . }}
-  <link rel="stylesheet" href="/css/auth.css">
-  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/auth.css" }}">
+  <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard.css" }}">
   {{- if site.Params.menuImageService.enabled }}
   <script>
   window.MENU_IMAGE_CONFIG = {

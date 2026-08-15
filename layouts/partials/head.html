@@ -156,7 +156,10 @@
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
-  /* Paint the notch with the header color — do not pad generic <header> (dashboard cards). */
+  /* Notch color lives on .main-header only. Padding <header> as well doubles the empty bar on iOS. */
+  header {
+    padding-top: 0;
+  }
   .main-header {
     padding-top: var(--ttms-safe-top);
     background-color: var(--header-bg-color, #111);
@@ -789,6 +792,10 @@
 <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
 {{ partialCached "head/css.html" . }}
+<style id="ttms-header-safe-once">
+  /* Beat assets/css/main.css if it still pads the wrapper <header>. */
+  header { padding-top: 0 !important; }
+</style>
 {{- if $menuPublicSite -}}
 <script src="/js/search.js" defer></script>
 {{ partialCached "head/menu-scripts.html" . }}

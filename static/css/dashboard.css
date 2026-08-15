@@ -8,6 +8,12 @@
   padding: 0!important;
   background: #0f172a !important;
 }
+
+html:has(.dashboard-control-room),
+html:has(.dashboard-control-room) body {
+  min-height: 100%;
+  height: auto;
+}
 .hidden { display: none !important; }
 
 .dashboard-draft-modal {
@@ -566,9 +572,17 @@
 /* ========== Control room (/dashboard/) ========== */
 
 .dashboard-control-room {
-  min-height: var(--ttms-overlay-height, 100dvh);
+  min-height: 100svh;
+  min-height: 100dvh;
   background: linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f172a 100%);
-  padding: max(1.5rem, var(--ttms-safe-top, env(safe-area-inset-top, 0px))) max(1.25rem, env(safe-area-inset-right, 0px)) max(2.5rem, calc(1.25rem + var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px)))) max(1.25rem, env(safe-area-inset-left, 0px));
+  display: flex;
+  flex-direction: column;
+  padding-top: max(0.65rem, constant(safe-area-inset-top, 0px));
+  padding-top: max(0.65rem, env(safe-area-inset-top, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1rem, constant(safe-area-inset-bottom, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
   color: #fff;
   max-width: 100%;
   box-sizing: border-box;
@@ -1417,8 +1431,10 @@
   width: 100%;
   min-width: 0;
   margin: 0 auto;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  align-content: start;
   gap: 1rem;
 }
 
@@ -3471,7 +3487,12 @@
 
 @media (max-width: 640px) {
   .dashboard-control-room {
-    padding: 1rem 0.75rem 2rem;
+    padding-top: max(0.5rem, constant(safe-area-inset-top, 0px));
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+    padding-right: 0.75rem;
+    padding-bottom: max(0.85rem, constant(safe-area-inset-bottom, 0px));
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+    padding-left: 0.75rem;
   }
 
   .dashboard-control-room .cards {
