@@ -897,8 +897,10 @@
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/footer.css" "sync" true) }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/contact.css" "sync" true) }}
 {{- $menuLocSlugs := slice -}}
+{{- $menuLocMeta := slice -}}
 {{- range site.Data.locations.locations -}}
   {{- with .slug -}}{{- $menuLocSlugs = $menuLocSlugs | append . -}}{{- end -}}
+  {{- $menuLocMeta = $menuLocMeta | append (dict "slug" (default "" .slug) "city" (default "" .city) "address" (default "" .address)) -}}
 {{- end -}}
 <script>
 window.TTMS_ASSET_V = {{ partial "head/asset-version.html" . | jsonify }};
@@ -910,6 +912,7 @@ window.ttmsAssetUrl = function (path) {
 window.MENU_CONFIG = {
   multiLocationMenus: {{ $multiLocationMenus }},
   locationSlugs: {{ $menuLocSlugs | jsonify }},
+  locations: {{ $menuLocMeta | jsonify }},
   assetVersion: window.TTMS_ASSET_V
 };
 </script>

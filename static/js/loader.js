@@ -235,6 +235,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return ANIM_SLIDE.slice();
     }
 
+    function pathFromHint(hint) {
+        if (!hint) return '';
+        try {
+            if (typeof hint === 'object') {
+                if (hint.path) return String(hint.path);
+                if (hint.pathname) return String(hint.pathname);
+                hint = hint.href || hint.url || '';
+            }
+            var raw = String(hint);
+            if (!raw) return '';
+            if (raw.charAt(0) === '/') return raw.split('?')[0].split('#')[0];
+            return new URL(raw, window.location.origin).pathname;
+        } catch (e) {
+            return String(hint).split('?')[0].split('#')[0] || '';
+        }
+    }
+
     function isLoaderHomePath(pathname) {
         var path = pathname || window.location.pathname || '/';
         try {
@@ -245,6 +262,53 @@ document.addEventListener('DOMContentLoaded', function() {
         return path.replace(/\/+$/, '') === '';
     }
 
+    function loaderLocationSlugs() {
+        var slugs = window.MENU_CONFIG && window.MENU_CONFIG.locationSlugs;
+        return Array.isArray(slugs) ? slugs : [];
+    }
+
+    function slugFromPath(pathname) {
+        var slugs = loaderLocationSlugs();
+        var parts = String(pathname || '')
+            .replace(/^\/+|\/+$/g, '')
+            .split('/')
+            .filter(Boolean);
+        if (!parts.length) return '';
+        return slugs.indexOf(parts[0]) >= 0 ? parts[0] : '';
+    }
+
+    function loaderLocationMeta(slug) {
+        var list = window.MENU_CONFIG && window.MENU_CONFIG.locations;
+        if (slug && Array.isArray(list)) {
+            for (var i = 0; i < list.length; i++) {
+                if (list[i] && list[i].slug === slug) return list[i];
+            }
+        }
+        return null;
+    }
+
+    function labelFromLocation(loc) {
+        if (!loc) return '';
+        return loc.city || loc.address || loc.name || loc.slug || '';
+    }
+
+    function labelForSlug(slug) {
+        if (!slug) return '';
+        var meta = loaderLocationMeta(slug);
+        if (meta) return labelFromLocation(meta);
+        try {
+            var cur = window.currentOrderLocation;
+            if (cur && cur.slug === slug) return labelFromLocation(cur);
+        } catch (e) { /* ignore */ }
+        var card = document.querySelector(
+            '.location-picker-card[data-slug="' + slug + '"]:not([data-picker-clone])'
+        );
+        if (card) {
+            return card.getAttribute('data-city') || card.getAttribute('data-address') || slug;
+        }
+        return slug;
+    }
+
     function loaderLocationCount() {
         var n = 0;
         if (loader) {
@@ -253,45 +317,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!n && window.SiteConfig && window.SiteConfig.locationCount != null) {
             n = parseInt(window.SiteConfig.locationCount, 10) || 0;
         }
-        if (!n && window.MENU_CONFIG && Array.isArray(window.MENU_CONFIG.locationSlugs)) {
-            n = window.MENU_CONFIG.locationSlugs.length;
-        }
+        if (!n) n = loaderLocationSlugs().length;
         return n;
     }
 
-    function updateLoaderLocationStatus() {
+    function setLoaderLocationText(label, onHome) {
         var valueEl = document.getElementById('loaderLocationValue');
         var locRow = document.getElementById('loaderLocation');
         var labelEl =
             document.getElementById('loaderLocationLabelText') ||
             document.getElementById('loaderLocationLabel');
         if (!valueEl) return;
-
-        var onHome = isLoaderHomePath();
-        if (loader) {
-            loader.setAttribute('data-home', onHome ? 'true' : 'false');
-        }
-
-        // Home: show location count only — never the selected address/name.
-        if (onHome) {
-            var count = loaderLocationCount();
-            if (labelEl) labelEl.textContent = 'Locations';
-            valueEl.textContent = count === 1 ? '1 location' : count + ' locations';
-            if (locRow) locRow.classList.add('is-ready');
-            return;
-        }
-
-        if (labelEl) labelEl.textContent = 'Location';
-        var label = '';
-        try {
-            if (window.currentOrderLocation) {
-                var cur = window.currentOrderLocation;
-                label = cur.address || cur.name || cur.city || cur.slug || '';
-            }
-            if (!label) {
-                label = localStorage.getItem('ttmenus_location_picker_address') || '';
-            }
-        } catch (e) { /* ignore */ }
+        if (loader) loader.setAttribute('data-home', onHome ? 'true' : 'false');
+        if (labelEl) labelEl.textContent = onHome ? 'Locations' : 'Location';
         if (label) {
             valueEl.textContent = label;
             if (locRow) locRow.classList.add('is-ready');
@@ -299,6 +337,32 @@ document.addEventListener('DOMContentLoaded', function() {
             valueEl.textContent = 'Selecting…';
             if (locRow) locRow.classList.remove('is-ready');
         }
+    }
+
+    function updateLoaderLocationStatus(pathname) {
+        var path = pathFromHint(pathname) || window.location.pathname || '/';
+        var slug = slugFromPath(path);
+        var onHome = isLoaderHomePath(path) && !slug;
+
+        // Home chooser: count only. Location URLs win over stale localStorage.
+        if (onHome) {
+            var count = loaderLocationCount();
+            setLoaderLocationText(count === 1 ? '1 location' : count + ' locations', true);
+            return;
+        }
+
+        if (slug) {
+            setLoaderLocationText(labelForSlug(slug), false);
+            return;
+        }
+
+        var label = '';
+        try {
+            var cur = window.currentOrderLocation;
+            if (cur) label = labelFromLocation(cur);
+            if (!label) label = localStorage.getItem('ttmenus_location_picker_address') || '';
+        } catch (e) { /* ignore */ }
+        setLoaderLocationText(label, false);
     }
 
     var revealTimer = null;
@@ -436,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function resetLoaderVisible() {
+    function resetLoaderVisible(pathname) {
         loaderGeneration += 1;
         clearLoaderHideTimers();
         isHidingLoader = false;
@@ -450,16 +514,16 @@ document.addEventListener('DOMContentLoaded', function() {
         loader.style.opacity = '';
         loader.style.visibility = '';
         loader.style.pointerEvents = '';
-        updateLoaderLocationStatus();
+        updateLoaderLocationStatus(pathname);
         loaderShownAt = Date.now();
         startLoaderMorph();
     }
 
-    function showLoader() {
+    function showLoader(pathname) {
         if (!loader) return;
         isHidingLoader = false;
         loaderHasHiddenOnce = false;
-        resetLoaderVisible();
+        resetLoaderVisible(pathname);
         scheduleLoaderFallback();
     }
 
@@ -542,7 +606,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateLoaderLocationStatus();
     restartLoaderMedia({ enter: true });
     startLoaderMorph();
-    document.addEventListener('ttms:location-selected', function () {
+    document.addEventListener('ttms:location-selected', function (ev) {
+        var detail = (ev && ev.detail) || {};
+        if (detail.slug) {
+            updateLoaderLocationStatus('/' + detail.slug + '/');
+            return;
+        }
+        if (detail.address || detail.name) {
+            setLoaderLocationText(detail.city || detail.address || detail.name, false);
+            return;
+        }
+        updateLoaderLocationStatus();
+    });
+    window.addEventListener('pageshow', function () {
+        updateLoaderLocationStatus();
+    });
+    window.addEventListener('popstate', function () {
         updateLoaderLocationStatus();
     });
 
@@ -689,10 +768,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.ensureMenuReelsItemModalClosed();
                 }
 
-                showLoader();
+                showLoader(pathFromHint(data && data.next && data.next.url));
                 await new Promise(resolve => setTimeout(resolve, 500));
             },
             async enter(data) {
+                updateLoaderLocationStatus(
+                    pathFromHint(data && data.next && data.next.url) || window.location.pathname
+                );
                 scheduleLoaderFallback();
                 syncMenuReelsDocumentMode();
                 // Reset scroll position immediately to prevent spacing issues
