@@ -22,7 +22,7 @@ main.multi-loc-page {
   position: relative;
   min-height: 0;
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,17 +46,10 @@ main.multi-loc-page {
   z-index: 0;
 }
 
+.hero_logo_container.multi-loc-chooser-hero::before,
 .multi-loc-chooser-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.25) 0%,
-    rgba(10, 10, 10, 0.88) 100%
-  );
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 .multi-loc-chooser-hero .logo_container,

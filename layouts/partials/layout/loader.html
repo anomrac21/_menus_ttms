@@ -14,6 +14,23 @@
 {{- $locations := default slice (index (site.Data.locations | default dict) "locations") -}}
 {{- $locCount := len $locations -}}
 {{- $isHome := .IsHome -}}
+{{- $pageSlug := partial "menu/location-slug.html" . -}}
+{{- $pageCity := "" -}}
+{{- $pageAddress := "" -}}
+{{- range $locations -}}
+  {{- if and $pageSlug .slug (eq .slug $pageSlug) -}}
+    {{- $pageCity = default "" .city -}}
+    {{- $pageAddress = default "" .address -}}
+  {{- end -}}
+{{- end -}}
+{{- $pageLocLabel := "" -}}
+{{- if $pageSlug -}}
+  {{- if and $pageCity $pageAddress -}}
+    {{- $pageLocLabel = printf "%s · %s" $pageCity $pageAddress -}}
+  {{- else -}}
+    {{- $pageLocLabel = or $pageCity $pageAddress $pageSlug -}}
+  {{- end -}}
+{{- end -}}
 {{- $locCountLabel := cond (eq $locCount 1) "1 location" (printf "%d locations" $locCount) -}}
 <div id="loader" class="loader{{ if $verified }} loader--verified{{ else }} loader--free{{ end }}{{ if $paid }} loader--paid{{ end }}"
   data-tier="{{ $tier }}"
@@ -21,13 +38,16 @@
   data-paid="{{ $paid }}"
   data-site-title="{{ $siteTitle }}"
   data-location-count="{{ $locCount }}"
-  data-home="{{ $isHome }}">
+  data-location-slug="{{ $pageSlug }}"
+  data-location-city="{{ $pageCity }}"
+  data-location-address="{{ $pageAddress }}"
+  data-home="{{ if $pageSlug }}false{{ else }}{{ $isHome }}{{ end }}">
   <div class="loader-brand-stage" id="loaderBrandStage">
     <img id="loaderImage" data-loader-src="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" src="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" alt="TT Menus" fetchpriority="high" loading="eager" decoding="sync">
     <img id="menuImage" src="/branding/favicon192.webp" alt="Loading {{ $siteTitle }}" width="192" height="192" fetchpriority="high" loading="eager" decoding="async">
   </div>
   <div class="loader-status" id="loaderStatus" aria-live="polite">
-    <p class="loader-location{{ if $isHome }} is-ready{{ end }}" id="loaderLocation">
+    <p class="loader-location{{ if or $isHome $pageLocLabel }} is-ready{{ end }}" id="loaderLocation">
       <span class="loader-location-label" id="loaderLocationLabel">
         <span class="loader-location-pin" aria-hidden="true">
           <svg class="loader-location-icon" viewBox="0 0 24 24" width="20" height="20" focusable="false">
@@ -35,9 +55,9 @@
             <circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
           </svg>
         </span>
-        <span id="loaderLocationLabelText">{{ if $isHome }}Locations{{ else }}Location{{ end }}</span>
+        <span id="loaderLocationLabelText">{{ if $pageSlug }}Location{{ else if $isHome }}Locations{{ else }}Location{{ end }}</span>
       </span>
-      <span class="loader-location-value" id="loaderLocationValue">{{ if $isHome }}{{ $locCountLabel }}{{ else }}Selecting…{{ end }}</span>
+      <span class="loader-location-value" id="loaderLocationValue">{{ if $pageLocLabel }}{{ $pageLocLabel }}{{ else if $isHome }}{{ $locCountLabel }}{{ else }}Selecting…{{ end }}</span>
     </p>
     {{ partial "layout/feature-chips.html" (dict "id" "loaderFeatures") }}
   </div>

@@ -235,6 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return ANIM_SLIDE.slice();
     }
 
+    var pendingLoaderSlug = '';
+
     function pathFromHint(hint) {
         if (!hint) return '';
         try {
@@ -252,13 +254,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function pathFromBarba(data) {
+        if (!data) return '';
+        var next = data.next || {};
+        var fromUrl = pathFromHint(next.url);
+        if (fromUrl) return fromUrl;
+        var trigger = data.trigger;
+        if (trigger && trigger !== 'back' && trigger !== 'forward' && trigger !== 'popstate') {
+            if (typeof trigger === 'string') return pathFromHint(trigger);
+            if (trigger.getAttribute) {
+                return pathFromHint(trigger.getAttribute('href') || trigger.href);
+            }
+        }
+        return '';
+    }
+
     function isLoaderHomePath(pathname) {
         var path = pathname || window.location.pathname || '/';
         try {
             path = String(path).split('?')[0].split('#')[0];
         } catch (e) { /* ignore */ }
         if (!path || path === '/') return true;
-        // Trailing-slash home only
         return path.replace(/\/+$/, '') === '';
     }
 
@@ -274,7 +290,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .split('/')
             .filter(Boolean);
         if (!parts.length) return '';
-        return slugs.indexOf(parts[0]) >= 0 ? parts[0] : '';
+        if (slugs.length && slugs.indexOf(parts[0]) >= 0) return parts[0];
+        if (!slugs.length && parts[0] && parts[0] !== 'dashboard') return parts[0];
+        return '';
     }
 
     function loaderLocationMeta(slug) {
@@ -284,27 +302,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (list[i] && list[i].slug === slug) return list[i];
             }
         }
+        if (loader && slug && loader.getAttribute('data-location-slug') === slug) {
+            return {
+                slug: slug,
+                city: loader.getAttribute('data-location-city') || '',
+                address: loader.getAttribute('data-location-address') || ''
+            };
+        }
         return null;
     }
 
-    function labelFromLocation(loc) {
+    function formatLocationLabel(loc) {
         if (!loc) return '';
-        return loc.city || loc.address || loc.name || loc.slug || '';
+        var city = (loc.city || loc.name || '').trim();
+        var address = (loc.address || '').trim();
+        if (city && address) {
+            if (address.toLowerCase().indexOf(city.toLowerCase()) !== -1) return address;
+            return city + ' · ' + address;
+        }
+        return city || address || loc.slug || '';
     }
 
     function labelForSlug(slug) {
         if (!slug) return '';
         var meta = loaderLocationMeta(slug);
-        if (meta) return labelFromLocation(meta);
+        if (meta) return formatLocationLabel(meta) || slug;
         try {
             var cur = window.currentOrderLocation;
-            if (cur && cur.slug === slug) return labelFromLocation(cur);
+            if (cur && cur.slug === slug) return formatLocationLabel(cur) || slug;
         } catch (e) { /* ignore */ }
         var card = document.querySelector(
             '.location-picker-card[data-slug="' + slug + '"]:not([data-picker-clone])'
         );
         if (card) {
-            return card.getAttribute('data-city') || card.getAttribute('data-address') || slug;
+            return formatLocationLabel({
+                city: card.getAttribute('data-city') || '',
+                address: card.getAttribute('data-address') || '',
+                slug: slug
+            }) || slug;
+        }
+        var opt = document.querySelector('#locationSelect option[data-slug="' + slug + '"]');
+        if (opt) {
+            return formatLocationLabel({
+                city: opt.getAttribute('data-city') || '',
+                address: opt.getAttribute('data-address') || '',
+                slug: slug
+            }) || slug;
         }
         return slug;
     }
@@ -340,11 +383,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateLoaderLocationStatus(pathname) {
-        var path = pathFromHint(pathname) || window.location.pathname || '/';
+        var path = pathFromHint(pathname);
         var slug = slugFromPath(path);
-        var onHome = isLoaderHomePath(path) && !slug;
+        if (!slug && pendingLoaderSlug) slug = pendingLoaderSlug;
+        if (!slug) slug = slugFromPath(window.location.pathname || '/');
+        var onHome = !slug && isLoaderHomePath(path || window.location.pathname);
 
-        // Home chooser: count only. Location URLs win over stale localStorage.
         if (onHome) {
             var count = loaderLocationCount();
             setLoaderLocationText(count === 1 ? '1 location' : count + ' locations', true);
@@ -352,17 +396,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (slug) {
+            if (loader) loader.setAttribute('data-location-slug', slug);
             setLoaderLocationText(labelForSlug(slug), false);
             return;
         }
 
-        var label = '';
-        try {
-            var cur = window.currentOrderLocation;
-            if (cur) label = labelFromLocation(cur);
-            if (!label) label = localStorage.getItem('ttmenus_location_picker_address') || '';
-        } catch (e) { /* ignore */ }
-        setLoaderLocationText(label, false);
+        setLoaderLocationText('', false);
     }
 
     var revealTimer = null;
@@ -608,21 +647,23 @@ document.addEventListener('DOMContentLoaded', function() {
     startLoaderMorph();
     document.addEventListener('ttms:location-selected', function (ev) {
         var detail = (ev && ev.detail) || {};
+        var source = detail.source || '';
+        // Ignore carousel/nearby noise — only an explicit store choice updates the loader.
+        if (source && source !== 'picker' && source !== 'user' && source !== 'card' && source !== 'click') {
+            return;
+        }
         if (detail.slug) {
+            pendingLoaderSlug = detail.slug;
             updateLoaderLocationStatus('/' + detail.slug + '/');
-            return;
         }
-        if (detail.address || detail.name) {
-            setLoaderLocationText(detail.city || detail.address || detail.name, false);
-            return;
-        }
-        updateLoaderLocationStatus();
     });
     window.addEventListener('pageshow', function () {
-        updateLoaderLocationStatus();
+        pendingLoaderSlug = '';
+        updateLoaderLocationStatus(window.location.pathname);
     });
     window.addEventListener('popstate', function () {
-        updateLoaderLocationStatus();
+        pendingLoaderSlug = '';
+        updateLoaderLocationStatus(window.location.pathname);
     });
 
     function scheduleLoaderFallback() {
@@ -768,13 +809,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.ensureMenuReelsItemModalClosed();
                 }
 
-                showLoader(pathFromHint(data && data.next && data.next.url));
+                var nextPath = pathFromBarba(data);
+                var nextSlug = slugFromPath(nextPath);
+                if (nextSlug) pendingLoaderSlug = nextSlug;
+                showLoader(nextPath || (pendingLoaderSlug ? '/' + pendingLoaderSlug + '/' : ''));
                 await new Promise(resolve => setTimeout(resolve, 500));
             },
             async enter(data) {
-                updateLoaderLocationStatus(
-                    pathFromHint(data && data.next && data.next.url) || window.location.pathname
-                );
+                var enterPath = pathFromBarba(data) || window.location.pathname;
+                var enterSlug = slugFromPath(enterPath);
+                if (enterSlug) pendingLoaderSlug = enterSlug;
+                else if (isLoaderHomePath(enterPath)) pendingLoaderSlug = '';
+                updateLoaderLocationStatus(enterPath);
                 scheduleLoaderFallback();
                 syncMenuReelsDocumentMode();
                 // Reset scroll position immediately to prevent spacing issues

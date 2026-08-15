@@ -2443,6 +2443,14 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .menu-image-upload-modal {
+    --upload-ink: var(--main-text-color, var(--hero-text-color, #fff));
+    --upload-muted: var(--button-text-color2, #ccc);
+    --upload-accent: var(--selected-button-color3, var(--button-color1, #fcd000));
+    --upload-btn-1: var(--button-color1, #1a1a2e);
+    --upload-btn-2: var(--button-color2, #16213e);
+    --upload-btn-ink: var(--button-text-color1, #fff);
+    --upload-sel-1: var(--selected-button-color1, var(--button-color1, #1a1a2e));
+    --upload-sel-2: var(--selected-button-color2, var(--button-color2, #16213e));
     display: none;
     position: fixed;
     inset: 0;
@@ -2456,7 +2464,10 @@ footer .icon,#footer .icon,#footerBtns .icon {
     padding: max(1rem,env(safe-area-inset-top,0)) max(1rem,env(safe-area-inset-right,0)) max(1rem,env(safe-area-inset-bottom,0)) max(1rem,env(safe-area-inset-left,0));
     background: rgba(0,0,0,.72);
     backdrop-filter: blur(6px);
-    overscroll-behavior: none
+    -webkit-backdrop-filter: blur(6px);
+    overscroll-behavior: none;
+    color: var(--upload-ink);
+    font-family: inherit
 }
 
 .menu-image-upload-modal.is-open {
@@ -2470,10 +2481,10 @@ footer .icon,#footer .icon,#footerBtns .icon {
     overflow: auto;
     padding: 1.35rem 1.35rem 1.15rem;
     border-radius: 14px;
-    background: linear-gradient(160deg,#1e293b 0%,#0f172a 100%);
+    background: var(--header-bg-color, var(--main-bg, #0f172a));
     border: 1px solid rgba(255,255,255,.12);
     box-shadow: 0 20px 50px rgba(0,0,0,.45);
-    color: var(--main-text-color,#fff)
+    color: var(--upload-ink)
 }
 
 .menu-image-upload-close {
@@ -2484,11 +2495,13 @@ footer .icon,#footer .icon,#footerBtns .icon {
     height: 2rem;
     border: none;
     border-radius: 50%;
-    background: rgba(255,255,255,8%);
-    color: #e2e8f0;
+    background: rgba(255,255,255,.08);
+    color: var(--upload-ink);
     font-size: 1.25rem;
     line-height: 1;
     cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
     transition: background .2s ease
 }
 
@@ -2499,14 +2512,15 @@ footer .icon,#footer .icon,#footerBtns .icon {
 .menu-image-upload-title {
     margin: 0 2rem .35rem 0;
     font-size: 1.2rem;
-    font-weight: 700
+    font-weight: 700;
+    color: var(--upload-ink)
 }
 
 .menu-image-upload-hint {
     margin: 0 0 1rem;
     font-size: .86rem;
     line-height: 1.45;
-    color: #94a3b8
+    color: var(--upload-muted)
 }
 
 .menu-image-upload-preview {
@@ -2514,7 +2528,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     margin-bottom: 1rem;
     border-radius: 12px;
     overflow: hidden;
-    background: #020617;
+    background: var(--main-bg, #0a0a0f);
     border: 1px solid rgba(255,255,255,.1)
 }
 
@@ -2536,7 +2550,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(2,6,23,.68)
+    background: rgba(0,0,0,.55)
 }
 
 .menu-image-upload-preview__busy.is-hidden {
@@ -2548,7 +2562,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     width: 2.5rem;
     height: 2.5rem;
     border: 3px solid rgba(255,255,255,.18);
-    border-top-color: #a5b4fc;
+    border-top-color: var(--upload-accent);
     border-radius: 50%;
     animation: spin .75s linear infinite;
     flex-shrink: 0
@@ -2573,7 +2587,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     gap: .5rem;
     padding: .55rem .65rem;
     font-size: .78rem;
-    color: #cbd5e1;
+    color: var(--upload-muted);
     background: rgba(0,0,0,.35)
 }
 
@@ -2588,11 +2602,13 @@ footer .icon,#footer .icon,#footerBtns .icon {
     flex-shrink: 0;
     border: none;
     background: 0 0;
-    color: #a5b4fc;
+    color: var(--upload-accent);
     font-size: .78rem;
     font-weight: 600;
     cursor: pointer;
-    text-decoration: underline
+    text-decoration: underline;
+    -webkit-appearance: none;
+    appearance: none
 }
 
 .menu-image-upload-picker {
@@ -2603,8 +2619,8 @@ footer .icon,#footer .icon,#footerBtns .icon {
     margin-bottom: 1rem;
     padding: 1rem;
     border-radius: 12px;
-    border: 2px dashed rgba(148,163,184,.45);
-    background: rgba(255,255,255,3%)
+    border: 2px dashed var(--upload-accent);
+    background: rgba(255,255,255,.04)
 }
 
 .menu-image-upload-picker.is-hidden {
@@ -2627,31 +2643,32 @@ footer .icon,#footer .icon,#footerBtns .icon {
     padding: .75rem .5rem;
     border: 1px solid rgba(255,255,255,.14);
     border-radius: 10px;
-    background: rgba(255,255,255,6%);
-    color: #e2e8f0;
+    background: var(--upload-btn-1);
+    color: var(--upload-btn-ink);
     font-size: .82rem;
     font-weight: 600;
     cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
     transition: background .2s ease,border-color .2s ease,transform .15s ease
 }
 
 .menu-image-upload-source i {
     font-size: 1.45rem;
-    opacity: .95
+    opacity: .95;
+    color: var(--upload-accent)
 }
 
 .menu-image-upload-source--camera:hover,.menu-image-upload-source--gallery:hover {
-    border-color: rgba(129,140,248,.6);
-    background: rgba(99,102,241,.14);
+    border-color: var(--upload-accent);
+    background: var(--upload-sel-1);
+    color: var(--upload-btn-ink);
     transform: translateY(-1px)
 }
 
-.menu-image-upload-source--camera i {
-    color: #86efac
-}
-
+.menu-image-upload-source--camera i,
 .menu-image-upload-source--gallery i {
-    color: #a5b4fc
+    color: var(--upload-accent)
 }
 
 .menu-image-upload-picker__input {
@@ -2666,7 +2683,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     font-size: .72rem;
     line-height: 1.4;
     text-align: center;
-    color: #94a3b8
+    color: var(--upload-muted)
 }
 
 .menu-image-upload-progress {
@@ -2688,7 +2705,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     width: 0%;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg,#6366f1,#22c55e);
+    background: linear-gradient(90deg, var(--upload-sel-1), var(--upload-accent));
     transition: width .15s ease
 }
 
@@ -2698,14 +2715,15 @@ footer .icon,#footer .icon,#footerBtns .icon {
     justify-content: center;
     margin-top: .4rem;
     font-size: .8rem;
-    color: #a5b4fc
+    color: var(--upload-accent)
 }
 
 .menu-image-upload-status {
     min-height: 1.25rem;
     margin-bottom: .85rem;
     font-size: .84rem;
-    line-height: 1.4
+    line-height: 1.4;
+    color: var(--upload-ink)
 }
 
 .menu-image-upload-status.is-success {
@@ -2717,7 +2735,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .menu-image-upload-status.is-muted {
-    color: #94a3b8
+    color: var(--upload-muted)
 }
 
 .menu-image-upload-actions {
@@ -2734,6 +2752,9 @@ footer .icon,#footer .icon,#footerBtns .icon {
     font-size: .88rem;
     font-weight: 600;
     cursor: pointer;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
     transition: transform .15s ease,opacity .15s ease,background .2s ease
 }
 
@@ -2747,23 +2768,45 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .menu-image-upload-btn--cancel {
-    background: rgba(255,255,255,.1);
-    color: #e2e8f0;
+    background: var(--upload-btn-1);
+    color: var(--upload-btn-ink);
+    border: 1px solid rgba(255,255,255,.16);
     width: -webkit-fill-available
 }
 
 .menu-image-upload-btn--cancel:hover:not(:disabled) {
-    background: rgba(255,255,255,.18)
+    background: var(--upload-btn-2)
 }
 
 .menu-image-upload-btn--submit {
-    background: linear-gradient(135deg,#6366f1,#4f46e5);
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(79,70,229,.35)
+    background: linear-gradient(135deg, var(--upload-sel-1), var(--upload-sel-2));
+    color: var(--upload-btn-ink);
+    box-shadow: 0 4px 14px rgba(0,0,0,.28)
 }
 
 .menu-image-upload-btn--submit:hover:not(:disabled) {
-    background: linear-gradient(135deg,#818cf8,#6366f1)
+    background: linear-gradient(135deg, var(--upload-accent), var(--upload-sel-1));
+    color: var(--upload-btn-ink)
+}
+
+@supports (color: color-mix(in srgb, #000 50%, #fff)) {
+    .menu-image-upload-dialog {
+        background:
+            radial-gradient(120% 70% at 50% -8%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 55%),
+            linear-gradient(180deg, color-mix(in srgb, var(--header-bg-color, var(--main-bg, #0f172a)) 88%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
+        border-color: color-mix(in srgb, var(--selected-button-color3, #fff) 28%, rgba(255,255,255,.12));
+    }
+    .menu-image-upload-picker {
+        border-color: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, rgba(255,255,255,.2));
+        background: color-mix(in srgb, var(--button-color1, #fff) 10%, transparent);
+    }
+    .menu-image-upload-source {
+        background: color-mix(in srgb, var(--button-color1, #1a1a2e) 82%, #000);
+        border-color: color-mix(in srgb, var(--selected-button-color3, #fff) 28%, rgba(255,255,255,.12));
+    }
+    .menu-image-upload-source:hover {
+        background: color-mix(in srgb, var(--selected-button-color1, var(--button-color1, #1a1a2e)) 80%, #000);
+    }
 }
 
 .single-page-description {
