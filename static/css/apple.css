@@ -105,9 +105,6 @@
  #btn_SubInfo:not(.hide) {
         display: flex;
  }
- #cart{
-   height: calc(100dvh - 12.4em);
- }
  #wamodal, #itemSides, #itemMods, #itemAddMods {
     max-height: calc(100dvh - 12em); 
  }
