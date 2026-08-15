@@ -3,10 +3,12 @@
   {{- $href = .href | default "" -}}
 {{- end -}}
 {{- if or (hasPrefix $href "http://") (hasPrefix $href "https://") (hasPrefix $href "//") -}}
-  {{- return $href -}}
+  {{- $href -}}
+{{- else -}}
+  {{- $ver := partial "head/asset-version.html" . -}}
+  {{- if in $href "?" -}}
+    {{- printf "%s&v=%s" $href $ver -}}
+  {{- else -}}
+    {{- printf "%s?v=%s" $href $ver -}}
+  {{- end -}}
 {{- end -}}
-{{- $ver := partial "head/asset-version.html" . -}}
-{{- if in $href "?" -}}
-  {{- return printf "%s&v=%s" $href $ver -}}
-{{- end -}}
-{{- return printf "%s?v=%s" $href $ver -}}
