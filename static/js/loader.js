@@ -150,7 +150,7 @@ function ensureAdsLoaded() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const loader = document.getElementById('loader');
-    const loaderImage = document.getElementById('loaderImage');
+    var loaderImage = document.getElementById('loaderImage');
     const menuImage = document.getElementById('menuImage');
 
     if (!loader) {
@@ -365,6 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof barba === 'undefined') {
         console.error('Barba.js not loaded. Hiding loader without transitions.');
         updateLoaderLocationStatus();
+        restartLoaderMedia({ enter: true });
         startLoaderMorph();
         var noBarbaWait = loaderShownAt
             ? Math.max(0, LOADER_MIN_VISIBLE_MS - (Date.now() - loaderShownAt))
@@ -390,18 +391,37 @@ document.addEventListener('DOMContentLoaded', function() {
     let isHidingLoader = false;
     let randomAnim = '';
 
+    function isIosLoader() {
+        return document.documentElement.classList.contains('ttms-ios');
+    }
+
     function restartLoaderMedia(opts) {
         var playEnter = opts && opts.enter === true;
-        if (loaderImage) {
+        var img = document.getElementById('loaderImage') || loaderImage;
+        if (img) {
             var base =
-                loaderImage.getAttribute('data-loader-src') ||
-                String(loaderImage.getAttribute('src') || '').split('?')[0];
+                img.getAttribute('data-loader-src') ||
+                String(img.getAttribute('src') || '').split('?')[0];
             if (base) {
-                loaderImage.setAttribute('data-loader-src', base);
-                // Keep the current frame until the replay URL is assigned — never blank the src.
-                loaderImage.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'replay=' + Date.now();
+                img.setAttribute('data-loader-src', base);
+                var next = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'replay=' + Date.now();
+                // iOS Safari keeps a preloaded GIF on its last frame unless the node is replaced.
+                if (isIosLoader() && img.parentNode) {
+                    var clone = img.cloneNode(true);
+                    clone.removeAttribute('srcset');
+                    clone.setAttribute('data-loader-src', base);
+                    clone.decoding = 'sync';
+                    clone.loading = 'eager';
+                    clone.src = next;
+                    clone.style.display = 'block';
+                    img.parentNode.replaceChild(clone, img);
+                    loaderImage = clone;
+                } else {
+                    img.src = next;
+                    loaderImage = img;
+                    loaderImage.style.display = 'block';
+                }
             }
-            loaderImage.style.display = 'block';
         }
         if (menuImage) {
             menuImage.classList.remove('is-popping');
@@ -520,6 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.updateLoaderLocationStatus = updateLoaderLocationStatus;
 
     updateLoaderLocationStatus();
+    restartLoaderMedia({ enter: true });
     startLoaderMorph();
     document.addEventListener('ttms:location-selected', function () {
         updateLoaderLocationStatus();

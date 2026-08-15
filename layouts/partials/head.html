@@ -254,20 +254,19 @@
     padding: 0;
     margin: 0 auto;
     object-fit: contain;
-    image-rendering: -webkit-optimize-contrast;
   }
-  
+
   #loaderImage {
     max-width: min(calc(100% - 0.5rem), 34rem);
     max-height: min(20rem, 48dvh);
     width: auto;
     height: auto;
-    will-change: transform, opacity, max-height, max-width;
+    /* Do not use will-change or -webkit-optimize-contrast — both freeze animated GIFs on iOS. */
     transition:
       max-height 1s cubic-bezier(0.22, 1, 0.36, 1),
       max-width 1s cubic-bezier(0.22, 1, 0.36, 1),
+      height 1s cubic-bezier(0.22, 1, 0.36, 1),
       opacity 0.7s ease,
-      transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
       filter 0.7s ease;
   }
 
@@ -607,9 +606,9 @@
   #loader.loader--verified.loader-morph #loaderImage {
     max-height: min(5.25rem, 14dvh);
     max-width: min(14rem, 58vw);
+    height: min(5.25rem, 14dvh);
     opacity: 0.92;
     filter: none;
-    transform: none;
   }
 
   #loader.loader--verified.loader-morph #menuImage {
@@ -694,6 +693,31 @@
     }
     #loader .loader-location-pin::before {
       display: none;
+    }
+
+    /* iOS Low Power Mode sets this query — keep the branded morph. */
+    html.ttms-ios #loaderImage,
+    html.ttms-ios #menuImage,
+    html.ttms-ios .loader-brand-stage,
+    html.ttms-ios .loader-status {
+      transition-duration: 0.85s !important;
+    }
+    html.ttms-ios #loader.loader-ready .loader-location {
+      animation: loaderLocationIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+    }
+    html.ttms-ios #loader.loader-ready .loader-location-value {
+      animation: loaderLocationValueIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+    }
+    html.ttms-ios #loader.loader-ready .loader-location-icon {
+      animation: loaderPinDrop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+    }
+    html.ttms-ios #loader.loader-ready .loader-feature.is-in,
+    html.ttms-ios #loader.loader-ready .loader-feature:not(.is-in) {
+      animation: loaderFeatureIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+    }
+    html.ttms-ios #loader.loader--verified.loader-morph #menuImage.is-popping,
+    html.ttms-ios #loader.loader--paid.loader-morph #menuImage.is-popping {
+      animation: loaderClientLogoPop 0.85s cubic-bezier(0.22, 1, 0.36, 1) both !important;
     }
   }
   

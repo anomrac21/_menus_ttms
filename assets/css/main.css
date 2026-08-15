@@ -72,8 +72,7 @@ html,body {
     max-height: min(20rem,48dvh);
     width: auto;
     height: auto;
-    will-change: transform,opacity,max-height,max-width;
-    transition: max-height 1s cubic-bezier(.22,1,.36,1),max-width 1s cubic-bezier(.22,1,.36,1),opacity .7s ease,transform 1.05s cubic-bezier(.22,1,.36,1),filter .7s ease
+    transition: max-height 1s cubic-bezier(.22,1,.36,1),max-width 1s cubic-bezier(.22,1,.36,1),height 1s cubic-bezier(.22,1,.36,1),opacity .7s ease,filter .7s ease
 }
 
 #loader #menuImage {
@@ -95,10 +94,10 @@ html,body {
 #loader.loader--verified.loader-morph #loaderImage {
     max-height: min(5.25rem,14dvh);
     max-width: min(14rem,58vw);
+    height: min(5.25rem,14dvh);
     min-width: 1em;
     opacity: .92;
     filter: none;
-    transform: none;
     border-radius: 1em
 }
 
@@ -547,6 +546,29 @@ html,body {
     }
     #loader .loader-location-pin::before {
         display: none
+    }
+    html.ttms-ios #loader #loaderImage,
+    html.ttms-ios #loader #menuImage,
+    html.ttms-ios #loader .loader-brand-stage,
+    html.ttms-ios #loader .loader-status {
+        transition-duration: .85s!important
+    }
+    html.ttms-ios #loader.loader-ready .loader-location {
+        animation: loaderLocationIn .55s cubic-bezier(.22,1,.36,1) both!important
+    }
+    html.ttms-ios #loader.loader-ready .loader-location-value {
+        animation: loaderLocationValueIn .55s cubic-bezier(.22,1,.36,1) both!important
+    }
+    html.ttms-ios #loader.loader-ready .loader-location-icon {
+        animation: loaderPinDrop .55s cubic-bezier(.22,1,.36,1) both!important
+    }
+    html.ttms-ios #loader.loader-ready .loader-feature.is-in,
+    html.ttms-ios #loader.loader-ready .loader-feature:not(.is-in) {
+        animation: loaderFeatureIn .45s cubic-bezier(.22,1,.36,1) both!important
+    }
+    html.ttms-ios #loader.loader--verified.loader-morph #menuImage.is-popping,
+    html.ttms-ios #loader.loader--paid.loader-morph #menuImage.is-popping {
+        animation: loaderClientLogoPop .85s cubic-bezier(.22,1,.36,1) both!important
     }
 }
 
