@@ -373,6 +373,7 @@ async function fetchMenuItems() {
 		.then(data => {
 			console.log('✅ Menu items loaded:', data.total_count, 'items');
 			menuItemsCache = data.menu_items;
+			window.menuItemsCache = menuItemsCache;
 			menuItemsCachePromise = null;
 			return menuItemsCache;
 		})
@@ -397,6 +398,52 @@ function findMenuItemByUrl(url) {
 		console.error('❌ Menu item not found for URL:', url);
 	}
 	return item;
+}
+
+function findMenuItemByTitle(itemName) {
+	if (!menuItemsCache || !itemName) return null;
+	var name = String(itemName).trim().toLowerCase();
+	var matches = menuItemsCache.filter(function (it) {
+		return String((it && (it.linkTitle || it.name || it.title)) || '').trim().toLowerCase() === name;
+	});
+	if (!matches.length) return null;
+	if (matches.length === 1) return matches[0];
+	var loc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
+	var slug = (loc && loc.slug) || '';
+	if (slug) {
+		var locMatch = matches.find(function (it) {
+			return it.location_slug === slug || (it.url && String(it.url).indexOf('/' + slug + '/') !== -1);
+		});
+		if (locMatch) return locMatch;
+	}
+	var path = (window.location && window.location.pathname) || '';
+	var pathMatch = matches.find(function (it) {
+		return it.url && path.indexOf(it.url) !== -1;
+	});
+	if (pathMatch) return pathMatch;
+	return matches.find(function (it) {
+		if (it.loyverse_variant_id) return true;
+		return (it.price_meta || []).some(function (pm) { return pm && pm.loyverse_variant_id; });
+	}) || matches[0];
+}
+
+function ttmsVariantFromPriceMeta(metas, size) {
+	if (!Array.isArray(metas) || !metas.length) return '';
+	var sz = String(size || '-').trim();
+	for (var i = 0; i < metas.length; i++) {
+		var pm = metas[i];
+		if (!pm || !pm.loyverse_variant_id) continue;
+		var v1 = String(pm.variable1 || '-').trim();
+		if (sz === v1 || ((sz === '-' || !sz) && (v1 === '-' || !v1))) return String(pm.loyverse_variant_id).trim();
+	}
+	if (metas.length === 1 && metas[0].loyverse_variant_id) return String(metas[0].loyverse_variant_id).trim();
+	return '';
+}
+
+function ttmsVariantFromCatalogItem(catalog, size) {
+	if (!catalog) return '';
+	if (catalog.loyverse_variant_id) return String(catalog.loyverse_variant_id).trim();
+	return ttmsVariantFromPriceMeta(catalog.price_meta, size);
 }
 
 // Function to find menu item by ID
@@ -1749,6 +1796,22 @@ function toggleCart(){
       if (currentoptions.loyverse_item_id) orderEntry.loyverse_item_id = currentoptions.loyverse_item_id;
       if (currentoptions.url) orderEntry.url = currentoptions.url;
     }
+    if (!orderEntry.loyverse_variant_id) {
+      var catalog = (currentoptions && currentoptions.url && typeof findMenuItemByUrl === 'function')
+        ? findMenuItemByUrl(currentoptions.url)
+        : null;
+      if (!catalog) catalog = findMenuItemByTitle(item);
+      var fromCatalog = ttmsVariantFromCatalogItem(catalog, size);
+      if (fromCatalog) {
+        orderEntry.loyverse_variant_id = fromCatalog;
+        if (catalog && catalog.loyverse_item_id) orderEntry.loyverse_item_id = catalog.loyverse_item_id;
+        if (catalog && catalog.url) orderEntry.url = catalog.url;
+      }
+    }
+    if (!orderEntry.loyverse_variant_id && window.posIntegration && typeof window.posIntegration.resolveVariantId === 'function') {
+      var mapped = window.posIntegration.resolveVariantId(orderEntry);
+      if (mapped) orderEntry.loyverse_variant_id = mapped;
+    }
   } catch (e) {}
   if (promoData && (promoData.promotions || promoData.pricesArray !== undefined || promoData.availability)) {
     orderEntry.promotions = promoData.promotions;
@@ -2886,14 +2949,11 @@ document.addEventListener("DOMContentLoaded", function() {
     loadCart();  // Load saved cart from localStorage
     updateCart(order.length);
     
-    // Preload menu items JSON when cart/order flow needs it (home reels loader owns its own fetch)
-    if (!document.getElementById('menu-reels-viewport')) {
-      fetchMenuItems().then(() => {
-        console.log('✅ Menu items preloaded and ready');
-      }).catch(err => {
-        console.error('❌ Failed to preload menu items:', err);
-      });
-    }
+    fetchMenuItems().then(() => {
+      console.log('✅ Menu items preloaded and ready');
+    }).catch(err => {
+      console.error('❌ Failed to preload menu items:', err);
+    });
     
     // Initialize location dropdown and load saved location
     const locationSelect = document.getElementById('locationSelect');

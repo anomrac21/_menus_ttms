@@ -5,6 +5,9 @@
   if (/Android/i.test(navigator.userAgent || '')) {
     doc.documentElement.classList.add('ttms-android');
   }
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+    doc.documentElement.classList.add('ttms-ios');
+  }
   var mq = window.matchMedia(
     '(max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse))'
   );
@@ -137,20 +140,26 @@
 </style>
 <style id="ttms-safe-area-critical">
   :root {
+    --ttms-safe-top: 0px;
+    --ttms-safe-top: constant(safe-area-inset-top, 0px);
     --ttms-safe-top: env(safe-area-inset-top, 0px);
+    --ttms-safe-bottom: 0px;
+    --ttms-safe-bottom: constant(safe-area-inset-bottom, 0px);
     --ttms-safe-bottom: env(safe-area-inset-bottom, 0px);
     --ttms-header-bar: 5em;
     --ttms-header-height: calc(var(--ttms-header-bar) + var(--ttms-safe-top));
   }
   html,
   body {
-    background-color: var(--main-bg, #000);
+    background-color: var(--main-bg, #0f172a);
     min-height: 100%;
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
-  header {
+  /* Paint the notch with the header color — do not pad generic <header> (dashboard cards). */
+  .main-header {
     padding-top: var(--ttms-safe-top);
+    background-color: var(--header-bg-color, #111);
     box-sizing: border-box;
   }
   #footer {
@@ -819,7 +828,8 @@
 <meta name="theme-color" content="#000000"/>
 
 <!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
-{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
 {{- $multiLocationMenus := site.Params.menu.multiLocationMenus | default false -}}
 <link rel="stylesheet" href="/css/breakpoints.css"/>
 <link rel="stylesheet" href="/css/z-index.css"/>
@@ -835,8 +845,11 @@
 {{- if and $menuPublicSite $multiLocationMenus -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/multi-location-menu.css" "sync" true) }}
 {{- end -}}
-{{- if and $menuPublicSite $isMenuReelsPage -}}
+{{- if $menuPublicSite -}}
+{{/* Always load reels CSS on public pages — Barba does not swap <head>, so item→location navigations would otherwise keep the hero in a row. */}}
 <link rel="stylesheet" href="/css/menu-reels.css"/>
+{{- end -}}
+{{- if and $menuPublicSite $isMenuReelsPage -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/menu-cards.css" "sync" true) }}
 {{- end -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/cart.css") }}
@@ -996,6 +1009,38 @@ window.MENU_CONFIG = {
     font-size: 0.95em;
   }
   .single-page-item-card .menu-item-title-row { min-height: 2.75rem; }
+  .hero_logo_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .hero_logo_container .logo_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: min(100%, 36rem);
+  }
+  .hero_logo_container .hero-cta-list,
+  .hero_logo_container .hero-intro {
+    width: 100%;
+    max-width: 22rem;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  .hero_logo_container .hero-cta-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.55rem;
+    list-style: none;
+    margin: 0;
+    padding: 0 1rem;
+  }
   html:not(.menu-nav-smooth) .main--home .menu-reels-viewport {
     width: 100%;
     height: 100%;
@@ -1170,9 +1215,17 @@ window.MENU_CONFIG = {
 {{- if or $loyverseFeature (default false $pos.enabled) -}}
 {{- $posClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 {{- $posMap := dict -}}
-{{- with site.Data.pos_mapping -}}
-  {{- with .loyverse -}}
-    {{- with .items -}}
+{{- $posData := false -}}
+{{- with (index site.Data "pos_mapping") -}}{{- $posData = . -}}{{- end -}}
+{{- if not $posData -}}{{- with (index site.Data "pos-mapping") -}}{{- $posData = . -}}{{- end -}}{{- end -}}
+{{- if not $posData -}}
+  {{- if (os.FileExists "data/pos-mapping.yaml") -}}
+    {{- $posData = transform.Unmarshal (os.ReadFile "data/pos-mapping.yaml") -}}
+  {{- end -}}
+{{- end -}}
+{{- with $posData -}}
+  {{- with (index . "loyverse") -}}
+    {{- with (index . "items") -}}
       {{- $posMap = . -}}
     {{- end -}}
   {{- end -}}
@@ -1189,10 +1242,10 @@ window.POS_CONFIG = {
     syncMenu: {{ default false $pos.sync_menu }},
     autoProcessOrders: {{ default false $pos.auto_process_orders }},
     fallbackToWhatsapp: {{ if isset $pos "fallback_to_whatsapp" }}{{ $pos.fallback_to_whatsapp }}{{ else }}true{{ end }},
-    itemMapping: {{ $posMap | jsonify }}
+    itemMapping: {{ $posMap | jsonify | safeJS }}
 };
 </script>
-<script src="/js/pos-integration.js" defer></script>
+<script src="/js/pos-integration.js?v=catalog-3" defer></script>
 {{- end -}}
 
 {{- if site.Params.auth.enabled -}}

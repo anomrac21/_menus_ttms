@@ -302,3 +302,19 @@
         transition: none;
     }
 }
+
+/* iOS: contact.css + apple.css used to keep the old gold subscribe banner */
+html.ttms-ios .hero_logo_container .contact-cta,
+html.ttms-ios .hero_logo_container .hero-cta-list .contact-cta,
+html.ttms-ios .hero_logo_container .subscribe .subbtn--notify,
+html.ttms-ios .hero_logo_container .subscribe .subbtn--notify.contact-cta,
+html.ttms-ios .hero_logo_container .subscribe .subbtn--notify.btn {
+    background:
+        linear-gradient(
+            155deg,
+            color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
+            rgba(15, 23, 42, 0.72) 100%
+        );
+    border: 1.5px solid color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+    color: #f8fafc;
+}

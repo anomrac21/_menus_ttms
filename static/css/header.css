@@ -4,9 +4,17 @@
  */
 
 :root {
+    --ttms-safe-top: 0px;
+    --ttms-safe-top: constant(safe-area-inset-top, 0px);
     --ttms-safe-top: env(safe-area-inset-top, 0px);
+    --ttms-safe-bottom: 0px;
+    --ttms-safe-bottom: constant(safe-area-inset-bottom, 0px);
     --ttms-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --ttms-safe-left: 0px;
+    --ttms-safe-left: constant(safe-area-inset-left, 0px);
     --ttms-safe-left: env(safe-area-inset-left, 0px);
+    --ttms-safe-right: 0px;
+    --ttms-safe-right: constant(safe-area-inset-right, 0px);
     --ttms-safe-right: env(safe-area-inset-right, 0px);
     --ttms-header-bar: 5em;
     --ttms-header-height: calc(var(--ttms-header-bar) + var(--ttms-safe-top));
@@ -29,14 +37,16 @@
     position: relative;
     margin: 0;
     padding: 0;
+    padding-top: var(--ttms-safe-top, env(safe-area-inset-top, 0px));
     top: 0;
+    box-sizing: border-box;
 }
 
 /* Header container */
 .main-header .container {
     max-width: 2560px;
     margin: 0 auto;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -44,8 +54,9 @@
     justify-content: flex-start;
     height: 5em;
     height: var(--ttms-header-bar, 5em);
-    padding: 0;
+    padding: 0 max(0.15rem, var(--ttms-safe-right, 0px)) 0 max(0.15rem, var(--ttms-safe-left, 0px));
     gap: 0;
+    box-sizing: border-box;
 }
 
 /* Dashboard + venue logo — fixed while #menublock scrolls horizontally */
@@ -98,8 +109,8 @@
     flex: 0 0 var(--ttms-dashboard-btn-slot);
     width: var(--ttms-dashboard-btn-slot);
     min-width: 0;
-    overflow: hidden;
-    contain: paint;
+    overflow: visible;
+    contain: none;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -235,7 +246,7 @@
 
 #dashboardBtn img {
     object-fit: contain;
-    top: -8px;
+    top: 0;
     transition: transform 0.3s ease;
     position: relative;
 }

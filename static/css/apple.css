@@ -102,20 +102,11 @@
 }
 
 @supports (-webkit-touch-callout: none) { /* CSS specific to iOS devices */
-/* CSS specific to iOS devices */
- #btn_SubInfo {
-        display: flex !important;
+ #btn_SubInfo:not(.hide) {
+        display: flex;
  }
  #cart{
-    height: calc(100dvh - 12.4em);
- }
- 
- #cartcount {
-    top: .4em !important;
- }
- .cartopen #cartcount {
-    top: calc(-50dvh + 24em) !important;
-    margin-left: 11em;
+   height: calc(100dvh - 12.4em);
  }
  #wamodal, #itemSides, #itemMods, #itemAddMods {
     max-height: calc(100dvh - 12em); 

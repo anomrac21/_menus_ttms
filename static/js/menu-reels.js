@@ -7,8 +7,10 @@
   var observer = null;
   var scrollHandler = null;
   var scrollSyncPending = false;
-  var initReelsScheduled = null;
-  var initReelsRunning = false;
+    var initReelsScheduled = null;
+    var initReelsRunning = false;
+    var initReelsQueued = false;
+    var initReelsQueuedForce = false;
   var RATIO_THRESHOLD = 0.45;
   var lastDominantSlide = null;
   var lastSyncedMenublockSectionId = null;
@@ -957,14 +959,36 @@
     });
   }
 
+  function ensureMenuReelsStylesheet() {
+    if (document.querySelector('link[href*="menu-reels.css"]')) return;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/css/menu-reels.css';
+    document.head.appendChild(link);
+  }
+
+  function syncMenuReelsDocumentMode() {
+    var hasReels = !!document.getElementById('menu-reels-viewport');
+    document.documentElement.classList.toggle('menu-reels-mode', hasReels);
+    if (document.body) {
+      document.body.classList.toggle('menu-reels-mode', hasReels);
+    }
+    if (hasReels) ensureMenuReelsStylesheet();
+  }
+
   function runInitMenuReels(forceFlatten) {
-    if (initReelsRunning) return;
+    if (initReelsRunning) {
+      initReelsQueued = true;
+      initReelsQueuedForce = initReelsQueuedForce || !!forceFlatten;
+      return;
+    }
     initReelsRunning = true;
+    initReelsQueued = false;
+    initReelsQueuedForce = false;
 
     var track = getTrack();
     if (!track) {
-      document.documentElement.classList.remove('menu-reels-mode');
-      document.body.classList.remove('menu-reels-mode');
+      syncMenuReelsDocumentMode();
       document.body.classList.remove('menu-reels-intro-active');
       document.body.classList.remove('menu-reels-contact-active');
       if (observer) {
@@ -972,9 +996,16 @@
         observer = null;
       }
       initReelsRunning = false;
+      if (initReelsQueued) {
+        var queuedForce = initReelsQueuedForce;
+        initReelsQueued = false;
+        initReelsQueuedForce = false;
+        runInitMenuReels(queuedForce);
+      }
       return;
     }
 
+    ensureMenuReelsStylesheet();
     mountBottomAdsInTrack(track);
 
     document.documentElement.classList.add('menu-reels-mode');
@@ -1023,6 +1054,14 @@
         }
       } finally {
         initReelsRunning = false;
+        if (initReelsQueued) {
+          var queuedForce = initReelsQueuedForce || !!forceFlatten;
+          initReelsQueued = false;
+          initReelsQueuedForce = false;
+          requestAnimationFrame(function () {
+            runInitMenuReels(queuedForce);
+          });
+        }
       }
     };
 
@@ -1420,6 +1459,7 @@
   window.scrollMenuReelsToTop = scrollTrackToTop;
   window.initMenuReels = initMenuReels;
   window.refreshMenuReelsLayout = refreshMenuReelsLayout;
+  window.syncMenuReelsDocumentMode = syncMenuReelsDocumentMode;
   window.mountBottomAdsInTrack = mountBottomAdsInTrack;
   window.shouldOpenMenuItemOrderFromEvent = shouldOpenMenuItemOrderFromEvent;
   window.openMenuReelsItemModal = openMenuReelsItemModal;

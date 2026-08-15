@@ -710,6 +710,15 @@
       ' data-prices-array="' +
       escapeHtml(JSON.stringify(pricesArray)) +
       '"' +
+      ' data-price-meta="' +
+      escapeHtml(JSON.stringify(item.price_meta || [])) +
+      '"' +
+      ' data-loyverse-item-id="' +
+      escapeHtml(item.loyverse_item_id || '') +
+      '"' +
+      (item.loyverse_variant_id
+        ? ' data-loyverse-variant-id="' + escapeHtml(item.loyverse_variant_id) + '"'
+        : '') +
       ' data-active-promo-percent="0"' +
       ' data-selected-variable1="' +
       escapeHtml(defaultV1) +
@@ -825,6 +834,7 @@
       })
       .then(function (payload) {
         rawMenuItems = payload.menu_items || [];
+        window.menuItemsCache = rawMenuItems;
         menuBySection = groupMenuItems(rawMenuItems);
         return menuBySection;
       })

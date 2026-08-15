@@ -155,6 +155,7 @@
     var css =
       '#ttms-ptr-indicator{position:fixed;left:0;right:0;top:0;z-index:2147483000;' +
       'display:flex;justify-content:center;pointer-events:none;' +
+      'padding-top:var(--ttms-safe-top,env(safe-area-inset-top,0px));' +
       'transform:translateY(-100%);transition:opacity .15s ease;opacity:0;' +
       'font-family:system-ui,-apple-system,sans-serif;font-size:13px;}' +
       '#ttms-ptr-indicator.ttms-ptr-visible{opacity:1;}' +

@@ -5,6 +5,12 @@
 
 :root {
     --ttms-overlay-height: var(--ttms-vvh, 100dvh);
+    --ttms-safe-top: 0px;
+    --ttms-safe-top: constant(safe-area-inset-top, 0px);
+    --ttms-safe-top: env(safe-area-inset-top, 0px);
+    --ttms-safe-bottom: 0px;
+    --ttms-safe-bottom: constant(safe-area-inset-bottom, 0px);
+    --ttms-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Scroll lock — top offset applied by ios-viewport.js */

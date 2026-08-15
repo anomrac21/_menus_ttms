@@ -17,10 +17,17 @@ Renders menu item card for list and tag term pages.
 {{- end -}}
 
 {{- $pricesArray := slice -}}
+{{- $priceMeta := slice -}}
 {{- range .Params.prices -}}
   {{- $pricesArray = $pricesArray | append .variable1 -}}
   {{- $pricesArray = $pricesArray | append .variable2 -}}
   {{- $pricesArray = $pricesArray | append .price -}}
+  {{- $priceMeta = $priceMeta | append (dict
+    "variable1" .variable1
+    "variable2" .variable2
+    "price" .price
+    "loyverse_variant_id" (.loyverse_variant_id | default "")
+  ) -}}
 {{- end -}}
 
 {{- $sideCategories := slice -}}
@@ -96,6 +103,8 @@ Renders menu item card for list and tag term pages.
       data-item-expanded="false"
       {{- $avail := .Params.availability | default .CurrentSection.Params.availability -}}{{- with $avail }} data-availability="{{ $avail | jsonify }}"{{ end }}
       data-prices-array="{{ $pricesArray | jsonify }}"
+      data-price-meta="{{ $priceMeta | jsonify }}"
+      data-loyverse-item-id="{{ .Params.loyverse_item_id | default "" }}"
       data-active-promo-percent="{{ if and $activePromo (eq (index $activePromo "type") "percent_off") }}{{ index $activePromo "value" }}{{ else }}0{{ end }}"
       data-selected-variable1="{{ $defaultVariable1 }}"
       data-selected-variable2="{{ $defaultVariable2 }}"

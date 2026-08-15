@@ -2686,6 +2686,42 @@
         }
     }
 
+    function stampCartLineLoyverseMapping(card, itemName, size, url) {
+        var cart = window.order;
+        if (!Array.isArray(cart) || !cart.length) return;
+        var line = cart[cart.length - 1];
+        if (!line || String(line.item || '') !== String(itemName || '')) return;
+        var meta = [];
+        try {
+            meta = JSON.parse(card.getAttribute('data-price-meta') || '[]');
+        } catch (e) {
+            meta = [];
+        }
+        var sz = String(size || '-').trim();
+        var variant = String(card.getAttribute('data-loyverse-variant-id') || '').trim();
+        if (!variant && Array.isArray(meta)) {
+            for (var i = 0; i < meta.length; i++) {
+                var pm = meta[i];
+                if (!pm || !pm.loyverse_variant_id) continue;
+                var v1 = String(pm.variable1 || '-').trim();
+                if (sz === v1 || ((sz === '-' || !sz) && (v1 === '-' || !v1))) {
+                    variant = String(pm.loyverse_variant_id).trim();
+                    break;
+                }
+            }
+            if (!variant && meta.length === 1 && meta[0].loyverse_variant_id) {
+                variant = String(meta[0].loyverse_variant_id).trim();
+            }
+        }
+        if (variant) line.loyverse_variant_id = variant;
+        var itemId = card.getAttribute('data-loyverse-item-id');
+        if (itemId) line.loyverse_item_id = itemId;
+        if (url) line.url = url;
+        if (variant) {
+            console.log('🧾 Cart line mapped to Loyverse variant', variant, itemName, size);
+        }
+    }
+
     /**
      * Add expanded item to cart
      * @global
@@ -2867,6 +2903,7 @@
             });
             
             addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost, promoData);
+            stampCartLineLoyverseMapping(card, itemName, size, url);
             
             // Show visual feedback
             button.classList.add('adding');

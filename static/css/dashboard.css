@@ -5,7 +5,8 @@
   overflow-x: clip!important;
   width: -webkit-fill-available!important;
   margin: 0!important;
-  padding: 0!important
+  padding: 0!important;
+  background: #0f172a !important;
 }
 .hidden { display: none !important; }
 
@@ -567,7 +568,7 @@
 .dashboard-control-room {
   min-height: var(--ttms-overlay-height, 100dvh);
   background: linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f172a 100%);
-  padding: 1.5rem 1.25rem 2.5rem;
+  padding: max(1.5rem, var(--ttms-safe-top, env(safe-area-inset-top, 0px))) max(1.25rem, env(safe-area-inset-right, 0px)) max(2.5rem, calc(1.25rem + var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px)))) max(1.25rem, env(safe-area-inset-left, 0px));
   color: #fff;
   max-width: 100%;
   box-sizing: border-box;
@@ -3649,11 +3650,11 @@ body.dashboard-edit-embed-panel .dashboard-edit-save-tab-host .dashboard-edit-ch
 }
 
 body.dashboard-edit-theme-only .dashboard-edit-page {
-  padding: 0.75rem 0.85rem 0;
+  padding: calc(0.75rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 0.85rem 0;
 }
 
 body.dashboard-edit-rearrange-only .dashboard-edit-page {
-  padding: 0.75rem 0.85rem 0.85rem;
+  padding: calc(0.75rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 0.85rem calc(0.85rem + var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 body.dashboard-edit-theme-only .dashboard-edit-layout {
@@ -3684,11 +3685,11 @@ body.dashboard-edit-rearrange-only .dashboard-subpage-header-bar .dashboard-logo
 
 @media (max-width: 640px) {
   body.dashboard-edit-theme-only .dashboard-edit-page {
-    padding: 0.55rem 0.55rem 0;
+    padding: calc(0.55rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 0.55rem 0;
   }
 
   body.dashboard-edit-rearrange-only .dashboard-edit-page {
-    padding: 0.55rem 0.55rem 0.7rem;
+    padding: calc(0.55rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 0.55rem calc(0.7rem + var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px)));
   }
 
   .dashboard-control-room .dashboard-subpage-header-bar.dashboard-header-bar {
@@ -4419,7 +4420,7 @@ body.menu-item-edit-modal-open {
   border-bottom: 1px solid rgba(129, 140, 248, 0.22);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
-  padding: 0.65rem 1rem;
+  padding: calc(0.65rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 1rem 0.65rem;
   height: min-content;
   color: #fff;
 }
@@ -7536,10 +7537,13 @@ body.menu-item-edit-modal-open {
 
 .dashboard-analytics-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #1a1a2e;
   color: #fff;
   display: flex;
   flex-direction: column;
+  padding-bottom: var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 
 .dashboard-analytics-page--full {
@@ -9670,7 +9674,7 @@ body.menu-item-edit-modal-open {
 
 /* Settings: control-room header bar inset; avoid full control-room page chrome */
 .dashboard-settings-page.dashboard-control-room {
-  padding: 0.75rem 0.85rem 0;
+  padding: calc(0.75rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 0.85rem 0;
   max-width: none;
 }
 
@@ -9682,7 +9686,7 @@ body.menu-item-edit-modal-open {
 
 @media (max-width: 640px) {
   .dashboard-settings-page.dashboard-control-room {
-    padding: 0.55rem 0.55rem 0;
+    padding: calc(0.55rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px))) 0.55rem 0;
   }
 }
 
@@ -9696,7 +9700,7 @@ body.menu-item-edit-modal-open {
 
 .dashboard-settings-main {
   max-width: 920px;
-  padding: 1.35rem 1rem 2.5rem;
+  padding: 1.35rem 1rem calc(2.5rem + var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px)));
   display: flex;
   flex-direction: column;
   gap: 1.1rem;

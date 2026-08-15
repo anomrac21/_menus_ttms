@@ -8,16 +8,18 @@
    HERO LOGO CONTAINER
    ============================================ */
 
-   .hero_logo_container {
+.hero_logo_container {
     position: relative;
     width: 100%;
     min-height: 100vh;
     max-height: 100vh;
     overflow: hidden;
     display: flex;
-    padding-block-start: 5em;
+    flex-direction: column;
+    padding-block-start: 0;
     align-items: center;
     justify-content: center;
+    gap: 0.75rem;
     background: var(--hero-bg-color, #000);
 }
 
@@ -64,9 +66,13 @@
     position: relative;
     z-index: var(--ttms-z-reel-inner-content, 1);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.85rem;
     width: 100%;
+    max-width: min(100%, 36rem);
+    box-sizing: border-box;
 }
 
 .logo_container a {
@@ -84,6 +90,7 @@
 }
 
 /* Logo Image — reels hero size tuned in multi-location-menu.css */
+.hero_logo_container #logo,
 #logo {
     display: block;
     border-radius: 1em;
@@ -103,6 +110,11 @@
 .logo_container a:hover #logo {
     filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.8));
     transform: scale(1.03);
+}
+
+/* Home/reels already offset main for the header — don't pad the hero again. */
+main:not(.main--home) .hero_logo_container {
+    padding-block-start: var(--ttms-header-height, 5em);
 }
 
 /* Landscape orientation - reduce height */

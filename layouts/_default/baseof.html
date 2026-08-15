@@ -15,7 +15,8 @@
 </body>
 </html>
 {{- else -}}
-{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
 <!DOCTYPE html>
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
 <head>

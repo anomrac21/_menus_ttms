@@ -3,6 +3,9 @@ let isAdsLoading = false;
 let adManagerCheckCount = 0;
 let maxLoaderTimeout = null;
 let globalLoaderKillTimeout = null;
+let hideFinishTimer = null;
+let hideForceTimer = null;
+let loaderGeneration = 0;
 let loaderHasHiddenOnce = false;
 /** Minimum time loader stays visible so morph, chips, and logo pop can play. */
 var LOADER_MIN_VISIBLE_MS = 4200;
@@ -15,6 +18,31 @@ function forceHideLoaderElement(loader) {
     loader.style.visibility = 'hidden';
     loader.style.opacity = '0';
     loader.style.display = 'none';
+}
+
+function clearLoaderHideTimers() {
+    if (hideFinishTimer) {
+        clearTimeout(hideFinishTimer);
+        hideFinishTimer = null;
+    }
+    if (hideForceTimer) {
+        clearTimeout(hideForceTimer);
+        hideForceTimer = null;
+    }
+}
+
+function syncMenuReelsDocumentMode() {
+    var hasReels = !!document.getElementById('menu-reels-viewport');
+    document.documentElement.classList.toggle('menu-reels-mode', hasReels);
+    if (document.body) {
+        document.body.classList.toggle('menu-reels-mode', hasReels);
+    }
+    if (!hasReels) return;
+    if (document.querySelector('link[href*="menu-reels.css"]')) return;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/css/menu-reels.css';
+    document.head.appendChild(link);
 }
 
 function recoverStuckUiState() {
@@ -389,6 +417,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function resetLoaderVisible() {
+        loaderGeneration += 1;
+        clearLoaderHideTimers();
+        isHidingLoader = false;
         animations.forEach(function (anim) {
             loader.classList.remove(anim);
         });
@@ -420,6 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function finishHideLoader() {
         if (!loader) return;
+        var gen = loaderGeneration;
         animations.forEach(function (anim) {
             loader.classList.remove(anim);
         });
@@ -435,7 +467,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Android Chrome can keep a composited overlay that still blocks taps
         // even after opacity:0 — force display:none after the hide animation.
-        setTimeout(function () {
+        hideForceTimer = setTimeout(function () {
+            hideForceTimer = null;
+            if (gen !== loaderGeneration) return;
             forceHideLoaderElement(loader);
             isHidingLoader = false;
         }, 820);
@@ -448,7 +482,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function hideLoader() {
         if (!loader) return;
-        if (isHidingLoader && loaderHasHiddenOnce) return;
+        var alreadyGone = loader.classList.contains('loader-force-hidden');
+        if (alreadyGone && !isHidingLoader) return;
+        if (isHidingLoader) return;
         isHidingLoader = true;
         loaderHasHiddenOnce = true;
 
@@ -463,7 +499,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var wait = msUntilMinVisible();
         if (wait > 0) {
-            setTimeout(finishHideLoader, wait);
+            hideFinishTimer = setTimeout(function () {
+                hideFinishTimer = null;
+                finishHideLoader();
+            }, wait);
         } else {
             finishHideLoader();
         }
@@ -473,6 +512,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.hideLoader = hideLoader;
     window.allowLoaderHide = hideLoader;
     window.forceHideLoader = function () {
+        loaderGeneration += 1;
+        clearLoaderHideTimers();
         forceHideLoaderElement(loader || document.getElementById('loader'));
         recoverStuckUiState();
     };
@@ -632,6 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             async enter(data) {
                 scheduleLoaderFallback();
+                syncMenuReelsDocumentMode();
                 // Reset scroll position immediately to prevent spacing issues
                 window.scrollTo(0, 0);
                 document.documentElement.scrollTop = 0;
@@ -751,6 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
             async once(data) {
                 var isReelsHome = !!document.getElementById('menu-reels-viewport');
                 scheduleLoaderFallback();
+                syncMenuReelsDocumentMode();
 
                 // Reels home defers video ads until the sponsored slide is near viewport
                 if (!isReelsHome) {

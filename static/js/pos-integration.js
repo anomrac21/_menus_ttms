@@ -36,7 +36,15 @@
   }
 
   function mapping() {
-    return cfg().itemMapping || global.POS_ITEM_MAPPING || {};
+    var m = cfg().itemMapping || global.POS_ITEM_MAPPING || {};
+    if (typeof m === 'string') {
+      try {
+        m = JSON.parse(m);
+      } catch (_) {
+        m = {};
+      }
+    }
+    return m && typeof m === 'object' ? m : {};
   }
 
   function isBlankSize(size) {
@@ -69,6 +77,7 @@
       candidates.push(item + '|' + size);
     }
     candidates.push(item);
+    candidates.push(item + '|-');
 
     for (var i = 0; i < candidates.length; i++) {
       var keyed = map[candidates[i]];
@@ -82,7 +91,62 @@
         if (keyed.variants['']) return String(keyed.variants['']);
       }
     }
+    return lookupFromMenuCatalog(item, size, line && line.url);
+  }
+
+  function variantFromPriceMeta(metas, size) {
+    if (!Array.isArray(metas) || !metas.length) return '';
+    var sz = String(size || '-').trim();
+    for (var i = 0; i < metas.length; i++) {
+      var pm = metas[i];
+      if (!pm || !pm.loyverse_variant_id) continue;
+      var v1 = String(pm.variable1 || '-').trim();
+      if (sz === v1 || (isBlankSize(sz) && isBlankSize(v1))) return String(pm.loyverse_variant_id).trim();
+    }
+    if (metas.length === 1 && metas[0].loyverse_variant_id) {
+      return String(metas[0].loyverse_variant_id).trim();
+    }
     return '';
+  }
+
+  function lookupFromMenuCatalog(itemName, size, url) {
+    var items = global.menuItemsCache;
+    if (!Array.isArray(items) || !items.length) return '';
+    var name = String(itemName || '').trim().toLowerCase();
+    if (!name) return '';
+    var matches = items.filter(function (it) {
+      return String((it && (it.linkTitle || it.name || it.title)) || '')
+        .trim()
+        .toLowerCase() === name;
+    });
+    if (!matches.length) return '';
+    var pick = matches[0];
+    if (url) {
+      var u = String(url).replace(/\/+$/, '');
+      var byUrl = matches.filter(function (it) {
+        return String(it.url || '').replace(/\/+$/, '') === u;
+      })[0];
+      if (byUrl) pick = byUrl;
+    } else if (matches.length > 1) {
+      var slug = '';
+      try {
+        if (typeof global.getCurrentLocationData === 'function') {
+          var loc = global.getCurrentLocationData();
+          slug = (loc && loc.slug) || '';
+        }
+      } catch (_) {}
+      if (slug) {
+        var byLoc = matches.filter(function (it) {
+          return (
+            it.location_slug === slug ||
+            (it.url && String(it.url).indexOf('/' + slug + '/') !== -1)
+          );
+        })[0];
+        if (byLoc) pick = byLoc;
+      }
+    }
+    if (pick.loyverse_variant_id) return String(pick.loyverse_variant_id).trim();
+    return variantFromPriceMeta(pick.price_meta, size);
   }
 
   function lineNote(line) {
@@ -153,6 +217,47 @@
     return String(cfg().storeId || '').trim();
   }
 
+  function mappingIsEmpty() {
+    var m = mapping();
+    return !m || !Object.keys(m).length;
+  }
+
+  function ensureItemMapping() {
+    if (!mappingIsEmpty()) return Promise.resolve(mapping());
+    return fetch('/pos-item-mapping.json', { credentials: 'same-origin' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('pos-mapping ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var items = (data && data.loyverse && data.loyverse.items) || data.items || data || {};
+        if (!global.POS_CONFIG) global.POS_CONFIG = {};
+        global.POS_CONFIG.itemMapping = items;
+        return items;
+      })
+      .catch(function () {
+        return mapping();
+      });
+  }
+
+  function ensureMenuCatalog() {
+    if (Array.isArray(global.menuItemsCache) && global.menuItemsCache.length) {
+      return Promise.resolve(global.menuItemsCache);
+    }
+    return fetch('/api/menu-items.json', { credentials: 'same-origin' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('menu-items ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        global.menuItemsCache = (data && data.menu_items) || [];
+        return global.menuItemsCache;
+      })
+      .catch(function () {
+        return global.menuItemsCache || [];
+      });
+  }
+
   var posIntegration = {
     get isPOSEnabled() {
       var c = cfg();
@@ -166,40 +271,40 @@
       if (!Array.isArray(orderArr) || !orderArr.length) {
         return Promise.resolve({ skipped: true, reason: 'empty_cart' });
       }
-      var lines = buildLinesFromOrder(orderArr);
-      var missing = lines.filter(function (l) {
-        return !l.variant_id;
-      });
-      if (missing.length) {
-        console.warn(
-          '[POS] ' +
-            missing.length +
-            ' cart line(s) missing variant_id — map items in menu-settings or set loyverse_variant_id',
-          missing.map(function (l) {
-            return (l.item || '') + (l.size ? '|' + l.size : '');
-          })
-        );
-      }
-      var body = {
-        client_id: clientId(),
-        store_id: resolveStoreId(opts),
-        order_ref: 'TTM-' + Date.now(),
-        note: 'TTmenus web order',
-        lines: lines,
-      };
-      if (!body.client_id) {
-        console.warn('[POS] missing client_id');
-        return Promise.resolve({ ok: false, error: 'missing_client_id' });
-      }
-      if (!body.store_id) {
-        console.warn('[POS] no store_id on location or POS_CONFIG — Loyverse may use first store');
-      }
-      return fetch(apiBase() + '/api/v1/loyverse/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(body),
-      })
-        .then(function (res) {
+      return Promise.all([ensureMenuCatalog(), ensureItemMapping()]).then(function () {
+        var lines = buildLinesFromOrder(orderArr);
+        var missing = lines.filter(function (l) {
+          return !l.variant_id;
+        });
+        if (missing.length) {
+          console.warn(
+            '[POS] ' +
+              missing.length +
+              ' cart line(s) missing variant_id — map items in menu-settings or set loyverse_variant_id',
+            missing.map(function (l) {
+              return (l.item || '') + (l.size ? '|' + l.size : '');
+            })
+          );
+        }
+        var body = {
+          client_id: clientId(),
+          store_id: resolveStoreId(opts),
+          order_ref: 'TTM-' + Date.now(),
+          note: 'TTmenus web order',
+          lines: lines,
+        };
+        if (!body.client_id) {
+          console.warn('[POS] missing client_id');
+          return { ok: false, error: 'missing_client_id' };
+        }
+        if (!body.store_id) {
+          console.warn('[POS] no store_id on location or POS_CONFIG — Loyverse may use first store');
+        }
+        return fetch(apiBase() + '/api/v1/loyverse/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(body),
+        }).then(function (res) {
           return res.json().then(function (data) {
             if (!res.ok) {
               console.warn('[POS] order failed', res.status, data);
@@ -208,11 +313,11 @@
             console.log('[POS] receipt created', data);
             return { ok: true, data: data };
           });
-        })
-        .catch(function (err) {
-          console.warn('[POS] order error', err);
-          return { ok: false, error: String(err) };
         });
+      }).catch(function (err) {
+        console.warn('[POS] order error', err);
+        return { ok: false, error: String(err) };
+      });
     },
 
     getStatus: function () {

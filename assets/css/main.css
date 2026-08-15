@@ -1888,7 +1888,11 @@ transition: all .2s ease; user-select: none; font-size: .9em; margin-inline: .8e
 
 .hero_logo_container {
     overflow: hidden;
-    position: relative
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center
 }
 
 .logo_container {

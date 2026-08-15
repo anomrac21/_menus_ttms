@@ -21,7 +21,9 @@
   visibility: hidden;
   pointer-events: none;
   box-sizing: border-box;
+  padding-top: constant(safe-area-inset-top, 0px);
   padding-top: var(--ttms-safe-top, env(safe-area-inset-top, 0px));
+  padding-bottom: constant(safe-area-inset-bottom, 0px);
   padding-bottom: var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px));
   overscroll-behavior: none;
 }
