@@ -238,6 +238,50 @@
 
 
 
+  function phaseLabel(ev) {
+
+    var phase = String((ev && ev.phase) || '').toLowerCase();
+
+    var source = String((ev && ev.source) || '').toLowerCase();
+
+    var labels = {
+
+      started: 'Rebuild started',
+
+      test_build: 'Rebuild started',
+
+      deploy: 'Cluster rollout',
+
+      health_check: 'Live check',
+
+      success: 'Live',
+
+      failure: 'Failed',
+
+      theme: 'Theme rollout',
+
+    };
+
+    var label = labels[phase] || (ev && ev.phase) || '—';
+
+    if (source === 'hugo-theme' && phase !== 'theme') {
+
+      return 'Theme · ' + label;
+
+    }
+
+    if (source === 'hugo-rebuild' && (phase === 'started' || phase === 'deploy')) {
+
+      return label;
+
+    }
+
+    return label;
+
+  }
+
+
+
   function renderHistoryTable(events) {
 
     var tbody = document.getElementById('dashboardDeployHistoryBody');
@@ -286,7 +330,7 @@
 
       '<td><span class="dashboard-deploy-phase">' +
 
-      (ev.phase || '—') +
+      phaseLabel(ev) +
 
       '</span></td>' +
 
@@ -642,7 +686,7 @@
 
               ? cachedEvents.length + ' event(s) · live updates enabled'
 
-              : 'No deploy events yet — they appear when the Hugo cluster pipeline runs.';
+              : 'No deploy events yet — they appear when a git push rebuilds this site on the cluster.';
 
         }
 
