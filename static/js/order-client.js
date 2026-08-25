@@ -65,6 +65,12 @@
 
   async function request(method, path, body) {
     var token = getToken();
+    if (!token && global.AuthClient && typeof global.AuthClient.ensureAccessToken === 'function') {
+      try {
+        await global.AuthClient.ensureAccessToken();
+      } catch (_) {}
+      token = getToken();
+    }
     if (!token) {
       throw new Error('Sign in required to order');
     }
@@ -84,7 +90,13 @@
     var qs = path.indexOf('?') >= 0 ? '&' : '?';
     var url = apiBase() + path;
     if (cid && url.indexOf('client_id=') === -1) url += qs + 'client_id=' + encodeURIComponent(cid);
-    var res = await fetch(url, opts);
+    var res;
+    try {
+      res = await fetch(url, opts);
+    } catch (e) {
+      var why = e && e.message ? e.message : String(e);
+      throw new Error('Cannot reach ' + url + ' (' + why + ')');
+    }
     var data = null;
     try {
       data = await res.json();

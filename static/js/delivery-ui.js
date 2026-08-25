@@ -13,6 +13,63 @@
     return !!(window.DELIVERY_CONFIG && window.DELIVERY_CONFIG.enabled);
   }
 
+  var closeTimer = null;
+  var bodyFreshTimer = null;
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function setPanelCopy(title, sub) {
+    ensurePanel();
+    var h = $('ttms-delivery-title');
+    var s = $('ttms-delivery-sub');
+    if (h) h.textContent = title || 'Deliver with TTMenus';
+    if (s) s.textContent = sub || '';
+  }
+
+  function closePanel() {
+    var panel = $('ttms-delivery-panel');
+    if (!panel || panel.hidden) return;
+    if (closeTimer) {
+      window.clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    panel.classList.remove('is-opening');
+    document.body.classList.remove('ttms-delivery-open');
+    if (prefersReducedMotion()) {
+      panel.hidden = true;
+      panel.classList.remove('is-open', 'is-closing');
+      return;
+    }
+    panel.classList.add('is-closing');
+    closeTimer = window.setTimeout(function () {
+      panel.hidden = true;
+      panel.classList.remove('is-closing', 'is-open');
+      closeTimer = null;
+    }, 300);
+  }
+
+  function openPanel() {
+    var panel = ensurePanel();
+    if (closeTimer) {
+      window.clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    var alreadyOpen = !panel.hidden && panel.classList.contains('is-open') && !panel.classList.contains('is-closing');
+    panel.classList.remove('is-closing');
+    panel.hidden = false;
+    panel.classList.add('is-open');
+    document.body.classList.add('ttms-delivery-open');
+    if (alreadyOpen || prefersReducedMotion()) return;
+    panel.classList.remove('is-opening');
+    void panel.offsetWidth;
+    panel.classList.add('is-opening');
+    window.setTimeout(function () {
+      panel.classList.remove('is-opening');
+    }, 520);
+  }
+
   function ensurePanel() {
     var existing = $('ttms-delivery-panel');
     if (existing) return existing;
@@ -24,24 +81,49 @@
       '<div class="ttms-delivery-panel__backdrop" data-close="1"></div>' +
       '<div class="ttms-delivery-panel__sheet" role="dialog" aria-modal="true" aria-labelledby="ttms-delivery-title">' +
       '<header class="ttms-delivery-panel__header">' +
-      '<h2 id="ttms-delivery-title">Delivery</h2>' +
-      '<button type="button" class="ttms-delivery-panel__close" data-close="1" aria-label="Close">&times;</button>' +
+      '<div class="ttms-delivery-panel__brand">' +
+      '<span class="ttms-delivery-panel__logo-wrap" aria-hidden="true">' +
+      '<img class="ttms-delivery-panel__logo" src="/branding/favicon192.webp" alt="" width="32" height="32">' +
+      '</span>' +
+      '<div>' +
+      '<h2 id="ttms-delivery-title">Deliver with TTMenus</h2>' +
+      '<p class="ttms-delivery-panel__sub" id="ttms-delivery-sub">Drop-off for nearby drivers</p>' +
+      '</div></div>' +
+      '<button type="button" class="ttms-delivery-panel__close" data-close="1" aria-label="Close">' +
+      '<i class="fa fa-times" aria-hidden="true"></i></button>' +
       '</header>' +
       '<div class="ttms-delivery-panel__body" id="ttms-delivery-body"></div>' +
       '</div>';
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
-      if (e.target && e.target.getAttribute('data-close')) {
-        el.hidden = true;
+      if (e.target && e.target.closest('[data-close]')) {
+        closePanel();
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.classList.contains('is-open') && !el.hidden) {
+        closePanel();
       }
     });
     return el;
   }
 
   function show(html) {
-    var panel = ensurePanel();
-    $('ttms-delivery-body').innerHTML = html;
-    panel.hidden = false;
+    ensurePanel();
+    var body = $('ttms-delivery-body');
+    if (bodyFreshTimer) {
+      window.clearTimeout(bodyFreshTimer);
+      bodyFreshTimer = null;
+    }
+    body.classList.remove('is-fresh');
+    body.innerHTML = html;
+    openPanel();
+    void body.offsetWidth;
+    body.classList.add('is-fresh');
+    bodyFreshTimer = window.setTimeout(function () {
+      body.classList.remove('is-fresh');
+      bodyFreshTimer = null;
+    }, 700);
   }
 
   var CONTACT_KEY = 'ttms_delivery_contact';
@@ -90,6 +172,32 @@
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;');
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function statusLabel(status) {
+    var map = {
+      requested: 'Finding drivers',
+      offered: 'Drivers available',
+      accepted: 'Driver accepted',
+      awaiting_client: 'Restaurant reviewing',
+      payment_pending: 'Payment needed',
+      preparing: 'Kitchen preparing',
+      ready: 'Ready for pickup',
+      picked_up: 'Picked up',
+      delivering: 'On the way',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled',
+    };
+    var key = String(status || '');
+    return map[key] || key.replace(/_/g, ' ') || 'Updating';
   }
 
   function readLocalContact() {
@@ -146,50 +254,13 @@
     } catch (_) {}
   }
 
-  async function placeDeliveryOrder(dropoff) {
-    if (!window.DeliveryClient) throw new Error('Delivery client missing');
-    if (!window.AuthClient || !AuthClient.isAuthenticated()) {
-      throw new Error('Please sign in to place a delivery order');
-    }
-    var cfg = window.DELIVERY_CONFIG || {};
-    var items = cartSnapshot();
-    var subtotal = cartSubtotal();
-    if (!items.length || !(subtotal > 0)) {
-      throw new Error('Add items to your cart before requesting delivery');
-    }
-    var order;
-    if (window.OrderClient && window.OrderClient.enabled()) {
-      var oc = window.ORDER_CONFIG || {};
-      var created = await window.OrderClient.create({
-        client_id: cfg.clientId || oc.clientId,
-        client_domain: cfg.clientDomain,
-        restaurant_name: cfg.restaurantName || document.title,
-        restaurant_lat: cfg.restaurantLat || 0,
-        restaurant_lng: cfg.restaurantLng || 0,
-        customer_name: dropoff.name || '',
-        customer_phone: dropoff.phone || '',
-        fulfillment: 'delivery',
-        notes: dropoff.notes || '',
-        cart_json: items,
-        currency: cfg.currency || 'TTD',
-        subtotal: subtotal,
-        total: subtotal + (cfg.deliveryFee || 0),
-        loyverse_receipt_mode: (oc.loyverseReceiptMode || 'on_payment'),
-        kitchen_print: oc.kitchenPrint !== false,
-        delivery: {
-          address: dropoff.address || '',
-          lat: dropoff.lat,
-          lng: dropoff.lng,
-          fee: cfg.deliveryFee || 0,
-        },
-      });
-      if (created && created.delivery_order_id) {
-        order = await DeliveryClient.getOrder(created.delivery_order_id);
-      } else {
-        throw new Error(created.delivery_error || 'Delivery job did not start');
-      }
-    } else {
-      order = await DeliveryClient.createOrder({
+  function isUnreachable(err) {
+    var msg = err && err.message ? String(err.message) : String(err || '');
+    return /Failed to fetch|Cannot reach|NetworkError|Load failed|ERR_NAME_NOT_RESOLVED/i.test(msg);
+  }
+
+  async function createFleetOrder(dropoff, items, subtotal, cfg) {
+    return DeliveryClient.createOrder({
       client_id: cfg.clientId,
       client_domain: cfg.clientDomain,
       restaurant_name: cfg.restaurantName || document.title,
@@ -206,15 +277,72 @@
       subtotal: subtotal,
       delivery_fee: cfg.deliveryFee || 0,
     });
+  }
+
+  async function placeDeliveryOrder(dropoff) {
+    if (!window.DeliveryClient) throw new Error('Delivery client missing');
+    if (window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
+      try {
+        await AuthClient.ensureAccessToken();
+      } catch (_) {}
     }
-    return order;
+    if (!window.AuthClient || !AuthClient.isAuthenticated()) {
+      throw new Error('Please sign in to place a delivery order');
+    }
+    var cfg = window.DELIVERY_CONFIG || {};
+    var items = cartSnapshot();
+    var subtotal = cartSubtotal();
+    if (!items.length || !(subtotal > 0)) {
+      throw new Error('Add items to your cart before requesting delivery');
+    }
+    if (window.OrderClient && window.OrderClient.enabled()) {
+      var oc = window.ORDER_CONFIG || {};
+      try {
+        var created = await window.OrderClient.create({
+          client_id: cfg.clientId || oc.clientId,
+          client_domain: cfg.clientDomain,
+          restaurant_name: cfg.restaurantName || document.title,
+          restaurant_lat: cfg.restaurantLat || 0,
+          restaurant_lng: cfg.restaurantLng || 0,
+          customer_name: dropoff.name || '',
+          customer_phone: dropoff.phone || '',
+          fulfillment: 'delivery',
+          notes: dropoff.notes || '',
+          cart_json: items,
+          currency: cfg.currency || 'TTD',
+          subtotal: subtotal,
+          total: subtotal + (cfg.deliveryFee || 0),
+          loyverse_receipt_mode: (oc.loyverseReceiptMode || 'on_payment'),
+          kitchen_print: oc.kitchenPrint !== false,
+          delivery: {
+            address: dropoff.address || '',
+            lat: dropoff.lat,
+            lng: dropoff.lng,
+            fee: cfg.deliveryFee || 0,
+          },
+        });
+        if (created && created.delivery_order_id) {
+          return DeliveryClient.getOrder(created.delivery_order_id);
+        }
+        throw new Error(created.delivery_error || 'Delivery job did not start');
+      } catch (err) {
+        if (!isUnreachable(err)) throw err;
+      }
+    }
+    return createFleetOrder(dropoff, items, subtotal, cfg);
   }
 
   async function showDriverOffers(orderId) {
+    setPanelCopy('Nearby drivers', 'Choose a driver to start your delivery');
     show(
-      '<p class="ttms-delivery-status">Waiting for nearby drivers…</p>' +
+      '<div class="ttms-delivery-status">' +
+        '<span class="ttms-delivery-status__pulse" aria-hidden="true"></span>' +
+        '<div><strong>Listening for nearby drivers</strong>' +
+        '<p>Offers appear as drivers accept the request.</p></div></div>' +
         '<ul id="ttms-driver-offers" class="ttms-driver-offers"></ul>' +
-        '<p><button type="button" class="btn" id="ttms-refresh-offers">Refresh</button></p>' +
+        '<div class="ttms-delivery-actions">' +
+        '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-refresh-offers">' +
+        '<i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button></div>' +
         '<div id="ttms-delivery-track-slot"></div>'
     );
     async function refresh() {
@@ -223,14 +351,16 @@
       ul.innerHTML = '';
       (res.offers || []).forEach(function (o) {
         var d = o.driver || {};
+        var name = d.display_name || d.email || 'Driver #' + o.driver_id;
+        var dist = o.distance_m ? (o.distance_m / 1000).toFixed(1) + ' km away' : 'Nearby';
         var li = document.createElement('li');
         li.innerHTML =
-          '<strong>' +
-          (d.display_name || d.email || 'Driver #' + o.driver_id) +
-          '</strong>' +
-          ' · ' +
-          (o.distance_m ? (o.distance_m / 1000).toFixed(1) + ' km' : '') +
-          ' <button type="button" data-driver="' +
+          '<div class="ttms-driver-offer__copy"><strong>' +
+          escapeHtml(name) +
+          '</strong><div class="ttms-driver-offer__meta">' +
+          escapeHtml(dist) +
+          '</div></div>' +
+          '<button type="button" data-driver="' +
           o.driver_id +
           '">Accept</button>';
         ul.appendChild(li);
@@ -264,35 +394,37 @@
 
   function showOrderStatus(order) {
     if (!order) return;
+    setPanelCopy(statusLabel(order.status), 'Order ' + order.id);
     var pay = '';
     if (order.status === 'payment_pending' && order.payment_url) {
       pay =
-        '<p><a class="btn" href="' +
-        order.payment_url +
-        '" target="_blank" rel="noopener">Pay now (' +
-        order.total +
+        '<div class="ttms-delivery-actions"><a class="ttms-delivery-cta ttms-delivery-cta--primary" href="' +
+        escapeAttr(order.payment_url) +
+        '" target="_blank" rel="noopener">Pay now · ' +
+        escapeHtml(order.total) +
         ' ' +
-        order.currency +
-        ')</a></p>';
+        escapeHtml(order.currency) +
+        '</a></div>';
     }
     var scan = '';
     if (order.status === 'delivering' || order.status === 'picked_up') {
       scan =
         '<div class="ttms-delivery-scan">' +
-        '<label>Scan driver QR to confirm receipt</label>' +
-        '<input type="text" id="ttms-delivery-qr-input" placeholder="Paste or scan QR token" />' +
-        '<button type="button" class="btn" id="ttms-confirm-delivery">Confirm received</button>' +
+        '<label for="ttms-delivery-qr-input">Scan driver QR to confirm receipt</label>' +
+        '<input type="text" id="ttms-delivery-qr-input" placeholder="Paste or scan QR token" autocomplete="off" />' +
+        '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-confirm-delivery">Confirm received</button>' +
         '</div>';
     }
     show(
-      '<p><strong>Status:</strong> ' +
-        order.status +
-        '</p>' +
-        '<p>Order <code>' +
-        order.id +
-        '</code></p>' +
+      '<div class="ttms-delivery-status ttms-delivery-status-card">' +
+        '<span class="ttms-delivery-status__pulse" aria-hidden="true"></span>' +
+        '<div><strong>' +
+        escapeHtml(statusLabel(order.status)) +
+        '</strong><p>Order <code>' +
+        escapeHtml(order.id) +
+        '</code></p></div></div>' +
         pay +
-        '<div id="ttms-live-map" class="ttms-live-map" aria-live="polite">Tracking driver…</div>' +
+        '<div id="ttms-live-map" class="ttms-live-map" aria-live="polite">Waiting for driver location…</div>' +
         scan
     );
     if (scan) {
@@ -340,39 +472,67 @@
         if (profile && profile.success) saved = contactFromAccount();
       } catch (_) {}
     }
+    setPanelCopy('Deliver with TTMenus', 'Where should we send this order?');
     show(
       '<form id="ttms-delivery-form" class="ttms-delivery-form">' +
-        '<label>Name<input name="name" required value="' +
+        '<p class="ttms-delivery-lede">Share a drop-off so nearby drivers can bid. Your pin is only used for this delivery.</p>' +
+        '<div class="ttms-delivery-grid">' +
+        '<label class="ttms-delivery-field"><span>Name</span>' +
+        '<input name="name" required value="' +
         escapeAttr(saved.name) +
         '" autocomplete="name" /></label>' +
-        '<label>Phone<input name="phone" required value="' +
+        '<label class="ttms-delivery-field"><span>Phone</span>' +
+        '<input name="phone" required value="' +
         escapeAttr(saved.phone) +
-        '" autocomplete="tel" /></label>' +
-        '<label>Address<input name="address" required value="' +
+        '" autocomplete="tel" inputmode="tel" /></label>' +
+        '<label class="ttms-delivery-field ttms-delivery-field--wide"><span>Address</span>' +
+        '<input name="address" required value="' +
         escapeAttr(saved.address) +
         '" autocomplete="street-address" /></label>' +
-        '<label>Latitude<input name="lat" type="number" step="any" required value="' +
+        '<label class="ttms-delivery-field ttms-delivery-field--wide"><span>Notes for the driver</span>' +
+        '<textarea name="notes" placeholder="Gate code, landmark, or floor"></textarea></label>' +
+        '</div>' +
+        '<div class="ttms-delivery-pin">' +
+        '<div class="ttms-delivery-pin__head"><strong>Drop-off pin</strong>' +
+        '<span>Needed so drivers see distance</span></div>' +
+        '<div class="ttms-delivery-coords">' +
+        '<label class="ttms-delivery-field"><span>Latitude</span>' +
+        '<input name="lat" type="number" step="any" required value="' +
         escapeAttr(saved.lat) +
         '" /></label>' +
-        '<label>Longitude<input name="lng" type="number" step="any" required value="' +
+        '<label class="ttms-delivery-field"><span>Longitude</span>' +
+        '<input name="lng" type="number" step="any" required value="' +
         escapeAttr(saved.lng) +
-        '" /></label>' +
-        '<label>Notes<textarea name="notes"></textarea></label>' +
-        '<button type="button" class="btn" id="ttms-use-gps">Use my location</button>' +
-        '<button type="submit" class="btn btn-primary">Find drivers</button>' +
+        '" /></label></div></div>' +
+        '<div class="ttms-delivery-actions">' +
+        '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-use-gps">' +
+        '<i class="fa fa-location-arrow" aria-hidden="true"></i> Use my location</button>' +
+        '<button type="submit" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-find-drivers">' +
+        'Find drivers</button></div>' +
         '</form>'
     );
-    $('ttms-use-gps').onclick = function () {
+    var gpsBtn = $('ttms-use-gps');
+    gpsBtn.onclick = function () {
       if (!navigator.geolocation) return alert('Geolocation unavailable');
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        var form = $('ttms-delivery-form');
-        form.lat.value = pos.coords.latitude;
-        form.lng.value = pos.coords.longitude;
-      });
+      gpsBtn.classList.add('is-locating', 'is-busy');
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          var form = $('ttms-delivery-form');
+          form.lat.value = pos.coords.latitude;
+          form.lng.value = pos.coords.longitude;
+          gpsBtn.classList.remove('is-locating', 'is-busy');
+        },
+        function () {
+          gpsBtn.classList.remove('is-locating', 'is-busy');
+          alert('Could not read your location');
+        },
+        { enableHighAccuracy: true, timeout: 12000 }
+      );
     };
     $('ttms-delivery-form').onsubmit = async function (e) {
       e.preventDefault();
       var form = e.target;
+      var submitBtn = $('ttms-find-drivers');
       var dropoff = {
         name: form.name.value,
         phone: form.phone.value,
@@ -381,14 +541,22 @@
         lng: Number(form.lng.value),
         notes: form.notes.value,
       };
+      if (submitBtn) submitBtn.classList.add('is-busy');
       try {
         await saveDeliveryContact(dropoff);
         var order = await placeDeliveryOrder(dropoff);
         await showDriverOffers(order.id);
       } catch (err) {
+        if (submitBtn) submitBtn.classList.remove('is-busy');
         alert(err.message || String(err));
       }
     };
+    var nameInput = document.querySelector('#ttms-delivery-form input[name="name"]');
+    if (nameInput && nameInput.focus) {
+      window.setTimeout(function () {
+        nameInput.focus();
+      }, 280);
+    }
   }
 
   function injectCartButton() {

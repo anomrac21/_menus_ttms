@@ -5,17 +5,29 @@
 (function (global) {
   'use strict';
 
+  function unwrapUrl(value, fallback) {
+    var s = value == null ? '' : String(value).trim();
+    while (
+      s.length >= 2 &&
+      ((s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') ||
+        (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'"))
+    ) {
+      s = s.slice(1, -1).trim();
+    }
+    return (s || fallback || '').replace(/\/$/, '');
+  }
+
   function cfg() {
     return global.DELIVERY_CONFIG || {};
   }
 
   function apiBase() {
-    return (cfg().apiUrl || 'https://delivery.ttmenus.com/api/v1').replace(/\/$/, '');
+    return unwrapUrl(cfg().apiUrl, 'https://delivery.ttmenus.com/api/v1');
   }
 
   function wsBase() {
-    var u = cfg().wsUrl || '';
-    if (u) return u.replace(/\/$/, '');
+    var u = unwrapUrl(cfg().wsUrl, '');
+    if (u) return u;
     var http = apiBase().replace(/\/api\/v1$/, '');
     return http.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:') + '/api/v1';
   }
@@ -31,13 +43,28 @@
     }
   }
 
-  async function request(method, path, body) {
+  async function ensureToken() {
     var token = getToken();
+    if (token) return token;
+    if (global.AuthClient && typeof global.AuthClient.ensureAccessToken === 'function') {
+      try {
+        await global.AuthClient.ensureAccessToken();
+      } catch (e) {
+        /* fall through */
+      }
+    }
+    return getToken();
+  }
+
+  async function request(method, path, body) {
+    var token = await ensureToken();
     if (!token) {
       throw new Error('Sign in required for delivery');
     }
     var opts = {
       method: method,
+      credentials: 'omit',
+      mode: 'cors',
       headers: {
         Authorization: 'Bearer ' + token,
         Accept: 'application/json',
@@ -47,7 +74,14 @@
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
-    var res = await fetch(apiBase() + path, opts);
+    var url = apiBase() + path;
+    var res;
+    try {
+      res = await fetch(url, opts);
+    } catch (e) {
+      var why = e && e.message ? e.message : String(e);
+      throw new Error('Cannot reach ' + url + ' (' + why + ')');
+    }
     var data = null;
     try {
       data = await res.json();
