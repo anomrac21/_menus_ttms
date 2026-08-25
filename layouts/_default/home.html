@@ -1,4 +1,5 @@
 {{ define "main" }}
+  {{- partial "menu/warn-generated-tree.html" . -}}
   {{- $multi := partial "menu/multi-location-enabled.html" . -}}
   {{- if $multi -}}
     <div class="multi-loc-home">

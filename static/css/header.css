@@ -24,6 +24,23 @@
 }
 
 /* ============================================
+   SITE HEADER WRAPPER (fixed chrome around .main-header)
+   ============================================ */
+
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    width: -webkit-fill-available;
+    z-index: var(--ttms-z-header, 100);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ============================================
    MAIN HEADER CONTAINER
    ============================================ */
 

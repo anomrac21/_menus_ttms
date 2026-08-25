@@ -2,26 +2,11 @@
 {{- $siteName := site.Title | default "Menu Demo" -}}
 {{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
 <div class="dashboard-analytics-page dashboard-settings-page dashboard-deploy-page dashboard-control-room" id="dashboardDeploymentsPage">
-  <header class="dashboard-edit-header dashboard-settings-header dashboard-header-bar dashboard-subpage-header-bar" aria-label="Deploy history toolbar">
-    <a href="/dashboard/" class="dashboard-logo-link" aria-label="Back to dashboard" title="Back to dashboard">
-      <span class="dashboard-logo-frame" aria-hidden="true">
-        <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
-      </span>
-      <span class="dashboard-logo-live-badge dashboard-deploy-status-badge" id="dashboardDeployStatusBadge" data-state="unknown" title="Site deploy status">History</span>
-    </a>
-    <div class="dashboard-header-main">
-      <p class="dashboard-header-kicker">
-        <span class="dashboard-header-kicker-dot dashboard-deploy-status-dot" id="dashboardDeployStatusDot" aria-hidden="true"></span>
-        Deploy history
-      </p>
-      <h1 class="dashboard-header-site">{{ $siteName }}</h1>
-    </div>
-    <div class="dashboard-header-end">
-      <a href="/dashboard/" class="dashboard-header-close" title="Close deploy history" aria-label="Close deploy history">
-        <i class="fa fa-times" aria-hidden="true"></i>
-      </a>
-    </div>
-  </header>
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Deploy history"
+    "toolbarLabel" "Deploy history toolbar"
+    "closeTitle" "Close deploy history"
+  ) }}
 
   <main class="dashboard-analytics-main dashboard-settings-main dashboard-deploy-history-main" id="main">
     <section class="dashboard-settings-panel dashboard-settings-panel--deploy" aria-labelledby="deploy-history-heading">
@@ -61,7 +46,6 @@ window.SITE_DISPLAY_NAME = {{ $siteName | jsonify }};
 window.SITE_CLIENT_ID = window.CLIENT_ID || {{ (site.Params.contentManagement.clientId | default "_ttms_menu_demo") | jsonify }};
 window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
 </script>
-<script src="{{ partial "head/asset-url.html" "/js/dashboard-deploy-status.js" }}" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
   if (window.AuthClient && typeof AuthClient.whenReady === 'function') {

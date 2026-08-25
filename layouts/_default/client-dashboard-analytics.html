@@ -12,30 +12,16 @@
   {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
 {{- end -}}
 
-<div class="dashboard-analytics-page dashboard-analytics-page--full" id="dashboardAnalyticsPage" data-site-tier="{{ $tier }}">
-
-  <div class="dashboard-edit-header dashboard-analytics-header">
-
-    <div class="dashboard-edit-header-inner">
-
-      <div class="dashboard-analytics-header-start">
-
-        <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-
-        <div class="dashboard-analytics-header-text">
-
-          <h1 class="dashboard-edit-title">Analytics</h1>
-
-        </div>
-
-      </div>
-
-      <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary dashboard-analytics-external-link" target="_blank" rel="noopener"{{ if not $isPaid }} hidden{{ end }}><i class="fa fa-external-link" aria-hidden="true"></i> Open analytics</a>
-      <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-primary dashboard-analytics-upgrade-link" target="_blank" rel="noopener"{{ if $isPaid }} hidden{{ end }}><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade</a>
-
-    </div>
-
-  </div>
+<div class="dashboard-analytics-page dashboard-analytics-page--full dashboard-control-room" id="dashboardAnalyticsPage" data-site-tier="{{ $tier }}">
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Analytics"
+    "toolbarLabel" "Analytics toolbar"
+    "closeTitle" "Close analytics"
+    "buttons" (slice
+      (dict "href" "https://analytics.ttmenus.com" "label" "Open analytics" "class" "btn-dash btn-dash-secondary dashboard-analytics-external-link" "icon" "fa-external-link" "target" "_blank" "rel" "noopener" "hidden" (not $isPaid))
+      (dict "href" (printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery)) "label" "Upgrade" "class" "btn-dash btn-dash-primary dashboard-analytics-upgrade-link" "icon" "fa-arrow-up" "target" "_blank" "rel" "noopener" "hidden" $isPaid)
+    )
+  ) }}
 
 
 

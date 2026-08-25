@@ -73,6 +73,12 @@
     position: relative;
     pointer-events: none;
 }
+
+main.main--offset ~ .bottomads #pageadscontainer {
+    height: auto;
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    pointer-events: auto;
+}
 .menu-ad-promo-label {
     right: 0.8em;
     position: absolute;

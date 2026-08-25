@@ -194,6 +194,45 @@
     btn.title = favorited ? 'Remove from favorites' : 'Save to favorites';
   }
 
+  function prefersReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function spawnFavoriteBurst(btn, adding) {
+    if (prefersReducedMotion() || !btn.getBoundingClientRect) return;
+    var rect = btn.getBoundingClientRect();
+    var host = document.createElement('span');
+    host.className = 'menu-favorite-burst' + (adding ? ' is-add' : ' is-remove');
+    host.setAttribute('aria-hidden', 'true');
+    host.style.left = rect.left + rect.width / 2 + 'px';
+    host.style.top = rect.top + rect.height / 2 + 'px';
+    var ring = document.createElement('span');
+    ring.className = 'menu-favorite-burst__ring';
+    host.appendChild(ring);
+    var count = adding ? 8 : 6;
+    for (var i = 0; i < count; i++) {
+      var p = document.createElement('span');
+      p.className = 'menu-favorite-burst__particle';
+      p.style.setProperty('--a', i * (360 / count) + 'deg');
+      host.appendChild(p);
+    }
+    document.body.appendChild(host);
+    setTimeout(function () {
+      if (host.parentNode) host.parentNode.removeChild(host);
+    }, 780);
+  }
+
+  function playFavoriteMotion(btn, adding) {
+    btn.classList.remove('is-favorite-pop', 'is-favorite-drop');
+    void btn.offsetWidth;
+    btn.classList.add(adding ? 'is-favorite-pop' : 'is-favorite-drop');
+    spawnFavoriteBurst(btn, adding);
+    clearTimeout(btn._favoriteMotionT);
+    btn._favoriteMotionT = setTimeout(function () {
+      btn.classList.remove('is-favorite-pop', 'is-favorite-drop');
+    }, 720);
+  }
+
   async function refreshFavoriteStates() {
     FAVORITE_KINDS.forEach(function (kind) {
       favoriteKeySets[kind] = new Set();
@@ -234,6 +273,19 @@
 
     var keys = keysForKind(kind);
     var favorited = keys.has(itemKey);
+    var willFavorite = !favorited;
+    if (willFavorite) {
+      setButtonState(btn, true);
+    }
+    playFavoriteMotion(btn, willFavorite);
+    if (!willFavorite) {
+      clearTimeout(btn._favoriteUnfillT);
+      btn._favoriteUnfillT = setTimeout(function () {
+        if (btn.classList.contains('is-favorite-drop')) {
+          setButtonState(btn, false);
+        }
+      }, 240);
+    }
     btn.classList.add('is-busy');
 
     var result;
@@ -261,6 +313,9 @@
     btn.classList.remove('is-busy');
 
     if (!result.success) {
+      clearTimeout(btn._favoriteUnfillT);
+      btn.classList.remove('is-favorite-pop', 'is-favorite-drop');
+      setButtonState(btn, favorited);
       showToast(result.error || 'Could not update favorite.');
       return;
     }

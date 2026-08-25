@@ -1,0 +1,42 @@
+{{ define "main" }}
+<div class="dashboard-orders-page dashboard-control-room" id="dashboardOrdersPage">
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Open tickets"
+    "toolbarLabel" "Orders toolbar"
+    "closeTitle" "Close orders"
+    "buttons" (slice (dict "href" "/dashboard/kitchen/" "label" "Kitchen" "class" "btn-dash btn-dash-secondary" "title" "Kitchen station"))
+  ) }}
+
+  <main class="dashboard-orders-main" id="main">
+    <section class="dashboard-orders-inbox" aria-labelledby="orders-inbox-heading">
+      <div class="dashboard-orders-inbox-head">
+        <span class="dashboard-orders-inbox-icon" aria-hidden="true"><i class="fa fa-ticket"></i></span>
+        <div class="dashboard-orders-inbox-copy">
+          <h2 id="orders-inbox-heading" class="dashboard-orders-heading">Orders inbox</h2>
+          <p class="dashboard-orders-status" id="dashboardOrdersStatus">Tickets from the menu cart.</p>
+        </div>
+        <label class="dashboard-orders-filter">
+          <span class="visually-hidden">Location</span>
+          <select id="dashboardOrdersLocation">
+            <option value="">All locations</option>
+          </select>
+        </label>
+        <label class="dashboard-orders-filter">
+          <span class="visually-hidden">Status</span>
+          <select id="dashboardOrdersFilter">
+            <option value="">Open + active</option>
+            <option value="open">Open</option>
+            <option value="ready">Ready</option>
+            <option value="paid">Paid</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="all">All</option>
+          </select>
+        </label>
+        <button type="button" class="btn-dash btn-dash-primary dashboard-orders-refresh" id="ttms-orders-refresh"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button>
+      </div>
+      <div id="ttms-orders-list" class="dashboard-orders-list"></div>
+    </section>
+  </main>
+</div>
+<script src="{{ partial "head/asset-url.html" "/js/order-dashboard.js" }}" defer></script>
+{{ end }}

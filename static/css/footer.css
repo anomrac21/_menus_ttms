@@ -413,8 +413,16 @@
     max-width: 1.35rem !important;
     max-height: 1.35rem !important;
     display: block;
+    color: var(--footer-icon-color, var(--footer-text-color, #fff));
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
-    transition: transform 0.2s ease;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer-dock__icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
 }
 
 .footer-dock__label {
@@ -460,6 +468,34 @@
     display: none !important;
     width: auto !important;
     height: auto !important;
+}
+
+#cartcount.is-cart-badge-pop {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    animation: ttms-cart-badge-pop 0.46s cubic-bezier(0.22, 1.55, 0.36, 1) both;
+}
+
+@keyframes ttms-cart-badge-pop {
+    0% {
+        transform: scale(0.35);
+        filter: brightness(1.35);
+    }
+    38% {
+        transform: scale(1.4);
+        filter: brightness(1.15);
+    }
+    100% {
+        transform: scale(1);
+        filter: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #cartcount.is-cart-badge-pop {
+        animation: none;
+    }
 }
 
 /* Active settings tab */

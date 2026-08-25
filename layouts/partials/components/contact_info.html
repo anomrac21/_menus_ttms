@@ -1,21 +1,4 @@
-{{- $locations := site.Data.locations -}}
-{{- if $locations -}}
-  {{- if not (reflect.IsSlice $locations) -}}
-    {{- if $locations.locations -}}
-      {{- $locations = $locations.locations -}}
-    {{- else -}}
-      {{- $locSlice := slice -}}
-      {{- range $key, $value := site.Data.locations -}}
-        {{- $locSlice = $locSlice | append $value -}}
-      {{- end -}}
-      {{- $locations = $locSlice -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{- if not $locations -}}
-  {{- $locations = getJSON "data/locations.yaml" -}}
-  {{- with $locations.locations -}}{{- $locations = . -}}{{- end -}}
-{{- end -}}
+{{- $locations := partial "menu/visible-locations.html" . -}}
 {{- $locationCount := 0 -}}
 {{- if $locations -}}
   {{- if reflect.IsSlice $locations -}}
@@ -27,7 +10,7 @@
   <div class="contactinfo item location-picker">
     {{- if and $locations (gt $locationCount 0) -}}
     <div class="location-picker__header">
-      <h2 class="location-picker__title">Choose your location</h2>
+      <h2 class="location-picker__title">{{ if le $locationCount 1 }}Our location{{ else }}Choose your location{{ end }}</h2>
       <div class="location-picker__selected" id="locationPickerSelected" hidden>
         <span class="location-picker__selected-label">Ordering from</span>
         <strong class="location-picker__selected-name" id="locationPickerSelectedName"></strong>

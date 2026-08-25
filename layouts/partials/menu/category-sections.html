@@ -21,10 +21,21 @@
     {{- end -}}
   {{- end -}}
 {{- else -}}
-  {{- range site.Pages.ByWeight -}}
-    {{- if and (not .IsPage) (not .IsHome) .RegularPages -}}
+  {{- /* Top-level catalog sections. Use site.Sections — Home.Sections can drop
+       mounted .generated folders after a live merge. Skip /{location}/ trees. */ -}}
+  {{- $locSlugs := slice -}}
+  {{- with site.Data.locations -}}
+    {{- if reflect.IsSlice . -}}
+      {{- range . -}}{{- with .slug -}}{{- $locSlugs = $locSlugs | append . -}}{{- end -}}{{- end -}}
+    {{- else if .locations -}}
+      {{- range .locations -}}{{- with .slug -}}{{- $locSlugs = $locSlugs | append . -}}{{- end -}}{{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- range site.Sections.ByWeight -}}
+    {{- if .RegularPages -}}
       {{- $titleurl := .RelPermalink -}}
-      {{- if not (partial "menu/is-excluded-section.html" $titleurl) -}}
+      {{- $first := index (split (strings.TrimPrefix "/" $titleurl) "/") 0 -}}
+      {{- if and (not (in $locSlugs $first)) (not (partial "menu/is-excluded-section.html" $titleurl)) -}}
         {{- $out = $out | append . -}}
       {{- end -}}
     {{- end -}}

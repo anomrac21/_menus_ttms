@@ -395,6 +395,7 @@
     },
 
     resolveVariantId: resolveVariantId,
+    buildLinesFromOrder: buildLinesFromOrder,
   };
 
   global.posIntegration = posIntegration;

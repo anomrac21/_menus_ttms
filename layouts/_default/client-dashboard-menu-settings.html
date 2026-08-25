@@ -1,27 +1,10 @@
 {{ define "main" }}
-{{- $siteName := site.Title | default "Menu Demo" -}}
-{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
 <div class="dashboard-analytics-page dashboard-settings-page dashboard-control-room" id="dashboardMenuSettingsPage">
-  <header class="dashboard-edit-header dashboard-settings-header dashboard-header-bar dashboard-subpage-header-bar" aria-label="Menu settings toolbar">
-    <a href="/dashboard/" class="dashboard-logo-link" aria-label="Back to dashboard" title="Back to dashboard">
-      <span class="dashboard-logo-frame" aria-hidden="true">
-        <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
-      </span>
-      <span class="dashboard-logo-live-badge">Settings</span>
-    </a>
-    <div class="dashboard-header-main">
-      <p class="dashboard-header-kicker">
-        <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
-        Menu settings
-      </p>
-      <h1 class="dashboard-header-site">{{ $siteName }}</h1>
-    </div>
-    <div class="dashboard-header-end">
-      <a href="/dashboard/" class="dashboard-header-close" title="Close menu settings" aria-label="Close menu settings">
-        <i class="fa fa-times" aria-hidden="true"></i>
-      </a>
-    </div>
-  </header>
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Menu settings"
+    "toolbarLabel" "Menu settings toolbar"
+    "closeTitle" "Close menu settings"
+  ) }}
 
   <main class="dashboard-analytics-main dashboard-settings-main">
     {{ partial "dashboard/hero-settings-panel.html" . }}

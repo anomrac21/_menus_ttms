@@ -1806,7 +1806,11 @@
   function loadClientPageAdsIfPresent() {
     const container = document.getElementById('pageadscontainer');
     if (!container) return;
+    if (typeof window.syncMenuReelsDocumentMode === 'function') {
+      window.syncMenuReelsDocumentMode();
+    }
     if (document.getElementById('menu-reels-viewport')) return;
+    AdsClient._deferredAdsBound = false;
     if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
       window.AdsClient.loadAds();
     } else {

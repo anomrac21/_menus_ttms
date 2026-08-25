@@ -215,7 +215,39 @@
       if (userDataSectionOff) userDataSectionOff.style.display = 'none';
       var favContainer = document.getElementById('account-dashboard-favorites');
       if (favContainer) favContainer.innerHTML = '';
+      var ordersContainerOff = document.getElementById('account-dashboard-orders');
+      if (ordersContainerOff) ordersContainerOff.innerHTML = '';
     }
+  }
+
+  function renderMyOrders(orders) {
+    var host = document.getElementById('account-dashboard-orders');
+    var emptyEl = document.getElementById('account-dashboard-orders-empty');
+    if (!host) return;
+    host.innerHTML = '';
+    if (!orders || !orders.length) {
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    host.innerHTML = orders
+      .slice(0, 20)
+      .map(function (o) {
+        return (
+          '<p class="account-dashboard-order-row"><strong>#' +
+          escapeHtmlFav(o.ticket_number || o.order_ref) +
+          '</strong> · ' +
+          escapeHtmlFav(o.status) +
+          ' · ' +
+          escapeHtmlFav(o.fulfillment || '') +
+          ' · ' +
+          escapeHtmlFav(o.currency || '') +
+          ' ' +
+          Number(o.total || 0).toFixed(2) +
+          '</p>'
+        );
+      })
+      .join('');
   }
 
   async function fetchAndDisplayUserData() {
@@ -224,6 +256,16 @@
     }
     if (!AuthClient.isAuthenticated()) {
       return;
+    }
+
+    if (window.OrderClient && window.OrderClient.enabled()) {
+      window.OrderClient.mine()
+        .then(function (res) {
+          renderMyOrders((res && res.orders) || []);
+        })
+        .catch(function () {
+          renderMyOrders([]);
+        });
     }
 
     var container = document.getElementById('account-dashboard-favorites');

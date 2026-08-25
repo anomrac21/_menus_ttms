@@ -15,10 +15,11 @@
 <div class="card card-ordering is-collapsed" data-dashboard-card="ordering" id="orderingSystemPanel">
   <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="ordering" aria-expanded="false" aria-controls="dashboardCardBody-ordering">
     <h3 class="dashboard-card-title"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Ordering system</h3>
+    <span class="dashboard-card-count is-loading" id="dashboardCardOrderingCount" aria-label="Locations" aria-busy="true"></span>
     <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
   </button>
   <div class="dashboard-card-body" id="dashboardCardBody-ordering">
-    <p class="dashboard-card-desc">Cart, checkout, and ordering behaviour.</p>
+    <p class="dashboard-card-desc">{{ if $posOn }}Cart, checkout, and how guest orders reach your Loyverse till.{{ else }}Cart, checkout, and how guests place an order.{{ end }}</p>
     <form id="orderingSystemForm" class="dashboard-settings-form dashboard-ordering-form" autocomplete="off" data-os-hastables="{{ if default true $os.hastables }}true{{ else }}false{{ end }}">
       <div class="dashboard-ordering-layout">
         <fieldset class="dashboard-ordering-group">
@@ -83,9 +84,9 @@
           </div>
         </fieldset>
 
-        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if or (not $orderingOn) (and $posOn (not (default true $pos.fallback_to_whatsapp))) }} hidden{{ end }}>
+        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if or (not $orderingOn) $posOn }} hidden{{ end }}>
           <legend class="dashboard-ordering-group-title">Guest checkout</legend>
-          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">{{ if $posOn }}Phone is dialer-only. WhatsApp is optional alongside Loyverse receipts.{{ else }}Phone opens the dialer. WhatsApp sends the order summary.{{ end }}</p>
+          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">{{ if $posOn }}Phone is dialer-only and does not create a POS order.{{ else }}Phone opens the dialer. WhatsApp sends the order summary.{{ end }}</p>
           <div class="dashboard-ordering-channel">
             <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="Order via">
               <button type="button" class="dashboard-ordering-channel-btn{{ if $usePhone }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if $usePhone }}true{{ else }}false{{ end }}">
@@ -109,8 +110,8 @@
           </div>
         </fieldset>
       </div>
-      <div class="dashboard-settings-form-actions">
-        <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveOrderingSystem">Save ordering settings</button>
+      <div class="dashboard-card-actions" id="orderingSystemFormActions"{{ if and $posOn $orderingOn }} hidden{{ end }}>
+        <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveOrderingSystem"><i class="fa fa-save" aria-hidden="true"></i> Save ordering settings</button>
         <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
       </div>
     </form>

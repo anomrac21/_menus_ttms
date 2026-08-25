@@ -1,0 +1,243 @@
+{{- $locations := partial "menu/visible-locations.html" . -}}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
+{{- $siteName := partial "site-name.html" . | urlize -}}
+{{- $locCount := len $locations -}}
+{{- $days := slice "sun" "mon" "tue" "wed" "thu" "fri" "sat" -}}
+{{- $dayNames := dict "sun" "Sunday" "mon" "Monday" "tue" "Tuesday" "wed" "Wednesday" "thu" "Thursday" "fri" "Friday" "sat" "Saturday" -}}
+<section class="locations-directory{{ if le $locCount 1 }} locations-directory--single{{ end }}">
+  <div class="locations-directory__hero">
+    <img class="locations-directory__logo" src="/branding/favicon192.webp" alt="{{ site.Title }}" width="96" height="96" decoding="async">
+    <p class="locations-directory__eyebrow">{{ site.Title }}</p>
+    <h1 class="locations-directory__title">{{ if le $locCount 1 }}Our location{{ else }}Our locations{{ end }}</h1>
+    {{- if eq $locCount 1 -}}
+      {{- with index $locations 0 -}}
+        <p class="locations-directory__intro">{{ .address }}{{ if or .city .island }} · {{ with .city }}{{ . }}{{ end }}{{ if and .city .island }}, {{ end }}{{ with .island }}{{ . }}{{ end }}{{ end }}</p>
+      {{- end -}}
+    {{- else -}}
+      {{- with $.Content -}}
+        <div class="locations-directory__intro">{{ . }}</div>
+      {{- else -}}
+        <p class="locations-directory__intro">Find us across Trinidad &amp; Tobago.</p>
+      {{- end -}}
+    {{- end -}}
+  </div>
+
+  {{- if $locations -}}
+  <div class="locations-directory__list">
+    {{- range $i, $loc := $locations -}}
+      {{- $place := "" -}}
+      {{- if and $loc.city $loc.island -}}{{- $place = printf "%s, %s" $loc.city $loc.island -}}
+      {{- else -}}{{- $place = or $loc.city $loc.island -}}{{- end -}}
+      {{- $hasCoords := and $loc.address $loc.latlon -}}
+      {{- $menuHref := "/" -}}
+      {{- if and $multi $loc.slug -}}{{- $menuHref = printf "/%s/" $loc.slug -}}{{- end -}}
+      <article class="location-card locations-directory-card" data-location-index="{{ $i }}"{{ if $loc.opening_hours }} data-opening-hours="{{ $loc.opening_hours | jsonify | safeHTMLAttr }}"{{ end }}{{ if $loc.slug }} data-slug="{{ $loc.slug }}"{{ end }}>
+        <div class="locations-directory-card__head">
+          <span class="locations-directory-card__pin" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 1.12 2.5 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+          </span>
+          <div class="locations-directory-card__copy">
+            {{- with $place -}}<p class="locations-directory-card__place">{{ . }}</p>{{- end -}}
+            <h2 class="locations-directory-card__address">{{ $loc.address }}</h2>
+          </div>
+          <div class="openstatus locations-directory-card__status" id="opensign-loc-{{ $i }}-page">
+            <button type="button" class="status-badge closed" onclick="refreshLocationStatusPage(this);" title="Refresh open status">Loading…</button>
+          </div>
+        </div>
+
+        <div class="locations-directory-card__actions">
+          {{- if $hasCoords -}}
+          <a href="https://www.ttmenus.com/map/?lat={{ index $loc.latlon 0 }}&amp;lng={{ index $loc.latlon 1 }}&amp;zoom=19&amp;client={{ $siteName }}" class="locations-directory-action locations-directory-action--map" target="_blank" rel="noopener noreferrer" title="View on map" aria-label="View {{ $loc.address }} on map">
+            <span class="locations-directory-action__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 1.12 2.5 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg></span>
+            <span class="locations-directory-action__label">Map</span>
+          </a>
+          {{- end -}}
+          {{- with $loc.phone -}}
+          <a href="tel:{{ . }}" class="locations-directory-action locations-directory-action--call" title="Call {{ . }}" aria-label="Call {{ . }}">
+            <span class="locations-directory-action__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="currentColor"/></svg></span>
+            <span class="locations-directory-action__label">Call</span>
+          </a>
+          {{- end -}}
+          {{- with $loc.whatsapp -}}
+          <a href="https://wa.me/{{ . }}" class="locations-directory-action locations-directory-action--whatsapp" target="_blank" rel="noopener noreferrer" title="WhatsApp {{ . }}" aria-label="WhatsApp {{ . }}">
+            <span class="locations-directory-action__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" fill="currentColor"/></svg></span>
+            <span class="locations-directory-action__label">WhatsApp</span>
+          </a>
+          {{- end -}}
+          {{- with $loc.delivery -}}{{- with .fooddrop -}}
+          <a href="{{ . }}" class="locations-directory-action locations-directory-action--delivery" target="_blank" rel="noopener noreferrer" aria-label="Order via FoodDrop">
+            <span class="locations-directory-action__icon" aria-hidden="true"><svg viewBox="0 0 512 512" fill="currentColor" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M311.069 130.515c-.963-5.641-5.851-9.768-11.578-9.768H35.43c-7.61 0-13.772 6.169-13.772 13.765 0 7.61 6.162 13.772 13.772 13.772h64.263c7.61 0 13.772 6.17 13.772 13.773 0 7.603-6.162 13.772-13.772 13.772H13.772C6.169 175.829 0 181.998 0 189.601c0 7.603 6.169 13.764 13.772 13.764h117.114c6.72 0 12.172 5.46 12.172 12.18 0 6.72-5.452 12.172-12.172 12.172H68.665c-7.61 0-13.772 6.17-13.772 13.773 0 7.602 6.162 13.772 13.772 13.772h45.857c6.726 0 12.179 5.452 12.179 12.172 0 6.719-5.453 12.172-12.179 12.172H51.215c-7.61 0-13.772 6.169-13.772 13.772 0 7.603 6.162 13.772 13.772 13.772h87.014l5.488 31.042h31.52c-1.854 4.504-2.911 9.421-2.911 14.598 0 21.245 17.218 38.464 38.464 38.464 21.237 0 38.456-17.219 38.456-38.464 0-5.177-1.057-10.094-2.911-14.598h100.04L311.069 130.515zm-83.727 222.274c0 9.146-7.407 16.553-16.553 16.553-9.152 0-16.56-7.407-16.56-16.553 0-6.364 3.627-11.824 8.892-14.598h15.329c-4.265 2.774-8.892 8.234-8.892 14.598zm272.798 0c0 9.146-7.407 16.553-16.56 16.553-9.138 0-16.552-7.407-16.552-16.553 0-6.364 3.635-11.824 8.892-14.598h15.329c-4.257 2.774-8.884 8.234-8.884 14.598zM511.598 314.072l-15.799-77.941-57.689-88.759H333.074l32.534 190.819h38.42c-1.854 4.504-2.904 9.421-2.904 14.598 0 21.245 17.218 38.464 38.456 38.464 21.246 0 38.464-17.219 38.464-38.464 0-5.177-1.057-10.094-2.91-14.598h16.741c6.039 0 11.759-2.708 15.582-7.386 1.675-2.148 3.202-8.296 2-14.212z"/></svg></span>
+            <span class="locations-directory-action__label">Delivery</span>
+          </a>
+          {{- end -}}{{- end -}}
+        </div>
+
+        {{- if or $loc.orderingtables $loc.subcategories -}}
+        <ul class="locations-directory-card__chips">
+          {{- range $loc.orderingtables -}}
+            <li>{{ . }}</li>
+          {{- end -}}
+          {{- range $loc.subcategories -}}
+            <li>{{ . }}</li>
+          {{- end -}}
+        </ul>
+        {{- end -}}
+
+        {{- with $loc.opening_hours -}}
+          {{ partial "locations/hours.html" (dict "hours" . "days" $days "dayNames" $dayNames) }}
+        {{- else -}}
+          <p class="locations-directory-hours__empty">Opening hours not available</p>
+        {{- end -}}
+
+        <a class="locations-directory-card__menu" href="{{ $menuHref }}">
+          <span>View menu</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </article>
+    {{- end -}}
+  </div>
+  {{- else -}}
+  <p class="locations-directory__empty">No location data found. Add entries to <code>data/locations.yaml</code>.</p>
+  {{- end -}}
+</section>
+<script>
+(function () {
+  'use strict';
+  function todayKey() {
+    return { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' }[new Date().getDay()];
+  }
+  function updateTodayHours() {
+    var key = todayKey();
+    document.querySelectorAll('.locations-directory .location-card').forEach(function (card) {
+      card.querySelectorAll('.hours-item').forEach(function (item) {
+        item.classList.toggle('is-today', item.getAttribute('data-day') === key);
+      });
+      var hoursItem = card.querySelector('.hours-item[data-day="' + key + '"]');
+      var todayHoursText = card.querySelector('.today-hours-text');
+      if (!todayHoursText) return;
+      var hoursTime = hoursItem && hoursItem.querySelector('.hours-time');
+      todayHoursText.textContent = (hoursTime && !hoursTime.classList.contains('closed')) ? hoursTime.textContent : 'Closed';
+    });
+  }
+  function parseTime(timeStr) {
+    if (!timeStr) return null;
+    var parts = String(timeStr).split(':');
+    var date = new Date();
+    date.setHours(parseInt(parts[0], 10), parseInt(parts[1] || 0, 10), 0, 0);
+    return date;
+  }
+  function hoursForDay(openingHours, day) {
+    var entries = openingHours[day];
+    if (!entries || !Array.isArray(entries)) return null;
+    var openTime = null, closeTime = null;
+    entries.forEach(function (entry) {
+      if (entry.type === 'Open') openTime = parseTime(entry.time);
+      else if (entry.type === 'Close') closeTime = parseTime(entry.time);
+    });
+    return { openTime: openTime, closeTime: closeTime };
+  }
+  function calculateLocationStatusPage(openingHours) {
+    var days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    var now = new Date();
+    var todayDay = days[now.getDay()];
+    var yesterdayDay = days[(now.getDay() + 6) % 7];
+    function windowStatus(openTime, closeTime, dayOffset) {
+      if (!openTime || !closeTime) return null;
+      var open = new Date(openTime);
+      open.setDate(open.getDate() + dayOffset);
+      var close = new Date(closeTime);
+      close.setDate(close.getDate() + dayOffset);
+      if (close <= open) close.setDate(close.getDate() + 1);
+      if (now >= open && now < close) {
+        return (Math.floor((close - now) / 60000) <= 30)
+          ? { type: 'closes-soon', text: 'Closes soon' }
+          : { type: 'open', text: 'Open' };
+      }
+      if (dayOffset === 0 && now < open) {
+        var minsToOpen = Math.floor((open - now) / 60000);
+        if (minsToOpen > 0 && minsToOpen <= 30) return { type: 'opens-soon', text: 'Opens soon' };
+      }
+      return null;
+    }
+    var yesterday = hoursForDay(openingHours, yesterdayDay);
+    if (yesterday) {
+      var overnight = windowStatus(yesterday.openTime, yesterday.closeTime, -1);
+      if (overnight) return overnight;
+    }
+    var today = hoursForDay(openingHours, todayDay);
+    if (today) {
+      var current = windowStatus(today.openTime, today.closeTime, 0);
+      if (current) return current;
+    }
+    return { type: 'closed', text: 'Closed' };
+  }
+  function updateStatusBadgePage(card, statusType, statusText) {
+    var statusButton = card.querySelector('.openstatus .status-badge');
+    if (!statusButton) return;
+    statusButton.classList.remove('open', 'closed', 'opens-soon', 'closes-soon', 'hide');
+    statusButton.classList.add(statusType);
+    statusButton.textContent = statusText;
+  }
+  function updateLocationStatusesPage() {
+    document.querySelectorAll('.locations-directory .location-card').forEach(function (card) {
+      var openingHoursData = card.getAttribute('data-opening-hours');
+      var statusButton = card.querySelector('.openstatus .status-badge');
+      if (!statusButton) return;
+      if (openingHoursData && openingHoursData !== 'null') {
+        try {
+          var openingHours = JSON.parse(openingHoursData);
+          var calculateStatus = typeof calculateLocationStatus === 'function' ? calculateLocationStatus : calculateLocationStatusPage;
+          var status = calculateStatus(openingHours);
+          updateStatusBadgePage(card, status.type, status.text);
+          return;
+        } catch (e) { /* fallback below */ }
+      }
+      var hoursTime = card.querySelector('.hours-item[data-day="' + todayKey() + '"] .hours-time');
+      var open = hoursTime && !hoursTime.classList.contains('closed');
+      updateStatusBadgePage(card, open ? 'open' : 'closed', open ? 'Open' : 'Closed');
+    });
+  }
+  function refreshLocationStatusPage(button) {
+    var card = button.closest('.location-card');
+    if (!card) return;
+    button.disabled = true;
+    var originalText = button.textContent.trim();
+    button.innerHTML = '';
+    var throbber = document.createElement('span');
+    throbber.className = 'throbber';
+    button.appendChild(throbber);
+    button.appendChild(document.createTextNode(' ' + originalText));
+    var openingHoursData = card.getAttribute('data-opening-hours');
+    var finish = function (type, text) {
+      updateStatusBadgePage(card, type, text);
+      button.disabled = false;
+    };
+    setTimeout(function () {
+      if (!openingHoursData) {
+        finish('closed', 'Closed');
+        return;
+      }
+      try {
+        var openingHours = JSON.parse(openingHoursData);
+        var calculateStatus = typeof calculateLocationStatus === 'function' ? calculateLocationStatus : calculateLocationStatusPage;
+        var status = calculateStatus(openingHours);
+        finish(status.type, status.text);
+      } catch (e) {
+        finish('closed', 'Closed');
+      }
+    }, 400);
+  }
+  function init() {
+    updateTodayHours();
+    updateLocationStatusesPage();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+  document.addEventListener('ttms:page-enter', function () {
+    setTimeout(init, 80);
+  });
+  window.refreshLocationStatusPage = refreshLocationStatusPage;
+  window.updateLocationStatusesPage = updateLocationStatusesPage;
+  window.updateTodayHours = updateTodayHours;
+})();
+</script>

@@ -2,7 +2,7 @@
  * Menu reels — same scroll model as #ads-reels-overlay / .ads-reels-track (header stays visible).
  */
 
-/* Homepage uses in-track reels; external footer strip only on non-home pages */
+/* Homepage uses in-track reels; keep the page-level strip on /locations/ and other pages */
 main.main--home ~ .bottomads {
     display: none !important;
 }
@@ -92,8 +92,24 @@ body.menu-nav-smooth .menu-anchor {
     scroll-margin-top: var(--ttms-header-height, 5em);
 }
 
-body.menu-reels-mode .bottomads:not(.menu-reels-bottom-ads-in-track) {
+body.menu-reels-mode:has(main.main--home) .bottomads:not(.menu-reels-bottom-ads-in-track) {
     display: none;
+}
+
+main.main--offset ~ .bottomads {
+    display: block !important;
+    visibility: visible;
+    position: relative;
+    width: 100%;
+    min-height: calc(100dvh - var(--ttms-header-height, 5em));
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    background: var(--main-bg, #000);
+}
+
+html:has(main.main--offset):not(:has(#menu-reels-viewport)),
+html:has(main.main--offset):not(:has(#menu-reels-viewport)) body {
+    overflow: auto;
+    height: auto;
 }
 
 body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track,
@@ -415,6 +431,10 @@ body.menu-search-active .menu-reels-track {
     font-size: small;
     line-height: var(--ttms-leading-relaxed, 1.5);
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.hero_logo_container .hero-intro p + p {
+    margin-top: 0.15em;
 }
 
 /* Contact slide — full-viewport location picker */
@@ -747,8 +767,49 @@ body.menu-reels-item-modal-open .menu-reels-track,
 .menu-item-expanded-data {
     height: 100%;
 }
-.menu-reels-item-modal.is-open {
+.menu-reels-item-modal.is-open,
+.menu-reels-item-modal.is-closing {
     display: flex;
+}
+
+.menu-reels-item-modal {
+    --reels-modal-from-x: 0px;
+    --reels-modal-from-y: 0px;
+    --reels-modal-from-scale: 0.94;
+}
+
+.menu-reels-item-modal.is-open .menu-reels-item-modal__backdrop {
+    animation: menu-reels-modal-backdrop-in 0.42s ease both;
+}
+
+.menu-reels-item-modal.is-open .menu-reels-item-modal__panel {
+    animation: menu-reels-modal-panel-in 0.52s cubic-bezier(0.32, 0.72, 0, 1) both;
+    transform-origin: 50% 50%;
+}
+
+.menu-reels-item-modal.is-closing .menu-reels-item-modal__backdrop {
+    animation: menu-reels-modal-backdrop-out 0.4s ease both;
+}
+
+.menu-reels-item-modal.is-closing .menu-reels-item-modal__panel {
+    animation: menu-reels-modal-panel-out 0.46s cubic-bezier(0.4, 0, 0.2, 1) both;
+    transform-origin: 50% 50%;
+}
+
+.menu-reels-item-modal.is-closing-into-cart .menu-reels-item-modal__backdrop {
+    animation: menu-reels-modal-backdrop-out 0.28s ease both;
+}
+
+.menu-reels-item-modal.is-closing-into-cart .menu-reels-item-modal__panel {
+    animation: menu-reels-modal-panel-into-cart 0.36s cubic-bezier(0.3, 0.02, 0.2, 1) both;
+}
+
+.footer-dock__action--cart.is-cart-caught {
+    animation: menu-reels-cart-dock-catch 0.5s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+.menu-reels-item-modal.is-cart-added .menu-reels-item-modal__panel {
+    animation: none;
 }
 
 .menu-reels-item-modal__backdrop {
@@ -927,6 +988,227 @@ body.menu-reels-item-modal-open .menu-reels-track,
     margin-inline: auto;
     width: 100%;
     box-sizing: border-box;
+}
+
+.menu-reels-item-modal .expanded-add-cart.is-cart-pop {
+    background: linear-gradient(135deg, #2ecc71, #128c7e);
+    box-shadow: 0 0 0 6px color-mix(in srgb, #25d366 35%, transparent),
+        0 16px 36px rgba(18, 140, 126, 0.45);
+    animation: menu-reels-cart-pop 0.9s cubic-bezier(0.22, 1.45, 0.36, 1) both;
+}
+
+body.menu-reels-item-modal-open.menu-reels-cart-celebrating #footerBtns {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    animation: menu-reels-cart-dock-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+body.menu-reels-cart-celebrating .footer-dock__action--cart {
+    animation: menu-reels-cart-dock-catch 0.7s 0.35s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+.menu-reels-cart-burst {
+    position: fixed;
+    width: 0;
+    height: 0;
+    z-index: calc(var(--ttms-z-reels-item-modal, 10070) + 2);
+    pointer-events: none;
+}
+
+.menu-reels-cart-burst__ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.6rem;
+    height: 2.6rem;
+    margin: -1.3rem 0 0 -1.3rem;
+    border-radius: 50%;
+    border: 3px solid #25d366;
+    box-sizing: border-box;
+    animation: menu-reels-cart-ring 0.7s ease-out forwards;
+}
+
+.menu-reels-cart-burst__ring--late {
+    width: 3.4rem;
+    height: 3.4rem;
+    margin: -1.7rem 0 0 -1.7rem;
+    border-color: #fcd000;
+    animation-delay: 0.1s;
+}
+
+.menu-reels-cart-burst__particle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin: -0.42rem 0 0 -0.42rem;
+    color: var(--p-color, #25d366);
+    font-size: 0.85rem;
+    line-height: 1;
+    animation: menu-reels-cart-particle 0.95s cubic-bezier(0.16, 0.8, 0.3, 1) forwards;
+}
+
+.menu-reels-cart-burst__particle::before {
+    content: var(--p-glyph, "+");
+    display: block;
+    text-align: center;
+    font-weight: 800;
+    text-shadow: 0 0 0.45rem color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.menu-reels-cart-fly {
+    position: fixed;
+    z-index: calc(var(--ttms-z-reels-item-modal, 10070) + 3);
+    width: 2.4rem;
+    height: 2.4rem;
+    margin: -1.2rem 0 0 -1.2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: 0 10px 24px rgba(18, 140, 126, 0.45);
+    pointer-events: none;
+    animation: menu-reels-cart-fly 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes menu-reels-modal-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes menu-reels-modal-backdrop-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes menu-reels-modal-panel-in {
+    0% {
+        transform: translate(var(--reels-modal-from-x), var(--reels-modal-from-y)) scale(var(--reels-modal-from-scale));
+        opacity: 0.4;
+        border-radius: 1.25rem;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 0;
+    }
+}
+
+@keyframes menu-reels-modal-panel-out {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 0;
+    }
+    100% {
+        transform: translate(var(--reels-modal-from-x), var(--reels-modal-from-y)) scale(var(--reels-modal-from-scale));
+        opacity: 0;
+        border-radius: 1.25rem;
+    }
+}
+
+@keyframes menu-reels-modal-panel-into-cart {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 0.85rem;
+    }
+    44% {
+        transform: translate(0, 0) scale(0.15);
+        opacity: 1;
+        border-radius: 50%;
+    }
+    100% {
+        transform: translate(var(--reels-modal-from-x), var(--reels-modal-from-y)) scale(0.05);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}
+
+@keyframes menu-reels-cart-pop {
+    0% { transform: scale(1); }
+    14% { transform: scale(0.92); }
+    36% { transform: scale(1.16); }
+    58% { transform: scale(0.97); }
+    78% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+@keyframes menu-reels-cart-ring {
+    0% {
+        transform: scale(0.3);
+        opacity: 0.95;
+    }
+    100% {
+        transform: scale(3.1);
+        opacity: 0;
+    }
+}
+
+@keyframes menu-reels-cart-particle {
+    0% {
+        transform: rotate(var(--a)) translateY(0) scale(0.25);
+        opacity: 1;
+    }
+    100% {
+        transform: rotate(var(--a)) translateY(var(--p-dist, -3.4rem)) scale(1.15);
+        opacity: 0;
+    }
+}
+
+@keyframes menu-reels-cart-fly {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--dx), var(--dy)) scale(0.35);
+        opacity: 0;
+    }
+}
+
+@keyframes menu-reels-cart-dock-in {
+    from {
+        transform: translateY(1.25rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes menu-reels-cart-dock-catch {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-reels-item-modal.is-open .menu-reels-item-modal__backdrop,
+    .menu-reels-item-modal.is-open .menu-reels-item-modal__panel,
+    .menu-reels-item-modal.is-closing .menu-reels-item-modal__backdrop,
+    .menu-reels-item-modal.is-closing .menu-reels-item-modal__panel,
+    .menu-reels-item-modal.is-closing-into-cart .menu-reels-item-modal__panel,
+    .footer-dock__action--cart.is-cart-caught,
+    .menu-reels-item-modal .expanded-add-cart.is-cart-pop,
+    body.menu-reels-item-modal-open.menu-reels-cart-celebrating #footerBtns,
+    body.menu-reels-cart-celebrating .footer-dock__action--cart {
+        animation: none;
+    }
+
+    .menu-reels-cart-burst,
+    .menu-reels-cart-fly {
+        display: none;
+    }
 }
 
 .menu-item-card.menu-reels-slide > .menu-add-photo-btn {

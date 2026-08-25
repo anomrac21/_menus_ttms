@@ -149,6 +149,9 @@
     if (state === 'disconnected' || state === 'error') {
       setPosEmbedCollapsed(false, false);
     }
+    if (state !== 'connected') {
+      renderSetupStatus();
+    }
     if (typeof window.syncOrderingDashboardVisibility === 'function') {
       window.syncOrderingDashboardVisibility();
     }
@@ -206,7 +209,7 @@
   }
 
   function storeOptionHtml(selectedId) {
-    var html = '<option value="">— Choose a Loyverse store —</option>';
+    var html = '<option value="">— Choose a till —</option>';
     var found = false;
     cachedStores.forEach(function (s) {
       var id = s.id || '';
@@ -334,8 +337,8 @@
       if (stats.unmatched.length) {
         var shown = stats.unmatched.slice(0, 3);
         var more = stats.unmatched.length - shown.length;
-        extra =
-          '<p class="dashboard-pos-item-match-unmapped">Unmapped: ' +
+          extra =
+          '<p class="dashboard-pos-item-match-unmapped">Won’t print: ' +
           escapeHtml(shown.join(', ')) +
           (more > 0 ? ' +' + more + ' more' : '') +
           '</p>';
@@ -396,6 +399,7 @@
           .join('');
       }
     }
+    updateLocationSummary();
   }
 
   function loadMenuCatalog() {
@@ -450,9 +454,255 @@
 
   function connectedStoreLabel(storeId) {
     var store = storeById(storeId);
-    if (store && store.name) return 'Connected to ' + store.name;
-    if (storeId) return 'Connected to Loyverse';
-    return 'Not connected';
+    if (store && store.name) return 'Till: ' + store.name;
+    if (storeId) return 'Till selected';
+    return 'Choose a till';
+  }
+
+  function collectPosSetup() {
+    var banner = $('posAccountBanner');
+    var accountState = banner ? banner.getAttribute('data-state') || 'checking' : 'checking';
+    var total = cachedLocations.length;
+    var mapped = 0;
+    cachedLocations.forEach(function (loc) {
+      if (loc && loc.loyverse_store_id) mapped += 1;
+    });
+    var itemsReady = cachedMenuItems.length > 0;
+    var itemMatched = 0;
+    var itemTotal = 0;
+    var unmatched = [];
+    var seen = {};
+    cachedLocations.forEach(function (loc) {
+      var stats = locationItemStats(loc.slug || '');
+      itemMatched += stats.matched;
+      itemTotal += stats.total;
+      (stats.unmatched || []).forEach(function (name) {
+        if (!name || seen[name]) return;
+        seen[name] = true;
+        unmatched.push(name);
+      });
+    });
+    return {
+      accountState: accountState,
+      total: total,
+      mapped: mapped,
+      storesDone: total > 0 && mapped === total,
+      itemsReady: itemsReady,
+      itemMatched: itemMatched,
+      itemTotal: itemTotal,
+      itemsDone: itemsReady && itemTotal > 0 && itemMatched === itemTotal,
+      unmatched: unmatched,
+    };
+  }
+
+  var applyingStepOpen = false;
+
+  function rememberStepToggle(el) {
+    if (!el || el.getAttribute('data-collapse-bound') === '1') return;
+    el.setAttribute('data-collapse-bound', '1');
+    el.addEventListener('toggle', function () {
+      if (applyingStepOpen) return;
+      el.setAttribute('data-user-toggled', '1');
+    });
+  }
+
+  function applyStepOpen(el, shouldOpen) {
+    if (!el) return;
+    rememberStepToggle(el);
+    if (el.getAttribute('data-user-toggled') === '1') return;
+    if (!!el.open === !!shouldOpen) return;
+    applyingStepOpen = true;
+    el.open = !!shouldOpen;
+    applyingStepOpen = false;
+  }
+
+  function setStepPill(id, state, text) {
+    var el = $(id);
+    if (!el) return;
+    el.setAttribute('data-state', state);
+    el.textContent = text;
+  }
+
+  function openPosStep(key) {
+    var ids = {
+      account: 'posStepConnect',
+      locations: 'posLocationMapRow',
+      items: 'posMatchItemsPanel',
+      orders: 'posStepOrders',
+    };
+    if (!key || !ids[key]) return;
+    var el = $(ids[key]);
+    if (!el) return;
+    el.hidden = false;
+    el.setAttribute('data-user-toggled', '1');
+    el.open = true;
+    if (el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function syncPosSteps(setup) {
+    var linked = setup.accountState === 'connected';
+    var checking = setup.accountState === 'checking';
+    var needAccount = !linked;
+    var needLocations = linked && !setup.storesDone;
+    var needItems = linked && setup.storesDone && setup.unmatched.length > 0;
+
+    applyStepOpen($('posStepConnect'), needAccount || checking);
+    applyStepOpen($('posLocationMapRow'), needLocations);
+    applyStepOpen($('posStepOrders'), false);
+    applyStepOpen($('posMatchItemsPanel'), needItems);
+    applyStepOpen($('posReplaceCatalogRow'), false);
+
+    if (checking) setStepPill('posStepConnectPill', 'checking', 'Checking…');
+    else if (linked) setStepPill('posStepConnectPill', 'ready', 'Linked');
+    else setStepPill('posStepConnectPill', 'attention', 'Not linked');
+
+    if (!linked) setStepPill('posStepLocationsPill', 'pending', 'Waiting…');
+    else if (!setup.total) setStepPill('posStepLocationsPill', 'attention', 'No locations');
+    else if (setup.storesDone) setStepPill('posStepLocationsPill', 'ready', 'All ' + setup.total + ' ready');
+    else {
+      var left = setup.total - setup.mapped;
+      setStepPill('posStepLocationsPill', 'attention', left === 1 ? '1 left' : left + ' left');
+    }
+
+    setStepPill('posStepOrdersPill', 'ready', 'Optional');
+  }
+
+  function setSetupRow(key, state, detail) {
+    var board = $('posSetupBoard');
+    if (!board) return;
+    var row = board.querySelector('[data-setup="' + key + '"]');
+    if (!row) return;
+    row.setAttribute('data-state', state);
+    var el = $('posSetup' + key.charAt(0).toUpperCase() + key.slice(1) + 'Detail');
+    if (el && detail) el.textContent = detail;
+  }
+
+  function renderSetupStatus() {
+    var board = $('posSetupBoard');
+    var next = $('posSetupNext');
+    var badge = $('posCardTitleBadge');
+    var setup = collectPosSetup();
+    var linked = setup.accountState === 'connected';
+
+    if (setup.accountState === 'checking') {
+      setSetupRow('account', 'checking', 'Checking your link…');
+    } else if (linked) {
+      setSetupRow('account', 'ready', 'Linked. Receipts can go to your tills.');
+    } else if (setup.accountState === 'error') {
+      setSetupRow('account', 'error', 'Couldn’t check the link. Sign in and tap Refresh.');
+    } else {
+      setSetupRow('account', 'attention', 'Not linked yet. Tap Connect Loyverse.');
+    }
+
+    if (!linked) {
+      setSetupRow('locations', 'pending', 'Waiting until Loyverse is linked.');
+      setSetupRow('items', 'pending', 'Waiting until Loyverse is linked.');
+    } else if (!setup.total) {
+      setSetupRow('locations', 'attention', 'No locations on this menu yet. Add them in Settings.');
+      setSetupRow('items', 'pending', 'Add locations first.');
+    } else if (!setup.storesDone) {
+      setSetupRow(
+        'locations',
+        'attention',
+        setup.mapped + ' of ' + setup.total + ' locations have a till. Choose one for each, then save.'
+      );
+      setSetupRow(
+        'items',
+        setup.itemsReady ? (setup.itemsDone ? 'ready' : 'attention') : 'checking',
+        setup.itemsReady
+          ? setup.itemsDone
+            ? 'Every dish matches a Loyverse item.'
+            : setup.itemMatched + ' of ' + setup.itemTotal + ' dishes match a Loyverse item.'
+          : 'Checking dishes…'
+      );
+    } else {
+      setSetupRow('locations', 'ready', 'All ' + setup.total + ' locations have a till.');
+      if (!setup.itemsReady) {
+        setSetupRow('items', 'checking', 'Checking which dishes match Loyverse…');
+      } else if (!setup.itemTotal) {
+        setSetupRow('items', 'pending', 'No sellable dishes found on this menu.');
+      } else if (setup.itemsDone) {
+        setSetupRow('items', 'ready', 'All ' + setup.itemTotal + ' dishes match Loyverse.');
+      } else {
+        var shown = setup.unmatched.slice(0, 3);
+        var more = setup.unmatched.length - shown.length;
+        setSetupRow(
+          'items',
+          'attention',
+          setup.itemMatched +
+            ' of ' +
+            setup.itemTotal +
+            ' dishes match. Missing: ' +
+            shown.join(', ') +
+            (more > 0 ? ' +' + more + ' more' : '') +
+            '.'
+        );
+      }
+    }
+
+    var nextText = 'Checking Loyverse…';
+    var nextReady = false;
+    var nextAction = '';
+    if (setup.accountState === 'checking') {
+      nextText = 'Checking whether this menu is linked to Loyverse…';
+    } else if (setup.accountState === 'error') {
+      nextText = 'Sign in, then tap Refresh so we can see your Loyverse account.';
+      nextAction = 'account';
+    } else if (!linked) {
+      nextText = 'Tap Connect Loyverse and sign in. One login covers every location.';
+      nextAction = 'account';
+    } else if (!setup.total) {
+      nextText = 'Add menu locations in Settings, then come back to pick a till for each.';
+    } else if (!setup.storesDone) {
+      nextText =
+        'Pick a Loyverse till for each location, then tap Save location connections.';
+      nextAction = 'locations';
+    } else if (!setup.itemsReady) {
+      nextText = 'Locations are set. Checking which dishes will print on the till…';
+    } else if (setup.unmatched.length) {
+      var names = setup.unmatched.slice(0, 3).join(', ');
+      var extra = setup.unmatched.length > 3 ? ' +' + (setup.unmatched.length - 3) + ' more' : '';
+      nextText =
+        setup.unmatched.length === 1
+          ? names + ' will not print on the till. Tap here to map it, or rename it to match a Loyverse item.'
+          : names +
+            extra +
+            ' will not print on the till. Tap here to map them, or rename them to match Loyverse.';
+      nextAction = 'items';
+    } else if (setup.itemsDone) {
+      nextText = 'You’re set. Guest orders go to the till you picked for that location.';
+      nextReady = true;
+    } else {
+      nextText = 'Locations are linked. Guest orders can go to Loyverse.';
+      nextReady = true;
+    }
+    if (next) {
+      next.textContent = nextText;
+      next.setAttribute('data-ready', nextReady ? 'true' : 'false');
+      next.setAttribute('data-action', nextAction);
+    }
+
+    var matchPanel = $('posMatchItemsPanel');
+    if (matchPanel) {
+      matchPanel.classList.toggle('is-needed', !!(linked && setup.unmatched.length));
+    }
+    syncPosSteps(setup);
+
+    if (badge && linked) {
+      if (setup.unmatched.length) {
+        badge.setAttribute('data-state', 'attention');
+        badge.textContent =
+          setup.unmatched.length === 1 ? '1 dish to match' : setup.unmatched.length + ' dishes to match';
+      } else if (!setup.storesDone && setup.total) {
+        var left = setup.total - setup.mapped;
+        badge.setAttribute('data-state', 'attention');
+        badge.textContent = left === 1 ? '1 location left' : left + ' locations left';
+      } else {
+        badge.setAttribute('data-state', 'connected');
+        badge.textContent = 'Ready';
+      }
+    }
+    if (board) board.hidden = false;
   }
 
   function updateLocationCardState(card, storeId) {
@@ -469,44 +719,22 @@
 
   function updateLocationSummary() {
     var summary = $('posLocationSummary');
-    var badge = $('posCardTitleBadge');
-    var banner = $('posAccountBanner');
-    var total = cachedLocations.length;
-    var mapped = 0;
-    cachedLocations.forEach(function (loc) {
-      if (loc && loc.loyverse_store_id) mapped += 1;
-    });
+    var setup = collectPosSetup();
     if (summary) {
-      var itemMatched = 0;
-      var itemTotal = 0;
-      var itemsReady = cachedMenuItems.length > 0;
-      cachedLocations.forEach(function (loc) {
-        var stats = locationItemStats(loc.slug || '');
-        itemMatched += stats.matched;
-        itemTotal += stats.total;
-      });
-      var storesDone = total > 0 && mapped === total;
-      var itemsDone = itemsReady && itemTotal > 0 && itemMatched === itemTotal;
-      summary.setAttribute('data-complete', storesDone && itemsDone ? 'true' : 'false');
-      if (!total) {
-        summary.textContent = 'No locations on this menu yet. Add them in Settings, or set a fallback store below.';
+      summary.setAttribute('data-complete', setup.storesDone && setup.itemsDone ? 'true' : 'false');
+      if (!setup.total) {
+        summary.textContent = 'No locations on this menu yet. Add them in Settings.';
+      } else if (setup.storesDone) {
+        summary.textContent = 'All ' + setup.total + ' locations have a till.';
       } else {
-        var storeLine = storesDone
-          ? 'All ' + total + ' locations are connected to Loyverse.'
-          : mapped + ' of ' + total + ' locations connected to Loyverse.';
-        var itemLine = !itemsReady
-          ? ' Checking item matches…'
-          : itemTotal
-            ? ' Items: ' + itemMatched + ' of ' + itemTotal + ' matched.'
-            : ' No sellable items found.';
-        summary.textContent = storeLine + itemLine;
+        summary.textContent =
+          setup.mapped +
+          ' of ' +
+          setup.total +
+          ' locations have a till. Choose one for each, then save.';
       }
     }
-    if (badge && banner && banner.getAttribute('data-state') === 'connected') {
-      if (total && mapped === total) badge.textContent = 'Connected';
-      else if (total) badge.textContent = mapped + '/' + total + ' locations';
-      else badge.textContent = 'Connected';
-    }
+    renderSetupStatus();
   }
 
   function renderLocationMap() {
@@ -535,13 +763,13 @@
         escapeHtml(locationLabel(loc, index)) +
         '</h5>' +
         (meta ? '<p class="dashboard-pos-location-meta">' + escapeHtml(meta) + '</p>' : '') +
-        '</div>' +
+          '</div>' +
         '<span class="dashboard-pos-location-badge" data-connected="' +
         (storeId ? 'true' : 'false') +
         '">' +
         escapeHtml(connectedStoreLabel(storeId)) +
         '</span></div>' +
-        '<label class="dashboard-pos-location-store-label"><span>Loyverse store</span>' +
+        '<label class="dashboard-pos-location-store-label"><span>Till for this location</span>' +
         '<select class="dashboard-settings-input" data-loc-index="' +
         index +
         '">' +
@@ -653,6 +881,26 @@
     setMapStatus('Auto-matched where names looked similar — review and Save.');
   }
 
+  function receiptModeFromData(d) {
+    var mode = String((d && d.loyverse_receipt_mode) || '').toLowerCase();
+    if (mode === 'on_payment' || mode === 'direct' || mode === 'off') return mode;
+    if (d && d.auto_process_orders === false) return 'off';
+    if (d && d.auto_process_orders === true) return 'direct';
+    return 'on_payment';
+  }
+
+  function applyReceiptMode(mode) {
+    var sel = $('posReceiptModeSelect');
+    var ap = $('posAutoProcessCb');
+    if (sel) sel.value = mode;
+    if (ap) ap.checked = mode === 'direct';
+    if (window.POS_CONFIG) {
+      window.POS_CONFIG.loyverseReceiptMode = mode;
+      window.POS_CONFIG.autoProcessOrders = mode === 'direct';
+    }
+    if (window.ORDER_CONFIG) window.ORDER_CONFIG.loyverseReceiptMode = mode;
+  }
+
   function loadPosSettings() {
     return ensureAuth()
       .then(function (token) {
@@ -665,11 +913,10 @@
       })
       .then(function (d) {
         var en = $('posEnabledCb');
-        var fb = $('posFallbackWhatsappCb');
         var ap = $('posAutoProcessCb');
         if (en) en.checked = !!d.enabled;
-        if (fb) fb.checked = d.fallback_to_whatsapp !== false;
         if (ap) ap.checked = !!d.auto_process_orders;
+        applyReceiptMode(receiptModeFromData(d));
         if (typeof window.syncOrderingDashboardVisibility === 'function') {
           window.syncOrderingDashboardVisibility();
         }
@@ -678,11 +925,13 @@
       .catch(function (err) {
         var c = window.POS_CONFIG || {};
         var en = $('posEnabledCb');
-        var fb = $('posFallbackWhatsappCb');
         var ap = $('posAutoProcessCb');
         if (en) en.checked = !!c.enabled;
-        if (fb) fb.checked = c.fallbackToWhatsapp !== false;
         if (ap) ap.checked = !!c.autoProcessOrders;
+        applyReceiptMode(receiptModeFromData({
+          loyverse_receipt_mode: c.loyverseReceiptMode,
+          auto_process_orders: c.autoProcessOrders,
+        }));
         if (typeof window.syncOrderingDashboardVisibility === 'function') {
           window.syncOrderingDashboardVisibility();
         }
@@ -695,6 +944,8 @@
     return ensureAuth()
       .then(function (token) {
         var c = window.POS_CONFIG || {};
+        var mode = ($('posReceiptModeSelect') && $('posReceiptModeSelect').value) || 'on_payment';
+        applyReceiptMode(mode);
         var body = {
           enabled: !!($('posEnabledCb') && $('posEnabledCb').checked),
           provider: 'loyverse',
@@ -702,8 +953,9 @@
           oauth_url: c.oauthUrl || c.apiUrl || 'https://loyverse-oauth.ttmenus.com',
           store_id: ($('posStoreSelect') && $('posStoreSelect').value) || c.storeId || '',
           sync_menu: !!c.syncMenu,
-          auto_process_orders: !!($('posAutoProcessCb') && $('posAutoProcessCb').checked),
-          fallback_to_whatsapp: !!($('posFallbackWhatsappCb') && $('posFallbackWhatsappCb').checked),
+          auto_process_orders: mode === 'direct',
+          loyverse_receipt_mode: mode,
+          fallback_to_whatsapp: false,
         };
         var url =
           cmsApiBase() +
@@ -720,6 +972,7 @@
       .then(function (data) {
         var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
         setSettingsStatus(h ? 'Saved · commit ' + h + ' (redeploy to apply)' : 'Saved.');
+        if (window.POS_CONFIG) window.POS_CONFIG.fallbackToWhatsapp = false;
         if (typeof window.syncOrderingDashboardVisibility === 'function') {
           window.syncOrderingDashboardVisibility();
         }
@@ -807,24 +1060,25 @@
       })
       .then(function (d) {
         if (d.connected) {
-          var detail = d.external_account_id ? 'Merchant ' + d.external_account_id : 'Account linked';
+          var statusNote =
+            d.status && d.status !== 'active' ? ' Loyverse reports: ' + d.status + '.' : '';
           setAccountState(
             'connected',
-            'Connected to Loyverse' + (d.status && d.status !== 'active' ? ' — ' + d.status : '') + ' · ' + detail
+            'Linked. Guest orders can go to your Loyverse tills.' + statusNote
           );
           var loadStores = $('btnPosLoadStores');
           var loadItems = $('btnPosLoadItems');
           if (loadStores) loadStores.hidden = false;
           if (loadItems) loadItems.hidden = false;
         } else {
-          setAccountState('disconnected', 'Not connected — connect Loyverse to map stores to each location.');
+          setAccountState('disconnected', 'Not linked yet. Tap Connect Loyverse and sign in.');
         }
         return d;
       })
       .catch(function (err) {
         var msg = String(err.message || err);
         if (/sign in required/i.test(msg)) {
-          setAccountState('error', 'Sign in to see Loyverse connection status.');
+          setAccountState('error', 'Sign in to see whether Loyverse is linked.');
         } else {
           setAccountState('error', msg);
         }
@@ -864,19 +1118,19 @@
         cachedStores = (d && d.stores) || [];
         var empty = document.createElement('option');
         empty.value = '';
-        empty.textContent = '— Use location mapping / first store —';
+        empty.textContent = '— First store if a location has none —';
         sel.appendChild(empty);
         cachedStores.forEach(function (s) {
           var opt = document.createElement('option');
           opt.value = s.id || '';
-          opt.textContent = (s.name || s.id || 'store') + ' — ' + (s.id || '');
+          opt.textContent = s.name || 'Unnamed store';
           sel.appendChild(opt);
         });
         var cfgStore = (window.POS_CONFIG && window.POS_CONFIG.storeId) || '';
         if (cfgStore) sel.value = cfgStore;
         row.hidden = cachedStores.length === 0;
         if (cachedStores.length) {
-          setMapStatus(cachedStores.length + ' Loyverse store(s) loaded — connect each location below.');
+          setMapStatus(cachedStores.length + ' Loyverse store(s) found. Pick a till for each location.');
         } else {
           setMapStatus('No Loyverse stores found on this account.', true);
         }
@@ -1126,11 +1380,31 @@
     el.style.color = isError ? '#b42318' : '';
   }
 
-  function syncReplaceButton() {
-    var btn = $('btnPosReplaceCatalog');
-    var input = $('posReplaceConfirmInput');
-    if (!btn || !input) return;
-    btn.disabled = String(input.value || '').trim() !== 'REPLACE';
+  function clientNameForConfirm() {
+    return String(clientId() || '')
+      .trim()
+      .replace(/^_?ttms_/i, '')
+      .replace(/^_+/, '');
+  }
+
+  function typedClientMatches(typed) {
+    var want = clientNameForConfirm().toLowerCase();
+    var got = String(typed || '')
+      .trim()
+      .replace(/^_?ttms_/i, '')
+      .replace(/^_+/, '')
+      .toLowerCase();
+    return !!want && !!got && got === want;
+  }
+
+  function promptReplaceCatalogConfirm() {
+    var name = clientNameForConfirm();
+    if (!name) return null;
+    var typed = window.prompt(
+      'Delete shared dishes on the menu and import Loyverse catalog.\nType ' + name + ' to confirm.',
+      ''
+    );
+    return typed == null ? null : typed;
   }
 
   function listAllLoyverseCategories() {
@@ -1156,16 +1430,15 @@
   }
 
   function replaceCatalogFromLoyverse() {
-    var input = $('posReplaceConfirmInput');
-    if (!input || String(input.value || '').trim() !== 'REPLACE') {
-      setReplaceStatus('Type REPLACE to confirm.', true);
-      return;
-    }
-    if (
-      !window.confirm(
-        'This will delete shared sellable menu items and import from Loyverse. Locations, promotions, and branding are kept. Continue?'
-      )
-    ) {
+    var typed = promptReplaceCatalogConfirm();
+    if (typed == null) return;
+    var name = clientNameForConfirm();
+    if (!typedClientMatches(typed)) {
+      setReplaceStatus('Type ' + name + ' to confirm.', true);
+      var status = $('posReplaceCatalogStatus');
+      if (status) {
+        status.innerHTML = 'Type <strong>' + escapeHtml(name) + '</strong> to confirm.';
+      }
       return;
     }
     var btn = $('btnPosReplaceCatalog');
@@ -1209,12 +1482,11 @@
           (h ? 'Imported ' + n + ' items / ' + m + ' categories · commit ' + h : 'Imported.') +
             ' Redeploy menu to apply.'
         );
-        if (input) input.value = '';
-        syncReplaceButton();
+        if (btn) btn.disabled = false;
       })
       .catch(function (err) {
         setReplaceStatus(String(err.message || err), true);
-        syncReplaceButton();
+        if (btn) btn.disabled = false;
       });
   }
 
@@ -1290,7 +1562,6 @@
     var saveMap = $('btnPosSaveLocationStores');
     var autoItems = $('btnPosAutoMapItems');
     var saveItems = $('btnPosSaveItemMapping');
-    var replaceConfirm = $('posReplaceConfirmInput');
     var replaceBtn = $('btnPosReplaceCatalog');
     if (c) c.addEventListener('click', connect);
     if (r) r.addEventListener('click', refreshStatus);
@@ -1301,11 +1572,24 @@
     if (saveMap) saveMap.addEventListener('click', saveLocationMapping);
     if (autoItems) autoItems.addEventListener('click', autoMapItems);
     if (saveItems) saveItems.addEventListener('click', saveItemMapping);
-    if (replaceConfirm) {
-      replaceConfirm.addEventListener('input', syncReplaceButton);
-      syncReplaceButton();
-    }
     if (replaceBtn) replaceBtn.addEventListener('click', replaceCatalogFromLoyverse);
+    var confirmName = $('posReplaceConfirmName');
+    if (confirmName && clientNameForConfirm()) confirmName.textContent = clientNameForConfirm();
+
+    var setupBoard = $('posSetupBoard');
+    if (setupBoard) {
+      setupBoard.querySelectorAll('[data-setup]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          openPosStep(row.getAttribute('data-setup') || '');
+        });
+      });
+    }
+    var setupNext = $('posSetupNext');
+    if (setupNext) {
+      setupNext.addEventListener('click', function () {
+        openPosStep(setupNext.getAttribute('data-action') || '');
+      });
+    }
 
     seedLocationsFromDom();
     loadPosSettings();

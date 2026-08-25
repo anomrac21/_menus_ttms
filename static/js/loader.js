@@ -278,9 +278,33 @@ document.addEventListener('DOMContentLoaded', function() {
         return path.replace(/\/+$/, '') === '';
     }
 
+    function parseMenuConfigList(value) {
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string' && value) {
+            try {
+                var parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) { /* ignore */ }
+        }
+        return [];
+    }
+
     function loaderLocationSlugs() {
-        var slugs = window.MENU_CONFIG && window.MENU_CONFIG.locationSlugs;
-        return Array.isArray(slugs) ? slugs : [];
+        return parseMenuConfigList(window.MENU_CONFIG && window.MENU_CONFIG.locationSlugs);
+    }
+
+    function loaderLocations() {
+        return parseMenuConfigList(window.MENU_CONFIG && window.MENU_CONFIG.locations);
+    }
+
+    function locationFromLoaderEl() {
+        if (!loader) return null;
+        var address = loader.getAttribute('data-location-address') || '';
+        var city = loader.getAttribute('data-location-city') || '';
+        var island = loader.getAttribute('data-location-island') || '';
+        var slug = loader.getAttribute('data-location-slug') || '';
+        if (!address && !city && !island && !slug) return null;
+        return { address: address, city: city, island: island, slug: slug };
     }
 
     function slugFromPath(pathname) {
@@ -296,8 +320,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loaderLocationMeta(slug) {
-        var list = window.MENU_CONFIG && window.MENU_CONFIG.locations;
-        if (slug && Array.isArray(list)) {
+        var list = loaderLocations();
+        if (slug && list.length) {
             for (var i = 0; i < list.length; i++) {
                 if (list[i] && list[i].slug === slug) return list[i];
             }
@@ -306,7 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return {
                 slug: slug,
                 city: loader.getAttribute('data-location-city') || '',
-                address: loader.getAttribute('data-location-address') || ''
+                address: loader.getAttribute('data-location-address') || '',
+                island: loader.getAttribute('data-location-island') || ''
             };
         }
         return null;
@@ -314,13 +339,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatLocationLabel(loc) {
         if (!loc) return '';
-        var city = (loc.city || loc.name || '').trim();
         var address = (loc.address || '').trim();
-        if (city && address) {
-            if (address.toLowerCase().indexOf(city.toLowerCase()) !== -1) return address;
-            return city + ' · ' + address;
-        }
-        return city || address || loc.slug || '';
+        var city = (loc.city || loc.name || '').trim();
+        var island = (loc.island || '').trim();
+        var place = [city, island].filter(Boolean).join(', ');
+        if (address && place) return address + '\n' + place;
+        return address || place || loc.slug || '';
+    }
+
+    function singleLocationLabel() {
+        return formatLocationLabel(loaderLocations()[0] || locationFromLoaderEl());
     }
 
     function labelForSlug(slug) {
@@ -338,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return formatLocationLabel({
                 city: card.getAttribute('data-city') || '',
                 address: card.getAttribute('data-address') || '',
+                island: card.getAttribute('data-island') || '',
                 slug: slug
             }) || slug;
         }
@@ -346,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return formatLocationLabel({
                 city: opt.getAttribute('data-city') || '',
                 address: opt.getAttribute('data-address') || '',
+                island: opt.getAttribute('data-island') || '',
                 slug: slug
             }) || slug;
         }
@@ -364,6 +394,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return n;
     }
 
+    function renderLoaderLocationValue(valueEl, label) {
+        var text = String(label || '');
+        var parts = text.split('\n');
+        var address = (parts[0] || '').trim();
+        var place = parts.slice(1).join(', ').trim();
+        if (address && place) {
+            valueEl.textContent = '';
+            var addrEl = document.createElement('span');
+            addrEl.className = 'loader-location-address';
+            addrEl.textContent = address;
+            var placeEl = document.createElement('span');
+            placeEl.className = 'loader-location-place';
+            placeEl.textContent = place;
+            valueEl.appendChild(addrEl);
+            valueEl.appendChild(placeEl);
+            return;
+        }
+        valueEl.textContent = text;
+    }
+
     function setLoaderLocationText(label, onHome) {
         var valueEl = document.getElementById('loaderLocationValue');
         var locRow = document.getElementById('loaderLocation');
@@ -372,9 +422,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('loaderLocationLabel');
         if (!valueEl) return;
         if (loader) loader.setAttribute('data-home', onHome ? 'true' : 'false');
-        if (labelEl) labelEl.textContent = onHome ? 'Locations' : 'Location';
+        var multi = !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
+        if (labelEl) labelEl.textContent = onHome && multi ? 'Locations' : 'Location';
         if (label) {
-            valueEl.textContent = label;
+            renderLoaderLocationValue(valueEl, label);
             if (locRow) locRow.classList.add('is-ready');
         } else {
             valueEl.textContent = 'Selecting…';
@@ -389,7 +440,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!slug) slug = slugFromPath(window.location.pathname || '/');
         var onHome = !slug && isLoaderHomePath(path || window.location.pathname);
 
+        var multi = !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
+
         if (onHome) {
+            if (!multi) {
+                var homeDetail = singleLocationLabel();
+                if (homeDetail) {
+                    setLoaderLocationText(homeDetail, false);
+                    return;
+                }
+            }
             var count = loaderLocationCount();
             setLoaderLocationText(count === 1 ? '1 location' : count + ' locations', true);
             return;
@@ -399,6 +459,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (loader) loader.setAttribute('data-location-slug', slug);
             setLoaderLocationText(labelForSlug(slug), false);
             return;
+        }
+
+        // Single-location sites have one store on every page, including /locations/.
+        if (!multi) {
+            var only = singleLocationLabel();
+            if (only) {
+                setLoaderLocationText(only, false);
+                return;
+            }
         }
 
         setLoaderLocationText('', false);

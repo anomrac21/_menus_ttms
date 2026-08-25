@@ -56,6 +56,49 @@
         return '/' + normalized;
     }
 
+    function multiLocationMenusEnabled() {
+        return !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
+    }
+
+    function knownLocationSlugs() {
+        var list = (window.MENU_CONFIG && window.MENU_CONFIG.locationSlugs) || [];
+        return Array.isArray(list) ? list : [];
+    }
+
+    function locationLabel(slug) {
+        if (!slug) return '';
+        var locs = (window.MENU_CONFIG && window.MENU_CONFIG.locations) || [];
+        for (var i = 0; i < locs.length; i += 1) {
+            if (locs[i] && locs[i].slug === slug) {
+                return locs[i].city || locs[i].address || slug;
+            }
+        }
+        return slug;
+    }
+
+    function locationSlugFromUrl(url) {
+        var slugs = knownLocationSlugs();
+        var match = String(url || '').match(/^\/([^/]+)\//);
+        var cand = match ? match[1] : '';
+        return slugs.indexOf(cand) >= 0 ? cand : '';
+    }
+
+    function activeSearchLocationSlug() {
+        if (!multiLocationMenusEnabled()) return '';
+        var slugs = knownLocationSlugs();
+        var viewport = document.getElementById('menu-reels-viewport');
+        var fromViewport = (viewport && viewport.getAttribute('data-location-slug')) || '';
+        if (fromViewport && slugs.indexOf(fromViewport) >= 0) return fromViewport;
+        var fromPath = locationSlugFromUrl(window.location.pathname);
+        if (fromPath) return fromPath;
+        var sel = document.getElementById('locationSelect');
+        if (sel && sel.selectedIndex >= 0) {
+            var fromCart = sel.options[sel.selectedIndex].getAttribute('data-slug') || '';
+            if (fromCart && slugs.indexOf(fromCart) >= 0) return fromCart;
+        }
+        return '';
+    }
+
     function buildMenuSearchIndex(data) {
         var entries = [];
         var categories = new Map();
@@ -68,11 +111,18 @@
             var title = item.linkTitle || item.name || '';
             if (!title) return;
 
+            var locSlug =
+                String(item.location_slug || item.ttms_location || '').trim() ||
+                locationSlugFromUrl(item.url);
+            var locName = locationLabel(locSlug);
+
             var haystack = [
                 title,
                 item.category,
                 item.section,
                 item.summary,
+                locSlug,
+                locName,
                 (item.tags || []).join(' '),
                 (item.ingredients || []).join(' '),
                 (item.types || []).join(' '),
@@ -87,14 +137,16 @@
                 image: item.images && item.images.length ? item.images[0] : '',
                 query: title,
                 haystack: haystack,
-                sectionSlug: (function (itemUrl) {
-                    var match = String(itemUrl || '').match(/^\/([^/]+)\//);
-                    return match ? match[1] : '';
-                })(item.url),
+                sectionSlug: item.section || '',
+                locationSlug: locSlug,
+                locationLabel: locName,
             });
 
             if (item.categoryUrl && item.category) {
-                categories.set(item.categoryUrl, item.category);
+                categories.set(item.categoryUrl, {
+                    label: item.category,
+                    locationSlug: locSlug || locationSlugFromUrl(item.categoryUrl),
+                });
             }
 
             (item.tags || []).forEach(function (tag) {
@@ -105,14 +157,18 @@
             });
         });
 
-        categories.forEach(function (label, url) {
+        categories.forEach(function (meta, url) {
+            var label = meta && meta.label ? meta.label : String(meta || '');
+            var locSlug = (meta && meta.locationSlug) || locationSlugFromUrl(url);
             entries.push({
                 type: 'category',
                 label: label,
                 sublabel: 'Category',
                 url: url,
                 query: label,
-                haystack: String(label).toLowerCase(),
+                haystack: (label + ' ' + locSlug + ' ' + locationLabel(locSlug)).toLowerCase(),
+                locationSlug: locSlug,
+                locationLabel: locationLabel(locSlug),
             });
         });
 
@@ -180,6 +236,14 @@
         return 0;
     }
 
+    function entryMatchesActiveLocation(entry) {
+        if (!multiLocationMenusEnabled()) return true;
+        if (entry.type === 'tag' || entry.type === 'ingredient') return true;
+        var locFilter = activeSearchLocationSlug();
+        if (!locFilter) return true;
+        return !!entry.locationSlug && entry.locationSlug === locFilter;
+    }
+
     function getSearchSuggestions(query, limit) {
         if (!query || !menuSearchIndex) return [];
 
@@ -187,6 +251,7 @@
         var matches = [];
 
         menuSearchIndex.forEach(function (entry) {
+            if (!entryMatchesActiveLocation(entry)) return;
             var score = scoreSuggestionEntry(entry, query);
             if (score <= 0) return;
 
@@ -202,6 +267,8 @@
                 image: entry.image,
                 query: entry.query || entry.label,
                 sectionSlug: entry.sectionSlug || '',
+                locationSlug: entry.locationSlug || '',
+                locationLabel: entry.locationLabel || '',
                 score: score,
             });
         });
@@ -324,7 +391,13 @@
                     highlightMatch(entry.label, query) +
                     '</span>' +
                     '<span class="menu-search-suggestions__meta">' +
-                    escapeHtml(entry.sublabel) +
+                    escapeHtml(entry.sublabel || '') +
+                    (entry.locationLabel
+                        ? (entry.sublabel ? ' · ' : '') +
+                          '<span class="menu-search-suggestions__location">' +
+                          escapeHtml(entry.locationLabel) +
+                          '</span>'
+                        : '') +
                     '</span>' +
                     '</span>' +
                     '</button>'
@@ -709,7 +782,9 @@
             parseMenuSearchJsonAttr(card, 'data-cookingmethods'),
             parseMenuSearchJsonAttr(card, 'data-events'),
         ].join(' ');
-        var haystack = [titleText, descriptionText, optionsText, sectionText, metaText].join(' ');
+        var locSlug = String(card.getAttribute('data-location-slug') || '').trim();
+        var locText = (locSlug + ' ' + locationLabel(locSlug)).toLowerCase();
+        var haystack = [titleText, descriptionText, optionsText, sectionText, metaText, locText].join(' ');
 
         return haystack.indexOf(searchTerm) !== -1;
     }
@@ -992,6 +1067,17 @@
             liveSearchNow();
         }
     });
+
+    function refreshSearchForLocation() {
+        var searchInput = document.getElementById('searchbox');
+        var term = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        if (!term) return;
+        updateSearchSuggestions(term);
+        liveSearchNow();
+    }
+
+    document.addEventListener('ttms:home-menu-location-filtered', refreshSearchForLocation);
+    document.addEventListener('ttms:location-selected', refreshSearchForLocation);
 
     document.addEventListener('keydown', function (e) {
         if (e.target && e.target.id === 'searchbox') {

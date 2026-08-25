@@ -1,0 +1,25 @@
+@media (min-width: 769px) {
+  .locations-directory {
+    width: min(100%, 56rem);
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .locations-directory__logo {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .locations-directory__title {
+    font-size: 1.85rem;
+  }
+
+  .locations-directory:not(.locations-directory--single) .locations-directory__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .locations-directory--single .locations-directory-card {
+    max-width: 28rem;
+    margin-inline: auto;
+  }
+}

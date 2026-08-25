@@ -142,6 +142,23 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     padding: 0.85rem 0.85rem 0.35rem;
 }
 
+#dashboard.dashboard-panel .dashboard-panel-orders {
+    margin: 0 0 0.35rem;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-orders[hidden] {
+    display: none !important;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-orders__title {
+    margin: 0 0 0.7rem 0.15rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dashboard-ink-muted);
+}
+
 #dashboard.dashboard-panel .body.dashboard-panel-list {
     flex: 0 0 auto;
     margin: 0;
@@ -156,8 +173,9 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
 
 #dashboard.dashboard-panel .body.dashboard-panel-list li {
     display: flex;
-    align-items: center;
-    gap: 0.85rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
     margin: 0 0 0.55rem;
     padding: 0.85rem 0.95rem;
     border-radius: 1rem;
@@ -168,15 +186,13 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
         rgba(255, 255, 255, 0.03) 100%
     );
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    cursor: pointer;
+    cursor: default;
     transition:
-        transform 0.2s ease,
         border-color 0.2s ease,
         background 0.2s ease;
 }
 
 #dashboard.dashboard-panel .body.dashboard-panel-list li:hover {
-    transform: translateY(-1px);
     border-color: color-mix(in srgb, var(--dashboard-accent) 32%, rgba(255, 255, 255, 0.14));
     background: linear-gradient(
         165deg,
@@ -190,6 +206,58 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     font-weight: 600;
 }
 
+#dashboard.dashboard-panel .dashboard-panel-order__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order__status {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.22);
+    color: #e2e8f0;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order--open .dashboard-panel-order__status {
+    background: rgba(234, 179, 8, 0.22);
+    color: #fde68a;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order--ready .dashboard-panel-order__status {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order--paid .dashboard-panel-order__status {
+    background: rgba(59, 130, 246, 0.22);
+    color: #93c5fd;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order--cancelled .dashboard-panel-order__status {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order__meta,
+#dashboard.dashboard-panel .dashboard-panel-order__lines {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--dashboard-ink-muted);
+}
+
+#dashboard.dashboard-panel .dashboard-panel-order__total {
+    color: var(--dashboard-ink);
+    font-weight: 700;
+}
+
 #dashboard.dashboard-panel .dashboard-panel-empty {
     display: flex;
     flex-direction: column;
@@ -201,8 +269,13 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     text-align: center;
 }
 
-#dashboard.dashboard-panel .body.dashboard-panel-list:not(:empty) + .dashboard-panel-empty {
+#dashboard.dashboard-panel .dashboard-panel-orders:not([hidden]) ~ .dashboard-panel-empty {
     display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-panel-empty--compact {
+    min-height: min(28dvh, 12rem);
+    padding-top: 1rem;
 }
 
 #dashboard.dashboard-panel .dashboard-panel-empty__icon-wrap {

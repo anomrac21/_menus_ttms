@@ -145,7 +145,7 @@
       });
     }
 
-    var header = document.querySelector('header');
+    var header = document.querySelector('.site-header');
     if (header && header.parentNode) {
       header.parentNode.insertBefore(banner, header.nextSibling);
     } else if (document.body.firstChild) {

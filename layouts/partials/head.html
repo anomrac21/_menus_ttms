@@ -1,5 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") -}}
+{{- $menuPublicSite := not $dashboardLayout -}}
 <script>
 (function (doc) {
   if (/Android/i.test(navigator.userAgent || '')) {
@@ -8,6 +10,7 @@
   if (/iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
     doc.documentElement.classList.add('ttms-ios');
   }
+{{- if $menuPublicSite }}
   var mq = window.matchMedia(
     '(max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse))'
   );
@@ -20,8 +23,10 @@
   } else if (typeof mq.addListener === 'function') {
     mq.addListener(sync);
   }
+{{- end }}
 })(document);
 </script>
+{{- if $menuPublicSite }}
 <style id="ttms-mobile-menublock-critical">
   @media (max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse)) {
     .main-header .container { overflow: visible; }
@@ -138,6 +143,7 @@
     transform: none;
   }
 </style>
+{{- end }}
 <style id="ttms-safe-area-critical">
   :root {
     --ttms-safe-top: 0px;
@@ -156,8 +162,8 @@
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
-  /* Notch color lives on .main-header only. Padding <header> as well doubles the empty bar on iOS. */
-  header {
+  /* Notch color lives on .main-header only. Padding .site-header as well doubles the empty bar on iOS. */
+  .site-header {
     padding-top: 0;
   }
   .main-header {
@@ -171,7 +177,7 @@
     padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
     box-sizing: border-box;
   }
-  /* Fixed <header> — keep chooser / offset pages below the bar on first paint. */
+  /* Fixed .site-header — keep chooser / offset pages below the bar on first paint. */
   .main--offset,
   main.multi-loc-page {
     padding-block-start: var(--ttms-header-height, 5em);
@@ -202,7 +208,7 @@
   {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
 {{- end -}}
 <link rel="canonical" href="{{ $canonical }}">
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") -}}
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 
 <!-- Preload critical loader resources FIRST -->
@@ -255,7 +261,7 @@
     margin: 0 auto;
     object-fit: contain;
   }
-
+  
   #loaderImage {
     max-width: min(calc(100% - 0.5rem), 34rem);
     max-height: min(20rem, 48dvh);
@@ -427,13 +433,31 @@
     display: block;
     font-weight: 800;
     font-size: 1.15rem;
-    line-height: 1.15;
+    line-height: 1.3;
     color: #0f172a;
     letter-spacing: -0.02em;
   }
 
+  .loader-location-address,
+  .loader-location-place {
+    display: block;
+  }
+
+  .loader-location-place {
+    margin-top: 0.15rem;
+    font-size: 0.78em;
+    font-weight: 650;
+    letter-spacing: 0;
+    color: #334155;
+  }
+
   .loader-location.is-ready .loader-location-value {
     color: #047857;
+  }
+
+  .loader-location.is-ready .loader-location-place {
+    color: #047857;
+    opacity: 0.88;
   }
 
   #loader.loader-ready .loader-location-value {
@@ -817,8 +841,8 @@
 
 {{ partialCached "head/css.html" . }}
 <style id="ttms-header-safe-once">
-  /* Beat assets/css/main.css if it still pads the wrapper <header>. */
-  header { padding-top: 0 !important; }
+  /* Beat assets/css/main.css if it still pads the wrapper .site-header. */
+  .site-header { padding-top: 0 !important; }
 </style>
 {{- if $menuPublicSite -}}
 <script src="/js/search.js" defer></script>
@@ -896,14 +920,17 @@
 {{- end -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/footer.css" "sync" true) }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/contact.css" "sync" true) }}
+{{- if $menuPublicSite -}}
+{{ partial "head/stylesheet-pair.html" (dict "href" "/css/locations.css" "sync" true) }}
+{{- end -}}
 {{- $menuLocSlugs := slice -}}
 {{- $menuLocMeta := slice -}}
-{{- range site.Data.locations.locations -}}
+{{- range (partial "menu/visible-locations.html" .) -}}
   {{- with .slug -}}{{- $menuLocSlugs = $menuLocSlugs | append . -}}{{- end -}}
-  {{- $menuLocMeta = $menuLocMeta | append (dict "slug" (default "" .slug) "city" (default "" .city) "address" (default "" .address)) -}}
+  {{- $menuLocMeta = $menuLocMeta | append (dict "slug" (default "" .slug) "city" (default "" .city) "address" (default "" .address) "island" (default "" .island)) -}}
 {{- end -}}
 <script>
-window.TTMS_ASSET_V = {{ partial "head/asset-version.html" . | jsonify }};
+window.TTMS_ASSET_V = {{ partial "head/asset-version.html" . | jsonify | safeJS }};
 window.ttmsAssetUrl = function (path) {
   var v = window.TTMS_ASSET_V || '';
   if (!path || !v || /^(https?:)?\/\//.test(path)) return path;
@@ -911,10 +938,25 @@ window.ttmsAssetUrl = function (path) {
 };
 window.MENU_CONFIG = {
   multiLocationMenus: {{ $multiLocationMenus }},
-  locationSlugs: {{ $menuLocSlugs | jsonify }},
-  locations: {{ $menuLocMeta | jsonify }},
+  locationSlugs: {{ $menuLocSlugs | jsonify | safeJS }},
+  locations: {{ $menuLocMeta | jsonify | safeJS }},
   assetVersion: window.TTMS_ASSET_V
 };
+(function (cfg) {
+  if (!cfg) return;
+  function parseArr(value) {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string' && value) {
+      try {
+        var parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) { /* ignore */ }
+    }
+    return [];
+  }
+  cfg.locationSlugs = parseArr(cfg.locationSlugs);
+  cfg.locations = parseArr(cfg.locations);
+})(window.MENU_CONFIG);
 </script>
 {{- if $isMenuReelsPage -}}
 <script>
@@ -1291,12 +1333,43 @@ window.POS_CONFIG = {
     storeId: "{{ $pos.store_id | default "" }}",
     syncMenu: {{ default false $pos.sync_menu }},
     autoProcessOrders: {{ default false $pos.auto_process_orders }},
+    loyverseReceiptMode: "{{ $pos.loyverse_receipt_mode | default "" }}",
     fallbackToWhatsapp: {{ if isset $pos "fallback_to_whatsapp" }}{{ $pos.fallback_to_whatsapp }}{{ else }}true{{ end }},
     itemMapping: {{ $posMap | jsonify | safeJS }}
 };
 </script>
 <script src="/js/pos-integration.js?v=catalog-3" defer></script>
 {{- end -}}
+
+{{- $osvc := site.Params.orderService | default dict -}}
+{{- $osvcClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+<script>
+window.ORDER_CONFIG = {
+  enabled: {{ if isset $osvc "enabled" }}{{ $osvc.enabled }}{{ else }}true{{ end }},
+  apiUrl: {{ ($osvc.apiUrl | default "https://orders.ttmenus.com/api/v1") | jsonify | safeJS }},
+  clientId: {{ $osvcClient | jsonify | safeJS }},
+  kitchenPrint: {{ default true $osvc.kitchenPrint }},
+  printerName: {{ ($osvc.printerName | default "") | jsonify | safeJS }},
+  paperWidthMm: {{ default 80 $osvc.paperWidthMm }},
+  loyverseReceiptMode: {{ ($pos.loyverse_receipt_mode | default "") | jsonify | safeJS }}
+};
+(function (cfg) {
+  if (!cfg) return;
+  function unwrap(value) {
+    if (typeof value !== 'string') return value;
+    var s = value.trim();
+    if ((s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') || (s.charAt(0) === '[' && s.charAt(s.length - 1) === ']')) {
+      try { return JSON.parse(s); } catch (e) { /* keep */ }
+    }
+    return s;
+  }
+  cfg.apiUrl = unwrap(cfg.apiUrl);
+  cfg.clientId = unwrap(cfg.clientId);
+  cfg.printerName = unwrap(cfg.printerName);
+  cfg.loyverseReceiptMode = unwrap(cfg.loyverseReceiptMode);
+})(window.ORDER_CONFIG);
+</script>
+<script src="{{ partial "head/asset-url.html" "/js/order-client.js" }}" defer></script>
 
 {{- if site.Params.auth.enabled -}}
 <script>

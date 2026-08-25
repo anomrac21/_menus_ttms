@@ -1,0 +1,33 @@
+{{- $siteName := site.Title | default "Menu Demo" -}}
+{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
+{{- $kicker := .kicker | default "Dashboard" -}}
+{{- $toolbarLabel := .toolbarLabel | default (printf "%s toolbar" $kicker) -}}
+{{- $closeTitle := .closeTitle | default "Back to dashboard" -}}
+{{- $closeHref := .closeHref | default "/dashboard/" -}}
+{{- $extraClass := .class | default "" -}}
+<div class="dashboard-header" role="banner">
+  <header class="dashboard-header-bar dashboard-subpage-header-bar{{ with $extraClass }} {{ . }}{{ end }}"{{ with .headerId }} id="{{ . }}"{{ end }} aria-label="{{ $toolbarLabel }}">
+    <a href="/dashboard/" class="dashboard-logo-link"{{ with .logoId }} id="{{ . }}"{{ end }} aria-label="Back to dashboard" title="Back to dashboard">
+      <span class="dashboard-logo-frame" aria-hidden="true">
+        <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
+      </span>
+      <span class="dashboard-logo-live-badge dashboard-deploy-status-badge" id="dashboardDeployStatusBadge" data-state="unknown" title="Site deploy status">Live</span>
+    </a>
+    <div class="dashboard-header-main">
+      <p class="dashboard-header-kicker">
+        <span class="dashboard-header-kicker-dot dashboard-deploy-status-dot" id="dashboardDeployStatusDot" aria-hidden="true"></span>
+        {{ $kicker }}
+      </p>
+      <h1 class="dashboard-header-site"{{ with .siteNameId }} id="{{ . }}"{{ end }}>{{ $siteName }}</h1>
+    </div>
+    <div class="dashboard-header-end">
+      {{- range .buttons -}}
+      <a href="{{ .href }}" class="{{ .class }}"{{ with .id }} id="{{ . }}"{{ end }}{{ with .title }} title="{{ . }}"{{ end }}{{ with .target }} target="{{ . }}"{{ end }}{{ with .rel }} rel="{{ . }}"{{ end }}{{ if .hidden }} hidden{{ end }}>{{ with .icon }}<i class="fa {{ . }}" aria-hidden="true"></i> {{ end }}{{ .label }}</a>
+      {{- end -}}
+      <a href="{{ $closeHref }}" class="dashboard-header-close"{{ with .closeId }} id="{{ . }}"{{ end }} title="{{ $closeTitle }}" aria-label="{{ $closeTitle }}">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+</div>
+<script src="{{ partial "head/asset-url.html" "/js/dashboard-deploy-status.js" }}" defer></script>

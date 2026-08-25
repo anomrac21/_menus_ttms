@@ -3,30 +3,18 @@
 <head>
   {{ partial "dashboard/edit-head-theme.html" . }}
 </head>
-{{- $siteName := site.Title | default "Menu Demo" -}}
-{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
 <body class="dashboard-edit-theme-only dashboard-control-room">
   <div class="dashboard-edit-page" id="dashboardEditPage" data-edit-submode="color" data-edit-mode="edit">
-    <header class="dashboard-edit-header dashboard-edit-header--theme dashboard-header-bar dashboard-subpage-header-bar dashboard-edit-theme-header-bar" id="dashboardEditThemeHeader" aria-label="Theme editor toolbar">
-      <a href="/dashboard/" class="dashboard-logo-link" id="dashboardEditThemeLogoLink" aria-label="Back to dashboard" title="Back to dashboard">
-        <span class="dashboard-logo-frame" aria-hidden="true">
-          <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
-        </span>
-        <span class="dashboard-logo-live-badge">Theme</span>
-      </a>
-      <div class="dashboard-header-main">
-        <p class="dashboard-header-kicker">
-          <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
-          Theme colors
-        </p>
-        <h1 class="dashboard-header-site" id="dashboardEditThemeSiteName">{{ $siteName }}</h1>
-      </div>
-      <div class="dashboard-header-end">
-        <a href="/dashboard/" class="dashboard-header-close" id="btnDashboardBack" title="Close theme editor" aria-label="Close theme editor">
-          <i class="fa fa-times" aria-hidden="true"></i>
-        </a>
-      </div>
-    </header>
+    {{ partial "dashboard/subpage-header.html" (dict
+      "kicker" "Theme colors"
+      "toolbarLabel" "Theme editor toolbar"
+      "closeTitle" "Close theme editor"
+      "class" "dashboard-edit-header--theme dashboard-edit-theme-header-bar"
+      "headerId" "dashboardEditThemeHeader"
+      "logoId" "dashboardEditThemeLogoLink"
+      "siteNameId" "dashboardEditThemeSiteName"
+      "closeId" "btnDashboardBack"
+    ) }}
 
     <div class="dashboard-edit-layout">
       <section class="dashboard-edit-preview" aria-label="Menu preview">
@@ -42,7 +30,7 @@
         </div>
       </section>
 
-      <aside class="dashboard-edit-color-aside dashboard-edit-color-painter" id="dashboardEditColorAside" aria-label="Edit theme colors" data-anchor="br">
+      <aside class="dashboard-edit-color-aside dashboard-edit-color-painter is-entrance-pending" id="dashboardEditColorAside" aria-label="Edit theme colors" data-anchor="br">
         <div class="dashboard-edit-color-painter-stage" id="dashboardEditColorPainterStage">
           <div class="dashboard-edit-color-wheel hidden" id="dashboardEditColorWheel" aria-label="Color palette wheel">
             <div class="dashboard-edit-color-wheel-track" aria-hidden="true"></div>

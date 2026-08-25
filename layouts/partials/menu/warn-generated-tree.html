@@ -1,0 +1,18 @@
+{{- /* Hugo WARN when multi-location URLs were not generated into content/.generated. */ -}}
+{{- if partial "menu/multi-location-enabled.html" . -}}
+  {{- $locs := slice -}}
+  {{- with site.Data.locations -}}
+    {{- if reflect.IsSlice . -}}
+      {{- $locs = . -}}
+    {{- else if .locations -}}
+      {{- $locs = .locations -}}
+    {{- end -}}
+  {{- end -}}
+  {{- range $locs -}}
+    {{- with .slug -}}
+      {{- if not (site.GetPage .) -}}
+        {{- warnf "[menu-merge] multiLocationMenus=true but /%s/ is missing — content/.generated is still a flat menu. Run: python scripts/merge_location_menus.py   or .\\scripts\\serve.ps1 so toggling the flag remakes /%s/." . . -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

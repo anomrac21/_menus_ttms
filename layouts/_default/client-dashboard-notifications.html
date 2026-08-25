@@ -17,31 +17,17 @@ window.MENU_IMAGE_CONFIG = {
 </script>
 {{- end }}
 
-<div class="dashboard-analytics-page dashboard-notify-page" id="dashboardNotificationsPage" data-notify-api-url="{{ $notifyApiUrl }}" data-notify-client-domain="{{ $notifyClientDomain }}" data-notify-feature="{{ $notifyFeature }}">
-
-  <div class="dashboard-edit-header dashboard-notify-header">
-
-    <div class="dashboard-edit-header-inner">
-
-      <div class="dashboard-notify-header-start">
-
-        <a href="/dashboard/" class="btn-dash btn-dash-secondary dashboard-edit-header-back" title="Dashboard" aria-label="Dashboard"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-
-        <div class="dashboard-notify-header-text">
-
-          <h1 class="dashboard-edit-title">Notifications</h1>
-
-        </div>
-
-      </div>
-
-      {{- if not $notifyFeature -}}
-      <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-primary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Renew / upgrade</a>
-      {{- end -}}
-
-    </div>
-
-  </div>
+{{- $notifyButtons := slice -}}
+{{- if not $notifyFeature -}}
+  {{- $notifyButtons = slice (dict "href" (printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery)) "label" "Renew / upgrade" "class" "btn-dash btn-dash-primary" "icon" "fa-arrow-up" "target" "_blank" "rel" "noopener") -}}
+{{- end -}}
+<div class="dashboard-analytics-page dashboard-notify-page dashboard-control-room" id="dashboardNotificationsPage" data-notify-api-url="{{ $notifyApiUrl }}" data-notify-client-domain="{{ $notifyClientDomain }}" data-notify-feature="{{ $notifyFeature }}">
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Notifications"
+    "toolbarLabel" "Notifications toolbar"
+    "closeTitle" "Close notifications"
+    "buttons" $notifyButtons
+  ) }}
 
 
 

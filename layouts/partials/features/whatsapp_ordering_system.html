@@ -1650,52 +1650,219 @@ function setTableModalOpen(isOpen) {
   document.body.classList.toggle("table-modal-open", isOpen);
 }
 
+var tableModalAnimTimer = null;
+var TABLE_MODAL_OPEN_MS = 420;
+var TABLE_MODAL_CLOSE_MS = 360;
+
+function prefersTableMotionReduce() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function getOrderNowButton() {
+  return document.querySelector('#whatsappOrderBtn .btn-place-order, #whatsappOrderBtn .placeOrder, .btn-place-order');
+}
+
+function setTableModalOriginFromOrderBtn(modal) {
+  if (!modal) return;
+  var vw = window.innerWidth || 1;
+  var vh = window.innerHeight || 1;
+  var target = getOrderNowButton();
+  if (!target || !target.getBoundingClientRect) {
+    modal.style.setProperty('--table-from-x', '0px');
+    modal.style.setProperty('--table-from-y', Math.round(vh * 0.32) + 'px');
+    return;
+  }
+  var rect = target.getBoundingClientRect();
+  if (!rect.width || !rect.height) {
+    modal.style.setProperty('--table-from-x', '0px');
+    modal.style.setProperty('--table-from-y', Math.round(vh * 0.32) + 'px');
+    return;
+  }
+  modal.style.setProperty('--table-from-x', (rect.left + rect.width / 2 - vw / 2) + 'px');
+  modal.style.setProperty('--table-from-y', (rect.top + rect.height / 2 - vh / 2) + 'px');
+}
+
+function spawnDelightBurst(el, options) {
+  options = options || {};
+  if (!el || !el.getBoundingClientRect || prefersTableMotionReduce()) return;
+  var rect = el.getBoundingClientRect();
+  var host = document.createElement('span');
+  host.className = 'ttms-delight-burst';
+  host.setAttribute('aria-hidden', 'true');
+  host.style.left = (rect.left + rect.width / 2) + 'px';
+  host.style.top = (rect.top + rect.height / 2) + 'px';
+  var ring = document.createElement('span');
+  ring.className = 'ttms-delight-burst__ring';
+  host.appendChild(ring);
+  var ring2 = document.createElement('span');
+  ring2.className = 'ttms-delight-burst__ring ttms-delight-burst__ring--late';
+  host.appendChild(ring2);
+  var glyphs = options.glyphs || ['✓', '★', '+'];
+  var colors = options.colors || ['#25d366', '#fcd000', '#fff', '#2ecc71'];
+  var i;
+  for (i = 0; i < 12; i++) {
+    var p = document.createElement('span');
+    p.className = 'ttms-delight-burst__particle';
+    p.style.setProperty('--a', (i * 30) + 'deg');
+    p.style.setProperty('--p-glyph', '"' + glyphs[i % glyphs.length] + '"');
+    p.style.setProperty('--p-color', colors[i % colors.length]);
+    p.style.setProperty('--p-dist', (-(2.4 + (i % 3) * 0.4)) + 'rem');
+    host.appendChild(p);
+  }
+  document.body.appendChild(host);
+  setTimeout(function () {
+    if (host.parentNode) host.parentNode.removeChild(host);
+  }, 1000);
+}
+
+function celebrateOrderNowButton() {
+  var btn = getOrderNowButton();
+  if (!btn) return;
+  btn.classList.remove('is-order-pop');
+  void btn.offsetWidth;
+  btn.classList.add('is-order-pop');
+  spawnDelightBurst(btn, { glyphs: ['✓', '★', '✦'], colors: ['#25d366', '#fcd000', '#fff', '#2ecc71'] });
+  setTimeout(function () {
+    btn.classList.remove('is-order-pop');
+  }, 720);
+}
+
+function celebrateTableButton(btn) {
+  if (!btn) return;
+  btn.classList.remove('is-table-btn-pop');
+  void btn.offsetWidth;
+  btn.classList.add('is-table-btn-pop');
+  spawnDelightBurst(btn, {
+    glyphs: btn.classList.contains('takeaway-btn') ? ['★', '✦', '✓'] : ['✓', '#', '★'],
+    colors: btn.classList.contains('takeaway-btn') ? ['#fcd000', '#fff', '#ffe082'] : ['#25d366', '#fff', '#fcd000']
+  });
+  setTimeout(function () {
+    btn.classList.remove('is-table-btn-pop');
+  }, 680);
+}
+
+function finishTableModalClose() {
+  tableModalAnimTimer = null;
+  var modal = document.getElementById('tableNumberModal');
+  if (modal) {
+    modal.classList.add('hide');
+    modal.classList.remove('is-table-opening', 'is-table-closing');
+  }
+  setTableModalOpen(false);
+  var confirmmodal = document.getElementById('confirmmodal');
+  if (confirmmodal) confirmmodal.classList.remove('show', 'is-confirm-ready', 'is-confirm-in');
+  var inputEl = document.querySelector('#tableNumberModal .input');
+  if (inputEl) inputEl.classList.remove('hide');
+  var tableSelectionSection = document.getElementById('tableSelectionSection');
+  if (tableSelectionSection) tableSelectionSection.classList.remove('show');
+  document.querySelectorAll('.tableBtn').forEach(function (btn) {
+    btn.classList.remove('selected', 'is-table-btn-pop');
+  });
+  var orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+  if (orderSummaryDisplay) orderSummaryDisplay.classList.add('hide');
+  hideTakeawayFulfillmentChoices();
+  var summaryLocationInfo = document.getElementById('summaryLocationInfo');
+  if (summaryLocationInfo) summaryLocationInfo.innerHTML = '';
+  var tableNumElement = document.getElementById('myTableNum');
+  if (tableNumElement) tableNumElement.textContent = '';
+  window.selectedTableInfo = null;
+  selectedLocationData = null;
+  window.currentOrderLocation = null;
+}
+
 function showTableNumberModal() {
   var modal = document.getElementById("tableNumberModal");
-  if (modal) {
-    modal.classList.remove("hide");
+  if (!modal) {
+    setTableModalOpen(true);
+    return;
   }
+  clearTimeout(tableModalAnimTimer);
+  tableModalAnimTimer = null;
+  setTableModalOriginFromOrderBtn(modal);
+  modal.classList.remove('hide', 'is-table-closing');
+  if (prefersTableMotionReduce()) {
+    modal.classList.remove('is-table-opening');
+    setTableModalOpen(true);
+    return;
+  }
+  void modal.offsetWidth;
+  modal.classList.add('is-table-opening');
   setTableModalOpen(true);
+  tableModalAnimTimer = setTimeout(function () {
+    tableModalAnimTimer = null;
+    modal.classList.remove('is-table-opening');
+  }, TABLE_MODAL_OPEN_MS);
+}
+
+function requestCloseTableModal(options) {
+  options = options || {};
+  var modal = document.getElementById('tableNumberModal');
+  if (!modal) {
+    finishTableModalClose();
+    return;
+  }
+  var alreadyClosed = modal.classList.contains('hide') && !modal.classList.contains('is-table-closing');
+  if (alreadyClosed) {
+    finishTableModalClose();
+    return;
+  }
+  if (modal.classList.contains('is-table-closing') && !options.instant) return;
+  clearTimeout(tableModalAnimTimer);
+  tableModalAnimTimer = null;
+  if (options.instant || prefersTableMotionReduce()) {
+    finishTableModalClose();
+    return;
+  }
+  setTableModalOriginFromOrderBtn(modal);
+  modal.classList.remove('hide', 'is-table-opening');
+  void modal.offsetWidth;
+  modal.classList.add('is-table-closing');
+  tableModalAnimTimer = setTimeout(finishTableModalClose, TABLE_MODAL_CLOSE_MS);
 }
 
 function toggleCart(){
     var cart = document.getElementById("cart");
-    var footerBtns = document.getElementById("footerBtns");
-    if(cart.classList.contains('cart-hidden')){
+    if (!cart) return;
+    var shouldOpen = cart.classList.contains('cart-hidden') || cart.classList.contains('is-cart-closing');
+    if (shouldOpen) {
       if (typeof window.closeAllUiPanels === 'function') {
         window.closeAllUiPanels({ keepCart: true, skipReelsModal: true });
       }
       if (order.length > 0 && order.some(o => o.promotions || o.pricesArray)) {
         refreshCartWithPromos();
       }
+      if (window.TTMSCartPanel && typeof window.TTMSCartPanel.open === 'function') {
+        window.TTMSCartPanel.open();
+        return;
+      }
+      var footerBtns = document.getElementById("footerBtns");
       cart.classList.remove('cart-hidden');
       setCartModalOpen(true);
-      footerBtns.classList.add('bigfont');
-      footerBtns.classList.add('cartopen');
-      footerBtns.classList.remove('smallfont');
-      footerBtns.classList.add('grad1');
-      footerBtns.classList.remove('grad2');
-    }else{
-      cart.classList.add('cart-hidden');
-      setCartModalOpen(false);
-      footerBtns.classList.remove('cartopen');
-      footerBtns.classList.add('grad2');
-      footerBtns.classList.remove('grad1');
-      footerBtns.classList.remove('bigfont');
-      footerBtns.classList.add('smallfont');
-      
+      if (footerBtns) {
+        footerBtns.classList.add('bigfont', 'cartopen', 'grad1');
+        footerBtns.classList.remove('smallfont', 'grad2');
+      }
+      return;
     }
+    closeCart();
   }
-  function closeCart(){
+  function closeCart(options){
+    if (window.TTMSCartPanel && typeof window.TTMSCartPanel.close === 'function') {
+      window.TTMSCartPanel.close(options);
+      return;
+    }
     var cart = document.getElementById("cart");
     var footerBtns = document.getElementById("footerBtns");
-    cart.classList.add('cart-hidden');
+    if (cart) {
+      cart.classList.add('cart-hidden');
+      cart.classList.remove('is-cart-opening', 'is-cart-closing');
+    }
     setCartModalOpen(false);
-    footerBtns.classList.remove('cartopen');
-    footerBtns.classList.add('grad2');
-    footerBtns.classList.remove('grad1');
-    footerBtns.classList.remove('bigfont');
-    footerBtns.classList.add('smallfont');
+    document.body.classList.remove('is-cart-opening', 'is-cart-closing');
+    if (footerBtns) {
+      footerBtns.classList.remove('cartopen', 'grad1', 'bigfont');
+      footerBtns.classList.add('grad2', 'smallfont');
+    }
 	}
 
 	function saveCart() {
@@ -1820,11 +1987,13 @@ function toggleCart(){
     if (promoData.availability) orderEntry.availability = promoData.availability;
   }
   order.push(orderEntry);
-  additemtocart();
-  cartadditem();
+  if (!window.__ttmsDeferCartBadge) {
+    additemtocart();
+    cartadditem();
+  }
   buildOrderText();
   saveCart();
-  updateCart(1);
+  updateCart();
   
   // Track add to cart event
   if (typeof window.trackAddToCart === 'function') {
@@ -1871,7 +2040,7 @@ function removeItem(i){
 	order.splice(i,1);
 	buildOrderText();
 	saveCart();
-	updateCart(-1);
+	updateCart();
 	//printValues();
 }
 function removeAllItems(){
@@ -1883,20 +2052,77 @@ function removeAllItems(){
 	localStorage.removeItem('cart');  // Clear cart from localStorage
 	buildOrderText();
 	document.getElementById("cartcount").innerText= 0;
-  updateCart(0);
+  updateCart();
 	//printValues();
 }
 
-function updateCart(i){
+function getCartBadgeCount(){
+    var list = (typeof order !== 'undefined' && order) ? order : [];
+    var total = 0;
+    for (var i = 0; i < list.length; i++) {
+      var n = parseInt(list[i] && list[i].amt, 10);
+      if (isNaN(n) || n < 1) n = 1;
+      total += n;
+    }
+    return total;
+}
+
+function applyCartBadge(n, opts){
     var cart = document.getElementById("cartcount");
-    cart.innerText= parseInt(cart.innerText)+i;
-    
-    if(parseInt(cart.innerText)<=0){
-    	cart.classList.add('hide');
-    }else{
-    	cart.classList.remove('hide');
+    if (!cart) return;
+    n = Math.max(0, parseInt(n, 10) || 0);
+    var prev = parseInt(cart.innerText, 10);
+    if (isNaN(prev)) prev = 0;
+    cart.innerText = n;
+    if (n <= 0) {
+      cart.classList.add('hide');
+      cart.classList.remove('is-cart-badge-pop');
+      return;
+    }
+    cart.classList.remove('hide');
+    if (opts && opts.animate && n !== prev) {
+      cart.classList.remove('is-cart-badge-pop');
+      void cart.offsetWidth;
+      cart.classList.add('is-cart-badge-pop');
+      clearTimeout(applyCartBadge._popT);
+      applyCartBadge._popT = setTimeout(function () {
+        cart.classList.remove('is-cart-badge-pop');
+      }, 480);
     }
 }
+
+function updateCart(){
+    var n = getCartBadgeCount();
+    if (window.__ttmsDeferCartBadge) {
+      window.__ttmsPendingCartCount = n;
+      return;
+    }
+    applyCartBadge(n);
+}
+
+window.TTMSCartBadge = {
+  count: getCartBadgeCount,
+  sync: updateCart,
+  defer: function () {
+    window.__ttmsDeferCartBadge = true;
+    window.__ttmsPendingCartCount = getCartBadgeCount();
+  },
+  reveal: function () {
+    var n = window.__ttmsPendingCartCount;
+    if (typeof n !== 'number') n = getCartBadgeCount();
+    window.__ttmsDeferCartBadge = false;
+    window.__ttmsPendingCartCount = null;
+    applyCartBadge(n, { animate: true });
+    var icon = document.getElementById('carticon');
+    if (icon) {
+      icon.classList.add('cartadditem');
+      clearTimeout(window.TTMSCartBadge._iconT);
+      window.TTMSCartBadge._iconT = setTimeout(function () {
+        icon.classList.remove('cartadditem');
+      }, 480);
+    }
+  }
+};
 
 async function refreshCartWithPromos() {
 	const dt = await fetchDateTimeForCart();
@@ -2250,12 +2476,18 @@ async function checkCartForUnavailableItems() {
 	return unavailable;
 }
 
-function ttmsShouldSendOrderToLoyverse() {
-	if (!window.posIntegration || !window.posIntegration.isPOSEnabled) return false;
+function ttmsReceiptMode() {
+	var o = window.ORDER_CONFIG || {};
 	var c = window.POS_CONFIG || {};
-	// Auto-process off = do not push receipts from the cart (Connect/mapping still available in Settings).
-	if (c.autoProcessOrders === false) return false;
-	return true;
+	var mode = String(o.loyverseReceiptMode || c.loyverseReceiptMode || '').toLowerCase();
+	if (mode === 'on_payment' || mode === 'direct' || mode === 'off') return mode;
+	if (c.autoProcessOrders === false) return 'off';
+	if (c.autoProcessOrders === true) return 'direct';
+	return 'on_payment';
+}
+
+function ttmsShouldSendOrderToLoyverse() {
+	return ttmsReceiptMode() === 'direct';
 }
 
 function ttmsShouldOpenWhatsAppCheckout() {
@@ -2269,22 +2501,84 @@ function ttmsShouldOpenWhatsAppCheckout() {
 	return true;
 }
 
-function ttmsSendOrderToLoyverse() {
-	if (!ttmsShouldSendOrderToLoyverse()) {
-		var c = window.POS_CONFIG || {};
-		var reason = !window.posIntegration
-			? 'pos_client_missing'
-			: !window.posIntegration.isPOSEnabled
-				? 'pos_off'
-				: c.autoProcessOrders === false
-					? 'auto_process_off'
-					: 'skipped';
-		return Promise.resolve({ skipped: true, reason: reason });
+function ttmsFulfillmentFromCart() {
+	if (currentOrderType === 'table' || (typeof currentMode === 'string' && currentMode === 'dinein')) {
+		return 'dine_in';
 	}
-	var posLoc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
-	return window.posIntegration.processOrderWithPOS({
-		storeId: (posLoc && posLoc.loyverse_store_id) || '',
-		order: order
+	return 'takeaway';
+}
+
+function ttmsCartLinesForOrder() {
+	var lines = [];
+	if (window.posIntegration && typeof window.posIntegration.resolveVariantId === 'function') {
+		(order || []).forEach(function (o) {
+			var qty = Number(o.amt) || 1;
+			var price = Number(o.cost);
+			var unit = qty > 0 ? price / qty : price;
+			lines.push({
+				variant_id: window.posIntegration.resolveVariantId(o) || o.loyverse_variant_id || '',
+				item: o.item,
+				name: o.item,
+				size: o.size || '',
+				quantity: qty,
+				amt: qty,
+				price: isFinite(unit) ? unit : undefined,
+				cost: price,
+				note: typeof lineNote === 'function' ? '' : '',
+				mods: o.mods || [],
+				adds: o.adds || [],
+				sides: o.sides || null,
+			});
+		});
+		if (window.posIntegration.buildLinesFromOrder) {
+			try {
+				var mapped = window.posIntegration.buildLinesFromOrder(order);
+				if (mapped && mapped.length === lines.length) {
+					mapped.forEach(function (m, i) {
+						lines[i].variant_id = m.variant_id || lines[i].variant_id;
+						lines[i].note = m.note || lines[i].note;
+					});
+				}
+			} catch (_) {}
+		}
+		return lines;
+	}
+	return order || [];
+}
+
+async function ttmsSubmitOrderTicket() {
+	if (!window.OrderClient || !window.OrderClient.enabled()) {
+		return { skipped: true, reason: 'order_service_off' };
+	}
+	if (!window.OrderClient.isSignedIn()) {
+		window.OrderClient.requireSignIn();
+		return { skipped: true, reason: 'auth' };
+	}
+	var loc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
+	var oc = window.ORDER_CONFIG || {};
+	var payload = {
+		client_id: oc.clientId || (window.POS_CONFIG && window.POS_CONFIG.clientId) || '',
+		client_domain: window.location.hostname,
+		restaurant_name: document.title || '',
+		location_slug: (loc && loc.slug) || '',
+		store_id: (loc && loc.loyverse_store_id) || (window.POS_CONFIG && window.POS_CONFIG.storeId) || '',
+		fulfillment: ttmsFulfillmentFromCart(),
+		table_number: currentTableNumber || myTable || '',
+		notes: '',
+		cart_json: ttmsCartLinesForOrder(),
+		currency: 'TTD',
+		subtotal: Number(price) || 0,
+		tax: Number(vatcost) || 0,
+		service_charge: Number(servicecost) || 0,
+		total: Number(price) + Number(vatcost) + Number(servicecost),
+		order_ref: 'TTM-' + Date.now(),
+		loyverse_receipt_mode: ttmsReceiptMode(),
+		kitchen_print: oc.kitchenPrint !== false,
+	};
+	return window.OrderClient.create(payload).then(function (data) {
+		return { ok: true, data: data };
+	}).catch(function (err) {
+		return { ok: false, error: err.message, data: err.data, status: err.status };
 	});
 }
 
@@ -2301,10 +2595,15 @@ function placeOrderClick(){
 		window.location.href = 'tel:' + orderPhone;
 		return;
 	}
+	celebrateOrderNowButton();
 	placeOrderClickAsync();
 }
 
 async function placeOrderClickAsync(){
+	if (window.OrderClient && !window.OrderClient.isSignedIn()) {
+		window.OrderClient.requireSignIn();
+		return;
+	}
 	const unavailable = await checkCartForUnavailableItems();
 	if (unavailable.length > 0) {
 		const list = unavailable.filter((v,i,a) => a.indexOf(v)===i).join(', ');
@@ -2483,11 +2782,9 @@ function ttmsSetConfirmOrderBusy(busy) {
 }
 
 async function confirmSendOrder(){
-	// Track order submission
 	if (typeof window.trackOrderSubmission === 'function') {
 		const locationSelect = document.getElementById('locationSelect');
 		const selectedLocation = locationSelect ? locationSelect.options[locationSelect.selectedIndex]?.text : 'Unknown';
-		
 		window.trackOrderSubmission({
 			items: order,
 			totalAmount: price + vatcost + servicecost,
@@ -2497,51 +2794,57 @@ async function confirmSendOrder(){
 		});
 	}
 
-	var openWhatsApp = ttmsShouldOpenWhatsAppCheckout();
-	var sendLoyverse = ttmsShouldSendOrderToLoyverse();
+	if (window.OrderClient && !window.OrderClient.isSignedIn()) {
+		window.OrderClient.requireSignIn();
+		return;
+	}
 
-	// Finish the POS receipt before opening WhatsApp — mobile often navigates
-	// away on wa.me and cancels the in-flight Loyverse request.
-	if (sendLoyverse) {
-		ttmsSetConfirmOrderBusy(true);
-		var result;
+	var openWhatsApp = ttmsShouldOpenWhatsAppCheckout();
+	ttmsSetConfirmOrderBusy(true);
+	var result;
+	try {
+		result = await ttmsSubmitOrderTicket();
+	} finally {
+		ttmsSetConfirmOrderBusy(false);
+	}
+
+	if (result && result.ok && result.data) {
+		var ticket = result.data.ticket_number || result.data.order_ref || '';
+		var extra = '';
+		if (result.data.loyverse_error) extra = '\nLoyverse: ' + result.data.loyverse_error;
+		if (!openWhatsApp) {
+			alert('Order placed. Ticket #' + ticket + extra);
+		} else {
+			alert('Order placed. Ticket #' + ticket + extra + '\nOpening WhatsApp.');
+		}
 		try {
-			result = await ttmsSendOrderToLoyverse();
-		} finally {
-			ttmsSetConfirmOrderBusy(false);
-		}
-		if (result && result.ok) {
-			if (!openWhatsApp) {
-				alert('Order sent to Loyverse.');
+			if (typeof saveCart === 'function') {
+				order = [];
+				saveCart();
+			} else {
+				localStorage.removeItem('cart');
 			}
-		} else if (result && !result.skipped) {
-			var failMsg = ttmsPosFailureMessage(result);
-			failMsg += openWhatsApp
-				? '\n\nOpening WhatsApp as fallback.'
-				: '\n\nCheck POS connection and item mapping in Menu settings.';
-			alert(failMsg);
-		} else if (!openWhatsApp && (!result || result.skipped)) {
-			var skipReason = (result && result.reason) || '';
-			var skipMsg = 'Loyverse order was not sent.';
-			if (skipReason === 'empty_cart') skipMsg += ' Cart was empty when sending to POS.';
-			else if (skipReason === 'auto_process_off') skipMsg += ' Auto-process orders is off in POS settings.';
-			else if (skipReason === 'pos_off' || skipReason === 'pos_client_missing') skipMsg += ' POS is off or not loaded.';
-			else skipMsg += ' POS off or auto-process disabled.';
-			alert(skipMsg);
-		}
+		} catch (_) {}
+	} else if (result && result.skipped && result.reason === 'auth') {
+		return;
+	} else if (result && !result.skipped) {
+		alert((result.error || 'Could not place order.') + (openWhatsApp ? '\n\nOpening WhatsApp as fallback.' : ''));
+	} else if (!openWhatsApp) {
+		alert('Could not place order. Sign in and try again.');
+		return;
 	}
 
 	if (openWhatsApp && message) {
 		window.open(message, '_blank');
-	} else if (!sendLoyverse && !openWhatsApp) {
-		alert('No checkout channel is available. Enable WhatsApp or Loyverse POS in Menu settings.');
 	}
 
 	if (typeof closeTableModal === 'function') {
-		try { closeTableModal(); } catch (e) {}
+		try { closeTableModal({ instant: true }); } catch (e) {}
+	}
+	if (typeof closeCart === 'function') {
+		try { closeCart(); } catch (e) {}
 	}
 
-	// Clear the order type variables after sending the order
 	currentOrderType = 'takeaway';
 	currentTableNumber = '';
 }
@@ -2669,40 +2972,8 @@ function openTableModal(state){
 	}
 	
 }
-function closeTableModal() {
-    document.getElementById('tableNumberModal').classList.add('hide');
-    setTableModalOpen(false);
-    document.getElementById('confirmmodal').classList.remove('show');
-    document.querySelector('.input').classList.remove('hide');
-    
-    // Hide the table selection section
-    const tableSelectionSection = document.getElementById('tableSelectionSection');
-    if (tableSelectionSection) {
-        tableSelectionSection.classList.remove('show');
-    }
-    
-    // Remove selected class from all table buttons
-    const allTableButtons = document.querySelectorAll('.tableBtn');
-    allTableButtons.forEach(btn => btn.classList.remove('selected'));
-    
-    // Hide the order summary display
-    const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
-    if (orderSummaryDisplay) {
-        orderSummaryDisplay.classList.add('hide');
-    }
-    
-    // Clear the order summary display
-    const summaryLocationInfo = document.getElementById('summaryLocationInfo');
-    if (summaryLocationInfo) {
-        summaryLocationInfo.innerHTML = '';
-    }
-    
-    // Reset selected table info
-    window.selectedTableInfo = null;
-    selectedLocationData = null;
-    
-    // Clear the current order location
-    window.currentOrderLocation = null;
+function closeTableModal(options) {
+    requestCloseTableModal(options);
 }
 
 // Enhanced selectTable function to include location context
@@ -2719,6 +2990,7 @@ function selectTable(buttonElement) {
     
     // Add selected class to the clicked button
     buttonElement.classList.add('selected');
+    celebrateTableButton(buttonElement);
     
     let tableNumber = buttonElement.textContent.trim();
     const isTakeaway = buttonElement.classList.contains('takeaway-btn');
@@ -2750,27 +3022,38 @@ function selectTable(buttonElement) {
         }
     }
     
+    var orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
     if (isTakeaway) {
-        // For takeaway, update the summary display and go to order confirmation
         updateOrderSummary(selectedLocationData);
-        // Show the summary for takeaway orders
-        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
-        if (orderSummaryDisplay) {
-            orderSummaryDisplay.classList.remove('hide');
+        if (showTakeawayFulfillmentChoices()) {
+            if (orderSummaryDisplay) orderSummaryDisplay.classList.add('hide');
+            hideConfirmFooter();
+            return;
         }
+        if (orderSummaryDisplay) orderSummaryDisplay.classList.remove('hide');
     } else {
-        // For table orders, hide the summary
-        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
-        if (orderSummaryDisplay) {
-            orderSummaryDisplay.classList.add('hide');
-        }
+        hideTakeawayFulfillmentChoices();
+        if (orderSummaryDisplay) orderSummaryDisplay.classList.add('hide');
     }
-    
-    // Scroll to confirmation section smoothly
-    const confirmSection = document.getElementById('confirmmodal');
-    if (confirmSection) {
-        confirmSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    revealConfirmFooter();
+}
+
+function revealConfirmFooter() {
+    var footer = document.getElementById('confirmmodal');
+    if (!footer) return;
+    footer.classList.remove('is-confirm-in');
+    footer.classList.add('is-confirm-ready');
+    void footer.offsetWidth;
+    if (!prefersTableMotionReduce()) {
+        footer.classList.add('is-confirm-in');
+        setTimeout(function () {
+            footer.classList.remove('is-confirm-in');
+        }, 720);
+        footer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
     }
+    footer.scrollIntoView({ block: 'nearest' });
 }
 
 function confirmTable(state){
@@ -2947,7 +3230,7 @@ document.addEventListener("DOMContentLoaded", function() {
     buildCartCards();
     
     loadCart();  // Load saved cart from localStorage
-    updateCart(order.length);
+    updateCart();
     
     fetchMenuItems().then(() => {
       console.log('✅ Menu items preloaded and ready');
@@ -3342,6 +3625,8 @@ function populateTableNumbers(locationData) {
     
     // Clear existing buttons
     tableButtonsContainer.innerHTML = '';
+    hideTakeawayFulfillmentChoices();
+    hideConfirmFooter();
     
     if (!locationData || !locationData.orderingtables || locationData.orderingtables.length === 0) {
         // Fallback to default table numbers if no location data
@@ -3378,6 +3663,99 @@ function populateTableNumbers(locationData) {
         
         tableButtonsContainer.appendChild(tableBtn);
     });
+}
+
+function deliveryCheckoutAvailable() {
+    return !!(window.DELIVERY_CONFIG && window.DELIVERY_CONFIG.enabled);
+}
+
+function takeawayFulfillmentSection() {
+    return document.getElementById('takeawayFulfillmentSection');
+}
+
+function hideConfirmFooter() {
+    var footer = document.getElementById('confirmmodal');
+    if (!footer) return;
+    footer.classList.remove('is-confirm-ready', 'is-confirm-in');
+}
+
+function hideTakeawayFulfillmentChoices() {
+    var el = takeawayFulfillmentSection();
+    if (!el) return;
+    el.classList.add('hide');
+    el.hidden = true;
+    var pickup = document.getElementById('ttmsTakeawayPickupBtn');
+    var deliver = document.getElementById('ttmsTakeawayDeliverBtn');
+    if (pickup) pickup.classList.remove('selected');
+    if (deliver) deliver.classList.remove('selected');
+}
+
+function showTakeawayFulfillmentChoices() {
+    if (!deliveryCheckoutAvailable()) {
+        hideTakeawayFulfillmentChoices();
+        return false;
+    }
+    bindTakeawayFulfillmentButtons();
+    var el = takeawayFulfillmentSection();
+    if (!el) return false;
+    el.classList.remove('hide');
+    el.hidden = false;
+    var pickup = document.getElementById('ttmsTakeawayPickupBtn');
+    var deliver = document.getElementById('ttmsTakeawayDeliverBtn');
+    if (pickup) pickup.classList.remove('selected');
+    if (deliver) deliver.classList.remove('selected');
+    var tableNumElement = document.getElementById('myTableNum');
+    if (tableNumElement) tableNumElement.textContent = 'Pick up or deliver this order?';
+    if (!prefersTableMotionReduce()) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return true;
+}
+
+function bindTakeawayFulfillmentButtons() {
+    var pickup = document.getElementById('ttmsTakeawayPickupBtn');
+    var deliver = document.getElementById('ttmsTakeawayDeliverBtn');
+    if (pickup && pickup.getAttribute('data-bound') !== '1') {
+        pickup.setAttribute('data-bound', '1');
+        pickup.addEventListener('click', chooseTakeawayPickup);
+    }
+    if (deliver && deliver.getAttribute('data-bound') !== '1') {
+        deliver.setAttribute('data-bound', '1');
+        deliver.addEventListener('click', function () {
+            startDeliveryCheckoutFromTableModal(deliver);
+        });
+    }
+}
+
+function chooseTakeawayPickup() {
+    var pickup = document.getElementById('ttmsTakeawayPickupBtn');
+    var deliver = document.getElementById('ttmsTakeawayDeliverBtn');
+    if (pickup) pickup.classList.add('selected');
+    if (deliver) deliver.classList.remove('selected');
+    updateOrderSummary(selectedLocationData);
+    var orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
+    if (orderSummaryDisplay) orderSummaryDisplay.classList.remove('hide');
+    var tableNumElement = document.getElementById('myTableNum');
+    if (tableNumElement) tableNumElement.textContent = 'Ready to pick up your order?';
+    revealConfirmFooter();
+}
+
+function startDeliveryCheckoutFromTableModal(buttonElement) {
+    var pickup = document.getElementById('ttmsTakeawayPickupBtn');
+    if (pickup) pickup.classList.remove('selected');
+    if (buttonElement) buttonElement.classList.add('selected');
+    if (typeof closeTableModal === 'function') closeTableModal();
+    var open = function () {
+        if (window.TTMSDeliveryUI && typeof window.TTMSDeliveryUI.openCheckout === 'function') {
+            window.TTMSDeliveryUI.openCheckout();
+            return true;
+        }
+        return false;
+    };
+    if (open()) return;
+    window.setTimeout(function () {
+        if (!open()) alert('Delivery is not available right now.');
+    }, 80);
 }
 
 // Function to open table modal with location data from WhatsApp ordering system
@@ -3555,50 +3933,8 @@ window.testTablePopulation = function() {
     };
 
     // Function to close table modal
-    function closeTableModal() {
-        const modal = document.getElementById('tableNumberModal');
-        if (modal) {
-            modal.classList.add('hide');
-        }
-        setTableModalOpen(false);
-        
-        // Hide the table selection section
-        const tableSelectionSection = document.getElementById('tableSelectionSection');
-        if (tableSelectionSection) {
-            tableSelectionSection.classList.remove('show');
-        }
-        
-        // Remove selected class from all table buttons
-        const allTableButtons = document.querySelectorAll('.tableBtn');
-        allTableButtons.forEach(btn => btn.classList.remove('selected'));
-        
-        // Hide the order summary display
-        const orderSummaryDisplay = document.getElementById('orderSummaryDisplay');
-        if (orderSummaryDisplay) {
-            orderSummaryDisplay.classList.add('hide');
-        }
-        
-        // Clear the order summary display
-        const summaryLocationInfo = document.getElementById('summaryLocationInfo');
-        if (summaryLocationInfo) {
-            summaryLocationInfo.innerHTML = '';
-        }
-        
-        // Clear the selected table display
-        const tableNumElement = document.getElementById('myTableNum');
-        if (tableNumElement) {
-            tableNumElement.textContent = '';
-        }
-        
-        // Reset selected table info
-        window.selectedTableInfo = null;
-        selectedLocationData = null;
-        
-        // Clear the current order location
-        window.currentOrderLocation = null;
-        
-        // NOTE: Do NOT clear currentOrderType and currentTableNumber here
-        // They are needed for the WhatsApp message construction
+    function closeTableModal(options) {
+        requestCloseTableModal(options);
     }
 
     // Function to confirm table selection
@@ -3625,7 +3961,7 @@ window.testTablePopulation = function() {
         }
         
         // Close the modal and proceed with order
-        closeTableModal();
+        closeTableModal({ instant: true });
         
         // Trigger the order confirmation in the WhatsApp ordering system
         if (typeof window.confirmWhatsAppOrder === 'function') {

@@ -12,6 +12,9 @@
     --cart-ink-muted: rgba(255, 255, 255, 0.62);
     --cart-whatsapp: #25d366;
     --cart-whatsapp-dark: #128c7e;
+    --cart-from-x: 0px;
+    --cart-from-y: 18%;
+    --cart-from-scale: 0.08;
     position: fixed;
     top: 0;
     right: 0;
@@ -91,10 +94,84 @@ body.cart-open #footerBtns {
     pointer-events: none !important;
 }
 
+body.cart-open.is-cart-opening #footerBtns,
+body.cart-open.is-cart-closing #footerBtns {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+}
+
 body.cart-open #footerSettings {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
+}
+
+#cart.is-cart-opening,
+#cart.is-cart-closing {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
+    background: transparent !important;
+    background-image: none !important;
+}
+
+#cart.is-cart-closing {
+    pointer-events: none !important;
+}
+
+#cart.is-cart-opening::before,
+#cart.is-cart-closing::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: #0a0a0f;
+}
+
+#cart.is-cart-opening::before {
+    animation: cart-scrim-in 0.36s ease both;
+}
+
+#cart.is-cart-closing::before {
+    animation: cart-scrim-out 0.28s ease both;
+}
+
+#cart .cart-motion {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0a0a0f;
+}
+
+#cart.is-cart-opening .cart-motion,
+#cart.is-cart-closing .cart-motion {
+    transform-origin: 50% 50%;
+    will-change: transform;
+}
+
+#cart.is-cart-opening .cart-motion {
+    animation: cart-panel-from-dock 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+#cart.is-cart-closing .cart-motion {
+    animation: cart-panel-into-dock 0.36s cubic-bezier(0.3, 0.02, 0.2, 1) both;
+}
+
+body.is-cart-opening .footer-dock__action--cart {
+    animation: cart-dock-release 0.45s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+body.is-cart-closing .footer-dock__action--cart {
+    animation: cart-dock-catch 0.5s 0.2s cubic-bezier(0.22, 1.4, 0.36, 1) both;
 }
 
 #cart .order,
@@ -756,6 +833,16 @@ body.cart-open #footerSettings {
     transform: translateY(0);
 }
 
+.btn-place-order.is-order-pop,
+.placeOrder.is-order-pop,
+.btn-place-order.is-order-pop:hover,
+.placeOrder.is-order-pop:hover,
+.btn-place-order.is-order-pop:active,
+.placeOrder.is-order-pop:active {
+    animation: order-now-pop 0.7s cubic-bezier(0.22, 1.45, 0.36, 1) both;
+    transform: none;
+}
+
 .btn-place-order:disabled,
 .btn-place-order--disabled,
 .placeOrder:disabled,
@@ -781,6 +868,73 @@ body.cart-open #footerSettings {
    ACCESSIBILITY
    ============================================ */
 
+@keyframes cart-scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes cart-scrim-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes cart-panel-from-dock {
+    0% {
+        transform: translate(var(--cart-from-x), var(--cart-from-y)) scale(0.06);
+        opacity: 0.88;
+        border-radius: 50%;
+    }
+    42% {
+        transform: translate(0, 0) scale(0.16);
+        opacity: 1;
+        border-radius: 50%;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 0;
+    }
+}
+
+@keyframes cart-panel-into-dock {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 0.85rem;
+    }
+    44% {
+        transform: translate(0, 0) scale(0.15);
+        opacity: 1;
+        border-radius: 50%;
+    }
+    100% {
+        transform: translate(var(--cart-from-x), var(--cart-from-y)) scale(0.05);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}
+
+@keyframes cart-dock-release {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+}
+
+@keyframes cart-dock-catch {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+}
+
+@keyframes order-now-pop {
+    0% { transform: scale(1); }
+    14% { transform: scale(0.9); }
+    38% { transform: scale(1.12); }
+    58% { transform: scale(0.97); }
+    78% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
     #cart,
     .cart-back-btn,
@@ -790,5 +944,16 @@ body.cart-open #footerSettings {
     .placeOrder,
     .btn-clear-cart {
         transition: none;
+    }
+
+    #cart.is-cart-opening::before,
+    #cart.is-cart-closing::before,
+    #cart.is-cart-opening .cart-motion,
+    #cart.is-cart-closing .cart-motion,
+    .btn-place-order.is-order-pop,
+    .placeOrder.is-order-pop,
+    body.is-cart-opening .footer-dock__action--cart,
+    body.is-cart-closing .footer-dock__action--cart {
+        animation: none;
     }
 }

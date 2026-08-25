@@ -9,30 +9,17 @@
 {{- $ds := site.Params.deliveryService | default dict -}}
 {{- $deliveryOn := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
 
+{{- $deliveryButtons := slice -}}
+{{- if not $deliveryOn -}}
+  {{- $deliveryButtons = slice (dict "href" (printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery)) "label" "Upgrade" "class" "btn-dash btn-dash-primary" "icon" "fa-arrow-up" "target" "_blank" "rel" "noopener") -}}
+{{- end -}}
 <div class="dashboard-analytics-page dashboard-settings-page dashboard-delivery-page dashboard-control-room" id="dashboardDeliveryPage">
-  <header class="dashboard-edit-header dashboard-settings-header dashboard-header-bar dashboard-subpage-header-bar" aria-label="Delivery orders toolbar">
-    <a href="/dashboard/" class="dashboard-logo-link" aria-label="Back to dashboard" title="Back to dashboard">
-      <span class="dashboard-logo-frame" aria-hidden="true">
-        <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
-      </span>
-      <span class="dashboard-logo-live-badge">Inbox</span>
-    </a>
-    <div class="dashboard-header-main">
-      <p class="dashboard-header-kicker">
-        <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
-        Delivery orders
-      </p>
-      <h1 class="dashboard-header-site">{{ $siteName }}</h1>
-    </div>
-    <div class="dashboard-header-end">
-      {{- if not $deliveryOn -}}
-      <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-primary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade</a>
-      {{- end -}}
-      <a href="/dashboard/" class="dashboard-header-close" title="Close delivery inbox" aria-label="Close delivery inbox">
-        <i class="fa fa-times" aria-hidden="true"></i>
-      </a>
-    </div>
-  </header>
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Delivery orders"
+    "toolbarLabel" "Delivery orders toolbar"
+    "closeTitle" "Close delivery inbox"
+    "buttons" $deliveryButtons
+  ) }}
 
   <main class="dashboard-analytics-main dashboard-settings-main" id="main">
     {{- if not $deliveryOn -}}

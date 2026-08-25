@@ -1,10 +1,5 @@
 {{- $siteName := partial "site-name.html" . | strings.TrimSpace -}}
-{{- $locations := site.Data.locations -}}
-{{- if $locations -}}
-  {{- if not (reflect.IsSlice $locations) -}}
-    {{- with $locations.locations -}}{{- $locations = . -}}{{- end -}}
-  {{- end -}}
-{{- end -}}
+{{- $locations := partial "menu/visible-locations.html" . -}}
 {{- $loc := dict -}}
 {{- if and $locations (reflect.IsSlice $locations) (gt (len $locations) 0) -}}
   {{- $loc = index $locations 0 -}}

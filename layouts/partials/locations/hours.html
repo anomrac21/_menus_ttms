@@ -1,0 +1,41 @@
+{{- $oh := .hours -}}
+{{- $days := .days -}}
+{{- $dayNames := .dayNames -}}
+<div class="locations-directory-hours">
+  <div class="locations-directory-hours__today">
+    <span class="locations-directory-hours__label">Today</span>
+    <strong class="today-hours-text">Loading…</strong>
+  </div>
+  <details class="hours-accordion locations-directory-hours__all">
+    <summary>All hours</summary>
+    <ul class="all-hours-list">
+      {{- range $days -}}
+        {{- $day := . -}}
+        {{- $dayName := index $dayNames $day -}}
+        {{- $entries := index $oh $day -}}
+        {{- $openList := where $entries "type" "Open" -}}
+        {{- $closeList := where $entries "type" "Close" -}}
+        {{- $open := index $openList 0 -}}
+        {{- $close := index $closeList 0 -}}
+        <li class="hours-item" data-day="{{ $day }}">
+          <span class="hours-item__day">{{ $dayName }}</span>
+          {{- if and $open $close $open.time $close.time -}}
+            {{- $openParts := split $open.time ":" -}}
+            {{- $closeParts := split $close.time ":" -}}
+            {{- $openHour := int (float (index $openParts 0)) -}}
+            {{- $openMin := index $openParts 1 -}}
+            {{- $openAMPM := cond (ge $openHour 12) "PM" "AM" -}}
+            {{- $open12 := mod $openHour 12 | default 12 -}}
+            {{- $closeHour := int (float (index $closeParts 0)) -}}
+            {{- $closeMin := index $closeParts 1 -}}
+            {{- $closeAMPM := cond (ge $closeHour 12) "PM" "AM" -}}
+            {{- $close12 := mod $closeHour 12 | default 12 -}}
+            <span class="hours-time">{{ printf "%d:%s%s – %d:%s%s" $open12 $openMin (lower $openAMPM) $close12 $closeMin (lower $closeAMPM) }}</span>
+          {{- else -}}
+            <span class="hours-time closed">Closed</span>
+          {{- end -}}
+        </li>
+      {{- end -}}
+    </ul>
+  </details>
+</div>

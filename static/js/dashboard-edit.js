@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   var COLOR_PAINTER_ANCHOR_KEY = 'ttmsColorPainterAnchor';
   var COLOR_PAINTER_MENU_KEY = 'ttmsColorPainterMenu';
   var COLOR_PAINTER_DRAG_THRESHOLD = 8;
-  var COLOR_WHEEL_STEP_DEG = 26;
+  var COLOR_WHEEL_STEP_DEG = 34;
   var COLOR_WHEEL_VISIBLE = 2.05; // slots each side of focus
   var colorPainterDrag = null;
   var colorWheelScroll = 0; // float index
@@ -820,35 +820,103 @@ document.addEventListener('DOMContentLoaded', async function() {
     showColorPainterOrb();
   }
 
+  function getColorPainterCenterPos() {
+    var size = getColorPainterOrbSize();
+    return {
+      x: Math.round((window.innerWidth - size) / 2),
+      y: Math.round((window.innerHeight - size) / 2)
+    };
+  }
+
+  function getColorPainterRestAnchor() {
+    var saved = null;
+    try { saved = sessionStorage.getItem(COLOR_PAINTER_ANCHOR_KEY); } catch (e) { /* ignore */ }
+    return saved || (colorAsideEl && colorAsideEl.getAttribute('data-anchor')) || 'br';
+  }
+
+  function colorPainterEntranceBusy() {
+    return !!(colorAsideEl && (
+      colorAsideEl.classList.contains('is-entering') ||
+      colorAsideEl.classList.contains('is-settling') ||
+      colorAsideEl.classList.contains('is-entrance-center') ||
+      colorAsideEl.dataset.entrancePlaying === '1'
+    ));
+  }
+
   function playColorPainterEntrance() {
     if (!colorAsideEl) return;
+    var restAnchor = getColorPainterRestAnchor();
     var reduceMotion = false;
     try {
       reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     } catch (e) { /* ignore */ }
-    if (reduceMotion) {
-      colorAsideEl.classList.remove('is-entering');
+
+    if (colorPainterEntranceBusy()) return;
+
+    if (colorAsideEl.dataset.entrancePlayed === '1') {
+      colorAsideEl.classList.remove('is-entrance-pending', 'hidden');
+      if (!colorAsideEl.style.left) snapColorPainterToAnchor(restAnchor, false);
       return;
     }
-    colorAsideEl.classList.remove('is-entering');
-    void colorAsideEl.offsetWidth;
-    colorAsideEl.classList.add('is-entering');
-    var onEnd = function (ev) {
-      if (ev && ev.target !== colorAsideEl && !ev.target.classList.contains('dashboard-edit-color-orb')) {
-        return;
+
+    if (reduceMotion) {
+      colorAsideEl.dataset.entrancePlayed = '1';
+      colorAsideEl.classList.remove('is-entrance-pending', 'hidden', 'is-entering', 'is-entrance-center', 'is-settling');
+      snapColorPainterToAnchor(restAnchor, false);
+      return;
+    }
+
+    colorAsideEl.dataset.entrancePlaying = '1';
+    colorAsideEl.classList.add('is-entrance-pending', 'is-entrance-center');
+    colorAsideEl.classList.remove('hidden', 'is-entering', 'is-settling', 'is-snapping');
+
+    function startFlourish() {
+      if (!colorAsideEl || colorAsideEl.dataset.entrancePlayed === '1') return;
+      var center = getColorPainterCenterPos();
+      setColorPainterPosition(center.x, center.y);
+      colorAsideEl.classList.add('is-entering');
+      void colorAsideEl.offsetWidth;
+      colorAsideEl.classList.remove('is-entrance-pending');
+
+      var settled = false;
+      function settleToRest() {
+        if (settled || !colorAsideEl) return;
+        settled = true;
+        colorAsideEl.dataset.entrancePlayed = '1';
+        colorAsideEl.dataset.entrancePlaying = '';
+        colorAsideEl.classList.remove('is-entering');
+        colorAsideEl.classList.add('is-settling');
+        window.requestAnimationFrame(function () {
+          colorAsideEl.classList.remove('is-entrance-center');
+          snapColorPainterToAnchor(restAnchor, false);
+          window.setTimeout(function () {
+            if (colorAsideEl) colorAsideEl.classList.remove('is-settling');
+          }, 1000);
+        });
       }
-      colorAsideEl.classList.remove('is-entering');
-      colorAsideEl.removeEventListener('animationend', onEnd);
-    };
-    colorAsideEl.addEventListener('animationend', onEnd);
+
+      var orb = btnColorPainterOrb;
+      var onEnd = function (ev) {
+        if (!ev || ev.target !== orb) return;
+        if (ev.animationName && String(ev.animationName).indexOf('colorPainterOrbGrandEnter') === -1) return;
+        orb.removeEventListener('animationend', onEnd);
+        window.setTimeout(settleToRest, 220);
+      };
+      if (orb) orb.addEventListener('animationend', onEnd);
+      window.setTimeout(settleToRest, 1600);
+    }
+
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        window.setTimeout(startFlourish, 160);
+      });
+    });
   }
 
   function showColorPainterOrb() {
     if (!colorAsideEl) return;
-    colorAsideEl.classList.remove('hidden');
     closeColorRings({ keepOrb: true });
     initColorPainterCanvas();
-    restoreColorPainterAnchor();
     playColorPainterEntrance();
   }
 
@@ -1087,6 +1155,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     { id: 'footer', label: 'Footer', vars: [
       { name: '--footer-bg-color', label: 'Background' },
       { name: '--footer-text-color', label: 'Text' },
+      { name: '--footer-icon-color', label: 'Icons' },
       { name: '--modal-bg-container-color', label: 'Modal overlay' }
     ]}
   ];
@@ -3344,14 +3413,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   function getColorPainterOpenSector() {
     var anchor = (colorAsideEl && colorAsideEl.getAttribute('data-anchor')) || 'br';
     // Compact iOS-style wheel arc into free space (0=right, 90=down).
-    if (anchor === 'tl') return { start: 10, sweep: 100 };
-    if (anchor === 'tc') return { start: 35, sweep: 110 };
-    if (anchor === 'tr') return { start: 90, sweep: 100 };
-    if (anchor === 'ml') return { start: -45, sweep: 100 };
-    if (anchor === 'mr') return { start: 135, sweep: 100 };
-    if (anchor === 'bl') return { start: -90, sweep: 100 };
-    if (anchor === 'bc') return { start: 215, sweep: 110 };
-    return { start: 180, sweep: 100 }; // br
+    if (anchor === 'tl') return { start: 6, sweep: 118 };
+    if (anchor === 'tc') return { start: 28, sweep: 128 };
+    if (anchor === 'tr') return { start: 84, sweep: 118 };
+    if (anchor === 'ml') return { start: -52, sweep: 118 };
+    if (anchor === 'mr') return { start: 128, sweep: 118 };
+    if (anchor === 'bl') return { start: -98, sweep: 118 };
+    if (anchor === 'bc') return { start: 208, sweep: 128 };
+    return { start: 172, sweep: 118 }; // br
   }
 
   function getActiveColorWheelRing() {
@@ -3554,8 +3623,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         var active = item.getAttribute(activeAttr) === activeValue;
         item.classList.toggle('is-section-active', activeAttr === 'data-section-id' && active);
         item.classList.toggle('is-var-active', activeAttr === 'data-var' && active);
-        scale = active ? 0.92 : 0.7;
-        opacity = active ? 0.95 : 0.42;
+        if (active) item.setAttribute('aria-current', 'true');
+        else item.removeAttribute('aria-current');
+        scale = active ? 1.08 : 0.68;
+        opacity = active ? 1 : 0.36;
         // Park evenly around the arc (not scrub-windowed).
         deg = sector.start + (n === 1 ? 0 : sector.sweep * (i / (n - 1)));
         rad = (deg * Math.PI) / 180;
@@ -3574,6 +3645,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         opacity = 0;
       }
       item.classList.toggle('is-focus', !compact && i === focusIdx);
+      if (!compact && i === focusIdx) item.setAttribute('aria-current', 'true');
+      else if (!compact) item.removeAttribute('aria-current');
       item.classList.toggle('is-near', !compact && abs > 0.5 && abs < 1.5);
       item.classList.toggle('is-far', !compact && abs >= 1.5 && visible);
       item.classList.toggle('is-offscreen', !visible);
@@ -3582,7 +3655,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       item.style.setProperty('--ring-scale', String(scale));
       item.style.setProperty('--ring-opacity', String(opacity));
       item.style.setProperty('--ring-i', String(i));
-      item.style.zIndex = String((compact ? 12 : 30) - Math.round(abs * 4));
+      var selected = compact ? active : i === focusIdx;
+      item.style.zIndex = selected ? '90' : String(Math.max(2, (compact ? 8 : 24) - Math.round(abs * 4)));
       item.style.pointerEvents = interactive && visible && (compact || abs < 1.2) ? 'auto' : 'none';
       item.tabIndex = !compact && i === focusIdx ? 0 : -1;
       item.setAttribute('aria-hidden', visible ? 'false' : 'true');
@@ -4373,7 +4447,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   function initColorPainterCanvas() {
     if (!colorAsideEl || !btnColorPainterOrb || colorAsideEl.dataset.painterReady === '1') return;
     colorAsideEl.dataset.painterReady = '1';
-    restoreColorPainterAnchor();
+    if (colorAsideEl.dataset.entrancePlayed === '1' && !colorPainterEntranceBusy()) {
+      restoreColorPainterAnchor();
+    }
 
     function pointerPos(ev) {
       if (ev.touches && ev.touches[0]) {

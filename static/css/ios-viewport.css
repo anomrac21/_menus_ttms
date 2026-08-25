@@ -51,3 +51,10 @@ body.ads-reels-open #footerSettings {
     visibility: hidden !important;
     pointer-events: none !important;
 }
+
+body.cart-open.is-cart-opening #footerBtns,
+body.cart-open.is-cart-closing #footerBtns {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+}

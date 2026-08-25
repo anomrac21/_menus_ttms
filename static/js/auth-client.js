@@ -731,6 +731,20 @@ const AuthClient = {
     }
   },
 
+  async updatePreferences(updates) {
+    var result = await this.authenticatedRequest(this.config.apiUrl + '/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates || {}),
+    });
+    if (result && result.success && result.data && result.data.preferences) {
+      var user = this.getCurrentUser() || {};
+      user.preferences = result.data.preferences;
+      this._storeUserProfile(user);
+    }
+    return result;
+  },
+
   async changePassword(currentPassword, newPassword, confirmPassword) {
     const token = this.getAccessToken();
     if (!token) return { success: false, error: 'Not authenticated' };

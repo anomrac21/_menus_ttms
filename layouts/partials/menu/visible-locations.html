@@ -1,0 +1,38 @@
+{{- /*
+  Locations shown on the public menu.
+  multiLocationMenus = true  → every entry in data/locations.yaml
+  multiLocationMenus = false → params.menu.location (slug) if it matches, else the first entry
+*/ -}}
+{{- $all := slice -}}
+{{- with site.Data.locations -}}
+  {{- if reflect.IsSlice . -}}
+    {{- $all = . -}}
+  {{- else if .locations -}}
+    {{- $all = .locations -}}
+  {{- end -}}
+{{- end -}}
+{{- $out := $all -}}
+{{- if not (partial "menu/multi-location-enabled.html" .) -}}
+  {{- $chosen := "" -}}
+  {{- with site.Params.menu -}}
+    {{- with .location -}}{{- $chosen = . -}}{{- end -}}
+    {{- if not $chosen -}}
+      {{- with .defaultLocation -}}{{- $chosen = . -}}{{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $one := slice -}}
+  {{- $picked := false -}}
+  {{- if $chosen -}}
+    {{- range $all -}}
+      {{- if and (not $picked) .slug (eq .slug $chosen) -}}
+        {{- $one = $one | append . -}}
+        {{- $picked = true -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if and (not $picked) (gt (len $all) 0) -}}
+    {{- $one = $one | append (index $all 0) -}}
+  {{- end -}}
+  {{- $out = $one -}}
+{{- end -}}
+{{- return $out -}}

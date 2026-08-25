@@ -71,20 +71,14 @@
     el.hidden = !!hidden;
   }
 
-  function whatsappFallbackIsOn() {
-    var el = document.getElementById('posFallbackWhatsappCb');
-    return !!(el && el.checked);
-  }
-
   function syncOrderingDashboardVisibility() {
     var orderingOn = orderingIsOn();
     var loyverseOn = loyverseIsOn();
     var usePhone = guestUsesPhone();
-    var waFallbackOn = whatsappFallbackIsOn();
     var banner = document.getElementById('posAccountBanner');
     var connected = loyverseOn && banner && banner.getAttribute('data-state') === 'connected';
     var showCharges = orderingOn && !loyverseOn;
-    var showGuestCheckout = orderingOn && (!loyverseOn || waFallbackOn);
+    var showGuestCheckout = orderingOn && !loyverseOn;
 
     document.querySelectorAll('[data-os-requires-ordering]').forEach(function (el) {
       if (el.hasAttribute('data-os-requires-no-loyverse') || el.hasAttribute('data-os-requires-guest-checkout')) {
@@ -108,6 +102,8 @@
     document.querySelectorAll('[data-pos-requires-connected]').forEach(function (el) {
       setHidden(el, !connected);
     });
+
+    setHidden(document.getElementById('orderingSystemFormActions'), loyverseOn && orderingOn);
 
     var channelHint = document.getElementById('os-channel-group-hint');
     if (channelHint) {
@@ -249,10 +245,6 @@
     if (loyverseCb) {
       loyverseCb.addEventListener('change', syncOrderingDashboardVisibility);
     }
-    var waFallbackCb = document.getElementById('posFallbackWhatsappCb');
-    if (waFallbackCb) {
-      waFallbackCb.addEventListener('change', syncOrderingDashboardVisibility);
-    }
     syncOrderingDashboardVisibility();
 
     form.addEventListener('submit', function (ev) {
@@ -282,7 +274,6 @@
       if (btn) btn.disabled = true;
       if (statusEl) statusEl.textContent = 'Saving…';
       var loyverseCb = document.getElementById('posEnabledCb');
-      var loyverseWaCb = document.getElementById('posFallbackWhatsappCb');
       var saveOrdering = fetch(url, {
         method: 'POST',
         credentials: 'include',
@@ -307,7 +298,7 @@
           store_id: (storeSel && storeSel.value) || posCfg.storeId || '',
           sync_menu: !!posCfg.syncMenu,
           auto_process_orders: autoCb ? !!autoCb.checked : !!posCfg.autoProcessOrders,
-          fallback_to_whatsapp: loyverseWaCb ? !!loyverseWaCb.checked : posCfg.fallbackToWhatsapp !== false,
+          fallback_to_whatsapp: false,
         };
         var posUrl =
           cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/hugo-posintegration';

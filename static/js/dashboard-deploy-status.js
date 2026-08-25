@@ -730,7 +730,13 @@
 
 
 
+  var started = false;
+
   function init() {
+
+    if (started) return;
+
+    started = true;
 
     if (document.getElementById('dashboardDeploymentsPage')) {
 
@@ -763,6 +769,16 @@
 
 
   global.addEventListener('beforeunload', stopDeployStream);
+
+  if (document.readyState === 'loading') {
+
+    document.addEventListener('DOMContentLoaded', init);
+
+  } else {
+
+    init();
+
+  }
 
 })(typeof window !== 'undefined' ? window : this);
 

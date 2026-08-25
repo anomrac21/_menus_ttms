@@ -1,4 +1,5 @@
 <div id="cart" class="cart-hidden" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true">
+	<div class="cart-motion">
 	<div class="order cart-shell">
 		<div class="cart-header-modern">
 			<div class="cart-title-bar">
@@ -16,8 +17,10 @@
 				</button>
 			</div>
 
+			{{- $cartLocations := partial "menu/visible-locations.html" . -}}
+			{{- $cartLocCount := len $cartLocations -}}
 			<div class="cart-location-row">
-				<button type="button" id="cartLocationChangeBtn" class="cart-location-btn" onclick="openLocationPickerFromCart(); return false;" aria-label="Choose a location">
+				<button type="button" id="cartLocationChangeBtn" class="cart-location-btn{{ if le $cartLocCount 1 }} cart-location-btn--single{{ end }}" onclick="openLocationPickerFromCart(); return false;" aria-label="{{ if le $cartLocCount 1 }}View location{{ else }}Choose a location{{ end }}">
 					<span class="cart-location-btn__icon-wrap" aria-hidden="true">
 						<i class="fa fa-map-marker"></i>
 					</span>
@@ -25,14 +28,16 @@
 						<span class="cart-location-btn__label">Ordering from</span>
 						<strong class="cart-location-btn__address" id="cartLocationAddress">Select a location</strong>
 					</span>
+					{{- if gt $cartLocCount 1 -}}
 					<span class="cart-location-btn__chevron" aria-hidden="true">
 						<i class="fa fa-chevron-right"></i>
 					</span>
+					{{- end -}}
 				</button>
 				<select id="locationSelect" class="cart-location-select-hidden" onchange="selectLocation(this.value)" aria-hidden="true" tabindex="-1">
 					<option value="">Select a location...</option>
-					{{ range $index, $location := site.Data.locations.locations }}
-					<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.slug }} data-slug="{{ . }}"{{ end }}{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }} {{ if eq $index 0 }}selected{{ end }}>
+					{{ range $index, $location := $cartLocations }}
+					<option value="{{ $location.whatsapp }}" data-address="{{ $location.address }}" data-city="{{ $location.city }}" data-island="{{ $location.island }}" data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.slug }} data-slug="{{ . }}"{{ end }}{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }} {{ if eq $index 0 }}selected{{ end }}>
 						{{ $location.address }}
 					</option>
 					{{ end }}
@@ -115,5 +120,6 @@
 			{{- end -}}
 		{{- end -}}
 		</div>
+	</div>
 	</div>
 </div>

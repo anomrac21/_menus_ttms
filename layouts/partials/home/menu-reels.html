@@ -1,6 +1,22 @@
 {{- /* Menu reels body (promotions + category headers). Expects page context. */ -}}
 {{- $sections := partial "menu/category-sections.html" . -}}
 {{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- $visibleLocs := partial "menu/visible-locations.html" . -}}
+{{- $heroCity := "" -}}
+{{- $heroAddress := "" -}}
+{{- if $locSlug -}}
+  {{- range $visibleLocs -}}
+    {{- if eq .slug $locSlug -}}
+      {{- $heroCity = .city | default .slug -}}
+      {{- $heroAddress = .address | default "" -}}
+    {{- end -}}
+  {{- end -}}
+{{- else if eq (len $visibleLocs) 1 -}}
+  {{- with index $visibleLocs 0 -}}
+    {{- $heroCity = .city | default .slug -}}
+    {{- $heroAddress = .address | default "" -}}
+  {{- end -}}
+{{- end -}}
 {{- /* Always load full catalog; client filters by data-location-slug in real time. */ -}}
 {{- $apiUrl := "/api/menu-items.json" -}}
 <div id="menu-reels-viewport" class="menu-reels-viewport" data-home-menu-api="{{ $apiUrl }}"{{ with $locSlug }} data-location-slug="{{ . }}"{{ end }} data-auth-enabled="{{ site.Params.auth.enabled }}" data-menu-images="{{ site.Params.menuImageService.enabled }}">
@@ -16,20 +32,26 @@
   <img id="bg" src="/main/bg.webp" alt="{{ $siteName }} background" fetchpriority="high">
 {{ end }}
 <div class="logo_container">
-  <a href="{{ if $locSlug }}/{{ else }}/locations/{{ end }}" aria-label="{{ if $locSlug }}All locations{{ else }}View {{ $siteName }} locations{{ end }}"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="264" height="264" fetchpriority="high" decoding="async"></a>
+  <a href="{{ if $locSlug }}/{{ else }}/locations/{{ end }}" aria-label="{{ if $locSlug }}Home{{ else if le (len $visibleLocs) 1 }}View {{ $siteName }} location{{ else }}View {{ $siteName }} locations{{ end }}"><img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="264" height="264" fetchpriority="high" decoding="async"></a>
   {{ partial "layout/feature-chips.html" (dict "class" "hero-features" "visible" true "expandable" true) }}
 </div>
+{{- if $heroCity -}}
+<div class="hero-intro">
+  <p>Menu for <strong>{{ $heroCity }}</strong>{{- with $heroAddress -}}<br>{{ . }}.{{- end -}}</p>
+</div>
+{{- else -}}
 {{ with .Content }}
 <div class="hero-intro">
   {{ . }}
 </div>
 {{ end }}
+{{- end -}}
 {{ partial "components/hero_ctas.html" . }}
 </section>
 {{ partial "components/contact_info.html" . }}
 {{ $advertisementsRendered := false }}
 {{ range $sections }}
-  {{ $title:= .LinkTitle }}
+  {{ $title:= default .LinkTitle .Params.title }}
   {{ $titleurl := .RelPermalink }}
   {{ $secSlug := partial "menu/section-slug.html" . }}
   {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
@@ -69,7 +91,7 @@
 </section>
 <div class="main-body" id="packery-container">
 {{ range $sections }}
-  {{ $title:= .LinkTitle }}
+  {{ $title:= default .LinkTitle .Params.title }}
   {{ if ne $title ("Promotions") }}
     {{ $itemCount := len .RegularPages }}
     {{ $secSlug := partial "menu/section-slug.html" . }}

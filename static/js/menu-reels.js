@@ -1125,9 +1125,70 @@
   }
 
   var activeReelsItemCard = null;
+  var reelsModalCloseTimer = null;
+  var REELS_MODAL_CLOSE_MS = 460;
 
   function getMenuReelsItemModal() {
     return document.getElementById('menu-reels-item-modal');
+  }
+
+  function prefersReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function setModalOriginFromRect(modal, rect, scale) {
+    if (!modal) return;
+    var vw = window.innerWidth || 1;
+    var vh = window.innerHeight || 1;
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    modal.style.setProperty('--reels-modal-from-x', (cx - vw / 2) + 'px');
+    modal.style.setProperty('--reels-modal-from-y', (cy - vh / 2) + 'px');
+    modal.style.setProperty('--reels-modal-from-scale', String(scale));
+  }
+
+  function setModalOriginFromCard(modal, card) {
+    if (!modal) return;
+    if (!card || !card.getBoundingClientRect) {
+      modal.style.setProperty('--reels-modal-from-x', '0px');
+      modal.style.setProperty('--reels-modal-from-y', '0px');
+      modal.style.setProperty('--reels-modal-from-scale', '0.94');
+      return;
+    }
+    var rect = card.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      modal.style.setProperty('--reels-modal-from-x', '0px');
+      modal.style.setProperty('--reels-modal-from-y', '0px');
+      modal.style.setProperty('--reels-modal-from-scale', '0.94');
+      return;
+    }
+    var vw = window.innerWidth || 1;
+    var vh = window.innerHeight || 1;
+    var scale = Math.max(0.2, Math.min(rect.width / vw, rect.height / vh, 0.42));
+    setModalOriginFromRect(modal, rect, scale);
+  }
+
+  function getCartDockTarget() {
+    return (
+      document.getElementById('carticon') ||
+      document.querySelector('.footer-dock__action--cart .footer-dock__icon-wrap') ||
+      document.querySelector('.footer-dock__action--cart') ||
+      document.getElementById('cartcount')
+    );
+  }
+
+  function setModalOriginFromCart(modal) {
+    var target = getCartDockTarget();
+    if (!target || !target.getBoundingClientRect) {
+      setModalOriginFromCard(modal, activeReelsItemCard);
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      setModalOriginFromCard(modal, activeReelsItemCard);
+      return;
+    }
+    setModalOriginFromRect(modal, rect, 0.06);
   }
 
   function isActiveReelsCardLive(card) {
@@ -1144,6 +1205,8 @@
   }
 
   function forceCloseMenuReelsItemModal() {
+    clearTimeout(reelsModalCloseTimer);
+    reelsModalCloseTimer = null;
     var modal = getMenuReelsItemModal();
     if (activeReelsItemCard) {
       resetReelsItemCardState(activeReelsItemCard);
@@ -1168,9 +1231,53 @@
 
     modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
-    modal.classList.remove('is-open');
-    document.body.classList.remove('menu-reels-item-modal-open');
+    modal.classList.remove('is-open', 'is-closing', 'is-closing-into-cart', 'is-cart-added');
+    var cartAction = document.querySelector('.footer-dock__action--cart');
+    if (cartAction) cartAction.classList.remove('is-cart-caught');
+    modal.style.removeProperty('--reels-modal-from-x');
+    modal.style.removeProperty('--reels-modal-from-y');
+    modal.style.removeProperty('--reels-modal-from-scale');
+    document.body.classList.remove('menu-reels-item-modal-open', 'menu-reels-cart-celebrating');
+    if (window.TTMSCartBadge && window.__ttmsDeferCartBadge && typeof window.TTMSCartBadge.reveal === 'function') {
+      window.TTMSCartBadge.reveal();
+    }
     unlockReelsTrackScroll();
+  }
+
+  function animateCloseMenuReelsItemModal(options) {
+    options = options || {};
+    var modal = getMenuReelsItemModal();
+    if (!modal || !modal.classList.contains('is-open')) {
+      forceCloseMenuReelsItemModal();
+      return;
+    }
+    if (modal.classList.contains('is-closing')) return;
+    if (prefersReducedMotion()) {
+      forceCloseMenuReelsItemModal();
+      return;
+    }
+    var intoCart = !!options.intoCart;
+    var closeMs = intoCart ? 380 : REELS_MODAL_CLOSE_MS;
+    if (intoCart) {
+      document.body.classList.add('menu-reels-cart-celebrating');
+      setModalOriginFromCart(modal);
+      modal.classList.add('is-closing-into-cart');
+      var cartAction = document.querySelector('.footer-dock__action--cart');
+      setTimeout(function () {
+        if (window.TTMSCartBadge && typeof window.TTMSCartBadge.reveal === 'function') {
+          window.TTMSCartBadge.reveal();
+        }
+        if (cartAction) cartAction.classList.add('is-cart-caught');
+      }, 300);
+    } else {
+      setModalOriginFromCard(modal, activeReelsItemCard);
+    }
+    modal.classList.add('is-closing');
+    clearTimeout(reelsModalCloseTimer);
+    reelsModalCloseTimer = setTimeout(function () {
+      reelsModalCloseTimer = null;
+      forceCloseMenuReelsItemModal();
+    }, closeMs);
   }
 
   function navigateFromMenuReelsItemModal(href) {
@@ -1274,6 +1381,9 @@
 
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
+    modal.classList.remove('is-closing', 'is-cart-added');
+    setModalOriginFromCard(modal, card);
+    void modal.offsetWidth;
     modal.classList.add('is-open');
     document.body.classList.add('menu-reels-item-modal-open');
 
@@ -1281,9 +1391,9 @@
     if (closeBtn) closeBtn.focus();
   }
 
-  function closeMenuReelsItemModal(card) {
+  function closeMenuReelsItemModal(card, options) {
     if (card && activeReelsItemCard && card !== activeReelsItemCard) return;
-    forceCloseMenuReelsItemModal();
+    animateCloseMenuReelsItemModal(options);
   }
 
   function getMenuReelsModalActiveCard() {
@@ -1310,10 +1420,9 @@
   function closeActiveReelsItemModalFromUI() {
     if (isActiveReelsCardLive() && typeof window.collapseMenuItemCard === 'function') {
       window.collapseMenuItemCard(activeReelsItemCard);
-      var modal = getMenuReelsItemModal();
-      if (modal && !modal.classList.contains('is-open')) return;
+      return;
     }
-    forceCloseMenuReelsItemModal();
+    animateCloseMenuReelsItemModal();
   }
 
   function ensureMenuReelsItemModalClosed() {
@@ -1333,7 +1442,7 @@
     }
 
     if (!options.keepCart && typeof window.closeCart === 'function') {
-      window.closeCart();
+      window.closeCart({ instant: true });
     }
     if (!options.keepDashboard && typeof window.closeDashboard === 'function') {
       window.closeDashboard();

@@ -126,7 +126,15 @@
   function urlLocationSlug() {
     var cfg = window.MENU_CONFIG || {};
     if (!cfg.multiLocationMenus) return '';
-    var slugs = cfg.locationSlugs || [];
+    var slugs = cfg.locationSlugs;
+    if (typeof slugs === 'string') {
+      try {
+        slugs = JSON.parse(slugs);
+      } catch (e) {
+        slugs = [];
+      }
+    }
+    if (!Array.isArray(slugs)) slugs = [];
     var parts = String(window.location.pathname || '')
       .replace(/^\/+|\/+$/g, '')
       .split('/')
@@ -154,6 +162,9 @@
 
   function getSavedLocationCard(cards) {
     if (!cards.length) return null;
+
+    var cfg = window.MENU_CONFIG || {};
+    if (!cfg.multiLocationMenus) return cards[0];
 
     var urlSlug = urlLocationSlug();
     if (urlSlug) {

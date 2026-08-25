@@ -12,7 +12,7 @@
   {{- end }}
 
   {{- $locations := slice -}}
-  {{- with site.Data.locations.locations }}
+  {{- with (partial "menu/visible-locations.html" .) }}
     {{- range . }}
       {{- $locationData := dict
           "address"  .address
@@ -114,6 +114,7 @@
       "tier" $tier
       "free_menu" $freeMenu
       "paid_menu" (not $freeMenu)
+      "generated_at" now.Unix
       "hero_background_image" (.Params.image | default "")
       "featured_images" $images
       "slideshow" $slideshowImages

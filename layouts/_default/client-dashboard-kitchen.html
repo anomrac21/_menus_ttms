@@ -1,0 +1,51 @@
+{{ define "main" }}
+<div class="dashboard-kitchen-page dashboard-control-room" id="dashboardKitchenPage">
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Print station"
+    "toolbarLabel" "Kitchen toolbar"
+    "closeTitle" "Close kitchen"
+    "buttons" (slice (dict "href" "/dashboard/orders/" "label" "Inbox" "class" "btn-dash btn-dash-secondary"))
+  ) }}
+
+  <main class="dashboard-kitchen-main" id="main">
+    <section class="dashboard-kitchen-station" aria-labelledby="kitchen-station-heading">
+      <div class="dashboard-kitchen-station-head">
+        <div class="dashboard-kitchen-station-title">
+          <span class="dashboard-kitchen-station-icon" aria-hidden="true"><i class="fa fa-print"></i></span>
+          <h2 id="kitchen-station-heading" class="dashboard-kitchen-heading">Kitchen printer</h2>
+          <label class="dashboard-kitchen-filter">
+            <span class="visually-hidden">Location</span>
+            <select id="dashboardKitchenLocation">
+              <option value="">All locations</option>
+            </select>
+          </label>
+          <button type="button" class="btn-dash btn-dash-primary dashboard-kitchen-refresh" id="ttms-kitchen-refresh"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button>
+        </div>
+        <div class="dashboard-kitchen-badges" id="dashboardKitchenBadges" role="status" aria-live="polite">
+          <span class="dashboard-kitchen-badge" data-badge="qz" data-state="unused">
+            <span class="dashboard-kitchen-badge-dot" aria-hidden="true"></span>
+            <span class="dashboard-kitchen-badge-text">QZ not used</span>
+          </span>
+          <span class="dashboard-kitchen-badge" data-badge="queue" data-state="idle">
+            <span class="dashboard-kitchen-badge-text">Idle</span>
+          </span>
+          <span class="dashboard-kitchen-badge" data-badge="printed" data-state="printed" hidden>
+            <span class="dashboard-kitchen-badge-text">Printed</span>
+          </span>
+          <span class="dashboard-kitchen-badge" data-badge="location" data-state="all">
+            <span class="dashboard-kitchen-badge-text">All locations</span>
+          </span>
+          <span class="dashboard-kitchen-badge" data-badge="printer" data-state="unset">
+            <span class="dashboard-kitchen-badge-dot" aria-hidden="true"></span>
+            <span class="dashboard-kitchen-badge-text">No printer configured</span>
+          </span>
+        </div>
+        <p class="dashboard-kitchen-error" id="dashboardKitchenError" hidden></p>
+      </div>
+      <div id="ttms-kitchen-list" class="dashboard-kitchen-list"></div>
+    </section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/order-kitchen.js" }}" defer></script>
+{{ end }}

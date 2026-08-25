@@ -23,6 +23,20 @@
   window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
   </script>
   <script src="/js/dashboard-control-room.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/dashboard-ops-snapshot.js" }}" defer></script>
+  {{- $dsHead := site.Params.deliveryService | default dict -}}
+  {{- $deliveryOnHead := and (default false site.Params.features.delivery) (default false $dsHead.enabled) -}}
+  {{- if $deliveryOnHead -}}
+  <script>
+  window.DELIVERY_CONFIG = {
+    enabled: true,
+    apiUrl: {{ ($dsHead.apiUrl | default "https://delivery.ttmenus.com/api/v1") | jsonify }},
+    wsUrl: {{ ($dsHead.wsUrl | default "wss://delivery.ttmenus.com/api/v1") | jsonify }},
+    clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "") | jsonify }}
+  };
+  </script>
+  <script src="{{ partial "head/asset-url.html" "/js/delivery-client.js" }}" defer></script>
+  {{- end }}
   <script src="/js/dashboard-deploy-status.js" defer></script>
   {{- if default false site.Params.features.notifications }}
   <script src="/js/dashboard-notifications.js" defer></script>
@@ -34,9 +48,59 @@
       {{ partial "dashboard/control-room-header.html" . }}
     </div>
     <div class="cards">
+      {{- $ds := site.Params.deliveryService | default dict -}}
+      {{- $deliveryOn := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
+      {{- $hubClientId := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+      {{- if and $hubClientId (not (hasPrefix $hubClientId "ttms_")) -}}
+        {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
+      {{- end -}}
+      <div class="card card-menu-orders is-collapsed" data-dashboard-card="orders">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="orders" aria-expanded="false" aria-controls="dashboardCardBody-orders">
+          <h3 class="dashboard-card-title"><i class="fa fa-ticket" aria-hidden="true"></i> Orders</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardOrdersCount" aria-label="Open tickets" aria-busy="true"></span>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-orders">
+          <p class="dashboard-card-desc">Open tickets from the menu — kitchen, charge, and Loyverse receipts.</p>
+          <div class="dashboard-card-actions">
+            <a href="/dashboard/orders/" class="btn-dash btn-dash-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Open inbox</a>
+            <a href="/dashboard/kitchen/" class="btn-dash btn-dash-secondary"><i class="fa fa-print" aria-hidden="true"></i> Kitchen station</a>
+          </div>
+        </div>
+      </div>
+      <div class="card card-delivery-orders is-collapsed" data-dashboard-card="delivery">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="delivery" aria-expanded="false" aria-controls="dashboardCardBody-delivery">
+          <h3 class="dashboard-card-title"><i class="fa fa-truck" aria-hidden="true"></i> Delivery</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardDeliveryCount" aria-label="Open delivery jobs" aria-busy="true"></span>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-delivery">
+          <p class="dashboard-card-desc">Platform fleet inbox — accept jobs, mark ready, scan pickup QR, and track your driver.</p>
+          <div class="dashboard-card-notify-snapshot" id="dashboardCardDeliverySnapshot" aria-label="Delivery status">
+            <div class="dashboard-card-notify-snapshot-grid">
+              <div class="dashboard-card-notify-snapshot-cell">
+                <span class="dashboard-card-notify-snapshot-label">Status</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardDeliveryStatus">{{ if $deliveryOn }}Active{{ else }}Off{{ end }}</span>
+              </div>
+            </div>
+          </div>
+          {{- if not $deliveryOn }}
+          <p class="dashboard-card-analytics-hint" role="status">Delivery is a platform add-on. Enable it on Account to open the fleet inbox.</p>
+          {{- end }}
+          <div class="dashboard-card-actions">
+            {{- if $deliveryOn }}
+            <a href="/delivery-orders/" class="btn-dash btn-dash-primary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
+            {{- else }}
+            <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade on Account</a>
+            <a href="/delivery-orders/" class="btn-dash btn-dash-secondary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
+            {{- end }}
+          </div>
+        </div>
+      </div>
       <div class="card card-edit-menu is-collapsed" data-dashboard-card="edit-menu">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="edit-menu" aria-expanded="false" aria-controls="dashboardCardBody-edit-menu">
           <h3 class="dashboard-card-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Edit menu</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardEditMenuCount" aria-label="Unpublished drafts" aria-busy="true"></span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-edit-menu">
@@ -115,24 +179,11 @@
         </div>
       </div>
       {{ partial "dashboard/ordering-settings-panel.html" . }}
-      {{- if and (default false site.Params.features.delivery) (default false (index (site.Params.deliveryService | default dict) "enabled")) }}
-      <div class="card card-delivery-orders is-collapsed" data-dashboard-card="delivery">
-        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="delivery" aria-expanded="false" aria-controls="dashboardCardBody-delivery">
-          <h3 class="dashboard-card-title"><i class="fa fa-truck" aria-hidden="true"></i> Delivery orders</h3>
-          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-        </button>
-        <div class="dashboard-card-body" id="dashboardCardBody-delivery">
-          <p class="dashboard-card-desc">Accept jobs, mark ready, scan pickup QR, and track your driver.</p>
-          <div class="dashboard-card-actions">
-            <a href="/delivery-orders/" class="btn-dash btn-dash-primary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
-          </div>
-        </div>
-      </div>
-      {{- end }}
       {{- if site.Params.menuImageService.enabled }}
       <div class="card card-dashboard-menu-images is-collapsed" id="dashboardCardMenuImages" data-dashboard-card="menu-images">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="menu-images" aria-expanded="false" aria-controls="dashboardCardBody-menu-images">
           <h3 class="dashboard-card-title"><i class="fa fa-picture-o" aria-hidden="true"></i> Menu photo reel</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardMenuImagesCount" aria-label="Photos in queue" aria-busy="true"></span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-menu-images">
@@ -178,6 +229,7 @@
       <div class="card card-dashboard-analytics is-collapsed" data-dashboard-card="analytics">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="analytics" aria-expanded="false" aria-controls="dashboardCardBody-analytics">
           <h3 class="dashboard-card-title"><i class="fa fa-bar-chart" aria-hidden="true"></i> Analytics</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardAnalyticsCount" aria-label="Visits last 30 days" aria-busy="true"></span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-analytics">
@@ -203,6 +255,7 @@
       <div class="card card-dashboard-notify is-collapsed" data-dashboard-card="notifications">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="notifications" aria-expanded="false" aria-controls="dashboardCardBody-notifications">
           <h3 class="dashboard-card-title"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardNotifyCount" aria-label="Subscribers" aria-busy="true"></span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-notifications">
@@ -294,6 +347,10 @@
 
       if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadDashboardCard) {
         DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 });
+      }
+
+      if (window.DashboardOpsSnapshot && typeof DashboardOpsSnapshot.init === 'function') {
+        DashboardOpsSnapshot.init();
       }
 
       {{- if default false site.Params.features.notifications }}

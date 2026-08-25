@@ -8,6 +8,8 @@
     --table-modal-ink-muted: color-mix(in srgb, var(--main-text-color, #fff) 62%, transparent);
     --table-modal-whatsapp: #25d366;
     --table-modal-whatsapp-dark: #128c7e;
+    --table-from-x: 0px;
+    --table-from-y: 18%;
     background:
         radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--button-color1, #1a1a2e) 55%, transparent), transparent 55%),
         rgba(0, 0, 0, 0.72);
@@ -27,6 +29,47 @@
 
 #tableNumberModal.table-modal-panel:not(.hide) .table-modal-container {
     transform: translateY(0) scale(1);
+}
+
+#tableNumberModal.is-table-opening,
+#tableNumberModal.is-table-closing {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: none;
+}
+
+#tableNumberModal.is-table-closing {
+    pointer-events: none;
+}
+
+#tableNumberModal.is-table-opening {
+    animation: table-modal-scrim-in 0.36s ease both;
+}
+
+#tableNumberModal.is-table-closing {
+    animation: table-modal-scrim-out 0.28s ease both;
+}
+
+#tableNumberModal.is-table-opening .table-modal-container,
+#tableNumberModal.is-table-closing .table-modal-container {
+    transform-origin: 50% 50%;
+    will-change: transform;
+    transition: none;
+    overflow: hidden;
+}
+
+#tableNumberModal.is-table-opening .table-modal-container {
+    animation: table-modal-from-order 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+#tableNumberModal.is-table-closing .table-modal-container {
+    animation: table-modal-into-order 0.36s cubic-bezier(0.3, 0.02, 0.2, 1) both;
+}
+
+#tableNumberModal .tableBtn.is-table-btn-pop,
+#tableNumberModal .table-buttons-grid button.is-table-btn-pop {
+    animation: table-btn-pop 0.62s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+    z-index: 2;
 }
 
 #tableNumberModal.table-modal-panel .table-modal-content {
@@ -226,6 +269,71 @@
     box-shadow: 0 4px 16px color-mix(in srgb, var(--table-modal-accent) 28%, transparent);
 }
 
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-section {
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-section.hide,
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-section[hidden] {
+    display: none;
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button {
+    min-height: 3rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--table-modal-ink);
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.pickup-order-btn {
+    background: color-mix(in srgb, var(--table-modal-accent) 14%, rgba(255, 255, 255, 0.06));
+    border-color: color-mix(in srgb, var(--table-modal-accent) 35%, rgba(255, 255, 255, 0.14));
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.pickup-order-btn.selected {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--table-modal-accent) 88%, #fff) 0%,
+        color-mix(in srgb, var(--table-modal-accent) 72%, #000) 100%
+    );
+    border-color: color-mix(in srgb, var(--table-modal-accent) 55%, #fff);
+    color: color-mix(in srgb, var(--main-bg, #0a0a0f) 85%, #000);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--table-modal-accent) 28%, transparent);
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.delivery-order-btn {
+    background: color-mix(in srgb, #38bdf8 16%, rgba(255, 255, 255, 0.06));
+    border-color: color-mix(in srgb, #38bdf8 38%, rgba(255, 255, 255, 0.14));
+}
+
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.delivery-order-btn.selected,
+#tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.delivery-order-btn:hover {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, #38bdf8 88%, #fff) 0%,
+        color-mix(in srgb, #0ea5e9 82%, #000) 100%
+    );
+    border-color: color-mix(in srgb, #7dd3fc 55%, #fff);
+    color: #0b1220;
+    box-shadow: 0 4px 16px color-mix(in srgb, #38bdf8 32%, transparent);
+}
+
 #tableNumberModal.table-modal-panel .table-modal-footer {
     padding: 0.85rem 1rem max(1rem, env(safe-area-inset-bottom, 0));
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -235,6 +343,38 @@
         color-mix(in srgb, var(--footer-bg-color, #111) 96%, #000) 100%
     );
     box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.28);
+}
+
+#tableNumberModal.table-modal-panel #confirmmodal:not(.is-confirm-ready) {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    border-top-width: 0;
+    overflow: hidden;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+#tableNumberModal.table-modal-panel #confirmmodal.is-confirm-in {
+    animation: table-confirm-footer-in 0.48s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+#tableNumberModal.table-modal-panel #confirmmodal.is-confirm-in .order-summary-display:not(.hide) {
+    animation: table-confirm-card-in 0.52s 0.06s cubic-bezier(0.22, 1.35, 0.36, 1) both;
+}
+
+#tableNumberModal.table-modal-panel #confirmmodal.is-confirm-in .selected-table-display {
+    animation: table-confirm-title-in 0.5s 0.12s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+#tableNumberModal.table-modal-panel #confirmmodal.is-confirm-in .btn-confirm-table {
+    animation: table-confirm-btn-in 0.56s 0.18s cubic-bezier(0.22, 1.45, 0.36, 1) both;
+}
+
+#tableNumberModal.table-modal-panel #confirmmodal.is-confirm-in .btn-cancel-table {
+    animation: table-confirm-btn-in 0.5s 0.28s cubic-bezier(0.22, 1.35, 0.36, 1) both;
 }
 
 #tableNumberModal.table-modal-panel .order-summary-display {
@@ -322,11 +462,213 @@
     outline: none;
 }
 
+@keyframes table-modal-scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes table-modal-scrim-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes table-modal-from-order {
+    0% {
+        transform: translate(var(--table-from-x), var(--table-from-y)) scale(0.08);
+        opacity: 0.88;
+        border-radius: 50%;
+    }
+    42% {
+        transform: translate(0, 0) scale(0.18);
+        opacity: 1;
+        border-radius: 1.5rem;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 0;
+    }
+}
+
+@keyframes table-modal-into-order {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        border-radius: 1.25rem;
+    }
+    44% {
+        transform: translate(0, 0) scale(0.16);
+        opacity: 1;
+        border-radius: 50%;
+    }
+    100% {
+        transform: translate(var(--table-from-x), var(--table-from-y)) scale(0.06);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}
+
+@keyframes table-confirm-footer-in {
+    0% {
+        opacity: 0;
+        transform: translateY(1.25rem) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes table-confirm-card-in {
+    0% {
+        opacity: 0;
+        transform: translateY(0.85rem) scale(0.92);
+    }
+    62% {
+        opacity: 1;
+        transform: translateY(-0.12rem) scale(1.03);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes table-confirm-title-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.82);
+    }
+    55% {
+        opacity: 1;
+        transform: scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes table-confirm-btn-in {
+    0% {
+        opacity: 0;
+        transform: translateY(0.75rem) scale(0.88);
+    }
+    58% {
+        opacity: 1;
+        transform: translateY(-0.08rem) scale(1.06);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes table-btn-pop {
+    0% { transform: scale(1); }
+    16% { transform: scale(0.86); }
+    42% { transform: scale(1.18); }
+    64% { transform: scale(0.96); }
+    82% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+.ttms-delight-burst {
+    position: fixed;
+    width: 0;
+    height: 0;
+    z-index: calc(var(--ttms-z-table-modal, 10085) + 4);
+    pointer-events: none;
+}
+
+.ttms-delight-burst__ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.6rem;
+    height: 2.6rem;
+    margin: -1.3rem 0 0 -1.3rem;
+    border-radius: 50%;
+    border: 3px solid #25d366;
+    box-sizing: border-box;
+    animation: ttms-delight-ring 0.7s ease-out forwards;
+}
+
+.ttms-delight-burst__ring--late {
+    width: 3.4rem;
+    height: 3.4rem;
+    margin: -1.7rem 0 0 -1.7rem;
+    border-color: #fcd000;
+    animation-delay: 0.08s;
+}
+
+.ttms-delight-burst__particle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin: -0.42rem 0 0 -0.42rem;
+    color: var(--p-color, #25d366);
+    font-size: 0.85rem;
+    line-height: 1;
+    animation: ttms-delight-particle 0.9s cubic-bezier(0.16, 0.8, 0.3, 1) forwards;
+}
+
+.ttms-delight-burst__particle::before {
+    content: var(--p-glyph, "+");
+    display: block;
+    text-align: center;
+    font-weight: 800;
+    text-shadow: 0 0 0.45rem color-mix(in srgb, currentColor 55%, transparent);
+}
+
+@keyframes ttms-delight-ring {
+    0% {
+        transform: scale(0.3);
+        opacity: 0.95;
+    }
+    100% {
+        transform: scale(3.1);
+        opacity: 0;
+    }
+}
+
+@keyframes ttms-delight-particle {
+    0% {
+        transform: rotate(var(--a)) translateY(0) scale(0.25);
+        opacity: 1;
+    }
+    100% {
+        transform: rotate(var(--a)) translateY(var(--p-dist, -3.2rem)) scale(1.15);
+        opacity: 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     #tableNumberModal.table-modal-panel .table-modal-container,
     #tableNumberModal.table-modal-panel .table-modal-close,
     #tableNumberModal.table-modal-panel .table-buttons-grid button,
     #tableNumberModal.table-modal-panel .btn-confirm-table {
         transition: none;
+    }
+
+    #tableNumberModal.is-table-opening,
+    #tableNumberModal.is-table-closing,
+    #tableNumberModal.is-table-opening .table-modal-container,
+    #tableNumberModal.is-table-closing .table-modal-container,
+    #tableNumberModal #confirmmodal.is-confirm-in,
+    #tableNumberModal #confirmmodal.is-confirm-in .order-summary-display,
+    #tableNumberModal #confirmmodal.is-confirm-in .selected-table-display,
+    #tableNumberModal #confirmmodal.is-confirm-in .btn-confirm-table,
+    #tableNumberModal #confirmmodal.is-confirm-in .btn-cancel-table,
+    #tableNumberModal .tableBtn.is-table-btn-pop,
+    .ttms-delight-burst__ring,
+    .ttms-delight-burst__particle {
+        animation: none;
+    }
+
+    .ttms-delight-burst {
+        display: none;
     }
 }

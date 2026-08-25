@@ -795,12 +795,11 @@
     var multi = multiLocationMenusEnabled();
     (items || []).forEach(function (item) {
       if (!item || !item.section || item.section === 'promotions') return;
-      // Multi-location: only show items for the selected location (hide everything else).
+      // Single-location catalogs are already flattened — never hide dishes by slug.
+      // Multi-location: only show items for the selected location.
       if (multi) {
         if (!locFilter) return;
         if (!item.location_slug || item.location_slug !== locFilter) return;
-      } else if (locFilter && item.location_slug && item.location_slug !== locFilter) {
-        return;
       }
       if (!grouped[item.section]) grouped[item.section] = [];
       grouped[item.section].push(item);

@@ -22,7 +22,7 @@
 
   {{- if eq $.Section "promotions" }}
     {{- $adLocations := slice -}}
-    {{- with site.Data.locations.locations }}
+    {{- with (partial "menu/visible-locations.html" $) }}
       {{- range . }}
         {{- $locationData := dict
             "address"  .address

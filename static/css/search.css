@@ -310,6 +310,11 @@ body.menu-search-bar-open::before {
     white-space: nowrap;
 }
 
+.menu-search-suggestions__location {
+    color: var(--menu-search-ink, rgba(248, 250, 252, 0.92));
+    font-weight: 650;
+}
+
 .menu-search-suggestions__mark {
     padding: 0;
     border-radius: 0.15rem;

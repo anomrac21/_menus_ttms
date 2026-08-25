@@ -3,30 +3,15 @@
 <head>
   {{ partial "dashboard/edit-head-rearrange.html" . }}
 </head>
-{{- $siteName := site.Title | default "Menu Demo" -}}
-{{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
 <body class="dashboard-edit-rearrange-only dashboard-control-room">
   <div class="dashboard-edit-page" id="dashboardEditPage" data-edit-submode="move" data-edit-mode="edit">
-    <header class="dashboard-edit-header dashboard-edit-header--rearrange dashboard-header-bar dashboard-subpage-header-bar" aria-label="Rearrange menu toolbar">
-      <a href="/dashboard/" class="dashboard-logo-link" aria-label="Back to dashboard" title="Back to dashboard">
-        <span class="dashboard-logo-frame" aria-hidden="true">
-          <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
-        </span>
-        <span class="dashboard-logo-live-badge">Rearrange</span>
-      </a>
-      <div class="dashboard-header-main">
-        <p class="dashboard-header-kicker">
-          <span class="dashboard-header-kicker-dot" aria-hidden="true"></span>
-          Rearrange menu
-        </p>
-        <h1 class="dashboard-header-site">{{ $siteName }}</h1>
-      </div>
-      <div class="dashboard-header-end">
-        <a href="/dashboard/" class="dashboard-header-close" id="btnDashboardBack" title="Close rearrange menu" aria-label="Close rearrange menu">
-          <i class="fa fa-times" aria-hidden="true"></i>
-        </a>
-      </div>
-    </header>
+    {{ partial "dashboard/subpage-header.html" (dict
+      "kicker" "Rearrange menu"
+      "toolbarLabel" "Rearrange menu toolbar"
+      "closeTitle" "Close rearrange menu"
+      "class" "dashboard-edit-header--rearrange"
+      "closeId" "btnDashboardBack"
+    ) }}
 
     <p class="dashboard-edit-rearrange-intro" id="dashboardEditRearrangeIntro">
       Use the arrow buttons to change order. Shared items appear once; location overrides and location-only dishes show with a location badge. Drafts save when you leave — publish from the dashboard when ready.

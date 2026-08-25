@@ -1,0 +1,456 @@
+/**
+ * Public /locations/ directory — matches home location-picker cards.
+ */
+.locations-directory {
+  --loc-ink: #f8fafc;
+  --loc-muted: rgba(248, 250, 252, 0.72);
+  --loc-accent: #38bdf8;
+  --loc-accent-deep: #0284c7;
+  --loc-glow: rgba(56, 189, 248, 0.4);
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: min(100%, 42rem);
+  margin: 0 auto;
+  padding: 0.75rem 0.85rem 1.5rem;
+  color: var(--loc-ink);
+}
+
+.locations-directory__hero {
+  position: relative;
+  inset: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  z-index: auto;
+}
+
+.locations-directory__logo {
+  width: 4.75rem;
+  height: 4.75rem;
+  object-fit: contain;
+  border-radius: 1.15rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+.locations-directory__eyebrow {
+  margin: 0.45rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--loc-muted);
+}
+
+.locations-directory__title {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--loc-ink);
+}
+
+.locations-directory__intro,
+.locations-directory__intro p {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--loc-muted);
+}
+
+.locations-directory__list {
+  display: grid;
+  gap: 1rem;
+}
+
+.locations-directory .location-card.locations-directory-card,
+.locations-directory-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.95rem 0.95rem 1rem;
+  margin: 0;
+  width: auto;
+  border-radius: 1.25rem;
+  border: 1.5px solid color-mix(in srgb, var(--loc-accent) 55%, rgba(255, 255, 255, 0.28));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--loc-accent) 22%, rgba(15, 23, 42, 0.78)) 0%,
+      rgba(15, 23, 42, 0.78) 100%
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px color-mix(in srgb, var(--loc-accent) 18%, transparent),
+    0 12px 28px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.locations-directory .location-card > .locations-directory-card__head,
+.locations-directory-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 0.85rem;
+  width: 100%;
+}
+
+.locations-directory-card__pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.42), transparent 50%),
+    linear-gradient(160deg, var(--loc-accent) 0%, var(--loc-accent-deep) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.32) inset,
+    0 0 14px color-mix(in srgb, var(--loc-glow) 65%, transparent);
+}
+
+.locations-directory-card__pin svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.locations-directory-card__copy {
+  flex: 1 1 9rem;
+  min-width: 0;
+}
+
+.locations-directory-card__place {
+  margin: 0 0 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.locations-directory-card__address {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.locations-directory .openstatus.locations-directory-card__status,
+.locations-directory-card__status {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0 0 0 auto;
+}
+
+.locations-directory .status-badge,
+.locations-directory .status-badge.open {
+  --chip-accent: #34d399;
+  --chip-accent-deep: #059669;
+  --chip-glow: rgba(52, 211, 153, 0.4);
+  min-height: 2.1rem;
+  padding: 0.35em 0.75em;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
+      rgba(15, 23, 42, 0.72) 100%
+    );
+  color: #ecfdf5;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.locations-directory .status-badge.closed,
+.locations-directory .status-badge.closes-soon {
+  --chip-accent: #fb7185;
+  --chip-accent-deep: #e11d48;
+  --chip-glow: rgba(251, 113, 133, 0.4);
+  color: #fff1f2;
+}
+
+.locations-directory .status-badge.opens-soon,
+.locations-directory .status-badge.closes-soon {
+  --chip-accent: #fbbf24;
+  --chip-accent-deep: #d97706;
+  --chip-glow: rgba(251, 191, 36, 0.4);
+  color: #fffbeb;
+}
+
+.locations-directory .location-card > .locations-directory-card__actions,
+.locations-directory-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.locations-directory-action {
+  --chip-accent: #38bdf8;
+  --chip-accent-deep: #0284c7;
+  --chip-glow: rgba(56, 189, 248, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  padding: 0.28rem 0.7rem 0.28rem 0.28rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--chip-accent) 70%, rgba(255, 255, 255, 0.35));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--chip-accent) 28%, rgba(15, 23, 42, 0.72)) 0%,
+      rgba(15, 23, 42, 0.72) 100%
+    );
+  color: #f8fafc;
+  text-decoration: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 8px 18px rgba(0, 0, 0, 0.32);
+}
+
+.locations-directory-action--call {
+  --chip-accent: #a78bfa;
+  --chip-accent-deep: #7c3aed;
+  --chip-glow: rgba(167, 139, 250, 0.4);
+}
+
+.locations-directory-action--whatsapp {
+  --chip-accent: #34d399;
+  --chip-accent-deep: #059669;
+  --chip-glow: rgba(52, 211, 153, 0.4);
+}
+
+.locations-directory-action--delivery {
+  --chip-accent: #fbbf24;
+  --chip-accent-deep: #d97706;
+  --chip-glow: rgba(251, 191, 36, 0.4);
+}
+
+.locations-directory-action__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.42), transparent 50%),
+    linear-gradient(160deg, var(--chip-accent) 0%, var(--chip-accent-deep) 100%);
+}
+
+.locations-directory-action__icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.locations-directory-action__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.locations-directory .location-card > .locations-directory-card__chips,
+.locations-directory-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: auto;
+}
+
+.locations-directory-card__chips li {
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(15, 23, 42, 0.42);
+  color: rgba(248, 250, 252, 0.88);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.locations-directory-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.locations-directory-hours__today {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.locations-directory-hours__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.62);
+}
+
+.locations-directory .today-hours-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.locations-directory-hours__all summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.locations-directory-hours__all summary::-webkit-details-marker {
+  display: none;
+}
+
+.locations-directory-hours__all summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.45rem;
+  transition: transform 0.2s ease;
+}
+
+.locations-directory-hours__all[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.locations-directory .all-hours-list {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0.15rem 0.2rem 0;
+}
+
+.locations-directory .hours-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(248, 250, 252, 0.88);
+  font-size: 0.88rem;
+}
+
+.locations-directory .hours-item:last-child {
+  border-bottom: none;
+}
+
+.locations-directory .hours-item.is-today {
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--loc-accent) 16%, transparent);
+  color: #fff;
+}
+
+.locations-directory .hours-item__day {
+  font-weight: 700;
+}
+
+.locations-directory .hours-time.closed {
+  color: rgba(248, 250, 252, 0.5);
+  font-style: italic;
+}
+
+.locations-directory-hours__empty {
+  margin: 0;
+  color: var(--loc-muted);
+  font-style: italic;
+}
+
+.locations-directory-card__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.7rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, #fbbf24 70%, rgba(255, 255, 255, 0.35));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, #fbbf24 32%, rgba(15, 23, 42, 0.72)) 0%,
+      rgba(15, 23, 42, 0.72) 100%
+    );
+  color: #fffbeb;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.locations-directory-card__menu svg {
+  flex: 0 0 auto;
+}
+
+.locations-directory__empty {
+  margin: 0;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  color: var(--loc-muted);
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .locations-directory-action:hover,
+  .locations-directory-card__menu:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--chip-accent, #fbbf24) 85%, #fff);
+  }
+
+  .locations-directory-card__menu:hover {
+    --chip-accent: #fbbf24;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .locations-directory-action,
+  .locations-directory-card__menu,
+  .locations-directory-hours__all summary::before {
+    transition: none;
+  }
+}
