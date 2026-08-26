@@ -43,6 +43,16 @@
     }
   }
 
+  function siteClientId() {
+    return String(cfg().clientId || '').trim();
+  }
+
+  function withClientId(path) {
+    var cid = siteClientId();
+    if (!cid || String(path).indexOf('client_id=') !== -1) return path;
+    return path + (String(path).indexOf('?') >= 0 ? '&' : '?') + 'client_id=' + encodeURIComponent(cid);
+  }
+
   async function ensureToken() {
     var token = getToken();
     if (token) return token;
@@ -70,11 +80,13 @@
         Accept: 'application/json',
       },
     };
+    var cid = siteClientId();
+    if (cid) opts.headers['X-TTMenus-Client-Id'] = cid;
     if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
-    var url = apiBase() + path;
+    var url = apiBase() + withClientId(path);
     var res;
     try {
       res = await fetch(url, opts);
