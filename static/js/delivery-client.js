@@ -43,8 +43,32 @@
     }
   }
 
+  function unwrapCfgValue(value) {
+    var s = String(value == null ? '' : value).trim();
+    while (
+      s.length >= 2 &&
+      ((s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') ||
+        (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'"))
+    ) {
+      try {
+        s = JSON.parse(s);
+      } catch (e) {
+        s = s.slice(1, -1);
+      }
+      if (typeof s !== 'string') return String(s);
+      s = s.trim();
+    }
+    return s;
+  }
+
   function siteClientId() {
-    return String(cfg().clientId || '').trim();
+    return unwrapCfgValue(
+      cfg().clientId ||
+        global.SITE_CLIENT_ID ||
+        global.CLIENT_ID ||
+        (global.ORDER_CONFIG && global.ORDER_CONFIG.clientId) ||
+        ''
+    );
   }
 
   function withClientId(path) {

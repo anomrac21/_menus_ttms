@@ -50,21 +50,40 @@ window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
 window.SITE_DISPLAY_NAME = {{ $siteName | jsonify }};
 </script>
 {{- if $deliveryOn -}}
-<link rel="stylesheet" href="{{ "css/delivery.css" | relURL }}">
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/delivery.css" }}">
 <script>
 window.DELIVERY_CONFIG = {
   enabled: true,
-  apiUrl: {{ ($ds.apiUrl | default "https://delivery.ttmenus.com/api/v1") | jsonify }},
-  wsUrl: {{ ($ds.wsUrl | default "wss://delivery.ttmenus.com/api/v1") | jsonify }},
-  clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "") | jsonify }},
-  clientDomain: {{ (site.Params.notifications.clientDomain | default "") | jsonify }},
-  restaurantName: {{ site.Title | jsonify }},
-  currency: {{ ($ds.currency | default "TTD") | jsonify }},
+  apiUrl: {{ ($ds.apiUrl | default "https://delivery.ttmenus.com/api/v1") | jsonify | safeJS }},
+  wsUrl: {{ ($ds.wsUrl | default "wss://delivery.ttmenus.com/api/v1") | jsonify | safeJS }},
+  clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "") | jsonify | safeJS }},
+  clientDomain: {{ (site.Params.notifications.clientDomain | default "") | jsonify | safeJS }},
+  restaurantName: {{ site.Title | jsonify | safeJS }},
+  currency: {{ ($ds.currency | default "TTD") | jsonify | safeJS }},
   deliveryFee: {{ default 30 $ds.deliveryFee }}
 };
+(function (cfg) {
+  if (!cfg) return;
+  function unwrap(value) {
+    if (typeof value !== 'string') return value;
+    var s = value.trim();
+    while (s.length >= 2 && ((s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') || (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'"))) {
+      try { s = JSON.parse(s); } catch (e) { s = s.slice(1, -1); }
+      if (typeof s !== 'string') return s;
+      s = s.trim();
+    }
+    return s;
+  }
+  cfg.apiUrl = unwrap(cfg.apiUrl);
+  cfg.wsUrl = unwrap(cfg.wsUrl);
+  cfg.clientId = unwrap(cfg.clientId);
+  cfg.clientDomain = unwrap(cfg.clientDomain);
+  cfg.restaurantName = unwrap(cfg.restaurantName);
+  cfg.currency = unwrap(cfg.currency);
+})(window.DELIVERY_CONFIG);
 </script>
-<script src="{{ "js/delivery-client.js" | relURL }}"></script>
-<script src="{{ "js/delivery-dashboard.js" | relURL }}"></script>
+<script src="{{ partial "head/asset-url.html" "/js/delivery-client.js" }}"></script>
+<script src="{{ partial "head/asset-url.html" "/js/delivery-dashboard.js" }}"></script>
 {{- end }}
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
