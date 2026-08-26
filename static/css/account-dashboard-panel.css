@@ -280,6 +280,36 @@
     text-align: center;
 }
 
+#account-dashboard.account-dashboard-panel .account-dashboard-orders {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-order-row {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.4;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-order-row:hover,
+#account-dashboard.account-dashboard-panel .account-dashboard-order-row:focus-visible {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    outline: none;
+}
+
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites {
     gap: 0.85rem;
 }

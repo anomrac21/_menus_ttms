@@ -31,18 +31,47 @@
       .trim();
   }
 
+  function unwrapValue(value) {
+    if (window.OrderClient && typeof window.OrderClient.unwrapValue === 'function') {
+      return window.OrderClient.unwrapValue(value);
+    }
+    if (typeof value !== 'string') return value == null ? '' : value;
+    var s = value.trim();
+    while (
+      s.length >= 2 &&
+      ((s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') ||
+        (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'"))
+    ) {
+      try {
+        s = JSON.parse(s);
+      } catch (_) {
+        s = s.slice(1, -1);
+      }
+      if (typeof s !== 'string') return s;
+      s = s.trim();
+    }
+    return s;
+  }
+
   function currentClientId() {
-    return (
+    return unwrapValue(
       (window.ORDER_CONFIG && window.ORDER_CONFIG.clientId) ||
-      window.SITE_CLIENT_ID ||
-      window.CLIENT_ID ||
-      ''
+        window.SITE_CLIENT_ID ||
+        window.CLIENT_ID ||
+        ''
     );
+  }
+
+  function moneyLabel(order) {
+    if (window.OrderClient && typeof window.OrderClient.formatMoney === 'function') {
+      return window.OrderClient.formatMoney(order.currency, order.total);
+    }
+    return String(unwrapValue(order.currency) || '') + ' ' + Number(order.total || 0).toFixed(2);
   }
 
   function clientMatch(a, b) {
     function norm(s) {
-      return String(s || '')
+      return String(unwrapValue(s) || '')
         .toLowerCase()
         .replace(/^_+/, '')
         .replace(/^ttms_/, '');
@@ -119,29 +148,36 @@
       .map(function (o) {
         var status = o.status || 'open';
         var lines = orderLinesSummary(o);
+        var ticket = o.ticket_number || o.order_ref || '';
+        var oid = o.id || '';
         return (
-          '<li class="dashboard-panel-order dashboard-panel-order--' +
+          '<li>' +
+          '<button type="button" class="dashboard-panel-order dashboard-panel-order--' +
           escapeHtml(status) +
+          ' js-customer-order" data-order-id="' +
+          escapeHtml(oid) +
+          '"' +
+          (oid ? '' : ' disabled') +
+          ' aria-label="Open order #' +
+          escapeHtml(ticket) +
           '">' +
           '<div class="dashboard-panel-order__top">' +
           '<b>#' +
-          escapeHtml(o.ticket_number || o.order_ref) +
+          escapeHtml(ticket) +
           '</b>' +
           '<span class="dashboard-panel-order__status">' +
           escapeHtml(titleCase(status)) +
           '</span>' +
           '</div>' +
-          '<p class="dashboard-panel-order__meta">' +
+          '<div class="dashboard-panel-order__meta">' +
           escapeHtml(fulfillmentLabel(o)) +
           ' · <span class="dashboard-panel-order__total">' +
-          escapeHtml(o.currency || '') +
-          ' ' +
-          Number(o.total || 0).toFixed(2) +
-          '</span></p>' +
+          escapeHtml(moneyLabel(o)) +
+          '</span></div>' +
           (lines
-            ? '<p class="dashboard-panel-order__lines">' + escapeHtml(lines) + '</p>'
+            ? '<div class="dashboard-panel-order__lines">' + escapeHtml(lines) + '</div>'
             : '') +
-          '</li>'
+          '</button></li>'
         );
       })
       .join('');

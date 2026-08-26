@@ -117,6 +117,15 @@
   }
 
   var OrderClient = {
+    unwrapValue: unwrapCfgValue,
+    formatMoney: function (currency, total) {
+      var cur = unwrapCfgValue(currency);
+      if (cur == null) cur = '';
+      cur = String(cur).trim();
+      var n = Number(total);
+      var amt = isFinite(n) ? n.toFixed(2) : '0.00';
+      return (cur ? cur + ' ' : '') + amt;
+    },
     enabled: function () {
       return cfg().enabled !== false && !!apiBase();
     },

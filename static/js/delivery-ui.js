@@ -186,15 +186,21 @@
     var map = {
       requested: 'Finding drivers',
       offered: 'Drivers available',
+      awaiting_drivers: 'Finding drivers',
+      driver_offers: 'Drivers available',
+      driver_selected: 'Driver selected',
       accepted: 'Driver accepted',
       awaiting_client: 'Restaurant reviewing',
       payment_pending: 'Payment needed',
+      paid: 'Paid',
       preparing: 'Kitchen preparing',
       ready: 'Ready for pickup',
       picked_up: 'Picked up',
       delivering: 'On the way',
       delivered: 'Delivered',
+      completed: 'Completed',
       cancelled: 'Cancelled',
+      expired: 'Expired',
     };
     var key = String(status || '');
     return map[key] || key.replace(/_/g, ' ') || 'Updating';

@@ -2,7 +2,7 @@
 {{- $deliveryEnabled := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
 {{- if $deliveryEnabled -}}
 {{- $loc := site.Params.location | default dict -}}
-<link rel="stylesheet" href="{{ "css/delivery.css" | relURL }}">
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/delivery.css" }}">
 <script>
 window.DELIVERY_CONFIG = {
   enabled: true,
@@ -36,6 +36,6 @@ window.DELIVERY_CONFIG = {
   cfg.currency = unwrap(cfg.currency);
 })(window.DELIVERY_CONFIG);
 </script>
-<script src="{{ "js/delivery-client.js" | relURL }}" defer></script>
-<script src="{{ "js/delivery-ui.js" | relURL }}" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/delivery-client.js" }}" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/delivery-ui.js" }}" defer></script>
 {{- end -}}

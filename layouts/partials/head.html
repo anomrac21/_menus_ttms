@@ -850,7 +850,7 @@
 {{- end -}}
 {{ partialCached "head/js.html" . }}
 {{- if $menuPublicSite -}}
-<script src="/js/dashboard-panel.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/dashboard-panel.js" }}" defer></script>
 {{- end -}}
 {{- $ogImage := "/branding/favicon152.webp" -}}
 {{- $images := slice -}}
@@ -1152,6 +1152,7 @@ window.MENU_CONFIG = {
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard-panel.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-panel.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/customer-order.css") }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css" "sync" true) }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero-cta.css" "sync" true) }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/slideshow.css") }}
@@ -1169,6 +1170,7 @@ window.MENU_CONFIG = {
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/account-dashboard.css" }}"/>
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/account-dashboard-panel.css" }}"/>
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard-panel.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/customer-order.css" }}"/>
 {{- if eq .Layout "client-dashboard-menu-settings" -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css") }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero-cta.css") }}
@@ -1370,6 +1372,7 @@ window.ORDER_CONFIG = {
 })(window.ORDER_CONFIG);
 </script>
 <script src="{{ partial "head/asset-url.html" "/js/order-client.js" }}" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/customer-order.js" }}" defer></script>
 
 {{- if site.Params.auth.enabled -}}
 <script>
@@ -1441,7 +1444,7 @@ window.MENU_IMAGE_CONFIG = {
 <script src="/js/feature-chips.js" defer></script>
 <script src="/js/share-buttons.js" defer></script>
 <script src="/js/single-page-init.js" defer></script>
-<script src="/js/menu-account-dashboard.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/menu-account-dashboard.js" }}" defer></script>
 <script src="/js/header-menublock-scroll.js" defer></script>
 {{- end -}}
 

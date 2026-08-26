@@ -233,18 +233,27 @@
     host.innerHTML = orders
       .slice(0, 20)
       .map(function (o) {
+        var ticket = o.ticket_number || o.order_ref || '';
+        var money =
+          window.OrderClient && typeof window.OrderClient.formatMoney === 'function'
+            ? window.OrderClient.formatMoney(o.currency, o.total)
+            : String(o.currency || '') + ' ' + Number(o.total || 0).toFixed(2);
+        var fulfill = String(o.fulfillment || '').replace(/_/g, ' ');
         return (
-          '<p class="account-dashboard-order-row"><strong>#' +
-          escapeHtmlFav(o.ticket_number || o.order_ref) +
+          '<button type="button" class="account-dashboard-order-row js-customer-order" data-order-id="' +
+          escapeHtmlFav(o.id || '') +
+          '" aria-label="Open order #' +
+          escapeHtmlFav(ticket) +
+          '">' +
+          '<strong>#' +
+          escapeHtmlFav(ticket) +
           '</strong> · ' +
           escapeHtmlFav(o.status) +
           ' · ' +
-          escapeHtmlFav(o.fulfillment || '') +
+          escapeHtmlFav(fulfill) +
           ' · ' +
-          escapeHtmlFav(o.currency || '') +
-          ' ' +
-          Number(o.total || 0).toFixed(2) +
-          '</p>'
+          escapeHtmlFav(money) +
+          '</button>'
         );
       })
       .join('');
