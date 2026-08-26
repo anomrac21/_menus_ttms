@@ -104,8 +104,6 @@
         Accept: 'application/json',
       },
     };
-    var cid = siteClientId();
-    if (cid) opts.headers['X-TTMenus-Client-Id'] = cid;
     if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
