@@ -80,7 +80,21 @@
     return Array.isArray(menu.locations) ? menu.locations : [];
   }
 
-  function locationMeta(slug) {
+  function moneyLabel(order) {
+    if (window.OrderClient && typeof window.OrderClient.formatMoney === 'function') {
+      return window.OrderClient.formatMoney(order.currency, order.total);
+    }
+    return String(order.currency || '') + ' ' + Number(order.total || 0).toFixed(2);
+  }
+
+  function orderLocationSlug(order) {
+    if (window.OrderClient && typeof window.OrderClient.inferLocationSlug === 'function') {
+      return String(window.OrderClient.inferLocationSlug(order) || '').trim();
+    }
+    return String((order && order.location_slug) || '').trim();
+  }
+
+  function locationMeta(slug, order) {
     var key = String(slug || '').trim();
     var found = locationCatalog().filter(function (loc) {
       return String(loc.slug || '') === key;
@@ -92,10 +106,11 @@
         subtitle: found.address || '',
       };
     }
-    if (!key) {
-      return { slug: '', title: 'Unspecified location', subtitle: 'No venue on this ticket' };
+    if (key) {
+      return { slug: key, title: titleCase(key), subtitle: '' };
     }
-    return { slug: key, title: titleCase(key), subtitle: '' };
+    var name = String((order && order.restaurant_name) || '').trim();
+    return { slug: '', title: name || 'Menu', subtitle: '' };
   }
 
   function selectedLocation() {
@@ -187,11 +202,11 @@
       bySlug[loc.slug] = group;
     });
     (orders || []).forEach(function (o) {
-      var slug = String(o.location_slug || '').trim();
+      var slug = orderLocationSlug(o);
       var key = slug || '__none__';
       var group = bySlug[key];
       if (!group) {
-        group = { meta: locationMeta(slug), orders: [] };
+        group = { meta: locationMeta(slug, o), orders: [] };
         groups.push(group);
         bySlug[key] = group;
       }
@@ -558,7 +573,7 @@
 
   function chitText(order) {
     var lines = ['TTMENUS', 'Ticket #' + (order.ticket_number || ''), (order.fulfillment || '').toUpperCase()];
-    var loc = locationMeta(order.location_slug);
+    var loc = locationMeta(orderLocationSlug(order), order);
     if (loc.title) lines.push(loc.title);
     if (order.table_number) lines.push('Table ' + order.table_number);
     if (order.customer_name) lines.push(order.customer_name);
@@ -575,7 +590,7 @@
       lines.push(order.notes);
     }
     lines.push('----------------');
-    lines.push((order.currency || '') + ' ' + Number(order.total || 0).toFixed(2));
+    lines.push(moneyLabel(order));
     lines.push('');
     return lines.join('\n');
   }
@@ -672,9 +687,7 @@
         ? '<span class="dashboard-order-chip">' + escapeHtml(o.customer_name) + '</span>'
         : '') +
       '<span class="dashboard-order-total">' +
-      escapeHtml(o.currency || '') +
-      ' ' +
-      Number(o.total || 0).toFixed(2) +
+      escapeHtml(moneyLabel(o)) +
       '</span>' +
       '</p>' +
       '<ul class="dashboard-order-lines">' +

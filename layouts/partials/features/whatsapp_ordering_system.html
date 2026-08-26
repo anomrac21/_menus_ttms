@@ -582,6 +582,14 @@ function getCurrentLocationData() {
 			if (orderingtables && orderingtables.trim() !== '') {
 				parsedOrderingTables = orderingtables.split(',').map(table => table.trim());
 			}
+
+			var matchedSlug = slug;
+			if (!matchedSlug && window.MENU_CONFIG && Array.isArray(window.MENU_CONFIG.locations)) {
+				var hit = window.MENU_CONFIG.locations.filter(function (loc) {
+					return loc && String(loc.address || '').trim() === String(address).trim();
+				})[0];
+				if (hit && hit.slug) matchedSlug = hit.slug;
+			}
 			
 			return {
 				address: address,
@@ -590,7 +598,7 @@ function getCurrentLocationData() {
 				lng: lng,
 				orderingtables: parsedOrderingTables,
 				loyverse_store_id: loyverseStoreId,
-				slug: slug
+				slug: matchedSlug
 			};
 		}
 	}
@@ -2554,14 +2562,21 @@ async function ttmsSubmitOrderTicket() {
 		window.OrderClient.requireSignIn();
 		return { skipped: true, reason: 'auth' };
 	}
-	var loc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
+	var loc = window.OrderClient && typeof window.OrderClient.resolveLocation === 'function'
+		? window.OrderClient.resolveLocation(ttmsCartLinesForOrder())
+		: (typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null);
+	if (!loc || !loc.slug) {
+		return { ok: false, error: 'Pick a location before ordering' };
+	}
 	var oc = window.ORDER_CONFIG || {};
 	var payload = {
 		client_id: oc.clientId || (window.POS_CONFIG && window.POS_CONFIG.clientId) || '',
 		client_domain: window.location.hostname,
 		restaurant_name: document.title || '',
-		location_slug: (loc && loc.slug) || '',
-		store_id: (loc && loc.loyverse_store_id) || (window.POS_CONFIG && window.POS_CONFIG.storeId) || '',
+		location_slug: loc.slug,
+		store_id: loc.storeId || loc.loyverse_store_id || (window.POS_CONFIG && window.POS_CONFIG.storeId) || '',
+		restaurant_lat: loc.lat || 0,
+		restaurant_lng: loc.lng || 0,
 		fulfillment: ttmsFulfillmentFromCart(),
 		table_number: currentTableNumber || myTable || '',
 		notes: '',
@@ -2630,6 +2645,19 @@ function advanceOrder(){
 	}
 
 	let currentLocationData = getCurrentLocationData();
+	var resolvedLoc =
+		window.OrderClient && typeof window.OrderClient.resolveLocation === 'function'
+			? window.OrderClient.resolveLocation(order)
+			: null;
+	if (resolvedLoc && resolvedLoc.slug && (!currentLocationData || !currentLocationData.slug)) {
+		currentLocationData = Object.assign({}, currentLocationData || {}, {
+			slug: resolvedLoc.slug,
+			loyverse_store_id: resolvedLoc.storeId || (currentLocationData && currentLocationData.loyverse_store_id) || '',
+			lat: resolvedLoc.lat || (currentLocationData && currentLocationData.lat) || '',
+			lng: resolvedLoc.lng || (currentLocationData && currentLocationData.lng) || '',
+			address: resolvedLoc.address || (currentLocationData && currentLocationData.address) || '',
+		});
+	}
 
 	if (!currentLocationData) {
 		const locationSelect = document.getElementById('locationSelect');
@@ -2643,6 +2671,11 @@ function advanceOrder(){
 				currentLocationData = getCurrentLocationData();
 			}
 		}
+	}
+
+	if (!((resolvedLoc && resolvedLoc.slug) || (currentLocationData && currentLocationData.slug))) {
+		alert('Please select a location first before placing your order.');
+		return;
 	}
 
 	if (shouldPromptForTableSelection(currentLocationData)) {
