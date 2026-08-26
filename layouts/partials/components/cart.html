@@ -3,8 +3,8 @@
 	<div class="order cart-shell">
 		<div class="cart-header-modern">
 			<div class="cart-title-bar">
-				<button type="button" class="cart-back-btn" onclick="toggleCart();" title="Close cart" aria-label="Close cart">
-					<i class="fa fa-arrow-left" aria-hidden="true"></i>
+				<button type="button" class="cart-back-btn" id="cartOrdersBtn" title="My orders" aria-label="My orders at this restaurant">
+					<i class="fa fa-list-alt" aria-hidden="true"></i>
 				</button>
 				<h2 class="cart-title" id="cart-title">
 					<span class="cart-title__icon-wrap" aria-hidden="true">
@@ -79,6 +79,20 @@
 					<span>Clear cart</span>
 				</button>
 			</div>
+		</div>
+
+		<div id="cartOrdersPane" class="cart-orders-pane" hidden>
+			<div id="cartOrdersThrobber" class="cart-orders-throbber" hidden role="status" aria-live="polite" aria-busy="true">
+				<span class="cart-orders-throbber__spin" aria-hidden="true"></span>
+				<p class="cart-orders-throbber__label">Loading your orders…</p>
+				<div class="cart-orders-skeleton" aria-hidden="true">
+					<div class="cart-orders-skeleton__card"><span></span><span></span><span></span></div>
+					<div class="cart-orders-skeleton__card"><span></span><span></span><span></span></div>
+					<div class="cart-orders-skeleton__card"><span></span><span></span><span></span></div>
+				</div>
+			</div>
+			<p id="cartOrdersStatus" class="cart-orders-status" aria-live="polite"></p>
+			<ul id="cartOrdersList" class="cart-orders-list"></ul>
 		</div>
 	</div>
 

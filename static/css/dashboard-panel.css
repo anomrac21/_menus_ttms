@@ -294,10 +294,6 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     text-align: center;
 }
 
-#dashboard.dashboard-panel .dashboard-panel-orders:not([hidden]) ~ .dashboard-panel-empty {
-    display: none;
-}
-
 #dashboard.dashboard-panel .dashboard-panel-empty--compact {
     min-height: min(28dvh, 12rem);
     padding-top: 1rem;

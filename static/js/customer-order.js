@@ -302,6 +302,217 @@
     showTicket(order);
   }
 
+  function clientMatch(a, b) {
+    function norm(s) {
+      return String(unwrap(s) || '')
+        .toLowerCase()
+        .replace(/^_+/, '')
+        .replace(/^ttms_/, '');
+    }
+    var left = norm(a);
+    var right = norm(b);
+    return !left || !right || left === right;
+  }
+
+  function currentClientId() {
+    return unwrap(
+      (global.ORDER_CONFIG && global.ORDER_CONFIG.clientId) ||
+        global.SITE_CLIENT_ID ||
+        global.CLIENT_ID ||
+        ''
+    );
+  }
+
+  function orderLinesSummary(order) {
+    var lines =
+      global.OrderClient && typeof global.OrderClient.parseCart === 'function'
+        ? global.OrderClient.parseCart(order)
+        : [];
+    if (!lines.length) return '';
+    return lines
+      .slice(0, 3)
+      .map(lineLabel)
+      .join(' · ');
+  }
+
+  var cartOrdersReq = 0;
+
+  function isCartOrdersOpen() {
+    var cart = $('cart');
+    return !!(cart && cart.classList.contains('cart--orders'));
+  }
+
+  function setCartOrdersBusy(busy) {
+    var cart = $('cart');
+    var pane = $('cartOrdersPane');
+    var throbber = $('cartOrdersThrobber');
+    if (cart) cart.classList.toggle('cart--orders-loading', !!busy);
+    if (pane) pane.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (throbber) {
+      throbber.hidden = !busy;
+      throbber.setAttribute('aria-busy', busy ? 'true' : 'false');
+    }
+  }
+
+  function setCartOrdersHeader(open) {
+    var btn = $('cartOrdersBtn');
+    var icon = btn && btn.querySelector('i');
+    var title = document.querySelector('#cart-title .cart-title__text');
+    var titleIcon = document.querySelector('#cart-title .cart-title__icon-wrap i');
+    if (open) {
+      if (icon) icon.className = 'fa fa-arrow-left';
+      if (btn) {
+        btn.title = 'Back to cart';
+        btn.setAttribute('aria-label', 'Back to cart');
+      }
+      if (title) title.textContent = 'My orders';
+      if (titleIcon) titleIcon.className = 'fa fa-list-alt';
+    } else {
+      if (icon) icon.className = 'fa fa-list-alt';
+      if (btn) {
+        btn.title = 'My orders';
+        btn.setAttribute('aria-label', 'My orders at this restaurant');
+      }
+      if (title) title.textContent = 'My Order';
+      if (titleIcon) titleIcon.className = 'fa fa-shopping-cart';
+    }
+  }
+
+  function hideCartOrders() {
+    cartOrdersReq += 1;
+    var cart = $('cart');
+    var pane = $('cartOrdersPane');
+    if (cart) cart.classList.remove('cart--orders');
+    if (pane) pane.hidden = true;
+    setCartOrdersBusy(false);
+    setCartOrdersHeader(false);
+  }
+
+  function renderCartOrders(orders, opts) {
+    opts = opts || {};
+    var list = $('cartOrdersList');
+    var status = $('cartOrdersStatus');
+    if (!list) return;
+    var loading = !!opts.loading;
+    setCartOrdersBusy(loading);
+    if (status) {
+      status.classList.remove('cart-orders-status--in');
+      if (loading) status.textContent = '';
+      else if (opts.error) status.textContent = 'Could not load orders. Try again.';
+      else if (opts.needSignIn) status.textContent = 'Sign in to see orders at this restaurant.';
+      else if (!orders || !orders.length) status.textContent = 'No orders at this restaurant yet.';
+      else status.textContent = '';
+      if (status.textContent) {
+        void status.offsetWidth;
+        status.classList.add('cart-orders-status--in');
+      }
+    }
+    if (loading || !orders || !orders.length) {
+      list.innerHTML = '';
+      return;
+    }
+    list.innerHTML = orders
+      .map(function (o, i) {
+        var st = o.status || 'open';
+        var lines = orderLinesSummary(o);
+        var ticket = o.ticket_number || o.order_ref || '';
+        var oid = o.id || '';
+        return (
+          '<li style="--cart-order-i:' +
+          i +
+          '">' +
+          '<button type="button" class="cart-order-row cart-order-row--' +
+          escapeHtml(st) +
+          ' js-customer-order" data-order-id="' +
+          escapeHtml(oid) +
+          '"' +
+          (oid ? '' : ' disabled') +
+          ' aria-label="Open order #' +
+          escapeHtml(ticket) +
+          '">' +
+          '<div class="cart-order-row__top">' +
+          '<b>#' +
+          escapeHtml(ticket) +
+          '</b>' +
+          '<span class="cart-order-row__status">' +
+          escapeHtml(titleCase(st)) +
+          '</span></div>' +
+          '<div class="cart-order-row__meta">' +
+          escapeHtml(fulfillmentLabel(o)) +
+          ' · ' +
+          escapeHtml(formatMoney(o.currency, o.total)) +
+          '</div>' +
+          (lines ? '<div class="cart-order-row__lines">' + escapeHtml(lines) + '</div>' : '') +
+          '</button></li>'
+        );
+      })
+      .join('');
+  }
+
+  function showCartOrders() {
+    var cart = $('cart');
+    var pane = $('cartOrdersPane');
+    if (!cart || !pane) return;
+    var req = ++cartOrdersReq;
+    if (cart.classList.contains('cart-hidden') && typeof global.toggleCart === 'function') {
+      global.toggleCart();
+    }
+    cart.classList.add('cart--orders');
+    pane.hidden = false;
+    setCartOrdersHeader(true);
+    if (
+      !global.OrderClient ||
+      typeof global.OrderClient.mine !== 'function' ||
+      !global.OrderClient.isSignedIn()
+    ) {
+      renderCartOrders([], { needSignIn: true });
+      if (global.OrderClient && typeof global.OrderClient.requireSignIn === 'function') {
+        global.OrderClient.requireSignIn();
+      }
+      return;
+    }
+    renderCartOrders([], { loading: true });
+    global.OrderClient.mine()
+      .then(function (res) {
+        if (req !== cartOrdersReq || !isCartOrdersOpen()) return;
+        var orders = (res && res.orders) || [];
+        var cid = currentClientId();
+        if (cid) {
+          orders = orders.filter(function (o) {
+            return clientMatch(o.client_id, cid);
+          });
+        }
+        renderCartOrders(orders, {});
+      })
+      .catch(function () {
+        if (req !== cartOrdersReq || !isCartOrdersOpen()) return;
+        renderCartOrders([], { error: true });
+      });
+  }
+
+  function toggleCartOrders() {
+    if (isCartOrdersOpen()) hideCartOrders();
+    else showCartOrders();
+  }
+
+  function hookCartClose() {
+    if (global.TTMSCartPanel && typeof global.TTMSCartPanel.close === 'function' && !global.TTMSCartPanel.close._ttmsOrdersWrapped) {
+      var panelClose = global.TTMSCartPanel.close;
+      global.TTMSCartPanel.close = function () {
+        hideCartOrders();
+        return panelClose.apply(this, arguments);
+      };
+      global.TTMSCartPanel.close._ttmsOrdersWrapped = true;
+    }
+    if (typeof global.closeCart !== 'function' || global.closeCart._ttmsOrdersWrapped) return;
+    var orig = global.closeCart;
+    global.closeCart = function () {
+      hideCartOrders();
+      return orig.apply(this, arguments);
+    };
+    global.closeCart._ttmsOrdersWrapped = true;
+  }
+
   function handleDelegatedClick(event) {
     var btn = event.target && event.target.closest('.js-customer-order[data-order-id]');
     if (!btn) return;
@@ -314,10 +525,36 @@
     });
   }
 
+  function bindCartOrdersBtn() {
+    var btn = $('cartOrdersBtn');
+    if (!btn || btn._ttmsOrdersBound) return;
+    btn._ttmsOrdersBound = true;
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      hookCartClose();
+      toggleCartOrders();
+    });
+  }
+
+  function initCartOrders() {
+    hookCartClose();
+    bindCartOrdersBtn();
+  }
+
   global.TTMSCustomerOrder = {
     open: open,
     close: closePanel,
+    showCartOrders: showCartOrders,
+    hideCartOrders: hideCartOrders,
+    toggleCartOrders: toggleCartOrders,
   };
 
   document.addEventListener('click', handleDelegatedClick);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCartOrders);
+  } else {
+    initCartOrders();
+  }
+  global.addEventListener('ttms:auth-ready', hookCartClose);
 })(typeof window !== 'undefined' ? window : this);
