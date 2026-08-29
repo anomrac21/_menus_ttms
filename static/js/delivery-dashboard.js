@@ -123,6 +123,28 @@
     return b;
   }
 
+  function bindAutoAccept() {
+    var box = document.getElementById('ttms-delivery-auto-accept');
+    if (!box || box.getAttribute('data-bound') || !window.DeliveryClient) return;
+    box.setAttribute('data-bound', '1');
+    DeliveryClient.getClientSettings()
+      .then(function (st) {
+        box.checked = !!(st && st.auto_accept);
+      })
+      .catch(function () {});
+    box.addEventListener('change', function () {
+      box.disabled = true;
+      DeliveryClient.updateClientSettings(box.checked)
+        .catch(function (err) {
+          alert((err && err.message) || String(err));
+          box.checked = !box.checked;
+        })
+        .then(function () {
+          box.disabled = false;
+        });
+    });
+  }
+
   function init() {
     var root = document.getElementById('ttms-delivery-orders');
     if (!root || !window.DELIVERY_CONFIG || !window.DELIVERY_CONFIG.enabled) return;
@@ -134,6 +156,7 @@
       refreshBtn.setAttribute('data-bound', '1');
       refreshBtn.addEventListener('click', function () { refresh(list); });
     }
+    bindAutoAccept();
     refresh(list);
     if (!root.getAttribute('data-poll')) {
       root.setAttribute('data-poll', '1');

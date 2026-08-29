@@ -186,6 +186,12 @@
       var q = status ? '?status=' + encodeURIComponent(status) : '';
       return request('GET', '/client/orders' + q);
     },
+    getClientSettings: function () {
+      return request('GET', '/client/settings');
+    },
+    updateClientSettings: function (autoAccept) {
+      return request('PATCH', '/client/settings', { auto_accept: !!autoAccept });
+    },
     clientAccept: function (orderId, accept, reason) {
       return request('POST', '/orders/' + encodeURIComponent(orderId) + '/client-accept', {
         accept: accept !== false,

@@ -530,6 +530,17 @@ body.ttms-delivery-open {
   width: 100%;
 }
 
+.dashboard-delivery-page .ttms-delivery-auto-accept {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0.65rem 0 0;
+  font-size: 0.85rem;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .dashboard-delivery-page .ttms-delivery-orders-list {
   display: flex;
   flex-direction: column;
