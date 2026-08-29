@@ -884,7 +884,6 @@
   function receiptModeFromData(d) {
     var mode = String((d && d.loyverse_receipt_mode) || '').toLowerCase();
     if (mode === 'on_payment' || mode === 'direct' || mode === 'off') return mode;
-    if (d && d.auto_process_orders === false) return 'off';
     if (d && d.auto_process_orders === true) return 'direct';
     return 'on_payment';
   }

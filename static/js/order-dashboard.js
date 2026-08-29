@@ -70,6 +70,8 @@
         text: 'Receipt ' + order.loyverse_receipt_number,
         kind: 'ok',
       });
+    } else if (order.loyverse_receipt_status === 'queued') {
+      chips.push({ text: 'Loyverse queued', kind: '' });
     } else if (order.loyverse_error) {
       chips.push({ text: 'Loyverse: ' + order.loyverse_error, kind: 'fail' });
     } else if (order.loyverse_receipt_mode === 'off') {
@@ -283,7 +285,7 @@
       '|' +
       (orders || [])
         .map(function (o) {
-          return [o.id, o.status, o.print_status, o.loyverse_receipt_number, o.updated_at].join(':');
+          return [o.id, o.status, o.print_status, o.loyverse_receipt_number, o.loyverse_receipt_status, o.loyverse_error, o.updated_at].join(':');
         })
         .join('|')
     );
@@ -393,6 +395,11 @@
       paidDisabled +
       '>Charge</button>' +
       '<button type="button" class="btn-dash btn-dash-secondary" data-act="reprint">Reprint</button>' +
+      (o.loyverse_receipt_mode && o.loyverse_receipt_mode !== 'off' && !o.loyverse_receipt_number
+        ? '<button type="button" class="btn-dash btn-dash-secondary" data-act="loyverse-resend">' +
+          (o.loyverse_receipt_status === 'queued' ? 'Retry Loyverse' : 'Send to Loyverse') +
+          '</button>'
+        : '') +
       '<button type="button" class="btn-dash btn-dash-secondary" data-act="cancel"' +
       cancelDisabled +
       '>Cancel</button>' +
@@ -540,6 +547,7 @@
       if (act === 'ready') await window.OrderClient.ready(id);
       if (act === 'charge') await window.OrderClient.charge(id);
       if (act === 'reprint') await window.OrderClient.reprint(id);
+      if (act === 'loyverse-resend') await window.OrderClient.resendLoyverse(id);
       if (act === 'cancel') await window.OrderClient.cancel(id, '');
       if (needsConfirm) await playTicketOutcome(card, act, true);
       await refresh({ preserve: true });

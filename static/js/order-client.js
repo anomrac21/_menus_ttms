@@ -386,6 +386,9 @@
     reprint: function (id) {
       return request('POST', '/orders/' + encodeURIComponent(id) + '/reprint', {});
     },
+    resendLoyverse: function (id) {
+      return request('POST', '/orders/' + encodeURIComponent(id) + '/loyverse-resend', {});
+    },
     requireSignIn: function () {
       if (this.isSignedIn()) return true;
       try {
