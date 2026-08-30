@@ -13,6 +13,9 @@
         {{- $day := . -}}
         {{- $dayName := index $dayNames $day -}}
         {{- $entries := index $oh $day -}}
+        {{- if not (reflect.IsSlice $entries) -}}
+          {{- $entries = slice -}}
+        {{- end -}}
         {{- $openList := where $entries "type" "Open" -}}
         {{- $closeList := where $entries "type" "Close" -}}
         {{- $open := index $openList 0 -}}
