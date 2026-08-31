@@ -335,6 +335,79 @@
       .join(' · ');
   }
 
+  var CART_ORDER_GROUPS = [
+    { key: 'today', label: 'Today' },
+    { key: 'week', label: 'Last week' },
+    { key: 'month', label: 'Last month' },
+    { key: 'more', label: 'More' }
+  ];
+
+  function startOfLocalDay(d) {
+    var x = new Date(d.getTime());
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }
+
+  function orderWhenMs(order) {
+    var raw = unwrap(order.created_at || order.CreatedAt || order.updated_at || order.UpdatedAt || '');
+    var t = Date.parse(raw);
+    return isFinite(t) ? t : 0;
+  }
+
+  function orderGroupKey(whenMs, now) {
+    var today = startOfLocalDay(now).getTime();
+    var day = 24 * 60 * 60 * 1000;
+    if (whenMs >= today) return 'today';
+    if (whenMs >= today - 7 * day) return 'week';
+    if (whenMs >= today - 30 * day) return 'month';
+    return 'more';
+  }
+
+  function groupCartOrders(orders) {
+    var now = new Date();
+    var buckets = { today: [], week: [], month: [], more: [] };
+    (orders || []).forEach(function (o) {
+      var key = orderGroupKey(orderWhenMs(o), now);
+      buckets[key].push(o);
+    });
+    return buckets;
+  }
+
+  function cartOrderRowHtml(o, i) {
+    var st = o.status || 'open';
+    var lines = orderLinesSummary(o);
+    var ticket = o.ticket_number || o.order_ref || '';
+    var oid = o.id || '';
+    return (
+      '<li style="--cart-order-i:' +
+      i +
+      '">' +
+      '<button type="button" class="cart-order-row cart-order-row--' +
+      escapeHtml(st) +
+      ' js-customer-order" data-order-id="' +
+      escapeHtml(oid) +
+      '"' +
+      (oid ? '' : ' disabled') +
+      ' aria-label="Open order #' +
+      escapeHtml(ticket) +
+      '">' +
+      '<div class="cart-order-row__top">' +
+      '<b>#' +
+      escapeHtml(ticket) +
+      '</b>' +
+      '<span class="cart-order-row__status">' +
+      escapeHtml(titleCase(st)) +
+      '</span></div>' +
+      '<div class="cart-order-row__meta">' +
+      escapeHtml(fulfillmentLabel(o)) +
+      ' · ' +
+      escapeHtml(formatMoney(o.currency, o.total)) +
+      '</div>' +
+      (lines ? '<div class="cart-order-row__lines">' + escapeHtml(lines) + '</div>' : '') +
+      '</button></li>'
+    );
+  }
+
   var cartOrdersReq = 0;
 
   function isCartOrdersOpen() {
@@ -411,42 +484,33 @@
       list.innerHTML = '';
       return;
     }
-    list.innerHTML = orders
-      .map(function (o, i) {
-        var st = o.status || 'open';
-        var lines = orderLinesSummary(o);
-        var ticket = o.ticket_number || o.order_ref || '';
-        var oid = o.id || '';
-        return (
-          '<li style="--cart-order-i:' +
-          i +
-          '">' +
-          '<button type="button" class="cart-order-row cart-order-row--' +
-          escapeHtml(st) +
-          ' js-customer-order" data-order-id="' +
-          escapeHtml(oid) +
-          '"' +
-          (oid ? '' : ' disabled') +
-          ' aria-label="Open order #' +
-          escapeHtml(ticket) +
-          '">' +
-          '<div class="cart-order-row__top">' +
-          '<b>#' +
-          escapeHtml(ticket) +
-          '</b>' +
-          '<span class="cart-order-row__status">' +
-          escapeHtml(titleCase(st)) +
-          '</span></div>' +
-          '<div class="cart-order-row__meta">' +
-          escapeHtml(fulfillmentLabel(o)) +
-          ' · ' +
-          escapeHtml(formatMoney(o.currency, o.total)) +
-          '</div>' +
-          (lines ? '<div class="cart-order-row__lines">' + escapeHtml(lines) + '</div>' : '') +
-          '</button></li>'
-        );
-      })
-      .join('');
+    var buckets = groupCartOrders(orders);
+    var html = '';
+    var i = 0;
+    CART_ORDER_GROUPS.forEach(function (g) {
+      var items = buckets[g.key];
+      if (!items.length) return;
+      html +=
+        '<section class="cart-orders-group" aria-labelledby="cartOrdersGroup-' +
+        g.key +
+        '">' +
+        '<h3 id="cartOrdersGroup-' +
+        g.key +
+        '" class="cart-orders-group__title">' +
+        '<span class="cart-orders-group__label">' +
+        escapeHtml(g.label) +
+        '</span>' +
+        '<span class="cart-orders-group__count">' +
+        items.length +
+        '</span></h3>' +
+        '<ul class="cart-orders-group__list">';
+      items.forEach(function (o) {
+        html += cartOrderRowHtml(o, i);
+        i += 1;
+      });
+      html += '</ul></section>';
+    });
+    list.innerHTML = html;
   }
 
   function showCartOrders() {

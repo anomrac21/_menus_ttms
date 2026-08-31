@@ -3591,25 +3591,151 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
 }
 
 @media (max-width: 640px) {
+  .dashboard-pos-flow {
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .dashboard-pos-step {
+    padding: 0.85rem 0.8rem 1rem;
+  }
+
+  .dashboard-pos-step[open] > .dashboard-pos-step-summary {
+    margin-bottom: 1rem;
+  }
+
+  .dashboard-pos-step > .dashboard-pos-step-summary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "num copy chevron"
+      ". pill .";
+    align-items: start;
+    column-gap: 0.7rem;
+    row-gap: 0.45rem;
+  }
+
+  .dashboard-pos-step-num {
+    grid-area: num;
+  }
+
+  .dashboard-pos-step-summary-copy {
+    grid-area: copy;
+  }
+
+  .dashboard-pos-step-pill {
+    grid-area: pill;
+    order: unset;
+    margin-left: 0;
+    justify-self: start;
+    white-space: normal;
+    max-width: 100%;
+    line-height: 1.25;
+  }
+
+  .dashboard-pos-step > .dashboard-pos-step-summary .dashboard-card-toggle-chevron {
+    grid-area: chevron;
+    margin-left: 0;
+    align-self: start;
+    margin-top: 0.2rem;
+  }
+
+  .dashboard-pos-step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   .dashboard-pos-title-badge {
     font-size: 0.62rem;
   }
 
-  .dashboard-pos-account-actions {
+  .dashboard-pos-account {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    padding: 0.9rem 0.85rem;
+  }
+
+  .dashboard-pos-account-copy {
+    min-width: 0;
     width: 100%;
   }
 
-  .dashboard-pos-step > .dashboard-pos-step-summary {
-    flex-wrap: wrap;
+  .dashboard-pos-account-status {
+    font-size: 0.88rem;
+    line-height: 1.4;
   }
 
-  .dashboard-pos-step-pill {
-    order: 3;
-    margin-left: 2.45rem;
+  .dashboard-pos-account-actions,
+  .dashboard-pos-location-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    margin-top: 0;
   }
 
-  .dashboard-pos-step > .dashboard-pos-step-summary .dashboard-card-toggle-chevron {
-    margin-left: auto;
+  .dashboard-pos-account-actions .btn-dash,
+  .dashboard-pos-location-actions .btn-dash {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dashboard-pos-inline-status {
+    width: 100%;
+    line-height: 1.45;
+  }
+
+  .dashboard-pos-location-list {
+    gap: 0.9rem;
+  }
+
+  .dashboard-pos-location-card {
+    padding: 0.95rem 0.85rem;
+  }
+
+  .dashboard-pos-location-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .dashboard-pos-location-store-label .dashboard-settings-input,
+  .dashboard-pos-toggles .dashboard-select,
+  .dashboard-pos-toggles select,
+  .dashboard-pos-fallback .dashboard-settings-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .dashboard-pos-item-match {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.28rem;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .dashboard-pos-item-match-overview {
+    gap: 0.6rem;
+    margin: 0.85rem 0 0;
+  }
+
+  .dashboard-pos-toggles .dashboard-settings-row,
+  .dashboard-pos-toggles .dashboard-ordering-switch-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .dashboard-pos-fallback {
+    margin-top: 0;
+  }
+
+  .dashboard-pos-advanced {
+    padding: 0.85rem 0.8rem 1rem;
   }
 }
 
