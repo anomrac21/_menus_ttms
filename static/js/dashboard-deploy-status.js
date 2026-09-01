@@ -248,6 +248,8 @@
 
       started: 'Rebuild started',
 
+      dispatch: 'Kick sent',
+
       test_build: 'Rebuild started',
 
       deploy: 'Cluster rollout',
@@ -263,6 +265,18 @@
     };
 
     var label = labels[phase] || (ev && ev.phase) || '—';
+
+    if (source === 'k8s-redeploy') {
+
+      if (phase === 'started') return 'Site requested';
+
+      if (phase === 'dispatch') return 'Kick sent';
+
+      if (phase === 'failure') return 'Kick failed';
+
+      return 'Site · ' + label;
+
+    }
 
     if (source === 'hugo-theme' && phase !== 'theme') {
 

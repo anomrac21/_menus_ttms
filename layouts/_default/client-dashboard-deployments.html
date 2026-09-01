@@ -18,8 +18,9 @@
         </div>
       </div>
       <p class="dashboard-deploy-history-note">
-        Events are reported when git push rebuilds the cluster site (Hugo runs in the pod, not in GitHub Actions).
-        Content pushes and theme rollouts from <code>_ttms_menu_demo/themes/_menus_ttms</code> both show here.
+        The site repo posts the first event (requested / kick sent). Cluster Helm, Hugo in the pod, and live
+        <code>build-info.json</code> checks are reported from <code>hugo-rebuild</code> on ttms-client-configs.
+        Theme pushes do not appear unless you run Theme fleet rebuild by hand.
       </p>
       <div class="dashboard-deploy-history-table-wrap">
         <table class="dashboard-deploy-history-table" aria-label="Deploy history">
