@@ -91,7 +91,7 @@
                 res.status +
                 (raw.length < 160 ? ': ' + raw : '') +
                 (res.status === 404
-                  ? ' — redeploy content-management-service if replace-catalog is missing'
+                  ? ': redeploy content-management-service if replace-catalog is missing'
                   : '')
             );
           }
@@ -165,21 +165,21 @@
     var el = $('posLocationMapStatus');
     if (!el) return;
     el.textContent = text || '';
-    el.style.color = isError ? '#b42318' : '';
+    el.style.color = isError ? 'var(--dash-error)' : '';
   }
 
   function setSettingsStatus(text, isError) {
     var el = $('posSettingsSaveStatus');
     if (!el) return;
     el.textContent = text || '';
-    el.style.color = isError ? '#b42318' : '';
+    el.style.color = isError ? 'var(--dash-error)' : '';
   }
 
   function setItemMapStatus(text, isError) {
     var el = $('posItemMapStatus');
     if (!el) return;
     el.textContent = text || '';
-    el.style.color = isError ? '#b42318' : '';
+    el.style.color = isError ? 'var(--dash-error)' : '';
   }
 
   function showItemMapButtons(show) {
@@ -209,7 +209,7 @@
   }
 
   function storeOptionHtml(selectedId) {
-    var html = '<option value="">— Choose a till —</option>';
+    var html = '<option value="">Choose a till.</option>';
     var found = false;
     cachedStores.forEach(function (s) {
       var id = s.id || '';
@@ -265,7 +265,7 @@
     var item = String(title || '').trim();
     if (!item) return false;
     var sizeKey = String(size || '').trim();
-    if (sizeKey && sizeKey !== '-' && sizeKey !== '—' && sizeKey !== '–') {
+    if (sizeKey && sizeKey !== '-' && sizeKey !== '' && sizeKey !== '–') {
       if (mappingValue(map[item + '|' + sizeKey])) return true;
     }
     return !!mappingValue(map[item]);
@@ -281,7 +281,7 @@
     metas.forEach(function (m) {
       if (m && m.loyverse_variant_id) priceMapped += 1;
       var s = String((m && (m.variable1 || m.size)) || '').trim();
-      if (s && s !== '-' && s !== '—' && s !== '–') sizes.push(s);
+      if (s && s !== '-' && s !== '' && s !== '–') sizes.push(s);
     });
     if (priceMapped && priceMapped === metas.length) return true;
     if (!sizes.length) return mappingHas(title, '');
@@ -336,8 +336,7 @@
       count = stats.matched + ' of ' + stats.total + ' items matched';
       if (stats.unmatched.length) {
         var shown = stats.unmatched.slice(0, 3);
-        var more = stats.unmatched.length - shown.length;
-          extra =
+        var more = stats.unmatched.length - shown.length;          extra =
           '<p class="dashboard-pos-item-match-unmapped">Won’t print: ' +
           escapeHtml(shown.join(', ')) +
           (more > 0 ? ' +' + more + ' more' : '') +
@@ -560,8 +559,7 @@
     else if (!setup.total) setStepPill('posStepLocationsPill', 'attention', 'No locations');
     else if (setup.storesDone) setStepPill('posStepLocationsPill', 'ready', 'All ' + setup.total + ' ready');
     else {
-      var left = setup.total - setup.mapped;
-      setStepPill('posStepLocationsPill', 'attention', left === 1 ? '1 left' : left + ' left');
+      var left = setup.total - setup.mapped;      setStepPill('posStepLocationsPill', 'attention', left === 1 ? '1 left' : left + ' left');
     }
 
     setStepPill('posStepOrdersPill', 'ready', 'Optional');
@@ -625,8 +623,7 @@
         setSetupRow('items', 'ready', 'All ' + setup.itemTotal + ' dishes match Loyverse.');
       } else {
         var shown = setup.unmatched.slice(0, 3);
-        var more = setup.unmatched.length - shown.length;
-        setSetupRow(
+        var more = setup.unmatched.length - shown.length;        setSetupRow(
           'items',
           'attention',
           setup.itemMatched +
@@ -694,8 +691,7 @@
         badge.textContent =
           setup.unmatched.length === 1 ? '1 dish to match' : setup.unmatched.length + ' dishes to match';
       } else if (!setup.storesDone && setup.total) {
-        var left = setup.total - setup.mapped;
-        badge.setAttribute('data-state', 'attention');
+        var left = setup.total - setup.mapped;        badge.setAttribute('data-state', 'attention');
         badge.textContent = left === 1 ? '1 location left' : left + ' locations left';
       } else {
         badge.setAttribute('data-state', 'connected');
@@ -878,7 +874,7 @@
       }
     });
     renderLocationMap();
-    setMapStatus('Auto-matched where names looked similar — review and Save.');
+    setMapStatus('Auto-matched where names looked similar: review and Save.');
   }
 
   function receiptModeFromData(d) {
@@ -1117,7 +1113,7 @@
         cachedStores = (d && d.stores) || [];
         var empty = document.createElement('option');
         empty.value = '';
-        empty.textContent = '— First store if a location has none —';
+        empty.textContent = 'First store if a location has none.';
         sel.appendChild(empty);
         cachedStores.forEach(function (s) {
           var opt = document.createElement('option');
@@ -1272,7 +1268,7 @@
         var v = map[k];
         var id = typeof v === 'string' ? v : (v && v.variant_id) || '';
         return (
-          '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;border-bottom:1px solid rgba(0,0,0,0.08);padding:0.25rem 0;">' +
+          '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;border-bottom:1px solid color-mix(in srgb, var(--dash-black) 8%, transparent);padding:0.25rem 0;">' +
           '<code style="flex:1;min-width:10rem;">' +
           escapeHtml(k) +
           '</code>' +
@@ -1331,7 +1327,7 @@
     proposedItemMapping = buildProposedMapping(cachedLoyverseItems);
     renderItemMapPreview(proposedItemMapping);
     var n = Object.keys(proposedItemMapping).length;
-    setItemMapStatus(n ? 'Proposed ' + n + ' mapping key(s) — review and Save.' : 'No mappings produced.', !n);
+    setItemMapStatus(n ? 'Proposed ' + n + ' mapping key(s) - review and Save.' : 'No mappings produced.', !n);
   }
 
   function saveItemMapping() {
@@ -1376,7 +1372,7 @@
     var el = $('posReplaceCatalogStatus');
     if (!el) return;
     el.textContent = text || '';
-    el.style.color = isError ? '#b42318' : '';
+    el.style.color = isError ? 'var(--dash-error)' : '';
   }
 
   function clientNameForConfirm() {

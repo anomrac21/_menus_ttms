@@ -24,56 +24,57 @@
     min-width: 0 !important;
     max-width: 100%;
     border-radius: 999px !important;
-    border: 1.5px solid rgba(56, 189, 248, 0.7) !important;
-    background: linear-gradient(155deg, rgba(56, 189, 248, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%) !important;
-    color: #f8fafc !important;
+    border: 1.5px solid var(--scheme-accent) !important;
+    background: var(--scheme-button-bg) !important;
+    color: var(--scheme-white) !important;
     font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.14) inset,
-      0 10px 22px rgba(0, 0, 0, 0.35) !important;
     padding: 0.38rem 0.85rem 0.38rem 0.38rem !important;
   }
   .hero_logo_container .contact-cta--notify,
   .hero_logo_container .subscribe .subbtn--notify,
   .hero_logo_container .subscribe .subbtn--notify.contact-cta,
   .hero_logo_container .subscribe .subbtn--notify.btn {
-    border-color: rgba(251, 113, 133, 0.7) !important;
-    background: linear-gradient(155deg, rgba(251, 113, 133, 0.32) 0%, rgba(15, 23, 42, 0.72) 100%) !important;
-    color: #f8fafc !important;
+    border-color: var(--scheme-accent-2) !important;
+    background: var(--scheme-accent-deep) !important;
+    color: var(--scheme-white) !important;
   }
   .hero_logo_container .subscribe .subbtn--notify .contact-cta__icon,
   .hero_logo_container .contact-cta__icon {
     width: 1.7rem !important;
     height: 1.7rem !important;
-    color: #fff !important;
-    background:
-      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.42), transparent 50%),
-      linear-gradient(160deg, #fb7185 0%, #e11d48 100%) !important;
+    color: var(--scheme-white) !important;
+    background: var(--scheme-accent-2) !important;
   }
   .hero_logo_container .contact-cta--install .contact-cta__icon {
-    background:
-      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.42), transparent 50%),
-      linear-gradient(160deg, #38bdf8 0%, #0284c7 100%) !important;
+    background: var(--scheme-button-bg) !important;
   }
   .hero_logo_container .subscribe .subbtn--notify .contact-cta__title,
   .hero_logo_container .contact-cta__title {
-    color: #f8fafc !important;
+    color: var(--scheme-white) !important;
   }
   .hero_logo_container .subscribe .subbtn--notify .contact-cta__hint,
   .hero_logo_container .contact-cta__hint {
-    color: rgba(248, 250, 252, 0.78) !important;
+    color: var(--scheme-white) !important;
   }
   .hero_logo_container .hero-features .loader-feature,
   .hero-features.loader-features .loader-feature {
-    color: #f8fafc;
-    border-color: rgba(255, 255, 255, 0.35);
-    background: linear-gradient(155deg, rgba(251, 191, 36, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
+    color: var(--scheme-white);
+    border-color: var(--scheme-accent);
+    background: var(--scheme-button-bg);
   }
   .hero_logo_container .hero-features .loader-feature[data-feature="ordering"] {
-    border-color: rgba(251, 191, 36, 0.55);
-    background: linear-gradient(155deg, rgba(251, 191, 36, 0.28) 0%, rgba(15, 23, 42, 0.72) 100%);
+    border-color: var(--scheme-accent);
+    background: var(--scheme-accent-deep);
+  }
+  .hero_logo_container .hero-features .loader-feature[data-feature="notifications"] {
+    border-color: var(--scheme-accent-2);
+    background: var(--scheme-accent-deep);
+  }
+  .hero_logo_container .hero-features .loader-feature[data-feature="install"] {
+    border-color: var(--scheme-accent);
+    background: var(--scheme-button-bg);
   }
 </style>

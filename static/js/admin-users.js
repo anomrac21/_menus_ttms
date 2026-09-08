@@ -239,7 +239,7 @@ const AdminUserManager = {
 
     if (!users || users.length === 0) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+        <div style="text-align: center; padding: 3rem; color: var(--dash-info);">
           <p style="font-size: 1.125rem; font-weight: 500;">No users found</p>
         </div>
       `;
@@ -368,7 +368,7 @@ const AdminUserManager = {
   editUser(userId) {
     // This would open a modal or navigate to an edit page
     console.log('Edit user:', userId);
-    alert('Edit user feature - implement based on your needs');
+    alert('Edit user feature: implement based on your needs');
   },
 };
 

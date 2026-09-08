@@ -14,7 +14,7 @@
     height: var(--ttms-overlay-height, 100dvh);
     max-height: var(--ttms-overlay-height, 100dvh);
     box-sizing: border-box;
-    background: rgba(0, 0, 0, 0.55);
+    background: color-mix(in srgb, var(--scheme-black) 55%, transparent);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     overscroll-behavior: none;
@@ -31,11 +31,11 @@
     border-radius: 1.25rem 1.25rem 0 0;
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--main-bg, #0a0a0f) 88%, #fff) 0%,
-        var(--main-bg, #0a0a0f) 100%
+        color-mix(in srgb, var(--main-bg) 88%, var(--scheme-white)) 0%,
+        var(--main-bg) 100%
     );
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.35);
+    border-top: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    box-shadow: 0 -16px 40px color-mix(in srgb, var(--scheme-black) 35%, transparent);
     padding: 1rem 1.1rem max(1.25rem, env(safe-area-inset-bottom, 0));
 }
 
@@ -51,7 +51,7 @@
     margin: 0;
     font-size: 1.15rem;
     font-weight: 700;
-    color: var(--main-text-color, #fff);
+    color: var(--main-text-color);
 }
 
 .payment-modal-close {
@@ -59,44 +59,44 @@
     height: 2.25rem;
     border: none;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--main-text-color, #fff);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    color: var(--main-text-color);
     cursor: pointer;
 }
 
 .payment-modal__summary {
     padding: 0.85rem 0.95rem;
     border-radius: 0.85rem;
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
     margin-bottom: 0.85rem;
 }
 
 .payment-modal__amount {
     font-size: 1.35rem;
     font-weight: 700;
-    color: var(--selected-button-color3, #fcd000);
+    color: var(--selected-button-color3);
 }
 
 .payment-modal__details {
     margin-top: 0.35rem;
     font-size: 0.85rem;
-    color: color-mix(in srgb, var(--main-text-color, #fff) 70%, transparent);
+    color: color-mix(in srgb, var(--main-text-color) 70%, transparent);
 }
 
 .payment-modal__status {
     min-height: 1.25rem;
     font-size: 0.9rem;
     margin-bottom: 0.85rem;
-    color: color-mix(in srgb, var(--main-text-color, #fff) 82%, transparent);
+    color: color-mix(in srgb, var(--main-text-color) 82%, transparent);
 }
 
 .payment-modal__status--error {
-    color: #ff8a8a;
+    color: var(--scheme-accent-2);
 }
 
 .payment-modal__status--processing,
 .payment-modal__status--redirecting {
-    color: var(--selected-button-color3, #fcd000);
+    color: var(--selected-button-color3);
 }
 
 .payment-modal__actions {
@@ -118,13 +118,13 @@
 }
 
 .btn-payment-primary {
-    background: linear-gradient(135deg, #fcd000, #e6b800);
-    color: #111;
+    background: linear-gradient(135deg, var(--scheme-accent), var(--scheme-accent-2));
+    color: var(--scheme-black);
 }
 
 .btn-payment-secondary {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--main-text-color, #fff);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    color: var(--main-text-color);
 }
 
 .payment-return-page {
@@ -133,7 +133,7 @@
     padding: 1.5rem;
     text-align: center;
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--scheme-white) 5%, transparent);
 }
 
 .payment-return-page h1 {
@@ -143,7 +143,7 @@
 
 .payment-return-page p {
     margin-bottom: 1rem;
-    color: color-mix(in srgb, var(--main-text-color, #fff) 78%, transparent);
+    color: color-mix(in srgb, var(--main-text-color) 78%, transparent);
 }
 
 .payment-return-page .btn-payment-primary {
@@ -161,11 +161,11 @@
 }
 
 .btn-pay-order {
-    background: linear-gradient(135deg, #fcd000, #c9a600) !important;
-    color: #111 !important;
-    box-shadow: 0 8px 22px rgba(252, 208, 0, 0.25) !important;
+    background: linear-gradient(135deg, var(--scheme-accent), var(--scheme-accent)) !important;
+    color: var(--scheme-black) !important;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--scheme-accent) 25%, transparent) !important;
 }
 
 .btn-pay-order:hover {
-    background: linear-gradient(135deg, #ffe566, #d4ad00) !important;
+    background: linear-gradient(135deg, var(--scheme-accent), var(--scheme-accent)) !important;
 }

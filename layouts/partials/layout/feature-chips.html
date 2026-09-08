@@ -42,9 +42,9 @@
 {{- else if $posOn -}}
   {{- $orderingDetail = "Orders are sent to the connected POS." -}}
 {{- else if $hasPhone -}}
-  {{- $orderingDetail = "Order by phone — add items, then call." -}}
+  {{- $orderingDetail = "Order by phone: add items, then call." -}}
 {{- else if $hasWhatsApp -}}
-  {{- $orderingDetail = "Order via WhatsApp — add items, then send your cart." -}}
+  {{- $orderingDetail = "Order via WhatsApp: add items, then send your cart." -}}
 {{- end -}}
 
 {{- $deliveryDetail := "Delivery available for this menu." -}}
@@ -58,7 +58,7 @@
   {{- if $expandable -}}
     {{- if $payments -}}
     <li class="loader-feature is-on{{ $inClass }}" data-feature="payments">
-      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Payments" title="Payments — tap for details">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Payments" title="Payments: tap for details">
         <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "payments" }}</span>
         <span class="loader-feature-copy">
           <span class="loader-feature-label">Payments</span>
@@ -69,7 +69,7 @@
     {{- end -}}
     {{- if $ordering -}}
     <li class="loader-feature is-on{{ $inClass }}" data-feature="ordering">
-      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Ordering" title="Ordering — tap for details">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Ordering" title="Ordering: tap for details">
         <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "ordering" }}</span>
         <span class="loader-feature-copy">
           <span class="loader-feature-label">Ordering</span>
@@ -80,7 +80,7 @@
     {{- end -}}
     {{- if $delivery -}}
     <li class="loader-feature is-on{{ $inClass }}" data-feature="delivery">
-      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Delivery" title="Delivery — tap for details">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Delivery" title="Delivery: tap for details">
         <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "delivery" }}</span>
         <span class="loader-feature-copy">
           <span class="loader-feature-label">Delivery</span>
@@ -89,10 +89,31 @@
       </button>
     </li>
     {{- end -}}
-    {{- /* Alerts chip omitted on hero — #subBtn / Get menu alerts CTA already covers it. */ -}}
-    {{- if and (not $payments) (not $ordering) (not $delivery) -}}
+    {{- if $notifications -}}
+    <li class="loader-feature is-on{{ $inClass }}" data-feature="notifications">
+      <button type="button" id="subBtn" class="loader-feature__btn" aria-expanded="false" aria-pressed="false" aria-label="Get menu alerts" title="Get alerts for specials, hours, and menu updates">
+        <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "notifications" }}</span>
+        <span class="loader-feature-copy">
+          <span id="subBtnText" class="loader-feature-label">Get menu alerts</span>
+          <span id="subBtnHint" class="loader-feature-detail">Free · specials &amp; hours</span>
+        </span>
+      </button>
+    </li>
+    {{- end -}}
+    <li class="loader-feature is-on{{ $inClass }} hide" data-feature="install">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Install app" title="Install this menu on your device">
+        <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "install" }}</span>
+        <span class="loader-feature-copy">
+          <span id="heroInstallLabel" class="loader-feature-label">Install app</span>
+          <span id="heroInstallDetail" class="loader-feature-detail">Add to home screen</span>
+        </span>
+      </button>
+      <a id="btn_SubInfo" class="hide" href="#" role="button" onclick="expandAppMenu(); return false;" title="Install this menu on your device" aria-hidden="true" tabindex="-1"></a>
+      <a id="btn_install1" class="hide installBtn" href="#" role="button" title="Install app" aria-hidden="true" tabindex="-1"></a>
+    </li>
+    {{- if and (not $payments) (not $ordering) (not $delivery) (not $notifications) -}}
     <li class="loader-feature is-muted{{ $inClass }}" data-feature="menu">
-      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Menu and search" title="Menu &amp; search — tap for details">
+      <button type="button" class="loader-feature__btn" aria-expanded="false" aria-label="Menu and search" title="Menu &amp; search: tap for details">
         <span class="loader-feature-badge" aria-hidden="true">{{ partial "layout/loader-feature-icon.html" "menu" }}</span>
         <span class="loader-feature-copy">
           <span class="loader-feature-label">Menu &amp; search</span>

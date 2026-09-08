@@ -18,8 +18,8 @@ const LocalStorageManager = {
     cart: {
         /**
          * Save cart data to localStorage
-         * @param {Array} order - The order array to save
-         * @param {string} baseURL - The base URL for menu validation
+         * @param {Array} order. The order array to save
+         * @param {string} baseURL. The base URL for menu validation
          */
         save(order, baseURL = null) {
             try {
@@ -40,7 +40,7 @@ const LocalStorageManager = {
 
         /**
          * Load cart data from localStorage
-         * @param {string} baseURL - The base URL to validate against
+         * @param {string} baseURL. The base URL to validate against
          * @returns {Array|null} The loaded order array or null if not found/invalid
          */
         load(baseURL = null) {
@@ -83,7 +83,7 @@ const LocalStorageManager = {
 
         /**
          * Check if cart exists in localStorage
-         * @param {string} baseURL - The base URL to validate against
+         * @param {string} baseURL. The base URL to validate against
          * @returns {boolean} True if cart exists and is valid
          */
         exists(baseURL = null) {
@@ -107,7 +107,7 @@ const LocalStorageManager = {
     headerScroll: {
         /**
          * Save header scroll position
-         * @param {number} scrollLeft - The scroll position to save
+         * @param {number} scrollLeft. The scroll position to save
          */
         save(scrollLeft) {
             try {
@@ -158,7 +158,7 @@ const LocalStorageManager = {
     preferences: {
         /**
          * Save user preferences
-         * @param {Object} preferences - The preferences object to save
+         * @param {Object} preferences. The preferences object to save
          */
         save(preferences) {
             try {
@@ -192,8 +192,8 @@ const LocalStorageManager = {
 
         /**
          * Update specific preference
-         * @param {string} key - The preference key to update
-         * @param {*} value - The new value
+         * @param {string} key. The preference key to update
+         * @param {*} value. The new value
          */
         update(key, value) {
             try {
@@ -210,8 +210,8 @@ const LocalStorageManager = {
 
         /**
          * Get specific preference value
-         * @param {string} key - The preference key
-         * @param {*} defaultValue - Default value if preference not found
+         * @param {string} key. The preference key
+         * @param {*} defaultValue. Default value if preference not found
          * @returns {*} The preference value or default
          */
         get(key, defaultValue = null) {
@@ -229,8 +229,8 @@ const LocalStorageManager = {
     locationHistory: {
         /**
          * Save location to history
-         * @param {Object} locationData - The location data to save
-         * @param {number} maxHistory - Maximum number of locations to keep (default: 10)
+         * @param {Object} locationData. The location data to save
+         * @param {number} maxHistory. Maximum number of locations to keep (default - 10)
          */
         save(locationData, maxHistory = 10) {
             try {
@@ -299,7 +299,7 @@ const LocalStorageManager = {
     location: {
         /**
          * Save selected location
-         * @param {string} whatsappNumber - The WhatsApp number of the selected location
+         * @param {string} whatsappNumber. The WhatsApp number of the selected location
          */
         save(whatsappNumber) {
             try {
@@ -363,8 +363,8 @@ const LocalStorageManager = {
     orderHistory: {
         /**
          * Save completed order to history
-         * @param {Object} orderData - The order data to save
-         * @param {number} maxHistory - Maximum number of orders to keep (default: 20)
+         * @param {Object} orderData. The order data to save
+         * @param {number} maxHistory. Maximum number of orders to keep (default - 20)
          */
         save(orderData, maxHistory = 20) {
             try {
@@ -521,7 +521,7 @@ const LocalStorageManager = {
 
         /**
          * Import localStorage data from JSON
-         * @param {string} jsonData - JSON string of localStorage data
+         * @param {string} jsonData. JSON string of localStorage data
          * @returns {boolean} True if import successful
          */
         importData(jsonData) {
@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Add testing functions for development
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     window.testLocalStorage = function() {
-        console.log('🧪 TESTING: LocalStorage Manager');
+        console.log('🧪 TESTING - LocalStorage Manager');
         console.log('📍 Available:', LocalStorageManager.utils.isAvailable());
         console.log('📊 Usage stats:', LocalStorageManager.utils.getUsageStats());
         console.log('🛒 Cart exists:', LocalStorageManager.cart.exists());

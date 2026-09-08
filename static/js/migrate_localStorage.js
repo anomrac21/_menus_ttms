@@ -196,7 +196,7 @@ const LocalStorageMigrator = {
             
             let migrationCount = 0;
             
-            // Note: This is a detection script - actual replacement would need to be done manually
+            // Note - This is a detection script: actual replacement would need to be done manually
             // or through a build process since we can't modify source files at runtime
             localStoragePatterns.forEach(pattern => {
                 console.log(`🔍 Pattern detected: ${pattern.description}`);
@@ -240,7 +240,7 @@ const LocalStorageMigrator = {
                 tests.push(() => {
                     console.log('🧪 Testing loadCart migration...');
                     const result = LocalStorageManager.cart.load();
-                    console.log(result ? '✅ loadCart test passed' : 'ℹ️ loadCart test - no data to load');
+                    console.log(result ? '✅ loadCart test passed' : 'ℹ️ loadCart test: no data to load');
                     return true;
                 });
             }

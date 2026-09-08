@@ -4,7 +4,7 @@
  * This file configures the connection to the TT Menus CDN API
  * for icon loading and other static resources.
  * 
- * Usage: Include this file BEFORE update-ui.js in your HTML:
+ * Usage - Include this file BEFORE update-ui.js in your HTML:
  * <script src="/js/cdn-config.js"></script>
  * <script src="/js/update-ui.js"></script>
  */
@@ -24,7 +24,7 @@
     // API endpoints
     endpoints: {
       listIcons: '/api/list-icons/index.json',  // Explicit index.json for Hugo compatibility
-      // CDN static/icons: ui/, socialmedia/, food/, drink/, business/, … — use getIconUrl(category, filename)
+      // CDN static/icons - ui/, socialmedia/, food/, drink/, business/, …: use getIconUrl(category, filename)
       icons: '/icons/',
       css: '/css/',
       js: '/js/',
@@ -49,7 +49,7 @@
   };
   
   // Make CDN config available globally
-  // Note: UPDATE_API_URL is set separately in the HTML template and should NOT be overwritten
+  // Note - UPDATE_API_URL is set separately in the HTML template and should NOT be overwritten
   // CDN is for READ operations (icons, static resources) via window.CDN_CONFIG
   // UPDATE_API_URL is for WRITE operations (publishing changes) and points to content service API
   window.CDN_CONFIG = CDN_CONFIG;

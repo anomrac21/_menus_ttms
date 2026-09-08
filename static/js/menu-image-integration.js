@@ -1,5 +1,5 @@
 /**
- * Menu Image Integration - fetches approved user-submitted images and allows upload (when logged in)
+ * Menu Image Integration: fetches approved user-submitted images and allows upload (when logged in)
  * Uses Thumbor for optimized image delivery
  */
 (function () {
@@ -555,7 +555,7 @@
       ph.appendChild(standaloneActions);
       const hint = document.createElement('p');
       hint.className = 'expanded-media-placeholder__hint';
-      hint.textContent = 'No photo yet — be the first to add one';
+      hint.textContent = 'No photo yet: be the first to add one';
       ph.appendChild(hint);
       host.insertBefore(ph, host.firstChild);
     }
@@ -894,9 +894,14 @@
     const throbber = modal.querySelector('#menuImageUploadThrobber');
     const changeBtn = modal.querySelector('#menuImageUploadChange');
     const submitBtn = modal.querySelector('#menuImageUploadSubmit');
+    const busyLabel = modal.querySelector('.menu-image-upload-busy-label');
     if (overlay) overlay.classList.toggle('is-hidden', !busy);
     if (throbber) throbber.classList.toggle('is-hidden', !busy);
     if (changeBtn) changeBtn.disabled = !!busy;
+    if (busyLabel && busy && !modal.classList.contains('is-success')) {
+      busyLabel.textContent = 'Sending your photo…';
+    }
+    modal.classList.toggle('is-uploading', !!busy && !modal.classList.contains('is-success'));
     if (submitBtn) {
       if (busy) {
         if (!submitBtn.dataset.defaultLabel) {
@@ -948,8 +953,13 @@
     if (nameEl) nameEl.textContent = file.name || 'Selected photo';
     if (sizeEl) sizeEl.textContent = formatFileSize(file.size);
     modal._selectedUploadFile = file;
+    modal.classList.remove('is-success', 'is-uploading');
     preview.classList.remove('is-hidden');
+    preview.classList.remove('is-arriving');
+    void preview.offsetWidth;
+    preview.classList.add('is-arriving');
     picker.classList.add('is-hidden');
+    modal.classList.add('is-previewing');
     if (submitBtn) submitBtn.disabled = false;
     setUploadStatus(modal, 'Ready to upload. An admin will review before it goes live.', 'muted');
     hideUploadProgress(modal);
@@ -970,19 +980,36 @@
     if (cameraInput) cameraInput.value = '';
     if (galleryInput) galleryInput.value = '';
     if (submitBtn) submitBtn.disabled = true;
+    modal.classList.remove('is-previewing', 'is-uploading', 'is-success');
     hideUploadProgress(modal);
     setUploadStatus(modal, '', '');
   }
 
+  let uploadModalCloseTimer = null;
+
   function closeUploadModal(modal) {
     if (!modal) return;
-    modal.classList.remove('is-open');
+    if (uploadModalCloseTimer) {
+      clearTimeout(uploadModalCloseTimer);
+      uploadModalCloseTimer = null;
+    }
+    modal.classList.remove('is-visible', 'is-uploading', 'is-success');
+    if (!modal.classList.contains('is-open')) {
     clearFilePreview(modal);
+      return;
+    }
+    modal.classList.add('is-closing');
+    uploadModalCloseTimer = setTimeout(function () {
+      modal.classList.remove('is-open', 'is-closing', 'is-previewing');
+      clearFilePreview(modal);
+      uploadModalCloseTimer = null;
+    }, 380);
   }
 
   function resetUploadModal(modal, clientId, menuItemPath) {
     modal.dataset.clientId = clientId;
     modal.dataset.menuItemPath = menuItemPath;
+    modal.classList.remove('is-uploading', 'is-success', 'is-previewing', 'is-closing');
     clearFilePreview(modal);
     setUploadStatus(modal, 'Your photo will be reviewed before it appears on the menu.', 'muted');
   }
@@ -1049,7 +1076,9 @@
       });
     }
     modal.addEventListener('click', function (e) {
-      if (e.target === modal) closeUploadModal(modal);
+      if (e.target === modal && !modal.classList.contains('is-uploading')) {
+        closeUploadModal(modal);
+      }
     });
   }
 
@@ -1061,7 +1090,10 @@
       busy.className = 'menu-image-upload-preview__busy is-hidden';
       busy.setAttribute('aria-hidden', 'true');
       busy.innerHTML =
-        '<span class="menu-image-upload-throbber" aria-label="Uploading"></span>';
+        '<div class="menu-image-upload-burst" aria-hidden="true"><i></i><i></i><i></i><i></i></div>' +
+        '<span class="menu-image-upload-throbber" aria-label="Uploading"></span>' +
+        '<span class="menu-image-upload-ok" aria-hidden="true">✓</span>' +
+        '<span class="menu-image-upload-busy-label">Sending your photo…</span>';
       preview.appendChild(busy);
     }
 
@@ -1088,7 +1120,7 @@
 
   function ensureUploadModal() {
     let modal = document.getElementById('menuImageUploadModal');
-    if (modal && !modal.querySelector('#menuImageTakePhoto')) {
+    if (modal && (!modal.querySelector('#menuImageTakePhoto') || !modal.querySelector('.menu-image-upload-flourish'))) {
       modal.remove();
       modal = null;
     }
@@ -1104,6 +1136,11 @@
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'menuImageUploadTitle');
     modal.innerHTML =
+      '<div class="menu-image-upload-flourish" aria-hidden="true">' +
+      '<span class="menu-image-upload-flourish__ring"></span>' +
+      '<span class="menu-image-upload-flourish__ring"></span>' +
+      '<span class="menu-image-upload-flourish__spark"></span>' +
+      '</div>' +
       '<div class="menu-image-upload-dialog">' +
       '<button type="button" class="menu-image-upload-close" id="menuImageUploadClose" aria-label="Close">×</button>' +
       '<h3 class="menu-image-upload-title" id="menuImageUploadTitle">Add photo for this item</h3>' +
@@ -1111,7 +1148,10 @@
       '<div class="menu-image-upload-preview is-hidden" id="menuImageUploadPreview">' +
       '<img class="menu-image-upload-preview__img" id="menuImagePreviewImg" alt="Photo preview">' +
       '<div class="menu-image-upload-preview__busy is-hidden" id="menuImageUploadBusy" aria-hidden="true">' +
-      '<span class="menu-image-upload-throbber" aria-label="Uploading"></span></div>' +
+      '<div class="menu-image-upload-burst" aria-hidden="true"><i></i><i></i><i></i><i></i></div>' +
+      '<span class="menu-image-upload-throbber" aria-label="Uploading"></span>' +
+      '<span class="menu-image-upload-ok" aria-hidden="true">✓</span>' +
+      '<span class="menu-image-upload-busy-label">Sending your photo…</span></div>' +
       '<div class="menu-image-upload-preview__meta">' +
       '<span class="menu-image-upload-preview__name" id="menuImagePreviewName"></span>' +
       '<span class="menu-image-upload-preview__size" id="menuImagePreviewSize"></span>' +
@@ -1182,7 +1222,13 @@
     const modal = ensureUploadModal();
     document.body.appendChild(modal);
     resetUploadModal(modal, clientId, menuItemPath);
+    modal.classList.remove('is-visible', 'is-closing');
     modal.classList.add('is-open');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        modal.classList.add('is-visible');
+      });
+    });
   }
 
   async function doUpload(modal) {
@@ -1221,12 +1267,21 @@
         }
       );
       if (result.ok && result.json.success) {
-        setUploadBusy(modal, false);
+        modal.classList.remove('is-uploading');
+        modal.classList.add('is-success');
         setUploadProgress(modal, 100, 'Upload complete');
         setUploadStatus(modal, 'Submitted! An admin will approve it soon.', 'success');
+        const overlay = modal.querySelector('#menuImageUploadBusy');
+        const busyLabel = modal.querySelector('.menu-image-upload-busy-label');
+        if (overlay) overlay.classList.remove('is-hidden');
+        if (busyLabel) busyLabel.textContent = 'Photo sent!';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Sent!';
+        }
         setTimeout(function () {
           closeUploadModal(modal);
-        }, 2200);
+        }, 2400);
       } else {
         hideUploadProgress(modal);
         setUploadStatus(modal, result.json.error || 'Upload failed. Please try again.', 'error');

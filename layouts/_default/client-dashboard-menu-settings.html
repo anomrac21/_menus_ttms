@@ -65,16 +65,16 @@
     {{- $brandingDir := "static/branding" -}}
     {{- $brandingHidden := slice "favicon-400x200.webp" -}}
     {{- $brandingMeta := dict
-      "favicon.png" (dict "title" "PWA icon (PNG)" "usage" "Web app manifest — install icon for browsers that prefer PNG (512×512).")
+      "favicon.png" (dict "title" "PWA icon (PNG)" "usage" "Web app manifest: install icon for browsers that prefer PNG (512×512).")
       "favicon16.webp" (dict "title" "Browser tab icon" "usage" "Tiny favicon in browser tabs and bookmarks (16×16).")
-      "favicon144.webp" (dict "title" "PWA icon (144)" "usage" "manifest.json — Android / Chrome install icon (144×144).")
+      "favicon144.webp" (dict "title" "PWA icon (144)" "usage" "manifest.json. Android / Chrome install icon (144×144).")
       "favicon152.webp" (dict "title" "Social share image" "usage" "Default Open Graph and Twitter preview when a page has no item image; also Apple touch icon (152×152).")
-      "favicon192.webp" (dict "title" "Logo / app icon" "usage" "Main logo — site header, loader, client dashboard, cart/table modals, and PWA 192 icon.")
+      "favicon192.webp" (dict "title" "Logo / app icon" "usage" "Main logo: site header, loader, client dashboard, cart/table modals, and PWA 192 icon.")
       "favicon196.webp" (dict "title" "Maskable PWA icon" "usage" "manifest.json maskable icon and Android shortcut favicon (196×196).")
       "favicon512.webp" (dict "title" "Large logo" "usage" "High-resolution PWA icon and large logo references (512×512).")
       "mappin.webp" (dict "title" "Map pin" "usage" "Marker image on the TTMenus locations map (256×256). Pin fill, border, and width come from data/mappin.yaml and export in /index.json.")
-      "richscreenshot1.webp" (dict "title" "PWA screenshot (wide)" "usage" "manifest.json — wide promotional screenshot in the install app dialog (640×320).")
-      "richscreenshot2.webp" (dict "title" "PWA screenshot (mobile)" "usage" "manifest.json — tall mobile screenshot in the install app dialog (320×640).")
+      "richscreenshot1.webp" (dict "title" "PWA screenshot (wide)" "usage" "manifest.json - wide promotional screenshot in the install app dialog (640×320).")
+      "richscreenshot2.webp" (dict "title" "PWA screenshot (mobile)" "usage" "manifest.json - tall mobile screenshot in the install app dialog (320×640).")
     -}}
     {{- $mappinData := site.Data.mappin | default dict -}}
     {{- $brandingOrder := slice "favicon192.webp" "favicon512.webp" "favicon152.webp" "favicon.png" "favicon144.webp" "favicon196.webp" "favicon16.webp" "richscreenshot1.webp" "richscreenshot2.webp" "mappin.webp" -}}
@@ -161,7 +161,7 @@
   {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
   {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
   {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
-  // Do not use jsonify here — inside <script> it is escaped and breaks strings (e.g. \"_ttms_menu_demo\").
+  // Do not use jsonify here: inside <script> it is escaped and breaks strings (e.g. \"_ttms_menu_demo\").
   // Prefer values from head (auth): SITE_CLIENT_ID, CLIENT_ID, CMS_SERVICE_URL, CMS_API_URL; reinforce from hugo.toml.
   window.CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || "{{ $dashClient }}";
   window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
@@ -189,7 +189,7 @@
       if (!res.ok) {
         if (res.status === 404) {
           throw new Error(
-            '404 Not found — no config endpoint on this CMS. Deploy the latest content-management-service (PUT/POST /api/clients/:id/config/hugo-orderingsystem), ' +
+            '404 Not found: no config endpoint on this CMS. Deploy the latest content-management-service (PUT/POST /api/clients/:id/config/hugo-orderingsystem), ' +
             'or for local dev set [params.contentManagement] apiUrl and serviceUrl to http://localhost:8084/api and http://localhost:8084, restart Hugo, and run the CMS on 8084. ' +
             '(Requested: ' + (res.url || '') + ')'
           );
@@ -281,8 +281,8 @@
       var fill = document.getElementById('mappin-fill');
       var border = document.getElementById('mappin-border');
       var borderWidth = document.getElementById('mappin-border-width');
-      var fillColor = normalizeHexColor(fill && fill.value) || '#000000';
-      var borderColor = normalizeHexColor(border && border.value) || '#ffffff';
+      var fillColor = normalizeHexColor(fill && fill.value) || 'var(--dash-black)';
+      var borderColor = normalizeHexColor(border && border.value) || 'var(--dash-ink)';
       var width = Math.max(0, Math.min(12, parseInt(borderWidth && borderWidth.value, 10) || 0));
       if (preview) {
         preview.style.setProperty('--ttms-map-pin-color', fillColor);
@@ -322,7 +322,7 @@
       var fill = normalizeHexColor(document.getElementById('mappin-fill').value);
       var border = normalizeHexColor(document.getElementById('mappin-border').value);
       if (!fill || !border) {
-        return Promise.reject(new Error('Fill and border must be hex colors like #000000'));
+        return Promise.reject(new Error('Fill and border must be hex colors like var(--dash-black)'));
       }
       var payload = {
         fill: fill,

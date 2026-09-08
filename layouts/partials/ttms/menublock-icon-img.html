@@ -4,5 +4,6 @@
 */ -}}
 {{- $path := strings.TrimSpace (.path | default "") -}}
 {{- if $path -}}
-<img class="icon center" src="{{ partial "ttms/menu-img-src.html" (dict "path" $path "size" "thumb") }}" alt="" loading="eager" decoding="async" width="32" height="32" data-src-path="{{ $path }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+{{- $src := partial "ttms/menu-img-src.html" (dict "path" $path "size" "thumb") -}}
+<img class="icon center" src="{{ $src }}" alt="" loading="eager" decoding="async" width="32" height="32" data-src-path="{{ $path }}" style="--menublock-icon: url('{{ $src }}')" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
 {{- end -}}

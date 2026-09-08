@@ -1,5 +1,5 @@
 /**
- * Feature chips — expand/collapse detail copy (ordering channels, payments, etc.)
+ * Feature chips: expand/collapse detail copy (ordering channels, payments, etc.)
  * After loader hides: show titles briefly, then collapse to icon badges.
  */
 (function () {
@@ -33,11 +33,39 @@
     else collapseChip(chip);
   }
 
+  function runChipAction(chip) {
+    var feature = chip.getAttribute('data-feature');
+    if (feature === 'notifications') {
+      if (typeof window.toggleNotificationSubscription === 'function') {
+        window.toggleNotificationSubscription();
+      }
+      return true;
+    }
+    if (feature === 'install') {
+      var nativeBtn = document.getElementById('btn_install1');
+      var iosBtn = document.getElementById('btn_SubInfo');
+      if (nativeBtn && !nativeBtn.classList.contains('hide') && window.APP && typeof window.APP.startChromeInstall === 'function') {
+        window.APP.startChromeInstall();
+        return true;
+      }
+      if (iosBtn && !iosBtn.classList.contains('hide') && typeof window.expandAppMenu === 'function') {
+        window.expandAppMenu();
+        return true;
+      }
+      if (nativeBtn && !nativeBtn.classList.contains('hide')) nativeBtn.click();
+      else if (iosBtn && !iosBtn.classList.contains('hide')) iosBtn.click();
+      return true;
+    }
+    return false;
+  }
+
   function onActivate(btn) {
     var chip = btn.closest('.loader-feature');
     var list = btn.closest('.loader-features');
     if (!chip || !list) return;
-    setExpanded(chip, list, !chip.classList.contains('is-expanded'));
+    var opening = !chip.classList.contains('is-expanded');
+    if (!opening && runChipAction(chip)) return;
+    setExpanded(chip, list, opening);
   }
 
   function initList(list) {

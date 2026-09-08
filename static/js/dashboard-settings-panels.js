@@ -1,5 +1,5 @@
 /**
- * Collapsible menu-settings panels — persists open/closed in sessionStorage.
+ * Collapsible menu-settings panels: persists open/closed in sessionStorage.
  */
 (function () {
   'use strict';

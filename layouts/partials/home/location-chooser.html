@@ -2,7 +2,7 @@
 {{- $locations := site.Data.locations.locations | default slice -}}
 {{- $siteName := partial "site-name.html" . -}}
 <section class="hero_logo_container item multi-loc-chooser-hero">
-  <h1 class="sr-only">{{ $siteName }} — choose a location</h1>
+  <h1 class="sr-only">{{ $siteName }}: choose a location</h1>
   {{ if .Params.image }}
     <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high" data-src-path="{{ .Params.image }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
   {{ else }}
@@ -12,16 +12,41 @@
     <img id="logo" src="/branding/favicon512.webp" alt="{{ $siteName }} logo" width="264" height="264" fetchpriority="high" decoding="async">
     {{ partial "layout/feature-chips.html" (dict "class" "hero-features" "visible" true "expandable" true) }}
   </div>
-  {{ partial "components/hero_ctas.html" . }}
 </section>
 <section class="multi-loc-chooser">
   <h2 class="multi-loc-chooser__title">Choose a location</h2>
-  <p class="multi-loc-chooser__hint">Each outlet has its own menu. Ordering and Loyverse store follow the location you open.</p>
-  <ul class="multi-loc-chooser__list">
+  <div class="multi-loc-chooser__search" role="search">
+    <label class="multi-loc-chooser__search-field" for="locationChooserSearch">
+      <span class="multi-loc-chooser__search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-3.5-3.5"/>
+        </svg>
+      </span>
+      <input
+        type="search"
+        id="locationChooserSearch"
+        class="multi-loc-chooser__search-input"
+        placeholder="Search locations…"
+        autocomplete="off"
+        enterkeyhint="search"
+        aria-label="Search locations"
+        aria-controls="locationChooserList"
+      >
+    </label>
+    <button type="button" id="locationChooserSearchClear" class="multi-loc-chooser__search-clear" hidden aria-label="Clear location search">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+    </button>
+  </div>
+  <p id="locationChooserEmpty" class="multi-loc-chooser__empty" hidden aria-live="polite">No locations match that search.</p>
+  <ul id="locationChooserList" class="multi-loc-chooser__list">
     {{- range $locations -}}
       {{- $loc := . -}}
       {{- with $loc.slug -}}
-      <li class="multi-loc-chooser__item">
+      {{- $search := printf "%s %s %s %s" ($loc.city | default "") ($loc.address | default "") ($loc.island | default "") . -}}
+      <li class="multi-loc-chooser__item" data-location-search="{{ $search }}">
         <a class="multi-loc-chooser__link" href="/{{ . }}/" data-location-slug="{{ . }}">
           <span class="multi-loc-chooser__city">{{ $loc.city | default . }}</span>
           <span class="multi-loc-chooser__address">{{ $loc.address }}</span>

@@ -3,9 +3,9 @@
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(252, 208, 0, 0.18), transparent 55%),
-    linear-gradient(165deg, #12121f, var(--main-bg, #0a0a0a));
-  color: var(--hero-text-color, #fff);
+    radial-gradient(ellipse 120% 80% at 50% -20%, color-mix(in srgb, var(--scheme-accent) 18%, transparent), transparent 55%),
+    linear-gradient(165deg, var(--scheme-black), var(--main-bg));
+  color: var(--hero-text-color);
 }
 
 main.multi-loc-page {
@@ -67,7 +67,7 @@ main.multi-loc-page {
   box-sizing: border-box;
 }
 
-/* Hero brand mark — primary focal point; chips collapse to icon badges */
+/* Hero brand mark: primary focal point; chips collapse to icon badges */
 .menu-reels-slide--hero #logo,
 .multi-loc-chooser-hero #logo {
   width: auto;
@@ -123,22 +123,143 @@ main.multi-loc-page {
   padding: 1.5rem 1.25rem 2rem;
   max-width: 40rem;
   margin: 0 auto;
-  color: var(--hero-text-color, #fff);
+  color: var(--hero-text-color);
 }
 
 .multi-loc-chooser__title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 1rem;
   font-size: 1.75rem;
   font-weight: 800;
   text-align: center;
-  color: var(--hero-text-color, #fff);
+  color: var(--hero-text-color);
 }
 
-.multi-loc-chooser__hint {
-  margin: 0 0 1.5rem;
+.multi-loc-chooser__search {
+  --loc-search-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 2.85rem;
+  margin: 0 0 1.25rem;
+  padding: 0.35rem 0.28rem 0.35rem 0.32rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--loc-search-accent) 42%, color-mix(in srgb, var(--scheme-white) 18%, transparent));
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--scheme-surface) 72%, color-mix(in srgb, var(--scheme-white) 14%, transparent)) 0%,
+    color-mix(in srgb, var(--scheme-surface) 88%, color-mix(in srgb, var(--scheme-black) 35%, transparent)) 100%
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--scheme-black) 34%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 14%, transparent);
+}
+
+.multi-loc-chooser__search:focus-within {
+  border-color: color-mix(in srgb, var(--loc-search-accent) 72%, color-mix(in srgb, var(--scheme-white) 28%, transparent));
+}
+
+.multi-loc-chooser__search-field {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0 0.15rem 0 0.35rem;
+}
+
+.multi-loc-chooser__search-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  color: var(--loc-search-accent);
+  background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 12%, transparent);
+}
+
+.multi-loc-chooser__search-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0.45rem 0.25rem 0.45rem 0;
+  border: none;
+  background: transparent;
+  color: var(--hero-text-color);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.25;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.multi-loc-chooser__search-input::placeholder {
+  color: color-mix(in srgb, var(--hero-text-color) 62%, transparent);
+  font-weight: 400;
+}
+
+.multi-loc-chooser__search-input:focus {
+  outline: none;
+}
+
+.multi-loc-chooser__search-input::-webkit-search-decoration,
+.multi-loc-chooser__search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.multi-loc-chooser__search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--scheme-black) 28%, transparent);
+  color: var(--hero-text-color);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.multi-loc-chooser__search-clear[hidden] {
+  display: none;
+}
+
+.multi-loc-chooser__search-clear:hover {
+  background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
+  border-color: color-mix(in srgb, var(--scheme-white) 28%, transparent);
+}
+
+.multi-loc-chooser__search-clear:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--scheme-white) 72%, transparent);
+  outline-offset: 2px;
+}
+
+.multi-loc-chooser__empty {
+  margin: 0 0 1rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.72);
+  color: color-mix(in srgb, var(--scheme-white) 72%, transparent);
   line-height: 1.45;
+}
+
+.multi-loc-chooser__empty[hidden] {
+  display: none;
+}
+
+.multi-loc-chooser__item.is-filtered-out {
+  display: none;
 }
 
 .multi-loc-chooser__list {
@@ -156,11 +277,11 @@ main.multi-loc-page {
   gap: 0.3rem;
   padding: 1rem 1.15rem;
   text-decoration: none;
-  color: var(--hero-text-color, #fff);
-  border: 1px solid rgba(252, 208, 0, 0.28);
+  color: var(--hero-text-color);
+  border: 1px solid color-mix(in srgb, var(--scheme-accent) 28%, transparent);
   border-radius: 0.75rem;
-  background: rgba(26, 26, 46, 0.55);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  background: color-mix(in srgb, var(--scheme-black) 55%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--scheme-black) 28%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition:
@@ -173,19 +294,19 @@ main.multi-loc-page {
 .multi-loc-chooser__link:hover,
 .multi-loc-chooser__link:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(252, 208, 0, 0.55);
-  background: rgba(26, 26, 46, 0.72);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.36);
+  border-color: color-mix(in srgb, var(--scheme-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--scheme-black) 72%, transparent);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--scheme-black) 36%, transparent);
   outline: none;
 }
 
 .multi-loc-chooser__city {
   font-weight: 700;
   font-size: 1.1rem;
-  color: var(--hero-text-color, #fff);
+  color: var(--hero-text-color);
 }
 
 .multi-loc-chooser__address {
-  color: rgba(255, 255, 255, 0.7);
+  color: color-mix(in srgb, var(--scheme-white) 70%, transparent);
   font-size: 0.95rem;
 }

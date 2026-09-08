@@ -1,5 +1,5 @@
 /**
- * Smash or pass — Tinder-style stack (intro feed + per-menu-item instances on reels).
+ * Smash or pass. Tinder-style stack (intro feed + per-menu-item instances on reels).
  */
 (function () {
   'use strict';
@@ -1059,9 +1059,7 @@
 
   function isPointerTapOnCard(inst, card, e) {
     if (!inst.dragState || inst.dragState.card !== card) return false;
-    var dx = e.clientX - inst.dragState.startX;
-    var dy = e.clientY - inst.dragState.startY;
-    if (Math.abs(dx) >= DRAG_LOCK_THRESHOLD || Math.abs(dy) >= DRAG_LOCK_THRESHOLD) {
+    var dx = e.clientX - inst.dragState.startX;    var dy = e.clientY - inst.dragState.startY;    if (Math.abs(dx) >= DRAG_LOCK_THRESHOLD || Math.abs(dy) >= DRAG_LOCK_THRESHOLD) {
       return false;
     }
     if (isSmashPassNonDragTarget(e.target)) return false;
@@ -1156,9 +1154,7 @@
     function onPointerMove(e) {
       if (!inst.dragState || inst.dragState.card !== card) return;
 
-      var dx = e.clientX - inst.dragState.startX;
-      var dy = e.clientY - inst.dragState.startY;
-      var absDx = Math.abs(dx);
+      var dx = e.clientX - inst.dragState.startX;      var dy = e.clientY - inst.dragState.startY;      var absDx = Math.abs(dx);
       var absDy = Math.abs(dy);
 
       if (!inst.dragState.locked) {
@@ -1198,8 +1194,7 @@
         return;
       }
 
-      var dx = e.clientX - inst.dragState.startX;
-      card.classList.remove('is-dragging');
+      var dx = e.clientX - inst.dragState.startX;      card.classList.remove('is-dragging');
       try {
         card.releasePointerCapture(e.pointerId);
       } catch (err) {}
@@ -1547,7 +1542,7 @@
       (path ? ' data-menu-item-path="' + escapeHtml(path) + '"' : '') +
       '>' +
       '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
-      '<p class="menu-smash-pass__empty hidden">No community photos yet — check back after guests upload and admins approve.</p>' +
+      '<p class="menu-smash-pass__empty hidden">No community photos yet: check back after guests upload and admins approve.</p>' +
       (path ? buildItemEmptyStateHtml() : '') +
       '<div class="menu-smash-pass__reel hidden">' +
       reelInner +

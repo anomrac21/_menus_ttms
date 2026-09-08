@@ -1,5 +1,5 @@
 /**
- * Footer dock — glass pill navigation (matches search bar + header chips).
+ * Footer dock: glass pill navigation (matches search bar + header chips).
  */
 
 #footer {
@@ -18,7 +18,7 @@
 
 /* Settings popover above dock */
 #footerSettings {
-    --footer-settings-accent: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
+    --footer-settings-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
     position: relative;
     width: min(100%, 22rem);
     margin: 0;
@@ -55,17 +55,17 @@
 .footer-settings-popover {
     width: 100%;
     border-radius: 1.1rem;
-    border: 1px solid color-mix(in srgb, var(--footer-settings-accent) 38%, rgba(255, 255, 255, 0.16));
+    border: 1px solid color-mix(in srgb, var(--footer-settings-accent) 38%, color-mix(in srgb, var(--scheme-white) 16%, transparent));
     background: linear-gradient(
         165deg,
-        color-mix(in srgb, var(--footer-bg-color, #111) 68%, rgba(255, 255, 255, 0.12)) 0%,
-        color-mix(in srgb, var(--footer-bg-color, #111) 88%, rgba(0, 0, 0, 0.35)) 100%
+        color-mix(in srgb, var(--footer-bg-color) 68%, color-mix(in srgb, var(--scheme-white) 12%, transparent)) 0%,
+        color-mix(in srgb, var(--footer-bg-color) 88%, color-mix(in srgb, var(--scheme-black) 35%, transparent)) 100%
     );
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     box-shadow:
-        0 14px 34px rgba(0, 0, 0, 0.38),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        0 14px 34px color-mix(in srgb, var(--scheme-black) 38%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 12%, transparent);
     overflow: hidden;
 }
 
@@ -75,7 +75,7 @@
     justify-content: space-between;
     gap: 0.65rem;
     padding: 0.7rem 1rem 0.35rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 8%, transparent);
 }
 
 .footer-settings-popover__title {
@@ -86,7 +86,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--footer-text-color, #fff) 72%, transparent);
+    color: color-mix(in srgb, var(--footer-text-color) 72%, transparent);
 }
 
 .footer-settings-popover__close {
@@ -98,10 +98,10 @@
     height: 2rem;
     margin: 0;
     padding: 0;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--footer-text-color, #fff);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    color: var(--footer-text-color);
     font: inherit;
     line-height: 1;
     cursor: pointer;
@@ -113,13 +113,13 @@
 }
 
 .footer-settings-popover__close:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: color-mix(in srgb, var(--footer-settings-accent) 45%, rgba(255, 255, 255, 0.22));
+    background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    border-color: color-mix(in srgb, var(--footer-settings-accent) 45%, color-mix(in srgb, var(--scheme-white) 22%, transparent));
     transform: translateY(-1px);
 }
 
 .footer-settings-popover__close:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--footer-settings-accent) 65%, #fff);
+    outline: 2px solid color-mix(in srgb, var(--footer-settings-accent) 65%, var(--scheme-white));
     outline-offset: 2px;
 }
 
@@ -142,14 +142,14 @@
     width: 100%;
     min-height: 2.85rem;
     padding: 0.65rem 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
     border-radius: 0.85rem;
     background: linear-gradient(
         160deg,
-        rgba(255, 255, 255, 0.12) 0%,
-        rgba(255, 255, 255, 0.05) 100%
+        color-mix(in srgb, var(--scheme-white) 12%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-white) 5%, transparent) 100%
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
     box-sizing: border-box;
 }
 
@@ -158,7 +158,7 @@
     align-items: center;
     gap: 0.65rem;
     min-width: 0;
-    color: var(--footer-text-color, #fff);
+    color: var(--footer-text-color);
     font-size: 0.95rem;
     font-weight: 600;
     line-height: 1.2;
@@ -174,9 +174,9 @@
     flex-shrink: 0;
     padding: 0.18rem;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(0, 0, 0, 0.22);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    background: color-mix(in srgb, var(--scheme-black) 22%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 8%, transparent);
 }
 
 .footer-settings-nav-toggle__btn {
@@ -185,7 +185,7 @@
     border: none;
     border-radius: 999px;
     background: transparent;
-    color: color-mix(in srgb, var(--footer-text-color, #fff) 72%, transparent);
+    color: color-mix(in srgb, var(--footer-text-color) 72%, transparent);
     font: inherit;
     font-size: 0.5rem;
     font-weight: 700;
@@ -201,15 +201,15 @@
 .footer-settings-nav-toggle__btn.is-active {
     background: linear-gradient(
         160deg,
-        color-mix(in srgb, var(--footer-settings-accent) 72%, #fff) 0%,
-        color-mix(in srgb, var(--footer-settings-accent) 42%, rgba(255, 255, 255, 0.2)) 100%
+        color-mix(in srgb, var(--footer-settings-accent) 72%, var(--scheme-white)) 0%,
+        color-mix(in srgb, var(--footer-settings-accent) 42%, color-mix(in srgb, var(--scheme-white) 20%, transparent)) 100%
     );
-    color: #111;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    color: var(--scheme-black);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--scheme-black) 22%, transparent);
 }
 
 .footer-settings-nav-toggle__btn:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--footer-settings-accent) 65%, #fff);
+    outline: 2px solid color-mix(in srgb, var(--footer-settings-accent) 65%, var(--scheme-white));
     outline-offset: 2px;
 }
 
@@ -223,19 +223,19 @@
     min-height: 2.85rem;
     margin: 0;
     padding: 0.65rem 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
     border-radius: 0.85rem;
     background: linear-gradient(
         160deg,
-        rgba(255, 255, 255, 0.12) 0%,
-        rgba(255, 255, 255, 0.05) 100%
+        color-mix(in srgb, var(--scheme-white) 12%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-white) 5%, transparent) 100%
     );
-    color: var(--footer-text-color, #fff);
+    color: var(--footer-text-color);
     text-decoration: none;
     font: inherit;
     font-size: 0.95rem;
     font-weight: 600;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
     cursor: pointer;
     transition:
         transform 0.2s ease,
@@ -247,15 +247,15 @@
 .footer-settings-popover__btn:hover,
 #footerSettings .btn.settings-btn:hover {
     transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--footer-settings-accent) 45%, rgba(255, 255, 255, 0.22));
+    border-color: color-mix(in srgb, var(--footer-settings-accent) 45%, color-mix(in srgb, var(--scheme-white) 22%, transparent));
     background: linear-gradient(
         160deg,
-        rgba(255, 255, 255, 0.18) 0%,
-        rgba(255, 255, 255, 0.08) 100%
+        color-mix(in srgb, var(--scheme-white) 18%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-white) 8%, transparent) 100%
     );
     box-shadow:
-        0 6px 16px rgba(0, 0, 0, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        0 6px 16px color-mix(in srgb, var(--scheme-black) 22%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 14%, transparent);
 }
 
 .footer-settings-popover__btn-icon {
@@ -265,7 +265,7 @@
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
     color: var(--footer-settings-accent);
     flex-shrink: 0;
 }
@@ -275,20 +275,20 @@
 }
 
 .footer-settings-popover__btn--logout {
-    border-color: color-mix(in srgb, #e74c3c 35%, rgba(255, 255, 255, 0.14));
+    border-color: color-mix(in srgb, var(--scheme-accent-deep) 35%, color-mix(in srgb, var(--scheme-white) 14%, transparent));
 }
 
 .footer-settings-popover__btn--logout .footer-settings-popover__btn-icon {
-    color: color-mix(in srgb, #ff8a80 88%, var(--footer-settings-accent));
+    color: color-mix(in srgb, var(--scheme-accent-2) 88%, var(--footer-settings-accent));
 }
 
 .footer-settings-popover__btn--logout:hover {
-    border-color: color-mix(in srgb, #e74c3c 55%, rgba(255, 255, 255, 0.22));
+    border-color: color-mix(in srgb, var(--scheme-accent-deep) 55%, color-mix(in srgb, var(--scheme-white) 22%, transparent));
 }
 
 /* Bottom action dock */
 #footerBtns.footer-dock {
-    --footer-dock-accent: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
+    --footer-dock-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
     position: relative;
     width: min(100%, 26rem);
     margin: 0;
@@ -322,8 +322,8 @@
     background: linear-gradient(
         180deg,
         transparent 0%,
-        color-mix(in srgb, var(--footer-bg-color, #000) 28%, transparent) 35%,
-        color-mix(in srgb, var(--footer-bg-color, #000) 88%, transparent) 100%
+        color-mix(in srgb, var(--footer-bg-color) 28%, transparent) 35%,
+        color-mix(in srgb, var(--footer-bg-color) 88%, transparent) 100%
     );
 }
 
@@ -336,15 +336,15 @@
     min-height: 3rem;
     padding: 0.32rem 1rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--footer-dock-accent) 34%, rgba(255, 255, 255, 0.14));
+    border: 1px solid color-mix(in srgb, var(--footer-dock-accent) 34%, color-mix(in srgb, var(--scheme-white) 14%, transparent));
     background: linear-gradient(
         165deg,
-        color-mix(in srgb, var(--footer-bg-color, #111) 70%, rgba(255, 255, 255, 0.12)) 0%,
-        color-mix(in srgb, var(--footer-bg-color, #111) 90%, rgba(0, 0, 0, 0.35)) 100%
+        color-mix(in srgb, var(--footer-bg-color) 70%, color-mix(in srgb, var(--scheme-white) 12%, transparent)) 0%,
+        color-mix(in srgb, var(--footer-bg-color) 90%, color-mix(in srgb, var(--scheme-black) 35%, transparent)) 100%
     );
     box-shadow:
-        0 12px 30px rgba(0, 0, 0, 0.36),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        0 12px 30px color-mix(in srgb, var(--scheme-black) 36%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 12%, transparent);
 }
 
 .footer-dock__action {
@@ -361,7 +361,7 @@
     border: none;
     border-radius: 999px;
     background: transparent;
-    color: color-mix(in srgb, var(--footer-text-color, #fff) 88%, transparent);
+    color: color-mix(in srgb, var(--footer-text-color) 88%, transparent);
     text-decoration: none;
     cursor: pointer;
     transition:
@@ -373,8 +373,8 @@
 
 .footer-dock__action:hover,
 .footer-dock__action:focus-visible {
-    color: var(--footer-text-color, #fff);
-    background: rgba(255, 255, 255, 0.08);
+    color: var(--footer-text-color);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
     outline: none;
 }
 
@@ -383,7 +383,7 @@
 }
 
 .footer-dock__action:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.55);
+    outline: 2px solid color-mix(in srgb, var(--scheme-white) 55%, transparent);
     outline-offset: 1px;
 }
 
@@ -395,14 +395,14 @@
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
     transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .footer-dock__action:hover .footer-dock__icon-wrap,
 .footer-dock__action:focus-visible .footer-dock__icon-wrap {
-    background: rgba(255, 255, 255, 0.14);
+    background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
     transform: translateY(-1px);
 }
 
@@ -413,8 +413,8 @@
     max-width: 1.35rem !important;
     max-height: 1.35rem !important;
     display: block;
-    color: var(--footer-icon-color, var(--footer-text-color, #fff));
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+    color: var(--footer-icon-color, var(--footer-text-color));
+    filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--scheme-black) 35%, transparent));
     transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -453,14 +453,14 @@
     height: 1.15rem;
     padding: 0 0.28rem;
     border-radius: 999px;
-    border: 1.5px solid rgba(255, 255, 255, 0.85);
-    background: linear-gradient(135deg, #e53935, #c62828);
-    color: #fff;
+    border: 1.5px solid color-mix(in srgb, var(--scheme-white) 85%, transparent);
+    background: linear-gradient(135deg, var(--scheme-accent-deep), var(--scheme-accent-deep));
+    color: var(--scheme-white);
     font-size: 0.62rem;
     font-weight: 800;
     line-height: 1.15rem;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--scheme-black) 35%, transparent);
 }
 
 .footer-dock__badge.hide,
@@ -500,12 +500,12 @@
 
 /* Active settings tab */
 #footerSettings:not(.hide) ~ #footerBtns .footer-dock__action--settings {
-    color: var(--footer-text-color, #fff);
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--footer-text-color);
+    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
 }
 
 #footerSettings:not(.hide) ~ #footerBtns .footer-dock__action--settings .footer-dock__icon-wrap {
-    background: color-mix(in srgb, var(--footer-dock-accent) 28%, rgba(255, 255, 255, 0.12));
+    background: color-mix(in srgb, var(--footer-dock-accent) 28%, color-mix(in srgb, var(--scheme-white) 12%, transparent));
     border: 1px solid color-mix(in srgb, var(--footer-dock-accent) 45%, transparent);
 }
 
@@ -541,7 +541,7 @@ body.table-modal-open #footerSettings {
     font-size: 0.46rem;
 }
 
-/* Cart open — keep badge visible but hide dock (cart.css) */
+/* Cart open: keep badge visible but hide dock (cart.css) */
 .cartopen #cartcount {
     position: absolute !important;
     top: -0.15rem !important;

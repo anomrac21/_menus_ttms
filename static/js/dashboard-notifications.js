@@ -1,5 +1,5 @@
 /**
- * Client dashboard — notify-service: metrics, send, recent history, reports.
+ * Client dashboard: notify-service: metrics, send, recent history, reports.
  * Expects window.NOTIFY_CONFIG.apiUrl, AuthClient.getAccessToken, and AuthClientAccess (guard runs in page).
  */
 (function () {
@@ -108,12 +108,12 @@
   }
 
   function formatNum(n) {
-    if (n == null || isNaN(n)) return '—';
+    if (n == null || isNaN(n)) return '';
     return String(Math.round(Number(n) * 10) / 10);
   }
 
   function formatInt(n) {
-    if (n == null || isNaN(n)) return '—';
+    if (n == null || isNaN(n)) return '';
     return String(Math.floor(Number(n)));
   }
 
@@ -191,7 +191,7 @@
     if (!el) return Promise.resolve();
 
     if (target == null || isNaN(target)) {
-      el.textContent = '—';
+      el.textContent = '';
       return Promise.resolve();
     }
 
@@ -294,7 +294,7 @@
   }
 
   function formatPercent(value) {
-    if (value == null || isNaN(value)) return '—';
+    if (value == null || isNaN(value)) return '';
     return Math.round(Number(value)) + '%';
   }
 
@@ -305,7 +305,7 @@
   }
 
   function formatCount(n) {
-    if (n == null || n === '') return '—';
+    if (n == null || n === '') return '';
     try {
       return new Intl.NumberFormat(undefined).format(Number(n));
     } catch (e) {
@@ -481,7 +481,6 @@
       notif.not_delivered != null
         ? Number(notif.not_delivered)
         : Math.max(0, attempts - delivered);
-
     return Promise.all([
       animateMetricCount('metricNotifySent30d', notif.in_period),
       animateMetricCount('metricNotifySubscribers', sub.active),
@@ -619,9 +618,7 @@
     var width = 960;
     var height = 260;
     var pad = { top: 16, right: 12, bottom: 36, left: 40 };
-    var innerW = width - pad.left - pad.right;
-    var innerH = height - pad.top - pad.bottom;
-    var maxVal = 1;
+    var innerW = width - pad.left - pad.right;    var innerH = height - pad.top - pad.bottom;    var maxVal = 1;
 
     rows.forEach(function (r) {
       maxVal = Math.max(
@@ -683,8 +680,7 @@
         var value = Number(row[s.key]) || 0;
         var barH = maxVal ? (value / maxVal) * innerH : 0;
         var x = groupX - (barW * seriesCount + (seriesCount - 1) * 2) / 2 + seriesIndex * (barW + 2);
-        var y = pad.top + innerH - barH;
-        svg +=
+        var y = pad.top + innerH - barH;        svg +=
           '<rect class="dashboard-notify-trends-bar ' +
           s.className +
           '" x="' +
@@ -775,7 +771,7 @@
       bounced: 'Bounced',
       unsubscribed: 'Unsubscribed',
     };
-    return labels[status] || status || '—';
+    return labels[status] || status || '';
   }
 
   function renderNotificationDetail(container, data) {
@@ -821,14 +817,14 @@
       '</tr></thead><tbody>';
 
     deliveries.forEach(function (d) {
-      var subId = d.subscription_id || '—';
+      var subId = d.subscription_id || '';
       var status = (d && d.status) || '';
-      var arrivedAt = d.delivered_at ? new Date(d.delivered_at).toLocaleString() : '—';
+      var arrivedAt = d.delivered_at ? new Date(d.delivered_at).toLocaleString() : '';
       var openedAt = d.confirmed_at
         ? new Date(d.confirmed_at).toLocaleString()
         : d.clicked_at
           ? new Date(d.clicked_at).toLocaleString()
-          : '—';
+          : '';
       var errMsg = (d.error_message || '').trim();
       html +=
         '<tr>' +
@@ -847,7 +843,7 @@
         escapeHtml(openedAt) +
         '</td>' +
         '<td class="dashboard-notify-error-cell">' +
-        (errMsg ? escapeHtml(errMsg) : '—') +
+        (errMsg ? escapeHtml(errMsg) : '') +
         '</td>' +
         '</tr>';
     });
@@ -1193,16 +1189,16 @@
       var tr = document.createElement('tr');
       var subscribed = s.subscribed_at || '';
       try {
-        subscribed = subscribed ? new Date(subscribed).toLocaleString() : '—';
+        subscribed = subscribed ? new Date(subscribed).toLocaleString() : '';
       } catch (e) {
-        subscribed = '—';
+        subscribed = '';
       }
       tr.innerHTML =
         '<td><code class="dashboard-notify-sub-id">' +
-        escapeHtml(s.id || '—') +
+        escapeHtml(s.id || '') +
         '</code></td>' +
         '<td>' +
-        escapeHtml(s.platform || '—') +
+        escapeHtml(s.platform || '') +
         '</td>' +
         '<td>' +
         (s.has_background_push
@@ -1320,7 +1316,7 @@
     loadMetrics().catch(function (err) {
       stopAllOverviewMetricAnimations();
       OVERVIEW_METRIC_IDS.forEach(function (id) {
-        setText(id, '—');
+        setText(id, '');
       });
       [
         'metricNotifySent30dMeta',
@@ -1987,7 +1983,7 @@
       getMessage: function () {
         return (
           getNotifyFieldValue('notifyWelcomeMessage') ||
-          'Thanks for subscribing — we\'ll keep you updated on specials and menu changes.'
+          'Thanks for subscribing: we\'ll keep you updated on specials and menu changes.'
         );
       },
       getIcon: function () {

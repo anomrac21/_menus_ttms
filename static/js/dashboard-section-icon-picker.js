@@ -1,5 +1,5 @@
 /**
- * Section icon / image picker — CDN icon library + site image paths.
+ * Section icon / image picker. CDN icon library + site image paths.
  * Supports multiple bound inputs (section icon + section secondary image).
  */
 (function (global) {

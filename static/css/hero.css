@@ -1,8 +1,28 @@
 /**
- * TTMenus v2 - Hero Section Styles
+ * TTMenus v2. Hero Section Styles
  * Modern, user-friendly hero section with logo and background
  * Mobile-first base (see hero.lg.css for 769px+)
  */
+
+/* ============================================
+   HERO REEL SURFACES
+   colors.css --hero-* only apply here (logo slide,
+   location picker, intro / community photos).
+   ============================================ */
+
+.hero_logo_container,
+.contactinfobg,
+.hero-content {
+    --scheme-hero-bg: var(--hero-bg-color-1);
+    --scheme-hero-ink: var(--hero-text-color);
+    --scheme-hero-border: var(--hero-border-color);
+    color: var(--hero-text-color);
+}
+
+.hero-content,
+.hero-content.menu-reels-slide--intro {
+    background: linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
+}
 
 /* ============================================
    HERO LOGO CONTAINER
@@ -20,7 +40,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: var(--hero-bg-color, #000);
+    background: linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
 }
 
 /* Background Image */
@@ -53,10 +73,10 @@
     height: 100%;
     background: linear-gradient(
         to bottom,
-        rgba(0, 0, 0, 0.6) 0%,
-        rgba(0, 0, 0, 0.4) 40%,
-        rgba(0, 0, 0, 0.3) 60%,
-        rgba(0, 0, 0, 0.2) 80%,
+        color-mix(in srgb, var(--scheme-black) 60%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-black) 40%, transparent) 40%,
+        color-mix(in srgb, var(--scheme-black) 30%, transparent) 60%,
+        color-mix(in srgb, var(--scheme-black) 20%, transparent) 80%,
         transparent 100%
     );
     z-index: var(--ttms-z-reel-inner-content, 1);
@@ -91,7 +111,7 @@
     transform: scale(0.98);
 }
 
-/* Logo Image — reels hero size tuned in multi-location-menu.css */
+/* Logo Image: reels hero size tuned in multi-location-menu.css */
 .hero_logo_container #logo,
 #logo {
     display: block;
@@ -104,22 +124,22 @@
     min-height: 7rem;
     margin-inline: auto;
     object-fit: contain;
-    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--scheme-black) 60%, transparent));
     transition: transform 0.3s ease, filter 0.3s ease;
     animation: none;
 }
 
 .logo_container a:hover #logo {
-    filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.8));
+    filter: drop-shadow(0 12px 32px color-mix(in srgb, var(--scheme-black) 80%, transparent));
     transform: scale(1.03);
 }
 
-/* Home/reels already offset main for the header — don't pad the hero again. */
+/* Home/reels already offset main for the header: don't pad the hero again. */
 main:not(.main--home) .hero_logo_container {
     padding-block-start: var(--ttms-header-height, 5em);
 }
 
-/* Landscape orientation - reduce height */
+/* Landscape orientation: reduce height */
 @media (orientation: landscape) and (max-height: 600px) {
     .hero_logo_container {
         min-height: 60vh;

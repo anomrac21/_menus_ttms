@@ -1,5 +1,5 @@
 /**
- * TTMenus z-index scale — single source of truth for stacking order.
+ * TTMenus z-index scale: single source of truth for stacking order.
  * Lower = further back. Reel slides use --ttms-z-reel-base + index (capped at --ttms-z-reel-max).
  */
 

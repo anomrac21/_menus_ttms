@@ -1,5 +1,5 @@
 /**
- * Customer order reopen — Recent orders / My orders tap into live ticket or delivery sheet.
+ * Customer order reopen. Recent orders / My orders tap into live ticket or delivery sheet.
  */
 (function (global) {
   'use strict';
@@ -71,7 +71,7 @@
   function kitchenHint(status) {
     var key = String(status || '').toLowerCase();
     if (key === 'ready') return 'Your order is ready. Show this ticket at pickup.';
-    if (key === 'paid') return 'Paid. Thank you — keep this ticket if you need a reprint.';
+    if (key === 'paid') return 'Paid. Thank you: keep this ticket if you need a reprint.';
     if (key === 'cancelled') return 'This order was cancelled.';
     if (key === 'open') return 'The kitchen has your ticket. This updates when it is ready.';
     return 'Live status for this order.';
@@ -211,7 +211,7 @@
       escapeHtml(status) +
       '">' +
       '<p class="ttms-customer-order__ticket">Ticket <strong>#' +
-      escapeHtml(ticket || '—') +
+      escapeHtml(ticket || '') +
       '</strong></p>' +
       (restaurant ? '<p class="ttms-customer-order__place">' + escapeHtml(restaurant) + '</p>' : '') +
       '<p class="ttms-customer-order__meta">' +

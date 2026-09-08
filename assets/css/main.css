@@ -2060,7 +2060,7 @@ footer .icon,#footer .icon,#footerBtns .icon {
     margin-inline:auto}
 
 .contactinfobg {
-    background: linear-gradient(var(--hero-bg-color,#000),var(--hero-bg-color,#000),var(--hero-bg-color,#000),var(--hero-bg-color,#000),var(--hero-bg-color,#000),transparent);
+    background: linear-gradient(165deg, var(--hero-bg-color-1, var(--hero-bg-color, #000)), var(--hero-bg-color-2, var(--hero-bg-color, #000)));
     z-index: auto;
     position: relative
 }
@@ -2485,25 +2485,122 @@ footer .icon,#footer .icon,#footerBtns .icon {
     -webkit-backdrop-filter: blur(6px);
     overscroll-behavior: none;
     color: var(--upload-ink);
-    font-family: inherit
+    font-family: inherit;
+    opacity: 0;
+    transition: opacity .38s ease
 }
 
 .menu-image-upload-modal.is-open {
     display: flex
 }
 
+.menu-image-upload-modal.is-visible {
+    opacity: 1
+}
+
+.menu-image-upload-modal.is-closing {
+    opacity: 0
+}
+
+.menu-image-upload-flourish {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none
+}
+
+.menu-image-upload-flourish__ring {
+    position: absolute;
+    width: min(78vw, 22rem);
+    height: min(78vw, 22rem);
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--upload-accent) 0%, transparent);
+    opacity: 0;
+    transform: scale(.42)
+}
+
+.menu-image-upload-modal.is-visible .menu-image-upload-flourish__ring {
+    animation: menu-image-upload-ring 1.05s cubic-bezier(.22,1,.36,1) both
+}
+
+.menu-image-upload-modal.is-visible .menu-image-upload-flourish__ring:nth-child(2) {
+    animation-delay: .12s;
+    width: min(92vw, 27rem);
+    height: min(92vw, 27rem)
+}
+
+.menu-image-upload-flourish__spark {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--upload-accent);
+    box-shadow: 0 0 18px var(--upload-accent);
+    opacity: 0
+}
+
+.menu-image-upload-modal.is-visible .menu-image-upload-flourish__spark {
+    animation: menu-image-upload-spark 1.15s ease-out both
+}
+
+.menu-image-upload-modal.is-uploading .menu-image-upload-flourish__ring,
+.menu-image-upload-modal.is-success .menu-image-upload-flourish__ring {
+    animation: menu-image-upload-ring-loop 1.4s ease-out infinite
+}
+
 .menu-image-upload-dialog {
     position: relative;
+    z-index: 1;
     width: min(100%,420px);
     max-height: min(92vh,640px);
     overflow: auto;
     padding: 1.35rem 1.35rem 1.15rem;
     border-radius: 14px;
-    background: var(--header-bg-color, var(--main-bg, #0f172a));
+    background: var(--scheme-surface, var(--main-bg, #0f172a));
     border: 1px solid rgba(255,255,255,.12);
     box-shadow: 0 20px 50px rgba(0,0,0,.45);
-    color: var(--upload-ink)
+    color: var(--upload-ink);
+    opacity: 0;
+    transform: translateY(36px) scale(.84);
+    transition: transform .52s cubic-bezier(.22,1.25,.36,1), opacity .32s ease, box-shadow .4s ease
 }
+
+.menu-image-upload-modal.is-visible .menu-image-upload-dialog {
+    opacity: 1;
+    transform: translateY(0) scale(1)
+}
+
+.menu-image-upload-modal.is-closing .menu-image-upload-dialog {
+    opacity: 0;
+    transform: translateY(18px) scale(.94);
+    transition-duration: .28s
+}
+
+.menu-image-upload-modal.is-uploading .menu-image-upload-dialog {
+    box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--upload-accent) 55%, transparent),
+        0 0 42px color-mix(in srgb, var(--upload-accent) 38%, transparent),
+        0 24px 56px rgba(0,0,0,.5);
+    animation: menu-image-upload-dialog-glow 1.2s ease-in-out infinite
+}
+
+.menu-image-upload-modal.is-success .menu-image-upload-dialog {
+    animation: menu-image-upload-success-pop .55s cubic-bezier(.22,1.4,.36,1)
+}
+
+.menu-image-upload-modal.is-visible .menu-image-upload-title,
+.menu-image-upload-modal.is-visible .menu-image-upload-hint,
+.menu-image-upload-modal.is-visible .menu-image-upload-picker,
+.menu-image-upload-modal.is-visible .menu-image-upload-actions {
+    animation: menu-image-upload-rise .55s cubic-bezier(.22,1,.36,1) both
+}
+
+.menu-image-upload-modal.is-visible .menu-image-upload-hint { animation-delay: .06s }
+.menu-image-upload-modal.is-visible .menu-image-upload-picker { animation-delay: .12s }
+.menu-image-upload-modal.is-visible .menu-image-upload-actions { animation-delay: .18s }
 
 .menu-image-upload-close {
     position: absolute;
@@ -2554,6 +2651,10 @@ footer .icon,#footer .icon,#footerBtns .icon {
     display: none
 }
 
+.menu-image-upload-preview.is-arriving {
+    animation: menu-image-upload-preview-in .62s cubic-bezier(.22,1.2,.36,1)
+}
+
 .menu-image-upload-preview__img {
     display: block;
     width: 100%;
@@ -2566,14 +2667,76 @@ footer .icon,#footer .icon,#footerBtns .icon {
     inset: 0;
     z-index: 2;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: .7rem;
     background: rgba(0,0,0,.55)
 }
 
 .menu-image-upload-preview__busy.is-hidden {
     display: none
 }
+
+.menu-image-upload-busy-label {
+    font-size: .86rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--upload-ink);
+    text-shadow: 0 2px 10px rgba(0,0,0,.45)
+}
+
+.menu-image-upload-ok {
+    display: none;
+    width: 3.4rem;
+    height: 3.4rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #4ade80;
+    color: #052e16;
+    font-size: 1.7rem;
+    font-weight: 800;
+    box-shadow: 0 0 0 8px rgba(74,222,128,.22), 0 10px 28px rgba(0,0,0,.35)
+}
+
+.menu-image-upload-modal.is-success .menu-image-upload-throbber {
+    display: none
+}
+
+.menu-image-upload-modal.is-success .menu-image-upload-ok {
+    display: flex;
+    animation: menu-image-upload-success-pop .55s cubic-bezier(.22,1.4,.36,1)
+}
+
+.menu-image-upload-burst {
+    position: absolute;
+    inset: 0;
+    pointer-events: none
+}
+
+.menu-image-upload-burst i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    margin: -3.5px;
+    border-radius: 50%;
+    background: var(--upload-accent);
+    opacity: 0
+}
+
+.menu-image-upload-modal.is-uploading .menu-image-upload-burst i,
+.menu-image-upload-modal.is-success .menu-image-upload-burst i {
+    animation: menu-image-upload-burst 1.05s ease-out infinite
+}
+
+.menu-image-upload-burst i:nth-child(1) { --burst-x: -64px; --burst-y: -38px; animation-delay: 0s }
+.menu-image-upload-burst i:nth-child(2) { --burst-x: 70px; --burst-y: -28px; animation-delay: .12s }
+.menu-image-upload-burst i:nth-child(3) { --burst-x: -48px; --burst-y: 52px; animation-delay: .2s }
+.menu-image-upload-burst i:nth-child(4) { --burst-x: 56px; --burst-y: 46px; animation-delay: .08s }
 
 .menu-image-upload-throbber {
     display: inline-block;
@@ -2713,18 +2876,34 @@ footer .icon,#footer .icon,#footerBtns .icon {
 }
 
 .menu-image-upload-progress__track {
-    height: 8px;
+    height: 10px;
     border-radius: 999px;
     overflow: hidden;
-    background: rgba(255,255,255,.1)
+    background: rgba(255,255,255,.1);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)
+}
+
+.menu-image-upload-modal.is-uploading .menu-image-upload-progress__track {
+    height: 14px;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--upload-accent) 35%, transparent)
 }
 
 .menu-image-upload-progress__fill {
     width: 0%;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--upload-sel-1), var(--upload-accent));
+    background: linear-gradient(90deg, var(--upload-sel-1), var(--upload-accent), var(--upload-sel-1));
+    background-size: 220% 100%;
     transition: width .15s ease
+}
+
+.menu-image-upload-modal.is-uploading .menu-image-upload-progress__fill {
+    animation: menu-image-upload-shimmer 1s linear infinite
+}
+
+.menu-image-upload-modal.is-success .menu-image-upload-progress__fill {
+    background: #4ade80;
+    animation: none
 }
 
 .menu-image-upload-progress__label {
@@ -2807,11 +2986,16 @@ footer .icon,#footer .icon,#footerBtns .icon {
     color: var(--upload-btn-ink)
 }
 
+.menu-image-upload-modal.is-uploading .menu-image-upload-btn--submit {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--upload-accent) 45%, transparent), 0 8px 22px rgba(0,0,0,.35);
+    animation: menu-image-upload-dialog-glow 1.1s ease-in-out infinite
+}
+
 @supports (color: color-mix(in srgb, #000 50%, #fff)) {
     .menu-image-upload-dialog {
         background:
-            radial-gradient(120% 70% at 50% -8%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 55%),
-            linear-gradient(180deg, color-mix(in srgb, var(--header-bg-color, var(--main-bg, #0f172a)) 88%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
+            radial-gradient(120% 70% at 50% -8%, color-mix(in srgb, var(--scheme-surface, #1c2a4a) 50%, transparent), transparent 55%),
+            linear-gradient(180deg, color-mix(in srgb, var(--scheme-surface, var(--main-bg, #0f172a)) 88%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
         border-color: color-mix(in srgb, var(--selected-button-color3, #fff) 28%, rgba(255,255,255,.12));
     }
     .menu-image-upload-picker {
@@ -2824,6 +3008,79 @@ footer .icon,#footer .icon,#footerBtns .icon {
     }
     .menu-image-upload-source:hover {
         background: color-mix(in srgb, var(--selected-button-color1, var(--button-color1, #1a1a2e)) 80%, #000);
+    }
+}
+
+@keyframes menu-image-upload-rise {
+    from { opacity: 0; transform: translateY(14px) }
+    to { opacity: 1; transform: translateY(0) }
+}
+
+@keyframes menu-image-upload-ring {
+    0% { opacity: 0; transform: scale(.42); border-color: color-mix(in srgb, var(--upload-accent) 80%, transparent) }
+    35% { opacity: .85 }
+    100% { opacity: 0; transform: scale(1.18); border-color: color-mix(in srgb, var(--upload-accent) 0%, transparent) }
+}
+
+@keyframes menu-image-upload-ring-loop {
+    0% { opacity: .7; transform: scale(.55); border-color: color-mix(in srgb, var(--upload-accent) 70%, transparent) }
+    100% { opacity: 0; transform: scale(1.28); border-color: color-mix(in srgb, var(--upload-accent) 0%, transparent) }
+}
+
+@keyframes menu-image-upload-spark {
+    0% { opacity: 0; transform: scale(.2) translateY(12px) }
+    30% { opacity: 1; transform: scale(1.4) translateY(-6px) }
+    100% { opacity: 0; transform: scale(.4) translateY(-46px) }
+}
+
+@keyframes menu-image-upload-dialog-glow {
+    0%, 100% { filter: brightness(1) }
+    50% { filter: brightness(1.08) }
+}
+
+@keyframes menu-image-upload-preview-in {
+    0% { opacity: 0; transform: scale(.86) translateY(12px) }
+    60% { opacity: 1; transform: scale(1.03) translateY(-2px) }
+    100% { opacity: 1; transform: scale(1) translateY(0) }
+}
+
+@keyframes menu-image-upload-burst {
+    0% { opacity: 0; transform: translate(0,0) scale(.4) }
+    25% { opacity: 1 }
+    100% { opacity: 0; transform: translate(var(--burst-x), var(--burst-y)) scale(.2) }
+}
+
+@keyframes menu-image-upload-success-pop {
+    0% { transform: scale(.72) }
+    55% { transform: scale(1.12) }
+    100% { transform: scale(1) }
+}
+
+@keyframes menu-image-upload-shimmer {
+    0% { background-position: 100% 0 }
+    100% { background-position: -100% 0 }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-image-upload-modal,
+    .menu-image-upload-dialog,
+    .menu-image-upload-flourish__ring,
+    .menu-image-upload-flourish__spark,
+    .menu-image-upload-preview.is-arriving,
+    .menu-image-upload-progress__fill,
+    .menu-image-upload-burst i,
+    .menu-image-upload-ok,
+    .menu-image-upload-modal.is-visible .menu-image-upload-title,
+    .menu-image-upload-modal.is-visible .menu-image-upload-hint,
+    .menu-image-upload-modal.is-visible .menu-image-upload-picker,
+    .menu-image-upload-modal.is-visible .menu-image-upload-actions {
+        animation: none !important;
+        transition: none !important
+    }
+    .menu-image-upload-modal.is-open,
+    .menu-image-upload-modal.is-visible .menu-image-upload-dialog {
+        opacity: 1;
+        transform: none
     }
 }
 

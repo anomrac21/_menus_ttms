@@ -1,5 +1,5 @@
 /**
- * Client dashboard — delivery order inbox, accept, ready, pickup QR scan, live track.
+ * Client dashboard: delivery order inbox, accept, ready, pickup QR scan, live track.
  */
 (function (global) {
   'use strict';

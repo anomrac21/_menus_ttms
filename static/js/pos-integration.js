@@ -49,7 +49,7 @@
 
   function isBlankSize(size) {
     var s = String(size || '').trim();
-    return !s || s === '-' || s === '—' || s === '–';
+    return !s || s === '–';
   }
 
   function lookupMapValue(keyed) {
@@ -96,11 +96,11 @@
 
   function variantFromPriceMeta(metas, size) {
     if (!Array.isArray(metas) || !metas.length) return '';
-    var sz = String(size || '-').trim();
+    var sz = String(size ).trim();
     for (var i = 0; i < metas.length; i++) {
       var pm = metas[i];
       if (!pm || !pm.loyverse_variant_id) continue;
-      var v1 = String(pm.variable1 || '-').trim();
+      var v1 = String(pm.variable1 ).trim();
       if (sz === v1 || (isBlankSize(sz) && isBlankSize(v1))) return String(pm.loyverse_variant_id).trim();
     }
     if (metas.length === 1 && metas[0].loyverse_variant_id) {
@@ -280,7 +280,7 @@
           console.warn(
             '[POS] ' +
               missing.length +
-              ' cart line(s) missing variant_id — map items in menu-settings or set loyverse_variant_id',
+              ' cart line(s) missing variant_id: map items in menu-settings or set loyverse_variant_id',
             missing.map(function (l) {
               return (l.item || '') + (l.size ? '|' + l.size : '');
             })
@@ -298,7 +298,7 @@
           return { ok: false, error: 'missing_client_id' };
         }
         if (!body.store_id) {
-          console.warn('[POS] no store_id on location or POS_CONFIG — Loyverse may use first store');
+          console.warn('[POS] no store_id on location or POS_CONFIG. Loyverse may use first store');
         }
         return fetch(apiBase() + '/api/v1/loyverse/orders', {
           method: 'POST',

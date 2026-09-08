@@ -1,5 +1,5 @@
 /**
- * Reels contact slide — infinite horizontal location carousel (Barba-safe).
+ * Reels contact slide: infinite horizontal location carousel (Barba-safe).
  */
 (function () {
   'use strict';
@@ -239,8 +239,7 @@
 
   function getCardScrollTarget(track, card) {
     if (!track || !card) return 0;
-    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-    if (maxScroll <= 0) return 0;
+    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);    if (maxScroll <= 0) return 0;
 
     var trackRect = track.getBoundingClientRect();
     var cardRect = card.getBoundingClientRect();
@@ -392,8 +391,7 @@
     cards.forEach(function (card) {
       var rect = card.getBoundingClientRect();
       var cardCenter = rect.left + rect.width / 2;
-      var dist = Math.abs(cardCenter - centerX);
-      if (dist < bestDist) {
+      var dist = Math.abs(cardCenter - centerX);      if (dist < bestDist) {
         bestDist = dist;
         best = card;
       }
@@ -432,7 +430,7 @@
     var source = options.source || 'picker';
     var multiMenus = !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
     // When per-location menus are on, carousel scroll must not change the active
-    // store/menu — only explicit user actions (click, arrows, nearby) should.
+    // store/menu - only explicit user actions (click, arrows, nearby) should.
     if (multiMenus && source === 'scroll') {
       return;
     }
@@ -802,13 +800,10 @@
       return deg * (Math.PI / 180);
     };
     var R = 6371;
-    var dLat = toRad(lat2 - lat1);
-    var dLon = toRad(lon2 - lon1);
-    var a =
+    var dLat = toRad(lat2 - lat1);    var dLon = toRad(lon2 - lon1);    var a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-  }
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));  }
 
   function findClosestLocationCard(userLat, userLng, cards) {
     var best = null;

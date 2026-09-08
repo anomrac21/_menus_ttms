@@ -13,7 +13,7 @@
     --ttms-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Scroll lock — top offset applied by ios-viewport.js */
+/* Scroll lock: top offset applied by ios-viewport.js */
 html.ttms-scroll-locked,
 body.ttms-scroll-locked {
     overflow: hidden !important;

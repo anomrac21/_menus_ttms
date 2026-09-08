@@ -1,6 +1,6 @@
 /**
  * TTMenus breakpoints (documentation + CSS custom props for JS/docs).
- * Media queries must use numeric values — CSS vars are not valid in @media
+ * Media queries must use numeric values. CSS vars are not valid in @media
  * without a build step.
  *
  * Primary larger-screen breakpoint: 769px (matches header.lg.css)

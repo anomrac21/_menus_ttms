@@ -246,7 +246,7 @@
       window.trackPaymentEvent('Checkout Start', 'order', amount);
     });
     wrapOnce(window.PaymentIntegration, 'isCurrentOrderPaid', function () {
-      /* no-op — avoid noise */
+      /* no-op: avoid noise */
     });
   }
 

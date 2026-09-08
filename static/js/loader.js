@@ -104,7 +104,7 @@ function ensureAdsLoaded() {
                 adContainers.forEach(container => {
                     if (container && (container.innerHTML.includes('Loading ads...') || container.innerHTML.includes('Ads loading...') || container.innerHTML.trim() === '')) {
                         needsRefresh = true;
-                        console.log(`Container ${container.id} needs refresh - current content:`, container.innerHTML.substring(0, 100));
+                        console.log(`Container ${container.id} needs refresh: current content:`, container.innerHTML.substring(0, 100));
                     }
                 });
                 
@@ -133,7 +133,7 @@ function ensureAdsLoaded() {
             console.log('AdManager not available after maximum retries');
             console.log('Final check - window.adManager:', window.adManager);
             
-            // Fallback: try to refresh any existing ads manually
+            // Fallback - try to refresh any existing ads manually
             const adContainers = document.querySelectorAll('#homepage-ads-container, #pageadscontainer');
             adContainers.forEach(container => {
                 if (container.innerHTML.includes('Loading ads...')) {
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tier === 'free_verified') {
             return ANIM_SLIDE.concat(ANIM_ROTATE.slice(0, 6));
         }
-        // free unverified — simple exits only
+        // free unverified: simple exits only
         return ANIM_SLIDE.slice();
     }
 
@@ -540,8 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
         restartLoaderMedia({ enter: true });
         startLoaderMorph();
         var noBarbaWait = loaderShownAt
-            ? Math.max(0, LOADER_MIN_VISIBLE_MS - (Date.now() - loaderShownAt))
-            : LOADER_MIN_VISIBLE_MS;
+            ? Math.max(0, LOADER_MIN_VISIBLE_MS - (Date.now() - loaderShownAt))            : LOADER_MIN_VISIBLE_MS;
         setTimeout(function () {
             loader.classList.add('loader-hide-down');
             try {
@@ -637,9 +636,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function msUntilMinVisible() {
         if (!loaderShownAt) return LOADER_MIN_VISIBLE_MS;
-        var elapsed = Date.now() - loaderShownAt;
-        return Math.max(0, LOADER_MIN_VISIBLE_MS - elapsed);
-    }
+        var elapsed = Date.now() - loaderShownAt;        return Math.max(0, LOADER_MIN_VISIBLE_MS - elapsed);    }
 
     function finishHideLoader() {
         if (!loader) return;
@@ -658,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) { /* ignore */ }
 
         // Android Chrome can keep a composited overlay that still blocks taps
-        // even after opacity:0 — force display:none after the hide animation.
+        // even after opacity:0 - force display:none after the hide animation.
         hideForceTimer = setTimeout(function () {
             hideForceTimer = null;
             if (gen !== loaderGeneration) return;
@@ -717,7 +714,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('ttms:location-selected', function (ev) {
         var detail = (ev && ev.detail) || {};
         var source = detail.source || '';
-        // Ignore carousel/nearby noise — only an explicit store choice updates the loader.
+        // Ignore carousel/nearby noise: only an explicit store choice updates the loader.
         if (source && source !== 'picker' && source !== 'user' && source !== 'card' && source !== 'click') {
             return;
         }
@@ -978,7 +975,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const foundContainers = containers.filter(id => document.getElementById(id));
                     console.log('Ad containers found:', foundContainers);
 
-                    // Reels frontpage ads (pageadscontainer) — same as ttms_app
+                    // Reels frontpage ads (pageadscontainer): same as ttms_app
                     setTimeout(() => {
                         if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
                             window.AdsClient.loadAds();

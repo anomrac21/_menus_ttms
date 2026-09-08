@@ -2,40 +2,46 @@
 <html lang="{{ site.Language.Lang }}">
 <head>
   {{ partial "head.html" . }}
-  <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/auth.css" }}">
-  <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard.css" }}">
+  {{- $authCss := partial "head/asset-url.html" `/css/auth.css` -}}
+  {{- $dashCss := partial "head/asset-url.html" `/css/dashboard.css` -}}
+  {{- $opsJs := partial "head/asset-url.html" `/js/dashboard-ops-snapshot.js` -}}
+  {{- $dashClient := site.Params.contentManagement.clientId | default `_ttms_menu_demo` -}}
+  {{- $menuImgApi := site.Params.menuImageService.apiUrl | default `https://menu-images.ttmenus.com/api/v1` -}}
+  <link rel="stylesheet" href="{{ $authCss }}">
+  <link rel="stylesheet" href="{{ $dashCss }}">
   {{- if site.Params.menuImageService.enabled }}
   <script>
   window.MENU_IMAGE_CONFIG = {
     enabled: true,
-    apiUrl: "{{ site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
-    clientId: "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
+    apiUrl: {{ $menuImgApi | jsonify }},
+    clientId: {{ $dashClient | jsonify }}
   };
-  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}";
+  window.SITE_CLIENT_ID = window.CLIENT_ID || {{ $dashClient | jsonify }};
   </script>
   <script src="/js/dashboard-menu-images.js" defer></script>
   {{- end }}
   <script src="/js/dashboard-analytics-snapshot.js" defer></script>
   <script src="/js/dashboard-menu-status.js" defer></script>
   <script>
-  window.SITE_DISPLAY_NAME = {{ (site.Title | default "Menu Demo") | jsonify }};
-  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}";
+  window.SITE_DISPLAY_NAME = {{ (site.Title | default `Menu Demo`) | jsonify }};
+  window.SITE_CLIENT_ID = window.CLIENT_ID || {{ $dashClient | jsonify }};
   window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
   </script>
   <script src="/js/dashboard-control-room.js" defer></script>
-  <script src="{{ partial "head/asset-url.html" "/js/dashboard-ops-snapshot.js" }}" defer></script>
+  <script src="{{ $opsJs }}" defer></script>
   {{- $dsHead := site.Params.deliveryService | default dict -}}
   {{- $deliveryOnHead := and (default false site.Params.features.delivery) (default false $dsHead.enabled) -}}
   {{- if $deliveryOnHead -}}
+  {{- $deliveryJs := partial "head/asset-url.html" `/js/delivery-client.js` -}}
   <script>
   window.DELIVERY_CONFIG = {
     enabled: true,
-    apiUrl: {{ ($dsHead.apiUrl | default "https://delivery.ttmenus.com/api/v1") | jsonify }},
-    wsUrl: {{ ($dsHead.wsUrl | default "wss://delivery.ttmenus.com/api/v1") | jsonify }},
-    clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "") | jsonify }}
+    apiUrl: {{ ($dsHead.apiUrl | default `https://delivery.ttmenus.com/api/v1`) | jsonify }},
+    wsUrl: {{ ($dsHead.wsUrl | default `wss://delivery.ttmenus.com/api/v1`) | jsonify }},
+    clientId: {{ (site.Params.contentManagement.clientId | default site.Params.ads.clientId | default ``) | jsonify }}
   };
   </script>
-  <script src="{{ partial "head/asset-url.html" "/js/delivery-client.js" }}" defer></script>
+  <script src="{{ $deliveryJs }}" defer></script>
   {{- end }}
   <script src="/js/dashboard-deploy-status.js" defer></script>
   {{- if default false site.Params.features.notifications }}
@@ -61,7 +67,7 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-orders">
-          <p class="dashboard-card-desc">Open tickets from the menu — kitchen, charge, and Loyverse receipts.</p>
+          <p class="dashboard-card-desc">Open tickets from the menu: kitchen, charge, and Loyverse receipts.</p>
           <div class="dashboard-card-actions">
             <a href="/dashboard/orders/" class="btn-dash btn-dash-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Open inbox</a>
             <a href="/dashboard/kitchen/" class="btn-dash btn-dash-secondary"><i class="fa fa-print" aria-hidden="true"></i> Kitchen station</a>
@@ -75,7 +81,7 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-delivery">
-          <p class="dashboard-card-desc">Platform fleet inbox — accept jobs, mark ready, scan pickup QR, and track your driver.</p>
+          <p class="dashboard-card-desc">Platform fleet inbox: accept jobs, mark ready, scan pickup QR, and track your driver.</p>
           <div class="dashboard-card-notify-snapshot" id="dashboardCardDeliverySnapshot" aria-label="Delivery status">
             <div class="dashboard-card-notify-snapshot-grid">
               <div class="dashboard-card-notify-snapshot-cell">
@@ -189,12 +195,12 @@
         <div class="dashboard-card-body" id="dashboardCardBody-menu-images">
           <p class="dashboard-card-desc">Swipe or tap to approve or decline customer photos.</p>
           <div class="dashboard-menu-images-reel-stats" aria-live="polite">
-            <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending">—</span> in queue</span>
+            <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending"></span> in queue</span>
             <span class="dashboard-menu-images-reel-stat dashboard-menu-images-reel-stat--muted" id="dashboardMenuImagesReelProgress"></span>
           </div>
           <p id="dashboardMenuImagesLoading" class="dashboard-menu-images-loading">Loading reel…</p>
           <p id="dashboardMenuImagesError" class="dashboard-menu-images-error hidden" role="alert"></p>
-          <p id="dashboardMenuImagesEmpty" class="dashboard-menu-images-empty hidden">You&apos;re all caught up — no photos waiting for review.</p>
+          <p id="dashboardMenuImagesEmpty" class="dashboard-menu-images-empty hidden">You&apos;re all caught up: no photos waiting for review.</p>
           <div id="dashboardMenuImagesReel" class="dashboard-menu-images-reel hidden" aria-label="Photo approval reel">
             <div class="dashboard-menu-images-reel__stack" id="dashboardMenuImagesReelStack"></div>
             <div class="dashboard-menu-images-reel__actions" id="dashboardMenuImagesReelActions">
@@ -238,11 +244,11 @@
             <div class="dashboard-card-notify-snapshot-grid">
               <div class="dashboard-card-notify-snapshot-cell">
                 <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews">—</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews"></span>
               </div>
               <div class="dashboard-card-notify-snapshot-cell">
                 <span class="dashboard-card-notify-snapshot-label">Visits (30d)</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits">—</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits"></span>
               </div>
             </div>
           </div>
@@ -265,11 +271,11 @@
             <div class="dashboard-card-notify-snapshot-grid">
               <div class="dashboard-card-notify-snapshot-cell">
                 <span class="dashboard-card-notify-snapshot-label">Subscribers</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySubs">—</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySubs"></span>
               </div>
               <div class="dashboard-card-notify-snapshot-cell">
                 <span class="dashboard-card-notify-snapshot-label">Sent (30d)</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySent">—</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySent"></span>
               </div>
             </div>
           </div>

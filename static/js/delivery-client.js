@@ -1,5 +1,5 @@
 /**
- * TTMenus Delivery API client — platform fleet flow.
+ * TTMenus Delivery API client: platform fleet flow.
  * Expects AuthClient.getAccessToken() and window.DELIVERY_CONFIG.
  */
 (function (global) {

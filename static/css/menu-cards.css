@@ -1,5 +1,5 @@
 /**
- * Menu item cards — tactile, clickable list rows (loads after main.css)
+ * Menu item cards: tactile, clickable list rows (loads after main.css)
  */
 
 .menu-items-container {
@@ -11,19 +11,22 @@
 .menu-item-card {
     padding: 1em;
     --menu-card-radius: 16px;
-    --menu-card-accent-a: color-mix(in srgb, var(--selected-button-color2, #b56024) 82%, #fff);
-    --menu-card-accent-b: color-mix(in srgb, var(--selected-button-color3, #fcd000) 68%, #fff);
-    --menu-card-accent-border: color-mix(in srgb, var(--selected-button-color3, #fcd000) 48%, transparent);
-    border: 2px solid rgba(255, 255, 255, 0.14);
+    --menu-card-accent-a: var(--button-color1);
+    --menu-card-accent-b: var(--button-color2);
+    --menu-card-accent-border: color-mix(in srgb, var(--button-text-color1) 35%, transparent);
+    --menu-card-ink: var(--button-text-color1);
+    --menu-card-ink-2: var(--button-text-color2);
+    --add-photo-accent: var(--button-color1);
+    --add-photo-accent-deep: var(--button-color2);
+    --add-photo-surface: var(--button-color1);
+    --add-photo-ink: var(--button-text-color1);
+    color: var(--button-text-color1);
+    border: 2px solid color-mix(in srgb, var(--button-text-color1) 22%, transparent);
     border-radius: var(--menu-card-radius);
-    background: linear-gradient(
-        155deg,
-        color-mix(in srgb, var(--button-color1, #333) 92%, #fff) 0%,
-        color-mix(in srgb, var(--button-color2, #222) 95%, #000) 100%
-    );
+    background: linear-gradient(165deg, var(--button-color1), var(--button-color2));
     box-shadow:
-        0 3px 14px rgba(0, 0, 0, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 3px 14px color-mix(in srgb, var(--scheme-black) 22%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
 }
@@ -36,8 +39,8 @@
     width: 0.55rem;
     height: 0.55rem;
     margin-top: 0.15rem;
-    border-right: 2.5px solid color-mix(in srgb, var(--button-text-color1, #fff) 55%, transparent);
-    border-bottom: 2.5px solid color-mix(in srgb, var(--button-text-color1, #fff) 55%, transparent);
+    border-right: 2.5px solid color-mix(in srgb, var(--button-text-color1) 55%, transparent);
+    border-bottom: 2.5px solid color-mix(in srgb, var(--button-text-color1) 55%, transparent);
     transform: translateY(-50%) rotate(-45deg);
     transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     opacity: 0.55;
@@ -48,13 +51,13 @@
     transform: translateY(-3px);
     border-color: var(--menu-card-accent-border);
     box-shadow:
-        0 10px 26px rgba(0, 0, 0, 0.32),
-        0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+        0 10px 26px color-mix(in srgb, var(--scheme-black) 32%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--scheme-white) 8%, transparent) inset;
 }
 
 .menu-item-card:hover::after {
     opacity: 0.95;
-    border-color: var(--button-text-color1, #fff);
+    border-color: var(--button-text-color1);
     transform: translateY(-50%) rotate(-45deg) translate(2px, 2px);
 }
 
@@ -66,13 +69,9 @@
     border-color: var(--menu-card-accent-border);
     border-width: 2px;
     box-shadow:
-        0 12px 32px rgba(0, 0, 0, 0.35),
-        0 0 0 1px color-mix(in srgb, var(--selected-button-color3, #fcd000) 35%, transparent);
-    background: linear-gradient(
-        155deg,
-        var(--selected-button-color1, var(--button-color1)) 0%,
-        var(--selected-button-color2, var(--button-color2)) 100%
-    );
+        0 12px 32px color-mix(in srgb, var(--scheme-black) 35%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--button-text-color2) 35%, transparent);
+    background: linear-gradient(155deg, var(--button-color2) 0%, var(--button-color1) 100%);
     padding: 1em;
 }
 
@@ -93,21 +92,21 @@
     border-radius: 999px;
     font-size: 0.78em;
     line-height: 1.35;
-    background: rgba(255, 193, 7, 0.16);
-    border: 1px solid rgba(255, 193, 7, 0.35);
-    color: #ffe082;
+    background: color-mix(in srgb, var(--scheme-accent-2) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-accent-2) 35%, transparent);
+    color: var(--scheme-accent);
 }
 
 .menu-item-availability.is-active {
-    background: rgba(76, 175, 80, 0.16);
-    border-color: rgba(76, 175, 80, 0.4);
-    color: #a5d6a7;
+    background: color-mix(in srgb, var(--scheme-accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-accent) 40%, transparent);
+    color: var(--scheme-accent);
 }
 
 .menu-item-availability.is-outside-window {
-    background: rgba(255, 152, 0, 0.14);
-    border-color: rgba(255, 152, 0, 0.4);
-    color: #ffcc80;
+    background: color-mix(in srgb, var(--scheme-accent-2) 14%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-accent-2) 40%, transparent);
+    color: var(--scheme-accent-2);
 }
 
 .menu-item-availability__text {
@@ -118,9 +117,9 @@
     margin: 0;
     padding: 0.55em 0.75em;
     border-radius: 0.5em;
-    background: rgba(255, 152, 0, 0.12);
-    border: 1px solid rgba(255, 152, 0, 0.35);
-    color: #ffcc80;
+    background: color-mix(in srgb, var(--scheme-accent-2) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-accent-2) 35%, transparent);
+    color: var(--scheme-accent-2);
     font-size: 0.92em;
 }
 
@@ -145,9 +144,9 @@
     width: 4.5rem;
     min-width: 4.5rem;
     height: 4.5rem;
-    border: 2px solid rgba(255, 255, 255, 0.18);
-    background: rgba(0, 0, 0, 0.25);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+    border: 2px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+    background: color-mix(in srgb, var(--scheme-black) 25%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--scheme-black) 28%, transparent);
     overflow: hidden;
 }
 
@@ -184,7 +183,7 @@
 
 .menu-item-card:not(.expanded) .menu-item-title a:hover {
     text-decoration: none;
-    border-bottom-color: color-mix(in srgb, var(--button-text-color1, #fff) 45%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--button-text-color1) 45%, transparent);
 }
 
 .menu-item-card:not(.expanded) .menu-item-header-content::after {
@@ -196,7 +195,7 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     opacity: 0.62;
-    color: var(--button-text-color1, #fff);
+    color: var(--button-text-color1);
 }
 
 .menu-item-card.expanded .menu-item-header-content::after {
@@ -222,17 +221,13 @@
     gap: 0.12em;
     padding: 0.35em 0.65em;
     border-radius: 12px;
-    background: linear-gradient(
-        135deg,
-        var(--menu-card-accent-a) 0%,
-        var(--menu-card-accent-b) 100%
-    );
-    color: #1a1208;
+    background: var(--accent-color);
+    color: var(--accent-text-color);
     font-size: 1.15rem;
     font-weight: 800;
     line-height: 1.1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    border: 1px solid color-mix(in srgb, #fff 40%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--scheme-black) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-text-color) 28%, transparent);
     justify-content: center;
 }
 
@@ -243,7 +238,7 @@
 }
 
 .menu-item-price-promo {
-    color: #1a1208;
+    color: var(--accent-text-color);
 }
 
 /* ── Promo badge ── */
@@ -271,12 +266,12 @@
     margin: 0;
     padding: 0.2em 0.55em;
     border-radius: 8px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #fff;
+    background: linear-gradient(135deg, var(--button-color1), var(--button-color2));
+    color: var(--button-text-color1);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.45);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--button-color2) 45%, transparent);
 }
 
 /* ── Size / flavour chips (collapsed preview) ── */
@@ -295,14 +290,8 @@
     font-size: 0.68rem;
     font-weight: 600;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* ── Favorite button (inline in title row) ── */
-.menu-item-card .menu-item-title-row > .menu-favorite-btn {
-    width: 2rem;
-    height: 2rem;
+    background: color-mix(in srgb, var(--button-text-color1) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--button-text-color1) 20%, transparent);
 }
 
 .menu-item-card .menu-item-title-row > .menu-favorite-btn:hover {

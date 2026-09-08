@@ -22,24 +22,37 @@ deferredInstall: null,
   updateInstallButtons() {
     const installBtn = document.getElementById('btn_install1');
     const subInfoBtn = document.getElementById('btn_SubInfo');
-    const row = document.querySelector('.subscribe--install');
+    const installChip = document.querySelector('.loader-feature[data-feature="install"]');
+    const installRow = document.querySelector('.subscribe--install');
+    const installLabel = document.getElementById('heroInstallLabel');
+    const installDetail = document.getElementById('heroInstallDetail');
     if (!installBtn || !subInfoBtn) return;
 
     if (APP.isStandalonePWA()) {
       APP.setInstallButtonVisible(installBtn, false);
       APP.setInstallButtonVisible(subInfoBtn, false);
-      if (row) row.classList.add('hide');
+      if (installChip) installChip.classList.add('hide');
+      if (installRow) installRow.classList.add('hide');
       return;
     }
 
     const showNativeInstall = !!APP.deferredInstall;
     const showIOSInstructions = !showNativeInstall && APP.isIOSInstallContext();
+    const showChip = showNativeInstall || showIOSInstructions;
 
     APP.setInstallButtonVisible(installBtn, showNativeInstall);
     APP.setInstallButtonVisible(subInfoBtn, showIOSInstructions);
 
-    if (row) {
-      row.classList.toggle('hide', !(showNativeInstall || showIOSInstructions));
+    if (installChip) installChip.classList.toggle('hide', !showChip);
+    if (installRow) installRow.classList.toggle('hide', !showChip);
+
+    if (installLabel) {
+      installLabel.textContent = showNativeInstall ? 'Install now' : 'Install app';
+    }
+    if (installDetail) {
+      installDetail.textContent = showNativeInstall
+        ? 'Add this menu to your home screen'
+        : 'Add to home screen';
     }
   },
 

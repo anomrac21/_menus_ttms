@@ -1,5 +1,5 @@
 /**
- * Share buttons — event delegation (Barba-safe).
+ * Share buttons: event delegation (Barba-safe).
  */
 (function () {
   'use strict';

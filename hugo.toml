@@ -38,7 +38,7 @@ weight = 30
   # apiUrl = "http://localhost:8084/api"
   # serviceUrl = "http://localhost:8084"
 
-# Payment Service (menu checkout — POST /pay on payment-service)
+# Payment Service (menu checkout. POST /pay on payment-service)
 [params.paymentService]
   enabled = false
   apiUrl = "https://pay.ttmenus.com"

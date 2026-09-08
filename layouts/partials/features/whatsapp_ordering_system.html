@@ -122,7 +122,7 @@ function applyPromosToOrder(today, timeInfo) {
 }
 
 // ============================================================================
-// UNIFIED SIDE CATEGORY MANAGER - Efficient, centralized system
+// UNIFIED SIDE CATEGORY MANAGER. Efficient, centralized system
 // ============================================================================
 class SideCategoryManager {
 	constructor() {
@@ -148,7 +148,7 @@ class SideCategoryManager {
 				maximum: configObj.maximum || 99
 			};
 			
-			// Parse items - support both flat array [name, type, price, ...] and object array [{name, type, price, image}, ...]
+			// Parse items: support both flat array [name, type, price, ...] and object array [{name, type, price, image}, ...]
 			const items = [];
 			if (rawItems.length > 0 && typeof rawItems[0] === 'object' && rawItems[0].name) {
 				// Object array format (new format with image support)
@@ -429,11 +429,11 @@ function findMenuItemByTitle(itemName) {
 
 function ttmsVariantFromPriceMeta(metas, size) {
 	if (!Array.isArray(metas) || !metas.length) return '';
-	var sz = String(size || '-').trim();
+	var sz = String(size ).trim();
 	for (var i = 0; i < metas.length; i++) {
 		var pm = metas[i];
 		if (!pm || !pm.loyverse_variant_id) continue;
-		var v1 = String(pm.variable1 || '-').trim();
+		var v1 = String(pm.variable1 ).trim();
 		if (sz === v1 || ((sz === '-' || !sz) && (v1 === '-' || !v1))) return String(pm.loyverse_variant_id).trim();
 	}
 	if (metas.length === 1 && metas[0].loyverse_variant_id) return String(metas[0].loyverse_variant_id).trim();
@@ -465,7 +465,7 @@ function selectLocation(whatsappNumber) {
 	if (whatsappNumber && whatsappNumber.trim() !== '') {
 		const oldNumber = number;
 		number = whatsappNumber;
-		console.log('📍 Location selected - WhatsApp number changed from', oldNumber, 'to:', number);
+		console.log('📍 Location selected. WhatsApp number changed from', oldNumber, 'to:', number);
 		
 		// Save selected location to localStorage
 		saveSelectedLocation(whatsappNumber);
@@ -746,11 +746,11 @@ function closeShop(){
 	premAmt=0;
 	//console.log(orderMod);
 }
-// Updated openItem function - supports both inline data and dynamic fetching
+// Updated openItem function: supports both inline data and dynamic fetching
 async function openItem(ele, options) {
 	addFocus(ele);
 	
-	// Check if options is a string (URL or ID) - then fetch data
+	// Check if options is a string (URL or ID): then fetch data
 	if (typeof options === 'string') {
 		console.log("🔄 Loading item dynamically:", options);
 		
@@ -885,7 +885,7 @@ async function openItem(ele, options) {
 	document.getElementById("itemFlavourControl").innerHTML=flavoursHtml;
 	setBaseFlav(document.getElementById("itemFlavourControl").childNodes[0]);
 
-	//Sides Options - Handle both new side_categories and old sides structure
+	//Sides Options. Handle both new side_categories and old sides structure
 	var sideHtml = '';
 	
 	// Check for new side_categories structure first
@@ -913,7 +913,7 @@ async function openItem(ele, options) {
 		// Create legacy overlay structure inside itemSideControl
 		makeSidesHtml(sideHtml,0);
 	} else {
-		// No sides at all - hide and clear everything
+		// No sides at all: hide and clear everything
 		document.getElementById("itemSideContainer").classList.add("hide");
 		document.getElementById("sideCategoriesButtonsContainer").innerHTML = '';
 		document.getElementById("itemSideControl").innerHTML = '';
@@ -1071,7 +1071,7 @@ function closeSingleCategoryMenu(categoryName) {
 			summaryList.innerText = printArray(items);
 		}
 		
-		// Check if all overlays are now hidden - if so, hide parent container
+		// Check if all overlays are now hidden: if so, hide parent container
 		if (parentContainer) {
 			const allOverlays = parentContainer.querySelectorAll('[id^="itemSideControl_"]');
 			const allHidden = Array.from(allOverlays).every(o => o.classList.contains('hide'));
@@ -1087,7 +1087,7 @@ function closeSingleCategoryMenu(categoryName) {
 	}
 }
 
-// Old function kept for reference - now replaced with individual category approach
+// Old function kept for reference: now replaced with individual category approach
 function renderSideCategories(sideCategories) {
 	console.log('🔧 Rendering side categories:', sideCategories);
 	console.log(`📊 Total categories to render: ${sideCategories.length}`);
@@ -1686,8 +1686,8 @@ function setTableModalOriginFromOrderBtn(modal) {
     modal.style.setProperty('--table-from-y', Math.round(vh * 0.32) + 'px');
     return;
   }
-  modal.style.setProperty('--table-from-x', (rect.left + rect.width / 2 - vw / 2) + 'px');
-  modal.style.setProperty('--table-from-y', (rect.top + rect.height / 2 - vh / 2) + 'px');
+  modal.style.setProperty('--table-from-x', (rect.left + rect.width / 2 - vw / 2) +'px');
+  modal.style.setProperty('--table-from-y', (rect.top + rect.height / 2 - vh / 2) +'px');
 }
 
 function spawnDelightBurst(el, options) {
@@ -1706,7 +1706,7 @@ function spawnDelightBurst(el, options) {
   ring2.className = 'ttms-delight-burst__ring ttms-delight-burst__ring--late';
   host.appendChild(ring2);
   var glyphs = options.glyphs || ['✓', '★', '+'];
-  var colors = options.colors || ['#25d366', '#fcd000', '#fff', '#2ecc71'];
+  var colors = options.colors || ['var(--scheme-accent)', 'var(--scheme-accent)', 'var(--scheme-white)', 'var(--scheme-accent)'];
   var i;
   for (i = 0; i < 12; i++) {
     var p = document.createElement('span');
@@ -1729,7 +1729,7 @@ function celebrateOrderNowButton() {
   btn.classList.remove('is-order-pop');
   void btn.offsetWidth;
   btn.classList.add('is-order-pop');
-  spawnDelightBurst(btn, { glyphs: ['✓', '★', '✦'], colors: ['#25d366', '#fcd000', '#fff', '#2ecc71'] });
+  spawnDelightBurst(btn, { glyphs: ['✓', '★', '✦'], colors: ['var(--scheme-accent)', 'var(--scheme-accent)', 'var(--scheme-white)', 'var(--scheme-accent)'] });
   setTimeout(function () {
     btn.classList.remove('is-order-pop');
   }, 720);
@@ -1742,7 +1742,7 @@ function celebrateTableButton(btn) {
   btn.classList.add('is-table-btn-pop');
   spawnDelightBurst(btn, {
     glyphs: btn.classList.contains('takeaway-btn') ? ['★', '✦', '✓'] : ['✓', '#', '★'],
-    colors: btn.classList.contains('takeaway-btn') ? ['#fcd000', '#fff', '#ffe082'] : ['#25d366', '#fff', '#fcd000']
+    colors: btn.classList.contains('takeaway-btn') ? ['var(--scheme-accent)', 'var(--scheme-white)', 'var(--scheme-accent)'] : ['var(--scheme-accent)', 'var(--scheme-white)', 'var(--scheme-accent)']
   });
   setTimeout(function () {
     btn.classList.remove('is-table-btn-pop');
@@ -1958,8 +1958,8 @@ function toggleCart(){
         for (var pi = 0; pi < currentoptions.price_meta.length; pi++) {
           var pm = currentoptions.price_meta[pi];
           if (!pm) continue;
-          var v1 = String(pm.variable1 || '-');
-          if (String(size || '-') === v1 || String(size) === String(pm.variable1)) {
+          var v1 = String(pm.variable1 );
+          if (String(size ) === v1 || String(size) === String(pm.variable1)) {
             if (pm.loyverse_variant_id) { lv = pm.loyverse_variant_id; break; }
           }
         }
@@ -2017,7 +2017,7 @@ function toggleCart(){
   //printValues();
 }
 function additemtocart(){
-  // Modal removed - just trigger cart animation
+  // Modal removed: just trigger cart animation
   let cart = document.getElementById("carticon");
   if (cart) {
     cart.classList.add("cartadditem");
@@ -2347,7 +2347,7 @@ function buildCartCards() {
 							${promoLabel ? `<span class="cart-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">${promoLabel}</span></span>` : ''}
 							${hasDetails ? '<i class="fa fa-chevron-down cart-expand-icon"></i>' : ''}
 						</div>
-						${item.size && item.size !== '-' ? `<div class="cart-item-size">${item.size}</div>` : '<div class="cart-item-size">-</div>'}
+						${item.size && item.size !== '-' ? `<div class="cart-item-size">${item.size}</div>` : '<div class="cart-item-size"></div>'}
 					</div>
 					${hasDetails ? `
 						<div class="cart-item-details">
@@ -3177,7 +3177,7 @@ function searchLocations(searchTerm) {
 			
 			// Highlight the matching text
 			const btn = item.querySelector('.locbtn');
-			btn.style.backgroundColor = '#4CAF50';
+			btn.style.backgroundColor = 'var(--scheme-accent)';
 			btn.style.color = 'white';
 			btn.style.fontWeight = 'bold';
 			
@@ -3195,17 +3195,17 @@ function searchLocations(searchTerm) {
 	if (searchInput) {
 		const currentPlaceholder = searchInput.placeholder;
 		if (foundCount > 0) {
-			searchInput.style.borderColor = '#4CAF50';
+			searchInput.style.borderColor = 'var(--scheme-accent)';
 			searchInput.placeholder = `Found ${foundCount} location(s)`;
 		} else {
-			searchInput.style.borderColor = '#f44336';
+			searchInput.style.borderColor = 'var(--scheme-accent-deep)';
 			searchInput.placeholder = 'No locations found';
 		}
 		
 		// Reset placeholder after 3 seconds
 		setTimeout(() => {
 			searchInput.placeholder = currentPlaceholder;
-			searchInput.style.borderColor = '#ddd';
+			searchInput.style.borderColor = 'var(--scheme-white-muted)';
 		}, 3000);
 	}
 }
@@ -3231,7 +3231,7 @@ function updateSearchPlaceholder() {
 	console.log('🔍 Search placeholder not needed with dropdown system');
 }
 
-// Function to navigate locations - now implemented in main.js
+// Function to navigate locations: now implemented in main.js
 // This placeholder is removed as scrolling functionality is handled by main.js
 
 // Function to toggle delivery options visibility
@@ -3276,7 +3276,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (locationSelect) {
       console.log('📍 Location dropdown initialized');
       
-      // Load saved location from localStorage (address first — branches may share one WhatsApp)
+      // Load saved location from localStorage (address first: branches may share one WhatsApp)
       const savedAddress = localStorage.getItem(LOCATION_ADDRESS_STORAGE_KEY);
       const savedLocation = loadSelectedLocation();
       if (savedAddress && setLocationDropdownByAddress(savedAddress)) {
@@ -3313,14 +3313,14 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add debug function to show current state
     window.debugWhatsAppState = function() {
-      console.log('🔍 DEBUG: Current WhatsApp State');
+      console.log('🔍 DEBUG - Current WhatsApp State');
       console.log('📱 Current number:', number);
       console.log('📍 Location dropdown system active');
     };
     
     // Add function to test location detection
     window.testLocationDetection = function() {
-      console.log('🧪 TESTING: Location Detection');
+      console.log('🧪 TESTING - Location Detection');
       const locationSelect = document.getElementById('locationSelect');
       if (locationSelect) {
         console.log('📍 Location dropdown found');
@@ -3333,7 +3333,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add function to test geolocation
     window.testGeolocation = function() {
-      console.log('🧪 TESTING: Geolocation');
+      console.log('🧪 TESTING - Geolocation');
       console.log('navigator.geolocation exists:', !!navigator.geolocation);
       
       if (navigator.geolocation) {
@@ -3342,12 +3342,12 @@ document.addEventListener("DOMContentLoaded", function() {
         
         navigator.geolocation.getCurrentPosition(
           function(position) {
-            console.log('✅ SUCCESS: Location permission granted!');
+            console.log('✅ SUCCESS - Location permission granted!');
             console.log('Coordinates:', position.coords.latitude, position.coords.longitude);
             console.log('Accuracy:', position.coords.accuracy, 'meters');
           },
           function(error) {
-            console.log('❌ ERROR: Location permission denied or error occurred');
+            console.log('❌ ERROR - Location permission denied or error occurred');
             console.log('Error code:', error.code);
             console.log('Error message:', error.message);
           },
@@ -3364,7 +3364,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add function to test scrolling to specific locations
     window.testScrollToLocation = function(locationIndex = 0) {
-      console.log('🧪 TESTING: Scroll to Location');
+      console.log('🧪 TESTING - Scroll to Location');
       const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
       
       if (locationElements.length === 0) {
@@ -3388,7 +3388,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add function to test all locations scrolling
     window.testAllLocationsScrolling = function() {
-      console.log('🧪 TESTING: All Locations Scrolling');
+      console.log('🧪 TESTING - All Locations Scrolling');
       const locationElements = document.querySelectorAll('.locations .location-item .locbtn');
       
       if (locationElements.length === 0) {
@@ -3409,7 +3409,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add function to test location search
     window.testLocationSearch = function(searchTerm = 'Port') {
-      console.log('🧪 TESTING: Location Search');
+      console.log('🧪 TESTING - Location Search');
       console.log('Search term:', searchTerm);
       
       // Test the search function
@@ -3438,7 +3438,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add function to test cart location updates (simplified for dropdown)
     window.testCartLocation = function() {
-      console.log('🧪 TESTING: Cart Location Updates');
+      console.log('🧪 TESTING - Cart Location Updates');
       
       const locationSelect = document.getElementById('locationSelect');
       if (locationSelect) {
@@ -3452,25 +3452,25 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Add function to test search placeholder updates (simplified for dropdown)
     window.testSearchPlaceholder = function() {
-      console.log('🧪 TESTING: Search Placeholder');
+      console.log('🧪 TESTING - Search Placeholder');
       console.log('🔍 Search placeholder not needed with dropdown system');
     };
     
     // Add function to test location navigation (simplified for dropdown)
     window.testLocationNavigation = function() {
-      console.log('🧪 TESTING: Location Navigation');
+      console.log('🧪 TESTING - Location Navigation');
       console.log('📍 Navigation not needed with dropdown system');
     };
     
     // Add function to test delivery options (simplified for dropdown)
     window.testDeliveryOptions = function() {
-      console.log('🧪 TESTING: Delivery Options');
+      console.log('🧪 TESTING - Delivery Options');
       console.log('🛵 Delivery options testing not implemented for dropdown system');
     };
     
     // Add function to test locations data loading (simplified for dropdown)
     window.testLocationsData = function() {
-      console.log('🧪 TESTING: Locations Data Loading');
+      console.log('🧪 TESTING - Locations Data Loading');
       
       const locationSelect = document.getElementById('locationSelect');
       if (locationSelect) {
@@ -3511,7 +3511,7 @@ window.updateCartLocationDisplay = updateCartLocationDisplay;
 
 // Add debugging and testing functions
 window.testTableModalIntegration = function() {
-	console.log('🧪 TESTING: Table Modal Integration');
+	console.log('🧪 TESTING - Table Modal Integration');
 	console.log('📍 Current location:', getVisibleLocation()?.textContent.trim() || 'None');
 	console.log('📱 Current WhatsApp number:', number);
 	console.log('🪑 Current table:', myTable);
@@ -3535,7 +3535,7 @@ window.testTableModalIntegration = function() {
 };
 
 window.testLocationDataAttributes = function() {
-	console.log('🧪 TESTING: Location Data Attributes');
+	console.log('🧪 TESTING - Location Data Attributes');
 	
 	const locationElements = document.querySelectorAll('li.locations .locbtn');
 	console.log(`Found ${locationElements.length} location elements`);
@@ -3559,7 +3559,7 @@ window.testLocationDataAttributes = function() {
 };
 
 window.testTableSelection = function() {
-	console.log('🧪 TESTING: Table Selection Process');
+	console.log('🧪 TESTING - Table Selection Process');
 	
 	// Simulate the complete flow
 	const currentLocation = getVisibleLocation();
@@ -3853,7 +3853,7 @@ function updateOrderSummary(locationData) {
 
 // Simple test function to manually test the table modal
 window.testTableModalManually = function() {
-    console.log('🧪 MANUAL TEST: Opening table modal with test data');
+    console.log('🧪 MANUAL TEST - Opening table modal with test data');
     
     const testLocationData = {
         address: 'Test Location - 123 Test Street',
@@ -3877,7 +3877,7 @@ window.showTableModal = function() {
 
 // Test table modal functions
 window.testTableModal = function() {
-    console.log('🧪 TESTING: Table Modal Functions');
+    console.log('🧪 TESTING - Table Modal Functions');
     console.log('📍 Selected location data:', selectedLocationData);
     console.log('🌐 Current order location:', window.currentOrderLocation);
     console.log('🔧 Functions available:', {
@@ -3903,7 +3903,7 @@ window.testTableModal = function() {
 
 // Test table population
 window.testTablePopulation = function() {
-    console.log('🧪 TESTING: Table Population');
+    console.log('🧪 TESTING - Table Population');
     
     if (selectedLocationData) {
         console.log('📍 Using selected location:', selectedLocationData);
@@ -3920,19 +3920,19 @@ window.testTablePopulation = function() {
 
     // Add function to test horizontal scrolling (simplified for dropdown)
     window.testHorizontalScrolling = function() {
-      console.log('🧪 TESTING: Horizontal Scrolling (not needed with dropdown)');
+      console.log('🧪 TESTING - Horizontal Scrolling (not needed with dropdown)');
       console.log('📍 Dropdown system does not require horizontal scrolling');
     };
     
     // Add function to manually scroll (simplified for dropdown)
     window.testHorizontalScroll = function(direction = 'right') {
-      console.log(`🧪 TESTING: Manual horizontal scroll (not needed with dropdown)`);
+      console.log(`🧪 TESTING - Manual horizontal scroll (not needed with dropdown)`);
       console.log('📍 Dropdown system does not require scrolling');
     };
     
     // Add function to manually select a location (simplified for dropdown)
     window.selectLocationByIndex = function(index = 0) {
-      console.log(`🧪 TESTING: Manually selecting location at index ${index}`);
+      console.log(`🧪 TESTING - Manually selecting location at index ${index}`);
       
       const locationSelect = document.getElementById('locationSelect');
       if (locationSelect && locationSelect.options.length > index) {
@@ -3946,7 +3946,7 @@ window.testTablePopulation = function() {
     
     // Add function to show all available locations (simplified for dropdown)
     window.showAllLocations = function() {
-      console.log('🧪 TESTING: Show all available locations');
+      console.log('🧪 TESTING - Show all available locations');
       
       const locationSelect = document.getElementById('locationSelect');
       if (locationSelect) {
@@ -3955,7 +3955,7 @@ window.testTablePopulation = function() {
         for (let i = 0; i < locationSelect.options.length; i++) {
           const option = locationSelect.options[i];
           if (option.value) {
-            console.log(`${i}: "${option.text}" - WhatsApp: ${option.value}`);
+            console.log(`${i}: "${option.text}". WhatsApp: ${option.value}`);
           }
         }
         
@@ -3987,7 +3987,7 @@ window.testTablePopulation = function() {
         if (typeof window.setTableNumber === 'function') {
             window.setTableNumber(tableNumber);
         } else {
-            // Fallback: try to set the table number directly
+            // Fallback - try to set the table number directly
             if (window.myTable !== undefined) {
                 window.myTable = tableNumber;
             }
@@ -4008,7 +4008,7 @@ window.testTablePopulation = function() {
 
     // Add function to test order type variables
     window.testOrderTypeVariables = function() {
-    	console.log('🧪 TESTING: Order Type Variables');
+    	console.log('🧪 TESTING - Order Type Variables');
     	console.log('📍 Current order type:', currentOrderType);
     	console.log('🪑 Current table number:', currentTableNumber);
     	console.log('📱 Current WhatsApp number:', number);
@@ -4047,7 +4047,7 @@ window.testTablePopulation = function() {
         if (whatsappNumber && whatsappNumber.trim() !== '') {
             const oldNumber = number;
             number = whatsappNumber;
-            console.log('📍 Location selected - WhatsApp number changed from', oldNumber, 'to:', number);
+            console.log('📍 Location selected. WhatsApp number changed from', oldNumber, 'to:', number);
             
             // Update cart location display
             updateCartLocationDisplay();

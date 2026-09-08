@@ -87,7 +87,7 @@
   </div>
 </div>
 <script>
-{{- /* Tier is always a safe slug (a-z0-9_); avoid jsonify here — it was double-encoding in Hugo 0.140. */ -}}
+{{- /* Tier is always a safe slug (a-z0-9_); avoid jsonify here: it was double-encoding in Hugo 0.140. */ -}}
 window.SITE_TIER = "{{ $tier }}";
 window.SITE_VERIFIED = {{ if $verified }}true{{ else }}false{{ end }};
 window.SiteConfig = window.SiteConfig || {};

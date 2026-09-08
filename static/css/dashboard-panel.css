@@ -1,14 +1,14 @@
 /**
- * TT Menus side dashboard panel (#dashboard) — glass overlay matching cart/search/footer.
+ * TT Menus side dashboard panel (#dashboard): glass overlay matching cart/search/footer.
  */
 
 #dashboard.dashboard-panel {
-    --dashboard-accent: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
-    --dashboard-ink: var(--main-text-color, #fff);
-    --dashboard-ink-muted: color-mix(in srgb, var(--main-text-color, #fff) 62%, transparent);
+    --dashboard-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--dash-ink));
+    --dashboard-ink: var(--main-text-color);
+    --dashboard-ink-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
     background:
-        radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 52%),
-        linear-gradient(180deg, color-mix(in srgb, var(--main-bg, #0a0a0f) 90%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
+        radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--scheme-surface) 50%, transparent), transparent 52%),
+        linear-gradient(180deg, color-mix(in srgb, var(--main-bg) 90%, var(--dash-black)) 0%, var(--main-bg) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     display: flex;
@@ -30,13 +30,13 @@
     padding-block: 0.65rem;
     padding-inline-end: 1em;
     margin: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--header-bg-color, #111) 78%, rgba(255, 255, 255, 0.08)) 0%,
-        color-mix(in srgb, var(--header-bg-color, #111) 92%, rgba(0, 0, 0, 0.2)) 100%
+        color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--dash-ink) 8%, transparent)) 0%,
+        color-mix(in srgb, var(--scheme-surface) 92%, color-mix(in srgb, var(--dash-black) 20%, transparent)) 100%
     );
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--dash-black) 22%, transparent);
     z-index: 2;
 }
 
@@ -69,7 +69,7 @@
     height: 4em;
     max-width: min(42vw, 9.5rem);
     object-fit: contain;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+    filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--dash-black) 35%, transparent));
 }
 
 #dashboard.dashboard-panel .dashboard-header-trailing {
@@ -90,8 +90,8 @@
     margin: 0;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 16%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
     color: var(--dashboard-ink);
     text-decoration: none;
     cursor: pointer;
@@ -108,8 +108,8 @@
 #dashboard.dashboard-panel .ttms-icon-btn--on-dark:focus-visible,
 #dashboard.dashboard-panel .dashboard-header-admin-link:focus-visible,
 #dashboard.dashboard-panel .account-panel-btn:focus-visible {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: color-mix(in srgb, var(--dash-ink) 14%, transparent);
+    border-color: color-mix(in srgb, var(--dash-ink) 28%, transparent);
     outline: none;
     transform: translateY(-1px);
 }
@@ -123,14 +123,14 @@
     height: 1.15rem;
     object-fit: contain;
     opacity: 0.88;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+    filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--dash-black) 35%, transparent));
 }
 
 body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     display: inline-flex;
-    color: #81c784;
-    border-color: color-mix(in srgb, #81c784 45%, rgba(255, 255, 255, 0.16));
-    background: rgba(76, 175, 80, 0.12);
+    color: var(--dash-success);
+    border-color: color-mix(in srgb, var(--dash-success) 45%, color-mix(in srgb, var(--dash-ink) 16%, transparent));
+    background: color-mix(in srgb, var(--dash-success) 12%, transparent);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-scroll {
@@ -186,13 +186,13 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     margin: 0;
     padding: 0.85rem 0.95rem;
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
     background: linear-gradient(
         165deg,
-        rgba(255, 255, 255, 0.08) 0%,
-        rgba(255, 255, 255, 0.03) 100%
+        color-mix(in srgb, var(--dash-ink) 8%, transparent) 0%,
+        color-mix(in srgb, var(--dash-ink) 3%, transparent) 100%
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 6%, transparent);
     color: inherit;
     font: inherit;
     text-align: left;
@@ -206,11 +206,11 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
 
 #dashboard.dashboard-panel .body.dashboard-panel-list .dashboard-panel-order:hover,
 #dashboard.dashboard-panel .body.dashboard-panel-list .dashboard-panel-order:focus-visible {
-    border-color: color-mix(in srgb, var(--dashboard-accent) 32%, rgba(255, 255, 255, 0.14));
+    border-color: color-mix(in srgb, var(--dashboard-accent) 32%, color-mix(in srgb, var(--dash-ink) 14%, transparent));
     background: linear-gradient(
         165deg,
-        rgba(255, 255, 255, 0.12) 0%,
-        rgba(255, 255, 255, 0.05) 100%
+        color-mix(in srgb, var(--dash-ink) 12%, transparent) 0%,
+        color-mix(in srgb, var(--dash-ink) 5%, transparent) 100%
     );
     outline: none;
 }
@@ -222,7 +222,7 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
 
 #dashboard.dashboard-panel .body.dashboard-panel-list .dashboard-panel-order:focus-visible {
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 6%, transparent),
         0 0 0 2px color-mix(in srgb, var(--dashboard-accent) 55%, transparent);
 }
 
@@ -246,28 +246,28 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     text-transform: uppercase;
     padding: 0.18rem 0.5rem;
     border-radius: 999px;
-    background: rgba(148, 163, 184, 0.22);
-    color: #e2e8f0;
+    background: color-mix(in srgb, var(--dash-info) 22%, transparent);
+    color: var(--dash-ink-muted);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-order--open .dashboard-panel-order__status {
-    background: rgba(234, 179, 8, 0.22);
-    color: #fde68a;
+    background: color-mix(in srgb, var(--dash-warning) 22%, transparent);
+    color: var(--dash-accent);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-order--ready .dashboard-panel-order__status {
-    background: rgba(34, 197, 94, 0.2);
-    color: #86efac;
+    background: color-mix(in srgb, var(--dash-success) 20%, transparent);
+    color: var(--dash-success);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-order--paid .dashboard-panel-order__status {
-    background: rgba(59, 130, 246, 0.22);
-    color: #93c5fd;
+    background: color-mix(in srgb, var(--dash-info) 22%, transparent);
+    color: var(--dash-info);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-order--cancelled .dashboard-panel-order__status {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+    background: color-mix(in srgb, var(--dash-error) 20%, transparent);
+    color: var(--dash-warning);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-order__meta,
@@ -306,8 +306,8 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     width: 5rem;
     height: 5rem;
     border-radius: 50%;
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed color-mix(in srgb, var(--dash-ink) 18%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 4%, transparent);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-empty__logo {
@@ -335,13 +335,13 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     flex-shrink: 0;
     margin-top: 0;
     padding: 0.75rem 0.85rem max(0.85rem, env(safe-area-inset-bottom, 0));
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--footer-bg-color, #111) 82%, rgba(255, 255, 255, 0.06)) 0%,
-        color-mix(in srgb, var(--footer-bg-color, #111) 96%, #000) 100%
+        color-mix(in srgb, var(--footer-bg-color) 82%, color-mix(in srgb, var(--dash-ink) 6%, transparent)) 0%,
+        color-mix(in srgb, var(--footer-bg-color) 96%, var(--dash-black)) 100%
     );
-    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 -10px 28px color-mix(in srgb, var(--dash-black) 28%, transparent);
 }
 
 #dashboard.dashboard-panel .dashboard-panel-footer__nav {
@@ -364,8 +364,8 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     min-height: 2.15rem;
     padding: 0.4rem 0.85rem;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 12%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
     color: var(--dashboard-ink);
     font-size: 0.78rem;
     font-weight: 600;
@@ -379,8 +379,8 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
 
 #dashboard.dashboard-panel .dashboard-panel-footer__row a:hover,
 #dashboard.dashboard-panel .dashboard-panel-footer__row a:focus-visible {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: color-mix(in srgb, var(--dashboard-accent) 38%, rgba(255, 255, 255, 0.18));
+    background: color-mix(in srgb, var(--dash-ink) 12%, transparent);
+    border-color: color-mix(in srgb, var(--dashboard-accent) 38%, color-mix(in srgb, var(--dash-ink) 18%, transparent));
     transform: translateY(-1px);
     text-decoration: none;
     outline: none;

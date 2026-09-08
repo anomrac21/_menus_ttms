@@ -17,9 +17,9 @@ Integrated with Matomo analytics platform for complete business insights.
 - And much more!
 
 **Documentation:**
-- 📖 **[Complete Guide](ANALYTICS_TRACKING_GUIDE.md)** - Full documentation
-- 📋 **[Quick Reference](ANALYTICS_QUICK_REFERENCE.md)** - Cheat sheet
-- 📝 **[Setup Summary](ANALYTICS_SETUP_SUMMARY.md)** - Implementation details
+- 📖 **[Complete Guide](ANALYTICS_TRACKING_GUIDE.md)**. Full documentation
+- 📋 **[Quick Reference](ANALYTICS_QUICK_REFERENCE.md)**. Cheat sheet
+- 📝 **[Setup Summary](ANALYTICS_SETUP_SUMMARY.md)**. Implementation details
 
 **Testing:**
 - Access `/test-analytics.html` on your site to test all tracking features

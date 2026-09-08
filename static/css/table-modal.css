@@ -1,18 +1,18 @@
 /**
- * Table / order-type modal (#tableNumberModal) — glass panel matching cart & checkout.
+ * Table / order-type modal (#tableNumberModal): glass panel matching cart & checkout.
  */
 
 #tableNumberModal.table-modal-panel {
-    --table-modal-accent: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
-    --table-modal-ink: var(--main-text-color, #fff);
-    --table-modal-ink-muted: color-mix(in srgb, var(--main-text-color, #fff) 62%, transparent);
-    --table-modal-whatsapp: #25d366;
-    --table-modal-whatsapp-dark: #128c7e;
+    --table-modal-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
+    --table-modal-ink: var(--main-text-color);
+    --table-modal-ink-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
+    --table-modal-whatsapp: var(--scheme-accent);
+    --table-modal-whatsapp-dark: var(--scheme-accent);
     --table-from-x: 0px;
     --table-from-y: 18%;
     background:
-        radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--button-color1, #1a1a2e) 55%, transparent), transparent 55%),
-        rgba(0, 0, 0, 0.72);
+        radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--scheme-surface) 55%, transparent), transparent 55%),
+        color-mix(in srgb, var(--scheme-black) 72%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     padding: max(0.75rem, env(safe-area-inset-top, 0)) max(0.75rem, env(safe-area-inset-right, 0))
@@ -74,23 +74,23 @@
 
 #tableNumberModal.table-modal-panel .table-modal-content {
     background:
-        radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 52%),
-        linear-gradient(180deg, color-mix(in srgb, var(--main-bg, #0a0a0f) 88%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+        radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--scheme-surface) 50%, transparent), transparent 52%),
+        linear-gradient(180deg, color-mix(in srgb, var(--main-bg) 88%, var(--scheme-black)) 0%, var(--main-bg) 100%);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
     border-radius: 1.25rem;
     box-shadow:
-        0 24px 64px rgba(0, 0, 0, 0.48),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        0 24px 64px color-mix(in srgb, var(--scheme-black) 48%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 8%, transparent);
     overflow: hidden;
 }
 
 #tableNumberModal.table-modal-panel .table-modal-header {
     padding: 1rem 1rem 0.85rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--header-bg-color, #111) 78%, rgba(255, 255, 255, 0.08)) 0%,
-        color-mix(in srgb, var(--header-bg-color, #111) 92%, rgba(0, 0, 0, 0.2)) 100%
+        color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--scheme-white) 8%, transparent)) 0%,
+        color-mix(in srgb, var(--scheme-surface) 92%, color-mix(in srgb, var(--scheme-black) 20%, transparent)) 100%
     );
 }
 
@@ -107,9 +107,9 @@
     height: 2.75rem;
     flex-shrink: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .table-modal-logo {
@@ -137,8 +137,8 @@
     height: 2.65rem;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
     color: var(--table-modal-ink);
     font-size: 1.15rem;
     transition:
@@ -149,8 +149,8 @@
 
 #tableNumberModal.table-modal-panel .table-modal-close:hover,
 #tableNumberModal.table-modal-panel .table-modal-close:focus-visible {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-white) 28%, transparent);
     transform: translateY(-1px);
     outline: none;
 }
@@ -173,13 +173,13 @@
 #tableNumberModal.table-modal-panel .selected-location-display {
     background: linear-gradient(
         165deg,
-        rgba(255, 255, 255, 0.08) 0%,
-        rgba(255, 255, 255, 0.03) 100%
+        color-mix(in srgb, var(--scheme-white) 8%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-white) 3%, transparent) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     border-radius: 1rem;
     padding: 0.85rem 1rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 6%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .selected-location-info {
@@ -220,8 +220,8 @@
     min-height: 3rem;
     padding: 0.65rem 0.75rem;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
     color: var(--table-modal-ink);
     font-size: 0.88rem;
     font-weight: 600;
@@ -234,10 +234,10 @@
 
 #tableNumberModal.table-modal-panel .table-buttons-grid button:hover,
 #tableNumberModal.table-modal-panel .table-buttons-grid a:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: color-mix(in srgb, var(--table-modal-accent) 32%, rgba(255, 255, 255, 0.18));
+    background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    border-color: color-mix(in srgb, var(--table-modal-accent) 32%, color-mix(in srgb, var(--scheme-white) 18%, transparent));
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--scheme-black) 22%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .table-buttons-grid button.selected,
@@ -245,34 +245,34 @@
 #tableNumberModal.table-modal-panel .table-buttons-grid button.tableBtn.selected {
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--table-modal-whatsapp) 88%, #fff) 0%,
+        color-mix(in srgb, var(--table-modal-whatsapp) 88%, var(--scheme-white)) 0%,
         var(--table-modal-whatsapp-dark) 100%
     );
-    border-color: color-mix(in srgb, var(--table-modal-whatsapp) 65%, #fff);
-    color: #fff;
+    border-color: color-mix(in srgb, var(--table-modal-whatsapp) 65%, var(--scheme-white));
+    color: var(--scheme-white);
     box-shadow: 0 4px 16px color-mix(in srgb, var(--table-modal-whatsapp) 35%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .table-buttons-grid button.takeaway-btn {
-    background: color-mix(in srgb, var(--table-modal-accent) 14%, rgba(255, 255, 255, 0.06));
-    border-color: color-mix(in srgb, var(--table-modal-accent) 35%, rgba(255, 255, 255, 0.14));
+    background: color-mix(in srgb, var(--table-modal-accent) 14%, color-mix(in srgb, var(--scheme-white) 6%, transparent));
+    border-color: color-mix(in srgb, var(--table-modal-accent) 35%, color-mix(in srgb, var(--scheme-white) 14%, transparent));
 }
 
 #tableNumberModal.table-modal-panel .table-buttons-grid button.takeaway-btn.selected {
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--table-modal-accent) 88%, #fff) 0%,
-        color-mix(in srgb, var(--table-modal-accent) 72%, #000) 100%
+        color-mix(in srgb, var(--table-modal-accent) 88%, var(--scheme-white)) 0%,
+        color-mix(in srgb, var(--table-modal-accent) 72%, var(--scheme-black)) 100%
     );
-    border-color: color-mix(in srgb, var(--table-modal-accent) 55%, #fff);
-    color: color-mix(in srgb, var(--main-bg, #0a0a0f) 85%, #000);
+    border-color: color-mix(in srgb, var(--table-modal-accent) 55%, var(--scheme-white));
+    color: color-mix(in srgb, var(--main-bg) 85%, var(--scheme-black));
     box-shadow: 0 4px 16px color-mix(in srgb, var(--table-modal-accent) 28%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-section {
     margin-top: 0.85rem;
     padding-top: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-section.hide,
@@ -290,8 +290,8 @@
     min-height: 3rem;
     padding: 0.65rem 0.75rem;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
     color: var(--table-modal-ink);
     font-size: 0.88rem;
     font-weight: 600;
@@ -302,47 +302,47 @@
 }
 
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.pickup-order-btn {
-    background: color-mix(in srgb, var(--table-modal-accent) 14%, rgba(255, 255, 255, 0.06));
-    border-color: color-mix(in srgb, var(--table-modal-accent) 35%, rgba(255, 255, 255, 0.14));
+    background: color-mix(in srgb, var(--table-modal-accent) 14%, color-mix(in srgb, var(--scheme-white) 6%, transparent));
+    border-color: color-mix(in srgb, var(--table-modal-accent) 35%, color-mix(in srgb, var(--scheme-white) 14%, transparent));
 }
 
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.pickup-order-btn.selected {
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--table-modal-accent) 88%, #fff) 0%,
-        color-mix(in srgb, var(--table-modal-accent) 72%, #000) 100%
+        color-mix(in srgb, var(--table-modal-accent) 88%, var(--scheme-white)) 0%,
+        color-mix(in srgb, var(--table-modal-accent) 72%, var(--scheme-black)) 100%
     );
-    border-color: color-mix(in srgb, var(--table-modal-accent) 55%, #fff);
-    color: color-mix(in srgb, var(--main-bg, #0a0a0f) 85%, #000);
+    border-color: color-mix(in srgb, var(--table-modal-accent) 55%, var(--scheme-white));
+    color: color-mix(in srgb, var(--main-bg) 85%, var(--scheme-black));
     box-shadow: 0 4px 16px color-mix(in srgb, var(--table-modal-accent) 28%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.delivery-order-btn {
-    background: color-mix(in srgb, #38bdf8 16%, rgba(255, 255, 255, 0.06));
-    border-color: color-mix(in srgb, #38bdf8 38%, rgba(255, 255, 255, 0.14));
+    background: color-mix(in srgb, var(--scheme-button-bg) 16%, color-mix(in srgb, var(--scheme-white) 6%, transparent));
+    border-color: color-mix(in srgb, var(--scheme-button-bg) 38%, color-mix(in srgb, var(--scheme-white) 14%, transparent));
 }
 
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.delivery-order-btn.selected,
 #tableNumberModal.table-modal-panel .takeaway-fulfillment-grid button.delivery-order-btn:hover {
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, #38bdf8 88%, #fff) 0%,
-        color-mix(in srgb, #0ea5e9 82%, #000) 100%
+        color-mix(in srgb, var(--scheme-button-bg) 88%, var(--scheme-white)) 0%,
+        color-mix(in srgb, var(--scheme-button-bg) 82%, var(--scheme-black)) 100%
     );
-    border-color: color-mix(in srgb, #7dd3fc 55%, #fff);
-    color: #0b1220;
-    box-shadow: 0 4px 16px color-mix(in srgb, #38bdf8 32%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-button-bg) 55%, var(--scheme-white));
+    color: var(--scheme-black);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--scheme-button-bg) 32%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .table-modal-footer {
     padding: 0.85rem 1rem max(1rem, env(safe-area-inset-bottom, 0));
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--footer-bg-color, #111) 82%, rgba(255, 255, 255, 0.06)) 0%,
-        color-mix(in srgb, var(--footer-bg-color, #111) 96%, #000) 100%
+        color-mix(in srgb, var(--footer-bg-color) 82%, color-mix(in srgb, var(--scheme-white) 6%, transparent)) 0%,
+        color-mix(in srgb, var(--footer-bg-color) 96%, var(--scheme-black)) 100%
     );
-    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 -10px 28px color-mix(in srgb, var(--scheme-black) 28%, transparent);
 }
 
 #tableNumberModal.table-modal-panel #confirmmodal:not(.is-confirm-ready) {
@@ -378,8 +378,8 @@
 }
 
 #tableNumberModal.table-modal-panel .order-summary-display {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--scheme-white) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     border-radius: 0.85rem;
     padding: 0.75rem 0.85rem;
     margin-bottom: 0.75rem;
@@ -397,7 +397,7 @@
     border-radius: 999px;
     padding: 0.35rem 0.75rem;
     font-size: 0.78rem;
-    background: color-mix(in srgb, var(--table-modal-accent) 22%, rgba(255, 255, 255, 0.08));
+    background: color-mix(in srgb, var(--table-modal-accent) 22%, color-mix(in srgb, var(--scheme-white) 8%, transparent));
     border: 1px solid color-mix(in srgb, var(--table-modal-accent) 38%, transparent);
     color: var(--table-modal-ink);
 }
@@ -419,17 +419,17 @@
     min-height: 3rem;
     padding: 0.7rem 1.15rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--table-modal-whatsapp) 45%, rgba(255, 255, 255, 0.2));
+    border: 1px solid color-mix(in srgb, var(--table-modal-whatsapp) 45%, color-mix(in srgb, var(--scheme-white) 20%, transparent));
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--table-modal-whatsapp) 92%, #fff) 0%,
+        color-mix(in srgb, var(--table-modal-whatsapp) 92%, var(--scheme-white)) 0%,
         var(--table-modal-whatsapp-dark) 100%
     );
     font-size: 0.95rem;
     font-weight: 700;
     box-shadow:
         0 4px 16px color-mix(in srgb, var(--table-modal-whatsapp) 32%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 25%, transparent);
 }
 
 #tableNumberModal.table-modal-panel .btn-confirm-table:hover,
@@ -437,7 +437,7 @@
     transform: translateY(-1px);
     box-shadow:
         0 6px 20px color-mix(in srgb, var(--table-modal-whatsapp) 38%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 30%, transparent);
     outline: none;
 }
 
@@ -447,8 +447,8 @@
     min-height: 3rem;
     padding: 0.7rem 1.1rem;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
     color: var(--table-modal-ink-muted);
     font-size: 0.88rem;
     font-weight: 600;
@@ -456,8 +456,8 @@
 
 #tableNumberModal.table-modal-panel .btn-cancel-table:hover,
 #tableNumberModal.table-modal-panel .btn-cancel-table:focus-visible {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.24);
+    background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-white) 24%, transparent);
     color: var(--table-modal-ink);
     outline: none;
 }
@@ -589,7 +589,7 @@
     height: 2.6rem;
     margin: -1.3rem 0 0 -1.3rem;
     border-radius: 50%;
-    border: 3px solid #25d366;
+    border: 3px solid var(--scheme-accent);
     box-sizing: border-box;
     animation: ttms-delight-ring 0.7s ease-out forwards;
 }
@@ -598,7 +598,7 @@
     width: 3.4rem;
     height: 3.4rem;
     margin: -1.7rem 0 0 -1.7rem;
-    border-color: #fcd000;
+    border-color: var(--scheme-accent);
     animation-delay: 0.08s;
 }
 
@@ -609,7 +609,7 @@
     width: 0.85rem;
     height: 0.85rem;
     margin: -0.42rem 0 0 -0.42rem;
-    color: var(--p-color, #25d366);
+    color: var(--p-color);
     font-size: 0.85rem;
     line-height: 1;
     animation: ttms-delight-particle 0.9s cubic-bezier(0.16, 0.8, 0.3, 1) forwards;

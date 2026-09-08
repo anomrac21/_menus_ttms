@@ -133,7 +133,7 @@
     var target = '/' + slug + '/';
     var path = window.location.pathname || '/';
     if (path.replace(/\/+$/, '') === target.replace(/\/+$/, '')) {
-      // Already on this location home — refresh filter only
+      // Already on this location home: refresh filter only
       if (hasMenuReelsViewport() && typeof window.applyHomeMenuLocationFilter === 'function') {
         applyingFilter = true;
         Promise.resolve(window.applyHomeMenuLocationFilter(slug))
@@ -173,7 +173,7 @@
     if (!enabled()) return;
     var detail = (ev && ev.detail) || {};
     var source = detail.source || '';
-    // Ignore carousel scroll / init restore — those were wiping the menu mid-scroll.
+    // Ignore carousel scroll / init restore: those were wiping the menu mid-scroll.
     if (!MENU_FILTER_SOURCES[source]) return;
     var slug = resolveSlugFromDetail(detail);
     if (!slug) return;
@@ -188,7 +188,91 @@
     if (slug) applyLocation(slug, { source: 'cart' });
   }
 
+  function locationChooserRoot() {
+    return document.querySelector('.multi-loc-chooser');
+  }
+
+  function locationChooserInput() {
+    return document.getElementById('locationChooserSearch');
+  }
+
+  function filterLocationChooser(term) {
+    var root = locationChooserRoot();
+    if (!root) return;
+    var query = String(term || '')
+      .trim()
+      .toLowerCase();
+    var items = root.querySelectorAll('.multi-loc-chooser__item');
+    var empty = document.getElementById('locationChooserEmpty');
+    var clearBtn = document.getElementById('locationChooserSearchClear');
+    var visible = 0;
+
+    items.forEach(function (item) {
+      var haystack = (item.getAttribute('data-location-search') || item.textContent || '').toLowerCase();
+      var match = !query || haystack.indexOf(query) !== -1;
+      item.classList.toggle('is-filtered-out', !match);
+      if (match) visible += 1;
+    });
+
+    if (empty) empty.hidden = !query || visible > 0;
+    if (clearBtn) clearBtn.hidden = !query;
+  }
+
+  function clearLocationChooserSearch() {
+    var input = locationChooserInput();
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+    filterLocationChooser('');
+  }
+
+  function onLocationChooserInput(e) {
+    var input = e.target && e.target.id === 'locationChooserSearch' ? e.target : null;
+    if (!input) return;
+    filterLocationChooser(input.value);
+  }
+
+  function onLocationChooserClick(e) {
+    if (!e.target || !e.target.closest) return;
+    if (e.target.closest('#locationChooserSearchClear')) {
+      e.preventDefault();
+      clearLocationChooserSearch();
+    }
+  }
+
+  function onLocationChooserKeydown(e) {
+    var input = e.target && e.target.id === 'locationChooserSearch' ? e.target : null;
+    if (!input) return;
+    if (e.key === 'Escape') {
+      if (input.value) {
+        e.preventDefault();
+        clearLocationChooserSearch();
+      }
+      return;
+    }
+    if (e.key !== 'Enter') return;
+    var root = locationChooserRoot();
+    if (!root) return;
+    var visible = root.querySelectorAll('.multi-loc-chooser__item:not(.is-filtered-out) a.multi-loc-chooser__link');
+    if (visible.length === 1) {
+      e.preventDefault();
+      visible[0].click();
+    }
+  }
+
+  function initLocationChooserSearch() {
+    var input = locationChooserInput();
+    if (!input) return;
+    filterLocationChooser(input.value);
+  }
+
   function bind() {
+    document.addEventListener('input', onLocationChooserInput);
+    document.addEventListener('search', onLocationChooserInput);
+    document.addEventListener('click', onLocationChooserClick);
+    document.addEventListener('keydown', onLocationChooserKeydown);
+    initLocationChooserSearch();
     if (!enabled()) return;
     syncFromUrl();
     document.addEventListener('ttms:location-selected', onLocationSelected);
@@ -208,7 +292,10 @@
     navigating = false;
     applyingFilter = false;
     syncFromUrl();
+    initLocationChooserSearch();
   });
+
+  window.initLocationChooserSearch = initLocationChooserSearch;
 
   window.TtmsMultiLocationMenu = {
     applyLocation: applyLocation,

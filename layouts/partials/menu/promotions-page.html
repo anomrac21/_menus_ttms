@@ -12,7 +12,7 @@
   {{- with site.GetPage "/promotions" -}}
     {{- $promo = . -}}
   {{- else -}}
-    {{- /* Fallback: first unambiguous match among sections titled Promotions */ -}}
+    {{- /* Fallback - first unambiguous match among sections titled Promotions */ -}}
     {{- range site.Sections -}}
       {{- if and (not $promo) (eq .LinkTitle "Promotions") (eq (partial "menu/section-slug.html" .) "promotions") -}}
         {{- $loc := partial "menu/location-slug.html" . -}}

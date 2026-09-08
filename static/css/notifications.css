@@ -1,4 +1,4 @@
-/* Stacked Notification System — mobile-first (see notifications.lg.css) */
+/* Stacked Notification System: mobile-first (see notifications.lg.css) */
 
 @keyframes slideInRight {
     from {
@@ -37,9 +37,9 @@
 /* Enhanced Notification Styles */
 
 .notification {
-  background: white;
+  background: var(--scheme-white);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--scheme-black) 15%, transparent);
   margin-bottom: 12px;
   opacity: 0;
   transform: translateX(400px);
@@ -79,12 +79,12 @@
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 4px;
-  color: #1a1a1a;
+  color: var(--scheme-ink-muted);
 }
 
 .notification-message {
   font-size: 12px;
-  color: #666;
+  color: var(--scheme-ink-muted);
   line-height: 1.4;
 }
 
@@ -92,7 +92,7 @@
   background: none;
   border: none;
   font-size: 20px;
-  color: #999;
+  color: var(--scheme-ink-muted);
   cursor: pointer;
   padding: 0;
   width: 24px;
@@ -105,63 +105,63 @@
 }
 
 .notification-close:hover {
-  color: #333;
+  color: var(--scheme-ink-muted);
 }
 
 /* Priority Styles */
 .notification.priority-urgent .notification-content {
-  border-left: 4px solid #dc3545;
+  border-left: 4px solid var(--scheme-accent-deep);
 }
 
 .notification.priority-high .notification-content {
-  border-left: 4px solid #ff6b35;
+  border-left: 4px solid var(--scheme-accent-2);
 }
 
 .notification.priority-normal .notification-content {
-  border-left: 4px solid #4a90e2;
+  border-left: 4px solid var(--scheme-button-bg);
 }
 
 .notification.priority-low .notification-content {
-  border-left: 4px solid #95a5a6;
+  border-left: 4px solid var(--scheme-button-bg);
 }
 
 /* Type-specific styles */
 .notification[data-type="menu_update"] .notification-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
+  color: var(--scheme-white);
 }
 
 .notification[data-type="menu_update"] .notification-title,
 .notification[data-type="menu_update"] .notification-message {
-  color: white;
+  color: var(--scheme-white);
 }
 
 .notification[data-type="promotion"] .notification-content {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-accent-2) 100%);
+  color: var(--scheme-white);
 }
 
 .notification[data-type="promotion"] .notification-title,
 .notification[data-type="promotion"] .notification-message {
-  color: white;
+  color: var(--scheme-white);
 }
 
 .notification[data-type="order"] .notification-content {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
+  color: var(--scheme-white);
 }
 
 .notification[data-type="order"] .notification-title,
 .notification[data-type="order"] .notification-message {
-  color: white;
+  color: var(--scheme-white);
 }
 
 .notification[data-type="system"] .notification-content {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--scheme-accent-2) 0%, var(--scheme-accent) 100%);
+  color: var(--scheme-white);
 }
 
 .notification[data-type="system"] .notification-title,
 .notification[data-type="system"] .notification-message {
-  color: white;
+  color: var(--scheme-white);
 }

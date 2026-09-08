@@ -15,14 +15,29 @@
 
   var scrollY = 0;
   var locked = false;
+  var lastVvh = '';
+  var lastVvOffset = '';
+
+  function viewportVarsStyle() {
+    var el = document.getElementById('ttms-vv-vars');
+    if (el) return el;
+    el = document.createElement('style');
+    el.id = 'ttms-vv-vars';
+    (document.head || document.documentElement).appendChild(el);
+    return el;
+  }
 
   function syncViewportHeight() {
     var vv = window.visualViewport;
-    var height = vv ? vv.height : window.innerHeight;
-    document.documentElement.style.setProperty('--ttms-vvh', height + 'px');
-    if (vv) {
-      document.documentElement.style.setProperty('--ttms-vv-offset-top', vv.offsetTop + 'px');
-    }
+    var height = (vv ? vv.height : window.innerHeight) + 'px';
+    var offset = (vv ? vv.offsetTop : 0) + 'px';
+    if (height === lastVvh && offset === lastVvOffset) return;
+    lastVvh = height;
+    lastVvOffset = offset;
+    /* Write on body, not html/:root: mutating documentElement.style
+       makes Chrome discard DevTools edits to colors.css. */
+    viewportVarsStyle().textContent =
+      'html,body{--ttms-vvh:' + height + ';--ttms-vv-offset-top:' + offset + ';}';
   }
 
   function shouldLockScroll() {

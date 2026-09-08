@@ -1,6 +1,6 @@
 .ad-portrait-bg {
     object-fit: cover !important;
-    /* Blur removed — expensive during sticky scroll; brightness-only fallback for legacy dual-img markup */
+    /* Blur removed: expensive during sticky scroll; brightness-only fallback for legacy dual-img markup */
     filter: brightness(0.4) !important;
 }
 
@@ -11,7 +11,7 @@
     left: 0;
     width: 100%;
     height: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
     z-index: var(--ttms-z-reel-inner-controls, 4);
     overflow: hidden;
     pointer-events: none;
@@ -20,9 +20,9 @@
 .scroll-progress-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ff6b6b, #ea580c, #45b7d1);
+    background: linear-gradient(90deg, var(--scheme-accent-2), var(--scheme-accent-2), var(--scheme-button-bg));
     transition: width 0.1s ease-out;
-    box-shadow: 0 0 10px rgba(234, 88, 12, 0.45);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--scheme-accent-2) 45%, transparent);
 }
 
 .adbottomspacer{
@@ -85,18 +85,18 @@ main.main--offset ~ .bottomads #pageadscontainer {
     top: 1.2em;
     background: linear-gradient(
         135deg,
-        var(--selected-button-color3, #fcd000),
-        var(--selected-button-color2, #b56024)
+        var(--selected-button-color3),
+        var(--selected-button-color2)
     );
-    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #dfeed4) 50%, transparent);
-    color: var(--selected-text-color3, #85181c);
+    border: 1px solid color-mix(in srgb, var(--scheme-accent) 50%, transparent);
+    color: var(--selected-text-color3);
     padding-inline: 0.55em;
     padding-block: 0.2em 0.25em;
     border-radius: 3em;
     font-size: xx-small;
     font-weight: 700;
     z-index: var(--ttms-z-reel-inner-controls, 4);
-    box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1, #5c1014) 40%, transparent);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1) 40%, transparent);
     text-shadow: none;
 }
 
@@ -114,10 +114,10 @@ main.main--offset ~ .bottomads #pageadscontainer {
     padding: 0.55em 1em;
     background: linear-gradient(
         to bottom,
-        color-mix(in srgb, var(--main-bg, #000) 75%, transparent),
+        color-mix(in srgb, var(--main-bg) 75%, transparent),
         transparent
     );
-    color: var(--main-text-color, #fefefe);
+    color: var(--main-text-color);
     pointer-events: none;
 }
 
@@ -136,7 +136,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     margin: 0;
     text-align: center;
     position: relative;
-    text-shadow: 1px 1px 2px #000000, -1px -1px 1px #ffffff;
+    text-shadow: 1px 1px 2px var(--scheme-black), -1px -1px 1px var(--scheme-white);
 }
 
 #pageadscontainer p,
@@ -144,18 +144,18 @@ main.main--offset ~ .bottomads #pageadscontainer {
 #client-ads-container p,
 #frontpage-ads-container p {
     text-align: center;
-    color: rgba(255, 255, 255, 0.5); /* transparentize($white, 0.5) */
-    text-shadow: 1px 1px 1px #000000;
+    color: color-mix(in srgb, var(--scheme-white) 50%, transparent); /* transparentize($white, 0.5) */
+    text-shadow: 1px 1px 1px var(--scheme-black);
 }
 
 #pageadscontainer strong,
 #homepage-ads-container strong,
 #client-ads-container strong,
 #frontpage-ads-container strong {
-    color: #ffffff;
+    color: var(--scheme-white);
 }
 
-/* All ad containers - simplified without ScrollMagic */
+/* All ad containers: simplified without ScrollMagic */
 #pageadscontainer,
 #homepage-ads-container,
 #client-ads-container,
@@ -166,7 +166,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     z-index: auto;
 }
 
-/* All ad sections - stack vertically */
+/* All ad sections: stack vertically */
 #pageadscontainer section,
 #homepage-ads-container section,
 #client-ads-container section,
@@ -175,10 +175,10 @@ main.main--offset ~ .bottomads #pageadscontainer {
     position: relative;
     min-height: calc(100dvh - var(--ttms-header-height, 5em));
     height: auto;
-    color: white;
+    color: var(--scheme-white);
     text-align: center;
-    text-shadow: 1px 1px 1px #00000055;
-    background: #000000;
+    text-shadow: 1px 1px 1px var(--scheme-overlay);
+    background: var(--scheme-black);
     width: 100%;
     border: 1px solid var(--main-bg);
     margin-bottom: 0;
@@ -272,17 +272,17 @@ main.main--offset ~ .bottomads #pageadscontainer {
 #frontpage-ads-container .taxonomy-links li a{
     padding-block: .1em .5em;
     padding-inline: .8em;
-    background: linear-gradient(#fefefe, #aeaeae);
+    background: linear-gradient(var(--scheme-white), var(--scheme-ink-muted));
     border-radius: 3em;
     display: flex;
-    color: #000000;
-    border: 1px solid #000000aa;
+    color: var(--scheme-black);
+    border: 1px solid color-mix(in srgb, var(--scheme-black) 67%, transparent);
     flex-wrap: wrap;
     flex-direction: row;
     justify-content: center;
     text-wrap-mode: nowrap;
     font-weight: 500;
-    text-shadow: 1px 0px 1px #ffffff55, 0px -1px 1px #ffffff55, 1px 0px 1px #ffffff55, -1px 0px 1px #ffffff55;
+    text-shadow: 1px 0px 1px color-mix(in srgb, var(--scheme-white) 33%, transparent), 0px -1px 1px color-mix(in srgb, var(--scheme-white) 33%, transparent), 1px 0px 1px color-mix(in srgb, var(--scheme-white) 33%, transparent), -1px 0px 1px color-mix(in srgb, var(--scheme-white) 33%, transparent);
 }
 
 #pageadscontainer section .inner .ad-panel, .menu-ad .inner .ad-panel ,#four .ad-panel,
@@ -350,7 +350,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     position: relative;
     z-index: var(--ttms-z-reel-inner-content, 1);
     left: 0;
-    color: #fefefe;
+    color: var(--scheme-white);
     border: none;
     width: -webkit-fill-available;
     text-align: center;
@@ -365,9 +365,9 @@ main.main--offset ~ .bottomads #pageadscontainer {
     padding: 2em;
     left: 0;
     margin: .4em;
-    color: #fefefe;
+    color: var(--scheme-white);
     border: none;
-    background: #aa1;
+    background: var(--scheme-accent);
     width: calc(100dvw - 4em);
     max-width: 366px;
     margin-inline: auto;
@@ -395,7 +395,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: top right;
-    background-color: #00000000;
+    background-color: color-mix(in srgb, var(--scheme-black) 0%, transparent);
     display: flex;
     padding-block-start: 100dvh;
     top: revert-layer;
@@ -407,7 +407,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
 #homepage-ads-container section#four.is-active .inner,
 #client-ads-container section#four.is-active .inner,
 #frontpage-ads-container section#four.is-active .inner {
-    background-color: #222222dd;
+    background-color: color-mix(in srgb, var(--scheme-ink-muted) 87%, transparent);
 }
 
 
@@ -427,18 +427,18 @@ main.main--offset ~ .bottomads #pageadscontainer {
     background: none;
     margin-block-start: 5em;
     border: none;
-    color: #fefefe;
+    color: var(--scheme-white);
 }
 .l-btn{
-    /*background: linear-gradient(90deg, #000000, transparent);*/
+    /*background: linear-gradient(90deg, var(--scheme-black), transparent);*/
 }
  .r-btn{
-    /*background: linear-gradient(-90deg, #000000, transparent);*/
+    /*background: linear-gradient(-90deg, var(--scheme-black), transparent);*/
 }
 .l-btn svg, .r-btn svg{
     width: 32px;
     height: 64px;
-    fill:#ffffff;
+    fill:var(--scheme-white);
 }
 
 /* Unmute button for video ads */
@@ -447,8 +447,8 @@ main.main--offset ~ .bottomads #pageadscontainer {
     position: absolute;
     bottom: 1em;
     left: 1em;
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid rgba(255, 250, 245, 0.9);
+    background: color-mix(in srgb, var(--scheme-black) 60%, transparent);
+    border: 2px solid color-mix(in srgb, var(--scheme-white) 90%, transparent);
     border-radius: 50%;
     width: 36px;
     height: 36px;
@@ -456,7 +456,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #fff8f0;
+    color: var(--scheme-white-muted);
     padding: 0;
     transition: all 0.3s ease;
     pointer-events: all;
@@ -464,14 +464,14 @@ main.main--offset ~ .bottomads #pageadscontainer {
 
 #pageadscontainer .inner .ad-panel .ad-unmute-btn:hover,
 #frontpage-ads-container .inner .ad-panel .ad-unmute-btn:hover {
-    background: rgba(0, 0, 0, 0.8);
+    background: color-mix(in srgb, var(--scheme-black) 80%, transparent);
     transform: scale(1.1);
 }
 
 #pageadscontainer .inner .ad-panel .ad-unmute-btn.unmuted,
 #frontpage-ads-container .inner .ad-panel .ad-unmute-btn.unmuted {
-    background: rgba(234, 88, 12, 0.88);
-    border-color: rgba(255, 200, 150, 0.95);
+    background: color-mix(in srgb, var(--scheme-accent-2) 88%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-accent-2) 95%, transparent);
 }
 
 #pageadscontainer .inner .ad-panel .ad-unmute-btn svg,
@@ -504,7 +504,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     box-sizing: border-box;
     align-items: center;
     flex-wrap: nowrap;
-    background: rgba(0, 0, 0, 0.92);
+    background: color-mix(in srgb, var(--scheme-black) 92%, transparent);
     width: calc(100% - 2rem);
     max-width: 420px;
     border-radius: 12px;
@@ -534,7 +534,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     inset: 0;
     border-radius: inherit;
     overflow: hidden;
-    background: #0a0a0a;
+    background: var(--scheme-black);
 }
 
 #pageadscontainer.frontpageads section.menu-ad--reels-preview ul.inner.ads-list--preview li.ad-panel.ad-panel--preview .ad-preview-media video.ad-video {
@@ -563,7 +563,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    background: rgba(0, 0, 0, 0.25);
+    background: color-mix(in srgb, var(--scheme-black) 25%, transparent);
     transition: opacity 0.28s ease, visibility 0.28s ease;
 }
 
@@ -572,8 +572,8 @@ main.main--offset ~ .bottomads #pageadscontainer {
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    border-top-color: rgba(234, 88, 12, 0.95);
+    border: 3px solid color-mix(in srgb, var(--scheme-white) 20%, transparent);
+    border-top-color: color-mix(in srgb, var(--scheme-accent-2) 95%, transparent);
     animation: ad-preview-throbber-spin 0.75s linear infinite;
 }
 
@@ -601,11 +601,11 @@ main.main--offset ~ .bottomads #pageadscontainer {
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 28px color-mix(in srgb, var(--scheme-black) 45%, transparent);
 }
 
 #pageadscontainer.frontpageads .ad-panel.ad-panel--preview:focus-visible {
-    outline: 2px solid rgba(234, 88, 12, 0.95);
+    outline: 2px solid color-mix(in srgb, var(--scheme-accent-2) 95%, transparent);
     outline-offset: 3px;
 }
 
@@ -632,7 +632,7 @@ body.ads-reels-open {
     position: fixed;
     inset: 0;
     z-index: var(--ttms-z-ads-reels-overlay, 10050);
-    background: #000;
+    background: var(--scheme-black);
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -653,7 +653,7 @@ body.ads-reels-open {
     top: max(0.75rem, env(safe-area-inset-top));
     right: max(0.75rem, env(safe-area-inset-right));
     z-index: var(--ttms-z-reel-inner-controls, 1);
-    background: rgba(0, 0, 0, 0.5);
+    background: color-mix(in srgb, var(--scheme-black) 50%, transparent);
     border: none;
     border-radius: 50%;
     width: 44px;
@@ -667,7 +667,7 @@ body.ads-reels-open {
 
 .ads-reels-close:hover {
     transform: translateY(-1px);
-    background: rgba(0, 0, 0, 0.75);
+    background: color-mix(in srgb, var(--scheme-black) 75%, transparent);
 }
 
 .ads-reels-track {
@@ -697,7 +697,7 @@ body.ads-reels-open {
     align-items: center;
     box-sizing: border-box;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
-    background: #000;
+    background: var(--scheme-black);
     overflow: hidden;
 }
 
@@ -708,11 +708,11 @@ body.ads-reels-open {
     z-index: var(--ttms-z-reel-inner-controls, 4);
     background: linear-gradient(
         135deg,
-        var(--selected-button-color3, #fcd000),
-        var(--selected-button-color2, #b56024)
+        var(--selected-button-color3),
+        var(--selected-button-color2)
     );
-    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #dfeed4) 50%, transparent);
-    color: var(--selected-text-color3, #85181c);
+    border: 1px solid color-mix(in srgb, var(--scheme-accent) 50%, transparent);
+    color: var(--selected-text-color3);
     padding-inline: 0.55em;
     padding-block: 0.2em 0.25em;
     border-radius: 3em;
@@ -720,12 +720,12 @@ body.ads-reels-open {
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1, #5c1014) 40%, transparent);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--selected-button-color1) 40%, transparent);
     text-shadow: none;
     pointer-events: none;
 }
 
-/* Promotions page + homepage promos — reels visuals with document sticky stack */
+/* Promotions page + homepage promos: reels visuals with document sticky stack */
 #client-ads-container.client-ads-reels,
 #homepage-ads-container.client-ads-reels {
     display: block;
@@ -744,15 +744,14 @@ body.ads-reels-open {
     border: 1px solid var(--main-bg);
     cursor: pointer;
     pointer-events: all;
-    color: white;
+    color: var(--scheme-white);
     text-align: center;
     margin-bottom: 0;
 }
 
 #client-ads-container.client-ads-reels .ads-reels-slide .ad-portrait,
 #homepage-ads-container.client-ads-reels .ads-reels-slide .ad-portrait {
-    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 5.5rem - env(safe-area-inset-bottom));
-}
+    max-height: calc(100dvh - var(--ttms-header-height, 5em) - 5.5rem - env(safe-area-inset-bottom));}
 
 .ads-reels-slide .ad-portrait-bg {
     position: absolute;
@@ -766,8 +765,7 @@ body.ads-reels-open {
 .ads-reels-slide .ad-portrait {
     position: relative;
     z-index: var(--ttms-z-reel-inner-content, 1);
-    max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom));
-    width: auto;
+    max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom));    width: auto;
     max-width: 100%;
     object-fit: contain;
 }
@@ -786,8 +784,8 @@ body.ads-reels-open {
     left: max(0.75rem, env(safe-area-inset-left));
     z-index: var(--ttms-z-reel-inner-controls, 4);
     bottom: 1em;
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid rgba(255, 250, 245, 0.9);
+    background: color-mix(in srgb, var(--scheme-black) 60%, transparent);
+    border: 2px solid color-mix(in srgb, var(--scheme-white) 90%, transparent);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -795,20 +793,20 @@ body.ads-reels-open {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #fff8f0;
+    color: var(--scheme-white-muted);
     padding: 0;
     pointer-events: auto;
     transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .ads-reels-slide .ad-unmute-btn:hover {
-    background: rgba(0, 0, 0, 0.82);
+    background: color-mix(in srgb, var(--scheme-black) 82%, transparent);
     transform: scale(1.06);
 }
 
 .ads-reels-slide .ad-unmute-btn.unmuted {
-    background: rgba(234, 88, 12, 0.88);
-    border-color: rgba(255, 200, 150, 0.95);
+    background: color-mix(in srgb, var(--scheme-accent-2) 88%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-accent-2) 95%, transparent);
 }
 
 .ads-reels-slide .ad-unmute-btn svg {

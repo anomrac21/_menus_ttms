@@ -1,6 +1,6 @@
 /**
- * TTMenus Update UI - Preview & Inline Editing (dashboard)
- * Version: 2025-01-20-v1
+ * TTMenus Update UI. Preview & Inline Editing (dashboard)
+ * Version - 2025-01-20-v1
  */
 
 const MenuEditor = {
@@ -230,9 +230,7 @@ const MenuEditor = {
     }
     
     // Sort by weight
-    this.state.categories.sort((a, b) => a.weight - b.weight);
-    this.state.menuItems.sort((a, b) => a.weight - b.weight);
-  },
+    this.state.categories.sort((a, b) => a.weight - b.weight);    this.state.menuItems.sort((a, b) => a.weight - b.weight);  },
 
   /**
    * Render preview mode (shows actual menu)
@@ -270,7 +268,7 @@ const MenuEditor = {
     try {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       if (!iframeDoc) {
-        console.warn('⚠️ Cannot access iframe document - may be cross-origin');
+        console.warn('⚠️ Cannot access iframe document: may be cross-origin');
         return;
       }
       
@@ -290,15 +288,15 @@ const MenuEditor = {
           }
           .edit-mode-enabled .menu-item-card:hover,
           .edit-mode-enabled .main-menu-bg:hover {
-            outline: 2px solid rgba(102, 126, 234, 0.5);
+            outline: 2px solid color-mix(in srgb, var(--dash-info) 50%, transparent);
             outline-offset: 4px;
           }
           .edit-btn {
             position: absolute;
             top: 0.5rem;
             right: 0.5rem;
-            background: rgba(102, 126, 234, 0.9);
-            color: #fff;
+            background: color-mix(in srgb, var(--dash-info) 90%, transparent);
+            color: var(--dash-ink);
             border: none;
             border-radius: 50%;
             width: 32px;
@@ -310,12 +308,12 @@ const MenuEditor = {
             font-size: 16px;
             z-index: 100;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 30%, transparent);
           }
           .edit-btn:hover {
-            background: rgba(102, 126, 234, 1);
+            background: var(--dash-info);
             transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--dash-info) 50%, transparent);
           }
           .edit-btn:active {
             transform: scale(0.95);
@@ -324,8 +322,8 @@ const MenuEditor = {
             position: absolute;
             top: 0.5rem;
             left: 0.5rem;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
+            background: color-mix(in srgb, var(--dash-black) 70%, transparent);
+            color: var(--dash-ink);
             border: none;
             border-radius: 4px;
             width: 32px;
@@ -337,7 +335,7 @@ const MenuEditor = {
             font-size: 18px;
             z-index: 1000 !important;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 30%, transparent);
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -349,7 +347,7 @@ const MenuEditor = {
             visibility: visible !important;
           }
           .drag-handle:hover {
-            background: rgba(0, 0, 0, 0.9);
+            background: color-mix(in srgb, var(--dash-black) 90%, transparent);
             transform: scale(1.1);
           }
           .drag-handle:active {
@@ -359,7 +357,7 @@ const MenuEditor = {
           /* Sortable.js classes */
           .sortable-ghost {
             opacity: 0.4;
-            background: rgba(102, 126, 234, 0.2);
+            background: color-mix(in srgb, var(--dash-info) 20%, transparent);
           }
           .sortable-chosen {
             cursor: grabbing;
@@ -599,7 +597,7 @@ const MenuEditor = {
       
     } catch (error) {
       console.error('❌ Error injecting edit controls:', error);
-      // Cross-origin issue - iframe might be from different domain
+      // Cross-origin issue: iframe might be from different domain
     }
   },
   
@@ -701,7 +699,7 @@ const MenuEditor = {
   setupDragHandles(iframeDoc, container, packery) {
     // packery parameter kept for compatibility but not used (Packery removed)
     try {
-      // Check if Sortable is available - try iframe window first, then parent window
+      // Check if Sortable is available: try iframe window first, then parent window
       const iframeWindow = iframeDoc.defaultView || iframeDoc.parentWindow;
       let Sortable = iframeWindow?.Sortable;
       
@@ -713,7 +711,7 @@ const MenuEditor = {
         console.error('❌ Sortable.js not available in iframe or parent window');
         console.log('iframeWindow:', iframeWindow);
         console.log('window.Sortable:', window.Sortable);
-        // Wait a bit and retry - scripts might still be loading
+        // Wait a bit and retry: scripts might still be loading
         setTimeout(() => {
           this.setupDragHandles(iframeDoc, container, packery);
         }, 500);
@@ -957,7 +955,7 @@ const MenuEditor = {
         }
       });
       
-      // Packery removed - no layout needed
+      // Packery removed: no layout needed
       
       console.log('✅ Drag handles setup complete');
       
@@ -1005,7 +1003,7 @@ const MenuEditor = {
       item.dataset.categoryIndex = index;
     });
     
-    // Packery removed - no layout needed
+    // Packery removed: no layout needed
     
     // Save new order (updates weights)
     this.saveItemOrder(container);
@@ -1046,7 +1044,7 @@ const MenuEditor = {
       }
     }
     
-    // Packery removed - no layout needed
+    // Packery removed: no layout needed
     
     // Save the new order
     this.reorderMenuItem(draggedUrl, targetUrl);
@@ -1175,8 +1173,7 @@ const MenuEditor = {
     
     // Sort items within each category by weight
     Object.keys(itemsByCategory).forEach(categoryUrl => {
-      itemsByCategory[categoryUrl].sort((a, b) => a.weight - b.weight);
-    });
+      itemsByCategory[categoryUrl].sort((a, b) => a.weight - b.weight);    });
     
     // Render each category
     this.state.categories.forEach(category => {
@@ -1223,7 +1220,7 @@ const MenuEditor = {
     html += '</div>';
     container.innerHTML = html;
     
-    // Packery removed - no initialization needed
+    // Packery removed: no initialization needed
   },
 
   /**
@@ -1234,8 +1231,7 @@ const MenuEditor = {
     const variable2Values = [...new Set(item.prices.map(p => (p.variable2 != null ? p.variable2 : (Array.isArray(p) ? p[1] : p.flavour))).filter(f => f && f !== '-' && f !== 'None'))];
     
     // Calculate price display
-    const prices = item.prices.map(p => parseFloat(p.price)).sort((a, b) => a - b);
-    let priceDisplay = '';
+    const prices = item.prices.map(p => parseFloat(p.price)).sort((a, b) => a - b);    let priceDisplay = '';
     if (prices.length > 0) {
       if (prices[0] === prices[prices.length - 1]) {
         priceDisplay = `$${prices[0].toFixed(2).replace(/\.00$/, '')}`;
@@ -1429,8 +1425,8 @@ const MenuEditor = {
       const inputs = entry.querySelectorAll('input');
       if (inputs.length >= 3) {
         prices.push({
-          variable1: inputs[0].value || '-',
-          variable2: inputs[1].value || '-',
+          variable1: inputs[0].value ,
+          variable2: inputs[1].value ,
           price: parseFloat(inputs[2].value) || 0
         });
       }
@@ -1485,18 +1481,18 @@ const MenuEditor = {
     // Settings panel toggle is handled by openSettings/closeSettings functions
   },
 
-  // Packery removed - no initialization needed
+  // Packery removed: no initialization needed
 
   /**
    * Update status message (no-op: status element removed)
    */
   updateStatus(message, type = 'info') {
-    // Status element removed - method kept for compatibility
+    // Status element removed: method kept for compatibility
     return;
   },
 
   /**
-   * Utility: Escape HTML
+   * Utility - Escape HTML
    */
   escapeHtml(text) {
     const div = document.createElement('div');
@@ -1526,7 +1522,7 @@ const MenuEditor = {
    */
   editCategory(categoryTitle) {
     console.log('Edit category:', categoryTitle);
-    // TODO: Implement category editing
+    // TODO - Implement category editing
   },
 
   /**
@@ -1534,7 +1530,7 @@ const MenuEditor = {
    */
   editCategorySummary(categoryTitle) {
     console.log('Edit category summary:', categoryTitle);
-    // TODO: Implement category summary editing
+    // TODO - Implement category summary editing
   },
 
   /**
@@ -1552,7 +1548,7 @@ const MenuEditor = {
       // Get all drafts
       const drafts = JSON.parse(localStorage.getItem('ttmenus_draft_items') || '{}');
       
-      // TODO: Send to API
+      // TODO - Send to API
       console.log('Saving drafts:', drafts);
       
       this.updateStatus('All changes saved!', 'success');
@@ -1638,7 +1634,7 @@ const MenuEditor = {
       console.log('⚠️ Could not load locations from localStorage');
     }
     
-    // Fallback: return empty array
+    // Fallback - return empty array
     console.log('⚠️ No locations data found, returning empty array');
     return [];
   },
@@ -1725,7 +1721,7 @@ const MenuEditor = {
       
       // Validate structure
       if (!menuData.categories || !menuData.menuItems) {
-        throw new Error('Invalid menu JSON: missing categories or menuItems');
+        throw new Error('Invalid menu JSON - missing categories or menuItems');
       }
       
       // Update state with imported data
@@ -1791,9 +1787,7 @@ const MenuEditor = {
       }
       
       // Sort by weight
-      this.state.categories.sort((a, b) => a.weight - b.weight);
-      this.state.menuItems.sort((a, b) => a.weight - b.weight);
-      
+      this.state.categories.sort((a, b) => a.weight - b.weight);      this.state.menuItems.sort((a, b) => a.weight - b.weight);      
       // Mark as having changes
       this.state.hasChanges = true;
       
@@ -1911,8 +1905,7 @@ const MenuEditor = {
         const variable2Values = [...new Set(item.prices.map(p => (p.variable2 != null ? p.variable2 : (Array.isArray(p) ? p[1] : p.flavour))).filter(f => f && f !== '-' && f !== 'None'))];
         
         // Calculate price display
-        const prices = item.prices.map(p => parseFloat(p.price)).filter(p => !isNaN(p)).sort((a, b) => a - b);
-        let priceDisplay = '';
+        const prices = item.prices.map(p => parseFloat(p.price)).filter(p => !isNaN(p)).sort((a, b) => a - b);        let priceDisplay = '';
         if (prices.length > 0) {
           if (prices[0] === prices[prices.length - 1]) {
             priceDisplay = `$${prices[0].toFixed(2).replace(/\.00$/, '')}`;

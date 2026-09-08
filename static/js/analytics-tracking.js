@@ -395,8 +395,7 @@ class TTMSAnalytics {
           : container.scrollHeight;
       const clientHeight =
         container === window ? window.innerHeight : container.clientHeight;
-      const maxScroll = scrollHeight - clientHeight;
-      if (maxScroll <= 0) return;
+      const maxScroll = scrollHeight - clientHeight;      if (maxScroll <= 0) return;
 
       const scrollPercent = (scrollTop / maxScroll) * 100;
       scrollDepths.forEach((depth) => {

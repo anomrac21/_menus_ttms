@@ -12,14 +12,14 @@
 			<!-- MENU LOGO (stays on screen when category nav scrolls) -->
 			{{- $siteName := partial "site-name.html" . -}}
 			{{ if and (not .IsHome) (not $isMenuHome) }}
-				<a class="logo-container header-logo" href="{{ if $locSlug }}/{{ $locSlug }}/{{ else }}/{{ end }}" onclick="closeCart();" title="{{ $siteName }}" aria-label="{{ $siteName }} — home">
+				<a class="logo-container header-logo" href="{{ if $locSlug }}/{{ $locSlug }}/{{ else }}/{{ end }}" onclick="closeCart();" title="{{ $siteName }}" aria-label="{{ $siteName }}: home">
 					<span class="header-logo__frame" aria-hidden="true">
 						<img class="logo center" src="/branding/favicon192.webp" alt="{{ $siteName }}" width="192" height="192" loading="lazy" decoding="async">
 						{{ partialCached "ttms-account-dashboard/badge.html" (dict "class" "account-badge--on-logo") "account-badge-on-logo" }}
 					</span>
 				</a>
 			{{ else }}
-				<a href="{{ if and $multi (not $locSlug) }}/{{ else if $locSlug }}/{{ $locSlug }}/{{ else }}#{{ end }}" class="logo-container header-logo" onclick="{{ if $isMenuHome }}return headerLogoActivate(event);{{ else }}closeCart();{{ end }}" title="{{ $siteName }}" aria-label="{{ $siteName }} — scroll to top">
+				<a href="{{ if and $multi (not $locSlug) }}/{{ else if $locSlug }}/{{ $locSlug }}/{{ else }}#{{ end }}" class="logo-container header-logo" onclick="{{ if $isMenuHome }}return headerLogoActivate(event);{{ else }}closeCart();{{ end }}" title="{{ $siteName }}" aria-label="{{ $siteName }}: scroll to top">
 					<span class="header-logo__frame" aria-hidden="true">
 						<img class="logo center" src="/branding/favicon192.webp" alt="{{ $siteName }}" width="192" height="192" loading="lazy" decoding="async">
 						{{ partialCached "ttms-account-dashboard/badge.html" (dict "class" "account-badge--on-logo") "account-badge-on-logo" }}

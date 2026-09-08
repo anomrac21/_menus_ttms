@@ -1,27 +1,27 @@
-/* Ordering System - Side Categories Styles */
+/* Ordering System. Side Categories Styles */
 #sideCategoriesButtonsContainer{
     padding-inline: 1em;
     padding-block-end: .2em;
 }
-/* Taxonomy Tags Section - Order Modal */
+/* Taxonomy Tags Section. Order Modal */
 #itemtaxonomytags {
     margin: .4em 0;
     padding: .4em;
-    background: rgba(0, 0, 0, 0.02);
+    background: color-mix(in srgb, var(--scheme-black) 2%, transparent);
     border-radius: 8px;
 }
 
-/* Taxonomy Tags Section - Single/List Pages */
+/* Taxonomy Tags Section. Single/List Pages */
 .taxonomy {
     padding: .4em;
-    background: rgba(0, 0, 0, 0.02);
+    background: color-mix(in srgb, var(--scheme-black) 2%, transparent);
     border-radius: 8px;
 }
 
 .taxonomy > div:first-child {
     font-weight: bold;
     font-size: x-small;
-    color: #666;
+    color: var(--scheme-ink-muted);
     text-align: center;
     margin-bottom: 0.5em;
     text-transform: uppercase;
@@ -49,7 +49,7 @@
     justify-content: center;
     padding: .4em .8em;
     margin: 2px;
-    color: white;
+    color: var(--scheme-white);
     border-radius: 15px;
     text-decoration: none;
     transition: all 0.3s ease;
@@ -61,48 +61,48 @@
 
 .taxonomy ul li a:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px color-mix(in srgb, var(--scheme-black) 20%, transparent);
 }
 
 /* Color schemes for different taxonomy types on pages */
 .taxonomy.Tags ul li a {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 .taxonomy.Tags ul li a:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 .taxonomy.Ingredients ul li a {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-accent-2) 100%);
 }
 
 .taxonomy.Ingredients ul li a:hover {
-    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    background: linear-gradient(135deg, var(--scheme-accent-2) 0%, var(--scheme-button-bg) 100%);
 }
 
 .taxonomy.Cookingmethods ul li a {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 .taxonomy.Cookingmethods ul li a:hover {
-    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 .taxonomy.Types ul li a {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background: linear-gradient(135deg, var(--scheme-accent) 0%, var(--scheme-accent) 100%);
 }
 
 .taxonomy.Types ul li a:hover {
-    background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%);
+    background: linear-gradient(135deg, var(--scheme-accent) 0%, var(--scheme-accent) 100%);
 }
 
 .taxonomy.Events ul li a {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    background: linear-gradient(135deg, var(--scheme-accent-2) 0%, var(--scheme-accent) 100%);
 }
 
 .taxonomy.Events ul li a:hover {
-    background: linear-gradient(135deg, #fee140 0%, #fa709a 100%);
+    background: linear-gradient(135deg, var(--scheme-accent) 0%, var(--scheme-accent-2) 100%);
 }
 
 .tags-container {
@@ -121,7 +121,7 @@
 .taxonomy-label {
     font-weight: bold;
     font-size: x-small;
-    color: #666;
+    color: var(--scheme-ink-muted);
     margin-right: 5px;
     width: -webkit-fill-available;
     text-align: center;
@@ -131,11 +131,11 @@
     display: flex;
     padding: .4em .8em 1px;
     margin: 2px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
+    color: var(--scheme-white);
     border-radius: 15px;
     text-decoration: none;
-    text-shadow: 0px 1px 5px #00000066, 0px -1px 5px #00000066, 1px 0px 6px black, -1px 0px 5px black;
+    text-shadow: 0px 1px 5px color-mix(in srgb, var(--scheme-black) 40%, transparent), 0px -1px 5px color-mix(in srgb, var(--scheme-black) 40%, transparent), 1px 0px 6px var(--scheme-black), -1px 0px 5px var(--scheme-black);
     transition: all 0.3s ease;
     cursor: pointer;
     font-size: 8px;
@@ -147,32 +147,32 @@
 
 .tag:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 4px 8px color-mix(in srgb, var(--scheme-black) 20%, transparent);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 /* Different colors for different taxonomy types */
 .tag-tags {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 .tag-ingredients {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-accent-2) 100%);
 }
 
 .tag-cookingmethods {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, var(--scheme-button-bg) 0%, var(--scheme-button-bg) 100%);
 }
 
 .tag-types {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background: linear-gradient(135deg, var(--scheme-accent) 0%, var(--scheme-accent) 100%);
 }
 
 .tag-events {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    background: linear-gradient(135deg, var(--scheme-accent-2) 0%, var(--scheme-accent) 100%);
 }
 
-/* Main sides modal container — styles shared via sibling selectors below */
+/* Main sides modal container: styles shared via sibling selectors below */
 
 /* Modifications modal container */
 #itemMods {
@@ -242,7 +242,7 @@
 #itemMods::-webkit-scrollbar-track,
 #itemAddMods::-webkit-scrollbar-track,
 .side-items-scrollable::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--scheme-white);
     border-radius: 10px;
 }
 
@@ -250,7 +250,7 @@
 #itemMods::-webkit-scrollbar-thumb,
 #itemAddMods::-webkit-scrollbar-thumb,
 .side-items-scrollable::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--scheme-ink-muted);
     border-radius: 10px;
 }
 
@@ -258,13 +258,13 @@
 #itemMods::-webkit-scrollbar-thumb:hover,
 #itemAddMods::-webkit-scrollbar-thumb:hover,
 .side-items-scrollable::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--scheme-ink-muted);
 }
 
 /* Firefox scrollbar */
 .side-items-scrollable {
     scrollbar-width: thin;
-    scrollbar-color: #888 #f1f1f1;
+    scrollbar-color: var(--scheme-ink-muted) var(--scheme-white);
     height: -webkit-fill-available;
 }
 

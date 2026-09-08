@@ -1,4 +1,4 @@
-// ClientAdManager — homepage-ads-container + frontpage-ads-container
+// ClientAdManager - homepage-ads-container + frontpage-ads-container
 // Loads from ads.ttmenus.com API when available, else /promotions/index.json (Hugo content)
 
 class ClientAdManager {
@@ -376,7 +376,7 @@ class ClientAdManager {
 
     const { ads, fromApi } = await this.getAdsForDisplay(container);
     if (!ads.length) {
-      console.log('No ads for frontpage — hiding container');
+      console.log('No ads for frontpage: hiding container');
       this.hideContainer(container);
       this.hasPopulatedFront = true;
       return;

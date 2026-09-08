@@ -1,5 +1,5 @@
 /**
- * Restaurant Orders inbox — poll tickets, ready / charge / cancel / reprint.
+ * Restaurant Orders inbox: poll tickets, ready / charge / cancel / reprint.
  */
 (function () {
   'use strict';
@@ -32,7 +32,7 @@
     var name = line.item || line.name || line.title || line.product || 'Item';
     var size = line.size && String(line.size) !== '-' ? ' (' + line.size + ')' : '';
     var qty = line.quantity || line.amt || line.qty || 1;
-    var extra = line.note ? ' — ' + line.note : '';
+    var extra = line.note ? ': ' + line.note : '';
     return qty + '× ' + name + size + extra;
   }
 

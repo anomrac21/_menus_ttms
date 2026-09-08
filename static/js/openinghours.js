@@ -181,13 +181,13 @@ function getOpenSigns() {
            const yesterdayStartTime = toDateToday(yesterdayRange.start);
            const yesterdayEndTime = toDateToday(yesterdayRange.end);
            const isActuallyOvernight = yesterdayEndTime <= yesterdayStartTime;
-           console.log('Actual overnight check - Start time today:', yesterdayStartTime, 'End time today:', yesterdayEndTime);
+           console.log('Actual overnight check. Start time today:', yesterdayStartTime, 'End time today:', yesterdayEndTime);
            console.log('Is actually overnight?', isActuallyOvernight);
            
            if (isActuallyOvernight) {
              // For overnight hours, the end time should be the same day as the start time
              // Since yesterdayStart is Tuesday and yesterdayEnd is Wednesday, we need to keep it as Wednesday
-             // Don't add an extra day - the overnight hours end on Wednesday 2:00 AM
+             // Don't add an extra day: the overnight hours end on Wednesday 2:00 AM
              console.log('Yesterday was overnight, keeping end time as Wednesday 2:00 AM');
              
              // Only check overnight hours if it's actually overnight
@@ -199,7 +199,7 @@ function getOpenSigns() {
              console.log('now < yesterdayEnd:', now < yesterdayEnd);
              
              // Check if we're currently in yesterday's overnight hours
-             // IMPORTANT: For overnight hours, we need to check if current time is between
+             // IMPORTANT - For overnight hours, we need to check if current time is between
              // yesterday's start time and the adjusted end time (which is now tomorrow)
              if (now >= yesterdayStart && now < yesterdayEnd) {
                isCurrentlyOpen = true;
@@ -214,8 +214,8 @@ function getOpenSigns() {
                console.log('Yesterday end (adjusted):', yesterdayEnd);
                console.log('now >= yesterdayStart:', now >= yesterdayStart);
                console.log('now < yesterdayEnd:', now < yesterdayEnd);
-               console.log('Time difference (start):', now - yesterdayStart, 'ms');
-               console.log('Time difference (end):', yesterdayEnd - now, 'ms');
+               console.log('Time difference (start):', now - yesterdayStart,'ms');
+               console.log('Time difference (end):', yesterdayEnd - now,'ms');
                
                // After 2:00 AM, we should be closed
                console.log('After 2:00 AM - should be CLOSED');
@@ -258,7 +258,7 @@ function getOpenSigns() {
           }
 
           // Check if we're currently in today's hours
-          // BUT: If we just finished yesterday's overnight hours, we should still be closed
+          // BUT - If we just finished yesterday's overnight hours, we should still be closed
           // until today's start time, not immediately open
           const isInTodayHours = now >= todayStart && now < todayEnd;
           
@@ -290,7 +290,7 @@ function getOpenSigns() {
         return;
       }
 
-      // Debug: Show final status decision
+      // Debug - Show final status decision
       console.log(`=== FINAL STATUS FOR PANEL ${i} ===`);
       console.log('isCurrentlyOpen:', isCurrentlyOpen);
       console.log('minsToOpen:', minsToOpen);

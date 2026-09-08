@@ -1,5 +1,5 @@
 /**
- * Homepage menu reels — lazy-load menu item cards from /api/menu-items.json.
+ * Homepage menu reels: lazy-load menu item cards from /api/menu-items.json.
  * Loads a section when its header slide is near the reels viewport (scroll or nav).
  */
 (function () {
@@ -466,8 +466,7 @@
       if (!Number.isNaN(val)) nums.push(val);
     }
     return nums.sort(function (a, b) {
-      return a - b;
-    });
+      return a - b;    });
   }
 
   function buildPriceHtml(item) {
@@ -579,7 +578,7 @@
       escapeHtml(path) +
       '">' +
       '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
-      '<p class="menu-smash-pass__empty hidden">No community photos yet — check back after guests upload and admins approve.</p>' +
+      '<p class="menu-smash-pass__empty hidden">No community photos yet: check back after guests upload and admins approve.</p>' +
       '<div class="menu-smash-pass__reel hidden">' +
       '<div class="menu-smash-pass__stack" aria-live="polite"></div>' +
       '</div></div>'
@@ -650,8 +649,8 @@
     var summary = truncate(stripHtml(item.summary), 120);
     var v1 = filterOptionValues(item.variable1_values);
     var v2 = filterOptionValues(item.variable2_values);
-    var defaultV1 = v1[0] || '-';
-    var defaultV2 = v2[0] || '-';
+    var defaultV1 = v1[0] ;
+    var defaultV2 = v2[0] ;
     var pricesArray = item.prices || [];
     var images = item.images || [];
     var firstImage = imagePath(item);
@@ -795,7 +794,7 @@
     var multi = multiLocationMenusEnabled();
     (items || []).forEach(function (item) {
       if (!item || !item.section || item.section === 'promotions') return;
-      // Single-location catalogs are already flattened — never hide dishes by slug.
+      // Single-location catalogs are already flattened: never hide dishes by slug.
       // Multi-location: only show items for the selected location.
       if (multi) {
         if (!locFilter) return;
@@ -1082,9 +1081,7 @@
     var trackRect = track.getBoundingClientRect();
     var headerRect = header.getBoundingClientRect();
     var range = trackRect.height * PROXIMITY_VIEWPORTS;
-    var topDelta = headerRect.top - trackRect.top;
-    var bottomDelta = headerRect.bottom - trackRect.bottom;
-    return topDelta <= range && bottomDelta >= -range;
+    var topDelta = headerRect.top - trackRect.top;    var bottomDelta = headerRect.bottom - trackRect.bottom;    return topDelta <= range && bottomDelta >= -range;
   }
 
   function checkProximityLoads() {

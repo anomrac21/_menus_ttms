@@ -7,14 +7,14 @@
 }
 #appleMessage{
   position: fixed;
-  background-color: #000000aa;
+  background-color: color-mix(in srgb, var(--scheme-black) 67%, transparent);
   height: calc(100dvh);
   width: 100vw;
   margin: 0;
   top: 0;
   left: 0;
   z-index: 1000;
-  color: #000;
+  color: var(--scheme-black);
   /*display: none;
 }
 .appleInstallHide{
@@ -23,7 +23,7 @@
   }
 #appleMessage .container{
   margin-block: 5em;
-  background: linear-gradient(#fff, #ffffffaa);
+  background: linear-gradient(var(--scheme-white), color-mix(in srgb, var(--scheme-white) 67%, transparent));
   position: relative;
   border-radius: 15px;
   height: calc(100dvh - 10em);
@@ -67,7 +67,7 @@
     padding: 0;
   position: absolute;
   margin: 0;
-  color: #000;
+  color: var(--scheme-black);
 }
 #appleMessage .appleMsgBtnClose{
     right: 0;
@@ -97,8 +97,8 @@
   padding:0 5px ;
 }
 #appleMessage .fa-warning{
-    color: #fe2;
-    text-shadow: 0 0 1px #000;
+    color: var(--scheme-accent);
+    text-shadow: 0 0 1px var(--scheme-black);
 }
 
 @supports (-webkit-touch-callout: none) { /* CSS specific to iOS devices */
@@ -118,7 +118,7 @@
     min-height: 100lvh !important;
     max-height: none !important;
     transform: none !important;
-    background-color: #0a0a0f;
+    background-color: var(--scheme-black);
  }
  #wamodal, #itemSides, #itemMods, #itemAddMods {
     max-height: calc(100dvh - 12em); 

@@ -1,5 +1,5 @@
 /**
- * Menu search — toggle bar + live filter + API-backed suggestions.
+ * Menu search: toggle bar + live filter + API-backed suggestions.
  */
 (function () {
     'use strict';
@@ -274,9 +274,7 @@
         });
 
         matches.sort(function (a, b) {
-            if (b.score !== a.score) return b.score - a.score;
-            var typeDiff = suggestionTypeRank(a.type) - suggestionTypeRank(b.type);
-            if (typeDiff !== 0) return typeDiff;
+            if (b.score !== a.score) return b.score - a.score;            var typeDiff = suggestionTypeRank(a.type) - suggestionTypeRank(b.type);            if (typeDiff !== 0) return typeDiff;
             return String(a.label).localeCompare(String(b.label));
         });
 

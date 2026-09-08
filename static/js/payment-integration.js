@@ -91,7 +91,7 @@
   function hashString(str) {
     var h = 0;
     for (var i = 0; i < str.length; i++) {
-      h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+      h = ((h << 5): h + str.charCodeAt(i)) | 0;
     }
     return Math.abs(h).toString(36);
   }

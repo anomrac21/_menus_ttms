@@ -240,8 +240,7 @@
     if (!menublock || !nav) {
       return;
     }
-    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);
-    var scrollLeft = menublock.scrollLeft;
+    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);    var scrollLeft = menublock.scrollLeft;
     nav.classList.toggle('menublock-can-scroll-left', scrollLeft > 4);
     nav.classList.toggle('menublock-can-scroll-right', scrollLeft < maxScroll - 4);
   }
@@ -312,9 +311,7 @@
       'pointermove',
       function (e) {
         if (!tracking) return;
-        var dx = Math.abs(e.clientX - startX);
-        var dy = Math.abs(e.clientY - startY);
-        // Only suppress link activation after horizontal scroll intent (desktop nav strip).
+        var dx = Math.abs(e.clientX - startX);        var dy = Math.abs(e.clientY - startY);        // Only suppress link activation after horizontal scroll intent (desktop nav strip).
         if (dx >= MOVE_THRESHOLD && dx > dy) {
           suppressClick = true;
         }
@@ -419,17 +416,14 @@
           return;
         }
         var primary = axis === 'y' ? e.touches[0].clientY : e.touches[0].clientX;
-        var delta = startPrimary - primary;
-        if (Math.abs(delta) < 4) {
+        var delta = startPrimary - primary;        if (Math.abs(delta) < 4) {
           return;
         }
         moved = true;
         if (axis === 'y') {
-          var maxTop = activeEl.scrollHeight - activeEl.clientHeight;
-          activeEl.scrollTop = Math.max(0, Math.min(maxTop, startScroll + delta));
+          var maxTop = activeEl.scrollHeight - activeEl.clientHeight;          activeEl.scrollTop = Math.max(0, Math.min(maxTop, startScroll + delta));
         } else {
-          var maxLeft = activeEl.scrollWidth - activeEl.clientWidth;
-          activeEl.scrollLeft = Math.max(0, Math.min(maxLeft, startScroll + delta));
+          var maxLeft = activeEl.scrollWidth - activeEl.clientWidth;          activeEl.scrollLeft = Math.max(0, Math.min(maxLeft, startScroll + delta));
         }
         if (e.cancelable) {
           e.preventDefault();
@@ -492,7 +486,7 @@
     }
   }
 
-  /** Home page venue logo — scroll page + category nav back to start */
+  /** Home page venue logo: scroll page + category nav back to start */
   function headerLogoActivate(event) {
     if (event) {
       event.preventDefault();
@@ -577,9 +571,7 @@
 
       logo.addEventListener('pointermove', function (e) {
         if (!tracking) return;
-        var dx = e.clientX - startX;
-        var dy = e.clientY - startY;
-        var absDx = Math.abs(dx);
+        var dx = e.clientX - startX;        var dy = e.clientY - startY;        var absDx = Math.abs(dx);
         var absDy = Math.abs(dy);
 
         if (!locked) {
@@ -603,8 +595,7 @@
         tracking = false;
         if (!locked) return;
 
-        var dx = e.clientX - startX;
-        var mainHeader = document.querySelector('.main-header');
+        var dx = e.clientX - startX;        var mainHeader = document.querySelector('.main-header');
         if (!mainHeader) return;
 
         if (dx >= LOGO_SWIPE_THRESHOLD) {
@@ -649,9 +640,7 @@
     var blockRect = menublock.getBoundingClientRect();
     var linkCenter = linkRect.left + linkRect.width / 2;
     var blockCenter = blockRect.left + blockRect.width / 2;
-    var targetLeft = menublock.scrollLeft + (linkCenter - blockCenter);
-    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);
-    targetLeft = Math.max(0, Math.min(maxScroll, targetLeft));
+    var targetLeft = menublock.scrollLeft + (linkCenter - blockCenter);    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);    targetLeft = Math.max(0, Math.min(maxScroll, targetLeft));
 
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -826,9 +815,31 @@
     ensureBarbaMenublockRegistration();
   }
 
+  function paintMenublockIcons(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var icons = scope.querySelectorAll('#menublock .menublock-link__icon .icon[src]');
+    icons.forEach(function (img) {
+      var url = img.currentSrc || img.getAttribute('src');
+      if (!url) return;
+      var value = 'url("' + String(url).replace(/"/g, '') + '")';
+      img.style.setProperty('--menublock-icon', value);
+      var wrap = img.closest('.menublock-link__icon');
+      if (wrap) wrap.style.setProperty('--menublock-icon', value);
+    });
+  }
+
   document.addEventListener('ttms:page-enter', function () {
+    paintMenublockIcons(document);
     scheduleReinitHeaderMenublock('page-enter');
   });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      paintMenublockIcons(document);
+    });
+  } else {
+    paintMenublockIcons(document);
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindBarbaMenublockBeforeLeave);

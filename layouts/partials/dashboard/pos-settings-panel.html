@@ -1,4 +1,4 @@
-{{- /* POS / Loyverse — nested in Ordering system. Tier 1+ (features.loyverse_connect). */ -}}
+{{- /* POS / Loyverse - nested in Ordering system. Tier 1+ (features.loyverse_connect). */ -}}
 {{- $loyverseConnect := false -}}
 {{- with site.Params.features -}}
   {{- $loyverseConnect = default false .loyverse_connect -}}
@@ -127,7 +127,7 @@
           <label class="dashboard-pos-location-store-label">
             <span>Till for this location</span>
             <select class="dashboard-settings-input" data-loc-index="{{ $i }}">
-              <option value="">— Choose a till —</option>
+              <option value="">Choose a till.</option>
               {{- if $mapped -}}
               <option value="{{ $mapped }}" selected>Saved store (reload stores for name)</option>
               {{- end -}}

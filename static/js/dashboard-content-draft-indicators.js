@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  var THEME_PATHS = ['static/css/colors.css', 'static/css/theme-overrides.css'];
+  var THEME_PATHS = ['static/css/colors.css'];
   var draftPaths = new Set();
   var previewsByPath = {};
   var refreshPromise = null;
@@ -115,7 +115,7 @@
     return (
       '<span class="menu-content-draft-badge ' +
       (classExtra || '') +
-      '" title="Unpublished CMS draft — publish from dashboard" aria-label="Unpublished CMS draft">' +
+      '" title="Unpublished CMS draft: publish from dashboard" aria-label="Unpublished CMS draft">' +
       '<i class="fa fa-exclamation-circle" aria-hidden="true"></i></span>'
     );
   }

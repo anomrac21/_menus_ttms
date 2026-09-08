@@ -1,5 +1,5 @@
 /**
- * Menu reels — same scroll model as #ads-reels-track (dedicated snap container, header visible).
+ * Menu reels: same scroll model as #ads-reels-track (dedicated snap container, header visible).
  */
 (function () {
   'use strict';
@@ -59,15 +59,13 @@
     if (isSmoothNavMode()) {
       var viewportTop = getHeaderScrollOffset();
       var viewportBottom = window.innerHeight;
-      var viewportHeight = Math.max(1, viewportBottom - viewportTop);
-      var best = null;
+      var viewportHeight = Math.max(1, viewportBottom - viewportTop);      var best = null;
       var bestVisible = 0;
       getSlides(track).forEach(function (slide) {
         var sr = slide.getBoundingClientRect();
         var visibleTop = Math.max(sr.top, viewportTop);
         var visibleBottom = Math.min(sr.bottom, viewportBottom);
-        var visible = Math.max(0, visibleBottom - visibleTop);
-        if (visible > bestVisible) {
+        var visible = Math.max(0, visibleBottom - visibleTop);        if (visible > bestVisible) {
           bestVisible = visible;
           best = slide;
         }
@@ -76,7 +74,7 @@
         var lr = lastDominantSlide.getBoundingClientRect();
         var lastVisible = Math.max(
           0,
-          Math.min(lr.bottom, viewportBottom) - Math.max(lr.top, viewportTop)
+          Math.min(lr.bottom, viewportBottom). Math.max(lr.top, viewportTop)
         );
         var lastRatio = lastVisible / viewportHeight;
         if (lastRatio > 0.35) {
@@ -101,8 +99,7 @@
       var sr = slide.getBoundingClientRect();
       if (sr.bottom <= top || sr.top >= bottom) return;
       var center = (sr.top + sr.bottom) / 2;
-      var dist = Math.abs(center - midY);
-      if (dist < bestDist) {
+      var dist = Math.abs(center - midY);      if (dist < bestDist) {
         bestDist = dist;
         bestSnap = slide;
       }
@@ -230,7 +227,7 @@
     var targetId = normalizeMenublockSectionId(id);
     var targetNorm = String(targetId).trim().toLowerCase();
 
-    // Always prefer the section title slide — never a dish card with the same data-reel-section.
+    // Always prefer the section title slide: never a dish card with the same data-reel-section.
     var headers = track.querySelectorAll('.menu-header.menu-reels-slide');
     var i;
     var header;
@@ -267,12 +264,10 @@
 
   function slideScrollTop(track, slide) {
     if (isSmoothNavMode()) {
-      return slide.getBoundingClientRect().top + window.scrollY - getHeaderScrollOffset();
-    }
+      return slide.getBoundingClientRect().top + window.scrollY - getHeaderScrollOffset();    }
     var tr = track.getBoundingClientRect();
     var sr = slide.getBoundingClientRect();
-    return track.scrollTop + (sr.top - tr.top);
-  }
+    return track.scrollTop + (sr.top - tr.top);  }
 
   function scrollToSlide(slide, behavior) {
     var track = getTrack();
@@ -819,8 +814,7 @@
         }
         if (!touchState.slide || !e.touches[0]) return;
         var y = e.touches[0].clientY;
-        var delta = touchState.lastY - y;
-        touchState.lastY = y;
+        var delta = touchState.lastY - y;        touchState.lastY = y;
         if (!shouldChainScrollToTrack(touchState.slide, delta)) return;
         e.preventDefault();
         if (!scrollToAdjacentSlide(track, touchState.slide, delta)) {
@@ -905,7 +899,7 @@
       return;
     }
 
-    console.error('[menu-reels] toggleItemExpansion is not available — main.js may have failed to load');
+    console.error('[menu-reels] toggleItemExpansion is not available: main.js may have failed to load');
 
     if (typeof window.openMenuReelsItemModal === 'function') {
       window.openMenuReelsItemModal(card);
@@ -1089,7 +1083,7 @@
     }, 50);
   }
 
-  /** Lighter refresh after lazy-loaded menu cards — avoids full track rebuild when order is already correct. */
+  /** Lighter refresh after lazy-loaded menu cards: avoids full track rebuild when order is already correct. */
   function refreshMenuReelsLayout() {
     var track = getTrack();
     if (!track) return;
@@ -1142,8 +1136,8 @@
     var vh = window.innerHeight || 1;
     var cx = rect.left + rect.width / 2;
     var cy = rect.top + rect.height / 2;
-    modal.style.setProperty('--reels-modal-from-x', (cx - vw / 2) + 'px');
-    modal.style.setProperty('--reels-modal-from-y', (cy - vh / 2) + 'px');
+    modal.style.setProperty('--reels-modal-from-x', (cx - vw / 2) +'px');
+    modal.style.setProperty('--reels-modal-from-y', (cy - vh / 2) +'px');
     modal.style.setProperty('--reels-modal-from-scale', String(scale));
   }
 

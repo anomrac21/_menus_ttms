@@ -1,5 +1,5 @@
 /**
- * Menu item image slideshow — horizontal snap (matches front-page promo ads)
+ * Menu item image slideshow: horizontal snap (matches front-page promo ads)
  */
 
 .expanded-image-carousel {
@@ -21,7 +21,7 @@
     position: relative;
     border-radius: 0;
     overflow: hidden;
-    background: #000;
+    background: var(--scheme-black);
 }
 
 .menu-item-slideshow-promo {
@@ -43,11 +43,11 @@
     min-height: 200px;
     margin: 0;
     padding: 0;
-    background: #000;
+    background: var(--scheme-black);
     scrollbar-width: none;
 }
 
-/* Avoid a black box when the carousel has no slides (failed/stale inject) */
+/* Avoid a var(--scheme-black) box when the carousel has no slides (failed/stale inject) */
 .menu-item-slideshow-track:empty,
 .expanded-image-carousel-container.menu-item-slideshow-track:empty {
     display: none;
@@ -165,7 +165,7 @@
     font-size: clamp(1.35rem, 5.5vw, 2rem);
     font-weight: 700;
     line-height: 1.15;
-    color: var(--main-text-color, #fff);
+    color: var(--main-text-color);
 }
 
 .single-page-item-card > .menu-item-header-content.single-page-header-top .menu-item-title-row .menu-item-title-text {
@@ -201,14 +201,14 @@
     margin: 0.5rem auto 0.75rem;
 }
 
-/* Legacy single-page carousel — same horizontal snap as promo ads */
+/* Legacy single-page carousel: same horizontal snap as promo ads */
 .single-page-image-carousel {
     position: relative;
     width: 100%;
     margin-bottom: 0;
     border-radius: 0;
     overflow: hidden;
-    background: #000;
+    background: var(--scheme-black);
 }
 
 .single-page-image-carousel .single-page-image-carousel-container {
@@ -250,13 +250,13 @@
     display: block;
 }
 
-/* Fade carousel (list expand only — not horizontal slideshow) */
+/* Fade carousel (list expand only: not horizontal slideshow) */
 .expanded-image-carousel:not(.menu-item-slideshow) .expanded-image-carousel-view {
     position: relative;
     width: 100%;
     border-radius: var(--contact-cta-radius, 16px);
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.25);
+    background: color-mix(in srgb, var(--scheme-black) 25%, transparent);
 }
 
 .expanded-image-carousel:not(.menu-item-slideshow) .expanded-image-carousel-container {
@@ -294,7 +294,7 @@
     vertical-align: middle;
 }
 
-/* Slideshow — must win over generic carousel rules above */
+/* Slideshow: must win over generic carousel rules above */
 .menu-item-slideshow .expanded-image-carousel-view {
     min-height: 200px;
     max-height: min(72dvh, calc(100dvh - 5em));
@@ -364,14 +364,14 @@
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    border: 2px solid var(--contact-cta-accent-border, rgba(252, 208, 0, 0.55));
+    border: 2px solid var(--contact-cta-accent-border);
     background: linear-gradient(
         135deg,
-        color-mix(in srgb, var(--selected-button-color2, #b56024) 88%, #fff) 0%,
-        color-mix(in srgb, var(--selected-button-color3, #fcd000) 75%, #fff) 100%
+        color-mix(in srgb, var(--selected-button-color2) 88%, var(--scheme-white)) 0%,
+        color-mix(in srgb, var(--selected-button-color3) 75%, var(--scheme-white)) 100%
     );
-    color: var(--contact-cta-ink, #1a1208);
-    box-shadow: var(--contact-cta-shadow, 0 4px 18px rgba(0, 0, 0, 0.28));
+    color: var(--contact-cta-ink);
+    box-shadow: var(--contact-cta-shadow, 0 4px 18px color-mix(in srgb, var(--scheme-black) 28%, transparent));
     align-items: center;
     justify-content: center;
 }
@@ -379,7 +379,7 @@
 .expanded-image-nav:hover,
 .expanded-image-nav:focus-visible {
     transform: translateY(-50%) scale(1.05);
-    border-color: #fff;
+    border-color: var(--scheme-white);
     outline: none;
 }
 
@@ -405,8 +405,8 @@
     margin: 0.5rem 0 0;
     padding: 0.4rem 0.65rem;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.35);
-    border: 2px solid var(--contact-cta-accent-border, rgba(252, 208, 0, 0.55));
+    background: color-mix(in srgb, var(--scheme-black) 35%, transparent);
+    border: 2px solid var(--contact-cta-accent-border);
     justify-content: center;
     align-items: center;
 }
@@ -419,7 +419,7 @@
     flex-shrink: 0;
     border: 2px solid transparent;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.45);
+    background: color-mix(in srgb, var(--scheme-white) 45%, transparent);
     cursor: pointer;
     font: inherit;
     line-height: 0;
@@ -428,7 +428,7 @@
 
 .expanded-image-indicator:hover,
 .expanded-image-indicator:focus-visible {
-    background: rgba(255, 255, 255, 0.85);
+    background: color-mix(in srgb, var(--scheme-white) 85%, transparent);
     transform: scale(1.15);
     outline: none;
 }
@@ -436,5 +436,5 @@
 .expanded-image-indicator.active {
     width: 0.7rem;
     height: 0.7rem;
-    background: var(--contact-cta-accent-b, #fcd000);
+    background: var(--contact-cta-accent-b);
 }

@@ -1,5 +1,5 @@
 /**
- * TTMenus v2 - Modern Slideshow Styles
+ * TTMenus v2. Modern Slideshow Styles
  * Beautiful, user-friendly client tour slideshow
  * Mobile-first base (see slideshow.lg.css for 769px+)
  */
@@ -22,9 +22,9 @@
     height: 300px;
     overflow: hidden;
     border-radius: var(--contact-cta-radius, 16px);
-    border: 2px solid var(--contact-cta-accent-border, rgba(252, 208, 0, 0.55));
-    box-shadow: var(--contact-cta-shadow, 0 4px 18px rgba(0, 0, 0, 0.28));
-    background: #000;
+    border: 2px solid var(--contact-cta-accent-border);
+    box-shadow: var(--contact-cta-shadow, 0 4px 18px color-mix(in srgb, var(--scheme-black) 28%, transparent));
+    background: var(--scheme-black);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -94,9 +94,9 @@
     z-index: var(--ttms-z-reel-inner-controls, 4);
     padding: 0.35rem 0.65rem;
     border-radius: 999px;
-    border: 2px solid var(--contact-cta-accent-border, rgba(252, 208, 0, 0.55));
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.35) 100%);
-    box-shadow: var(--contact-cta-shadow, 0 4px 18px rgba(0, 0, 0, 0.28));
+    border: 2px solid var(--contact-cta-accent-border);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--scheme-black) 55%, transparent) 0%, color-mix(in srgb, var(--scheme-black) 35%, transparent) 100%);
+    box-shadow: var(--contact-cta-shadow, 0 4px 18px color-mix(in srgb, var(--scheme-black) 28%, transparent));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
@@ -107,7 +107,7 @@
     min-width: 0.55rem;
     padding: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.45);
+    background: color-mix(in srgb, var(--scheme-white) 45%, transparent);
     cursor: pointer;
     transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     border: 2px solid transparent;
@@ -117,17 +117,17 @@
 
 .slideshow-dots .dot:hover,
 .slideshow-dots .dot:focus-visible {
-    background: rgba(255, 255, 255, 0.85);
+    background: color-mix(in srgb, var(--scheme-white) 85%, transparent);
     transform: scale(1.15);
-    border-color: var(--contact-cta-accent-border, rgba(252, 208, 0, 0.55));
+    border-color: var(--contact-cta-accent-border);
     outline: none;
 }
 
 .slideshow-dots .dot.active {
-    background: var(--contact-cta-accent-b, #fcd000);
+    background: var(--contact-cta-accent-b);
     transform: scale(1.25);
-    border-color: #fff;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--contact-cta-accent-b, #fcd000) 70%, #fff);
+    border-color: var(--scheme-white);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--contact-cta-accent-b) 70%, var(--scheme-white));
 }
 
 /* Reduce motion for accessibility */

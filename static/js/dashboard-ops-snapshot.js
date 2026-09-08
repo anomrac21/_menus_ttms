@@ -90,12 +90,12 @@
     if (!el || el.getAttribute('data-count') !== null) return;
     el.classList.remove('is-loading', 'is-hot', 'is-zero', 'is-bump', 'is-reveal');
     el.removeAttribute('aria-busy');
-    el.textContent = '—';
+    el.textContent = '';
   }
 
   function sourceReady(raw) {
     raw = (raw || '').trim();
-    if (!raw || raw === '—' || raw === 'Checking…') return false;
+    if (!raw || raw === '' || raw === 'Checking…') return false;
     return true;
   }
 

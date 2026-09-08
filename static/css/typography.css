@@ -1,5 +1,5 @@
 /**
- * TTMenus — unified typography (menu UI, panels, cards, CTAs)
+ * TTMenus: unified typography (menu UI, panels, cards, CTAs)
  */
 
 :root {
@@ -233,8 +233,8 @@ h2.center.title a,
     overflow: hidden;
     z-index: calc(var(--ttms-z-loader, 99999) + 1);
     padding: 0.75rem 1.25rem;
-    background: #000;
-    color: #fff;
+    background: var(--scheme-black);
+    color: var(--scheme-white);
     font-weight: 600;
     text-decoration: none;
 }

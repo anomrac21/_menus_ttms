@@ -157,7 +157,7 @@
   }
   html,
   body {
-    background-color: var(--main-bg, #0f172a);
+    background-color: var(--main-bg);
     min-height: 100%;
     min-height: 100dvh;
     min-height: -webkit-fill-available;
@@ -168,7 +168,7 @@
   }
   .main-header {
     padding-top: var(--ttms-safe-top);
-    background-color: var(--header-bg-color, #111);
+    background-color: var(--header-bg-color);
     box-sizing: border-box;
   }
   #footer {
@@ -177,7 +177,7 @@
     padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
     box-sizing: border-box;
   }
-  /* Fixed .site-header — keep chooser / offset pages below the bar on first paint. */
+  /* Fixed .site-header: keep chooser / offset pages below the bar on first paint. */
   .main--offset,
   main.multi-loc-page {
     padding-block-start: var(--ttms-header-height, 5em);
@@ -186,11 +186,11 @@
 </style>
 {{- $siteName := partial "site-name.html" . -}}
 {{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
-{{- $metaDesc := .Description | default site.Params.description | default (printf "%s — view our full menu, prices, and order online." $siteName) -}}
+{{- $metaDesc := .Description | default site.Params.description | default (printf "%s: view our full menu, prices, and order online." $siteName) -}}
 {{- $ogTitle := cond .IsHome $pageTitle (printf "%s | %s" .Title site.Title) -}}
 {{- $ogDesc := $metaDesc -}}
 {{- if and (not .IsHome) .Summary -}}
-  {{- $ogDesc = printf "%s — Digital Menu" (.Summary | plainify | truncate 155) -}}
+  {{- $ogDesc = printf "%s. Digital Menu" (.Summary | plainify | truncate 155) -}}
 {{- end -}}
 <title>{{ $pageTitle }}</title>
 <meta name="description" content="{{ $metaDesc }}">
@@ -224,7 +224,7 @@
 
 <!-- Inline critical loader CSS for instant rendering -->
 <style>
-  /* Critical loader styles - inline for instant display */
+  /* Critical loader styles: inline for instant display */
   #loader {
     position: fixed;
     top: 0;
@@ -236,8 +236,8 @@
     box-sizing: border-box;
     padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
     overflow: hidden;
-    background: #fff;
-    color: #0f172a;
+    background: var(--scheme-white);
+    color: var(--scheme-black);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -267,7 +267,7 @@
     max-height: min(20rem, 48dvh);
     width: auto;
     height: auto;
-    /* Do not use will-change or -webkit-optimize-contrast — both freeze animated GIFs on iOS. */
+    /* Do not use will-change or -webkit-optimize-contrast: both freeze animated GIFs on iOS. */
     transition:
       max-height 1s cubic-bezier(0.22, 1, 0.36, 1),
       max-width 1s cubic-bezier(0.22, 1, 0.36, 1),
@@ -329,7 +329,7 @@
     max-height: 0;
     overflow: hidden;
     text-align: center;
-    color: #0f172a;
+    color: var(--scheme-black);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -355,7 +355,7 @@
     transform: translateY(0);
   }
 
-  /* Safety: never leave chips invisible if JS stagger fails */
+  /* Safety - never leave chips invisible if JS stagger fails */
   #loader.loader-ready .loader-feature:not(.is-in) {
     animation: loaderFeatureIn 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) 1.4s forwards;
   }
@@ -388,7 +388,7 @@
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #475569;
+    color: var(--scheme-button-bg);
     margin-bottom: 0.35rem;
   }
 
@@ -407,7 +407,7 @@
     position: absolute;
     inset: -2px;
     border-radius: 999px;
-    border: 2px solid rgba(16, 185, 129, 0.35);
+    border: 2px solid color-mix(in srgb, var(--scheme-accent) 35%, transparent);
     opacity: 0;
     transform: scale(0.55);
   }
@@ -422,7 +422,7 @@
     flex: 0 0 auto;
     width: 20px;
     height: 20px;
-    color: #059669;
+    color: var(--scheme-accent);
   }
 
   #loader.loader-ready .loader-location-icon {
@@ -434,7 +434,7 @@
     font-weight: 800;
     font-size: 1.15rem;
     line-height: 1.3;
-    color: #0f172a;
+    color: var(--scheme-black);
     letter-spacing: -0.02em;
   }
 
@@ -448,15 +448,15 @@
     font-size: 0.78em;
     font-weight: 650;
     letter-spacing: 0;
-    color: #334155;
+    color: var(--scheme-button-bg);
   }
 
   .loader-location.is-ready .loader-location-value {
-    color: #047857;
+    color: var(--scheme-accent);
   }
 
   .loader-location.is-ready .loader-location-place {
-    color: #047857;
+    color: var(--scheme-accent);
     opacity: 0.88;
   }
 
@@ -562,18 +562,18 @@
   @keyframes loaderPaidGlow {
     0% {
       box-shadow:
-        0 8px 24px rgba(15, 23, 42, 0.1),
-        0 0 0 0 rgba(16, 185, 129, 0);
+        0 8px 24px color-mix(in srgb, var(--scheme-black) 10%, transparent),
+        0 0 0 0 color-mix(in srgb, var(--scheme-accent) 0%, transparent);
     }
     55% {
       box-shadow:
-        0 28px 64px rgba(15, 23, 42, 0.28),
-        0 0 0 16px rgba(16, 185, 129, 0.18);
+        0 28px 64px color-mix(in srgb, var(--scheme-black) 28%, transparent),
+        0 0 0 16px color-mix(in srgb, var(--scheme-accent) 18%, transparent);
     }
     100% {
       box-shadow:
-        0 22px 56px rgba(15, 23, 42, 0.2),
-        0 0 0 10px rgba(16, 185, 129, 0.08);
+        0 22px 56px color-mix(in srgb, var(--scheme-black) 20%, transparent),
+        0 0 0 10px color-mix(in srgb, var(--scheme-accent) 8%, transparent);
     }
   }
 
@@ -620,7 +620,7 @@
     transform: none;
   }
 
-  /* Verified / paid: TTMenus recedes; client logo dominates the screen */
+  /* Verified / paid - TTMenus recedes; client logo dominates the screen */
   #loader.loader--verified.loader-morph .loader-brand-stage {
     gap: 0.4rem;
     min-height: min(58dvh, 32rem);
@@ -719,7 +719,7 @@
       display: none;
     }
 
-    /* iOS Low Power Mode sets this query — keep the branded morph. */
+    /* iOS Low Power Mode sets this query: keep the branded morph. */
     html.ttms-ios #loaderImage,
     html.ttms-ios #menuImage,
     html.ttms-ios .loader-brand-stage,
@@ -745,7 +745,7 @@
     }
   }
   
-  /* Loader hide states — must cover every class used in loader.js */
+  /* Loader hide states: must cover every class used in loader.js */
   #loader.loader-hide-up,
   #loader.loader-hide-up-right,
   #loader.loader-hide-right,
@@ -826,7 +826,7 @@
   #loader.loader-hide-up-left-rotate-scale { transform: translate3d(-10%, -12%, 0) rotate(-5deg) scale(0.86); }
 </style>
 
-<!-- Preconnect sparingly (Lighthouse: max ~4); dns-prefetch for the rest -->
+<!-- Preconnect sparingly (Lighthouse - max ~4); dns-prefetch for the rest -->
 <link rel="preconnect" href="https://cdn.ttmenus.com" crossorigin>
 {{- if default false site.Params.features.notifications -}}
 <link rel="preconnect" href="https://notify.ttmenus.com" crossorigin>
@@ -886,9 +886,9 @@
 {{- end -}}
 
 <!-- APP THEME COLOR -->
-<meta name="theme-color" content="#000000"/>
+<meta name="theme-color">
 
-<!-- MAIN APP STYLE - Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
+<!-- MAIN APP STYLE. Critical CSS loaded synchronously (root-relative for /login/ etc.) -->
 {{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $isMenuReelsPage := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
 {{- $multiLocationMenus := site.Params.menu.multiLocationMenus | default false -}}
@@ -897,6 +897,10 @@
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/ios-viewport.css" }}"/>
 <script src="{{ partial "head/asset-url.html" "/js/ios-viewport.js" }}"></script>
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/colors.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/scheme-tokens.css" }}"/>
+{{- if $dashboardLayout -}}
+{{ partial "dashboard/theme-boot.html" . }}
+{{- end -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/typography.css" "sync" true) }}
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/custom.css" }}"/>
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/header.css" "sync" true) }}
@@ -907,7 +911,7 @@
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/multi-location-menu.css" "sync" true) }}
 {{- end -}}
 {{- if $menuPublicSite -}}
-{{/* Always load reels CSS on public pages — Barba does not swap <head>, so item→location navigations would otherwise keep the hero in a row. */}}
+{{/* Always load reels CSS on public pages. Barba does not swap <head>, so item→location navigations would otherwise keep the hero in a row. */}}
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/menu-reels.css" }}"/>
 {{- end -}}
 {{- if and $menuPublicSite $isMenuReelsPage -}}
@@ -978,12 +982,12 @@ window.MENU_CONFIG = {
   html.menu-reels-mode:not(.menu-nav-smooth),
   body.menu-reels-mode:not(.menu-nav-smooth) {
     overflow: hidden;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
   }
   html.menu-nav-smooth,
   body.menu-nav-smooth {
     scroll-behavior: smooth;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
   }
   html:not(.menu-nav-smooth) body.menu-reels-mode main.main--home,
   html:not(.menu-nav-smooth) body.main--home main.main--home {
@@ -997,7 +1001,7 @@ window.MENU_CONFIG = {
     height: 100svh;
     height: 100dvh;
     overflow: hidden;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
   }
   html:not(.menu-nav-smooth) .main--home .menu-reels-viewport {
     position: relative;
@@ -1005,7 +1009,7 @@ window.MENU_CONFIG = {
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
   }
   html:not(.menu-nav-smooth) .main--home .menu-reels-track {
     position: relative;
@@ -1033,7 +1037,7 @@ window.MENU_CONFIG = {
     min-height: 100dvh;
     height: auto;
     overflow: visible;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
   }
   html.menu-nav-smooth .main--home .menu-reels-viewport,
   html.menu-nav-smooth .main--home .menu-reels-track,
@@ -1094,7 +1098,7 @@ window.MENU_CONFIG = {
   .single-page-unavailable-notice:not([hidden]) {
     display: block;
     margin: 0 0 0.5em;
-    color: #e65100;
+    color: var(--scheme-accent-2);
     font-size: 0.95em;
   }
   .single-page-item-card .menu-item-title-row { min-height: 2.75rem; }
@@ -1206,7 +1210,7 @@ window.MENU_CONFIG = {
   }
 </style>
 
-<!-- Menu UI font (non-blocking; dns-prefetch only — avoid unused preconnect) -->
+<!-- Menu UI font (non-blocking; dns-prefetch only: avoid unused preconnect) -->
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"/></noscript>
 <script>
@@ -1233,8 +1237,8 @@ window.MENU_CONFIG = {
 })();
 </script>
 
-{{/* Notification service worker is registered by notifications.js only after the user subscribes — avoids eager SW setup on first visit. */}}
-<!-- Matomo Tag Manager - menu/public pages only (avoids Tag Manager errors on admin dashboard) -->
+{{/* Notification service worker is registered by notifications.js only after the user subscribes: avoids eager SW setup on first visit. */}}
+<!-- Matomo Tag Manager: menu/public pages only (avoids Tag Manager errors on admin dashboard) -->
 {{- if $menuPublicSite -}}
 <script>
   window._mtm = window._mtm || [];
@@ -1290,10 +1294,10 @@ window.MENU_CONFIG = {
 <!-- End Matomo -->
 {{- end -}}
 
-<!-- TTMS Analytics Tracking - Deferred -->
+<!-- TTMS Analytics Tracking. Deferred -->
 <script src="/js/analytics-tracking.js" defer></script>
 
-<!-- Touch particles — all pages -->
+<!-- Touch particles: all pages -->
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/tap-particles.css") }}
 <script src="/js/tap-particles.js" defer></script>
 
@@ -1325,7 +1329,7 @@ window.MENU_CONFIG = {
   {{- end -}}
 {{- end -}}
 <script>
-// POS Integration Configuration (no Loyverse secrets — proxy uses stored OAuth tokens server-side)
+// POS Integration Configuration (no Loyverse secrets: proxy uses stored OAuth tokens server-side)
 window.POS_CONFIG = {
     enabled: {{ default false $pos.enabled }},
     provider: "{{ $pos.provider | default "loyverse" }}",
@@ -1388,7 +1392,7 @@ window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .S
 {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
 // CMS base URL + client id for dashboard editor, menu settings, and other API calls (same as payload flows)
 window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
-// API root must end with /api (use apiUrl from hugo.toml — avoids double /api when building paths)
+// API root must end with /api (use apiUrl from hugo.toml - avoids double /api when building paths)
 window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
 window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 </script>
@@ -1438,7 +1442,7 @@ window.MENU_IMAGE_CONFIG = {
   clientId: "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
 };
 </script>
-<script src="/js/menu-image-integration.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/menu-image-integration.js" }}" defer></script>
 {{- end -}}
 {{- if $menuPublicSite -}}
 <script src="/js/feature-chips.js" defer></script>

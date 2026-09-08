@@ -1,5 +1,5 @@
 /**
- * Header — larger screens (min-width: 769px)
+ * Header: larger screens (min-width: 769px)
  * Restores horizontal category chips; hides mobile dropdown chrome
  * unless html.ttms-mobile-menublock (coarse pointer / touch tablet).
  */
@@ -88,7 +88,7 @@
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-item,
     html:not(.ttms-mobile-menublock) #menublock li {
-        min-width: 4.35rem;
+        min-width: var(--menublock-chip-min-width);
         max-width: none;
         width: auto;
     }
@@ -97,7 +97,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        min-height: 4.1rem;
+        min-height: var(--menublock-chip-height);
         padding: 0.45em 0.35em 0.4em;
         gap: 0.28em;
         touch-action: auto;

@@ -26,14 +26,37 @@
           <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
         </button>
       </div>
+      <div class="menu-item-edit-modal__actions">
       <button
         type="button"
-        class="menu-item-edit-modal__close"
+          class="menu-item-edit-modal__icon-btn menu-item-edit-modal__delete"
+          id="menuItemEditModalDelete"
+          aria-label="Mark for deletion"
+          title="Mark for deletion"
+          disabled
+        >
+          <i class="fa fa-trash" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="menu-item-edit-modal__icon-btn menu-item-edit-modal__save"
+          id="menuItemEditModalSave"
+          title="Save snapshot or publish"
+          aria-label="Save menu"
+        >
+          <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+          <span class="menu-item-edit-modal__save-label">Save</span>
+          <span class="menu-item-edit-modal__save-count hidden" id="menuItemEditModalSaveCount" aria-hidden="true"></span>
+        </button>
+        <button
+          type="button"
+          class="menu-item-edit-modal__icon-btn menu-item-edit-modal__close"
         data-close-menu-item-edit-modal
         aria-label="Close editor"
       >
         <i class="fa fa-times" aria-hidden="true"></i>
       </button>
+      </div>
     </header>
     <div class="menu-item-edit-modal__body">
       <div

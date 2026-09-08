@@ -1,5 +1,5 @@
 /**
- * Canvas touch particles — site-wide, minimal CPU/GPU.
+ * Canvas touch particles: site-wide, minimal CPU/GPU.
  * Disabled on Android: full-screen canvas + draw triggers Chrome compositor black flash.
  */
 (function () {
@@ -23,7 +23,6 @@
   var STEP_SQ = 196;
   var SCROLL_STEP_SQ = 100;
   var MAX_PARTICLES = 48;
-  var COLORS = ['#fcd000', '#dfeed4', '#b56024', '#ffffff'];
   var SKIP_SEL = 'input,textarea,select,[contenteditable="true"],#loader';
 
   var canvas = null;
@@ -31,8 +30,10 @@
   var particles = [];
   var pointer = null;
   var pageOff = false;
-  var colorA = COLORS[0];
-  var colorB = COLORS[1];
+  var colorA = '';
+  var colorB = '';
+  var colorC = '';
+  var colorD = '';
   var moveRaf = 0;
   var drawRaf = 0;
   var pendingMove = null;
@@ -51,10 +52,13 @@
     if (pageOff) return;
     try {
       var root = getComputedStyle(document.documentElement);
-      var a = root.getPropertyValue('--selected-button-color3').trim();
-      var b = root.getPropertyValue('--header-bordercolor-1').trim();
-      if (a) colorA = a;
-      if (b) colorB = b;
+      function token(name) {
+        return (root.getPropertyValue(name) || '').trim();
+      }
+      colorA = token('--accent-color') || token('--scheme-accent') || token('--selected-button-color3');
+      colorB = token('--accent-glow-color') || token('--scheme-accent-glow') || token('--selected-button-color3');
+      colorC = token('--selected-button-color2') || token('--scheme-accent-2');
+      colorD = token('--hero-text-color') || token('--scheme-white');
     } catch (e2) {}
   }
 
@@ -67,7 +71,9 @@
   }
 
   function pickColor(i) {
-    return (i & 1) ? colorB : colorA;
+    var palette = [colorA, colorB, colorC, colorD].filter(Boolean);
+    if (!palette.length) return '';
+    return palette[i % palette.length];
   }
 
   function ensureCanvas() {
@@ -189,8 +195,7 @@
     if (!particles.length || !ctx) return;
 
     if (!lastFrame) lastFrame = now;
-    var dt = now - lastFrame;
-    if (dt > 48) dt = 48;
+    var dt = now - lastFrame;    if (dt > 48) dt = 48;
     lastFrame = now;
 
     var w = window.innerWidth;
@@ -268,13 +273,7 @@
       return;
     }
 
-    var dx = e.clientX - pointer.x0;
-    var dy = e.clientY - pointer.y0;
-    var sdx = e.clientX - pointer.sx;
-    var sdy = e.clientY - pointer.sy;
-    var mdx = e.clientX - pointer.lx;
-    var mdy = e.clientY - pointer.ly;
-
+    var dx = e.clientX - pointer.x0;    var dy = e.clientY - pointer.y0;    var sdx = e.clientX - pointer.sx;    var sdy = e.clientY - pointer.sy;    var mdx = e.clientX - pointer.lx;    var mdy = e.clientY - pointer.ly;
     if (!pointer.swipe) {
       if (distSq(dx, dy) <= MOVE_SQ) return;
       pointer.swipe = 1;
@@ -320,9 +319,7 @@
       var vx = pointer.vx;
       var vy = pointer.vy;
       if (distSq(vx, vy) < 16) {
-        vx = e.clientX - pointer.x0;
-        vy = e.clientY - pointer.y0;
-      }
+        vx = e.clientX - pointer.x0;        vy = e.clientY - pointer.y0;      }
       spawnSpark(e.clientX, e.clientY, vx, vy);
     } else if (!pointer.moved && !skipEvent(e)) {
       spawnBurst(e.clientX, e.clientY);

@@ -128,7 +128,7 @@
     banner.innerHTML =
       '<div class="dashboard-live-menu-hint__inner">' +
       '<p class="dashboard-live-menu-hint__text">' +
-      '<strong>Edit menu content</strong> — tap <span class="dashboard-live-menu-hint__icon" aria-hidden="true"><i class="fa fa-ellipsis-v"></i></span> ' +
+      '<strong>Edit menu content</strong>: tap <span class="dashboard-live-menu-hint__icon" aria-hidden="true"><i class="fa fa-ellipsis-v"></i></span> ' +
       'on any <strong>menu item</strong>, <strong>section heading</strong>, or <strong>promotion</strong>, then choose <strong>Edit</strong>. ' +
       'Finish with <strong>Save</strong> on the last step of the editor panel (or close the panel to save your draft). Publish drafts from the dashboard <strong>Publish</strong> button.' +
       '</p>' +

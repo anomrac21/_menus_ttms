@@ -1,4 +1,4 @@
-// AOS (Animate On Scroll) removed - no longer needed
+// AOS (Animate On Scroll) removed: no longer needed
 // This file is kept for reference but functionality is disabled
 
 // function initAOS() {

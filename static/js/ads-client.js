@@ -114,7 +114,7 @@
   },
 
   /**
-   * Get config from data attributes - re-read on each call for Barba.js compatibility
+   * Get config from data attributes: re-read on each call for Barba.js compatibility
    */
   getConfig() {
     const container = document.getElementById('pageadscontainer');
@@ -273,7 +273,7 @@
 
   /**
    * Fetch active ads from ads.ttmenus.com (ads-service).
-   * clientId is optional — omit for network-wide ads.
+   * clientId is optional: omit for network-wide ads.
    */
   async fetchServiceAds(adsServiceUrl, options = {}) {
     const { clientId, location, day } = options;
@@ -310,9 +310,9 @@
       console.warn('Ads service response missing data array:', result);
     } catch (error) {
       if (error && error.name === 'AbortError') {
-        console.warn(`Ads service timed out (${timeoutMs}ms): ${url}`);
+        console.warn(`Ads service timed out (${timeoutMs}ms) - ${url}`);
       } else if (error && error.message === 'Failed to fetch') {
-        console.warn(`Ads service unreachable at ${url} — is it running? (go run . in ads-service)`);
+        console.warn(`Ads service unreachable at ${url}: is it running? (go run . in ads-service)`);
       } else {
         console.warn('Failed to fetch ads from service:', error);
       }
@@ -403,7 +403,7 @@
     }
   },
 
-  /** Homepage: 3-card preview; fullscreen vertical feed */
+  /** Homepage - 3-card preview; fullscreen vertical feed */
   REELS_PREVIEW_COUNT: 1,
   _reelsCatalog: null,
   _reelsConfig: null,
@@ -446,7 +446,7 @@
   },
 
   /**
-   * Same progress model as ad-scroll-progress.js: 0% when section enters viewport,
+   * Same progress model as ad-scroll-progress.js - 0% when section enters viewport,
    * 100% when its top reaches the viewport top (sticky fullscreen).
    */
   getReelsPreviewScrollProgress() {
@@ -733,8 +733,7 @@
       const sr = slide.getBoundingClientRect();
       if (sr.bottom <= tr.top || sr.top >= tr.bottom) return;
       const center = (sr.top + sr.bottom) / 2;
-      const dist = Math.abs(center - midY);
-      if (dist < bestDist) {
+      const dist = Math.abs(center - midY);      if (dist < bestDist) {
         bestDist = dist;
         best = slide;
       }
@@ -751,9 +750,7 @@
       const pr = panel.getBoundingClientRect();
       const visibleLeft = Math.max(pr.left, tr.left);
       const visibleRight = Math.min(pr.right, tr.right);
-      const visible = Math.max(0, visibleRight - visibleLeft);
-      const total = Math.max(1, pr.right - pr.left);
-      const ratio = visible / total;
+      const visible = Math.max(0, visibleRight - visibleLeft);      const total = Math.max(1, pr.right - pr.left);      const ratio = visible / total;
       if (ratio > bestRatio) {
         bestRatio = ratio;
         best = panel;
@@ -1432,7 +1429,6 @@
 
       const items = this.prepareAdsForDisplay(ads);
       let skippedCount = ads.length - items.length;
-
       items.forEach((item) => {
         const li = this.buildAdPanelLi(item, config, {});
         adsList.appendChild(li);
@@ -1448,7 +1444,7 @@
   },
 
   /**
-   * Fetch active ads (client_id is optional - if not provided, returns all active ads)
+   * Fetch active ads (client_id is optional: if not provided, returns all active ads)
    */
   async loadActiveAds() {
     try {
@@ -1504,10 +1500,10 @@
         const adsList = document.getElementById('ads-list');
         if (adsList && response.status >= 500) {
           const errorMsg = errorData?.details || errorData?.error || errorText || 'Server error';
-          adsList.innerHTML = `<li class="ad-panel" style="padding: 2rem; text-align: center; color: #666;">
+          adsList.innerHTML = `<li class="ad-panel" style="padding: 2rem; text-align: center; color: var(--scheme-ink-muted);">
             <p>⚠️ Unable to load ads at this time.</p>
             <p style="font-size: 0.9em; margin-top: 0.5rem;">Error: ${this.escapeHtml(errorMsg)}</p>
-            <p style="font-size: 0.8em; margin-top: 0.5rem; color: #999;">Please try refreshing the page.</p>
+            <p style="font-size: 0.8em; margin-top: 0.5rem; color: var(--scheme-ink-muted);">Please try refreshing the page.</p>
           </li>`;
         }
         return;
@@ -1533,7 +1529,7 @@
         if (isLocalhost && isProductionAdsService) {
           console.warn('⚠️ Local development detected: Trying to fetch from production ads-service');
         } else {
-          console.warn('Failed to fetch ads - this may be a CORS issue or the ads service is not available.');
+          console.warn('Failed to fetch ads: this may be a CORS issue or the ads service is not available.');
         }
       } else {
         console.error('Error loading ads:', error);
@@ -1638,7 +1634,7 @@
         if (!window.__ttmsPromotionsFetchWarned) {
           window.__ttmsPromotionsFetchWarned = true;
           if (lastStatus === 404) {
-            console.info('ℹ️ No promotions/index.json on this site yet — using ads-service only');
+            console.info('ℹ️ No promotions/index.json on this site yet: using ads-service only');
           } else if (lastStatus) {
             console.warn(`⚠️ Promotions fetch failed: ${lastStatus}`);
           }
@@ -1728,7 +1724,7 @@
       if (displayGen !== this._displayGeneration) return;
 
       if (serviceAds.length === 0 && !config.noCompetitorAds) {
-        console.log('ℹ️ No client ads from service — trying network ads');
+        console.log('ℹ️ No client ads from service: trying network ads');
         serviceAds = await this.fetchServiceAds(adsServiceUrl, { location });
       }
 
@@ -1756,7 +1752,7 @@
   },
 
   /**
-   * Load ads function - exposed globally for Barba.js
+   * Load ads function: exposed globally for Barba.js
    * This function re-reads the DOM each time to work with Barba.js
    */
   loadAds() {

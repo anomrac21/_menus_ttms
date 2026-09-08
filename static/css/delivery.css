@@ -1,7 +1,7 @@
 .ttms-delivery-panel {
-  --ttms-del-accent: color-mix(in srgb, var(--selected-button-color3, #38bdf8) 55%, #fff);
-  --ttms-del-ink: var(--main-text-color, #fff);
-  --ttms-del-muted: color-mix(in srgb, var(--main-text-color, #fff) 62%, transparent);
+  --ttms-del-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
+  --ttms-del-ink: var(--main-text-color);
+  --ttms-del-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
   position: fixed;
   inset: 0;
   z-index: 12000;
@@ -28,8 +28,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--button-color1, #1a1a2e) 55%, transparent), transparent 55%),
-    rgba(0, 0, 0, 0.72);
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--scheme-surface) 55%, transparent), transparent 55%),
+    color-mix(in srgb, var(--scheme-black) 72%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -51,14 +51,14 @@
   color: var(--ttms-del-ink);
   padding: 0 0 max(1.1rem, env(safe-area-inset-bottom, 0));
   border-radius: 1.25rem 1.25rem 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
   border-bottom: 0;
   background:
-    radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 52%),
-    linear-gradient(180deg, color-mix(in srgb, var(--main-bg, #0a0a0f) 88%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
+    radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--scheme-surface) 50%, transparent), transparent 52%),
+    linear-gradient(180deg, color-mix(in srgb, var(--main-bg) 88%, var(--scheme-black)) 0%, var(--main-bg) 100%);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 24px 64px color-mix(in srgb, var(--scheme-black) 48%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 8%, transparent);
   transform-origin: 50% 100%;
 }
 
@@ -76,11 +76,11 @@
   align-items: center;
   gap: 0.85rem;
   padding: 1.15rem 1rem 0.9rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--header-bg-color, #111) 78%, rgba(255, 255, 255, 0.08)) 0%,
-    color-mix(in srgb, var(--header-bg-color, #111) 92%, rgba(0, 0, 0, 0.2)) 100%
+    color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--scheme-white) 8%, transparent)) 0%,
+    color-mix(in srgb, var(--scheme-surface) 92%, color-mix(in srgb, var(--scheme-black) 20%, transparent)) 100%
   );
   position: sticky;
   top: 0;
@@ -106,9 +106,9 @@ body.ttms-delivery-open {
   height: 2.75rem;
   flex-shrink: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
 }
 
 .ttms-delivery-panel__logo {
@@ -141,8 +141,8 @@ body.ttms-delivery-open {
   flex-shrink: 0;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
   color: var(--ttms-del-ink);
   font-size: 1.15rem;
   line-height: 1;
@@ -155,8 +155,8 @@ body.ttms-delivery-open {
 
 .ttms-delivery-panel__close:hover,
 .ttms-delivery-panel__close:focus-visible {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
+  border-color: color-mix(in srgb, var(--scheme-white) 28%, transparent);
   transform: translateY(-1px);
   outline: none;
 }
@@ -228,11 +228,11 @@ body.ttms-delivery-open {
   margin: 0;
   padding: 0.78em 0.9em;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
   color: var(--ttms-del-ink);
   font: inherit;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 5%, transparent);
   transition:
     border-color 0.16s ease,
     box-shadow 0.16s ease,
@@ -247,20 +247,20 @@ body.ttms-delivery-open {
 .ttms-delivery-field input:focus,
 .ttms-delivery-field textarea:focus {
   outline: none;
-  border-color: color-mix(in srgb, #38bdf8 55%, rgba(255, 255, 255, 0.2));
-  background: rgba(255, 255, 255, 0.09);
+  border-color: color-mix(in srgb, var(--scheme-button-bg) 55%, color-mix(in srgb, var(--scheme-white) 20%, transparent));
+  background: color-mix(in srgb, var(--scheme-white) 9%, transparent);
   box-shadow:
-    0 0 0 4px color-mix(in srgb, #38bdf8 22%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 0 0 4px color-mix(in srgb, var(--scheme-button-bg) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 8%, transparent);
 }
 
 .ttms-delivery-pin {
   margin: 0;
   padding: 0.85rem 0.95rem;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  background: linear-gradient(165deg, color-mix(in srgb, var(--scheme-white) 8%, transparent) 0%, color-mix(in srgb, var(--scheme-white) 3%, transparent) 100%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 6%, transparent);
 }
 
 .ttms-delivery-pin__head {
@@ -319,15 +319,15 @@ body.ttms-delivery-open {
 
 .ttms-delivery-cta--ghost {
   flex: 1 1 8rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
   color: var(--ttms-del-ink);
 }
 
 .ttms-delivery-cta--ghost:hover,
 .ttms-delivery-cta--ghost:focus-visible {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.24);
+  background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
+  border-color: color-mix(in srgb, var(--scheme-white) 24%, transparent);
   transform: translateY(-1px);
   outline: none;
 }
@@ -338,20 +338,20 @@ body.ttms-delivery-open {
 
 .ttms-delivery-cta--primary {
   flex: 1.4 1 11rem;
-  border: 1px solid color-mix(in srgb, #7dd3fc 55%, #fff);
+  border: 1px solid color-mix(in srgb, var(--scheme-button-bg) 55%, var(--scheme-white));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, #38bdf8 88%, #fff) 0%,
-    color-mix(in srgb, #0ea5e9 82%, #000) 100%
+    color-mix(in srgb, var(--scheme-button-bg) 88%, var(--scheme-white)) 0%,
+    color-mix(in srgb, var(--scheme-button-bg) 82%, var(--scheme-black)) 100%
   );
-  color: #0b1220;
-  box-shadow: 0 4px 16px color-mix(in srgb, #38bdf8 32%, transparent);
+  color: var(--scheme-black);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--scheme-button-bg) 32%, transparent);
 }
 
 .ttms-delivery-cta--primary:hover,
 .ttms-delivery-cta--primary:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px color-mix(in srgb, #38bdf8 38%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--scheme-button-bg) 38%, transparent);
   outline: none;
 }
 
@@ -373,8 +373,8 @@ body.ttms-delivery-open {
   margin: 0 0 0.85rem;
   padding: 0.95rem 1rem;
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, #38bdf8 28%, rgba(255, 255, 255, 0.1));
-  background: color-mix(in srgb, #38bdf8 12%, rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--scheme-button-bg) 28%, color-mix(in srgb, var(--scheme-white) 10%, transparent));
+  background: color-mix(in srgb, var(--scheme-button-bg) 12%, color-mix(in srgb, var(--scheme-white) 4%, transparent));
   color: var(--ttms-del-ink);
 }
 
@@ -384,8 +384,8 @@ body.ttms-delivery-open {
   margin-top: 0.4rem;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #38bdf8;
-  box-shadow: 0 0 0 0 color-mix(in srgb, #38bdf8 45%, transparent);
+  background: var(--scheme-button-bg);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--scheme-button-bg) 45%, transparent);
   animation: ttms-del-pulse 1.15s ease-in-out infinite;
 }
 
@@ -449,8 +449,8 @@ body.ttms-delivery-open {
   justify-content: space-between;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  background: linear-gradient(165deg, color-mix(in srgb, var(--scheme-white) 8%, transparent) 0%, color-mix(in srgb, var(--scheme-white) 3%, transparent) 100%);
   animation: ttms-del-rise 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) both;
 }
 
@@ -466,10 +466,10 @@ body.ttms-delivery-open {
   cursor: pointer;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--selected-button-color3, #fcd000) 88%, #fff) 0%,
-    color-mix(in srgb, var(--selected-button-color3, #fcd000) 72%, #000) 100%
+    color-mix(in srgb, var(--selected-button-color3) 88%, var(--scheme-white)) 0%,
+    color-mix(in srgb, var(--selected-button-color3) 72%, var(--scheme-black)) 100%
   );
-  color: color-mix(in srgb, var(--main-bg, #0a0a0f) 85%, #000);
+  color: color-mix(in srgb, var(--main-bg) 85%, var(--scheme-black));
 }
 
 .ttms-live-map,
@@ -477,8 +477,8 @@ body.ttms-delivery-open {
   margin-top: 0.85rem;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 5%, transparent);
 }
 
 .ttms-live-map {
@@ -500,8 +500,8 @@ body.ttms-delivery-open {
   margin-bottom: 0.65rem;
   padding: 0.7em 0.85em;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
   color: inherit;
   font: inherit;
 }
@@ -512,7 +512,7 @@ body.ttms-delivery-open {
 }
 
 .ttms-delivery-order-card {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid color-mix(in srgb, var(--scheme-black) 12%, transparent);
   border-radius: 10px;
   padding: 1rem;
   margin: 0.75rem 0;
@@ -550,10 +550,10 @@ body.ttms-delivery-open {
 .dashboard-delivery-page .ttms-delivery-order-card {
   margin: 0;
   padding: 1rem 1.05rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.45);
-  color: #f8fafc;
+  background: color-mix(in srgb, var(--scheme-black) 45%, transparent);
+  color: var(--scheme-white);
 }
 
 .dashboard-delivery-page .ttms-delivery-order-card__head {
@@ -570,7 +570,7 @@ body.ttms-delivery-open {
 
 .dashboard-delivery-page .ttms-delivery-order-card__meta {
   margin: 0.45rem 0 0;
-  color: rgba(203, 213, 225, 0.9);
+  color: color-mix(in srgb, var(--scheme-button-bg) 90%, transparent);
   font-size: 0.88rem;
   line-height: 1.45;
 }
@@ -579,7 +579,7 @@ body.ttms-delivery-open {
   margin-top: 0.7rem;
   padding: 0.65rem 0.75rem;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.82rem;
 }
@@ -628,8 +628,8 @@ body.ttms-delivery-open {
 }
 
 @keyframes ttms-del-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #38bdf8 35%, transparent); }
-  50% { box-shadow: 0 0 0 8px color-mix(in srgb, #38bdf8 0%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--scheme-button-bg) 35%, transparent); }
+  50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--scheme-button-bg) 0%, transparent); }
 }
 
 @media (prefers-reduced-motion: reduce) {

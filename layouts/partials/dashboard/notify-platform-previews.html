@@ -1,4 +1,4 @@
-{{/* Tabbed platform previews — live-updated by dashboard-notifications.js */}}
+{{/* Tabbed platform previews: live-updated by dashboard-notifications.js */}}
 {{- $id := .id -}}
 {{- $kind := .kind -}}
 <aside class="dashboard-notify-preview-panel" id="{{ $id }}" data-notify-preview-kind="{{ $kind }}" aria-label="Notification preview">
@@ -23,7 +23,7 @@
 
   <div class="dashboard-notify-preview-stage">
 
-    {{/* —— Web: Chrome native notification —— */}}
+    {{/* Web - Chrome native notification */}}
     <div class="dashboard-notify-preview-pane dashboard-notify-preview-pane--active" id="{{ $id }}PaneWeb" role="tabpanel" aria-labelledby="{{ $id }}TabWeb" data-preview-pane="web">
 
       <div class="dashboard-notify-stage-label">Chrome · Windows notification</div>
@@ -80,7 +80,7 @@
 
 
 
-    {{/* —— Android: Material lock-screen notification —— */}}
+    {{/* Android - Material lock-screen notification */}}
     <div class="dashboard-notify-preview-pane" id="{{ $id }}PaneAndroid" role="tabpanel" aria-labelledby="{{ $id }}TabAndroid" data-preview-pane="android">
 
       <div class="dashboard-notify-stage-label">Android · expanded notification</div>
@@ -149,7 +149,7 @@
 
 
 
-    {{/* —— iOS: Lock screen banner + expanded image —— */}}
+    {{/* iOS - Lock screen banner + expanded image */}}
     <div class="dashboard-notify-preview-pane" id="{{ $id }}PaneIos" role="tabpanel" aria-labelledby="{{ $id }}TabIos" data-preview-pane="ios">
 
       <div class="dashboard-notify-stage-label">iOS · lock screen</div>

@@ -219,6 +219,11 @@
     if (kind === 'pairs') return pairsFilled(host);
     if (kind === 'side-categories') return sideCategoriesFilled(host);
     if (kind === 'menu-item-promotions') return menuItemPromotionsFilled(host);
+    if (kind === 'availability-days') {
+      var hiddenDays = host.querySelector('#dashboardEditAvailabilityDays');
+      if (hiddenDays && String(hiddenDays.value || '').trim()) return true;
+      return !!host.querySelector('.dashboard-availability-day[aria-pressed="true"]');
+    }
     return false;
   }
 

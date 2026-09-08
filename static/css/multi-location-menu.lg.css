@@ -1,5 +1,5 @@
 /**
- * Multi-location menu chooser — larger screens (769px+)
+ * Multi-location menu chooser: larger screens (769px+)
  */
 
 @media (min-width: 769px) {
@@ -11,4 +11,8 @@
   .multi-loc-chooser__title {
     font-size: 2rem;
   }
+
+  .multi-loc-chooser__search {
+    min-height: 3rem;
+}
 }

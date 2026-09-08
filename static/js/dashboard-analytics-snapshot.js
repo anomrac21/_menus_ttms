@@ -1,5 +1,5 @@
 /**
- * Dashboard analytics snapshot — loads last-N-day Matomo metrics via CMS
+ * Dashboard analytics snapshot: loads last-N-day Matomo metrics via CMS
  * (GET /api/clients/:clientId/analytics/summary). CMS reads idsite from hugo.toml
  * and queries Matomo in ttms-app-cluster/base/analytics.
  */
@@ -7,7 +7,7 @@
   'use strict';
 
   function formatCount(n) {
-    if (n == null || n === '') return '—';
+    if (n == null || n === '') return '';
     try {
       return new Intl.NumberFormat(undefined).format(Number(n));
     } catch (e) {
@@ -365,9 +365,7 @@
     var width = 960;
     var height = 260;
     var pad = { top: 16, right: 12, bottom: 36, left: 40 };
-    var innerW = width - pad.left - pad.right;
-    var innerH = height - pad.top - pad.bottom;
-    var maxVal = 1;
+    var innerW = width - pad.left - pad.right;    var innerH = height - pad.top - pad.bottom;    var maxVal = 1;
 
     rows.forEach(function (r) {
       maxVal = Math.max(maxVal, r.pageViews, r.visits, r.menuItemViews, r.addToCart, r.orderSubmissions, r.searches);
@@ -421,8 +419,7 @@
         var value = Number(row[s.key]) || 0;
         var barH = maxVal ? (value / maxVal) * innerH : 0;
         var x = groupX - (barW * seriesCount + (seriesCount - 1) * 2) / 2 + seriesIndex * (barW + 2);
-        var yBar = pad.top + innerH - barH;
-        svg +=
+        var yBar = pad.top + innerH - barH;        svg +=
           '<rect class="dashboard-notify-trends-bar ' +
           s.className +
           '" x="' +
@@ -471,7 +468,7 @@
       var el = document.getElementById(id);
       if (!el) return;
       if (value == null || value === '') {
-        el.textContent = '—';
+        el.textContent = '';
         el.setAttribute('aria-label', name + ', data not available');
         return;
       }
@@ -481,7 +478,7 @@
     }
 
     document.querySelectorAll('.dashboard-analytics-card-value').forEach(function (el) {
-      if (el.textContent === '—') el.setAttribute('aria-label', 'Data not yet loaded');
+      if (el.textContent === '') el.setAttribute('aria-label', 'Data not yet loaded');
     });
 
     setAnalyticsNoteState(noteEl, 'loading', 'Loading analytics…');

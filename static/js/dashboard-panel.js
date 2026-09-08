@@ -1,5 +1,5 @@
 /**
- * TT Menus side dashboard panel — open/close + trigger binding.
+ * TT Menus side dashboard panel: open/close + trigger binding.
  * Kept outside main.js so toggles survive Barba transitions and load reliably.
  */
 (function () {

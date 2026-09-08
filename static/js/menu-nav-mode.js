@@ -1,5 +1,5 @@
 /**
- * Home navigation mode — snap (reels) vs smooth (regular page scroll).
+ * Home navigation mode: snap (reels) vs smooth (regular page scroll).
  */
 (function () {
   'use strict';
@@ -88,8 +88,7 @@
       applyDomClass(nextMode);
       requestAnimationFrame(function () {
         var trackTop = track.getBoundingClientRect().top + window.scrollY;
-        track.scrollTop = Math.max(0, pageY - trackTop);
-        if (typeof window.refreshMenuNavScrollBindings === 'function') {
+        track.scrollTop = Math.max(0, pageY - trackTop);        if (typeof window.refreshMenuNavScrollBindings === 'function') {
           window.refreshMenuNavScrollBindings();
         }
       });

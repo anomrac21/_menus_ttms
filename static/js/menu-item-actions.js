@@ -5,6 +5,8 @@
   'use strict';
 
   var OPEN_CLASS = 'is-open';
+  var CLOSING_CLASS = 'is-closing';
+  var CLOSE_MS = 220;
   var FOCUS_ITEM_KEY = 'editMenuFocusItemUrl';
   var FOCUS_SECTION_SLUG_KEY = 'editMenuFocusSectionSlug';
   var FOCUS_PROMO_CATALOG_KEY = 'editMenuFocusPromoCatalogIndex';
@@ -165,13 +167,59 @@
     });
   }
 
+  function prefersReducedMotion() {
+    try {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function clearCloseWait(menuRoot) {
+    if (!menuRoot) return;
+    if (menuRoot._actionsCloseT) {
+      clearTimeout(menuRoot._actionsCloseT);
+      menuRoot._actionsCloseT = 0;
+    }
+    if (menuRoot._actionsOnCloseEnd) {
+      var panel = menuRoot.querySelector('.menu-item-actions__menu');
+      if (panel) panel.removeEventListener('animationend', menuRoot._actionsOnCloseEnd);
+      menuRoot._actionsOnCloseEnd = null;
+    }
+  }
+
+  function finishClose(menuRoot) {
+    if (!menuRoot) return;
+    clearCloseWait(menuRoot);
+    menuRoot.classList.remove(OPEN_CLASS, CLOSING_CLASS);
+    var panel = menuRoot.querySelector('.menu-item-actions__menu');
+    if (panel) panel.hidden = true;
+  }
+
   function closeMenu(menuRoot) {
     if (!menuRoot) return;
-    menuRoot.classList.remove(OPEN_CLASS);
     var trigger = menuRoot.querySelector('.menu-item-actions__trigger');
     var panel = menuRoot.querySelector('.menu-item-actions__menu');
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (!menuRoot.classList.contains(OPEN_CLASS) && !menuRoot.classList.contains(CLOSING_CLASS)) {
     if (panel) panel.hidden = true;
+      return;
+    }
+    if (!panel || panel.hidden || prefersReducedMotion()) {
+      finishClose(menuRoot);
+      return;
+    }
+    clearCloseWait(menuRoot);
+    menuRoot.classList.remove(OPEN_CLASS);
+    menuRoot.classList.add(CLOSING_CLASS);
+    menuRoot._actionsOnCloseEnd = function (e) {
+      if (e.target !== panel) return;
+      finishClose(menuRoot);
+    };
+    panel.addEventListener('animationend', menuRoot._actionsOnCloseEnd);
+    menuRoot._actionsCloseT = setTimeout(function () {
+      finishClose(menuRoot);
+    }, CLOSE_MS);
   }
 
   function closeAllMenus(exceptRoot) {
@@ -185,11 +233,16 @@
     if (!menuRoot) return;
     refreshAuthVisibility();
     closeAllMenus(menuRoot);
-    menuRoot.classList.add(OPEN_CLASS);
+    clearCloseWait(menuRoot);
+    menuRoot.classList.remove(CLOSING_CLASS);
     var trigger = menuRoot.querySelector('.menu-item-actions__trigger');
     var panel = menuRoot.querySelector('.menu-item-actions__menu');
     if (trigger) trigger.setAttribute('aria-expanded', 'true');
-    if (panel) panel.hidden = false;
+    if (panel) {
+      panel.hidden = false;
+      void panel.offsetWidth;
+    }
+    menuRoot.classList.add(OPEN_CLASS);
   }
 
   function toggleMenu(menuRoot) {

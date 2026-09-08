@@ -1,4 +1,10 @@
 .menu-item-edit-modal {
+  --dash-bg: #f4f4f4;
+  --dash-ink: #090a13;
+  --dash-ink-muted: #6b7280;
+  --dash-accent: var(--accent-color, #f0c43a);
+  --dash-info: var(--header-bg-color, #0b1c45);
+  --dash-black: var(--main-bg, #070b16);
   position: fixed;
   inset: 0;
   z-index: calc(var(--ttms-z-modal, 12000) + 2);
@@ -7,16 +13,28 @@
   justify-content: center;
   padding: 0;
   box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
 }
 
-.menu-item-edit-modal[hidden] {
+.menu-item-edit-modal[hidden]:not(.is-closing) {
   display: none !important;
+}
+
+.menu-item-edit-modal.is-closing {
+  display: flex !important;
+}
+
+.menu-item-edit-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .menu-item-edit-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(10, 12, 22, 0.72);
+  background: color-mix(in srgb, var(--dash-info) 72%, transparent);
   backdrop-filter: blur(4px);
 }
 
@@ -29,10 +47,16 @@
   max-width: 100%;
   height: min(100dvh, 100%);
   margin: 0 auto;
-  background: #1a1a2e;
-  border-left: 1px solid rgba(129, 140, 248, 0.22);
-  border-right: 1px solid rgba(129, 140, 248, 0.22);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  background: var(--dash-bg);
+  border-left: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--dash-black) 45%, transparent);
+  transform: translateY(18px);
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menu-item-edit-modal.is-open .menu-item-edit-modal__panel {
+  transform: translateY(0);
 }
 
 .menu-item-edit-modal__header {
@@ -40,38 +64,104 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid rgba(129, 140, 248, 0.18);
-  background: linear-gradient(180deg, rgba(22, 33, 62, 0.98) 0%, rgba(15, 23, 42, 0.96) 100%);
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--header-border-color) 45%, transparent);
+  background: var(--header-bg-color);
 }
 
 .menu-item-edit-modal__title {
   margin: 0;
+  font-family: var(--ttms-font-sans, "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
   font-size: 0.95rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--header-text-color);
 }
 
-.menu-item-edit-modal__close {
+.menu-item-edit-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   flex-shrink: 0;
-  width: 2.25rem;
+}
+
+.menu-item-edit-modal__icon-btn {
+  flex-shrink: 0;
+  min-width: 2.25rem;
   height: 2.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  padding: 0 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--header-text-color) 22%, transparent);
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.65);
-  color: #e2e8f0;
+  background: color-mix(in srgb, var(--header-text-color) 10%, transparent);
+  color: var(--header-text-color);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.35rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
-.menu-item-edit-modal__close:hover,
-.menu-item-edit-modal__close:focus-visible {
-  background: rgba(129, 140, 248, 0.2);
-  border-color: rgba(129, 140, 248, 0.45);
-  color: #fff;
+.menu-item-edit-modal__icon-btn:hover,
+.menu-item-edit-modal__icon-btn:focus-visible {
+  background: color-mix(in srgb, var(--accent-color) 28%, transparent);
+  border-color: var(--header-border-color);
+  color: var(--header-text-color);
+  outline: none;
+}
+
+.menu-item-edit-modal__icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menu-item-edit-modal__save {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--accent-text-color);
+}
+
+.menu-item-edit-modal__save:hover,
+.menu-item-edit-modal__save:focus-visible {
+  background: var(--accent-color);
+  color: var(--accent-text-color);
+  filter: brightness(1.06);
+}
+
+.menu-item-edit-modal__save.menu-item-edit-modal__save--pending {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 45%, transparent);
+}
+
+.menu-item-edit-modal__save-count:not(.hidden) {
+  display: inline-flex;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-text-color) 18%, transparent);
+  font-size: 0.68rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-item-edit-modal__delete {
+  background: color-mix(in srgb, var(--favorite-color) 88%, transparent);
+  border-color: var(--favorite-color);
+  color: var(--accent-text-color);
+}
+
+.menu-item-edit-modal__delete:hover,
+.menu-item-edit-modal__delete:focus-visible {
+  background: var(--favorite-color);
+  color: var(--accent-text-color);
+}
+
+.menu-item-edit-modal__delete.is-unmark {
+  background: color-mix(in srgb, var(--header-text-color) 14%, transparent);
+  border-color: color-mix(in srgb, var(--header-text-color) 28%, transparent);
+  color: var(--header-text-color);
 }
 
 .menu-item-edit-modal__body {
@@ -89,7 +179,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(13, 27, 42, 0.88);
+  background: color-mix(in srgb, var(--dash-bg) 88%, transparent);
   backdrop-filter: blur(6px);
 }
 
@@ -103,13 +193,13 @@
   align-items: center;
   gap: 0.75rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.92);
+  color: color-mix(in srgb, var(--dash-ink) 92%, transparent);
   font-size: 0.88rem;
 }
 
 .menu-item-edit-modal__loading-inner .fa-spinner {
   font-size: 2rem;
-  color: #a5b4fc;
+  color: var(--dash-info);
 }
 
 .menu-item-edit-modal__frame {
@@ -117,7 +207,7 @@
   width: 100%;
   height: 100%;
   border: 0;
-  background: #1a1a2e;
+  background: var(--dash-bg);
 }
 
 @media (min-width: 900px) {
@@ -128,6 +218,6 @@
   .menu-item-edit-modal__panel {
     height: calc(100dvh - 1.5rem);
     border-radius: 14px;
-    border: 1px solid rgba(129, 140, 248, 0.22);
+    border: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
   }
 }

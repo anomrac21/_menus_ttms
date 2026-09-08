@@ -14,13 +14,13 @@
 
   z-index: var(--ttms-z-live-menu-hint, 150);
 
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.97) 0%, rgba(15, 23, 42, 0.98) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--dash-info) 97%, transparent) 0%, color-mix(in srgb, var(--dash-bg) 98%, transparent) 100%);
 
-  border-bottom: 1px solid rgba(129, 140, 248, 0.35);
+  border-bottom: 1px solid color-mix(in srgb, var(--dash-accent) 35%, transparent);
 
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--dash-black) 25%, transparent);
 
-  color: #f1f5f9;
+  color: var(--dash-ink);
 
   box-sizing: border-box;
 
@@ -82,7 +82,7 @@
 
   border-radius: 4px;
 
-  background: rgba(129, 140, 248, 0.25);
+  background: color-mix(in srgb, var(--dash-accent) 25%, transparent);
 
   vertical-align: middle;
 
@@ -106,9 +106,9 @@
 
   border: none;
 
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
 
-  color: #e2e8f0;
+  color: var(--dash-ink-muted);
 
   width: 2.75rem;
 
@@ -140,9 +140,9 @@
 
 .dashboard-live-menu-hint__close:focus-visible {
 
-  background: rgba(255, 255, 255, 0.16);
+  background: color-mix(in srgb, var(--dash-ink) 16%, transparent);
 
-  color: #fff;
+  color: var(--dash-ink);
 
 }
 

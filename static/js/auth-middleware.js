@@ -5,7 +5,7 @@
 
 const AuthMiddleware = {
   /**
-   * Protect current page - redirect to login if not authenticated
+   * Protect current page: redirect to login if not authenticated
    */
   async protectPage(options = {}) {
     const {

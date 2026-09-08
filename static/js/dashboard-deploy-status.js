@@ -1,6 +1,6 @@
 /**
 
- * Cluster deploy status — CMS SSE stream + build-info.json fallback (no polling).
+ * Cluster deploy status. CMS SSE stream + build-info.json fallback (no polling).
 
  */
 
@@ -206,7 +206,7 @@
 
   function formatTimestamp(ts) {
 
-    if (!ts) return '—';
+    if (!ts) return '';
 
     try {
 
@@ -264,7 +264,7 @@
 
     };
 
-    var label = labels[phase] || (ev && ev.phase) || '—';
+    var label = labels[phase] || (ev && ev.phase) || '';
 
     if (source === 'k8s-redeploy') {
 
@@ -354,19 +354,19 @@
 
       '">' +
 
-      (ev.status || '—') +
+      (ev.status || '') +
 
       '</span></td>' +
 
       '<td><code class="dashboard-deploy-sha">' +
 
-      (shortSha(ev.live_commit || ev.commit_sha) || '—') +
+      (shortSha(ev.live_commit || ev.commit_sha) || '') +
 
       '</code></td>' +
 
       '<td>' +
 
-      (ev.message || '—') +
+      (ev.message || '') +
 
       '</td>' +
 
@@ -380,7 +380,7 @@
 
           '" target="_blank" rel="noopener" class="dashboard-deploy-run-link">Run</a>'
 
-        : '—') +
+        : '') +
 
       '</td>';
 
@@ -700,7 +700,7 @@
 
               ? cachedEvents.length + ' event(s) · live updates enabled'
 
-              : 'No deploy events yet — they appear when a git push rebuilds this site on the cluster.';
+              : 'No deploy events yet: they appear when a git push rebuilds this site on the cluster.';
 
         }
 

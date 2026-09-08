@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     btn.classList.toggle('dashboard-wizard-save-btn--pending', pending);
     btn.setAttribute(
       'aria-label',
-      pending ? 'Save draft and menu snapshot — pending changes' : 'Save draft and menu snapshot'
+      pending ? 'Save draft and menu snapshot: pending changes' : 'Save draft and menu snapshot'
     );
   }
 
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   var _embedSaveInFlight = null;
 
-  /** Safe snapshot label timestamp — avoid locale APIs that can overflow on some mobile WebKits. */
+  /** Safe snapshot label timestamp: avoid locale APIs that can overflow on some mobile WebKits. */
   function formatSnapshotTimestamp(date) {
     var d = date instanceof Date ? date : new Date(date || Date.now());
     if (isNaN(d.getTime())) d = new Date();
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     );
   }
 
-  /** Iterative JSON-safe clone (no recursive stringify — safer on mobile call stacks). */
+  /** Iterative JSON-safe clone (no recursive stringify: safer on mobile call stacks). */
   function cloneJsonSafe(value, maxDepth) {
     maxDepth = typeof maxDepth === 'number' ? maxDepth : 20;
     if (vIsPrimitive(value)) return value;
@@ -333,8 +333,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       var sorted = versions.slice().sort(function(a, b) {
         var ta = new Date(a.updated_at || a.created_at || 0).getTime();
         var tb = new Date(b.updated_at || b.created_at || 0).getTime();
-        return tb - ta;
-      });
+        return tb - ta;      });
       var vid = sorted[0].id || sorted[0].ID;
       if (!vid) return getFromCMS(base + '/menu');
       return getFromCMS(base + '/menu-versions/' + encodeURIComponent(vid)).then(function(v) {
@@ -353,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     _embedSaveInFlight = Promise.resolve()
       .then(function() {
         step = 'draft';
-        // Form state is enough for the draft — avoid touching the live parent DOM on mobile.
+        // Form state is enough for the draft: avoid touching the live parent DOM on mobile.
         return persistCurrentDraftToCMS({ skipHighlights: true, skipApplyPreview: true, force: true });
       })
       .then(function() {
@@ -964,7 +963,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   var editorSnapshotVersionId = null;
   /** Git path for theme CSS (must match CMS allowlist and static/css/colors.css). */
   var THEME_COLORS_CONTENT_PATH = 'static/css/colors.css';
-  /** @deprecated Legacy draft path; still loaded when applying old previews. */
+  /** Legacy draft path only: theme-overrides.css is no longer shipped. */
   var THEME_OVERRIDES_LEGACY_PATH = 'static/css/theme-overrides.css';
   /** When > 0, applyColorOverrides does not queue a CMS theme draft (hydration load). */
   var themeColorSuppressPersist = 0;
@@ -1016,19 +1015,75 @@ document.addEventListener('DOMContentLoaded', async function() {
         ? 'Save 1 pending menu change'
         : 'Save ' + count + ' pending menu changes');
     } else {
-      btnSave.title = 'Menu matches live — save snapshot or publish';
-      btnSave.setAttribute('aria-label', 'Save menu — in sync with live');
+      btnSave.title = 'Menu matches live: save snapshot or publish';
+      btnSave.setAttribute('aria-label', 'Save menu: in sync with live');
     }
     syncPendingChangesPanel();
+    notifyEmbedChromeState();
+  }
+
+  function notifyEmbedChromeState() {
+    if (!embedPanelMode || !parentMenuWindow) return;
+    var count = countPendingMenuChanges();
+    var pending = count > 0;
+    var deleteDisabled = true;
+    var deleteUnmark = false;
+    var deleteTitle = 'Mark for deletion';
+    var deleteLabel = 'Mark for deletion';
+    if (btnMarkForDeletion) {
+      deleteDisabled = !!btnMarkForDeletion.disabled;
+      deleteUnmark = btnMarkForDeletion.classList.contains('btn-dash-secondary');
+      deleteTitle = btnMarkForDeletion.title || deleteTitle;
+      deleteLabel = btnMarkForDeletion.getAttribute('aria-label') || deleteLabel;
+    }
+    try {
+      parentMenuWindow.postMessage(
+        {
+          type: 'ttms:embed-panel-chrome-state',
+          save: {
+            pending: pending,
+            count: count,
+            disabled: !!(btnSave && btnSave.disabled),
+            title: btnSave ? btnSave.title : '',
+            label: btnSave ? btnSave.getAttribute('aria-label') : '',
+          },
+          remove: {
+            disabled: deleteDisabled,
+            unmark: deleteUnmark,
+            title: deleteTitle,
+            label: deleteLabel,
+          },
+        },
+        window.location.origin
+      );
+    } catch (e) { /* ignore */ }
   }
 
   function setEmbedPanelLoading(on, message) {
     if (!embedPanelMode) return;
     document.body.classList.toggle('dashboard-edit-embed-loading-active', !!on);
     if (!embedLoadingEl) return;
-    embedLoadingEl.classList.toggle('hidden', !on);
-    embedLoadingEl.setAttribute('aria-busy', on ? 'true' : 'false');
     if (embedLoadingLabel && message) embedLoadingLabel.textContent = message;
+    embedLoadingEl.setAttribute('aria-busy', on ? 'true' : 'false');
+    if (embedLoadingEl._leaveTimer) {
+      clearTimeout(embedLoadingEl._leaveTimer);
+      embedLoadingEl._leaveTimer = null;
+    }
+    if (on) {
+      embedLoadingEl.classList.remove('hidden', 'is-leaving');
+      void embedLoadingEl.offsetWidth;
+      embedLoadingEl.classList.add('is-visible');
+      return;
+    }
+    embedLoadingEl.classList.remove('is-visible');
+    embedLoadingEl.classList.add('is-leaving');
+    embedLoadingEl._leaveTimer = setTimeout(function () {
+      if (!embedLoadingEl.classList.contains('is-visible')) {
+        embedLoadingEl.classList.add('hidden');
+        embedLoadingEl.classList.remove('is-leaving');
+      }
+      embedLoadingEl._leaveTimer = null;
+    }, 380);
   }
 
   function notifyEmbedPanelFormReady() {
@@ -1036,20 +1091,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
       window.parent.postMessage({ type: 'ttms:embed-panel-form-ready' }, window.location.origin);
     } catch (e) { /* ignore */ }
+    notifyEmbedChromeState();
   }
 
   function setEditFormLoading(on, message) {
     if (!editFormLoadingEl) return;
+    if (editFormLoadingLabel && message) editFormLoadingLabel.textContent = message;
+    if (editFormLoadingEl._leaveTimer) {
+      clearTimeout(editFormLoadingEl._leaveTimer);
+      editFormLoadingEl._leaveTimer = null;
+    }
     if (on) {
-      editFormLoadingEl.classList.remove('hidden');
+      editFormLoadingEl.classList.remove('hidden', 'is-leaving');
+      void editFormLoadingEl.offsetWidth;
+      editFormLoadingEl.classList.add('is-visible');
       editFormLoadingEl.setAttribute('aria-busy', 'true');
       if (editFormFieldsEl) editFormFieldsEl.setAttribute('aria-busy', 'true');
-      if (editFormLoadingLabel && message) editFormLoadingLabel.textContent = message;
-    } else {
-      editFormLoadingEl.classList.add('hidden');
+      return;
+    }
+    editFormLoadingEl.classList.remove('is-visible');
+    editFormLoadingEl.classList.add('is-leaving');
       editFormLoadingEl.setAttribute('aria-busy', 'false');
       if (editFormFieldsEl) editFormFieldsEl.setAttribute('aria-busy', 'false');
-    }
+    editFormLoadingEl._leaveTimer = setTimeout(function () {
+      if (!editFormLoadingEl.classList.contains('is-visible')) {
+        editFormLoadingEl.classList.add('hidden');
+        editFormLoadingEl.classList.remove('is-leaving');
+      }
+      editFormLoadingEl._leaveTimer = null;
+    }, 320);
   }
 
   function scheduleEndEditFormLoad() {
@@ -1126,11 +1196,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     { id: 'header', label: 'Header', vars: [
       { name: '--header-bg-color', label: 'Background' },
       { name: '--header-text-color', label: 'Nav text' },
-      { name: '--header-bordercolor-1', label: 'Border' }
+      { name: '--header-icon-color', label: 'Icons' },
+      { name: '--header-border-color', label: 'Border' }
     ]},
     { id: 'hero', label: 'Hero', vars: [
-      { name: '--hero-bg-color', label: 'Background' },
-      { name: '--hero-text-color', label: 'Text' }
+      { name: '--hero-bg-color-1', label: 'Background 1' },
+      { name: '--hero-bg-color-2', label: 'Background 2' },
+      { name: '--hero-text-color', label: 'Text' },
+      { name: '--hero-features-icon-color', label: 'Feature icons' },
+      { name: '--hero-features-icon-bg-color', label: 'Feature icon background' },
+      { name: '--hero-border-color', label: 'Border' }
     ]},
     { id: 'main', label: 'Main', vars: [
       { name: '--main-bg', label: 'Background' },
@@ -1139,7 +1214,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     { id: 'menu', label: 'Menu', vars: [
       { name: '--menu-bg-color-1', label: 'Background 1' },
       { name: '--menu-bg-color-2', label: 'Background 2' },
-      { name: '--menu-text-color', label: 'Text' }
+      { name: '--menu-text-color', label: 'Text' },
+      { name: '--favorite-color', label: 'Favorite' }
     ]},
     { id: 'buttons', label: 'Buttons', vars: [
       { name: '--button-color1', label: 'Button 1' },
@@ -1150,7 +1226,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       { name: '--selected-button-color2', label: 'Selected bg 2' },
       { name: '--selected-button-color3', label: 'Selected bg 3' },
       { name: '--selected-text-color1', label: 'Selected text' },
-      { name: '--selected-text-color3', label: 'Accent text' }
+      { name: '--selected-text-color3', label: 'Accent text' },
+      { name: '--select-color', label: 'Select' },
+      { name: '--accent-color', label: 'Accent' },
+      { name: '--accent-text-color', label: 'Accent text' },
+      { name: '--accent-glow-color', label: 'Accent glow' }
     ]},
     { id: 'footer', label: 'Footer', vars: [
       { name: '--footer-bg-color', label: 'Background' },
@@ -1160,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     ]}
   ];
 
-  // Editable selectors (order: more specific first). Click target is matched against these or their descendants.
+  // Editable selectors (order - more specific first). Click target is matched against these or their descendants.
   var EDITABLE_SELECTORS = [
     { selector: '.menu-item-title, .menu-item-title a', type: 'Menu item name' },
     { selector: '.menu-item-description', type: 'Menu item description' },
@@ -1415,8 +1495,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     var prices = [];
     for (var i = 0; i < pricesFlat.length; i += 3) {
       prices.push({
-        variable1: (pricesFlat[i] != null ? String(pricesFlat[i]).trim() : '') || '-',
-        variable2: (pricesFlat[i + 1] != null ? String(pricesFlat[i + 1]).trim() : '') || '-',
+        variable1: (pricesFlat[i] != null ? String(pricesFlat[i]).trim() : '') ,
+        variable2: (pricesFlat[i + 1] != null ? String(pricesFlat[i + 1]).trim() : '') ,
         price: typeof pricesFlat[i + 2] === 'number' ? pricesFlat[i + 2] : (parseFloat(pricesFlat[i + 2]) || 0)
       });
     }
@@ -1751,12 +1831,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         var tr = track.getBoundingClientRect();
         var sr = scrollTarget.getBoundingClientRect();
         var pad = 16;
-        var outOfView = sr.top < tr.top + pad || sr.bottom > tr.bottom - pad;
-        if (!outOfView) return;
+        var outOfView = sr.top < tr.top + pad || sr.bottom > tr.bottom - pad;        if (!outOfView) return;
         try {
           track.scrollTo({
-            top: track.scrollTop + (sr.top - tr.top) - pad,
-            left: 0,
+            top: track.scrollTop + (sr.top - tr.top) - pad,            left: 0,
             behavior: 'smooth'
           });
         } catch (e) { /* ignore */ }
@@ -1766,8 +1844,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       var vh = win.innerHeight || doc.documentElement.clientHeight;
       var vw = win.innerWidth || doc.documentElement.clientWidth;
       var pad = 16;
-      var outOfView = rect.top < pad || rect.bottom > vh - pad || rect.left < pad || rect.right > vw - pad;
-      if (!outOfView) return;
+      var outOfView = rect.top < pad || rect.bottom > vh - pad || rect.left < pad || rect.right > vw - pad;      if (!outOfView) return;
       try {
         scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
       } catch (e) {
@@ -1912,8 +1989,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var bw = parseInt(b.getAttribute('data-weight'), 10);
         if (isNaN(aw)) aw = 999;
         if (isNaN(bw)) bw = 999;
-        if (aw !== bw) return aw - bw;
-        var pos = a.compareDocumentPosition(b);
+        if (aw !== bw) return aw - bw;        var pos = a.compareDocumentPosition(b);
         if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
         if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
         return 0;
@@ -2150,8 +2226,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (Array.isArray(pa)) {
       for (var i = 0; i + 2 < pa.length; i += 3) {
         prices.push({
-          variable1: (pa[i] != null ? String(pa[i]).trim() : '') || '-',
-          variable2: (pa[i + 1] != null ? String(pa[i + 1]).trim() : '') || '-',
+          variable1: (pa[i] != null ? String(pa[i]).trim() : '') ,
+          variable2: (pa[i + 1] != null ? String(pa[i + 1]).trim() : '') ,
           price: typeof pa[i + 2] === 'number' ? pa[i + 2] : (parseFloat(pa[i + 2]) || 0)
         });
       }
@@ -2653,7 +2729,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       console.log(tag, phase, pathOrUrl);
       return;
     }
-    // Never pretty-print huge menu snapshots on mobile — stringify can overflow the stack.
+    // Never pretty-print huge menu snapshots on mobile: stringify can overflow the stack.
     if (detail && typeof detail === 'object') {
       if (detail.menu_data || detail.menuData) {
         var md = detail.menu_data || detail.menuData;
@@ -3111,7 +3187,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       try {
         var idoc = getEditorPreviewDocument();
         if (idoc && idoc.body) {
-          // In embed mode the preview is the live parent menu — avoid mutating it during save.
+          // In embed mode the preview is the live parent menu: avoid mutating it during save.
           if (!embedPanelMode) syncSectionWeightsFromDom(idoc);
           var collected = collectDashboardNewMenuItemsFromIframe(idoc);
           var domSnap = collectMenuStructureFromIframe(idoc);
@@ -3195,7 +3271,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       else if (data.source === 'live') setEditStatus('Live menu with draft changes');
       if (loadDraftsOnLoad && iframe && iframe.contentDocument && iframe.contentDocument.body && editMode) {
         setTimeout(function() {
-          hydrateThemeColorsFromMenuSnapshot();
+          paintLiveThemeOverrides();
           hydrateDashboardNewItemsFromMenuSnapshot();
           var win = iframe.contentWindow;
           if (win && win._dashboardInjectEditButtons) win._dashboardInjectEditButtons();
@@ -3258,7 +3334,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   fetchEditorSnapshotBootstrap();
 
   function setEditSubmode(mode) {
-    /* Inline move mode retired — dedicated /edit-menu-rearrange/ page handles order. */
+    /* Inline move mode retired: dedicated /edit-menu-rearrange/ page handles order. */
     if (mode === 'move' && !rearrangeOnlyMode) {
       window.location.href = '/edit-menu-rearrange/';
       return;
@@ -3344,10 +3420,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     var midX = Math.round((vw - size) / 2);
     var midY = Math.round(inset.top + (vh - inset.top - inset.bottom - size) / 2);
     var left = inset.left;
-    var right = Math.max(left, vw - inset.right - size);
-    var top = inset.top;
-    var bottom = Math.max(top, vh - inset.bottom - size);
-    return {
+    var right = Math.max(left, vw - inset.right - size);    var top = inset.top;
+    var bottom = Math.max(top, vh - inset.bottom - size);    return {
       tl: { x: left, y: top },
       tc: { x: midX, y: top },
       tr: { x: right, y: top },
@@ -3373,9 +3447,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var bestDist = Infinity;
     Object.keys(anchors).forEach(function(id) {
       var a = anchors[id];
-      var dx = a.x - x;
-      var dy = a.y - y;
-      var d = dx * dx + dy * dy;
+      var dx = a.x - x;      var dy = a.y - y;      var d = dx * dx + dy * dy;
       if (d < bestDist) {
         bestDist = d;
         best = id;
@@ -3443,11 +3515,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var cy = rect.top + orb / 2;
     var inset = getColorPainterInsets();
     var pad = 16;
-    var roomL = Math.max(40, cx - pad);
-    var roomR = Math.max(40, window.innerWidth - cx - pad);
-    var roomU = Math.max(40, cy - inset.top);
-    var roomD = Math.max(40, window.innerHeight - cy - pad);
-    var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
+    var roomL = Math.max(40, cx - pad);    var roomR = Math.max(40, window.innerWidth - cx - pad);    var roomU = Math.max(40, cy - inset.top);    var roomD = Math.max(40, window.innerHeight - cy - pad);    var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
     if (anchor === 'tl') return Math.min(roomR, roomD);
     if (anchor === 'tr') return Math.min(roomL, roomD);
     if (anchor === 'bl') return Math.min(roomR, roomU);
@@ -3512,27 +3580,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (anchor === 'tl' || anchor === 'tc' || anchor === 'tr') {
       top = rect.bottom + gap;
     } else if (anchor === 'bl' || anchor === 'bc' || anchor === 'br') {
-      top = rect.top - gap - panelH;
-    } else if (anchor === 'ml') {
+      top = rect.top - gap - panelH;    } else if (anchor === 'ml') {
       left = rect.right + gap;
       top = rect.top + (orb - panelH) / 2;
     } else {
       // mr and fallback: keep panel on the right edge side, below/above orb.
-      left = Math.min(rect.left + orb - panelW, window.innerWidth - panelW - 8 - inset.right);
-      top = rect.bottom + gap;
+      left = Math.min(rect.left + orb - panelW, window.innerWidth - panelW - 8 - inset.right);      top = rect.bottom + gap;
       if (top + panelH > window.innerHeight - 8 - inset.bottom) {
-        top = rect.top - gap - panelH;
-      }
+        top = rect.top - gap - panelH;      }
     }
 
     left = Math.min(
       Math.max(left, 8 + inset.left),
-      window.innerWidth - panelW - 8 - inset.right
-    );
+      window.innerWidth - panelW - 8 - inset.right    );
     top = Math.min(
       Math.max(top, 8 + inset.top),
-      window.innerHeight - panelH - 8 - inset.bottom
-    );
+      window.innerHeight - panelH - 8 - inset.bottom    );
 
     colorWheelFieldsEl.style.left = Math.round(left) + 'px';
     colorWheelFieldsEl.style.top = Math.round(top) + 'px';
@@ -3554,8 +3617,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function shortestAngleDelta(from, to) {
-    var d = to - from;
-    while (d > 180) d -= 360;
+    var d = to - from;    while (d > 180) d -= 360;
     while (d < -180) d += 360;
     return d;
   }
@@ -3609,8 +3671,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var compact = !!opts.compact;
 
     items.forEach(function(item, i) {
-      var delta = i - scroll;
-      var abs = Math.abs(delta);
+      var delta = i - scroll;      var abs = Math.abs(delta);
       var deg = focusAngle + delta * step;
       var rad = (deg * Math.PI) / 180;
       var visible = compact ? true : abs <= COLOR_WHEEL_VISIBLE;
@@ -3656,7 +3717,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       item.style.setProperty('--ring-opacity', String(opacity));
       item.style.setProperty('--ring-i', String(i));
       var selected = compact ? active : i === focusIdx;
-      item.style.zIndex = selected ? '90' : String(Math.max(2, (compact ? 8 : 24) - Math.round(abs * 4)));
+      item.style.zIndex = selected ? '90' : String(Math.max(2, (compact ? 8 : 24). Math.round(abs * 4)));
       item.style.pointerEvents = interactive && visible && (compact || abs < 1.2) ? 'auto' : 'none';
       item.tabIndex = !compact && i === focusIdx ? 0 : -1;
       item.setAttribute('aria-hidden', visible ? 'false' : 'true');
@@ -4090,8 +4151,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var s = 0;
     var hue = 0;
     if (max !== min) {
-      var d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      var d = max - min;      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
       if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) / 6;
       else if (max === g) hue = ((b - r) / d + 2) / 6;
       else hue = ((r - g) / d + 4) / 6;
@@ -4147,10 +4207,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     palette.forEach(function(it, idx) {
       var h = toHex6(it.hex);
       if (!h) return;
-      var dr = channel(h, 1) - tr;
-      var dg = channel(h, 3) - tg;
-      var db = channel(h, 5) - tb;
-      var dist = dr * dr + dg * dg + db * db;
+      var dr = channel(h, 1) - tr;      var dg = channel(h, 3) - tg;      var db = channel(h, 5) - tb;      var dist = dr * dr + dg * dg + db * db;
       if (dist < bestDist) {
         bestDist = dist;
         best = idx;
@@ -4319,22 +4376,6 @@ document.addEventListener('DOMContentLoaded', async function() {
           '.dashboard-edit-color-ring-item[data-var="' + v.name + '"]'
         );
         if (node) node.style.setProperty('--ring-swatch', cssColorToSwatch(textInp.value));
-        if (!colorEditApplyLock && colorPainterLevel === 'editor' && colorEditRingEl) {
-          var hex = toHex6(textInp.value);
-          if (!hex) return;
-          var items = Array.prototype.slice.call(
-            colorEditRingEl.querySelectorAll('.dashboard-edit-color-ring-item')
-          );
-          var palette = items.map(function(it) {
-            return { hex: it.getAttribute('data-edit-hex') || '' };
-          });
-          var next = nearestEditorPaletteIndex(hex, palette);
-          if (next !== Math.round(colorWheelScroll)) {
-            colorWheelScroll = next;
-            colorWheelEditScroll = next;
-            layoutColorPainterRings();
-          }
-        }
       }
       colorInp.addEventListener('input', function() {
         textInp.value = hexWithAlpha(colorInp.value, parseInt(slider.value, 10));
@@ -4480,9 +4521,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     function onPointerMove(ev) {
       if (!colorPainterDrag) return;
       var p = pointerPos(ev);
-      var dx = p.x - colorPainterDrag.startX;
-      var dy = p.y - colorPainterDrag.startY;
-      if (!colorPainterDrag.moved && (Math.abs(dx) > COLOR_PAINTER_DRAG_THRESHOLD || Math.abs(dy) > COLOR_PAINTER_DRAG_THRESHOLD)) {
+      var dx = p.x - colorPainterDrag.startX;      var dy = p.y - colorPainterDrag.startY;      if (!colorPainterDrag.moved && (Math.abs(dx) > COLOR_PAINTER_DRAG_THRESHOLD || Math.abs(dy) > COLOR_PAINTER_DRAG_THRESHOLD)) {
         colorPainterDrag.moved = true;
         closeColorRings({ keepOrb: true });
       }
@@ -4491,9 +4530,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       var inset = getColorPainterInsets();
       var nextX = colorPainterDrag.originLeft + dx;
       var nextY = colorPainterDrag.originTop + dy;
-      nextX = Math.min(Math.max(nextX, inset.left), window.innerWidth - inset.right - size);
-      nextY = Math.min(Math.max(nextY, inset.top), window.innerHeight - inset.bottom - size);
-      setColorPainterPosition(nextX, nextY);
+      nextX = Math.min(Math.max(nextX, inset.left), window.innerWidth - inset.right - size);      nextY = Math.min(Math.max(nextY, inset.top), window.innerHeight - inset.bottom - size);      setColorPainterPosition(nextX, nextY);
       ev.preventDefault();
     }
 
@@ -4844,6 +4881,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       var val = part.slice(idx + 1).trim();
       if (prop && val) out[prop] = val;
     });
+    if (out['--header-bordercolor-1'] && !out['--header-border-color']) {
+      out['--header-border-color'] = out['--header-bordercolor-1'];
+    }
+    if (out['--hero-bg-color'] && !out['--hero-bg-color-1']) {
+      out['--hero-bg-color-1'] = out['--hero-bg-color'];
+    }
     return out;
   }
 
@@ -4901,19 +4944,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
-  function hydrateThemeColorsFromMenuSnapshot() {
-    var snap = window.__ttmsEditorSnapshot;
-    if (!snap || !snap.menuData) return;
-    var o = snap.menuData.themeColorOverrides;
-    if (!o || typeof o !== 'object') return;
-    themeColorSuppressPersist++;
-    try {
-      Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(k) { delete COLOR_OVERRIDE_VALUES[k]; });
-      Object.keys(o).forEach(function(k) { COLOR_OVERRIDE_VALUES[k] = o[k]; });
-      applyColorOverrides();
-    } finally {
-      themeColorSuppressPersist--;
-    }
+  function paintLiveThemeOverrides() {
+    if (Object.keys(COLOR_OVERRIDE_VALUES).length) applyColorOverrides();
   }
 
   function clearSelection() {
@@ -5006,9 +5038,89 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
-  function getMenuItemAvailabilityFromState() {
+  var AVAILABILITY_DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  var AVAILABILITY_DAY_ALIASES = {
+    monday: 'Monday', mon: 'Monday',
+    tuesday: 'Tuesday', tue: 'Tuesday', tues: 'Tuesday',
+    wednesday: 'Wednesday', wed: 'Wednesday',
+    thursday: 'Thursday', thu: 'Thursday', thur: 'Thursday', thurs: 'Thursday',
+    friday: 'Friday', fri: 'Friday',
+    saturday: 'Saturday', sat: 'Saturday',
+    sunday: 'Sunday', sun: 'Sunday'
+  };
+
+  function normalizeAvailabilityDay(name) {
+    return AVAILABILITY_DAY_ALIASES[String(name || '').trim().toLowerCase()] || null;
+  }
+
+  function getAvailabilityDaysFromUi() {
+    var root = document.getElementById('dashboardAvailabilityDays');
+    if (root) {
+      return Array.prototype.map.call(root.querySelectorAll('.dashboard-availability-day[aria-pressed="true"]'), function(btn) {
+        return btn.getAttribute('data-day');
+      }).filter(Boolean);
+    }
     var daysStr = inputAvailabilityDays ? (inputAvailabilityDays.value || '').trim() : '';
-    var days = daysStr.split(',').map(function(s) { return (s || '').trim(); }).filter(Boolean);
+    return daysStr.split(',').map(function(s) { return normalizeAvailabilityDay(s); }).filter(Boolean);
+  }
+
+  function setAvailabilityDaysUi(days, opts) {
+    opts = opts || {};
+    var selected = {};
+    (Array.isArray(days) ? days : []).forEach(function(d) {
+      var n = normalizeAvailabilityDay(d);
+      if (n) selected[n] = true;
+    });
+    var root = document.getElementById('dashboardAvailabilityDays');
+    if (root) {
+      Array.prototype.forEach.call(root.querySelectorAll('.dashboard-availability-day'), function(btn) {
+        var on = !!selected[btn.getAttribute('data-day')];
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.classList.toggle('is-on', on);
+      });
+    }
+    if (inputAvailabilityDays) {
+      inputAvailabilityDays.value = AVAILABILITY_DAY_ORDER.filter(function(d) { return selected[d]; }).join(', ');
+      if (opts.dispatch) {
+        inputAvailabilityDays.dispatchEvent(new Event('input', { bubbles: true }));
+        inputAvailabilityDays.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  }
+
+  function bindAvailabilityDaysUi() {
+    var root = document.getElementById('dashboardAvailabilityDays');
+    if (root && !root.getAttribute('data-bound')) {
+      root.setAttribute('data-bound', '1');
+      root.addEventListener('click', function(e) {
+        var btn = e.target.closest('.dashboard-availability-day');
+        if (!btn || !root.contains(btn)) return;
+        var on = btn.getAttribute('aria-pressed') === 'true';
+        btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+        btn.classList.toggle('is-on', !on);
+        setAvailabilityDaysUi(getAvailabilityDaysFromUi(), { dispatch: true });
+      });
+    }
+    var presets = document.querySelector('.dashboard-availability-day-presets');
+    if (presets && !presets.getAttribute('data-bound')) {
+      presets.setAttribute('data-bound', '1');
+      presets.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-avail-preset]');
+        if (!btn) return;
+        var kind = btn.getAttribute('data-avail-preset');
+        var next = [];
+        if (kind === 'weekdays') next = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        else if (kind === 'weekend') next = ['Saturday', 'Sunday'];
+        else if (kind === 'all') next = AVAILABILITY_DAY_ORDER.slice();
+        setAvailabilityDaysUi(next, { dispatch: true });
+      });
+    }
+  }
+
+  bindAvailabilityDaysUi();
+
+  function getMenuItemAvailabilityFromState() {
+    var days = getAvailabilityDaysFromUi();
     var ts = inputAvailabilityTimeStart ? (inputAvailabilityTimeStart.value || '').trim() : '';
     var tf = inputAvailabilityTimeFinish ? (inputAvailabilityTimeFinish.value || '').trim() : '';
     if (!days.length && !ts && !tf) return null;
@@ -5020,15 +5132,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function populateMenuItemAvailabilityFromObject(obj) {
-    if (!inputAvailabilityDays) return;
+    if (!inputAvailabilityDays && !document.getElementById('dashboardAvailabilityDays')) return;
     if (!obj || typeof obj !== 'object') {
-      inputAvailabilityDays.value = '';
+      setAvailabilityDaysUi([]);
       if (inputAvailabilityTimeStart) inputAvailabilityTimeStart.value = '';
       if (inputAvailabilityTimeFinish) inputAvailabilityTimeFinish.value = '';
       return;
     }
-    var days = obj.days;
-    inputAvailabilityDays.value = Array.isArray(days) ? days.map(function(d) { return String(d).trim(); }).filter(Boolean).join(', ') : '';
+    setAvailabilityDaysUi(obj.days);
     if (inputAvailabilityTimeStart) inputAvailabilityTimeStart.value = obj.time_start != null ? String(obj.time_start).trim() : '';
     if (inputAvailabilityTimeFinish) inputAvailabilityTimeFinish.value = obj.time_finish != null ? String(obj.time_finish).trim() : '';
   }
@@ -5048,7 +5159,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       var v2 = pricesArr[i + 1] != null ? String(pricesArr[i + 1]).trim() : '-';
       var price = pricesArr[i + 2] != null ? String(pricesArr[i + 2]).trim() : '';
       if (!v1 && !v2 && !price) continue;
-      out.push(v1 + ' | ' + (v2 || '-') + ' | ' + price);
+      out.push(v1 + ' | ' + (v2 ) + ' | ' + price);
     }
     return out.join('\n');
   }
@@ -5058,7 +5169,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     lines.forEach(function(line) {
       var parts = line.split('|').map(function(s) { return s.trim(); });
       if (parts.length < 2) return;
-      var v1 = parts[0] || '-';
+      var v1 = parts[0] ;
       var v2 = (parts[1] != null && parts[1] !== '') ? parts[1] : '-';
       var price = parts.length >= 3 ? parts[2] : '';
       if (!v1 || price === '') return;
@@ -6092,6 +6203,96 @@ document.addEventListener('DOMContentLoaded', async function() {
     syncMenuItemImagesTextareaFromRows(!!silentSync);
   }
 
+  function menuItemImageFileLabel(path, previewFile) {
+    if (previewFile && previewFile.name) return String(previewFile.name);
+    var s = String(path || '').replace(/\\/g, '/').trim();
+    if (!s) return 'No image';
+    var base = s.split('/').pop() || s;
+    try { base = decodeURIComponent(base); } catch (e) {}
+    return base;
+  }
+
+  function setMenuItemImageActionMarkup(btn, iconClass, text) {
+    btn.innerHTML = '<i class="fa ' + iconClass + '" aria-hidden="true"></i><span class="dashboard-menu-item-image-action-label">' + text + '</span>';
+  }
+
+  var imagePreviewModal = document.getElementById('dashboardImagePreviewModal');
+  var imagePreviewModalBackdrop = document.getElementById('dashboardImagePreviewBackdrop');
+  var imagePreviewModalClose = document.getElementById('dashboardImagePreviewClose');
+  var imagePreviewModalImg = document.getElementById('dashboardImagePreviewImg');
+  var imagePreviewModalCaption = document.getElementById('dashboardImagePreviewCaption');
+  var imagePreviewModalTitle = document.getElementById('dashboardImagePreviewTitle');
+
+  function closeMenuItemImagePreview() {
+    if (!imagePreviewModal) return;
+    imagePreviewModal.classList.add('hidden');
+    imagePreviewModal.setAttribute('aria-hidden', 'true');
+    if (imagePreviewModalImg) {
+      imagePreviewModalImg.removeAttribute('src');
+      imagePreviewModalImg.alt = '';
+    }
+    if (imagePreviewModalCaption) imagePreviewModalCaption.textContent = '';
+  }
+
+  function openMenuItemImagePreview(src, label) {
+    if (!imagePreviewModal || !imagePreviewModalImg || !src) return;
+    var caption = String(label || '').trim();
+    imagePreviewModalImg.src = src;
+    imagePreviewModalImg.alt = caption;
+    if (imagePreviewModalCaption) {
+      imagePreviewModalCaption.textContent = caption;
+      imagePreviewModalCaption.classList.toggle('hidden', !caption);
+    }
+    if (imagePreviewModalTitle) {
+      imagePreviewModalTitle.textContent = caption || 'Image preview';
+    }
+    imagePreviewModal.classList.remove('hidden');
+    imagePreviewModal.setAttribute('aria-hidden', 'false');
+    if (imagePreviewModalClose) imagePreviewModalClose.focus();
+  }
+
+  function bindMenuItemImageThumbPreview(thumbWrap, img) {
+    if (!thumbWrap || !img) return;
+    thumbWrap.classList.remove('dashboard-menu-item-image-thumb-wrap--replace');
+    thumbWrap.classList.add('dashboard-menu-item-image-thumb-wrap--preview');
+    thumbWrap.setAttribute('title', 'View larger image');
+    thumbWrap.setAttribute('role', 'button');
+    thumbWrap.setAttribute('tabindex', '0');
+    if (!thumbWrap.querySelector('.dashboard-menu-item-image-thumb-zoom')) {
+      var zoomHint = document.createElement('span');
+      zoomHint.className = 'dashboard-menu-item-image-thumb-zoom';
+      zoomHint.setAttribute('aria-hidden', 'true');
+      zoomHint.innerHTML = '<i class="fa fa-search-plus" aria-hidden="true"></i>';
+      thumbWrap.appendChild(zoomHint);
+    }
+    function openIfPossible() {
+      if (thumbWrap.classList.contains('dashboard-menu-item-image-thumb-wrap--empty')) return;
+      var src = img.getAttribute('src');
+      if (!src) return;
+      openMenuItemImagePreview(src, img.alt || '');
+    }
+    thumbWrap.addEventListener('click', openIfPossible);
+    thumbWrap.addEventListener('keydown', function(e) {
+ if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openIfPossible();
+      }
+    });
+  }
+
+  if (imagePreviewModalBackdrop) {
+    imagePreviewModalBackdrop.addEventListener('click', closeMenuItemImagePreview);
+  }
+  if (imagePreviewModalClose) {
+    imagePreviewModalClose.addEventListener('click', closeMenuItemImagePreview);
+  }
+  document.addEventListener('keydown', function(ev) {
+    if (ev.key !== 'Escape') return;
+    if (!imagePreviewModal || imagePreviewModal.classList.contains('hidden')) return;
+    ev.preventDefault();
+    closeMenuItemImagePreview();
+  });
+
   function createMenuItemImageRow(path, previewFile) {
     var row = document.createElement('div');
     row.className = 'dashboard-menu-item-image-row';
@@ -6112,6 +6313,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     img.loading = 'lazy';
     var rowBlobUrl = null;
     var thumbLoadSeq = 0;
+    var nameEl = document.createElement('p');
+    nameEl.className = 'dashboard-menu-item-image-name';
     function revokeRowBlob() {
       if (rowBlobUrl) {
         try { URL.revokeObjectURL(rowBlobUrl); } catch (e) {}
@@ -6126,6 +6329,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     function updateThumbDisplay(val, previewFile) {
       var p = (val || '').trim();
+      if (nameEl) {
+        nameEl.textContent = menuItemImageFileLabel(p, previewFile);
+        img.alt = p ? nameEl.textContent : '';
+      }
       if (!p) {
         thumbLoadSeq++;
         revokeRowBlob();
@@ -6224,7 +6431,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     replaceBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-replace';
     replaceBtn.setAttribute('aria-label', 'Replace with another file');
     replaceBtn.setAttribute('title', 'Replace with another file');
-    replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
+    setMenuItemImageActionMarkup(replaceBtn, 'fa-cloud-upload', 'Replace');
     replaceBtn.addEventListener('click', function() { fileInp.click(); });
 
     var browseSiteBtn = document.createElement('button');
@@ -6232,7 +6439,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     browseSiteBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-browse-site';
     browseSiteBtn.setAttribute('aria-label', 'Browse site images');
     browseSiteBtn.setAttribute('title', 'Browse site images');
-    browseSiteBtn.innerHTML = '<i class="fa fa-folder-open" aria-hidden="true"></i>';
+    setMenuItemImageActionMarkup(browseSiteBtn, 'fa-folder-open', 'Browse');
     browseSiteBtn.addEventListener('click', function() {
       openSiteImagePickerModal(function(rel) {
         inp.value = rel;
@@ -6244,21 +6451,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     });
 
-    var pathCol = document.createElement('div');
-    pathCol.className = 'dashboard-menu-item-image-path-col';
-    var pathActions = document.createElement('div');
-    pathActions.className = 'dashboard-menu-item-image-path-actions';
-    pathActions.appendChild(replaceBtn);
-    pathActions.appendChild(browseSiteBtn);
-    pathActions.appendChild(fileInp);
-    pathCol.appendChild(inp);
-    pathCol.appendChild(pathActions);
-
     var rm = document.createElement('button');
     rm.type = 'button';
     rm.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-remove';
     rm.setAttribute('aria-label', 'Remove image');
-    rm.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+    rm.setAttribute('title', 'Remove image');
+    setMenuItemImageActionMarkup(rm, 'fa-times', 'Remove');
     rm.addEventListener('click', function() {
       var paths = gatherMenuItemImagePathsFromRows();
       var rows = menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
@@ -6266,6 +6464,19 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (i >= 0) paths.splice(i, 1);
       renderMenuItemImagesUI(paths);
     });
+
+    var pathCol = document.createElement('div');
+    pathCol.className = 'dashboard-menu-item-image-path-col';
+    var pathActions = document.createElement('div');
+    pathActions.className = 'dashboard-menu-item-image-path-actions';
+    pathActions.appendChild(replaceBtn);
+    pathActions.appendChild(browseSiteBtn);
+    pathActions.appendChild(rm);
+    pathActions.appendChild(fileInp);
+    pathCol.appendChild(inp);
+    pathCol.appendChild(nameEl);
+    pathCol.appendChild(pathActions);
+    bindMenuItemImageThumbPreview(thumbWrap, img);
 
     handle.addEventListener('dragstart', function(e) {
       var rows = menuItemImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
@@ -6309,7 +6520,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     row.appendChild(handle);
     row.appendChild(thumbWrap);
     row.appendChild(pathCol);
-    row.appendChild(rm);
     return row;
   }
 
@@ -6375,6 +6585,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     img.loading = 'lazy';
     var rowBlobUrl = null;
     var thumbLoadSeq = 0;
+    var nameEl = document.createElement('p');
+    nameEl.className = 'dashboard-menu-item-image-name';
     function revokeRowBlob() {
       if (rowBlobUrl) {
         try { URL.revokeObjectURL(rowBlobUrl); } catch (e) {}
@@ -6389,6 +6601,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     function updateThumbDisplay(val, previewFile) {
       var p = (val || '').trim();
+      if (nameEl) {
+        nameEl.textContent = menuItemImageFileLabel(p, previewFile);
+        img.alt = p ? nameEl.textContent : '';
+      }
       if (!p) {
         thumbLoadSeq++;
         revokeRowBlob();
@@ -6487,7 +6703,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     replaceBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-replace';
     replaceBtn.setAttribute('aria-label', 'Replace with another file');
     replaceBtn.setAttribute('title', 'Replace with another file');
-    replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
+    setMenuItemImageActionMarkup(replaceBtn, 'fa-cloud-upload', 'Replace');
     replaceBtn.addEventListener('click', function() { fileInp.click(); });
 
     var browseSlideshowBtn = document.createElement('button');
@@ -6495,7 +6711,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     browseSlideshowBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-browse-site';
     browseSlideshowBtn.setAttribute('aria-label', 'Browse site images');
     browseSlideshowBtn.setAttribute('title', 'Browse site images');
-    browseSlideshowBtn.innerHTML = '<i class="fa fa-folder-open" aria-hidden="true"></i>';
+    setMenuItemImageActionMarkup(browseSlideshowBtn, 'fa-folder-open', 'Browse');
     browseSlideshowBtn.addEventListener('click', function() {
       openSiteImagePickerModal(function(rel) {
         inp.value = rel;
@@ -6507,21 +6723,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     });
 
-    var pathCol = document.createElement('div');
-    pathCol.className = 'dashboard-menu-item-image-path-col';
-    var pathActions = document.createElement('div');
-    pathActions.className = 'dashboard-menu-item-image-path-actions';
-    pathActions.appendChild(replaceBtn);
-    pathActions.appendChild(browseSlideshowBtn);
-    pathActions.appendChild(fileInp);
-    pathCol.appendChild(inp);
-    pathCol.appendChild(pathActions);
-
     var rm = document.createElement('button');
     rm.type = 'button';
     rm.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-remove';
     rm.setAttribute('aria-label', 'Remove image');
-    rm.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+    rm.setAttribute('title', 'Remove image');
+    setMenuItemImageActionMarkup(rm, 'fa-times', 'Remove');
     rm.addEventListener('click', function() {
       var paths = gatherSlideshowImagePathsFromRows();
       var rows = slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
@@ -6529,6 +6736,19 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (i >= 0) paths.splice(i, 1);
       renderSlideshowImagesUI(paths);
     });
+
+    var pathCol = document.createElement('div');
+    pathCol.className = 'dashboard-menu-item-image-path-col';
+    var pathActions = document.createElement('div');
+    pathActions.className = 'dashboard-menu-item-image-path-actions';
+    pathActions.appendChild(replaceBtn);
+    pathActions.appendChild(browseSlideshowBtn);
+    pathActions.appendChild(rm);
+    pathActions.appendChild(fileInp);
+    pathCol.appendChild(inp);
+    pathCol.appendChild(nameEl);
+    pathCol.appendChild(pathActions);
+    bindMenuItemImageThumbPreview(thumbWrap, img);
 
     handle.addEventListener('dragstart', function(e) {
       var rows = slideshowImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
@@ -6572,7 +6792,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     row.appendChild(handle);
     row.appendChild(thumbWrap);
     row.appendChild(pathCol);
-    row.appendChild(rm);
     return row;
   }
 
@@ -6637,6 +6856,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     img.loading = 'lazy';
     var rowBlobUrl = null;
     var thumbLoadSeq = 0;
+    var nameEl = document.createElement('p');
+    nameEl.className = 'dashboard-menu-item-image-name';
     function revokeRowBlob() {
       if (rowBlobUrl) {
         try { URL.revokeObjectURL(rowBlobUrl); } catch (e) {}
@@ -6651,6 +6872,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     function updateThumbDisplay(val, previewFile) {
       var p = (val || '').trim();
+      if (nameEl) {
+        nameEl.textContent = menuItemImageFileLabel(p, previewFile);
+        img.alt = p ? nameEl.textContent : '';
+      }
       if (!p) {
         thumbLoadSeq++;
         revokeRowBlob();
@@ -6749,7 +6974,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     replaceBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-replace';
     replaceBtn.setAttribute('aria-label', 'Replace with another file');
     replaceBtn.setAttribute('title', 'Replace with another file');
-    replaceBtn.innerHTML = '<i class="fa fa-cloud-upload" aria-hidden="true"></i>';
+    setMenuItemImageActionMarkup(replaceBtn, 'fa-cloud-upload', 'Replace');
     replaceBtn.addEventListener('click', function() { fileInp.click(); });
 
     var browsePromoBtn = document.createElement('button');
@@ -6757,7 +6982,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     browsePromoBtn.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-browse-site';
     browsePromoBtn.setAttribute('aria-label', 'Browse site images');
     browsePromoBtn.setAttribute('title', 'Browse site images');
-    browsePromoBtn.innerHTML = '<i class="fa fa-folder-open" aria-hidden="true"></i>';
+    setMenuItemImageActionMarkup(browsePromoBtn, 'fa-folder-open', 'Browse');
     browsePromoBtn.addEventListener('click', function() {
       openSiteImagePickerModal(function(rel) {
         inp.value = rel;
@@ -6769,21 +6994,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     });
 
-    var pathCol = document.createElement('div');
-    pathCol.className = 'dashboard-menu-item-image-path-col';
-    var pathActions = document.createElement('div');
-    pathActions.className = 'dashboard-menu-item-image-path-actions';
-    pathActions.appendChild(replaceBtn);
-    pathActions.appendChild(browsePromoBtn);
-    pathActions.appendChild(fileInp);
-    pathCol.appendChild(inp);
-    pathCol.appendChild(pathActions);
-
     var rm = document.createElement('button');
     rm.type = 'button';
     rm.className = 'dashboard-btn dashboard-btn-secondary dashboard-menu-item-image-remove';
     rm.setAttribute('aria-label', 'Remove image');
-    rm.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+    rm.setAttribute('title', 'Remove image');
+    setMenuItemImageActionMarkup(rm, 'fa-times', 'Remove');
     rm.addEventListener('click', function() {
       var paths = gatherPromoImagePathsFromRows();
       var rows = promoImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
@@ -6791,6 +7007,19 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (i >= 0) paths.splice(i, 1);
       renderPromoImagesUI(paths);
     });
+
+    var pathCol = document.createElement('div');
+    pathCol.className = 'dashboard-menu-item-image-path-col';
+    var pathActions = document.createElement('div');
+    pathActions.className = 'dashboard-menu-item-image-path-actions';
+    pathActions.appendChild(replaceBtn);
+    pathActions.appendChild(browsePromoBtn);
+    pathActions.appendChild(rm);
+    pathActions.appendChild(fileInp);
+    pathCol.appendChild(inp);
+    pathCol.appendChild(nameEl);
+    pathCol.appendChild(pathActions);
+    bindMenuItemImageThumbPreview(thumbWrap, img);
 
     handle.addEventListener('dragstart', function(e) {
       var rows = promoImagesContainer.querySelectorAll('.dashboard-menu-item-image-row');
@@ -6834,7 +7063,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     row.appendChild(handle);
     row.appendChild(thumbWrap);
     row.appendChild(pathCol);
-    row.appendChild(rm);
     return row;
   }
 
@@ -7045,7 +7273,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if (hoursDayFill) {
       hoursDayFill.style.left = (hoursDayOpenSlot / HOURS_SLOTS_PER_DAY * 100) + '%';
-      hoursDayFill.style.width = ((hoursDayCloseSlot - hoursDayOpenSlot) / HOURS_SLOTS_PER_DAY * 100) + '%';
+      hoursDayFill.style.width = ((hoursDayCloseSlot - hoursDayOpenSlot) / HOURS_SLOTS_PER_DAY * 100) +'%';
     }
     if (hoursDayHandleOpenTime) hoursDayHandleOpenTime.textContent = hoursSlotToTime(hoursDayOpenSlot);
     if (hoursDayHandleCloseTime) {
@@ -7112,8 +7340,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!el) return 0;
         var r = el.getBoundingClientRect();
         var clientX = e.clientX != null ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-        var x = clientX - r.left;
-        var pct = r.width > 0 ? Math.max(0, Math.min(1, x / r.width)) : 0;
+        var x = clientX - r.left;        var pct = r.width > 0 ? Math.max(0, Math.min(1, x / r.width)) : 0;
         return Math.round(pct * HOURS_SLOTS_PER_DAY);
       }
       function applySlot(slot) {
@@ -7210,7 +7437,42 @@ document.addEventListener('DOMContentLoaded', async function() {
     el.addEventListener('change', scheduleLocationPreviewApply);
   });
 
+  function runEmbedWizardTransition(fn) {
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!embedPanelMode || reduced || typeof document.startViewTransition !== 'function') {
+      fn();
+      return;
+    }
+    try {
+      document.startViewTransition(fn);
+    } catch (e) {
+      fn();
+    }
+  }
+
+  var embedWizardTransitionLock = false;
+
+  function withEmbedWizardTransition(fn) {
+    if (embedPanelMode && !embedWizardTransitionLock) {
+      embedWizardTransitionLock = true;
+      runEmbedWizardTransition(function () {
+        try { fn(); } finally { embedWizardTransitionLock = false; }
+      });
+      return true;
+    }
+    return false;
+  }
+
+  function scrollEmbedWizardTabIntoView(root) {
+    if (!root) return;
+    var active = root.querySelector('.dashboard-wizard-tab-active');
+    if (active && typeof active.scrollIntoView === 'function') {
+      active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
   function setMenuItemWizardStep(step) {
+    if (withEmbedWizardTransition(function () { setMenuItemWizardStep(step); })) return;
     menuItemWizardStep = Math.max(0, Math.min(embedWizardMaxStep(MENU_ITEM_WIZARD_LABELS), step));
     var root = document.getElementById('dashboardMenuItemWizardRoot');
     if (!root) return;
@@ -7242,6 +7504,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       clearEmbedChangesFilterIfKind('menu-item');
     }
+    scrollEmbedWizardTabIntoView(root);
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
 
@@ -7273,6 +7536,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   };
 
   function setSectionWizardStep(step) {
+    if (withEmbedWizardTransition(function () { setSectionWizardStep(step); })) return;
     sectionWizardStep = Math.max(0, Math.min(embedWizardMaxStep(SECTION_WIZARD_LABELS), step));
     var root = document.getElementById('dashboardSectionWizardRoot');
     if (!root) return;
@@ -7313,10 +7577,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       clearEmbedChangesFilterIfKind('section');
     }
+    scrollEmbedWizardTabIntoView(root);
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
 
   function setLocationWizardStep(step) {
+    if (withEmbedWizardTransition(function () { setLocationWizardStep(step); })) return;
     var prev = locationWizardStep;
     locationWizardStep = Math.max(0, Math.min(LOCATION_WIZARD_LABELS.length - 1, step));
     if (prev === LOCATION_WIZARD_HOURS_INDEX && locationWizardStep !== LOCATION_WIZARD_HOURS_INDEX && hoursZoomedDayIndex != null) {
@@ -7348,10 +7614,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (locationWizardStep === LOCATION_WIZARD_HOURS_INDEX) {
       hoursRenderWeekView();
     }
+    scrollEmbedWizardTabIntoView(root);
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
 
   function setPromotionWizardStep(step) {
+    if (withEmbedWizardTransition(function () { setPromotionWizardStep(step); })) return;
     promoWizardStep = Math.max(0, Math.min(embedWizardMaxStep(PROMO_WIZARD_LABELS), step));
     var root = document.getElementById('dashboardPromotionWizardRoot');
     if (!root) return;
@@ -7383,6 +7651,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       clearEmbedChangesFilterIfKind('promotion');
     }
+    scrollEmbedWizardTabIntoView(root);
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
 
@@ -7595,7 +7864,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     return paths;
   }
 
-  /** Section _index.md: images.primary (main) and images.secondary (decoration). */
+  /** Section _index.md - images.primary (main) and images.secondary (decoration). */
   function sectionImagePathsFromFrontMatter(fm) {
     fm = fm || {};
     var secondary = '';
@@ -8136,15 +8405,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           var title = fm.title != null ? fm.title : '';
 
           if (kind === 'theme-css' || contentPath === THEME_COLORS_CONTENT_PATH || contentPath === THEME_OVERRIDES_LEGACY_PATH) {
-            themeColorSuppressPersist++;
-            try {
-              var parsed = parseThemeOverridesFromCss(p.body || '');
-              Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(k) { delete COLOR_OVERRIDE_VALUES[k]; });
-              Object.keys(parsed).forEach(function(k) { COLOR_OVERRIDE_VALUES[k] = parsed[k]; });
-              applyColorOverrides();
-            } finally {
-              themeColorSuppressPersist--;
-            }
+            /* colors.css is the live source: do not rehydrate old theme drafts over a pick. */
             applied++;
             return;
           }
@@ -8256,6 +8517,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (editMode && iframeEditOverlayActive()) applyEditHighlights();
         syncMenuItemWeightsFromDom(doc);
         syncMenublockOrderFromSections(doc);
+        paintLiveThemeOverrides();
       })
       .finally(function() { _loadDraftsInFlight = null; });
     return _loadDraftsInFlight;
@@ -8464,12 +8726,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     newLines.forEach(function(l) { newCount[l] = (newCount[l] || 0) + 1; });
     Object.keys(oldCount).forEach(function(l) {
       var n = newCount[l] || 0;
-      if (oldCount[l] > n) removed += oldCount[l] - n;
-    });
+      if (oldCount[l] > n) removed += oldCount[l] - n;    });
     Object.keys(newCount).forEach(function(l) {
       var o = oldCount[l] || 0;
-      if (newCount[l] > o) added += newCount[l] - o;
-    });
+      if (newCount[l] > o) added += newCount[l] - o;    });
     if (!added && !removed) return 'updated';
     return '+' + added + ' \u2212' + removed + ' lines';
   }
@@ -9202,14 +9462,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (addCart) { addCart.setAttribute('data-unit-price', nums[0] || 0); var cartPrice = addCart.querySelector('.cart-button-price'); if (cartPrice) cartPrice.textContent = priceText; }
                 var variable1Vals = [], variable2Vals = [];
                 for (var si = 0; si < opts.pricesArray.length; si += 3) {
-                  var sval = String(opts.pricesArray[si] || '-').trim();
+                  var sval = String(opts.pricesArray[si] ).trim();
                   var fval = String(opts.pricesArray[si + 1] != null ? opts.pricesArray[si + 1] : '-').trim();
                   if (sval && sval !== '-' && sval !== 'None' && variable1Vals.indexOf(sval) === -1) variable1Vals.push(sval);
                   if (fval && fval !== '-' && fval !== 'None' && variable2Vals.indexOf(fval) === -1) variable2Vals.push(fval);
                 }
                 if (opts.pricesArray.length >= 3) {
-                  card.setAttribute('data-selected-variable1', String(opts.pricesArray[0] || '-'));
-                  card.setAttribute('data-selected-variable2', String(opts.pricesArray[1] || '-'));
+                  card.setAttribute('data-selected-variable1', String(opts.pricesArray[0] ));
+                  card.setAttribute('data-selected-variable2', String(opts.pricesArray[1] ));
                 }
                 var url = (opts.itemUrl || '').replace(/'/g, "\\'");
                 var esc = function(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
@@ -9292,7 +9552,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             style = doc.createElement('style');
             style.id = 'dashboard-edit-injected-style';
             style.textContent = [
-              '.dashboard-edit-selected { outline: 2px solid #667eea !important; outline-offset: 2px !important; }',
+              ':root { --dash-accent: var(--scheme-accent); --dash-info: var(--scheme-button-bg); --dash-ink: var(--scheme-white); --dash-success: var(--scheme-accent); --dash-warning: var(--scheme-accent-2); --dash-error: var(--scheme-accent-deep); --dash-black: var(--scheme-black); --dash-bg: var(--scheme-bg); }',
+              '.dashboard-edit-selected { outline: 2px solid var(--dash-accent) !important; outline-offset: 2px !important; }',
               '.menu-item-card .dashboard-new-item-placeholder-link { cursor: default; color: inherit; text-decoration: none; }',
               '.menu-item-card.dashboard-edit-card-wrap { position: relative !important; pointer-events: none; }',
               '.menu-item-card.menu-reels-slide.dashboard-edit-card-wrap { position: relative !important; pointer-events: none; }',
@@ -9313,39 +9574,39 @@ document.addEventListener('DOMContentLoaded', async function() {
               '.hero_logo_container .dashboard-edit-hero-btn-wrap { position: absolute; top: 8px; right: 8px; z-index: 10000; pointer-events: auto; }',
               '.location-item.dashboard-edit-location-wrap { position: relative !important; }',
               '.location-item .dashboard-edit-location-btn-wrap { position: absolute; top: 2px; right: 2px; z-index: 9999; pointer-events: auto; }',
-              '.dashboard-edit-card-btn-wrap .dashboard-edit-btn, .dashboard-edit-header-btn-wrap .dashboard-edit-btn, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn, .dashboard-edit-location-btn-wrap .dashboard-edit-btn, .dashboard-edit-hero-btn-wrap .dashboard-edit-btn { width: 36px; height: 36px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: #667eea9c; backdrop-filter: blur(10px); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: auto; }',
-              '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-hero-btn-wrap .dashboard-edit-btn:hover { background: #764ba2; }',
-              '.dashboard-edit-add-section-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: rgba(102, 126, 234, 0.15); border: 1px dashed rgba(102, 126, 234, 0.5); border-radius: 8px; }',
-              '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.25); color: #fff; cursor: pointer; }',
-              '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn:hover { background: rgba(102, 126, 234, 0.4); }',
-              '.dashboard-edit-add-promotion-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: rgba(102, 126, 234, 0.15); border: 1px dashed rgba(102, 126, 234, 0.5); border-radius: 8px; }',
-              '.dashboard-edit-add-promotion-bar .dashboard-edit-add-promotion-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.5); background: rgba(102, 126, 234, 0.25); color: #fff; cursor: pointer; }',
-              '.dashboard-edit-add-promotion-bar .dashboard-edit-add-promotion-btn:hover { background: rgba(102, 126, 234, 0.4); }',
-              '.dashboard-edit-add-item-bar { margin: 0.5rem 0; padding: 0.4rem; text-align: center; background: rgba(102, 126, 234, 0.12); border: 1px dashed rgba(102, 126, 234, 0.4); border-radius: 6px; }',
-              '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.45); background: rgba(102, 126, 234, 0.2); color: #fff; cursor: pointer; }',
-              '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn:hover { background: rgba(102, 126, 234, 0.35); }',
+              '.dashboard-edit-card-btn-wrap .dashboard-edit-btn, .dashboard-edit-header-btn-wrap .dashboard-edit-btn, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn, .dashboard-edit-location-btn-wrap .dashboard-edit-btn, .dashboard-edit-hero-btn-wrap .dashboard-edit-btn { width: 36px; height: 36px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: color-mix(in srgb, var(--dash-accent) 61%, transparent); backdrop-filter: blur(10px); color: var(--dash-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: auto; }',
+              '.dashboard-edit-card-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-header-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-ad-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-slideshow-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-location-btn-wrap .dashboard-edit-btn:hover, .dashboard-edit-hero-btn-wrap .dashboard-edit-btn:hover { background: var(--primary-purple-dark); }',
+              '.dashboard-edit-add-section-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: color-mix(in srgb, var(--dash-info) 15%, transparent); border: 1px dashed color-mix(in srgb, var(--dash-info) 50%, transparent); border-radius: 8px; }',
+              '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--dash-info) 50%, transparent); background: color-mix(in srgb, var(--dash-info) 25%, transparent); color: var(--dash-ink); cursor: pointer; }',
+              '.dashboard-edit-add-section-bar .dashboard-edit-add-section-btn:hover { background: color-mix(in srgb, var(--dash-info) 40%, transparent); }',
+              '.dashboard-edit-add-promotion-bar { margin: 0.5rem 0; padding: 0.5rem; text-align: center; background: color-mix(in srgb, var(--dash-info) 15%, transparent); border: 1px dashed color-mix(in srgb, var(--dash-info) 50%, transparent); border-radius: 8px; }',
+              '.dashboard-edit-add-promotion-bar .dashboard-edit-add-promotion-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--dash-info) 50%, transparent); background: color-mix(in srgb, var(--dash-info) 25%, transparent); color: var(--dash-ink); cursor: pointer; }',
+              '.dashboard-edit-add-promotion-bar .dashboard-edit-add-promotion-btn:hover { background: color-mix(in srgb, var(--dash-info) 40%, transparent); }',
+              '.dashboard-edit-add-item-bar { margin: 0.5rem 0; padding: 0.4rem; text-align: center; background: color-mix(in srgb, var(--dash-info) 12%, transparent); border: 1px dashed color-mix(in srgb, var(--dash-info) 40%, transparent); border-radius: 6px; }',
+              '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--dash-info) 45%, transparent); background: color-mix(in srgb, var(--dash-info) 20%, transparent); color: var(--dash-ink); cursor: pointer; }',
+              '.dashboard-edit-add-item-bar .dashboard-edit-add-item-btn:hover { background: color-mix(in srgb, var(--dash-info) 35%, transparent); }',
               '.dashboard-edit-card-btn-wrap, .dashboard-edit-header-btn-wrap, .dashboard-edit-ad-btn-wrap { display: inline-flex; align-items: center; gap: 2px; flex-wrap: nowrap; }',
               '.dashboard-edit-move-wrap { display: none; align-items: center; gap: 2px; flex-wrap: nowrap; position: relative; }',
               'body.dashboard-edit-move-mode .dashboard-edit-move-wrap { display: inline-flex !important; }',
               'body.dashboard-edit-move-mode .dashboard-edit-move-wrap.is-open .dashboard-edit-move-actions { display: inline-flex !important; }',
               '.dashboard-edit-move-actions[hidden] { display: none !important; }',
-              '.dashboard-edit-move-btn { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 32px; padding: 0; border: none; border-radius: 4px; background: rgba(102, 126, 234, 0.45); color: #fff; font-size: 11px; pointer-events: auto; user-select: none; touch-action: manipulation; }',
+              '.dashboard-edit-move-btn { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 32px; padding: 0; border: none; border-radius: 4px; background: color-mix(in srgb, var(--dash-info) 45%, transparent); color: var(--dash-ink); font-size: 11px; pointer-events: auto; user-select: none; touch-action: manipulation; }',
               '.dashboard-edit-move-btn > * { pointer-events: none; }',
-              '.dashboard-edit-move-btn:hover:not(:disabled) { background: rgba(102, 126, 234, 0.7); }',
+              '.dashboard-edit-move-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--dash-info) 70%, transparent); }',
               '.dashboard-edit-move-btn:disabled { opacity: 0.35; cursor: not-allowed; }',
               '.dashboard-edit-move-wrap.is-open { z-index: 10002; position: relative; }',
               'body.dashboard-edit-move-mode .dashboard-edit-btn { display: none !important; }',
               'body.dashboard-edit-move-mode .dashboard-edit-add-section-bar, body.dashboard-edit-move-mode .dashboard-edit-add-item-bar, body.dashboard-edit-move-mode .dashboard-edit-add-promotion-bar { display: none !important; }',
-              '.dashboard-edit-move-toggle { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 36px; padding: 0; border: none; border-radius: 4px; background: rgba(102, 126, 234, 0.5); color: #fff; font-size: 12px; pointer-events: auto; user-select: none; touch-action: manipulation; }',
+              '.dashboard-edit-move-toggle { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 36px; padding: 0; border: none; border-radius: 4px; background: color-mix(in srgb, var(--dash-info) 50%, transparent); color: var(--dash-ink); font-size: 12px; pointer-events: auto; user-select: none; touch-action: manipulation; }',
               '.dashboard-edit-move-toggle > * { pointer-events: none; }',
-              '.dashboard-edit-move-toggle:hover { background: rgba(102, 126, 234, 0.75); }',
-              '.dashboard-edit-move-wrap.is-open .dashboard-edit-move-toggle { background: rgba(102, 126, 234, 0.95); outline: 2px solid rgba(255, 255, 255, 0.85); outline-offset: 1px; }',
-              '.dashboard-edit-move-selected { outline: 2px solid #667eea !important; outline-offset: 3px !important; box-shadow: 0 0 0 1px rgba(102, 126, 234, 0.45) !important; }',
-              '.dashboard-edit-has-change { outline: 2px solid #f59e0b !important; outline-offset: 2px !important; box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.4) !important; }',
-              '.dashboard-edit-change-focus { outline: 3px solid #818cf8 !important; outline-offset: 3px !important; box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.35) !important; transition: box-shadow 0.2s ease, outline-color 0.2s ease; }',
-              '.dashboard-edit-new { outline: 2px solid #10b981 !important; outline-offset: 2px !important; box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4) !important; }',
-              '.dashboard-edit-marked-delete { opacity: 0.65 !important; outline: 2px solid #ef4444 !important; outline-offset: 2px !important; position: relative !important; }',
-              '.dashboard-edit-marked-delete::after { content: ""; position: absolute; left: 0; top: 50%; right: 0; height: 2px; background: #ef4444; transform: translateY(-50%); pointer-events: none; }',
+              '.dashboard-edit-move-toggle:hover { background: color-mix(in srgb, var(--dash-info) 75%, transparent); }',
+              '.dashboard-edit-move-wrap.is-open .dashboard-edit-move-toggle { background: color-mix(in srgb, var(--dash-info) 95%, transparent); outline: 2px solid color-mix(in srgb, var(--dash-ink) 85%, transparent); outline-offset: 1px; }',
+              '.dashboard-edit-move-selected { outline: 2px solid var(--dash-accent) !important; outline-offset: 3px !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--dash-info) 45%, transparent) !important; }',
+              '.dashboard-edit-has-change { outline: 2px solid var(--dash-warning) !important; outline-offset: 2px !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--dash-warning) 40%, transparent) !important; }',
+              '.dashboard-edit-change-focus { outline: 3px solid var(--dash-accent) !important; outline-offset: 3px !important; box-shadow: 0 0 0 6px color-mix(in srgb, var(--dash-accent) 35%, transparent) !important; transition: box-shadow 0.2s ease, outline-color 0.2s ease; }',
+              '.dashboard-edit-new { outline: 2px solid var(--dash-success) !important; outline-offset: 2px !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--dash-success) 40%, transparent) !important; }',
+              '.dashboard-edit-marked-delete { opacity: 0.65 !important; outline: 2px solid var(--dash-error) !important; outline-offset: 2px !important; position: relative !important; }',
+              '.dashboard-edit-marked-delete::after { content: ""; position: absolute; left: 0; top: 50%; right: 0; height: 2px; background: var(--dash-error); transform: translateY(-50%); pointer-events: none; }',
               '.dashboard-edit-hidden-for-preview { display: none !important; }'
             ].join('\n');
             doc.head.appendChild(style);
@@ -9664,7 +9925,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 '<div class="menu-image-actions menu-image-actions--standalone">' +
                 '<button type="button" class="menu-image-add-btn" style="display:none;" title="Add a photo for this menu item" aria-label="Add a photo for this menu item">' +
                 '<i class="fa fa-camera" aria-hidden="true"></i><span class="menu-image-add-btn__label">Add photo</span></button></div>' +
-                '<p class="menu-smash-pass__empty-hint">No photo yet — be the first to add one</p></div>' +
+                '<p class="menu-smash-pass__empty-hint">No photo yet: be the first to add one</p></div>' +
                 '<div class="menu-smash-pass__reel hidden"><div class="menu-smash-pass__stack" aria-live="polite"></div></div></div>'
               : '<div class="menu-item-expanded-content" style="display: none;">' +
                 '<div class="menu-item-expanded-loading"><div class="loading-spinner"></div><div class="loading-text">Loading...</div></div>' +
@@ -10063,6 +10324,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       btnMarkForDeletion.innerHTML = '<i class="fa fa-trash" aria-hidden="true"></i>';
       btnMarkForDeletion.setAttribute('aria-label', 'Remove new item');
       btnMarkForDeletion.title = 'Remove this unsaved item from the preview (not published yet)';
+      notifyEmbedChromeState();
       return;
     }
     var canMark = selectedInfo && selectedInfo.contentPath && ['menu-item', 'section-header', 'promotion'].indexOf(selectedInfo.contentType || '') >= 0;
@@ -10079,6 +10341,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       btnMarkForDeletion.setAttribute('aria-label', 'Mark for deletion');
       btnMarkForDeletion.title = 'Mark for deletion (hidden in preview)';
     }
+    notifyEmbedChromeState();
   }
   if (btnMarkForDeletion) {
     btnMarkForDeletion.addEventListener('click', function() {
@@ -10282,6 +10545,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }, 350);
     });
     updateThumb(cfg.input.value.trim(), null);
+    bindMenuItemImageThumbPreview(cfg.thumbWrap, cfg.thumb);
   }
   wireSectionSingleImageField({
     input: inputSectionImageBottom,
@@ -10463,6 +10727,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         setEditStatus('Unsaved changes (not yet published)');
       });
     }
+    bindMenuItemImageThumbPreview(dashboardHeroImageThumbWrap, heroImageThumbImg);
   })();
   if (btnAddModification && modificationsContainer) {
     btnAddModification.addEventListener('click', function() {
@@ -11169,8 +11434,8 @@ document.addEventListener('DOMContentLoaded', async function() {
           }
 
           if (pricesArr.length >= 3) {
-            selectedElement.setAttribute('data-selected-variable1', String(pricesArr[0] || '-'));
-            selectedElement.setAttribute('data-selected-variable2', String(pricesArr[1] || '-'));
+            selectedElement.setAttribute('data-selected-variable1', String(pricesArr[0] ));
+            selectedElement.setAttribute('data-selected-variable2', String(pricesArr[1] ));
           }
 
           var optsWrap = selectedElement.querySelector('.menu-item-options');
@@ -11398,6 +11663,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
       }
       if (!data || !data.type) return;
+
+      if (data.type === 'ttms:embed-panel-click-save') {
+        if (btnSave && !btnSave.disabled) btnSave.click();
+        return;
+      }
+
+      if (data.type === 'ttms:embed-panel-click-delete') {
+        if (btnMarkForDeletion && !btnMarkForDeletion.disabled) btnMarkForDeletion.click();
+        return;
+      }
 
       if (data.type === 'ttms:embed-panel-load-cms-draft') {
         var draftPath = data.contentPath;

@@ -8,10 +8,10 @@
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 999px;
-  background: #f59e0b;
-  color: #1a1a1a;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.45);
+  background: var(--dash-warning);
+  color: var(--dash-ink-muted);
+  border: 1px solid color-mix(in srgb, var(--dash-black) 12%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--dash-warning) 45%, transparent);
   vertical-align: middle;
   line-height: 1;
 }
@@ -68,8 +68,8 @@
 
 .menu-content-draft-badge--modal:hover,
 .menu-content-draft-badge--modal:focus-visible {
-  background: #fbbf24;
-  outline: 2px solid rgba(251, 191, 36, 0.45);
+  background: var(--dash-warning);
+  outline: 2px solid color-mix(in srgb, var(--dash-warning) 45%, transparent);
   outline-offset: 2px;
 }
 

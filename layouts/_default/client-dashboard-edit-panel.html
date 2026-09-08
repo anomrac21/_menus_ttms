@@ -1,9 +1,18 @@
 <!DOCTYPE html>
-<html lang="{{ site.Language.Lang }}">
+<html lang="{{ site.Language.Lang }}" class="dashboard-edit-embed-panel">
 <head>
   {{ partial "dashboard/edit-head.html" . }}
+  <style>
+    html.dashboard-edit-embed-panel,
+    html.dashboard-edit-embed-panel body {
+      background: var(--gray-light, #f4f4f4);
+      color: var(--primary-blue-dark, #090a13);
+      color-scheme: light;
+      font-family: var(--ttms-font-sans, "Montserrat", system-ui, sans-serif);
+    }
+  </style>
 </head>
-<body>
+<body class="dashboard-edit-embed-panel">
   <div class="dashboard-edit-page" id="dashboardEditPage">
     <header class="dashboard-edit-header dashboard-edit-header--menu" aria-label="Content editor toolbar">
       <div class="dashboard-edit-header-inner">
@@ -57,9 +66,16 @@
         </div>
         <div class="dashboard-edit-options-inner">
           <div id="dashboardEditEmbedLoading" class="dashboard-edit-embed-loading hidden" role="status" aria-live="polite" aria-busy="false">
-            <div class="dashboard-edit-form-loading-inner">
-              <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+            <div class="dashboard-edit-form-loading-inner dashboard-edit-embed-loading-card">
+              <div class="dashboard-edit-embed-orb" aria-hidden="true">
+                <span class="dashboard-edit-embed-orb-ring"></span>
+                <span class="dashboard-edit-embed-orb-ring"></span>
+                <span class="dashboard-edit-embed-orb-core"></span>
+              </div>
               <span class="dashboard-edit-embed-loading-label">Loading editor…</span>
+              <div class="dashboard-edit-embed-skel" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
             </div>
           </div>
           <div id="dashboardEditChangesPanelMount" class="dashboard-edit-changes-panel-mount">
@@ -284,9 +300,24 @@
                     </div>
                     <div class="dashboard-menu-item-wizard-panel hidden" data-wizard-index="4" role="tabpanel" id="dashboardWizardPanel4" aria-hidden="true">
                       <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>availability</code> in front matter (when the item can be ordered). Weekday names must match site logic (e.g. <code>Monday</code>).</p>
-                      <div class="dashboard-edit-field">
-                        <label for="dashboardEditAvailabilityDays">Days (comma-separated)</label>
-                        <input type="text" id="dashboardEditAvailabilityDays" class="dashboard-edit-input" placeholder="Monday, Tuesday, Wednesday, Thursday, Friday">
+                      <div class="dashboard-edit-field" id="dashboardEditAvailabilityDaysWrap" data-dashboard-composite="availability-days">
+                        <label id="dashboardEditAvailabilityDaysLabel">Available days</label>
+                        <input type="hidden" id="dashboardEditAvailabilityDays" value="" aria-labelledby="dashboardEditAvailabilityDaysLabel">
+                        <div class="dashboard-availability-days" id="dashboardAvailabilityDays" role="group" aria-labelledby="dashboardEditAvailabilityDaysLabel">
+                          <button type="button" class="dashboard-availability-day" data-day="Monday" aria-pressed="false">Mon</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Tuesday" aria-pressed="false">Tue</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Wednesday" aria-pressed="false">Wed</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Thursday" aria-pressed="false">Thu</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Friday" aria-pressed="false">Fri</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Saturday" aria-pressed="false">Sat</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Sunday" aria-pressed="false">Sun</button>
+                        </div>
+                        <div class="dashboard-availability-day-presets" role="group" aria-label="Day presets">
+                          <button type="button" class="dashboard-availability-preset" data-avail-preset="weekdays">Weekdays</button>
+                          <button type="button" class="dashboard-availability-preset" data-avail-preset="weekend">Weekend</button>
+                          <button type="button" class="dashboard-availability-preset" data-avail-preset="all">All</button>
+                          <button type="button" class="dashboard-availability-preset" data-avail-preset="none">Any day</button>
+                        </div>
                       </div>
                       <div class="dashboard-edit-field dashboard-menu-item-availability-times">
                         <label for="dashboardEditAvailabilityTimeStart">Time start</label>
@@ -588,6 +619,19 @@
       <div id="dashboardHeroSiteImageGrid" class="dashboard-site-image-grid" role="listbox" aria-label="Choose image"></div>
     </div>
   </div>
+  <div id="dashboardImagePreviewModal" class="dashboard-draft-modal dashboard-image-preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardImagePreviewTitle" aria-hidden="true">
+    <div class="dashboard-draft-modal-backdrop" id="dashboardImagePreviewBackdrop"></div>
+    <div class="dashboard-draft-modal-dialog dashboard-image-preview-dialog">
+      <div class="dashboard-image-preview-head">
+        <h2 id="dashboardImagePreviewTitle" class="dashboard-draft-modal-title">Image preview</h2>
+        <button type="button" class="dashboard-site-image-modal-close" id="dashboardImagePreviewClose" aria-label="Close preview">×</button>
+      </div>
+      <div class="dashboard-image-preview-frame">
+        <img id="dashboardImagePreviewImg" class="dashboard-image-preview-img" alt="">
+      </div>
+      <p id="dashboardImagePreviewCaption" class="dashboard-image-preview-caption"></p>
+    </div>
+  </div>
   <div id="dashboardSaveOptionsModal" class="dashboard-draft-modal dashboard-save-options-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardSaveOptionsTitle" aria-hidden="true">
     <div class="dashboard-draft-modal-backdrop" id="dashboardSaveOptionsModalBackdrop"></div>
     <div class="dashboard-draft-modal-dialog dashboard-save-options-dialog">
@@ -601,7 +645,7 @@
 
       <section class="dashboard-save-options-changes" aria-labelledby="dashboardSaveOptionsChangesHeading">
         <h3 id="dashboardSaveOptionsChangesHeading" class="dashboard-save-options-changes-heading">Changes summary</h3>
-        <p id="dashboardSaveOptionsChangesSynced" class="dashboard-save-options-changes-synced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live — you can still save a snapshot.</p>
+        <p id="dashboardSaveOptionsChangesSynced" class="dashboard-save-options-changes-synced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live: you can still save a snapshot.</p>
         <ul id="dashboardSaveOptionsChangesList" class="dashboard-save-options-changes-list hidden" role="list" aria-label="Pending changes"></ul>
       </section>
 

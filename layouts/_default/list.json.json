@@ -70,7 +70,7 @@
   {{- $items = $items | append $item -}}
 {{- end }}
 
-{{- /* Add menu items with promotions (promo image first, else item image) - only for promotions section */ -}}
+{{- /* Add menu items with promotions (promo image first, else item image): only for promotions section */ -}}
 {{- if eq .Section "promotions" }}
   {{- range $mp := where site.RegularPages "Section" "!=" "promotions" }}
     {{- with $mp.Params.promotions }}

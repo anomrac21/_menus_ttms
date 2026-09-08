@@ -1,5 +1,5 @@
 /**
- * Dashboard Edit menu card — menu snapshots (CMS menu-versions), content drafts, publish.
+ * Dashboard Edit menu card: menu snapshots (CMS menu-versions), content drafts, publish.
  */
 (function (global) {
   'use strict';
@@ -267,7 +267,7 @@
     return btn;
   }
 
-  /** API root (single /api segment) — avoids double /api when serviceUrl already ends with /api. */
+  /** API root (single /api segment): avoids double /api when serviceUrl already ends with /api. */
   function cmsApiBase() {
     var api = (CMS_API_URL || global.CMS_API_URL || '').replace(/\/+$/, '');
     if (api) return api;
@@ -327,7 +327,7 @@
     return h;
   }
 
-  /** Hub cookie sessions may lack a stored JWT until sync/refresh — obtain one for CMS Bearer auth. */
+  /** Hub cookie sessions may lack a stored JWT until sync/refresh - obtain one for CMS Bearer auth. */
   function ensureAccessTokenForCms() {
     var existing = getAccessTokenForCms();
     if (existing) return Promise.resolve(existing);
@@ -618,12 +618,12 @@
       if (String(k).trim() && String(overrides[k]).trim()) themeCount++;
     });
     var layoutLabel =
-      'data/menu.json — layout (' + cats + ' categories, ' + items + ' items';
+      'data/menu.json - layout (' + cats + ' categories, ' + items + ' items';
     if (locs) layoutLabel += ', ' + locs + ' locations';
     layoutLabel += ')';
     var fileLabels = [layoutLabel];
     if (themeCount) {
-      fileLabels.push('static/css/colors.css — ' + themeCount + ' theme variables');
+      fileLabels.push('static/css/colors.css: ' + themeCount + ' theme variables');
     }
     return {
       categoryCount: cats,
@@ -639,7 +639,7 @@
     if (s && s.fileLabels && s.fileLabels.length) return s;
     var md = v.menu_data || v.menuData || v.MenuData;
     if (md) return computeClientSnapshotSummaryFromMenuData(md);
-    return { fileLabels: ['data/menu.json — layout (details unavailable)'] };
+    return { fileLabels: ['data/menu.json - layout (details unavailable)'] };
   }
 
   function normalizeMenuUrl(url) {
@@ -891,12 +891,10 @@
     var added = 0;
     Object.keys(oldCount).forEach(function (l) {
       var n = newCount[l] || 0;
-      if (oldCount[l] > n) removed += oldCount[l] - n;
-    });
+      if (oldCount[l] > n) removed += oldCount[l] - n;    });
     Object.keys(newCount).forEach(function (l) {
       var o = oldCount[l] || 0;
-      if (newCount[l] > o) added += newCount[l] - o;
-    });
+      if (newCount[l] > o) added += newCount[l] - o;    });
     return { added: added, removed: removed };
   }
 
@@ -1112,15 +1110,13 @@
         : isSectionIndexDraftPath(pathB)
           ? draftWeightFromPreview(b)
           : 9999;
-    if (secWA !== secWB) return secWA - secWB;
-    var isSecA = isSectionIndexDraftPath(pathA);
+    if (secWA !== secWB) return secWA - secWB;    var isSecA = isSectionIndexDraftPath(pathA);
     var isSecB = isSectionIndexDraftPath(pathB);
     if (isSecA && !isSecB) return -1;
     if (!isSecA && isSecB) return 1;
     var wA = draftWeightFromPreview(a);
     var wB = draftWeightFromPreview(b);
-    if (wA !== wB) return wA - wB;
-    return String(pathA || '').localeCompare(String(pathB || ''));
+    if (wA !== wB) return wA - wB;    return String(pathA || '').localeCompare(String(pathB || ''));
   }
 
   function sortDraftRowElementsByMenuOrder(rowElements, sectionWeights) {
@@ -1156,7 +1152,7 @@
   }
 
   function formatChangeValue(v) {
-    if (v == null) return '—';
+    if (v == null) return '';
     if (typeof v === 'string') {
       var t = v.trim();
       return t.length > 44 ? t.slice(0, 41) + '…' : t;
@@ -1493,7 +1489,7 @@
         more.appendChild(moreBtn);
       } else {
         more.textContent =
-          '… and ' + (items.length - cap) + ' more';
+          '… and ' + (items.length - cap) +' more';
       }
       list.appendChild(more);
     }
@@ -1795,7 +1791,7 @@
         document.createTextNode(
           ' saved on the CMS (max ' +
             SNAPSHOT_MAX +
-            ') — menu layout in data/menu.json and theme colors.'
+            ') - menu layout in data/menu.json and theme colors.'
         )
       );
       snapshotStatusEl.appendChild(intro);
@@ -1935,7 +1931,7 @@
         return n + ' draft' + (n === 1 ? '' : 's') + ' ready to publish';
       }
       if (publishableCount === 0) {
-        return n + ' draft' + (n === 1 ? '' : 's') + ' saved — all omitted';
+        return n + ' draft' + (n === 1 ? '' : 's') + ' saved: all omitted';
       }
       return (
         n +
@@ -2000,7 +1996,7 @@
         introD.appendChild(document.createTextNode(' ready to publish.'));
       } else if (publishableCount === 0) {
         introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
-        introD.appendChild(document.createTextNode(' saved — all omitted from publish.'));
+        introD.appendChild(document.createTextNode(' saved: all omitted from publish.'));
       } else {
         introD.appendChild(createStatusStatPill(n, 'draft', 'drafts'));
         introD.appendChild(document.createTextNode(' saved · '));
@@ -2291,7 +2287,7 @@
         if (data.fileLabels.length > maxL) {
           var liMoreP = document.createElement('li');
           liMoreP.className = 'dashboard-menu-status-row dashboard-menu-status-row--more';
-          liMoreP.textContent = '… and ' + (data.fileLabels.length - maxL) + ' more';
+          liMoreP.textContent = '… and ' + (data.fileLabels.length - maxL) +' more';
           publishRows.push(liMoreP);
         }
         appendStatusRows(lastPublishEl, publishRows, maxL + 1);
@@ -2333,8 +2329,7 @@
           }
           var raw = normalizeVersionsPayload(res.data);
           cachedVersions = raw.slice().sort(function (a, b) {
-            return versionSortKey(b) - versionSortKey(a);
-          });
+            return versionSortKey(b) - versionSortKey(a);          });
           snapshotLoadState = 'ok';
           snapshotLoadError = '';
           var persisted = loadPersistedSnapshotSelection();
@@ -2617,7 +2612,7 @@
                 });
                 renderLastPublishSummary();
                 var flashMsg =
-                  'Success — ' +
+                  'Success: ' +
                   pending.length +
                   ' file' +
                   (pending.length === 1 ? '' : 's') +

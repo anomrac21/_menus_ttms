@@ -53,7 +53,7 @@
       }
     }
 
-    // Hash / empty / bare "#" — UI controls and in-page anchors, never Barba SPA
+    // Hash / empty / bare "#". UI controls and in-page anchors, never Barba SPA
     if (!href || href === '#' || href === '' || href.charAt(0) === '#') {
       return true;
     }
@@ -64,7 +64,7 @@
         if (url.origin === window.location.origin) {
           var path = (url.pathname || '/').replace(/\/+$/, '') || '/';
           var cur = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
-          // Same path + hash only (e.g. /#Dessert) — not a page transition
+          // Same path + hash only (e.g. /#Dessert): not a page transition
           if (path === cur && url.hash) {
             return true;
           }
@@ -106,7 +106,7 @@
     }
     bound = true;
 
-    // Barba v2 uses hooks — it does not dispatch document "barba:after" events by default.
+    // Barba v2 uses hooks: it does not dispatch document "barba:after" events by default.
     if (window.barba.hooks) {
       if (typeof window.barba.hooks.after === 'function') {
         window.barba.hooks.after(function () {
@@ -197,7 +197,7 @@
 
         // UI-only controls: stop Barba from ever seeing these clicks.
         if (shouldPreventBarbaNavigation(href, link) && !shouldUseFullPageNavigation(href)) {
-          // Only cancel bare "#" / empty — real "#section" anchors must still navigate.
+          // Only cancel bare "#" / empty - real "#section" anchors must still navigate.
           if (!href || href === '#') {
             e.preventDefault();
           }

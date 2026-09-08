@@ -1,6 +1,6 @@
 {{ define "main" }}
 {{- $tier := lower (default "free" site.Params.tier) -}}
-{{- /* Tier 1+ only — free / free_verified must not unlock analytics via Matomo id alone */ -}}
+{{- /* Tier 1+ only - free / free_verified must not unlock analytics via Matomo id alone */ -}}
 {{- $analyticsAccess := false -}}
 {{- with site.Params.features -}}
   {{- $analyticsAccess = or (default false .analytics_access) (default false .analytics) -}}
@@ -53,7 +53,7 @@
 
           <span class="dashboard-analytics-card-label">Page views</span>
 
-          <span class="dashboard-analytics-card-value" id="metricPageViews" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricPageViews" aria-label="Data not yet loaded"></span>
 
         </div>
 
@@ -63,7 +63,7 @@
 
           <span class="dashboard-analytics-card-label">Visits</span>
 
-          <span class="dashboard-analytics-card-value" id="metricVisits" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricVisits" aria-label="Data not yet loaded"></span>
 
         </div>
 
@@ -73,7 +73,7 @@
 
           <span class="dashboard-analytics-card-label">Unique visitors</span>
 
-          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricUniqueVisitors" aria-label="Data not yet loaded"></span>
 
         </div>
 
@@ -83,7 +83,7 @@
 
           <span class="dashboard-analytics-card-label">Menu item views</span>
 
-          <span class="dashboard-analytics-card-value" id="metricMenuItemViews" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricMenuItemViews" aria-label="Data not yet loaded"></span>
 
         </div>
 
@@ -93,7 +93,7 @@
 
           <span class="dashboard-analytics-card-label">Add to cart</span>
 
-          <span class="dashboard-analytics-card-value" id="metricAddToCart" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricAddToCart" aria-label="Data not yet loaded"></span>
 
         </div>
 
@@ -103,7 +103,7 @@
 
           <span class="dashboard-analytics-card-label">Orders submitted</span>
 
-          <span class="dashboard-analytics-card-value" id="metricOrderSubmissions" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricOrderSubmissions" aria-label="Data not yet loaded"></span>
 
         </div>
 
@@ -113,7 +113,7 @@
 
           <span class="dashboard-analytics-card-label">Searches</span>
 
-          <span class="dashboard-analytics-card-value" id="metricSearches" aria-label="Data not yet loaded">—</span>
+          <span class="dashboard-analytics-card-value" id="metricSearches" aria-label="Data not yet loaded"></span>
 
         </div>
 

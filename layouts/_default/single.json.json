@@ -72,7 +72,7 @@
           {{- end -}}
           {{- $items = $items | append $item -}}
         {{- else -}}
-          {{- /* Flat array format: [name, type, price] - backward compatible */ -}}
+          {{- /* Flat array format: [name, type, price]: backward compatible */ -}}
           {{- $item := slice -}}
           {{- $item = $item | append . -}}
           {{- $items = $items | append $item -}}
@@ -92,7 +92,7 @@
     {{- end -}}
   {{- end -}}
 
-  {{- /* Build modifications array - flat array format [name, price, name, price, ...] */ -}}
+  {{- /* Build modifications array: flat array format [name, price, name, price, ...] */ -}}
   {{- $modifications := slice -}}
   {{- if .Params.modifications -}}
     {{- range .Params.modifications -}}
@@ -101,7 +101,7 @@
     {{- end -}}
   {{- end -}}
   
-  {{- /* Build additions array - flat array format [name, price, name, price, ...] */ -}}
+  {{- /* Build additions array: flat array format [name, price, name, price, ...] */ -}}
   {{- $additions := slice -}}
   {{- if .Params.additions -}}
     {{- range .Params.additions -}}

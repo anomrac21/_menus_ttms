@@ -7,7 +7,7 @@
 {{- end -}}
 {{- $accountUrl := printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery) -}}
 <div class="dashboard-header-bar" id="dashboardHeaderBar">
-  <a href="/" class="dashboard-logo-link" id="dashboardLogoLink" aria-label="{{ $siteName }} — view live menu" title="View {{ $siteName }} menu site">
+  <a href="/" class="dashboard-logo-link" id="dashboardLogoLink" aria-label="{{ $siteName }}: view live menu" title="View {{ $siteName }} menu site">
     <span class="dashboard-logo-frame" aria-hidden="true">
       <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
     </span>
@@ -21,8 +21,9 @@
     <a href="/" class="dashboard-header-view-menu dashboard-header-view-menu--desktop" id="dashboardHeaderViewMenuDesktop">View live menu <i class="fa fa-external-link" aria-hidden="true"></i></a>
     <a href="{{ $accountUrl }}" class="dashboard-header-account-wrap dashboard-header-account-wrap--desktop" id="dashboardHeaderAccountLink" aria-label="Open your TT Menus account" title="Open your TT Menus account">
       <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
-      <span class="dashboard-header-account" id="dashboardHeaderUserName">—</span>
+      <span class="dashboard-header-account" id="dashboardHeaderUserName"></span>
     </a>
+    {{ partial "dashboard/theme-toggle.html" . }}
     <div class="dashboard-header-actions dashboard-header-actions--desktop" role="group" aria-label="Account actions">
       <a href="/dashboard/deployments/" class="btn-dash btn-dash-secondary dashboard-header-deploy-history" id="dashboardDeployHistoryLink" data-auth="admin-site" style="display: none;" title="View cluster deploy history" aria-label="Deploy history">
         <i class="fa fa-history" aria-hidden="true"></i>
@@ -44,7 +45,7 @@
       <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <span class="dashboard-header-tray-text">
         <span class="dashboard-header-tray-label">Account</span>
-        <span class="dashboard-header-tray-value" id="dashboardHeaderTrayUserName">—</span>
+        <span class="dashboard-header-tray-value" id="dashboardHeaderTrayUserName"></span>
       </span>
     </a>
     <a href="/" class="dashboard-header-tray-row" id="dashboardHeaderViewMenu">

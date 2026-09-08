@@ -196,7 +196,7 @@ const NotifyClient = {
       if (/^(wss?):\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(this.config.websocketUrl || '')) {
         var host = (window.location && window.location.hostname) || '';
         if (host !== 'localhost' && host !== '127.0.0.1' && !/\.local$/i.test(host)) {
-          console.warn('Skipping notification WebSocket — loopback URL on public site');
+          console.warn('Skipping notification WebSocket: loopback URL on public site');
           return;
         }
       }
@@ -282,7 +282,7 @@ const NotifyClient = {
   },
 
   /**
-   * Send notification (admin only - requires JWT token)
+   * Send notification (admin only: requires JWT token)
    */
   async sendNotification(notification, token) {
     if (!token) {

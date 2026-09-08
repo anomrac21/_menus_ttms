@@ -57,7 +57,7 @@
     var name = line.item || line.name || line.title || line.product || 'Item';
     var size = line.size && String(line.size) !== '-' ? ' (' + line.size + ')' : '';
     var qty = line.quantity || line.amt || line.qty || 1;
-    var extra = line.note ? ' — ' + line.note : '';
+    var extra = line.note ? ': ' + line.note : '';
     return qty + '× ' + name + size + extra;
   }
 
@@ -401,7 +401,7 @@
     }
     var title = 'Set orderService.printerName when a thermal printer is available.';
     if (qzPrinter) {
-      title += ' This computer’s OS default is “' + qzPrinter + '” — that is not a kitchen printer setup.';
+      title += ' This computer’s OS default is “' + qzPrinter + '”: that is not a kitchen printer setup.';
     }
     return { state: 'unset', text: 'No printer configured', title: title };
   }
@@ -432,8 +432,7 @@
     }
     var shown = displayOrders(lastPending);
     var queued = queuedCount(shown);
-    var printed = shown.length - queued;
-    var loc = selectedLocation();
+    var printed = shown.length - queued;    var loc = selectedLocation();
     var printer = printerBadge();
     var qz = qzBadge();
     setBadge('qz', qz.text, qz.state, true, qz.title);

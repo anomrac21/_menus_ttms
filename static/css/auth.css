@@ -5,14 +5,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #242938 0%, #2b3140 100%);
+  background: var(--dash-bg);
   padding: 20px;
 }
 
 .auth-card {
-  background: white;
+  background: var(--dash-surface);
+  color: var(--dash-ink);
+  border: 1px solid var(--dash-border);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--dash-black) 30%, transparent);
   padding: 40px;
   max-width: 450px;
   width: 100%;
@@ -44,13 +46,13 @@
 .auth-title {
   font-size: 28px;
   font-weight: bold;
-  color: #333;
+  color: var(--dash-ink);
   margin: 0 0 10px;
 }
 
 .auth-subtitle {
   font-size: 14px;
-  color: #666;
+  color: var(--dash-ink-muted);
   margin: 0;
 }
 
@@ -66,7 +68,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--dash-ink-muted);
   margin-bottom: 8px;
 }
 
@@ -74,24 +76,26 @@
   width: 100%;
   padding: 12px 16px;
   font-size: 15px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--dash-ink-muted);
   border-radius: 8px;
+  background: var(--dash-surface);
+  color: var(--dash-ink);
   transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--dash-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dash-info) 10%, transparent);
 }
 
 .form-input.error {
-  border-color: #f44336;
+  border-color: var(--dash-error);
 }
 
 .form-error {
-  color: #f44336;
+  color: var(--dash-error);
   font-size: 13px;
   margin-top: 6px;
   display: none;
@@ -116,7 +120,7 @@
 
 .form-checkbox label {
   font-size: 14px;
-  color: #666;
+  color: var(--dash-ink-muted);
   cursor: pointer;
   user-select: none;
 }
@@ -126,8 +130,8 @@
   padding: 14px;
   font-size: 16px;
   font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #242938 0%, #2b3140 100%);
+  color: var(--dash-ink);
+  background: linear-gradient(135deg, var(--dash-info) 0%, var(--dash-info) 100%);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -136,7 +140,7 @@
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--dash-info) 30%, transparent);
 }
 
 .btn-primary:active {
@@ -154,16 +158,16 @@
   padding: 14px;
   font-size: 16px;
   font-weight: 600;
-  color: #667eea;
-  background: white;
-  border: 2px solid #667eea;
+  color: var(--dash-accent);
+  background: var(--dash-surface);
+  border: 2px solid var(--dash-accent);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-  background: #f5f7ff;
+  background: var(--dash-surface);
 }
 
 a.btn-secondary {
@@ -175,7 +179,7 @@ a.btn-secondary {
 
 .auth-signup-note {
   text-align: center;
-  color: #666;
+  color: var(--dash-ink-muted);
   font-size: 14px;
   margin: 12px 0 0;
   line-height: 1.45;
@@ -194,13 +198,13 @@ a.btn-secondary {
   left: 0;
   right: 0;
   height: 1px;
-  background: #e0e0e0;
+  background: var(--dash-ink-muted);
 }
 
 .auth-divider span {
-  background: white;
+  background: var(--dash-surface);
   padding: 0 15px;
-  color: #999;
+  color: var(--dash-ink-muted);
   font-size: 13px;
   position: relative;
 }
@@ -217,10 +221,10 @@ a.btn-secondary {
   justify-content: center;
   gap: 12px;
   padding: 12px 16px;
-  border: 2px solid #dadce0;
+  border: 2px solid var(--dash-info);
   border-radius: 8px;
-  background: #fff;
-  color: #3c4043;
+  background: var(--dash-surface);
+  color: var(--dash-info);
   font-size: small;
   font-weight: 600;
   cursor: pointer;
@@ -228,9 +232,9 @@ a.btn-secondary {
 }
 
 .btn-google:hover {
-  background: #f8f9fa;
-  border-color: #c6c9cc;
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15);
+  background: var(--dash-surface);
+  border-color: var(--dash-info);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--dash-info) 15%, transparent);
 }
 
 .btn-google:disabled {
@@ -250,7 +254,7 @@ a.btn-secondary {
 }
 
 .auth-link {
-  color: #667eea;
+  color: var(--dash-accent);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -258,7 +262,7 @@ a.btn-secondary {
 }
 
 .auth-link:hover {
-  color: #764ba2;
+  color: var(--primary-purple-dark);
   text-decoration: underline;
 }
 
@@ -282,26 +286,26 @@ a.btn-secondary {
 }
 
 .alert-success {
-  background: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #c8e6c9;
+  background: var(--dash-ink-muted);
+  color: var(--dash-success);
+  border: 1px solid var(--dash-accent);
 }
 
 .alert-error {
-  background: #ffebee;
-  color: #c62828;
-  border: 1px solid #ffcdd2;
+  background: var(--dash-accent);
+  color: var(--dash-error);
+  border: 1px solid var(--dash-warning);
 }
 
 .alert-info {
-  background: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #bbdefb;
+  background: var(--dash-info);
+  color: var(--dash-info);
+  border: 1px solid var(--dash-info);
 }
 
 .password-requirements {
   font-size: 12px;
-  color: #666;
+  color: var(--dash-ink-muted);
   margin-top: 8px;
   padding-left: 20px;
 }
@@ -311,11 +315,11 @@ a.btn-secondary {
 }
 
 .password-requirements li.valid {
-  color: #4caf50;
+  color: var(--dash-success);
 }
 
 .password-requirements li.invalid {
-  color: #f44336;
+  color: var(--dash-error);
 }
 
 /* Loading Spinner */
@@ -323,9 +327,9 @@ a.btn-secondary {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid color-mix(in srgb, var(--dash-ink) 30%, transparent);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: var(--dash-ink);
   animation: spin 0.8s linear infinite;
   margin-right: 8px;
 }
@@ -337,7 +341,7 @@ a.btn-secondary {
 /* Dashboard Styles */
 .dashboard-container {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--dash-surface);
 }
 
 .dashboard-header {
@@ -349,7 +353,7 @@ a.btn-secondary {
 .dashboard-title {
   font-size: 24px;
   font-weight: bold;
-  color: #333;
+  color: var(--dash-ink-muted);
   margin: 0;
 }
 
@@ -365,31 +369,31 @@ a.btn-secondary {
 
 .user-name {
   font-weight: 600;
-  color: #333;
+  color: var(--dash-ink-muted);
   display: block;
   font-size: 14px;
 }
 
 .user-email {
   font-size: 12px;
-  color: #666;
+  color: var(--dash-ink-muted);
 }
 
 .btn-logout {
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
-  color: #f44336;
-  background: white;
-  border: 2px solid #f44336;
+  color: var(--dash-error);
+  background: var(--dash-surface);
+  border: 2px solid var(--dash-error);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .btn-logout:hover {
-  background: #f44336;
-  color: white;
+  background: var(--dash-error);
+  color: var(--dash-ink);
 }
 
 .dashboard-content {
@@ -406,11 +410,11 @@ a.btn-secondary {
 }
 
 .dashboard-card {
-  background: white;
+  background: var(--dash-surface);
   display: flex;
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 10%, transparent);
   transition: all 0.3s ease;
   justify-content: center;
   flex-direction: column;
@@ -419,7 +423,7 @@ a.btn-secondary {
 
 .dashboard-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--dash-black) 15%, transparent);
 }
 
 .card-header {
@@ -432,43 +436,43 @@ a.btn-secondary {
 .card-title {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--dash-ink-muted);
   margin: 0;
 }
 
 .card-icon {
   font-size: 24px;
-  color: #667eea;
+  color: var(--dash-accent);
 }
 
 .card-value {
   font-size: 32px;
   font-weight: bold;
-  color: #667eea;
+  color: var(--dash-accent);
   margin: 0;
 }
 
 .card-description {
   font-size: x-small;
-  color: #666;
+  color: var(--dash-ink-muted);
   margin-top: 8px;
 }
 
 .update-section {
-  background: white;
+  background: var(--dash-surface);
   border-radius: 12px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 10%, transparent);
   margin-bottom: 1rem;
 }
 
 .section-title {
   font-size: 20px;
   font-weight: 600;
-  color: #333;
+  color: var(--dash-ink-muted);
   margin: 0 0 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--dash-ink-muted);
 }
 
 /* Responsive */

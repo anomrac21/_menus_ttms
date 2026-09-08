@@ -21,7 +21,7 @@
     {{- end -}}
   {{- end -}}
 {{- else -}}
-  {{- /* Top-level catalog sections. Use site.Sections — Home.Sections can drop
+  {{- /* Top-level catalog sections. Use site.Sections. Home.Sections can drop
        mounted .generated folders after a live merge. Skip /{location}/ trees. */ -}}
   {{- $locSlugs := slice -}}
   {{- with site.Data.locations -}}

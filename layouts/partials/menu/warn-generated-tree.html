@@ -11,7 +11,7 @@
   {{- range $locs -}}
     {{- with .slug -}}
       {{- if not (site.GetPage .) -}}
-        {{- warnf "[menu-merge] multiLocationMenus=true but /%s/ is missing — content/.generated is still a flat menu. Run: python scripts/merge_location_menus.py   or .\\scripts\\serve.ps1 so toggling the flag remakes /%s/." . . -}}
+        {{- warnf "[menu-merge] multiLocationMenus=true but /%s/ is missing: content/.generated is still a flat menu. Run: python scripts/merge_location_menus.py or .\\scripts\\serve.ps1 so toggling the flag remakes /%s/." . . -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}

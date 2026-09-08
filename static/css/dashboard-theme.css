@@ -1,0 +1,257 @@
+/**
+ * Dashboard chrome. TT Menus hub (ttms_app) color system.
+ * Hex values live only here. Dashboard CSS must use the tokens below.
+ */
+
+:root {
+  --primary-red: #cd2e57;
+  --primary-red-dark: #ba1d45;
+  --primary-red-light: #e85d7a;
+  --primary-orange: #e5ad36;
+  --primary-orange-light: #f0c066;
+  --primary-orange-dark: #d19b2e;
+  --primary-purple: #ecb5d1;
+  --primary-purple-light: #f0c8e0;
+  --primary-purple-dark: #d89bc8;
+  --primary-blue: #313446;
+  --primary-blue-dark: #090a13;
+  --primary-blue-light: #4a4f5f;
+  --primary-green: #28a745;
+  --primary-green-dark: #1e7e34;
+  --primary-green-light: #34ce57;
+  --primary-yellow: #e5ad36;
+  --primary-yellow-light: #f0c066;
+  --primary-yellow-dark: #d19b2e;
+  --primary-cyan: #17a2b8;
+  --primary-cyan-light: #20c997;
+  --primary-cyan-dark: #138496;
+  --primary-glow: #fcfbf9;
+
+  --white: #ffffff;
+  --white-off: #fcfbf9;
+  --black: #000000;
+  --gray-light: #f4f4f4;
+  --gray: #9ca3af;
+  --gray-medium: #6b7280;
+  --gray-dark: #374151;
+
+  --bg-primary: var(--primary-blue-dark);
+  --bg-secondary: var(--primary-blue);
+  --bg-accent: var(--primary-purple);
+  --bg-surface: var(--gray-light);
+  --bg-overlay: color-mix(in srgb, var(--primary-blue-dark) 4%, transparent);
+
+  --text-primary: var(--primary-blue-dark);
+  --text-secondary: var(--primary-blue);
+  --text-light: var(--white-off);
+  --text-muted: var(--gray);
+
+  --border-light: color-mix(in srgb, var(--primary-purple) 20%, transparent);
+  --border-medium: color-mix(in srgb, var(--primary-blue) 10%, transparent);
+  --border-dark: color-mix(in srgb, var(--primary-blue-dark) 20%, transparent);
+
+  --shadow-light: color-mix(in srgb, var(--primary-blue-dark) 10%, transparent);
+  --shadow-medium: color-mix(in srgb, var(--primary-blue-dark) 15%, transparent);
+  --shadow-dark: color-mix(in srgb, var(--primary-blue-dark) 20%, transparent);
+
+  --success: var(--primary-green);
+  --warning: var(--primary-orange);
+  --error: var(--primary-red);
+  --info: var(--primary-blue);
+
+  --hub-panel-ink: var(--text-primary);
+  --hub-panel-ink-muted: color-mix(in srgb, var(--text-primary) 58%, transparent);
+  --hub-panel-accent: color-mix(in srgb, var(--primary-orange) 72%, var(--primary-blue-dark));
+  --hub-panel-accent-ink: var(--primary-blue-dark);
+  --hub-panel-border: color-mix(in srgb, var(--primary-blue-dark) 10%, transparent);
+  --hub-panel-border-subtle: color-mix(in srgb, var(--primary-blue-dark) 6%, transparent);
+  --hub-panel-surface: color-mix(in srgb, var(--white) 78%, transparent);
+  --hub-panel-surface-raised: color-mix(in srgb, var(--white) 92%, transparent);
+  --hub-panel-surface-inset: color-mix(in srgb, var(--primary-blue-dark) 4%, transparent);
+  --hub-panel-backdrop: color-mix(in srgb, var(--primary-blue-dark) 42%, transparent);
+  --hub-panel-shadow: color-mix(in srgb, var(--primary-blue-dark) 14%, transparent);
+  --hub-panel-success: var(--primary-green-dark);
+  --hub-panel-logout-ink: var(--primary-red-dark);
+
+  --dash-bg: var(--gray-light);
+  --dash-bg-2: var(--white-off);
+  --dash-surface: var(--white);
+  --dash-surface-raised: var(--white-off);
+  --dash-surface-inset: var(--hub-panel-surface-inset);
+  --dash-ink: var(--text-primary);
+  --dash-ink-muted: var(--text-muted);
+  --dash-accent: var(--primary-orange);
+  --dash-accent-2: var(--primary-red);
+  --dash-accent-ink: var(--primary-blue-dark);
+  --dash-border: var(--border-medium);
+  --dash-border-strong: var(--border-dark);
+  --dash-shadow: var(--shadow-medium);
+  --dash-shadow-strong: var(--shadow-dark);
+  --dash-success: var(--success);
+  --dash-warning: var(--warning);
+  --dash-error: var(--error);
+  --dash-info: var(--info);
+  --dash-overlay: var(--hub-panel-backdrop);
+  --dash-white: var(--white);
+  --dash-black: var(--black);
+  --dash-on-accent: var(--white-off);
+}
+
+[data-theme="dark"] {
+  --bg-surface: var(--primary-blue-light);
+  --bg-overlay: color-mix(in srgb, var(--primary-purple) 12%, transparent);
+  --text-primary: var(--white-off);
+  --text-secondary: color-mix(in srgb, var(--white-off) 88%, var(--primary-blue-light));
+  --text-muted: color-mix(in srgb, var(--white-off) 68%, var(--primary-blue));
+  --border-light: color-mix(in srgb, var(--white) 14%, transparent);
+  --border-medium: color-mix(in srgb, var(--white) 20%, transparent);
+  --border-dark: color-mix(in srgb, var(--white) 28%, transparent);
+  --shadow-light: color-mix(in srgb, var(--primary-blue-dark) 30%, transparent);
+  --shadow-medium: color-mix(in srgb, var(--primary-blue-dark) 40%, transparent);
+  --shadow-dark: color-mix(in srgb, var(--primary-blue-dark) 50%, transparent);
+
+  --hub-panel-ink: var(--text-primary);
+  --hub-panel-ink-muted: color-mix(in srgb, var(--text-primary) 72%, transparent);
+  --hub-panel-accent: color-mix(in srgb, var(--primary-orange) 55%, var(--white));
+  --hub-panel-accent-ink: var(--primary-blue-dark);
+  --hub-panel-border: color-mix(in srgb, var(--white) 16%, transparent);
+  --hub-panel-border-subtle: color-mix(in srgb, var(--white) 12%, transparent);
+  --hub-panel-surface: color-mix(in srgb, var(--white) 12%, transparent);
+  --hub-panel-surface-raised: color-mix(in srgb, var(--white) 18%, transparent);
+  --hub-panel-surface-inset: color-mix(in srgb, var(--white) 7%, transparent);
+  --hub-panel-backdrop: color-mix(in srgb, var(--black) 55%, transparent);
+  --hub-panel-shadow: color-mix(in srgb, var(--black) 42%, transparent);
+  --hub-panel-success: var(--primary-green-light);
+  --hub-panel-logout-ink: var(--primary-red-light);
+
+  --dash-bg: var(--primary-blue-dark);
+  --dash-bg-2: var(--primary-blue);
+  --dash-surface: var(--primary-blue);
+  --dash-surface-raised: var(--primary-blue-light);
+  --dash-surface-inset: var(--hub-panel-surface-inset);
+  --dash-ink: var(--text-primary);
+  --dash-ink-muted: var(--text-muted);
+  --dash-accent: var(--primary-orange);
+  --dash-accent-2: var(--primary-red-light);
+  --dash-accent-ink: var(--primary-blue-dark);
+  --dash-border: var(--border-medium);
+  --dash-border-strong: var(--border-dark);
+  --dash-shadow: var(--shadow-medium);
+  --dash-shadow-strong: var(--shadow-dark);
+  --dash-overlay: var(--hub-panel-backdrop);
+  --dash-on-accent: var(--white-off);
+}
+
+/* Live-menu iframe editor: keep the light hub palette so fields stay readable
+   even when the site theme is dark or restaurant tokens leak in. */
+html.dashboard-edit-embed-panel,
+html.dashboard-edit-embed-panel[data-theme="dark"],
+html[data-theme="dark"] body.dashboard-edit-embed-panel,
+body.dashboard-edit-embed-panel {
+  --text-primary: var(--primary-blue-dark);
+  --text-secondary: var(--primary-blue);
+  --text-muted: var(--gray-medium);
+  --dash-bg: var(--gray-light);
+  --dash-bg-2: var(--white-off);
+  --dash-surface: var(--white);
+  --dash-surface-raised: var(--white-off);
+  --dash-surface-inset: var(--hub-panel-surface-inset);
+  --dash-ink: var(--primary-blue-dark);
+  --dash-ink-muted: var(--gray-medium);
+  --dash-accent: var(--primary-orange);
+  --dash-accent-2: var(--primary-red);
+  --dash-accent-ink: var(--primary-blue-dark);
+  --dash-border: var(--border-medium);
+  --dash-border-strong: var(--border-dark);
+  --dash-success: var(--primary-green-dark);
+  --dash-warning: var(--primary-orange-dark);
+  --dash-error: var(--primary-red-dark);
+  --dash-info: var(--primary-blue);
+  --dash-black: var(--black);
+  --dash-white: var(--white);
+  --dash-on-accent: var(--white-off);
+  color-scheme: light;
+  background: var(--gray-light);
+  color: var(--primary-blue-dark);
+}
+
+html:has(.dashboard-control-room),
+html:has(.dashboard-control-room) body,
+body.dashboard-control-room,
+body.dashboard-edit-theme-only,
+body.dashboard-edit-rearrange-only {
+  background: var(--dash-bg) !important;
+  color: var(--dash-ink);
+}
+
+html:has(.dashboard-control-room) {
+  --main-bg: var(--dash-bg);
+  --main-bg-color: var(--dash-bg);
+  --main-text-color: var(--dash-ink);
+  --header-bg-color: var(--dash-surface);
+  --header-text-color: var(--dash-ink);
+  --header-icon-color: var(--dash-ink);
+  --header-border-color: var(--dash-border);
+  --header-bordercolor-1: var(--dash-border);
+  --header-bordercolor-2: var(--dash-border);
+  --hero-bg-color: var(--dash-bg);
+  --hero-bg-color-1: var(--dash-bg);
+  --hero-bg-color-2: var(--dash-bg);
+  --hero-text-color: var(--dash-ink);
+  --hero-features-icon-color: var(--dash-ink);
+  --hero-features-icon-bg-color: var(--dash-surface);
+  --hero-border-color: var(--dash-border);
+  --menu-bg-color-1: var(--dash-surface);
+  --menu-bg-color-2: var(--dash-surface-raised);
+  --menu-text-color: var(--dash-ink);
+  --favorite-color: var(--primary-red-light);
+  --button-color1: var(--primary-blue);
+  --button-color2: var(--primary-blue-dark);
+  --button-text-color1: var(--white-off);
+  --button-text-color2: var(--white);
+  --selected-button-color1: var(--primary-red-dark);
+  --selected-button-color2: var(--primary-orange-dark);
+  --selected-button-color3: var(--primary-orange);
+  --selected-text-color1: var(--white);
+  --selected-text-color3: var(--primary-red);
+  --select-color: var(--primary-orange);
+  --accent-color: var(--primary-orange);
+  --accent-text-color: var(--white);
+  --accent-glow-color: var(--primary-orange);
+  --footer-bg-color: var(--dash-surface);
+  --footer-text-color: var(--dash-ink);
+  --footer-icon-color: var(--dash-ink);
+  --modal-bg-container-color: var(--dash-overlay);
+}
+
+.dashboard-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dashboard-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--dash-border);
+  border-radius: 999px;
+  background: var(--dash-surface);
+  color: var(--dash-ink);
+  cursor: pointer;
+}
+
+.dashboard-theme-btn:hover,
+.dashboard-theme-btn:focus-visible {
+  border-color: var(--dash-accent);
+  color: var(--dash-accent-ink);
+  background: color-mix(in srgb, var(--dash-accent) 18%, var(--dash-surface));
+}
+
+.dashboard-theme-btn.hide {
+  display: none !important;
+}

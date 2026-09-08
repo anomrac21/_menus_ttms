@@ -103,7 +103,7 @@
                 <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if $usePhone }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
                 <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if $usePhone }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
               </div>
-              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if $usePhone }}Opens the phone dialer only{{ if $posOn }} — does not create a Loyverse order{{ end }}.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now{{ if $posOn }} (optional alongside Loyverse){{ end }}.{{ end }}</p>
+              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if $usePhone }}Opens the phone dialer only{{ if $posOn }}: does not create a Loyverse order{{ end }}.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now{{ if $posOn }} (optional alongside Loyverse){{ end }}.{{ end }}</p>
             </div>
             <input type="hidden" id="os-whatsapp" name="whatsapp" value="{{ default "" $os.whatsapp }}">
             <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">

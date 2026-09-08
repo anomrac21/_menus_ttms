@@ -18,7 +18,6 @@
     var scrollAmount = 300;
     var currentScroll = scrollableElement.scrollLeft;
     var maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
-
     if (maxScroll <= 0) {
       updateLocationNavButtons(scrollableElement, 0);
       return;
@@ -104,15 +103,13 @@
     var scrollableElement = locations.scrollWidth > locations.clientWidth ? locations : locationsWrapper;
 
     var updateButtons = function () {
-      var maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
-      updateLocationNavButtons(scrollableElement, maxScroll);
+      var maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;      updateLocationNavButtons(scrollableElement, maxScroll);
     };
 
     setTimeout(updateButtons, 100);
 
     function onScroll() {
-      var maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;
-      updateLocationNavButtons(scrollableElement, maxScroll);
+      var maxScroll = scrollableElement.scrollWidth - scrollableElement.clientWidth;      updateLocationNavButtons(scrollableElement, maxScroll);
     }
 
     var resizeTimer;

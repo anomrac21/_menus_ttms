@@ -21,6 +21,7 @@
       <h1 class="dashboard-header-site"{{ with .siteNameId }} id="{{ . }}"{{ end }}>{{ $siteName }}</h1>
     </div>
     <div class="dashboard-header-end">
+      {{ partial "dashboard/theme-toggle.html" . }}
       {{- range .buttons -}}
       <a href="{{ .href }}" class="{{ .class }}"{{ with .id }} id="{{ . }}"{{ end }}{{ with .title }} title="{{ . }}"{{ end }}{{ with .target }} target="{{ . }}"{{ end }}{{ with .rel }} rel="{{ . }}"{{ end }}{{ if .hidden }} hidden{{ end }}>{{ with .icon }}<i class="fa {{ . }}" aria-hidden="true"></i> {{ end }}{{ .label }}</a>
       {{- end -}}

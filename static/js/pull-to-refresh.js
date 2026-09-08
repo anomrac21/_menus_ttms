@@ -1,5 +1,5 @@
 /**
- * Pull-down to reload — PWA / standalone (menu) and client dashboard pages.
+ * Pull-down to reload. PWA / standalone (menu) and client dashboard pages.
  * Dashboard uses soft refresh (reload data); menu pages use a full reload.
  */
 (function () {
@@ -160,11 +160,11 @@
       'font-family:system-ui,-apple-system,sans-serif;font-size:13px;}' +
       '#ttms-ptr-indicator.ttms-ptr-visible{opacity:1;}' +
       '.ttms-ptr-inner{margin-top:8px;padding:8px 14px;border-radius:999px;' +
-      'background:rgba(0,0,0,.78);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.25);' +
+      'background:color-mix(in srgb, var(--scheme-black) 78%, transparent);color:var(--scheme-white);box-shadow:0 2px 12px color-mix(in srgb, var(--scheme-black) 25%, transparent);' +
       'display:flex;align-items:center;gap:8px;}' +
       '.ttms-ptr-icon{display:inline-block;transition:transform .12s ease;}' +
       '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-icon{transform:rotate(-180deg);}' +
-      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-text::after{content:" — release";}' +
+      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-text::after{content:": release";}' +
       '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-icon{animation:ttms-ptr-spin .8s linear infinite;}' +
       '@keyframes ttms-ptr-spin{to{transform:rotate(360deg);}}';
     var s = document.createElement('style');
@@ -280,9 +280,7 @@
     }
 
     var touch = e.touches[0];
-    var dy = touch.clientY - startY;
-    var dx = touch.clientX - startX;
-
+    var dy = touch.clientY - startY;    var dx = touch.clientX - startX;
     if (dy <= 0) {
       window.TTMS_PTR_PULLING = false;
       lastPullPx = 0;

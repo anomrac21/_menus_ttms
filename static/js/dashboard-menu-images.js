@@ -1,5 +1,5 @@
 /**
- * Menu photo approval — swipe reel (approve / decline).
+ * Menu photo approval: swipe reel (approve / decline).
  */
 (function () {
   'use strict';
@@ -131,7 +131,7 @@
     if (reel) reel.classList.add('hidden');
     if (empty) {
       empty.classList.remove('hidden');
-      empty.textContent = "You're all caught up — no photos waiting for review.";
+      empty.textContent = "You're all caught up: no photos waiting for review.";
     }
     setSnapshotCount(0);
   }
@@ -199,7 +199,7 @@
 
   function buildCardHtml(sub, stackIndex) {
     var preview = thumborReel(sub.url) || sub.url || '';
-    var pathLabel = sub.menu_item_path || '—';
+    var pathLabel = sub.menu_item_path || '';
     var title = menuItemTitle(sub.menu_item_path);
     var when = formatWhen(sub.created_at);
     var depth = stackIndex === 0 ? ' is-top' : ' is-behind';
@@ -315,15 +315,13 @@
 
     function onPointerMove(e) {
       if (!dragState || dragState.card !== card) return;
-      var dx = e.clientX - dragState.startX;
-      var dy = (e.clientY - dragState.startY) * 0.35;
+      var dx = e.clientX - dragState.startX;      var dy = (e.clientY - dragState.startY) * 0.35;
       setCardDragStyles(card, dx, dy);
     }
 
     function onPointerUp(e) {
       if (!dragState || dragState.card !== card) return;
-      var dx = e.clientX - dragState.startX;
-      card.classList.remove('is-dragging');
+      var dx = e.clientX - dragState.startX;      card.classList.remove('is-dragging');
       try {
         card.releasePointerCapture(e.pointerId);
       } catch (err) {}
@@ -383,7 +381,7 @@
             window.showDashboardMenuImagesToast(
               action === 'approve'
                 ? 'Smash! Photo is live on the menu.'
-                : 'Passed — photo declined.'
+                : 'Passed: photo declined.'
             );
           }
           renderStack();

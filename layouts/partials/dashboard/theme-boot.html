@@ -1,0 +1,12 @@
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  } catch (e) {}
+})();
+</script>
+{{- $themeCss := partial "head/asset-url.html" `/css/dashboard-theme.css` -}}
+{{- $themeJs := partial "head/asset-url.html" `/js/dashboard-theme.js` -}}
+<link rel="stylesheet" href="{{ $themeCss }}">
+<script src="{{ $themeJs }}" defer></script>

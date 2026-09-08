@@ -1,20 +1,20 @@
 /**
- * Account dashboard panel (#account-dashboard) — glass overlay matching cart / menu dashboard.
+ * Account dashboard panel (#account-dashboard): glass overlay matching cart / menu dashboard.
  */
 
 #account-dashboard.account-dashboard-panel {
-    --account-accent: color-mix(in srgb, var(--selected-button-color3, #fcd000) 55%, #fff);
-    --account-ink: var(--main-text-color, #fff);
-    --account-ink-muted: color-mix(in srgb, var(--main-text-color, #fff) 62%, transparent);
-    --account-success: #81c784;
+    --account-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--dash-ink));
+    --account-ink: var(--main-text-color);
+    --account-ink-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
+    --account-success: var(--dash-success);
     background:
-        radial-gradient(120% 70% at 80% -5%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 52%),
-        linear-gradient(180deg, color-mix(in srgb, var(--main-bg, #0a0a0f) 90%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
+        radial-gradient(120% 70% at 80% -5%, color-mix(in srgb, var(--scheme-surface) 50%, transparent), transparent 52%),
+        linear-gradient(180deg, color-mix(in srgb, var(--main-bg) 90%, var(--dash-black)) 0%, var(--main-bg) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.42);
+    border-left: 1px solid color-mix(in srgb, var(--dash-ink) 8%, transparent);
+    box-shadow: -12px 0 40px color-mix(in srgb, var(--dash-black) 42%, transparent);
     color: var(--account-ink);
     overflow: hidden;
 }
@@ -26,13 +26,13 @@
     flex-shrink: 0;
     padding: 0.65rem 0.85rem;
     margin: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--header-bg-color, #111) 78%, rgba(255, 255, 255, 0.08)) 0%,
-        color-mix(in srgb, var(--header-bg-color, #111) 92%, rgba(0, 0, 0, 0.2)) 100%
+        color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--dash-ink) 8%, transparent)) 0%,
+        color-mix(in srgb, var(--scheme-surface) 92%, color-mix(in srgb, var(--dash-black) 20%, transparent)) 100%
     );
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--dash-black) 22%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-title {
@@ -58,8 +58,8 @@
     margin: 0;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 16%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
     color: var(--account-ink);
     box-shadow: none;
     transition:
@@ -72,8 +72,8 @@
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .ttms-icon-btn:hover,
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .ttms-icon-btn--on-dark:focus-visible,
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .ttms-icon-btn:focus-visible {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: color-mix(in srgb, var(--dash-ink) 14%, transparent);
+    border-color: color-mix(in srgb, var(--dash-ink) 28%, transparent);
     transform: translateY(-1px);
     outline: none;
 }
@@ -100,9 +100,9 @@
     width: 2.65rem;
     height: 2.65rem;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid color-mix(in srgb, var(--account-success) 35%, rgba(255, 255, 255, 0.14));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--account-success) 35%, color-mix(in srgb, var(--dash-ink) 14%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 10%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-user-info--header .user-avatar .icon.account {
@@ -122,7 +122,7 @@
 
 #account-dashboard.account-dashboard-panel .account-dashboard-profile-link:hover,
 #account-dashboard.account-dashboard-panel .account-dashboard-profile-link:focus-visible {
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
     outline: none;
 }
 
@@ -143,13 +143,13 @@
 
 #account-dashboard.account-dashboard-panel .account-dashboard-card {
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
     background: linear-gradient(
         165deg,
-        rgba(255, 255, 255, 0.08) 0%,
-        rgba(255, 255, 255, 0.03) 100%
+        color-mix(in srgb, var(--dash-ink) 8%, transparent) 0%,
+        color-mix(in srgb, var(--dash-ink) 3%, transparent) 100%
     );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 6%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-logout {
@@ -162,9 +162,9 @@
     min-height: 2.65rem;
     padding: 0.55rem 1rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, #ef4444 38%, rgba(255, 255, 255, 0.12));
-    background: color-mix(in srgb, #ef4444 14%, rgba(255, 255, 255, 0.06));
-    color: #fca5a5;
+    border: 1px solid color-mix(in srgb, var(--dash-error) 38%, color-mix(in srgb, var(--dash-ink) 12%, transparent));
+    background: color-mix(in srgb, var(--dash-error) 14%, color-mix(in srgb, var(--dash-ink) 6%, transparent));
+    color: var(--dash-warning);
     font-weight: 600;
     transition:
         background 0.2s ease,
@@ -174,8 +174,8 @@
 
 #account-dashboard.account-dashboard-panel .account-dashboard-logout .account-dashboard-btn--logout:hover,
 #account-dashboard.account-dashboard-panel .account-dashboard-logout .account-dashboard-btn--logout:focus-visible {
-    background: color-mix(in srgb, #ef4444 22%, rgba(255, 255, 255, 0.08));
-    border-color: color-mix(in srgb, #ef4444 55%, rgba(255, 255, 255, 0.18));
+    background: color-mix(in srgb, var(--dash-error) 22%, color-mix(in srgb, var(--dash-ink) 8%, transparent));
+    border-color: color-mix(in srgb, var(--dash-error) 55%, color-mix(in srgb, var(--dash-ink) 18%, transparent));
     transform: translateY(-1px);
     outline: none;
 }
@@ -199,8 +199,8 @@
     width: 4.25rem;
     height: 4.25rem;
     border-radius: 50%;
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed color-mix(in srgb, var(--dash-ink) 18%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 4%, transparent);
     color: var(--account-accent);
 }
 
@@ -234,16 +234,16 @@
     justify-content: center;
     min-height: 2.75rem;
     padding: 0.65rem 1.35rem;
-    border: 1px solid color-mix(in srgb, var(--account-accent) 45%, rgba(255, 255, 255, 0.2));
+    border: 1px solid color-mix(in srgb, var(--account-accent) 45%, color-mix(in srgb, var(--dash-ink) 20%, transparent));
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--account-accent) 88%, #fff) 0%,
-        color-mix(in srgb, var(--account-accent) 72%, #000) 100%
+        color-mix(in srgb, var(--account-accent) 88%, var(--dash-ink)) 0%,
+        color-mix(in srgb, var(--account-accent) 72%, var(--dash-black)) 100%
     );
-    color: color-mix(in srgb, var(--main-bg, #0a0a0f) 85%, #000);
+    color: color-mix(in srgb, var(--main-bg) 85%, var(--dash-black));
     box-shadow:
         0 4px 16px color-mix(in srgb, var(--account-accent) 28%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 35%, transparent);
     text-decoration: none;
 }
 
@@ -252,7 +252,7 @@
     transform: translateY(-1px);
     box-shadow:
         0 6px 20px color-mix(in srgb, var(--account-accent) 35%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 40%, transparent);
     outline: none;
 }
 
@@ -272,8 +272,8 @@
     margin: 0.5rem 0 0;
     padding: 0.85rem;
     border-radius: 0.75rem;
-    border: 1px dashed rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed color-mix(in srgb, var(--dash-ink) 14%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 3%, transparent);
     font-size: 0.84rem;
     line-height: 1.45;
     color: var(--account-ink-muted);
@@ -292,8 +292,8 @@
     margin: 0;
     padding: 0.75rem 0.85rem;
     border-radius: 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 5%, transparent);
     color: inherit;
     font: inherit;
     text-align: left;
@@ -305,8 +305,8 @@
 
 #account-dashboard.account-dashboard-panel .account-dashboard-order-row:hover,
 #account-dashboard.account-dashboard-panel .account-dashboard-order-row:focus-visible {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.22);
+    background: color-mix(in srgb, var(--dash-ink) 10%, transparent);
+    border-color: color-mix(in srgb, var(--dash-ink) 22%, transparent);
     outline: none;
 }
 
@@ -327,14 +327,14 @@
     width: 100%;
     padding: 0.35rem 0.4rem 0.35rem 0.55rem;
     border-radius: 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+    background: color-mix(in srgb, var(--dash-ink) 5%, transparent);
     transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites__row:hover {
-    border-color: color-mix(in srgb, var(--account-accent) 28%, rgba(255, 255, 255, 0.12));
-    background: rgba(255, 255, 255, 0.08);
+    border-color: color-mix(in srgb, var(--account-accent) 28%, color-mix(in srgb, var(--dash-ink) 12%, transparent));
+    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites__link.account-dashboard-btn {
@@ -351,7 +351,7 @@
 
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites__link.account-dashboard-btn:hover,
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites__link.account-dashboard-btn:focus-visible {
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
     transform: none;
     outline: none;
 }
@@ -360,21 +360,21 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 0.45rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid color-mix(in srgb, var(--dash-ink) 12%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites__remove {
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    border: 1px solid color-mix(in srgb, #ef4444 35%, rgba(255, 255, 255, 0.12));
-    background: color-mix(in srgb, #ef4444 12%, rgba(255, 255, 255, 0.06));
-    color: #fca5a5;
+    border: 1px solid color-mix(in srgb, var(--dash-error) 35%, color-mix(in srgb, var(--dash-ink) 12%, transparent));
+    background: color-mix(in srgb, var(--dash-error) 12%, color-mix(in srgb, var(--dash-ink) 6%, transparent));
+    color: var(--dash-warning);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-favorites__remove:hover {
-    background: color-mix(in srgb, #ef4444 20%, rgba(255, 255, 255, 0.08));
-    border-color: color-mix(in srgb, #ef4444 50%, rgba(255, 255, 255, 0.16));
+    background: color-mix(in srgb, var(--dash-error) 20%, color-mix(in srgb, var(--dash-ink) 8%, transparent));
+    border-color: color-mix(in srgb, var(--dash-error) 50%, color-mix(in srgb, var(--dash-ink) 16%, transparent));
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-heading:has(.account-dashboard-user-info--header:not([style*="display: none"])) .account-dashboard-panel-title {
@@ -403,8 +403,8 @@
 [data-theme="dark"] #account-dashboard.account-dashboard-panel,
 #account-dashboard.account-dashboard-panel {
     background:
-        radial-gradient(120% 70% at 80% -5%, color-mix(in srgb, var(--button-color1, #1a1a2e) 50%, transparent), transparent 52%),
-        linear-gradient(180deg, color-mix(in srgb, var(--main-bg, #0a0a0f) 90%, #000) 0%, var(--main-bg, #0a0a0f) 100%);
+        radial-gradient(120% 70% at 80% -5%, color-mix(in srgb, var(--scheme-surface) 50%, transparent), transparent 52%),
+        linear-gradient(180deg, color-mix(in srgb, var(--main-bg) 90%, var(--dash-black)) 0%, var(--main-bg) 100%);
     color: var(--account-ink);
 }
 
@@ -412,10 +412,10 @@
 #account-dashboard.account-dashboard-panel .header.account-dashboard-panel-header {
     background: linear-gradient(
         180deg,
-        color-mix(in srgb, var(--header-bg-color, #111) 78%, rgba(255, 255, 255, 0.08)) 0%,
-        color-mix(in srgb, var(--header-bg-color, #111) 92%, rgba(0, 0, 0, 0.2)) 100%
+        color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--dash-ink) 8%, transparent)) 0%,
+        color-mix(in srgb, var(--scheme-surface) 92%, color-mix(in srgb, var(--dash-black) 20%, transparent)) 100%
     );
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: color-mix(in srgb, var(--dash-ink) 10%, transparent);
 }
 
 [data-theme="dark"] #account-dashboard.account-dashboard-panel .account-dashboard-panel-tools,

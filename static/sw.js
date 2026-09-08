@@ -31,13 +31,13 @@ function extractMediaFromPayload(data) {
   return { icon, badge, image: image || undefined };
 }
 
-// Install event - cache resources
+// Install event: cache resources
 self.addEventListener('install', (event) => {
   console.log('[SW] Service Worker installing...');
   self.skipWaiting(); // Activate immediately
 });
 
-// Activate event - clean up old caches
+// Activate event: clean up old caches
 self.addEventListener('activate', (event) => {
   console.log('[SW] Service Worker activating...');
   event.waitUntil(

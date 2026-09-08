@@ -1,5 +1,5 @@
 /**
- * Menu reels — same scroll model as #ads-reels-overlay / .ads-reels-track (header stays visible).
+ * Menu reels: same scroll model as #ads-reels-overlay / .ads-reels-track (header stays visible).
  */
 
 /* Homepage uses in-track reels; keep the page-level strip on /locations/ and other pages */
@@ -9,7 +9,7 @@ main.main--home ~ .bottomads {
 
 body.menu-reels-mode {
     overflow: hidden;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
 html.menu-nav-smooth,
@@ -19,13 +19,13 @@ html.menu-nav-smooth body.menu-reels-mode {
 }
 
 html.menu-nav-smooth body.menu-reels-mode {
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
 body.menu-reels-mode main.main--home {
     margin: 0 !important;
     padding: 0;
-    /* Fixed header — content starts below header + notch safe area */
+    /* Fixed header: content starts below header + notch safe area */
     padding-block-start: var(--ttms-header-height, 5em) !important;
     box-sizing: border-box;
     min-height: 0;
@@ -34,7 +34,7 @@ body.menu-reels-mode main.main--home {
     height: 100svh;
     height: 100dvh;
     overflow: hidden;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
 html.menu-nav-smooth body.menu-reels-mode main.main--home,
@@ -55,7 +55,7 @@ body.menu-nav-smooth .menu-reels-track {
     scroll-snap-type: none;
 }
 
-/* Smooth scroll — same slide heights as snap, without scroll-snap */
+/* Smooth scroll: same slide heights as snap, without scroll-snap */
 html.menu-nav-smooth .menu-reels-track .menu-reels-slide,
 html.menu-nav-smooth .menu-reels-track .ads-reels-slide,
 html.menu-nav-smooth .menu-item-card.menu-reels-slide,
@@ -103,7 +103,7 @@ main.main--offset ~ .bottomads {
     width: 100%;
     min-height: calc(100dvh - var(--ttms-header-height, 5em));
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
 html:has(main.main--offset):not(:has(#menu-reels-viewport)),
@@ -123,7 +123,7 @@ body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track {
     width: 100%;
     height: 100%;
     min-height: 100%;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
 .menu-reels-slide--bottom-ads {
@@ -135,7 +135,7 @@ body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track {
     flex-shrink: 0;
 }
 
-/* Track snap owns scroll — disable document sticky stack inside sponsored slide */
+/* Track snap owns scroll: disable document sticky stack inside sponsored slide */
 #menu-reels-track .menu-reels-slide--bottom-ads section.sticky,
 #menu-reels-track .menu-reels-slide--bottom-ads .menu-ad.sticky {
     position: relative !important;
@@ -181,7 +181,7 @@ body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track {
     pointer-events: auto !important;
 }
 
-/* Community Photos intro + location picker — hide bottom nav + settings popover */
+/* Community Photos intro + location picker: hide bottom nav + settings popover */
 body.menu-reels-intro-active #footerBtns,
 body.menu-reels-contact-active #footerBtns,
 body.menu-reels-intro-active #footerSettings,
@@ -194,7 +194,7 @@ body.menu-reels-contact-active #footerSettings {
 .menu-reels-viewport {
     position: relative;
     width: 100%;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
 html:not(.menu-nav-smooth) .menu-reels-viewport {
@@ -202,7 +202,7 @@ html:not(.menu-nav-smooth) .menu-reels-viewport {
     overflow: hidden;
 }
 
-/* Same as .ads-reels-track — dedicated vertical snap container */
+/* Same as .ads-reels-track: dedicated vertical snap container */
 html:not(.menu-nav-smooth) .menu-reels-track {
     position: relative;
     height: 100%;
@@ -243,7 +243,7 @@ html.menu-nav-smooth .menu-reels-track {
     margin: 0 !important;
 }
 
-/* adsbase.css sets display:block on .client-ads-reels — flatten inside track */
+/* adsbase.css sets display:block on .client-ads-reels: flatten inside track */
 body.menu-reels-mode #menu-reels-track #homepage-ads-container.client-ads-reels,
 body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
     display: contents !important;
@@ -269,14 +269,14 @@ body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
     align-items: center;
     box-sizing: border-box;
     overflow: hidden;
-    background: var(--main-bg, #000);
+    background: var(--main-bg);
 }
 
-/* Promo slides inside track — match overlay reel visuals */
+/* Promo slides inside track: match overlay reel visuals */
 #menu-reels-track .ads-reels-slide {
-    color: #fff;
+    color: var(--scheme-white);
     text-align: center;
-    background: #000;
+    background: var(--scheme-black);
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
@@ -293,8 +293,7 @@ body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
 #menu-reels-track .ads-reels-slide video.ad-video {
     position: relative;
     z-index: var(--ttms-z-reel-inner-content, 1);
-    max-height: calc(100% - 5.5rem - env(safe-area-inset-bottom));
-    width: auto;
+    max-height: calc(100% - 5.5rem - env(safe-area-inset-bottom));    width: auto;
     max-width: 100%;
     object-fit: contain;
 }
@@ -349,7 +348,7 @@ body.menu-search-active .menu-reels-track {
     gap: 0.75rem;
     padding-block-start: 0;
     padding-block-end: max(3.25rem, env(safe-area-inset-bottom));
-    background: var(--hero-bg-color, #000);
+    background: linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
 }
 
 @media (max-height: 740px) {
@@ -422,22 +421,22 @@ body.menu-search-active .menu-reels-track {
     margin: 0;
     padding: 0 1.25rem;
     text-align: center;
-    color: var(--menu-text-color, #fff);
+    color: var(--hero-text-color);
 }
 
 .hero_logo_container .hero-intro p {
     margin: 0;
-    color: var(--hero-text-color, #fff);
+    color: var(--hero-text-color);
     font-size: small;
     line-height: var(--ttms-leading-relaxed, 1.5);
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+    text-shadow: 0 1px 8px color-mix(in srgb, var(--scheme-black) 45%, transparent);
 }
 
 .hero_logo_container .hero-intro p + p {
     margin-top: 0.15em;
 }
 
-/* Contact slide — full-viewport location picker */
+/* Contact slide: full-viewport location picker */
 .contactinfobg.menu-reels-slide {
     height: 100%;
     min-height: 100%;
@@ -452,8 +451,8 @@ body.menu-search-active .menu-reels-track {
     /* Clear fixed footer dock (Home / Cart / Search / Settings) */
     box-sizing: border-box;
     background:
-        radial-gradient(ellipse 120% 80% at 50% -20%, color-mix(in srgb, var(--selected-button-color3, #fcd000) 22%, transparent), transparent 55%),
-        linear-gradient(165deg, color-mix(in srgb, var(--button-color1, #1a1a2e) 92%, #000), var(--main-bg, #000));
+        radial-gradient(ellipse 120% 80% at 50% -20%, color-mix(in srgb, var(--hero-border-color) 22%, transparent), transparent 55%),
+        linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
 }
 
 .contactinfobg.menu-reels-slide .contactinfo.location-picker {
@@ -513,6 +512,7 @@ body.menu-search-active .menu-reels-track {
     justify-content: space-between;
     gap: 0.25rem;
     padding-block: 0.4rem max(0.45rem, env(safe-area-inset-bottom));
+    background: linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
 }
 
 .hero-content.menu-reels-slide .client-tour-slideshow,
@@ -529,7 +529,7 @@ body.menu-search-active .menu-reels-track {
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.02em;
-    color: var(--main-text-color, #fff);
+    color: var(--hero-text-color);
     text-align: center;
 }
 
@@ -547,7 +547,7 @@ body.menu-search-active .menu-reels-track {
 
 /* Section title slide */
 .menu-reels-slide--section-title {
-    color: var(--main-text, #fff);
+    color: var(--main-text);
     text-align: center;
 }
 
@@ -561,7 +561,7 @@ body.menu-search-active .menu-reels-track {
 
 /* Section header reel */
 .menu-header.menu-reels-slide {
-    color: var(--main-text, #fff);
+    color: var(--main-text);
     text-align: center;
     position: relative;
 }
@@ -630,7 +630,7 @@ body.menu-search-active .menu-reels-track {
     letter-spacing: 0.01em;
     text-transform: none;
     line-height: 1.3;
-    color: color-mix(in srgb, var(--main-text, #fff) 84%, transparent);
+    color: color-mix(in srgb, var(--main-text) 84%, transparent);
 }
 
 .menu-header__item-count__value {
@@ -647,7 +647,7 @@ body.menu-search-active .menu-reels-track {
 }
 
 .menu-header__item-count.is-count-loading .menu-header__item-count__value {
-    color: color-mix(in srgb, var(--selected-button-color3, #fcd000) 78%, var(--main-text-color, #fff));
+    color: color-mix(in srgb, var(--selected-button-color3) 78%, var(--main-text-color));
     animation: menu-section-count-pulse 0.85s ease-in-out infinite;
 }
 
@@ -662,7 +662,7 @@ body.menu-search-active .menu-reels-track {
     background: linear-gradient(
         90deg,
         transparent,
-        color-mix(in srgb, var(--selected-button-color3, #fcd000) 70%, #fff),
+        color-mix(in srgb, var(--selected-button-color3) 70%, var(--scheme-white)),
         transparent
     );
     background-size: 200% 100%;
@@ -700,13 +700,13 @@ body.menu-search-active .menu-reels-track {
     left: 0;
 }
 
-/* Menu item reel — one viewport: image flexes, copy stays compact below */
+/* Menu item reel: one viewport: image flexes, copy stays compact below */
 .menu-item-card.menu-reels-slide {
-    color: var(--button-text-color1, #fff);
+    color: var(--button-text-color1);
     background: linear-gradient(165deg, var(--button-color1), var(--button-color2));
-    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #fff) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--button-text-color1) 22%, transparent);
     border-radius: 0;
-    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38);
+    box-shadow: 0 10px 36px color-mix(in srgb, var(--scheme-black) 38%, transparent);
     width: 100%;
     max-width: none;
     height: 100%;
@@ -734,7 +734,7 @@ body.menu-search-active .menu-reels-track {
 .menu-item-card.menu-reels-slide:hover,
 .menu-item-card.menu-reels-slide:active {
     transform: none;
-    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38);
+    box-shadow: 0 10px 36px color-mix(in srgb, var(--scheme-black) 38%, transparent);
 }
 
 body.menu-reels-item-modal-open {
@@ -755,7 +755,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     z-index: var(--ttms-z-reels-item-modal, 10070);
     display: none;
     flex-direction: column;
-    color: var(--button-text-color1, #fff);
+    color: var(--button-text-color1);
     width: 100%;
     height: var(--ttms-overlay-height, 100dvh);
     max-height: var(--ttms-overlay-height, 100dvh);
@@ -815,7 +815,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
 .menu-reels-item-modal__backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.72);
+    background: color-mix(in srgb, var(--scheme-black) 72%, transparent);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
 }
@@ -830,7 +830,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     min-height: 0;
     max-height: 100%;
     background: linear-gradient(165deg, var(--button-color1), var(--button-color2));
-    border: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #fff) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-accent) 18%, transparent);
     overflow: hidden;
 }
 
@@ -841,7 +841,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     justify-content: space-between;
     gap: 0;
     flex-shrink: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--header-bordercolor-1, #fff) 15%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--scheme-accent) 15%, transparent);
 }
 
 .menu-reels-item-modal__title-row {
@@ -929,7 +929,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
     width: 4rem;
     height: 4rem;
     border: none;
-    background: rgba(0, 0, 0, 0.28);
+    background: color-mix(in srgb, var(--scheme-black) 28%, transparent);
     color: inherit;
     font-size: 1.25rem;
     cursor: pointer;
@@ -937,7 +937,7 @@ body.menu-reels-item-modal-open .menu-reels-track,
 
 .menu-reels-item-modal__close:hover,
 .menu-reels-item-modal__close:focus-visible {
-    background: rgba(0, 0, 0, 0.42);
+    background: color-mix(in srgb, var(--scheme-black) 42%, transparent);
     outline: none;
 }
 
@@ -991,9 +991,9 @@ body.menu-reels-item-modal-open .menu-reels-track,
 }
 
 .menu-reels-item-modal .expanded-add-cart.is-cart-pop {
-    background: linear-gradient(135deg, #2ecc71, #128c7e);
-    box-shadow: 0 0 0 6px color-mix(in srgb, #25d366 35%, transparent),
-        0 16px 36px rgba(18, 140, 126, 0.45);
+    background: linear-gradient(135deg, var(--scheme-accent), var(--scheme-accent));
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--scheme-accent) 35%, transparent),
+        0 16px 36px color-mix(in srgb, var(--scheme-accent) 45%, transparent);
     animation: menu-reels-cart-pop 0.9s cubic-bezier(0.22, 1.45, 0.36, 1) both;
 }
 
@@ -1024,7 +1024,7 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
     height: 2.6rem;
     margin: -1.3rem 0 0 -1.3rem;
     border-radius: 50%;
-    border: 3px solid #25d366;
+    border: 3px solid var(--scheme-accent);
     box-sizing: border-box;
     animation: menu-reels-cart-ring 0.7s ease-out forwards;
 }
@@ -1033,7 +1033,7 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
     width: 3.4rem;
     height: 3.4rem;
     margin: -1.7rem 0 0 -1.7rem;
-    border-color: #fcd000;
+    border-color: var(--scheme-accent);
     animation-delay: 0.1s;
 }
 
@@ -1044,7 +1044,7 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
     width: 0.85rem;
     height: 0.85rem;
     margin: -0.42rem 0 0 -0.42rem;
-    color: var(--p-color, #25d366);
+    color: var(--p-color);
     font-size: 0.85rem;
     line-height: 1;
     animation: menu-reels-cart-particle 0.95s cubic-bezier(0.16, 0.8, 0.3, 1) forwards;
@@ -1065,13 +1065,13 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
     height: 2.4rem;
     margin: -1.2rem 0 0 -1.2rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, #25d366, #128c7e);
-    color: #fff;
+    background: linear-gradient(135deg, var(--scheme-accent), var(--scheme-accent));
+    color: var(--scheme-white);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.15rem;
-    box-shadow: 0 10px 24px rgba(18, 140, 126, 0.45);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--scheme-accent) 45%, transparent);
     pointer-events: none;
     animation: menu-reels-cart-fly 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
@@ -1240,8 +1240,6 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
 
 .menu-item-card.menu-reels-slide > .menu-item-title-row > .menu-favorite-btn {
     margin-top: 0;
-    width: 2.1rem;
-    height: 2.1rem;
 }
 
 .menu-item-card.menu-reels-slide > .menu-item-title-row .menu-item-title {
@@ -1315,7 +1313,7 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
     height: 100%;
     max-height: 100%;
     aspect-ratio: unset;
-    background: rgba(0, 0, 0, 0.28);
+    background: color-mix(in srgb, var(--scheme-black) 28%, transparent);
     overflow: hidden;
 }
 
@@ -1346,7 +1344,7 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     opacity: 0.62;
-    color: var(--button-text-color1, #fff);
+    color: var(--button-text-color1);
 }
 
 .menu-item-card.menu-reels-slide.expanded .menu-item-header-content::after,

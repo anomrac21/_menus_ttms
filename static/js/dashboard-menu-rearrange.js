@@ -1,5 +1,5 @@
 /**
- * Lightweight menu rearrange page — section + item list (no live menu iframe).
+ * Lightweight menu rearrange page: section + item list (no live menu iframe).
  */
 (function (global) {
   'use strict';
@@ -372,7 +372,7 @@
         return;
       }
       var saveFirst = confirm(
-        'Save menu order as CMS drafts before leaving?\n\nOK — save and leave\nCancel — more options'
+        'Save menu order as CMS drafts before leaving?\n\nOK: save and leave\nCancel: more options'
       );
       if (saveFirst) {
         persistDrafts()
@@ -481,9 +481,9 @@
       if (sessionItemMoves) {
         moveParts.push(sessionItemMoves + ' item' + (sessionItemMoves === 1 ? '' : 's'));
       }
-      parts.push(moveParts.join(', ') + ' reordered — save when you leave');
+      parts.push(moveParts.join(', ') + ' reordered: save when you leave');
     } else if (draftSectionMoves || draftItemMoves) {
-      parts.push('showing draft order — publish when ready');
+      parts.push('showing draft order: publish when ready');
     } else {
       parts.push('tap arrows to reorder · saved when you leave');
     }

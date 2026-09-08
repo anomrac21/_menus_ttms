@@ -25,7 +25,7 @@ function ttmsIsLocalDevHost() {
   return h === 'localhost' || h === '127.0.0.1' || /\.local$/i.test(h);
 }
 
-/** True for localhost / loopback URLs — blocked on public sites (Chrome LNA prompt). */
+/** True for localhost / loopback URLs: blocked on public sites (Chrome LNA prompt). */
 function ttmsIsLoopbackUrl(url) {
   return /^(https?|wss?):\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(String(url || ''));
 }
@@ -163,7 +163,7 @@ const NotificationService = {
         return;
       }
 
-      console.warn('⚠️ Background push subscription missing — repairing…');
+      console.warn('⚠️ Background push subscription missing: repairing…');
       this.updateSubscribeButton(true, { backgroundPush: false });
       await this.repairBackgroundPush();
     } catch (error) {
@@ -342,7 +342,7 @@ const NotificationService = {
     const needsResync = vapidChanged || resyncedFor !== vapidPublicKey;
 
     if (pushSubscription && needsResync) {
-      console.warn('VAPID key changed or push subscription needs resync — recreating background push subscription');
+      console.warn('VAPID key changed or push subscription needs resync: recreating background push subscription');
       try {
         await pushSubscription.unsubscribe();
       } catch (unsubErr) {
@@ -378,7 +378,7 @@ const NotificationService = {
         const msg = subscribeErr && subscribeErr.message ? subscribeErr.message : '';
         throw new Error(
           msg
-            ? `Browser push subscribe failed (${name}): ${msg}`
+            ? `Browser push subscribe failed (${name}) - ${msg}`
             : `Browser push subscribe failed (${name}). Check VAPID public key on notify-service and try again.`
         );
       }
@@ -441,7 +441,7 @@ const NotificationService = {
         this.updateSubscribeButton(false);
       }
     } else {
-      // Not subscribed - ensure buttons show correctly
+      // Not subscribed: ensure buttons show correctly
       this.updateSubscribeButton(false);
     }
   },
@@ -741,9 +741,9 @@ const NotificationService = {
       demographics.os = 'Unknown';
     }
 
-    // Set device type if not already set - use multiple methods for accuracy
+    // Set device type if not already set: use multiple methods for accuracy
     if (!demographics.device_type) {
-      // Method 1: Use screen width
+      // Method 1 - Use screen width
       const screenWidth = demographics.screen_width || window.innerWidth || 0;
       if (screenWidth < 768) {
         demographics.device_type = 'mobile';
@@ -753,7 +753,7 @@ const NotificationService = {
         demographics.device_type = 'desktop';
       }
       
-      // Method 2: Verify with user agent if available
+      // Method 2 - Verify with user agent if available
       if (ua.includes('Mobile') && !ua.includes('Tablet') && !ua.includes('iPad')) {
         demographics.device_type = 'mobile';
       } else if (ua.includes('Tablet') || ua.includes('iPad')) {
@@ -1075,7 +1075,7 @@ const NotificationService = {
       const wsPath = `${wsUrl}?client_domain=${encodeURIComponent(clientDomain)}&connection_id=${encodeURIComponent(connectionId)}`;
 
       if (!ttmsIsLocalDevHost() && ttmsIsLoopbackUrl(wsPath)) {
-        console.warn('Skipping notification WebSocket — loopback URL on public site');
+        console.warn('Skipping notification WebSocket: loopback URL on public site');
         return;
       }
 
@@ -1222,7 +1222,7 @@ const NotificationService = {
       // Track confirmation when notification is displayed
       this.trackNotificationConfirmation(notification.id);
       
-      // Handle click event - navigate to link and track click
+      // Handle click event: navigate to link and track click
       notificationObj.onclick = (event) => {
         event.preventDefault();
         
@@ -1356,7 +1356,7 @@ const NotificationService = {
       } else {
         btn.setAttribute(
           'aria-label',
-          backgroundPush ? 'Alerts on — tap to turn off' : 'Alerts need setup — tap to re-enable'
+          backgroundPush ? 'Alerts on: tap to turn off' : 'Alerts need setup: tap to re-enable'
         );
       }
       if (btnHint) {
@@ -1365,8 +1365,8 @@ const NotificationService = {
           : 'Tap to fix phone alerts';
       }
       btn.title = backgroundPush
-        ? 'You receive menu alerts — tap to turn off'
-        : 'Background alerts need setup — tap to re-enable';
+        ? 'You receive menu alerts: tap to turn off'
+        : 'Background alerts need setup: tap to re-enable';
     } else {
       btn.classList.remove('subscribed');
       btn.setAttribute('aria-pressed', 'false');
@@ -1424,7 +1424,7 @@ const NotificationService = {
    * Show message to user
    */
   showMessage(message, type = 'info') {
-    // Simple alert for now - can be enhanced with a toast notification
+    // Simple alert for now: can be enhanced with a toast notification
     if (type === 'error') {
       alert('Error: ' + message);
     } else if (type === 'success') {

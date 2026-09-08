@@ -23,7 +23,7 @@
 <div id="menu-reels-track" class="menu-reels-track">
 <section class="hero_logo_container item menu-reels-slide menu-reels-slide--hero" data-cms-content-path="content/_index.md" data-cms-edit="hero-image">
 {{ $siteName := partial "site-name.html" . }}
-<h1 class="sr-only">{{ $siteName }}{{ with $locSlug }} — {{ . }}{{ end }}</h1>
+<h1 class="sr-only">{{ $siteName }}{{ with $locSlug }}: {{ . }}{{ end }}</h1>
 {{ if .Params.image }}
   <img id="bg" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.image "size" "hero") }}" alt="{{ $siteName }} background" fetchpriority="high" data-src-path="{{ .Params.image }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
 {{ else if $.Site.Home.Params.image }}
@@ -46,7 +46,6 @@
 </div>
 {{ end }}
 {{- end -}}
-{{ partial "components/hero_ctas.html" . }}
 </section>
 {{ partial "components/contact_info.html" . }}
 {{ $advertisementsRendered := false }}

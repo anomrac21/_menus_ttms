@@ -1,10 +1,10 @@
 /**
- * TTMenus Authentication Client — Hub SSO
+ * TTMenus Authentication Client. Hub SSO
  *
  * Cross-subdomain SSO via HttpOnly cookies on .ttmenus.com:
- * - Access token: in-memory only (never localStorage)
- * - Refresh token: HttpOnly cookie only (never JS-accessible)
- * - User profile: in-memory (+ sessionStorage for UI within tab)
+ *. Access token: in-memory only (never localStorage)
+ *. Refresh token: HttpOnly cookie only (never JS-accessible)
+ *. User profile: in-memory (+ sessionStorage for UI within tab)
  *
  * Login on any *.ttmenus.com site authenticates all menus/services.
  * Logout clears hub cookies server-side; other tabs detect via /session poll.
@@ -54,7 +54,7 @@ var TTMS_LOGOUT_LATCH_KEY = 'ttmenus_logout_latch';
 var TTMS_LOGOUT_LATCH_MS = 20000;
 
 const AuthClient = {
-  /** In-memory access JWT — never persisted to localStorage. */
+  /** In-memory access JWT - never persisted to localStorage. */
   _accessToken: null,
   /** In-memory user object. */
   _currentUser: null,

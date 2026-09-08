@@ -34,6 +34,54 @@
     return document.getElementById(LOADING_ID);
   }
 
+  function getSaveBtn() {
+    return document.getElementById('menuItemEditModalSave');
+  }
+
+  function getDeleteBtn() {
+    return document.getElementById('menuItemEditModalDelete');
+  }
+
+  function postToFrame(payload) {
+    var frame = getFrame();
+    if (!frame || !frame.contentWindow) return;
+    try {
+      frame.contentWindow.postMessage(payload, window.location.origin);
+    } catch (err) { /* ignore */ }
+  }
+
+  function applyEmbedChromeState(data) {
+    var saveBtn = getSaveBtn();
+    var deleteBtn = getDeleteBtn();
+    var countEl = document.getElementById('menuItemEditModalSaveCount');
+    if (saveBtn && data.save) {
+      saveBtn.disabled = !!data.save.disabled;
+      saveBtn.classList.toggle('menu-item-edit-modal__save--pending', !!data.save.pending);
+      saveBtn.classList.toggle('menu-item-edit-modal__save--synced', !data.save.pending);
+      if (data.save.title) saveBtn.title = data.save.title;
+      if (data.save.label) saveBtn.setAttribute('aria-label', data.save.label);
+      if (countEl) {
+        if (data.save.pending && data.save.count > 0) {
+          countEl.textContent = String(data.save.count);
+          countEl.classList.remove('hidden');
+          countEl.setAttribute('aria-hidden', 'false');
+        } else {
+          countEl.textContent = '';
+          countEl.classList.add('hidden');
+          countEl.setAttribute('aria-hidden', 'true');
+        }
+      }
+    }
+    if (deleteBtn && data.remove) {
+      deleteBtn.disabled = !!data.remove.disabled;
+      deleteBtn.classList.toggle('is-unmark', !!data.remove.unmark);
+      if (data.remove.title) deleteBtn.title = data.remove.title;
+      if (data.remove.label) deleteBtn.setAttribute('aria-label', data.remove.label);
+      var icon = deleteBtn.querySelector('i');
+      if (icon) icon.className = data.remove.unmark ? 'fa fa-undo' : 'fa fa-trash';
+    }
+  }
+
   function setModalLoading(on, message) {
     var loadingEl = getLoadingEl();
     if (!loadingEl) return;
@@ -257,9 +305,15 @@
     refreshDraftBadgeState();
     setModalLoading(true, 'Loading editor…');
 
+    modal.classList.remove('is-closing');
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('menu-item-edit-modal-open');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        modal.classList.add('is-open');
+      });
+    });
 
     var embedSrc = EDIT_EMBED_PATH;
     if (frame.getAttribute('src') !== embedSrc) {
@@ -305,18 +359,29 @@
     var frame = getFrame();
     if (!modal) return;
 
-    modal.hidden = true;
+    modal.classList.remove('is-open');
+    modal.classList.add('is-closing');
     modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('menu-item-edit-modal-open');
     setModalLoading(false);
 
+    var finishClose = function () {
+      modal.classList.remove('is-closing');
+      modal.hidden = true;
+      if (frame) {
+        frame.setAttribute('src', 'about:blank');
+      }
+    };
+    var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      finishClose();
+    } else {
+      window.setTimeout(finishClose, 320);
+    }
+
     currentMenuRoot = null;
     currentContentPath = '';
     syncModalDraftBadge();
-
-    if (frame) {
-      frame.setAttribute('src', 'about:blank');
-    }
 
     if (opts.reload) {
       if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
@@ -329,6 +394,16 @@
     if (e.target.closest('#' + DRAFT_BADGE_ID)) {
       e.preventDefault();
       loadCmsDraftIntoFrame();
+      return;
+    }
+    if (e.target.closest('#menuItemEditModalSave')) {
+      e.preventDefault();
+      postToFrame({ type: 'ttms:embed-panel-click-save' });
+      return;
+    }
+    if (e.target.closest('#menuItemEditModalDelete')) {
+      e.preventDefault();
+      postToFrame({ type: 'ttms:embed-panel-click-delete' });
       return;
     }
     if (e.target.closest('[data-close-menu-item-edit-modal]')) {
@@ -381,7 +456,12 @@
         return;
       }
     }
-    if (!data || data.type !== 'ttms:embed-panel-form-ready') return;
+    if (!data || !data.type) return;
+    if (data.type === 'ttms:embed-panel-chrome-state') {
+      applyEmbedChromeState(data);
+      return;
+    }
+    if (data.type !== 'ttms:embed-panel-form-ready') return;
     setModalLoading(false);
   }
 

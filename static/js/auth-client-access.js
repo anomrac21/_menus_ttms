@@ -214,7 +214,7 @@ const AuthClientAccess = {
   },
 
   /**
-   * Protect client dashboard/control room - only authenticated users with access to this client
+   * Protect client dashboard/control room: only authenticated users with access to this client
    */
   async protectClientPage(options = {}) {
     const {

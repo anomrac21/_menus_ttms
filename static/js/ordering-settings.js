@@ -115,7 +115,7 @@
     if (contactHint) {
       contactHint.textContent = usePhone
         ? loyverseOn
-          ? 'Opens the phone dialer only — does not create a Loyverse order.'
+          ? 'Opens the phone dialer only: does not create a Loyverse order.'
           : 'Opens the phone dialer only.'
         : loyverseOn
           ? 'Opens WhatsApp with the order summary when guests tap Order Now (optional alongside Loyverse).'
@@ -331,7 +331,7 @@
           });
       }
 
-      // Sequential: both writes rewrite hugo.toml and push master. Parallel
+      // Sequential - both writes rewrite hugo.toml and push master. Parallel
       // clones race (remote rejected: cannot lock ref / expected stale SHA).
       saveOrdering
         .then(function (data) {

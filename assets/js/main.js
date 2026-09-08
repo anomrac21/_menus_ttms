@@ -1,5 +1,5 @@
 /**
- * TTMenus v2 - Basic UI Interactions
+ * TTMenus v2. Basic UI Interactions
  * Essential JavaScript for theme functionality
  */
 
@@ -22,7 +22,7 @@
             hydrateAllDraftMenuCardImages();
             applyDayBasedPromos();
         });
-        // Packery removed - no initialization needed
+        // Packery removed: no initialization needed
     }
 
     /**
@@ -79,14 +79,14 @@
         } catch (_) { return null; }
     }
 
-    /** Fallback when the time API is unavailable — still apply day-based promos using local clock. */
+    /** Fallback when the time API is unavailable: still apply day-based promos using local clock. */
     function getLocalDateTime() {
         const d = new Date();
         const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         return { day: names[d.getDay()], hour: d.getHours(), minute: d.getMinutes() };
     }
 
-    /** @param {string} timeStr "HH:mm" or "H:mm" 24h - returns minutes since midnight */
+    /** @param {string} timeStr "HH:mm" or "H:mm" 24h: returns minutes since midnight */
     function parseTimeToMinutes(timeStr) {
         if (!timeStr || typeof timeStr !== 'string') return null;
         const m = timeStr.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -115,7 +115,7 @@
         }) || null;
     }
 
-    /** Promo image for today (ignores time windows — art shows all day on promo days). */
+    /** Promo image for today (ignores time windows: art shows all day on promo days). */
     function getPromoImageForDay(promotionsJson, today) {
         if (!promotionsJson || !today) return '';
         let promotions;
@@ -462,7 +462,7 @@
                 notice.className = 'expanded-unavailable-notice';
                 controls.insertBefore(notice, controls.firstChild);
             }
-            notice.textContent = `Ordering unavailable — ${msg}`;
+            notice.textContent = `Ordering unavailable: ${msg}`;
             notice.style.display = '';
             if (addBtn) {
                 addBtn.disabled = true;
@@ -512,7 +512,7 @@
             if (textEl) textEl.textContent = msg;
             scheduleEl.classList.toggle('is-active', available);
             scheduleEl.classList.toggle('is-outside-window', !available);
-            scheduleEl.setAttribute('aria-label', available ? msg : `Outside ordering window — ${msg}`);
+            scheduleEl.setAttribute('aria-label', available ? msg : `Outside ordering window: ${msg}`);
         }
 
         card.querySelectorAll('.menu-item-unavailable-overlay').forEach((el) => el.remove());
@@ -722,7 +722,7 @@
         }
 
         // Hide order modal
-        // Order modal removed - no longer needed
+        // Order modal removed: no longer needed
 
         // Hide dashboard
         if (typeof window.closeDashboard === 'function') {
@@ -799,8 +799,8 @@
         }
         var cx = rect.left + rect.width / 2;
         var cy = rect.top + rect.height / 2;
-        cart.style.setProperty('--cart-from-x', (cx - vw / 2) + 'px');
-        cart.style.setProperty('--cart-from-y', (cy - vh / 2) + 'px');
+        cart.style.setProperty('--cart-from-x', (cx - vw / 2) +'px');
+        cart.style.setProperty('--cart-from-y', (cy - vh / 2) +'px');
         cart.style.setProperty('--cart-from-scale', '0.06');
     }
 
@@ -1333,8 +1333,8 @@
 
     /**
      * Track menu item card click
-     * @param {HTMLElement} element - The menu item card element
-     * @param {string} url - Item URL
+     * @param {HTMLElement} element. The menu item card element
+     * @param {string} url. Item URL
      */
     function trackMenuItemCardClick(element, url) {
         const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || 
@@ -1353,7 +1353,7 @@
             sessionStorage.setItem('lastMenuItemClick', JSON.stringify(clickData));
         }
         
-        // Card click intent — Matomo view is recorded in expandItem() when the item opens
+        // Card click intent. Matomo view is recorded in expandItem() when the item opens
         console.log('📊 Tracked menu item card click:', { itemName, url, price: itemPrice });
     }
 
@@ -1379,9 +1379,9 @@
     /**
      * Toggle item expansion (inline expansion instead of modal)
      * @global
-     * @param {HTMLElement} element - The menu item card element
-     * @param {string} url - Item URL
-     * @param {Event} event - The click event (optional)
+     * @param {HTMLElement} element. The menu item card element
+     * @param {string} url. Item URL
+     * @param {Event} event. The click event (optional)
      */
     function toggleItemExpansion(element, url, event) {
         if (!element) {
@@ -1430,7 +1430,7 @@
             const isSideCategoryTitle = target.closest('.expanded-side-category-title');
             const isSideOption = target.closest('.expanded-side-option');
             
-            // If clicking on drag handle, don't expand - let drag handle handle it
+            // If clicking on drag handle, don't expand: let drag handle handle it
             if (isDragHandle) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1439,7 +1439,7 @@
             
             // When expanded: allow image and title links to work normally
             if (isExpanded && (isImageLink || isTitleLink)) {
-                // Let the link handle its own click - navigate to page
+                // Let the link handle its own click: navigate to page
                 return;
             }
             // When expanded: allow buttons in expanded content to work
@@ -1719,12 +1719,12 @@
                             console.log('⚠️ itemData keys:', Object.keys(itemData || {}));
                             console.log('⚠️ itemData.side_categories:', itemData?.side_categories);
                         }
-                        // Get modifications - handle both flat array format and nested array format
+                        // Get modifications: handle both flat array format and nested array format
                         modifications = [];
                         if (itemData.modifications && Array.isArray(itemData.modifications)) {
                             // Check if it's a flat array [name, price, name, price, ...] or nested [[name, price], ...]
                             if (itemData.modifications.length > 0 && Array.isArray(itemData.modifications[0])) {
-                                // Nested array format - convert to flat
+                                // Nested array format: convert to flat
                                 itemData.modifications.forEach(mod => {
                                     if (Array.isArray(mod) && mod.length >= 2) {
                                         modifications.push(mod[0], mod[1]);
@@ -1737,12 +1737,12 @@
                             console.log('📊 Loaded modifications from JSON:', modifications);
                         }
                         
-                        // Get additions - handle both flat array format and nested array format
+                        // Get additions: handle both flat array format and nested array format
                         additions = [];
                         if (itemData.additions && Array.isArray(itemData.additions)) {
                             // Check if it's a flat array [name, price, name, price, ...] or nested [[name, price], ...]
                             if (itemData.additions.length > 0 && Array.isArray(itemData.additions[0])) {
-                                // Nested array format - convert to flat
+                                // Nested array format: convert to flat
                                 itemData.additions.forEach(add => {
                                     if (Array.isArray(add) && add.length >= 2) {
                                         additions.push(add[0], add[1]);
@@ -1765,7 +1765,7 @@
                 }
                 }
                 
-                // Fallback: Get data from card's data attributes if JSON failed (or always in edit mode)
+                // Fallback - Get data from card's data attributes if JSON failed (or always in edit mode)
                 if (!itemData || Object.keys(itemData).length === 0) {
                     const pricesArrayStr = element.getAttribute('data-prices-array');
                     if (pricesArrayStr) {
@@ -1845,7 +1845,7 @@
                 // Try to get item data from the page
                 const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() ||
                                 element.querySelector('.menu-item-title a')?.textContent?.trim() || '';
-                // Get description from card (summary) - try both with and without p tag
+                // Get description from card (summary): try both with and without p tag
                 const itemDescCard = element.querySelector('.menu-item-description')?.textContent?.trim() || 
                                      element.querySelector('.menu-item-description p')?.textContent?.trim() || '';
                 
@@ -1912,7 +1912,7 @@
                     variable2Values = v2s;
                 }
                 
-                // Extract numeric price - use first available price as default
+                // Extract numeric price: use first available price as default
                 let unitPrice = 0;
                 if (pricesArray.length >= 3) {
                     // Find first valid price
@@ -2170,7 +2170,7 @@
                                     return `
                                     <div class="expanded-image-slide menu-item-slideshow-slide ${index === 0 ? 'active' : ''}" data-image-index="${index}">
                                         <div class="content-panel" style="--ad-image: ${cssUrl}">
-                                            <img src="${src}"${pathAttr} alt="${itemName} - Image ${index + 1}" loading="${loadingAttr}" decoding="async"${fetchAttr} class="ad-portrait expanded-image-carousel-img">
+                                            <img src="${src}"${pathAttr} alt="${itemName}. Image ${index + 1}" loading="${loadingAttr}" decoding="async"${fetchAttr} class="ad-portrait expanded-image-carousel-img">
                                         </div>
                                     </div>`;
                                 }).join('')}
@@ -2228,7 +2228,7 @@
                             <div class="menu-image-actions menu-image-actions--standalone">
                                 ${menuImageAddBtnHTML}
                             </div>
-                            <p class="expanded-media-placeholder__hint">No photo yet — be the first to add one</p>
+                            <p class="expanded-media-placeholder__hint">No photo yet: be the first to add one</p>
                         </div>`;
                     }
                 }
@@ -2286,7 +2286,7 @@
                     </div>
                 `;
             } else {
-                // Fallback: simple expansion
+                // Fallback - simple expansion
                 const fallbackNav = isDashboardNewPlaceholderUrl ? 'return false;' : ('window.location.href=' + JSON.stringify(url) + ';');
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details">
@@ -2362,8 +2362,7 @@
                     const tr = track.getBoundingClientRect();
                     const sr = element.getBoundingClientRect();
                     track.scrollTo({
-                        top: track.scrollTop + (sr.top - tr.top),
-                        left: 0,
+                        top: track.scrollTop + (sr.top - tr.top),                        left: 0,
                         behavior: 'smooth',
                     });
                     return;
@@ -2371,8 +2370,7 @@
                 const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
                 const offset = rootFontSize * 5;
                 const elementTop = element.getBoundingClientRect().top + window.pageYOffset;
-                const targetPosition = elementTop - offset;
-                window.scrollTo({
+                const targetPosition = elementTop - offset;                window.scrollTo({
                     top: Math.max(0, targetPosition),
                     behavior: 'smooth',
                 });
@@ -2389,7 +2387,7 @@
 
     /**
      * Collapse a menu item card
-     * @param {HTMLElement} element - The menu item card
+     * @param {HTMLElement} element. The menu item card
      */
     function collapseItem(element, options) {
         const isReelsItem = isReelsMenuItemCard(element);
@@ -2414,8 +2412,8 @@
     /**
      * Adjust quantity in expanded item
      * @global
-     * @param {HTMLElement} button - The quantity button
-     * @param {number} change - Amount to change (-1 or 1)
+     * @param {HTMLElement} button. The quantity button
+     * @param {number} change. Amount to change (-1 or 1)
      */
     function adjustExpandedQuantity(button, change) {
         const card = resolveMenuItemCard(button);
@@ -2435,8 +2433,8 @@
 
     /**
      * Update price and cart button when quantity changes
-     * @param {HTMLElement} card - The menu item card
-     * @param {number} quantity - The new quantity
+     * @param {HTMLElement} card. The menu item card
+     * @param {number} quantity. The new quantity
      */
     function updateExpandedItemPrice(card, quantity) {
         // Update price including sides
@@ -2446,9 +2444,9 @@
     /**
      * Select an option (size or flavour) in expanded view
      * @global
-     * @param {HTMLElement} optionElement - The clicked option element
-     * @param {string} url - Item URL
-     * @param {Event} event - The click event (optional)
+     * @param {HTMLElement} optionElement. The clicked option element
+     * @param {string} url. Item URL
+     * @param {Event} event. The click event (optional)
      */
     function selectExpandedOption(optionElement, url, event) {
         // Prevent event from bubbling up to the card's onclick handler
@@ -2483,9 +2481,9 @@
     /**
      * Select an addition in expanded view
      * @global
-     * @param {HTMLElement} additionElement - The clicked addition element
-     * @param {string} url - Item URL
-     * @param {Event} event - The click event (optional)
+     * @param {HTMLElement} additionElement. The clicked addition element
+     * @param {string} url. Item URL
+     * @param {Event} event. The click event (optional)
      */
     function selectExpandedAddition(additionElement, url, event) {
         // Prevent event from bubbling up to the card's onclick handler
@@ -2507,9 +2505,9 @@
     /**
      * Select a side item in expanded view
      * @global
-     * @param {HTMLElement} sideElement - The clicked side element
-     * @param {string} url - Item URL
-     * @param {Event} event - The click event (optional)
+     * @param {HTMLElement} sideElement. The clicked side element
+     * @param {string} url. Item URL
+     * @param {Event} event. The click event (optional)
      */
     function selectExpandedSide(sideElement, url, event) {
         // Prevent event from bubbling up to the card's onclick handler
@@ -2569,8 +2567,8 @@
     /**
      * Toggle expanded side category collapse/expand
      * @global
-     * @param {HTMLElement} titleElement - The category title element
-     * @param {Event} event - Optional event object
+     * @param {HTMLElement} titleElement. The category title element
+     * @param {Event} event. Optional event object
      */
     function toggleExpandedSideCategory(titleElement, event) {
         // Prevent event from bubbling up to parent card's onclick
@@ -2604,7 +2602,7 @@
     
     /**
      * Update the counter for expanded side category title
-     * @param {HTMLElement} categoryContainer - The category container element
+     * @param {HTMLElement} categoryContainer. The category container element
      */
     function updateExpandedSideCategoryCounter(categoryContainer) {
         if (!categoryContainer) return;
@@ -2643,7 +2641,7 @@
     
     /**
      * Update price including selected sides
-     * @param {HTMLElement} card - The menu item card
+     * @param {HTMLElement} card. The menu item card
      */
     function updateExpandedItemPriceWithSides(card) {
         // First update base price from size/flavour
@@ -2698,15 +2696,15 @@
     
     /**
      * Update price based on selected size and flavour
-     * @param {HTMLElement} card - The menu item card
+     * @param {HTMLElement} card. The menu item card
      */
     function updateExpandedItemPriceFromOptions(card) {
         const pricesArrayStr = card.getAttribute('data-prices-array');
         if (!pricesArrayStr) return;
         
         const pricesArray = JSON.parse(pricesArrayStr);
-        const selectedVariable1 = card.getAttribute('data-selected-variable1') || '-';
-        const selectedVariable2 = card.getAttribute('data-selected-variable2') || '-';
+        const selectedVariable1 = card.getAttribute('data-selected-variable1') ;
+        const selectedVariable2 = card.getAttribute('data-selected-variable2') ;
         
         // Find matching price in prices array (format: [variable1, variable2, price, ...])
         let unitPrice = 0;
@@ -2826,13 +2824,13 @@
         } catch (e) {
             meta = [];
         }
-        var sz = String(size || '-').trim();
+        var sz = String(size ).trim();
         var variant = String(card.getAttribute('data-loyverse-variant-id') || '').trim();
         if (!variant && Array.isArray(meta)) {
             for (var i = 0; i < meta.length; i++) {
                 var pm = meta[i];
                 if (!pm || !pm.loyverse_variant_id) continue;
-                var v1 = String(pm.variable1 || '-').trim();
+                var v1 = String(pm.variable1 ).trim();
                 if (sz === v1 || ((sz === '-' || !sz) && (v1 === '-' || !v1))) {
                     variant = String(pm.loyverse_variant_id).trim();
                     break;
@@ -2900,8 +2898,8 @@
                 fly.innerHTML = '<i class="fa fa-shopping-cart"></i>';
                 fly.style.left = originX + 'px';
                 fly.style.top = originY + 'px';
-                fly.style.setProperty('--dx', (to.left + to.width / 2 - originX) + 'px');
-                fly.style.setProperty('--dy', (to.top + to.height / 2 - originY) + 'px');
+                fly.style.setProperty('--dx', (to.left + to.width / 2 - originX) +'px');
+                fly.style.setProperty('--dy', (to.top + to.height / 2 - originY) +'px');
                 document.body.appendChild(fly);
                 setTimeout(function () {
                     if (fly.parentNode) fly.parentNode.removeChild(fly);
@@ -2923,8 +2921,8 @@
     /**
      * Add expanded item to cart
      * @global
-     * @param {HTMLElement} button - The add to cart button
-     * @param {string} url - Item URL
+     * @param {HTMLElement} button. The add to cart button
+     * @param {string} url. Item URL
      */
     function addExpandedItemToCart(button, url) {
         const card = resolveMenuItemCard(button);
@@ -2992,10 +2990,10 @@
         const itemName = titleElement?.textContent?.trim() || '';
         
         // Get selected variable1 and variable2
-        const selectedVariable1 = card.getAttribute('data-selected-variable1') || '-';
-        const selectedVariable2 = card.getAttribute('data-selected-variable2') || '-';
+        const selectedVariable1 = card.getAttribute('data-selected-variable1') ;
+        const selectedVariable2 = card.getAttribute('data-selected-variable2') ;
         
-        // Get price - try expanded price first, then regular price
+        // Get price: try expanded price first, then regular price
         const priceElement = root.querySelector('.expanded-price') || card.querySelector('.menu-item-price');
         const priceText = priceElement?.textContent?.trim() || '';
         
@@ -3006,7 +3004,7 @@
 
         if (!itemName || unitPrice === 0) {
             console.warn('Missing item name or price:', { itemName, unitPrice, priceText });
-            // Fallback: open the item page to use the full modal
+            // Fallback - open the item page to use the full modal
             if (typeof window.openItem === 'function') {
                 window.openItem(card, url);
             }
@@ -3122,7 +3120,7 @@
             
         } else {
             console.warn('addItem function not available, opening item page');
-            // Fallback: open the item page to use the full modal
+            // Fallback - open the item page to use the full modal
             if (typeof window.openItem === 'function') {
                 window.openItem(card, url);
             } else {
@@ -3134,8 +3132,8 @@
     /**
      * Open item modal (kept for backward compatibility, but redirects to expansion for menu cards)
      * @global
-     * @param {HTMLElement|string} element - Element or URL
-     * @param {string} url - Item URL (if element is not provided)
+     * @param {HTMLElement|string} element. Element or URL
+     * @param {string} url. Item URL (if element is not provided)
      */
     function openItem(element, url) {
         if (element && element.classList && element.classList.contains('single-page-item-card')) {
@@ -3188,8 +3186,7 @@
                 const tr = track.getBoundingClientRect();
                 const sr = slide.getBoundingClientRect();
                 track.scrollTo({
-                    top: track.scrollTop + (sr.top - tr.top),
-                    left: 0,
+                    top: track.scrollTop + (sr.top - tr.top),                    left: 0,
                     behavior: behavior || 'smooth',
                 });
                 return;
@@ -3200,8 +3197,7 @@
             }
         }
         const offset = getHeaderScrollOffset();
-        const top = target.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;        window.scrollTo({
             top: Math.max(0, top),
             behavior: behavior || 'smooth',
         });
@@ -3286,7 +3282,7 @@
     /**
      * Update cart count badge
      * @global
-     * @param {number} change - Change in cart count (+1, -1, etc.)
+     * @param {number} change. Change in cart count (+1, -1, etc.)
      */
     function updateCart() {
         if (window.TTMSCartBadge && typeof window.TTMSCartBadge.sync === 'function') {
@@ -3307,7 +3303,7 @@
     /**
      * Update ad count badge
      * @global
-     * @param {number} count - New ad count
+     * @param {number} count. New ad count
      */
     function updateAdCount(count) {
         const adCount = document.getElementById('adcount');
@@ -3349,7 +3345,7 @@
     window.selectExpandedAddition = selectExpandedAddition;
     
     /**
-     * Safe CSS url() for --ad-image (single-quoted — avoids breaking style="...").
+     * Safe CSS url() for --ad-image (single-quoted: avoids breaking style="...").
      * @param {string} src
      * @returns {string}
      */
@@ -3361,10 +3357,10 @@
     /**
      * Navigate to previous/next image in expanded carousel
      * @global
-     * @param {HTMLElement} button - The navigation button
+     * @param {HTMLElement} button. The navigation button
      * @param {number} direction - -1 for previous, 1 for next
-     * @param {string} url - Item URL (for compatibility)
-     * @param {Event} event - The click event
+     * @param {string} url. Item URL (for compatibility)
+     * @param {Event} event. The click event
      */
     function navigateExpandedImage(button, direction, url, event) {
         if (event) {
@@ -3394,10 +3390,10 @@
     /**
      * Go to specific image by indicator click
      * @global
-     * @param {HTMLElement} indicator - The indicator element
-     * @param {number} index - The image index to go to
-     * @param {string} url - Item URL (for compatibility)
-     * @param {Event} event - The click event
+     * @param {HTMLElement} indicator. The indicator element
+     * @param {number} index. The image index to go to
+     * @param {string} url. Item URL (for compatibility)
+     * @param {Event} event. The click event
      */
     function goToExpandedImage(indicator, index, url, event) {
         if (event) {
@@ -3413,8 +3409,8 @@
     
     /**
      * Go to specific image index in carousel
-     * @param {HTMLElement} carousel - The carousel element
-     * @param {number} index - The image index to show
+     * @param {HTMLElement} carousel. The carousel element
+     * @param {number} index. The image index to show
      */
     function goToExpandedImageIndex(carousel, index) {
         const slides = carousel.querySelectorAll('.expanded-image-slide');
@@ -3523,8 +3519,7 @@
                 let bestIndex = 0;
                 let minDistance = Infinity;
                 slides.forEach(function (slide, i) {
-                    const distance = Math.abs(slide.offsetLeft - scrollLeft);
-                    if (distance < minDistance) {
+                    const distance = Math.abs(slide.offsetLeft - scrollLeft);                    if (distance < minDistance) {
                         minDistance = distance;
                         bestIndex = i;
                     }
@@ -3583,9 +3578,9 @@
     /**
      * Navigate to previous/next image in single page carousel
      * @global
-     * @param {HTMLElement} button - The navigation button
+     * @param {HTMLElement} button. The navigation button
      * @param {number} direction - -1 for previous, 1 for next
-     * @param {Event} event - The click event
+     * @param {Event} event. The click event
      */
     function navigateSinglePageImage(button, direction, event) {
         if (button && button.closest('.expanded-image-carousel')) {
@@ -3618,9 +3613,9 @@
     /**
      * Go to specific image by indicator click on single page
      * @global
-     * @param {HTMLElement} indicator - The indicator element
-     * @param {number} index - The image index to go to
-     * @param {Event} event - The click event
+     * @param {HTMLElement} indicator. The indicator element
+     * @param {number} index. The image index to go to
+     * @param {Event} event. The click event
      */
     function goToSinglePageImage(indicator, index, event) {
         if (indicator && indicator.closest('.expanded-image-carousel')) {
@@ -3639,8 +3634,8 @@
     
     /**
      * Go to specific image index in single page carousel
-     * @param {HTMLElement} carousel - The carousel element
-     * @param {number} index - The image index to show
+     * @param {HTMLElement} carousel. The carousel element
+     * @param {number} index. The image index to show
      */
     function goToSinglePageImageIndex(carousel, index) {
         const slides = carousel.querySelectorAll('.single-page-image-slide');
@@ -3673,8 +3668,8 @@
     /**
      * Adjust quantity on single page
      * @global
-     * @param {HTMLElement} button - The quantity button
-     * @param {number} change - Amount to change (-1 or 1)
+     * @param {HTMLElement} button. The quantity button
+     * @param {number} change. Amount to change (-1 or 1)
      */
     function adjustSinglePageQuantity(button, change) {
         const quantitySpan = document.querySelector('.single-page-quantity, .single-page-item-card .expanded-quantity');
@@ -3690,8 +3685,8 @@
 
     /**
      * Update price and cart button on single page
-     * @param {HTMLElement} quantitySpan - The quantity span element
-     * @param {number} quantity - The new quantity
+     * @param {HTMLElement} quantitySpan. The quantity span element
+     * @param {number} quantity. The new quantity
      */
     function updateSinglePagePrice(quantitySpan, quantity) {
         // Use the new function that includes options
@@ -3701,8 +3696,8 @@
     /**
      * Add single page item to cart
      * @global
-     * @param {HTMLElement} button - The add to cart button
-     * @param {string} url - Item URL
+     * @param {HTMLElement} button. The add to cart button
+     * @param {string} url. Item URL
      */
     function addSinglePageItemToCart(button, url) {
         if (document.body.classList.contains('single-page-unavailable')) {
@@ -3796,8 +3791,8 @@
             // Get selected variable1 and variable2
             const selectedVariable1Option = document.querySelector('.single-page-option[data-option-type="variable1"].selected');
             const selectedVariable2Option = document.querySelector('.single-page-option[data-option-type="variable2"].selected');
-            const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') || '-';
-            const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') || '-';
+            const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') ;
+            const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') ;
             
             // Combine variable1 and variable2 for the size parameter
             let size = '-';
@@ -3911,8 +3906,8 @@
     /**
      * Select an option (size or flavour) on single page
      * @global
-     * @param {HTMLElement} optionElement - The clicked option element
-     * @param {Event} event - The click event
+     * @param {HTMLElement} optionElement. The clicked option element
+     * @param {Event} event. The click event
      */
     function selectSinglePageOption(optionElement, event) {
         if (event) {
@@ -3940,8 +3935,8 @@
     /**
      * Select a side item on single page
      * @global
-     * @param {HTMLElement} sideElement - The clicked side element
-     * @param {Event} event - The click event
+     * @param {HTMLElement} sideElement. The clicked side element
+     * @param {Event} event. The click event
      */
     function selectSinglePageSide(sideElement, event) {
         if (event) {
@@ -3997,8 +3992,8 @@
     /**
      * Select an addition on single page
      * @global
-     * @param {HTMLElement} additionElement - The clicked addition element
-     * @param {Event} event - The click event
+     * @param {HTMLElement} additionElement. The clicked addition element
+     * @param {Event} event. The click event
      */
     function selectSinglePageAddition(additionElement, event) {
         if (event) {
@@ -4031,8 +4026,8 @@
         // Get selected variable1 and variable2
         const selectedVariable1Option = document.querySelector('.single-page-option[data-option-type="variable1"].selected');
         const selectedVariable2Option = document.querySelector('.single-page-option[data-option-type="variable2"].selected');
-        const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') || '-';
-        const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') || '-';
+        const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') ;
+        const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') ;
         
         // Find matching price
         let unitPrice = 0;
@@ -4211,6 +4206,6 @@
 
 })();
 
-// LOCATION STATUS — assets/js/location-status.js
-// PAGE REINIT — assets/js/page-reinit.js (body)
-// LOCATION NAV — assets/js/location-navigation.js
+// LOCATION STATUS - assets/js/location-status.js
+// PAGE REINIT - assets/js/page-reinit.js (body)
+// LOCATION NAV - assets/js/location-navigation.js

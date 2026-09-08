@@ -64,6 +64,9 @@
     if (typeof window.TtmsFeatureChips !== 'undefined' && typeof window.TtmsFeatureChips.init === 'function') {
       window.TtmsFeatureChips.init();
     }
+    if (typeof window.initLocationChooserSearch === 'function') {
+      window.initLocationChooserSearch();
+    }
   }
 
   window.reinitTTMSPageFeatures = reinitTTMSPageFeatures;

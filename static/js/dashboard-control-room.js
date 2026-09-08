@@ -1,5 +1,5 @@
 /**
- * Dashboard control room — header + collapsible cards.
+ * Dashboard control room: header + collapsible cards.
  */
 (function (global) {
   'use strict';
@@ -12,7 +12,7 @@
 
   function isJunkSiteName(s) {
     s = cleanSiteName(s);
-    if (!s || s === '—') return true;
+    if (!s) return true;
     if (/^dashboard(\s*\|\s*)?$/i.test(s)) return true;
     if (/^dashboard\s*\|\s*$/i.test(s)) return true;
     return false;
@@ -58,7 +58,7 @@
     var logoLink = document.getElementById('dashboardLogoLink');
     if (logoLink) {
       logoLink.setAttribute('title', 'View ' + siteName + ' menu site');
-      logoLink.setAttribute('aria-label', siteName + ' — view live menu');
+      logoLink.setAttribute('aria-label', siteName + ': view live menu');
     }
     return siteName;
   }
@@ -86,10 +86,10 @@
         : null;
     if (!user) {
       if (accountEl) {
-        accountEl.textContent = '—';
+        accountEl.textContent = '';
         accountEl.removeAttribute('title');
       }
-      if (trayUserEl) trayUserEl.textContent = '—';
+      if (trayUserEl) trayUserEl.textContent = '';
       applyHeaderAccountLink();
       return;
     }
@@ -99,7 +99,7 @@
         ? user.first_name + ' ' + user.last_name
         : null) ||
       user.email ||
-      '—';
+      '';
     if (accountEl) {
       accountEl.textContent = username;
       if (user.email && user.email !== username) {
@@ -114,11 +114,11 @@
     var linkEl = document.getElementById('dashboardHeaderAccountLink');
     if (linkEl) {
       linkEl.setAttribute('title', 'Open your TT Menus account');
-      linkEl.setAttribute('aria-label', username + ' — open account');
+      linkEl.setAttribute('aria-label', username + ': open account');
     }
     var trayAccount = document.getElementById('dashboardHeaderTrayAccount');
     if (trayAccount) {
-      trayAccount.setAttribute('aria-label', username + ' — open account');
+      trayAccount.setAttribute('aria-label', username + ': open account');
     }
     applyHeaderAccountLink();
   }
@@ -379,7 +379,7 @@
     initCardCollapse: initCardCollapse,
   };
 
-  // Run collapse ASAP — do not wait for auth gate in the page script.
+  // Run collapse ASAP - do not wait for auth gate in the page script.
   function bootCollapse() {
     try {
       initCardCollapse();

@@ -1,5 +1,5 @@
 /**
- * Single menu item page — (re)init after Barba transitions and first load.
+ * Single menu item page: (re)init after Barba transitions and first load.
  */
 (function () {
   'use strict';

@@ -1,0 +1,70 @@
+/**
+ * Mixes from colors.css. Not a second palette: do not put hex here.
+ *
+ * --scheme-white is light ink (main text) for highlights and glass edges.
+ * Setting it to gold (#ffaf00) tints chips, borders, and panels orange.
+ *
+ * Header colors are not remapped here. .site-header in header.css
+ * is the only place that consumes --header-*.
+ * Hero borders are consumed by hero.css, feature-chips, location picker,
+ * and the intro reel: not as a global --scheme-white replacement.
+ */
+:root {
+  --main-bg-color: var(--main-bg);
+
+  /* Page */
+  --scheme-bg: var(--main-bg);
+  --scheme-ink: var(--main-text-color);
+  --scheme-black: var(--main-bg);
+  --scheme-white: var(--main-text-color);
+  --hero-bg-color: var(--hero-bg-color-1);
+  --scheme-hero-bg: var(--hero-bg-color-1);
+  --scheme-hero-ink: var(--hero-text-color);
+  --scheme-hero-border: var(--hero-border-color);
+
+  /* Cards / panels */
+  --scheme-surface: var(--menu-bg-color-1);
+  --scheme-surface-2: var(--menu-bg-color-2);
+  --scheme-menu-ink: var(--menu-text-color);
+
+  /* Footer / overlay */
+  --scheme-footer-bg: var(--footer-bg-color);
+  --scheme-footer-ink: var(--footer-text-color);
+  --scheme-footer-icon: var(--footer-icon-color);
+  --scheme-overlay: var(--modal-bg-container-color);
+
+  /* Actions */
+  --scheme-button-bg: var(--button-color1);
+  --scheme-button-bg-2: var(--button-color2);
+  --scheme-button-ink: var(--button-text-color1);
+  --scheme-button-ink-2: var(--button-text-color2);
+  --scheme-accent: var(--accent-color);
+  --scheme-select: var(--select-color);
+  --scheme-accent-2: var(--selected-button-color2);
+  --scheme-accent-deep: var(--selected-button-color1);
+  --scheme-on-accent: var(--accent-text-color);
+  --scheme-accent-ink: var(--selected-text-color3);
+  --scheme-accent-glow: var(--accent-glow-color);
+
+  --scheme-ink-muted: color-mix(in srgb, var(--scheme-ink) 72%, transparent);
+  --scheme-ink-soft: color-mix(in srgb, var(--scheme-ink) 62%, transparent);
+  --scheme-ink-faint: color-mix(in srgb, var(--scheme-ink) 42%, transparent);
+  --scheme-white-muted: color-mix(in srgb, var(--scheme-white) 72%, transparent);
+  --scheme-white-soft: color-mix(in srgb, var(--scheme-white) 55%, transparent);
+  --scheme-white-faint: color-mix(in srgb, var(--scheme-white) 28%, transparent);
+  --scheme-white-line: color-mix(in srgb, var(--scheme-white) 18%, transparent);
+  --scheme-white-glass: color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  --scheme-black-muted: color-mix(in srgb, var(--scheme-black) 72%, transparent);
+  --scheme-black-soft: color-mix(in srgb, var(--scheme-black) 45%, transparent);
+  --scheme-black-faint: color-mix(in srgb, var(--scheme-black) 28%, transparent);
+  --scheme-black-line: color-mix(in srgb, var(--scheme-black) 16%, transparent);
+  --scheme-shadow: color-mix(in srgb, var(--scheme-black) 34%, transparent);
+  --scheme-shadow-strong: color-mix(in srgb, var(--scheme-black) 55%, transparent);
+  --scheme-glass: color-mix(in srgb, var(--scheme-surface) 72%, transparent);
+  --scheme-glass-strong: color-mix(in srgb, var(--scheme-surface) 88%, transparent);
+  --scheme-accent-muted: color-mix(in srgb, var(--scheme-accent-glow) 55%, transparent);
+  --scheme-accent-soft: color-mix(in srgb, var(--scheme-accent-glow) 28%, transparent);
+  --scheme-accent-line: color-mix(in srgb, var(--scheme-accent-glow) 42%, transparent);
+  --scheme-accent-2-muted: color-mix(in srgb, var(--scheme-accent-2) 55%, transparent);
+  --scheme-accent-deep-muted: color-mix(in srgb, var(--scheme-accent-deep) 55%, transparent);
+}

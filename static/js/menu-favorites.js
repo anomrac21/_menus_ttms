@@ -1,5 +1,5 @@
 /**
- * Menu dish & promotion favorites — auth-service /api/v1/me/favorites (requires params.auth.enabled + signed-in user).
+ * Menu dish & promotion favorites: auth-service /api/v1/me/favorites (requires params.auth.enabled + signed-in user).
  */
 (function () {
   'use strict';
