@@ -57,7 +57,7 @@
   --success: var(--primary-green);
   --warning: var(--primary-orange);
   --error: var(--primary-red);
-  --info: var(--primary-blue);
+  --info: var(--gray-dark);
 
   --hub-panel-ink: var(--text-primary);
   --hub-panel-ink-muted: color-mix(in srgb, var(--text-primary) 58%, transparent);
@@ -79,7 +79,7 @@
   --dash-surface-raised: var(--white-off);
   --dash-surface-inset: var(--hub-panel-surface-inset);
   --dash-ink: var(--text-primary);
-  --dash-ink-muted: var(--text-muted);
+  --dash-ink-muted: var(--gray-dark);
   --dash-accent: var(--primary-orange);
   --dash-accent-2: var(--primary-red);
   --dash-accent-ink: var(--primary-blue-dark);
@@ -123,6 +123,7 @@
   --hub-panel-shadow: color-mix(in srgb, var(--black) 42%, transparent);
   --hub-panel-success: var(--primary-green-light);
   --hub-panel-logout-ink: var(--primary-red-light);
+  --info: color-mix(in srgb, var(--white-off) 78%, var(--gray));
 
   --dash-bg: var(--primary-blue-dark);
   --dash-bg-2: var(--primary-blue);
@@ -130,7 +131,7 @@
   --dash-surface-raised: var(--primary-blue-light);
   --dash-surface-inset: var(--hub-panel-surface-inset);
   --dash-ink: var(--text-primary);
-  --dash-ink-muted: var(--text-muted);
+  --dash-ink-muted: color-mix(in srgb, var(--white-off) 72%, var(--gray));
   --dash-accent: var(--primary-orange);
   --dash-accent-2: var(--primary-red-light);
   --dash-accent-ink: var(--primary-blue-dark);
@@ -140,6 +141,7 @@
   --dash-shadow-strong: var(--shadow-dark);
   --dash-overlay: var(--hub-panel-backdrop);
   --dash-on-accent: var(--white-off);
+  --dash-info: var(--info);
 }
 
 /* Live-menu iframe editor: keep the light hub palette so fields stay readable
@@ -184,6 +186,20 @@ body.dashboard-edit-rearrange-only {
   color: var(--dash-ink);
 }
 
+html:has(.dashboard-control-room),
+html:has(.dashboard-control-room) body,
+body.dashboard-edit-theme-only,
+body.dashboard-edit-rearrange-only {
+  color-scheme: light;
+}
+
+html:has(.dashboard-control-room)[data-theme="dark"],
+html:has(.dashboard-control-room)[data-theme="dark"] body,
+html[data-theme="dark"] body.dashboard-edit-theme-only,
+html[data-theme="dark"] body.dashboard-edit-rearrange-only {
+  color-scheme: dark;
+}
+
 html:has(.dashboard-control-room) {
   --main-bg: var(--dash-bg);
   --main-bg-color: var(--dash-bg);
@@ -222,6 +238,17 @@ html:has(.dashboard-control-room) {
   --footer-text-color: var(--dash-ink);
   --footer-icon-color: var(--dash-ink);
   --modal-bg-container-color: var(--dash-overlay);
+  --scheme-bg: var(--dash-bg);
+  --scheme-ink: var(--dash-ink);
+  --scheme-black: var(--dash-bg);
+  --scheme-white: var(--dash-ink);
+  --scheme-surface: var(--dash-surface);
+  --scheme-surface-2: var(--dash-surface-raised);
+  --scheme-menu-ink: var(--dash-ink);
+  --scheme-accent: var(--dash-accent);
+  --scheme-on-accent: var(--dash-on-accent);
+  --scheme-overlay: var(--dash-overlay);
+  accent-color: var(--dash-success);
 }
 
 .dashboard-theme-toggle {
@@ -252,6 +279,7 @@ html:has(.dashboard-control-room) {
   background: color-mix(in srgb, var(--dash-accent) 18%, var(--dash-surface));
 }
 
-.dashboard-theme-btn.hide {
+.dashboard-theme-btn.hide,
+.dashboard-header-tray-theme.hide {
   display: none !important;
 }

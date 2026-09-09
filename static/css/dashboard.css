@@ -919,7 +919,7 @@ html:has(.dashboard-control-room) body {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--dash-info) 90%, transparent);
+  color: var(--dash-ink-muted);
   line-height: 1.2;
 }
 
@@ -964,13 +964,12 @@ html:has(.dashboard-control-room) body {
 
 .dashboard-control-room .dashboard-header-end {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.55rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
   flex-shrink: 0;
   min-width: 0;
-  max-width: 15rem;
 }
 
 .dashboard-control-room .dashboard-header-actions {
@@ -1040,11 +1039,131 @@ html:has(.dashboard-control-room) body {
 }
 
 .dashboard-control-room .dashboard-header-account-btn {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.55rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 14%, transparent);
+  background: color-mix(in srgb, var(--dash-bg) 55%, transparent);
+  color: var(--dash-ink-muted);
+  cursor: pointer;
+}
+
+.dashboard-control-room .dashboard-header-account-btn .dashboard-header-account-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  font-size: 1.35rem;
+}
+
+.dashboard-control-room .dashboard-header-account-btn-chevron {
+  font-size: 0.65rem;
+  opacity: 0.75;
+  transition: transform 0.18s ease;
+}
+
+.dashboard-control-room .dashboard-header-bar.is-account-open .dashboard-header-account-btn-chevron {
+  transform: rotate(180deg);
+}
+
+.dashboard-control-room .dashboard-header-account-btn .dashboard-header-action-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .dashboard-control-room .dashboard-header-tray {
+  flex: 1 0 100%;
   display: none;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+}
+
+.dashboard-control-room .dashboard-header-bar.is-account-open {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.dashboard-control-room .dashboard-header-bar.is-account-open .dashboard-header-tray {
+  display: flex;
+}
+
+.dashboard-control-room .dashboard-header-tray[hidden] {
+  display: none !important;
+}
+
+.dashboard-control-room .dashboard-header-tray-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+  background: color-mix(in srgb, var(--dash-bg) 45%, transparent);
+  color: var(--dash-ink);
+  text-decoration: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.dashboard-control-room .dashboard-header-tray-row:hover,
+.dashboard-control-room .dashboard-header-tray-row:focus-visible {
+  background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
+  border-color: color-mix(in srgb, var(--dash-ink) 18%, transparent);
+}
+
+.dashboard-control-room .dashboard-header-tray-icon {
+  width: 1.35rem;
+  text-align: center;
+  color: var(--dash-ink-muted);
+  flex-shrink: 0;
+}
+
+.dashboard-control-room .dashboard-header-tray-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.dashboard-control-room .dashboard-header-tray-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.dashboard-control-room .dashboard-header-tray-value {
+  font-size: 0.75rem;
+  color: var(--dash-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-control-room .dashboard-header-tray-theme .dashboard-header-tray-icon {
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-control-room .dashboard-header-tray-signout {
+  border-color: color-mix(in srgb, var(--dash-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--dash-error) 22%, transparent);
+}
+
+.dashboard-control-room .dashboard-header-tray-signout .dashboard-header-tray-icon {
+  color: var(--dash-warning);
 }
 
 @media (max-width: 720px) {
@@ -1131,124 +1250,15 @@ html:has(.dashboard-control-room) body {
   .dashboard-control-room .dashboard-header-actions--desktop {
     display: none !important;
   }
+}
 
-  .dashboard-control-room .dashboard-header-account-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 0.55rem;
-    border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--dash-ink) 14%, transparent);
-    background: color-mix(in srgb, var(--dash-bg) 55%, transparent);
-    color: var(--dash-ink-muted);
-    cursor: pointer;
-  }
-
-  .dashboard-control-room .dashboard-header-account-btn .dashboard-header-account-icon {
-    width: 1.45rem;
-    height: 1.45rem;
-    font-size: 1.35rem;
-  }
-
-  .dashboard-control-room .dashboard-header-account-btn-chevron {
-    font-size: 0.65rem;
-    opacity: 0.75;
-    transition: transform 0.18s ease;
-  }
-
-  .dashboard-control-room .dashboard-header-bar.is-account-open .dashboard-header-account-btn-chevron {
-    transform: rotate(180deg);
-  }
-
-  .dashboard-control-room .dashboard-header-account-btn .dashboard-header-action-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .dashboard-control-room .dashboard-header-tray {
-    flex: 1 0 100%;
-    display: none;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding-top: 0.35rem;
-    border-top: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
-  }
-
-  .dashboard-control-room .dashboard-header-bar.is-account-open .dashboard-header-tray {
+@media (min-width: 721px) {
+  .dashboard-control-room .dashboard-header-account-wrap--desktop {
     display: flex;
   }
 
-  .dashboard-control-room .dashboard-header-tray[hidden] {
-    display: none !important;
-  }
-
-  .dashboard-control-room .dashboard-header-tray-row {
+  .dashboard-control-room .dashboard-header-actions--desktop {
     display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    min-height: 44px;
-    padding: 0.55rem 0.7rem;
-    border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
-    background: color-mix(in srgb, var(--dash-bg) 45%, transparent);
-    color: var(--dash-ink);
-    text-decoration: none;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    width: 100%;
-  }
-
-  .dashboard-control-room .dashboard-header-tray-row:hover,
-  .dashboard-control-room .dashboard-header-tray-row:focus-visible {
-    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
-    border-color: color-mix(in srgb, var(--dash-ink) 18%, transparent);
-  }
-
-  .dashboard-control-room .dashboard-header-tray-icon {
-    width: 1.35rem;
-    text-align: center;
-    color: color-mix(in srgb, var(--dash-info) 90%, transparent);
-    flex-shrink: 0;
-  }
-
-  .dashboard-control-room .dashboard-header-tray-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    min-width: 0;
-  }
-
-  .dashboard-control-room .dashboard-header-tray-label {
-    font-size: 0.86rem;
-    font-weight: 600;
-  }
-
-  .dashboard-control-room .dashboard-header-tray-value {
-    font-size: 0.75rem;
-    color: color-mix(in srgb, var(--dash-info) 80%, transparent);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .dashboard-control-room .dashboard-header-tray-signout {
-    border-color: color-mix(in srgb, var(--dash-warning) 28%, transparent);
-    background: color-mix(in srgb, var(--dash-error) 22%, transparent);
-  }
-
-  .dashboard-control-room .dashboard-header-tray-signout .dashboard-header-tray-icon {
-    color: var(--dash-warning);
   }
 }
 
@@ -1358,7 +1368,7 @@ html:has(.dashboard-control-room) body {
   height: 1.75rem;
   border-radius: 8px;
   background: color-mix(in srgb, var(--dash-ink) 10%, transparent);
-  color: var(--dash-info);
+  color: var(--dash-ink);
   font-size: 0.85rem;
   flex-shrink: 0;
 }
@@ -1636,7 +1646,7 @@ html:has(.dashboard-control-room) body {
   margin: 0 0 0.75rem;
   font-size: 0.84rem;
   line-height: 1.45;
-  color: color-mix(in srgb, var(--dash-info) 82%, transparent);
+  color: var(--dash-ink-muted);
 }
 
 .dashboard-control-room .dashboard-card-actions {
@@ -3156,11 +3166,6 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
   animation: dashboard-pos-badge-breathe 1.6s ease-in-out infinite;
 }
 
-#posIntegrationPanel:has(#posAccountBanner[data-state="checking"]) .dashboard-pos-loyverse-icon,
-#posIntegrationPanel:has(#posAccountBanner[data-state="unknown"]) .dashboard-pos-loyverse-icon {
-  animation: dashboard-pos-icon-glow 1.6s ease-in-out infinite;
-}
-
 .dashboard-pos-account[data-state="checking"],
 .dashboard-pos-account[data-state="unknown"] {
   background-image: linear-gradient(
@@ -3169,8 +3174,6 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
     color-mix(in srgb, var(--dash-info) 14%, transparent) 45%,
     color-mix(in srgb, var(--dash-info) 8%, transparent) 90%
   );
-  background-size: 180% 100%;
-  animation: dashboard-pos-checking-shimmer 1.8s ease-in-out infinite;
 }
 
 .dashboard-pos-account.is-just-connected,
@@ -3235,22 +3238,6 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
 @keyframes dashboard-pos-badge-breathe {
   0%, 100% { opacity: 0.78; }
   50% { opacity: 1; }
-}
-
-@keyframes dashboard-pos-icon-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--dash-warning) 18%, transparent);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--dash-warning) 8%, transparent);
-    transform: scale(1.06);
-  }
-}
-
-@keyframes dashboard-pos-checking-shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: -80% 0; }
 }
 
 @keyframes dashboard-pos-connected-bloom {
@@ -7017,7 +7004,6 @@ body.menu-item-edit-modal-open {
 .dashboard-edit-color-painter--open .dashboard-edit-color-orb-glow,
 .dashboard-edit-color-aside.is-entering .dashboard-edit-color-orb-glow {
   opacity: 1;
-  animation: colorPainterOrbPulse 1.8s ease-in-out infinite;
 }
 
 .dashboard-edit-color-orb-icon {
@@ -7032,33 +7018,11 @@ body.menu-item-edit-modal-open {
 @keyframes colorPainterOrbGrandEnter {
   0% {
     opacity: 0;
-    transform: scale(0.08) rotate(-56deg);
-    filter: blur(12px);
-    box-shadow:
-      0 0 0 0 color-mix(in srgb, var(--dash-accent) 0%, transparent),
-      0 0 0 0 color-mix(in srgb, var(--dash-info) 0%, transparent);
-  }
-  22% {
-    opacity: 1;
-    transform: scale(1.85) rotate(12deg);
-    filter: blur(0);
-    box-shadow:
-      0 22px 56px color-mix(in srgb, var(--dash-info) 62%, transparent),
-      0 0 0 14px color-mix(in srgb, var(--dash-info) 28%, transparent);
-  }
-  42% {
-    transform: scale(0.82) rotate(-10deg);
-  }
-  64% {
-    transform: scale(1.22) rotate(5deg);
-    box-shadow:
-      0 18px 44px color-mix(in srgb, var(--dash-info) 48%, transparent),
-      0 0 0 6px color-mix(in srgb, var(--dash-info) 30%, transparent);
+    transform: scale(0.72);
   }
   100% {
     opacity: 1;
-    transform: scale(1) rotate(0deg);
-    filter: blur(0);
+    transform: scale(1);
   }
 }
 
@@ -7101,11 +7065,6 @@ body.menu-item-edit-modal-open {
     transform: translate(-50%, -50%) scale(3.4);
     opacity: 0;
   }
-}
-
-@keyframes colorPainterOrbPulse {
-  0%, 100% { transform: scale(1); opacity: 0.55; }
-  50% { transform: scale(1.12); opacity: 1; }
 }
 
 /* iOS-style radial wheel around the brush */
@@ -8560,6 +8519,7 @@ body.menu-item-edit-modal-open {
   margin: 0;
   width: 1.1em;
   height: 1.1em;
+  accent-color: var(--dash-success);
 }
 
 .dashboard-side-categories-ui {
@@ -10516,7 +10476,7 @@ body.menu-item-edit-modal-open {
 .dashboard-notify-toggle input[type='checkbox'] {
   width: 1.1rem;
   height: 1.1rem;
-  accent-color: var(--dash-accent);
+  accent-color: var(--dash-success);
 }
 
 .dashboard-notify-toggle-label {
@@ -10993,7 +10953,7 @@ body.menu-item-edit-modal-open {
 .dashboard-notify-broadcast-label input[type="checkbox"] {
   margin-top: 0.2rem;
   flex-shrink: 0;
-  accent-color: var(--dash-accent);
+  accent-color: var(--dash-success);
 }
 
 .dashboard-notify-broadcast-text {
@@ -12032,8 +11992,8 @@ button.dashboard-settings-panel-toggle:focus-visible {
   width: 2.85rem;
   height: 1.55rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--dash-info) 75%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dash-info) 28%, transparent);
+  background: color-mix(in srgb, var(--dash-ink) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 18%, transparent);
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -12051,9 +12011,9 @@ button.dashboard-settings-panel-toggle:focus-visible {
 }
 
 .dashboard-switch-input:checked + .dashboard-switch-track {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--dash-info) 95%, transparent) 0%, color-mix(in srgb, var(--dash-info) 95%, transparent) 100%);
-  border-color: color-mix(in srgb, var(--dash-accent) 55%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dash-info) 18%, transparent);
+  background: var(--dash-success);
+  border-color: var(--dash-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dash-success) 22%, transparent);
 }
 
 .dashboard-switch-input:checked + .dashboard-switch-track::after {

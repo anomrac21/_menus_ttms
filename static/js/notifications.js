@@ -938,6 +938,9 @@ const NotificationService = {
       this.connectWebSocket();
 
       this.updateSubscribeButton(true, { backgroundPush: true });
+      if (window.NotifyInbox && typeof window.NotifyInbox.refresh === 'function') {
+        window.NotifyInbox.refresh();
+      }
       this.showMessage(
         'Alerts enabled! You will receive push notifications on this device even when the menu is closed.',
         'success'
@@ -1134,13 +1137,20 @@ const NotificationService = {
    * Uses service worker if available, otherwise falls back to direct Notification API
    */
   async showNotification(notification) {
-    if (Notification.permission !== 'granted') {
-      console.warn('⚠️ Notification permission not granted');
+    if (!this.shouldDisplayNotification(notification)) {
+      console.log('Skipping admin-only notification for this user/device');
       return;
     }
 
-    if (!this.shouldDisplayNotification(notification)) {
-      console.log('Skipping admin-only notification for this user/device');
+    try {
+      document.dispatchEvent(new CustomEvent('ttms:notify-received', { detail: notification }));
+    } catch (e) {}
+    if (window.NotifyInbox && typeof window.NotifyInbox.remember === 'function') {
+      window.NotifyInbox.remember(notification);
+    }
+
+    if (Notification.permission !== 'granted') {
+      console.warn('⚠️ Notification permission not granted');
       return;
     }
 
@@ -1351,7 +1361,9 @@ const NotificationService = {
     if (isSubscribed) {
       btn.classList.add('subscribed');
       btn.setAttribute('aria-pressed', 'true');
-      if (btnText) {
+      if (btn.getAttribute('data-opens') === 'notify-inbox') {
+        btn.title = 'Menu alerts';
+      } else if (btnText) {
         btnText.textContent = 'Alerts on';
       } else {
         btn.setAttribute(
@@ -1359,24 +1371,30 @@ const NotificationService = {
           backgroundPush ? 'Alerts on: tap to turn off' : 'Alerts need setup: tap to re-enable'
         );
       }
-      if (btnHint) {
-        btnHint.textContent = backgroundPush
-          ? 'Tap to turn off'
-          : 'Tap to fix phone alerts';
+      if (btn.getAttribute('data-opens') !== 'notify-inbox') {
+        if (btnHint) {
+          btnHint.textContent = backgroundPush
+            ? 'Tap to turn off'
+            : 'Tap to fix phone alerts';
+        }
+        btn.title = backgroundPush
+          ? 'You receive menu alerts: tap to turn off'
+          : 'Background alerts need setup: tap to re-enable';
       }
-      btn.title = backgroundPush
-        ? 'You receive menu alerts: tap to turn off'
-        : 'Background alerts need setup: tap to re-enable';
     } else {
       btn.classList.remove('subscribed');
       btn.setAttribute('aria-pressed', 'false');
-      if (btnText) {
+      if (btn.getAttribute('data-opens') === 'notify-inbox') {
+        btn.title = 'Menu alerts';
+      } else if (btnText) {
         btnText.textContent = 'Get menu alerts';
       } else {
         btn.setAttribute('aria-label', 'Get menu alerts');
       }
-      if (btnHint) btnHint.textContent = 'Free · specials & hours';
-      btn.title = 'Get alerts for specials, hours, and menu updates';
+      if (btn.getAttribute('data-opens') !== 'notify-inbox') {
+        if (btnHint) btnHint.textContent = 'Free · specials & hours';
+        btn.title = 'Get alerts for specials, hours, and menu updates';
+      }
     }
   },
 
@@ -1404,6 +1422,10 @@ const NotificationService = {
       isSubscribed,
       backgroundPush
     );
+
+    if (window.NotifyInbox && typeof window.NotifyInbox.syncSubscribe === 'function') {
+      window.NotifyInbox.syncSubscribe();
+    }
 
     const btnHero = document.getElementById('subBtnHero');
     const btnHeroText = document.getElementById('subBtnHeroText');

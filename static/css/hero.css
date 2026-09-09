@@ -99,7 +99,7 @@
 
 .logo_container a {
     display: block;
-    transition: all 0.3s ease;
+    transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease);
     text-decoration: none;
 }
 

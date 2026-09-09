@@ -1,0 +1,37 @@
+<div id="notify-inbox" class="notify-inbox-hidden notify-inbox-panel" aria-hidden="true" role="dialog" aria-labelledby="notify-inbox-title">
+	<div class="notify-inbox-motion">
+		<div class="notify-inbox-header">
+			<div class="notify-inbox-heading">
+				<span class="notify-inbox-heading__icon" aria-hidden="true">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
+				</span>
+				<div>
+					<h2 id="notify-inbox-title" class="notify-inbox-title">Alerts</h2>
+					<p class="notify-inbox-subtitle">Recent updates from this menu</p>
+				</div>
+			</div>
+			<button type="button" class="notify-inbox-close ttms-icon-btn ttms-icon-btn--on-dark" onclick="if (typeof closeNotifyInbox === 'function') closeNotifyInbox(); return false;" aria-label="Close alerts">
+				<img src="https://cdn.ttmenus.com/icons/ui/close.svg" alt="" width="24" height="24" decoding="async">
+			</button>
+		</div>
+
+		<div class="notify-inbox-subscribe" id="notify-inbox-subscribe">
+			<p class="notify-inbox-subscribe__copy" id="notify-inbox-subscribe-copy">Get specials, hours, and menu updates on this phone.</p>
+			<button type="button" class="notify-inbox-subscribe__btn" id="notify-inbox-subscribe-btn" onclick="toggleNotificationSubscription(); return false;">
+				Get menu alerts
+			</button>
+		</div>
+
+		<div class="notify-inbox-scroll">
+			<p class="notify-inbox-status" id="notify-inbox-status" hidden></p>
+			<ul class="notify-inbox-list" id="notify-inbox-list"></ul>
+			<div class="notify-inbox-empty" id="notify-inbox-empty" hidden>
+				<div class="notify-inbox-empty__icon" aria-hidden="true">
+					<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
+				</div>
+				<p class="notify-inbox-empty__title">No alerts yet</p>
+				<p class="notify-inbox-empty__hint" id="notify-inbox-empty-hint">When this restaurant sends specials or menu updates, they show up here.</p>
+			</div>
+		</div>
+	</div>
+</div>

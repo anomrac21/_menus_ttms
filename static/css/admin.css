@@ -14,7 +14,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px color-mix(in srgb, var(--dash-black) 10%, transparent);
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ttms-ease-out, ease), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   width: -webkit-fill-available;
   max-width: 100%;
 }
@@ -111,7 +111,7 @@
 
 .user-card-details {
   margin-bottom: 1rem;
-  transition: all 0.3s ease;
+  transition: transform 0.28s var(--ttms-ease-out, ease), box-shadow 0.28s ease, background-color 0.28s ease, border-color 0.28s ease;
   overflow: hidden;
 }
 
@@ -137,7 +137,7 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  transition: all 0.3s ease;
+  transition: transform 0.28s var(--ttms-ease-out, ease), box-shadow 0.28s ease, background-color 0.28s ease, border-color 0.28s ease;
   overflow: hidden;
 }
 
@@ -156,7 +156,7 @@
   border-radius: 4px;
   color: var(--dash-info);
   min-width: 36px;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ttms-ease-out, ease), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   flex-shrink: 0;
 }
 
@@ -205,7 +205,7 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ttms-ease-out, ease), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   margin-right: 6px;
 }
 

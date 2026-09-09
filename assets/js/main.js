@@ -6,6 +6,16 @@
 (function() {
     'use strict';
 
+    function normalizePriceVar(value) {
+        if (value == null) return '-';
+        var s = String(value).trim();
+        return s === '' || s === '-' || s === 'None' ? '-' : s;
+    }
+
+    function isPriced(price) {
+        return typeof price === 'number' && !isNaN(price);
+    }
+
     function init() {
         hideAllPanels();
         initializeFooter();
@@ -725,8 +735,11 @@
         // Order modal removed: no longer needed
 
         // Hide dashboard
+        if (typeof window.closeNotifyInbox === 'function') {
+            window.closeNotifyInbox({ instant: true });
+        }
         if (typeof window.closeDashboard === 'function') {
-            window.closeDashboard();
+            window.closeDashboard({ instant: true });
         } else {
             const dashboard = document.getElementById('dashboard');
             if (dashboard) {
@@ -1400,6 +1413,10 @@
         }
 
         if (event && event.target?.closest?.('.menu-smash-pass-card__title-link')) {
+            return;
+        }
+
+        if (event && event.target?.closest?.('.expanded-item-taxonomies a, .menu-item-card__taxonomies a, .taxonomy a')) {
             return;
         }
 
@@ -2703,20 +2720,20 @@
         if (!pricesArrayStr) return;
         
         const pricesArray = JSON.parse(pricesArrayStr);
-        const selectedVariable1 = card.getAttribute('data-selected-variable1') ;
-        const selectedVariable2 = card.getAttribute('data-selected-variable2') ;
+        const selectedVariable1 = normalizePriceVar(card.getAttribute('data-selected-variable1'));
+        const selectedVariable2 = normalizePriceVar(card.getAttribute('data-selected-variable2'));
         
         // Find matching price in prices array (format: [variable1, variable2, price, ...])
-        let unitPrice = 0;
+        let unitPrice = NaN;
         
         // First try exact match
         for (let i = 0; i < pricesArray.length; i += 3) {
             if (i + 2 < pricesArray.length) {
-                const v1 = pricesArray[i];
-                const v2 = pricesArray[i + 1];
+                const v1 = normalizePriceVar(pricesArray[i]);
+                const v2 = normalizePriceVar(pricesArray[i + 1]);
                 const price = parseFloat(pricesArray[i + 2]);
                 
-                if (v1 === selectedVariable1 && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
+                if (v1 === selectedVariable1 && v2 === selectedVariable2 && isPriced(price)) {
                     unitPrice = price;
                     break;
                 }
@@ -2724,14 +2741,14 @@
         }
         
         // If no exact match, try matching just variable2 (when variable1 is "-")
-        if (unitPrice === 0 && selectedVariable1 === '-') {
+        if (!isPriced(unitPrice) && selectedVariable1 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const v1 = pricesArray[i];
-                    const v2 = pricesArray[i + 1];
+                    const v1 = normalizePriceVar(pricesArray[i]);
+                    const v2 = normalizePriceVar(pricesArray[i + 1]);
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (v1 === '-' && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
+                    if (v1 === '-' && v2 === selectedVariable2 && isPriced(price)) {
                         unitPrice = price;
                         break;
                     }
@@ -2740,14 +2757,14 @@
         }
         
         // If still no match, try matching just variable1 (when variable2 is "-")
-        if (unitPrice === 0 && selectedVariable2 === '-') {
+        if (!isPriced(unitPrice) && selectedVariable2 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const v1 = pricesArray[i];
-                    const v2 = pricesArray[i + 1];
+                    const v1 = normalizePriceVar(pricesArray[i]);
+                    const v2 = normalizePriceVar(pricesArray[i + 1]);
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (v1 === selectedVariable1 && v2 === '-' && !isNaN(price) && price > 0) {
+                    if (v1 === selectedVariable1 && v2 === '-' && isPriced(price)) {
                         unitPrice = price;
                         break;
                     }
@@ -2756,15 +2773,16 @@
         }
         
         // If still no match, try to find first available price
-        if (unitPrice === 0) {
+        if (!isPriced(unitPrice)) {
             for (let i = 2; i < pricesArray.length; i += 3) {
                 const price = parseFloat(pricesArray[i]);
-                if (!isNaN(price) && price > 0) {
+                if (isPriced(price)) {
                     unitPrice = price;
                     break;
                 }
             }
         }
+        if (!isPriced(unitPrice)) unitPrice = 0;
         
         // Apply promotion discount if active
         const promoPercent = parseInt(card.getAttribute('data-active-promo-percent')) || 0;
@@ -2999,12 +3017,12 @@
         
         // Extract numeric price (remove $ and any other characters)
         const priceMatch = priceText.match(/\$?([\d.]+)/);
-        const unitPrice = priceMatch ? parseFloat(priceMatch[1]) : parseFloat(button.getAttribute('data-unit-price')) || 0;
+        let unitPrice = priceMatch ? parseFloat(priceMatch[1]) : parseFloat(button.getAttribute('data-unit-price'));
+        if (!isPriced(unitPrice)) unitPrice = 0;
         const totalCost = unitPrice * quantity;
 
-        if (!itemName || unitPrice === 0) {
-            console.warn('Missing item name or price:', { itemName, unitPrice, priceText });
-            // Fallback - open the item page to use the full modal
+        if (!itemName) {
+            console.warn('Missing item name:', { itemName, unitPrice, priceText });
             if (typeof window.openItem === 'function') {
                 window.openItem(card, url);
             }
@@ -3235,6 +3253,7 @@
             if (e.target.closest(
                 '.menu-favorite-btn, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, ' +
                 '.expanded-image-nav, .expanded-image-indicator, .menu-item-slideshow, ' +
+                '.expanded-item-taxonomies a, .menu-item-card__taxonomies a, .taxonomy a, ' +
                 '.dashboard-edit-drag-handle, .dashboard-edit-card-btn-wrap, .dashboard-edit-header-btn-wrap, ' +
                 '.dashboard-edit-btn, [data-dashboard-edit="1"]'
             )) {
@@ -3774,25 +3793,24 @@
             }
         }
         
-        // Calculate unit price from selected options
-        const unitPrice = updateSinglePagePriceWithOptions();
-        if (unitPrice === 0) {
-            console.warn('Missing item name or price:', { itemName, unitPrice });
-            return;
+        let unitPrice = updateSinglePagePriceWithOptions();
+        if (!isPriced(unitPrice)) {
+            unitPrice = parseFloat(button.getAttribute('data-unit-price'));
         }
+        if (!isPriced(unitPrice)) unitPrice = 0;
 
         if (!itemName) {
-            console.warn('Missing item name:', { itemName });
+            console.warn('Missing item name:', { itemName, unitPrice });
             return;
         }
 
-        // Call existing addItem function if available
-        if (typeof addItem === 'function') {
+        const addFn = typeof addItem === 'function' ? addItem : window.addItem;
+        if (typeof addFn === 'function') {
             // Get selected variable1 and variable2
             const selectedVariable1Option = document.querySelector('.single-page-option[data-option-type="variable1"].selected');
             const selectedVariable2Option = document.querySelector('.single-page-option[data-option-type="variable2"].selected');
-            const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') ;
-            const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') ;
+            const selectedVariable1 = normalizePriceVar(selectedVariable1Option?.getAttribute('data-option-value'));
+            const selectedVariable2 = normalizePriceVar(selectedVariable2Option?.getAttribute('data-option-value'));
             
             // Combine variable1 and variable2 for the size parameter
             let size = '-';
@@ -3890,7 +3908,7 @@
                 url 
             });
             
-            addItem(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost, promoData);
+            addFn(itemName, size, sidesData, adds, mods, quantity.toString(), finalTotalCost, promoData);
             
             // Show visual feedback
             button.classList.add('adding');
@@ -4026,18 +4044,18 @@
         // Get selected variable1 and variable2
         const selectedVariable1Option = document.querySelector('.single-page-option[data-option-type="variable1"].selected');
         const selectedVariable2Option = document.querySelector('.single-page-option[data-option-type="variable2"].selected');
-        const selectedVariable1 = selectedVariable1Option?.getAttribute('data-option-value') ;
-        const selectedVariable2 = selectedVariable2Option?.getAttribute('data-option-value') ;
+        const selectedVariable1 = normalizePriceVar(selectedVariable1Option?.getAttribute('data-option-value'));
+        const selectedVariable2 = normalizePriceVar(selectedVariable2Option?.getAttribute('data-option-value'));
         
         // Find matching price
-        let unitPrice = 0;
+        let unitPrice = NaN;
         for (let i = 0; i < pricesArray.length; i += 3) {
             if (i + 2 < pricesArray.length) {
-                const v1 = pricesArray[i];
-                const v2 = pricesArray[i + 1];
+                const v1 = normalizePriceVar(pricesArray[i]);
+                const v2 = normalizePriceVar(pricesArray[i + 1]);
                 const price = parseFloat(pricesArray[i + 2]);
                 
-                if (v1 === selectedVariable1 && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
+                if (v1 === selectedVariable1 && v2 === selectedVariable2 && isPriced(price)) {
                     unitPrice = price;
                     break;
                 }
@@ -4045,14 +4063,14 @@
         }
         
         // If no exact match, try matching just variable2 (when variable1 is "-")
-        if (unitPrice === 0 && selectedVariable1 === '-') {
+        if (!isPriced(unitPrice) && selectedVariable1 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const v1 = pricesArray[i];
-                    const v2 = pricesArray[i + 1];
+                    const v1 = normalizePriceVar(pricesArray[i]);
+                    const v2 = normalizePriceVar(pricesArray[i + 1]);
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (v1 === '-' && v2 === selectedVariable2 && !isNaN(price) && price > 0) {
+                    if (v1 === '-' && v2 === selectedVariable2 && isPriced(price)) {
                         unitPrice = price;
                         break;
                     }
@@ -4061,14 +4079,14 @@
         }
         
         // If still no match, try matching just variable1 (when variable2 is "-")
-        if (unitPrice === 0 && selectedVariable2 === '-') {
+        if (!isPriced(unitPrice) && selectedVariable2 === '-') {
             for (let i = 0; i < pricesArray.length; i += 3) {
                 if (i + 2 < pricesArray.length) {
-                    const v1 = pricesArray[i];
-                    const v2 = pricesArray[i + 1];
+                    const v1 = normalizePriceVar(pricesArray[i]);
+                    const v2 = normalizePriceVar(pricesArray[i + 1]);
                     const price = parseFloat(pricesArray[i + 2]);
                     
-                    if (v1 === selectedVariable1 && v2 === '-' && !isNaN(price) && price > 0) {
+                    if (v1 === selectedVariable1 && v2 === '-' && isPriced(price)) {
                         unitPrice = price;
                         break;
                     }
@@ -4077,15 +4095,16 @@
         }
         
         // If still no match, use first available price
-        if (unitPrice === 0) {
+        if (!isPriced(unitPrice)) {
             for (let i = 2; i < pricesArray.length; i += 3) {
                 const price = parseFloat(pricesArray[i]);
-                if (!isNaN(price) && price > 0) {
+                if (isPriced(price)) {
                     unitPrice = price;
                     break;
                 }
             }
         }
+        if (!isPriced(unitPrice)) unitPrice = 0;
         
         // Apply promotion discount if active
         const promoPercent = parseInt(dataContainer.getAttribute('data-active-promo-percent')) || 0;

@@ -1,63 +1,47 @@
 {{- $locations := partial "menu/visible-locations.html" . -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $locationCount := 0 -}}
+{{- $currentLocation := false -}}
+{{- $currentIndex := 0 -}}
 {{- if $locations -}}
   {{- if reflect.IsSlice $locations -}}
     {{- $locationCount = len $locations -}}
+    {{- range $index, $location := $locations -}}
+      {{- if and $locSlug $location.slug (eq $location.slug $locSlug) -}}
+        {{- $currentLocation = $location -}}
+        {{- $currentIndex = $index -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if not $currentLocation -}}
+      {{- range $index, $location := $locations -}}
+        {{- if and (not $currentLocation) $location.address -}}
+          {{- $currentLocation = $location -}}
+          {{- $currentIndex = $index -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 
 <section class="contactinfobg menu-reels-slide menu-reels-slide--contact">
-  <div class="contactinfo item location-picker">
-    {{- if and $locations (gt $locationCount 0) -}}
+  <div class="contactinfo item location-picker location-picker--current">
+    {{- if $currentLocation -}}
     <div class="location-picker__header">
-      <h2 class="location-picker__title">{{ if le $locationCount 1 }}Our location{{ else }}Choose your location{{ end }}</h2>
-      <div class="location-picker__selected" id="locationPickerSelected" hidden>
-        <span class="location-picker__selected-label">Ordering from</span>
-        <strong class="location-picker__selected-name" id="locationPickerSelectedName"></strong>
-      </div>
+      <h2 class="location-picker__title">{{ if le $locationCount 1 }}Our location{{ else }}Your location{{ end }}</h2>
+      {{- if gt $locationCount 1 -}}
+      <a class="location-picker__change-btn" id="locationPickerChangeBtn" href="/">Change location</a>
+      {{- end -}}
     </div>
 
     <div class="location-picker__carousel location-navigation-container" id="locationPickerCarousel">
-      {{- if gt $locationCount 1 -}}
-      <button type="button" class="location-picker__nav location-picker__nav--prev" id="locationNavLeft" aria-label="Previous location" title="Previous location">
-        <span aria-hidden="true">‹</span>
-      </button>
-      {{- end -}}
       <div class="locations-wrapper location-picker__track-wrap">
-        <div class="locations location-picker__list" role="listbox" aria-label="Restaurant locations">
-          {{- if reflect.IsSlice $locations -}}
-            {{- range $index, $location := $locations -}}
-              {{- if and $location.address $location.latlon -}}
-                {{ partial "components/location-picker-card.html" (dict "location" $location "index" $index "ctx" $) }}
-              {{- end -}}
-            {{- end -}}
-          {{- end -}}
+        <div class="locations location-picker__list">
+          {{ partial "components/location-picker-card.html" (dict "location" $currentLocation "index" $currentIndex "ctx" $ "selected" true "readonly" true) }}
         </div>
       </div>
-      {{- if gt $locationCount 1 -}}
-      <button type="button" class="location-picker__nav location-picker__nav--next" id="locationNavRight" aria-label="Next location" title="Next location">
-        <span aria-hidden="true">›</span>
-      </button>
-      {{- end -}}
     </div>
     {{- else -}}
     <p class="location-picker__empty">No locations configured yet.</p>
-    {{- end -}}
-
-    {{- if and $locations (gt $locationCount 1) -}}
-    <div class="location-picker__section-footer">
-      <button type="button" class="location-picker__nearby-btn" id="locationPickerNearbyBtn" data-default-label="Find closest location" aria-label="Find closest location using your device">
-        <span class="location-picker__nearby-btn-inner">
-          <span class="location-picker__nearby-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" fill="currentColor"/></svg>
-          </span>
-          <span class="location-picker__nearby-copy">
-            <span class="location-picker__nearby-label">Find closest location</span>
-            <span class="location-picker__nearby-hint">Uses your GPS</span>
-          </span>
-        </span>
-      </button>
-    </div>
     {{- end -}}
 
     {{- $hasSocial := or .Site.Params.social.facebook .Site.Params.social.instagram .Site.Params.social.youtube .Site.Params.social.tiktok -}}

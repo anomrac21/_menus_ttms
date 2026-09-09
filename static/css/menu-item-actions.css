@@ -92,13 +92,11 @@
 @keyframes menu-item-actions-in {
   0% {
     opacity: 0;
-    transform: translateY(-0.4rem) scale(0.88);
-    filter: blur(4px);
+    transform: translateY(-0.4rem) scale(0.96);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -106,12 +104,10 @@
   0% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
   100% {
     opacity: 0;
-    transform: translateY(-0.28rem) scale(0.92);
-    filter: blur(3px);
+    transform: translateY(-0.28rem) scale(0.96);
   }
 }
 

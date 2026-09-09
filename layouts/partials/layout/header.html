@@ -28,7 +28,7 @@
 			{{ end }}
 			{{- if default false site.Params.features.notifications -}}
 			<span class="header-notify-btn-wrap">
-				{{ partial "components/notification-subscribe-btn.html" (dict "id" "subBtnHeader" "class" "header-notify-subscribe" "iconOnly" true) }}
+				{{ partial "components/notification-subscribe-btn.html" (dict "id" "subBtnHeader" "class" "header-notify-subscribe" "iconOnly" true "opensInbox" true) }}
 			</span>
 			{{- end -}}
 			<button type="button" class="header-menublock-toggle" id="menublockToggle" aria-label="Open menu categories" aria-controls="menublock" aria-expanded="false" aria-haspopup="true">

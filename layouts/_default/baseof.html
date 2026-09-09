@@ -19,7 +19,10 @@
 {{- else -}}
 {{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $multiLocHome := and .IsHome (partial "menu/multi-location-enabled.html" .) -}}
-{{- $isMenuReelsPage := and (not $multiLocHome) (or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug))) -}}
+{{- $isLocationHome := and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug) -}}
+{{- $isMenuCategoryList := and (eq .Kind "section") (ne .Type "locations") (ne .Section "locations") (not .IsHome) -}}
+{{- $isTaxonomyTerm := eq .Kind "term" -}}
+{{- $isMenuReelsPage := and (not $multiLocHome) (or .IsHome (eq .Layout "location-home") $isLocationHome $isMenuCategoryList $isTaxonomyTerm) -}}
 <!DOCTYPE html>
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
 <head>
@@ -85,13 +88,13 @@
   <script src="/js/ads-client.js" defer></script>
   <script src="/js/client-ad-manager.js" defer></script>
   {{- end -}}
-  <script src="/js/location-picker.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/location-picker.js" }}" defer></script>
   <script src="/js/multi-location-menu.js" defer></script>
   {{- if site.Params.menuImageService.enabled -}}
   <script src="/js/menu-smash-pass.js" defer></script>
   {{- end -}}
   <script src="/js/menu-nav-mode.js" defer></script>
-  <script src="/js/menu-reels.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/menu-reels.js" }}" defer></script>
   
   <!-- Core app functionality: deferred -->
   <script src="/js/app.js" defer></script>

@@ -307,7 +307,7 @@ const MenuEditor = {
             cursor: pointer;
             font-size: 16px;
             z-index: 100;
-            transition: all 0.3s ease;
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.28s ease, box-shadow 0.28s ease;
             box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 30%, transparent);
           }
           .edit-btn:hover {
@@ -334,7 +334,7 @@ const MenuEditor = {
             cursor: grab !important;
             font-size: 18px;
             z-index: 1000 !important;
-            transition: all 0.3s ease;
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.28s ease, box-shadow 0.28s ease;
             box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 30%, transparent);
             user-select: none;
             -webkit-user-select: none;

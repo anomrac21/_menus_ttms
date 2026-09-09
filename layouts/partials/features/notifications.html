@@ -1,4 +1,5 @@
 {{ if default false site.Params.features.notifications }}
 {{/* Plan entitlement: features.notifications (CPS). NOTIFY_CONFIG is in head.html. */}}
 <div id="notification-container"></div>
+{{ partial "ttms-notify-inbox/panel.html" . }}
 {{ end }}

@@ -60,21 +60,11 @@
     color: var(--scheme-white) !important;
   }
   .hero_logo_container .hero-features .loader-feature,
-  .hero-features.loader-features .loader-feature {
-    color: var(--scheme-white);
-    border-color: var(--scheme-accent);
-    background: var(--scheme-button-bg);
-  }
-  .hero_logo_container .hero-features .loader-feature[data-feature="ordering"] {
-    border-color: var(--scheme-accent);
-    background: var(--scheme-accent-deep);
-  }
-  .hero_logo_container .hero-features .loader-feature[data-feature="notifications"] {
-    border-color: var(--scheme-accent-2);
-    background: var(--scheme-accent-deep);
-  }
-  .hero_logo_container .hero-features .loader-feature[data-feature="install"] {
-    border-color: var(--scheme-accent);
-    background: var(--scheme-button-bg);
+  .hero_logo_container .hero-features .loader-feature[data-feature],
+  .hero-features.loader-features .loader-feature,
+  .hero-features.loader-features .loader-feature[data-feature] {
+    color: var(--hero-features-icon-color, var(--hero-text-color));
+    border-color: var(--hero-border-color);
+    background: var(--hero-features-icon-bg-color);
   }
 </style>

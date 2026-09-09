@@ -1,31 +1,55 @@
 {{ define "main" }}
-  <div class="main-content">
-    <div class="menu-header list-page-header" data-section-slug="{{ .Section }}" data-reel-section="{{ .LinkTitle }}">
-      {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" .Section "imagePrimary" (index .Params.images "primary")) }}
-      {{ if .Params.images.primary }}
-        <img class="food item listpageimage" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ .Title }}" loading="lazy">
-      {{ end }}
-      <div class="headerstyle item">
-        <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}
-        {{ if .Params.images.secondary }}
-          <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "decoration") }}" alt="{{ .Title }} decoration" loading="lazy" width="160" height="200">
-        {{ end }}
-        </h1>
-      </div>
-      {{ if .Content }}
-      <div class="menu-summary item">{{ .Content }}</div>
+{{- $secSlug := partial "menu/section-slug.html" . -}}
+{{- $locSlug := partial "menu/location-slug.html" . -}}
+{{- $itemCount := len .RegularPages -}}
+{{- $title := .LinkTitle | default .Title -}}
+{{- $apiUrl := "/api/menu-items.json" -}}
+<div id="menu-reels-viewport" class="menu-reels-viewport" data-home-menu-api="{{ $apiUrl }}"{{ with $locSlug }} data-location-slug="{{ . }}"{{ end }} data-auth-enabled="{{ site.Params.auth.enabled }}" data-menu-images="{{ site.Params.menuImageService.enabled }}">
+<div id="menu-reels-track" class="menu-reels-track">
+  <div class="main-menu-bg {{ $title }}">
+    <div class="main-menu {{ $title }} item">
+      <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
+        <a class="menu-anchor" id="{{ $title }}"></a>
+        {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" $title "sectionSlug" $secSlug "imagePrimary" (index .Params.images "primary")) }}
+        <div class="menu-header__link">
+          {{ if .Params.images.primary }}
+            <img class="food item aos-init aos-animate" data-aos="zoom-out" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.primary "size" "section") }}" alt="{{ $title }}" loading="lazy" width="640" height="640" data-src-path="{{ .Params.images.primary }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+          {{ end }}
+          <div class="headerstyle item">
+            <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">
+              {{ $title }}
+              {{ if .Params.images.secondary }}
+                <img class="slideinimg aos-init aos-animate" data-aos="zoom-out-right" src="{{ partial "ttms/menu-img-src.html" (dict "path" .Params.images.secondary "size" "decoration") }}" alt="{{ $title }} decoration" loading="lazy" width="160" height="200">
+              {{ end }}
+            </h1>
+            <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">{{ $itemCount }}</span> <span class="menu-header__item-count__suffix">{{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</span></p>
+          </div>
+          {{ with .Summary }}
+          <div class="menu-summary item">{{ . }}</div>
+          {{ end }}
+        </div>
+      </section>
+    </div>
+  </div>
+
+  {{ if eq $title "Promotions" }}
+    {{ partial "ads/clientads.html" . }}
+  {{ else }}
+    <div class="menu-items-container">
+      {{ range .RegularPages.ByWeight }}
+        {{ partial "components/menu-item-card.html" (dict "page" . "reels" true) }}
       {{ end }}
     </div>
-
-    {{ if eq .LinkTitle ("Promotions") }}
-      {{ partial "ads/clientads.html" . }}
-    {{ else }}
-      <div class="menu-items-container">
-        {{ range .RegularPages.ByWeight }}
-          {{ partial "components/menu-item-card.html" . }}
-        {{ end }}
-      </div>
-    {{ end }}
-  </div>
-  {{ partial "socialmedia/share-button.html" . }}
+  {{ end }}
+  {{- if site.Params.ads.enabled -}}
+  <section class="menu-reels-slide menu-reels-slide--bottom-ads" id="menu-reels-sponsored-ads" data-reel-section="Sponsored">
+    <a class="menu-anchor" id="Sponsored"></a>
+    <div class="bottomads menu-reels-bottom-ads-in-track">
+      {{ partial "ads/frontpageads.html" . }}
+    </div>
+  </section>
+  {{- end -}}
+</div>
+</div>
+{{ partial "socialmedia/share-button.html" . }}
 {{ end }}

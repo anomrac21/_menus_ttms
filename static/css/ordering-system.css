@@ -52,7 +52,7 @@
     color: var(--scheme-white);
     border-radius: 15px;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), box-shadow var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease;
     cursor: pointer;
     font-size: 10px;
     font-weight: bold;
@@ -136,7 +136,7 @@
     border-radius: 15px;
     text-decoration: none;
     text-shadow: 0px 1px 5px color-mix(in srgb, var(--scheme-black) 40%, transparent), 0px -1px 5px color-mix(in srgb, var(--scheme-black) 40%, transparent), 1px 0px 6px var(--scheme-black), -1px 0px 5px var(--scheme-black);
-    transition: all 0.3s ease;
+    transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), box-shadow var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease;
     cursor: pointer;
     font-size: 8px;
     font-weight: bold;

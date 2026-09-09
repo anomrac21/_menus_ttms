@@ -120,11 +120,21 @@
     options = options || {};
     var target = options.target != null ? options.target : getTargetItemCount(section);
     var from = options.from != null ? options.from : getCurrentCount(section);
-    var duration = options.duration || 1100;
+    var prefersReduced = typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var duration = prefersReduced ? 0 : (options.duration || 700);
     var clearLoadingOnComplete = !!options.clearLoadingOnComplete;
     var onComplete = typeof options.onComplete === 'function' ? options.onComplete : null;
 
     stopSectionCountAnimation(section);
+    if (duration <= 0) {
+      updateSectionCountDisplay(section, target, !clearLoadingOnComplete);
+      if (clearLoadingOnComplete) {
+        updateSectionCountDisplay(section, target, false);
+      }
+      if (onComplete) onComplete();
+      return;
+    }
     updateSectionCountDisplay(section, from, true);
 
     var startTime = null;

@@ -43,7 +43,7 @@
   margin-bottom: 12px;
   opacity: 0;
   transform: translateX(400px);
-  transition: all 0.3s ease;
+  transition: opacity var(--ttms-duration, 0.28s) ease, transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease);
   overflow: hidden;
   max-width: calc(100% - 20px);
 }

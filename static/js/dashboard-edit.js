@@ -3717,7 +3717,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       item.style.setProperty('--ring-opacity', String(opacity));
       item.style.setProperty('--ring-i', String(i));
       var selected = compact ? active : i === focusIdx;
-      item.style.zIndex = selected ? '90' : String(Math.max(2, (compact ? 8 : 24). Math.round(abs * 4)));
+      item.style.zIndex = selected ? '90' : String(Math.max(2, (compact ? 8 : 24) - Math.round(abs * 4)));
       item.style.pointerEvents = interactive && visible && (compact || abs < 1.2) ? 'auto' : 'none';
       item.tabIndex = !compact && i === focusIdx ? 0 : -1;
       item.setAttribute('aria-hidden', visible ? 'false' : 'true');

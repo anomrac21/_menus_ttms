@@ -213,10 +213,56 @@
   }
 
   function updatePickerChrome(data) {
+    var picker = getPicker();
     var selectedWrap = document.getElementById('locationPickerSelected');
     var selectedName = document.getElementById('locationPickerSelectedName');
-    if (selectedName) selectedName.textContent = data.address;
-    if (selectedWrap) selectedWrap.hidden = !data.address;
+    if (selectedName && data && data.address) selectedName.textContent = data.address;
+    if (selectedWrap) {
+      selectedWrap.hidden = !isChooserMode(picker) || !(data && data.address);
+    }
+  }
+
+  function isChooserMode(picker) {
+    picker = picker || getPicker();
+    return !!(picker && picker.classList.contains('location-picker--choosing'));
+  }
+
+  function isCurrentOnlyPicker(picker) {
+    picker = picker || getPicker();
+    return !!(picker && picker.classList.contains('location-picker--current'));
+  }
+
+  function setChooserMode(on, options) {
+    var picker = getPicker();
+    if (!picker) return;
+    options = options || {};
+    var cards = getCards(picker);
+    var enable = !!on && cards.length > 1;
+    picker.classList.toggle('location-picker--choosing', enable);
+
+    var title = picker.querySelector('.location-picker__title');
+    if (title) {
+      var selectedTitle = title.getAttribute('data-title-selected') || 'Your location';
+      var chooseTitle = title.getAttribute('data-title-choose') || 'Choose your location';
+      title.textContent = enable ? chooseTitle : selectedTitle;
+    }
+
+    var selectedWrap = document.getElementById('locationPickerSelected');
+    if (selectedWrap) {
+      var nameEl = document.getElementById('locationPickerSelectedName');
+      var hasName = !!(nameEl && nameEl.textContent.trim());
+      selectedWrap.hidden = !enable || !hasName;
+    }
+
+    if (enable && options.align !== false) {
+      var track = getTrack(picker);
+      if (track) {
+        setupInfiniteTrack(picker, track);
+        requestAnimationFrame(function () {
+          alignSelectedCard(picker, track, options.behavior || 'auto');
+        });
+      }
+    }
   }
 
   function updateNavButtons(picker) {
@@ -479,6 +525,10 @@
 
     if (typeof window.updateSelectedLocationDisplay === 'function') {
       window.updateSelectedLocationDisplay(data);
+    }
+
+    if (source === 'user' || source === 'nearby') {
+      setChooserMode(false);
     }
 
     if (options.scroll !== false) {
@@ -955,6 +1005,18 @@
       );
     }
 
+    var changeBtn = document.getElementById('locationPickerChangeBtn');
+    if (changeBtn) {
+      changeBtn.addEventListener(
+        'click',
+        function (e) {
+          e.preventDefault();
+          goToHomeLocationChooser();
+        },
+        { signal: signal }
+      );
+    }
+
     picker.addEventListener(
       'click',
       function (e) {
@@ -974,6 +1036,8 @@
           }
           return;
         }
+
+        if (isCurrentOnlyPicker(picker)) return;
 
         var selectEl = e.target.closest('.location-picker-card__select');
         if (selectEl) {
@@ -1006,11 +1070,13 @@
         if (card.getAttribute('data-picker-clone')) return;
 
         if (e.key === 'ArrowLeft') {
+          if (!isChooserMode(picker)) return;
           e.preventDefault();
           scrollToAdjacentCard('left');
           return;
         }
         if (e.key === 'ArrowRight') {
+          if (!isChooserMode(picker)) return;
           e.preventDefault();
           scrollToAdjacentCard('right');
           return;
@@ -1071,6 +1137,19 @@
     pickerAbort = new AbortController();
     bindPickerEvents(picker, pickerAbort.signal);
 
+    if (isCurrentOnlyPicker(picker)) {
+      picker.dataset.pickerReady = '1';
+      var currentCard = getCards(picker)[0];
+      if (currentCard) {
+        selectLocationCard(currentCard, { scroll: false, source: 'init' });
+      }
+      setTimeout(function () {
+        if (!getPicker() || !window.currentOrderLocation) return;
+        syncCartDropdown(window.currentOrderLocation);
+      }, 650);
+      return;
+    }
+
     var track = bindCarousel(picker, pickerAbort.signal);
     if (!track) return;
 
@@ -1080,6 +1159,9 @@
 
     whenCarouselReady(track, function () {
       finalizePickerAlignment(picker, track);
+      if (!isChooserMode(picker)) {
+        setChooserMode(false);
+      }
     });
 
     // Cart init may run after picker; re-sync dropdown only (no scroll)
@@ -1108,6 +1190,7 @@
   }
 
   window.selectLocationCard = selectLocationCard;
+  window.setLocationPickerChooserMode = setChooserMode;
   window.initLocationPicker = initLocationPicker;
   window.destroyLocationPicker = destroyLocationPicker;
   window.scrollPickerLocations = scrollToAdjacentCard;
@@ -1125,6 +1208,18 @@
       initLocationPicker();
     }
     consumeOpenLocationPickerIntent();
+  }
+
+  function homeLocationChooserUrl() {
+    return '/';
+  }
+
+  function goToHomeLocationChooser() {
+    var target = homeLocationChooserUrl();
+    var path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+    if (path === '/') return true;
+    window.location.assign(target);
+    return true;
   }
 
   function scrollToLocationPickerSlide(options) {
@@ -1146,11 +1241,11 @@
     }
     if (!shouldOpen) return false;
 
-    var scrolled = scrollToLocationPickerSlide({ behavior: 'smooth' });
-    if (scrolled && typeof window.initLocationPicker === 'function') {
-      window.initLocationPicker();
+    if (window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus) {
+      return goToHomeLocationChooser();
     }
-    return scrolled;
+
+    return scrollToLocationPickerSlide({ behavior: 'smooth' });
   }
 
   window.openLocationPickerFromCart = function () {
@@ -1163,19 +1258,16 @@
       }
     }
 
-    if (scrollToLocationPickerSlide({ behavior: 'smooth' })) {
-      if (typeof window.initLocationPicker === 'function') {
-        window.initLocationPicker();
-      }
+    if (window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus) {
+      goToHomeLocationChooser();
       return;
     }
 
-    try {
-      sessionStorage.setItem('ttmenus_open_location_picker', '1');
-    } catch (e) {
-      /* ignore */
+    if (scrollToLocationPickerSlide({ behavior: 'smooth' })) {
+      return;
     }
-    window.location.href = '/';
+
+    window.location.assign(homeLocationChooserUrl());
   };
 
   window.scrollToLocationPickerSlide = scrollToLocationPickerSlide;

@@ -1,3 +1,23 @@
+{{- $variant := "buttons" -}}
+{{- if reflect.IsMap . -}}
+  {{- $variant = .variant | default "buttons" -}}
+{{- end -}}
+{{- if eq $variant "tray" -}}
+<button type="button" class="dashboard-header-tray-row dashboard-header-tray-theme" id="night-mode" onclick="toggleTheme('dark'); return false;" title="Dark mode" aria-label="Use dark theme">
+  <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-moon-o"></i></span>
+  <span class="dashboard-header-tray-text">
+    <span class="dashboard-header-tray-label">Dark mode</span>
+    <span class="dashboard-header-tray-value">Switch the control room to dark</span>
+  </span>
+</button>
+<button type="button" class="dashboard-header-tray-row dashboard-header-tray-theme hide" id="light-mode" onclick="toggleTheme('light'); return false;" title="Light mode" aria-label="Use light theme">
+  <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-sun-o"></i></span>
+  <span class="dashboard-header-tray-text">
+    <span class="dashboard-header-tray-label">Light mode</span>
+    <span class="dashboard-header-tray-value">Switch the control room to light</span>
+  </span>
+</button>
+{{- else -}}
 <div class="dashboard-theme-toggle" role="group" aria-label="Dashboard theme">
   <button type="button" id="night-mode" class="dashboard-theme-btn" onclick="toggleTheme('dark'); return false;" title="Dark mode" aria-label="Use dark theme">
     <i class="fa fa-moon-o" aria-hidden="true"></i>
@@ -6,3 +26,4 @@
     <i class="fa fa-sun-o" aria-hidden="true"></i>
   </button>
 </div>
+{{- end -}}

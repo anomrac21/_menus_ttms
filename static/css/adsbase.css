@@ -458,7 +458,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     cursor: pointer;
     color: var(--scheme-white-muted);
     padding: 0;
-    transition: all 0.3s ease;
+    transition: background-color var(--ttms-duration, 0.28s) ease, transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease);
     pointer-events: all;
 }
 

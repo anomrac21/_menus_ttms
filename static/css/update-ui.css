@@ -84,7 +84,7 @@ body{
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ttms-ease-out, ease), opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   display: inline-block;
 }
 
@@ -142,7 +142,7 @@ body{
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .btn-logout:hover {
@@ -179,7 +179,7 @@ body{
   color: var(--dash-info);
   border-left: 3px solid transparent;
   white-space: nowrap;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
   text-align: left;
   border-radius: 6px;
   display: flex !important;
@@ -324,7 +324,7 @@ body{
   border: 1px solid var(--dash-info);
   border-radius: 6px;
   font-size: 0.9375rem;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .form-input:focus,
@@ -349,7 +349,7 @@ body{
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .btn-primary {
@@ -545,7 +545,7 @@ body{
   padding: 2rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .image-upload-area:hover {
@@ -622,7 +622,7 @@ body{
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8125rem;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .category-btn:hover {
@@ -642,7 +642,7 @@ body{
   border: 1px solid var(--dash-info);
   border-radius: 8px;
   padding: 1rem;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
   width: -webkit-fill-available;
   max-width: 100%;
   min-width: -webkit-fill-available;
@@ -745,7 +745,7 @@ body{
   cursor: pointer;
   background: var(--dash-ink);
   border-radius: 8px;
-  transition: all 0.3s;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .add-item-card:hover {

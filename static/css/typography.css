@@ -3,6 +3,10 @@
  */
 
 :root {
+    --ttms-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ttms-duration-fast: 0.18s;
+    --ttms-duration: 0.28s;
+    --ttms-duration-slow: 0.42s;
     --ttms-font-sans: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --ttms-font-weight-normal: 400;
     --ttms-font-weight-medium: 500;
@@ -221,6 +225,16 @@ h2.center.title a,
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
+    }
+
+    /* iOS Low Power Mode sets this query; keep the branded loader morph there. */
+    html:not(.ttms-ios) *,
+    html:not(.ttms-ios) *::before,
+    html:not(.ttms-ios) *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 

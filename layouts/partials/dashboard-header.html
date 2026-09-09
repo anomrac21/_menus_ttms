@@ -105,7 +105,7 @@ window.addEventListener('resize', () => {
   display: block;
   height: 2px;
   background: var(--dash-ink);
-  transition: all 0.3s ease;
+  transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .mobile-menu-toggle.active .hamburger-icon span:nth-child(1) {
@@ -149,7 +149,7 @@ window.addEventListener('resize', () => {
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ttms-ease-out, ease), opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .btn-logout:hover {
@@ -167,7 +167,7 @@ window.addEventListener('resize', () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ttms-ease-out, ease), opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .nav-icon {
@@ -197,7 +197,7 @@ window.addEventListener('resize', () => {
     transform: translateY(-100%);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s ease;
+    transition: transform 0.28s var(--ttms-ease-out, ease), opacity 0.28s ease, background-color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
     z-index: 1000;
   }
   

@@ -23,7 +23,6 @@
       <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <span class="dashboard-header-account" id="dashboardHeaderUserName"></span>
     </a>
-    {{ partial "dashboard/theme-toggle.html" . }}
     <div class="dashboard-header-actions dashboard-header-actions--desktop" role="group" aria-label="Account actions">
       <a href="/dashboard/deployments/" class="btn-dash btn-dash-secondary dashboard-header-deploy-history" id="dashboardDeployHistoryLink" data-auth="admin-site" style="display: none;" title="View cluster deploy history" aria-label="Deploy history">
         <i class="fa fa-history" aria-hidden="true"></i>
@@ -60,6 +59,7 @@
         <span class="dashboard-header-tray-label">Deploy history</span>
       </span>
     </a>
+    {{ partial "dashboard/theme-toggle.html" (dict "variant" "tray") }}
     <button type="button" class="dashboard-header-tray-row dashboard-header-tray-signout" id="btnLogoutMobile">
       <span class="dashboard-header-tray-icon" aria-hidden="true"><i class="fa fa-sign-out"></i></span>
       <span class="dashboard-header-tray-text">

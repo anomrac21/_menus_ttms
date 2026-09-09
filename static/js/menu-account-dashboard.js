@@ -4,6 +4,24 @@
 (function () {
   'use strict';
 
+  var ACCOUNT_HIDDEN = 'loader-hide-right';
+  var ACCOUNT_OPENING = 'is-account-opening';
+  var ACCOUNT_CLOSING = 'is-account-closing';
+  var ACCOUNT_INSTANT = 'is-account-instant';
+  var accountAnimTimer = null;
+
+  function prefersReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function getAccountPanel() {
+    return document.getElementById('account-dashboard');
+  }
+
+  function isAccountHidden(panel) {
+    return !panel || panel.classList.contains(ACCOUNT_HIDDEN);
+  }
+
   function syncBodyAuthClasses(isAuthenticated) {
     document.body.classList.toggle('ttms-logged-in', !!isAuthenticated);
     document.body.classList.toggle('ttms-logged-out', !isAuthenticated);
@@ -441,11 +459,34 @@
     });
   }
 
+  function finishAccountClose(panel) {
+    accountAnimTimer = null;
+    if (panel) {
+      panel.classList.add(ACCOUNT_HIDDEN);
+      panel.classList.remove(ACCOUNT_OPENING, ACCOUNT_CLOSING, ACCOUNT_INSTANT);
+      panel.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('account-dashboard-open');
+    var dash = document.getElementById('dashboard');
+    var notify = document.getElementById('notify-inbox');
+    var menuOpen =
+      dash &&
+      !dash.classList.contains('loader-hide-left') &&
+      !dash.classList.contains('is-dashboard-closing');
+    var notifyOpen =
+      notify &&
+      !notify.classList.contains('notify-inbox-hidden') &&
+      !notify.classList.contains('is-notify-closing');
+    if (!menuOpen && !notifyOpen) {
+      document.body.classList.remove('modal-open');
+    }
+  }
+
   function toggleAccountDashboard() {
-    var panel = document.getElementById('account-dashboard');
+    var panel = getAccountPanel();
     if (!panel) return;
 
-    if (panel.classList.contains('loader-hide-right')) {
+    if (isAccountHidden(panel) || panel.classList.contains(ACCOUNT_CLOSING)) {
       if (typeof window.closeAllUiPanels === 'function') {
         window.closeAllUiPanels({ keepAccountDashboard: true, skipReelsModal: true });
       } else {
@@ -453,12 +494,24 @@
           window.closeCart();
         }
         if (typeof window.closeDashboard === 'function') {
-          window.closeDashboard();
+          window.closeDashboard({ instant: true });
+        }
+        if (typeof window.closeNotifyInbox === 'function') {
+          window.closeNotifyInbox({ instant: true });
         }
       }
-      panel.classList.remove('loader-hide-right');
-      document.body.classList.add('modal-open');
-      document.body.classList.add('account-dashboard-open');
+      clearTimeout(accountAnimTimer);
+      panel.classList.remove(ACCOUNT_HIDDEN, ACCOUNT_CLOSING, ACCOUNT_INSTANT);
+      panel.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open', 'account-dashboard-open');
+      if (!prefersReducedMotion()) {
+        void panel.offsetWidth;
+        panel.classList.add(ACCOUNT_OPENING);
+        accountAnimTimer = setTimeout(function () {
+          accountAnimTimer = null;
+          panel.classList.remove(ACCOUNT_OPENING);
+        }, 640);
+      }
       setTimeout(function () {
         fetchAndUpdateUserInfo({ syncSession: true });
       }, 200);
@@ -467,17 +520,27 @@
     }
   }
 
-  function closeAccountDashboard() {
-    var panel = document.getElementById('account-dashboard');
-    if (panel) panel.classList.add('loader-hide-right');
-    document.body.classList.remove('account-dashboard-open');
-    var dash = document.getElementById('dashboard');
-    var accountOpen =
-      panel && !panel.classList.contains('loader-hide-right');
-    var menuOpen = dash && !dash.classList.contains('loader-hide-left');
-    if (!accountOpen && !menuOpen) {
-      document.body.classList.remove('modal-open');
+  function closeAccountDashboard(options) {
+    options = options || {};
+    var panel = getAccountPanel();
+    if (!panel || (isAccountHidden(panel) && !panel.classList.contains(ACCOUNT_OPENING))) {
+      finishAccountClose(panel);
+      return;
     }
+
+    clearTimeout(accountAnimTimer);
+    if (options.instant || prefersReducedMotion()) {
+      panel.classList.add(ACCOUNT_INSTANT);
+      finishAccountClose(panel);
+      return;
+    }
+
+    panel.classList.remove(ACCOUNT_OPENING);
+    panel.classList.add(ACCOUNT_CLOSING, ACCOUNT_HIDDEN);
+    panel.setAttribute('aria-hidden', 'true');
+    accountAnimTimer = setTimeout(function () {
+      finishAccountClose(panel);
+    }, 400);
   }
 
   function closeAll() {
@@ -488,13 +551,16 @@
     if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
       window.ensureMenuReelsItemModalClosed();
     }
+    if (typeof window.closeNotifyInbox === 'function') {
+      window.closeNotifyInbox({ instant: true });
+    }
     if (typeof window.closeDashboard === 'function') {
-      window.closeDashboard();
+      window.closeDashboard({ instant: true });
     }
     if (typeof window.closeCart === 'function') {
       window.closeCart();
     }
-    closeAccountDashboard();
+    closeAccountDashboard({ instant: true });
     document.body.classList.remove('modal-open');
     document.body.classList.remove('account-dashboard-open');
   }

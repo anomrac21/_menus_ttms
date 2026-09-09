@@ -1,19 +1,38 @@
 {{ define "main" }}
-  <div class="main-content">
-    <div class="menu-header list-page-header">
+{{- $title := .LinkTitle | default .Title -}}
+{{- $itemCount := len .Pages -}}
+{{- $secSlug := .Data.Term | default (path.Base (strings.TrimSuffix .RelPermalink "/")) -}}
+{{- $backLabels := dict "tags" "Tags" "ingredients" "Ingredients" "cookingmethods" "Cooking Methods" "types" "Types" "events" "Events" -}}
+{{- $backLabel := index $backLabels .Section | default (.Section | humanize) -}}
+<div id="menu-reels-viewport" class="menu-reels-viewport" data-auth-enabled="{{ site.Params.auth.enabled }}" data-menu-images="{{ site.Params.menuImageService.enabled }}">
+<div id="menu-reels-track" class="menu-reels-track">
+  <section class="menu-header menu-reels-slide menu-reels-slide--section-title menu-reels-slide--taxonomy-term" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}" data-item-count="{{ $itemCount }}">
+    <a class="menu-anchor" id="{{ $title }}"></a>
+    {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" $title "sectionSlug" $secSlug) }}
+    <div class="menu-header__link">
       <div class="headerstyle item">
-        <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ .Title }}</h1>
+        <h1 class="center title" data-aos="zoom-out-right" data-aos-offset="50">{{ $title }}</h1>
+        <p class="menu-header__item-count" aria-live="polite"><span class="menu-header__item-count__value">{{ $itemCount }}</span> <span class="menu-header__item-count__suffix">{{ if eq $itemCount 1 }}item{{ else }}items{{ end }}</span></p>
       </div>
       <p class="menu-taxonomy-term-back center item">
-        {{- $backLabels := dict "tags" "Tags" "ingredients" "Ingredients" "cookingmethods" "Cooking Methods" "types" "Types" "events" "Events" -}}
-        <a href="{{ `/tags/` | relURL }}#taxonomy-{{ .Section }}" onclick="closeCart();">← All {{ index $backLabels .Section | default (.Section | humanize) }}</a>
+        <a href="{{ `/tags/` | relURL }}#taxonomy-{{ .Section }}" onclick="closeCart();">← All {{ $backLabel }}</a>
       </p>
+      {{ partial "socialmedia/share-button.html" . }}
     </div>
-    <div class="menu-items-container">
-      {{ range .Pages.ByWeight }}
-        {{ partial "components/menu-item-card.html" . }}
-      {{ end }}
-    </div>
+  </section>
+  <div class="menu-items-container">
+    {{ range .Pages.ByWeight }}
+      {{ partial "components/menu-item-card.html" (dict "page" . "reels" true) }}
+    {{ end }}
   </div>
-  {{ partial "socialmedia/share-button.html" . }}
+  {{- if site.Params.ads.enabled -}}
+  <section class="menu-reels-slide menu-reels-slide--bottom-ads" id="menu-reels-sponsored-ads" data-reel-section="Sponsored">
+    <a class="menu-anchor" id="Sponsored"></a>
+    <div class="bottomads menu-reels-bottom-ads-in-track">
+      {{ partial "ads/frontpageads.html" . }}
+    </div>
+  </section>
+  {{- end -}}
+</div>
+</div>
 {{ end }}

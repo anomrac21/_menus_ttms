@@ -95,7 +95,7 @@
       global.closeAllUiPanels({ skipReelsModal: true });
       return;
     }
-    if (typeof global.closeDashboard === 'function') global.closeDashboard();
+    if (typeof global.closeDashboard === 'function') global.closeDashboard({ instant: true });
     if (typeof global.closeAccountDashboard === 'function') global.closeAccountDashboard();
   }
 
@@ -433,7 +433,7 @@
     var title = document.querySelector('#cart-title .cart-title__text');
     var titleIcon = document.querySelector('#cart-title .cart-title__icon-wrap i');
     if (open) {
-      if (icon) icon.className = 'fa fa-arrow-left';
+      if (icon) icon.className = 'fa fa-shopping-cart';
       if (btn) {
         btn.title = 'Back to cart';
         btn.setAttribute('aria-label', 'Back to cart');

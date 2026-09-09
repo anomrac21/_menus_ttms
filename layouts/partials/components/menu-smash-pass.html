@@ -11,6 +11,20 @@
 >
   <p class="menu-smash-pass__error hidden" role="alert"></p>
   <p class="menu-smash-pass__empty hidden">No community photos yet: check back after guests upload and admins approve.</p>
+  {{- if not $menuItemPath -}}
+  <div class="menu-smash-pass__empty-state menu-smash-pass__empty-state--community hidden" role="region" aria-label="Add community photos" data-menu-item-path="/">
+    <div class="menu-smash-pass__empty-visual" aria-hidden="true">
+      <span class="menu-smash-pass__empty-icon"><i class="fa fa-camera"></i></span>
+    </div>
+    <h3 class="menu-smash-pass__empty-title">Be the first</h3>
+    <p class="menu-smash-pass__empty-lead">This reel is empty. Share a community photo.</p>
+    <p class="menu-smash-pass__empty-hint">Snap a dish, a table, or a night out. An admin reviews it, then everyone can like it here.</p>
+    <button type="button" class="menu-add-photo-btn menu-smash-pass__empty-cta" data-menu-image-client-id="{{ $clientId }}" data-menu-item-path="/" aria-label="Add a community photo">
+      <span class="menu-smash-pass__empty-cta-icon" aria-hidden="true"><i class="fa fa-camera"></i></span>
+      <span class="menu-smash-pass__empty-cta-label">Add a photo</span>
+    </button>
+  </div>
+  {{- end -}}
   <div class="menu-smash-pass__reel hidden">
     {{- if not $menuItemPath -}}
     <p class="menu-smash-pass__progress"></p>

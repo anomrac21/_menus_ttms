@@ -1,13 +1,46 @@
 {{- $page := . -}}
-{{- $taxonomies := slice "tags" "ingredients" "cookingmethods" "types" "events" -}}
+{{- $groups := slice
+  (dict "key" "tags" "label" "Tags")
+  (dict "key" "ingredients" "label" "Ingredients")
+  (dict "key" "cookingmethods" "label" "Cooking Methods")
+  (dict "key" "types" "label" "Types")
+  (dict "key" "events" "label" "Events")
+-}}
 {{- $hasAny := false -}}
-{{- range $taxonomies -}}
-  {{- with $page.GetTerms . -}}{{- $hasAny = true -}}{{- end -}}
+{{- range $groups -}}
+  {{- if $page.GetTerms .key -}}{{- $hasAny = true -}}{{- end -}}
+  {{- with index $page.Params .key -}}{{- if gt (len .) 0 -}}{{- $hasAny = true -}}{{- end -}}{{- end -}}
 {{- end -}}
 {{- if $hasAny -}}
-<div class="expanded-item-taxonomies">
-  {{- range $taxonomies -}}
-    {{- partial "utilities/terms.html" (dict "taxonomy" . "page" $page) -}}
+<div class="expanded-item-taxonomies menu-item-card__taxonomies">
+  {{- range $groups -}}
+    {{- $key := .key -}}
+    {{- $label := .label -}}
+    {{- $class := $key | title -}}
+    {{- $termPages := $page.GetTerms $key -}}
+    {{- $paramItems := index $page.Params $key | default slice -}}
+    {{- if $termPages -}}
+    <div class="taxonomy {{ $class }}">
+      <div>{{ $label }}</div>
+      <ul>
+        {{- range $termPages -}}
+          <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
+        {{- end -}}
+      </ul>
+    </div>
+    {{- else if $paramItems -}}
+    <div class="taxonomy {{ $class }}">
+      <div>{{ $label }}</div>
+      <ul>
+        {{- range $paramItems -}}
+          {{- $name := . | string -}}
+          {{- if $name -}}
+          <li><a href="{{ printf "/%s/%s/" $key ($name | urlize) | relURL }}">{{ $name }}</a></li>
+          {{- end -}}
+        {{- end -}}
+      </ul>
+    </div>
+    {{- end -}}
   {{- end -}}
 </div>
 {{- end -}}

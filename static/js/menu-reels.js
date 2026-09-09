@@ -5,6 +5,8 @@
   'use strict';
 
   var observer = null;
+  var revealObserver = null;
+  var revealBoundTrack = null;
   var scrollHandler = null;
   var scrollSyncPending = false;
     var initReelsScheduled = null;
@@ -74,7 +76,7 @@
         var lr = lastDominantSlide.getBoundingClientRect();
         var lastVisible = Math.max(
           0,
-          Math.min(lr.bottom, viewportBottom). Math.max(lr.top, viewportTop)
+          Math.min(lr.bottom, viewportBottom) - Math.max(lr.top, viewportTop)
         );
         var lastRatio = lastVisible / viewportHeight;
         if (lastRatio > 0.35) {
@@ -953,6 +955,98 @@
     });
   }
 
+  var REVEAL_IN = 0.36;
+  var REVEAL_OUT = 0.14;
+
+  function setSlideRevealed(slide, on) {
+    if (!slide) return;
+    slide.classList.toggle('is-reel-in', !!on);
+  }
+
+  function revealVisibleSlides(track) {
+    if (!track) return;
+    var dominant = getDominantSlide(track);
+    getSlides(track).forEach(function (slide) {
+      if (slide === dominant) {
+        setSlideRevealed(slide, true);
+        return;
+      }
+      var rect = slide.getBoundingClientRect();
+      var rootRect = isSmoothNavMode()
+        ? { top: getHeaderScrollOffset(), bottom: window.innerHeight, height: window.innerHeight }
+        : track.getBoundingClientRect();
+      var visible = Math.max(0, Math.min(rect.bottom, rootRect.bottom) - Math.max(rect.top, rootRect.top));
+      var ratio = visible / Math.max(1, rect.height);
+      setSlideRevealed(slide, ratio >= REVEAL_IN);
+    });
+  }
+
+  function bindRevealFocus(track) {
+    if (!track || track === revealBoundTrack) return;
+    revealBoundTrack = track;
+    track.addEventListener('focusin', function (e) {
+      var slide = e.target.closest('.menu-reels-slide, .ads-reels-slide');
+      if (!slide || !track.contains(slide)) return;
+      setSlideRevealed(slide, true);
+    });
+  }
+
+  function teardownReveal(track) {
+    if (revealObserver) {
+      revealObserver.disconnect();
+      revealObserver = null;
+    }
+    if (track) {
+      track.removeAttribute('data-ttms-reel-reveal');
+      getSlides(track).forEach(function (slide) {
+        slide.classList.remove('is-reel-in');
+      });
+    }
+  }
+
+  function observeReveal(track) {
+    if (revealObserver) revealObserver.disconnect();
+    if (!track || prefersReducedMotion()) {
+      teardownReveal(track);
+      return;
+    }
+
+    bindRevealFocus(track);
+    track.setAttribute('data-ttms-reel-reveal', '1');
+
+    revealObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          var ratio = entry.intersectionRatio;
+          if (entry.isIntersecting && ratio >= REVEAL_IN) {
+            setSlideRevealed(entry.target, true);
+          } else if (ratio <= REVEAL_OUT) {
+            setSlideRevealed(entry.target, false);
+          }
+        });
+      },
+      {
+        root: isSmoothNavMode() ? null : track,
+        rootMargin: '0px',
+        threshold: [0, 0.14, 0.36, 0.55, 0.75, 1]
+      }
+    );
+
+    getSlides(track).forEach(function (slide) {
+      revealObserver.observe(slide);
+    });
+
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          revealVisibleSlides(track);
+        });
+      });
+    } else {
+      revealVisibleSlides(track);
+    }
+  }
+
   function ensureMenuReelsStylesheet() {
     if (document.querySelector('link[href*="menu-reels.css"]')) return;
     var link = document.createElement('link');
@@ -989,6 +1083,7 @@
         observer.disconnect();
         observer = null;
       }
+      teardownReveal(null);
       initReelsRunning = false;
       if (initReelsQueued) {
         var queuedForce = initReelsQueuedForce;
@@ -1025,6 +1120,7 @@
         bindMenublockReelsNav();
         bindTrackScroll();
         observeSections(track);
+        observeReveal(track);
         syncMenublockFromTrack();
 
         if (window.location.hash) {
@@ -1093,6 +1189,7 @@
     }
     var didFlatten = flattenReelsTrack(track);
     observeSections(track);
+    observeReveal(track);
     syncMenublockFromTrack();
     if (!didFlatten) {
       try {
@@ -1439,10 +1536,13 @@
       window.closeCart({ instant: true });
     }
     if (!options.keepDashboard && typeof window.closeDashboard === 'function') {
-      window.closeDashboard();
+      window.closeDashboard({ instant: true });
     }
     if (!options.keepAccountDashboard && typeof window.closeAccountDashboard === 'function') {
-      window.closeAccountDashboard();
+      window.closeAccountDashboard({ instant: true });
+    }
+    if (!options.keepNotifyInbox && typeof window.closeNotifyInbox === 'function') {
+      window.closeNotifyInbox({ instant: true });
     }
     if (!options.keepSearch) {
       if (typeof window.closeSearch === 'function') {
@@ -1469,7 +1569,7 @@
       }
     }
 
-    if (!options.keepDashboard && !options.keepAccountDashboard) {
+    if (!options.keepDashboard && !options.keepAccountDashboard && !options.keepNotifyInbox) {
       document.body.classList.remove('modal-open');
     }
     if (!options.keepAccountDashboard) {
@@ -1546,6 +1646,7 @@
     teardownTrackScroll(track);
     bindTrackScroll();
     observeSections(track);
+    observeReveal(track);
     syncMenublockFromTrack();
   }
 

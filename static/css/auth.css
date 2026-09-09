@@ -80,7 +80,7 @@
   border-radius: 8px;
   background: var(--dash-surface);
   color: var(--dash-ink);
-  transition: all 0.3s ease;
+  transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), opacity var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease, border-color var(--ttms-duration, 0.28s) ease, box-shadow var(--ttms-duration, 0.28s) ease;
   box-sizing: border-box;
 }
 
@@ -135,7 +135,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), opacity var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease, border-color var(--ttms-duration, 0.28s) ease, box-shadow var(--ttms-duration, 0.28s) ease;
 }
 
 .btn-primary:hover {
@@ -163,7 +163,7 @@
   border: 2px solid var(--dash-accent);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), opacity var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease, border-color var(--ttms-duration, 0.28s) ease, box-shadow var(--ttms-duration, 0.28s) ease;
 }
 
 .btn-secondary:hover {
@@ -388,7 +388,7 @@ a.btn-secondary {
   border: 2px solid var(--dash-error);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), opacity var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease, border-color var(--ttms-duration, 0.28s) ease, box-shadow var(--ttms-duration, 0.28s) ease;
 }
 
 .btn-logout:hover {
@@ -415,7 +415,7 @@ a.btn-secondary {
   border-radius: 12px;
   padding: 1rem;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 10%, transparent);
-  transition: all 0.3s ease;
+  transition: transform var(--ttms-duration, 0.28s) var(--ttms-ease-out, ease), opacity var(--ttms-duration, 0.28s) ease, background-color var(--ttms-duration, 0.28s) ease, border-color var(--ttms-duration, 0.28s) ease, box-shadow var(--ttms-duration, 0.28s) ease;
   justify-content: center;
   flex-direction: column;
   align-items: center;

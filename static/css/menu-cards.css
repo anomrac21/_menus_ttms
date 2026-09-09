@@ -302,6 +302,35 @@
     font-size: 1.15rem;
 }
 
+.menu-item-card .menu-item-card__taxonomies,
+.menu-item-card .expanded-item-taxonomies {
+    width: 100%;
+    margin-top: 0.45rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.menu-item-card .menu-item-card__taxonomies .taxonomy,
+.menu-item-card .expanded-item-taxonomies .taxonomy {
+    padding: 0.35rem 0.2rem 0.15rem;
+    background: color-mix(in srgb, var(--scheme-black) 10%, transparent);
+}
+
+.menu-item-card .menu-item-card__taxonomies .taxonomy > div:first-child,
+.menu-item-card .expanded-item-taxonomies .taxonomy > div:first-child {
+    color: color-mix(in srgb, var(--menu-card-ink) 78%, transparent);
+}
+
+.menu-item-card .menu-item-card__taxonomies .taxonomy ul li a,
+.menu-item-card .expanded-item-taxonomies .taxonomy ul li a {
+    pointer-events: auto;
+}
+
+.menu-item-card.expanded > .menu-item-row-top .menu-item-card__taxonomies {
+    display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .menu-item-card,
     .menu-item-card::after,

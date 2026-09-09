@@ -1,23 +1,33 @@
 /* Account panel + header account button (menu theme) */
 
 #account-dashboard {
+  --account-ink: var(--main-text-color, #f6f1e6);
+  --account-ink-muted: color-mix(in srgb, var(--main-text-color, #f6f1e6) 62%, transparent);
+  --account-accent: var(--scheme-accent, var(--selected-button-color3, #f0c43a));
+  --account-danger: var(--selected-button-color1, #7a1f2b);
+  --account-danger-ink: var(--selected-button-color2, #d8892a);
   inset: 0;
   left: auto;
-  background: color-mix(in srgb, var(--dash-ink) 95%, transparent);
+  background: var(--main-bg, #070b16);
   backdrop-filter: blur(30px);
   display: flex;
   width: 100vw;
   height: var(--ttms-overlay-height, 100dvh);
   max-height: var(--ttms-overlay-height, 100dvh);
   position: fixed;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
+  transition:
+    transform 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.36s ease,
+    visibility 0s 0.48s;
   z-index: var(--ttms-z-account-dashboard, 1001);
-  color: var(--text-darker);
-  box-shadow: color-mix(in srgb, var(--dash-black) 12%, transparent) 0 8px 32px;
-  border: 1px solid color-mix(in srgb, var(--dash-ink) 20%, transparent);
+  color: var(--account-ink);
+  box-shadow: color-mix(in srgb, var(--scheme-black, #070b16) 42%, transparent) -16px 0 40px;
+  border: none;
+  border-left: 1px solid color-mix(in srgb, var(--account-ink) 10%, transparent);
   flex-direction: column;
   max-width: 600px;
-  transform: translateX(100%);
+  transform: translate3d(100%, 0, 0);
+  opacity: 0;
   visibility: hidden;
   pointer-events: none;
   box-sizing: border-box;
@@ -29,17 +39,29 @@
 }
 
 #account-dashboard.loader-hide-right {
-  transform: translateX(100%);
+  transform: translate3d(100%, 0, 0);
+  opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.3s;
+  transition:
+    transform 0.38s cubic-bezier(0.3, 0.02, 0.2, 1),
+    opacity 0.28s ease,
+    visibility 0s 0.38s;
 }
 
 #account-dashboard:not(.loader-hide-right) {
-  transform: translateX(0);
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0s;
+  transition:
+    transform 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.36s ease,
+    visibility 0s 0s;
+}
+
+#account-dashboard.is-account-instant {
+  transition: none !important;
 }
 
 #account-dashboard .body {
@@ -115,7 +137,8 @@
 .dashboard-menu-btn-wrap .account-badge .icon.account {
   width: 0.95em;
   height: 0.95em;
-  color: var(--success);
+  color: var(--scheme-accent, var(--accent-color, #f0c43a));
+  fill: currentColor;
 }
 
 body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--on-logo) {
@@ -147,15 +170,16 @@ body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-log
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 35%, transparent);
+  background: var(--scheme-accent, var(--accent-color, #f0c43a));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--scheme-black) 35%, transparent);
   pointer-events: none;
 }
 
 body.ttms-logged-in .main-header.menublock-scrolled-right .account-badge--on-logo .icon.account {
   width: 0.75em;
   height: 0.75em;
-  color: var(--dash-ink);
+  color: var(--main-bg, #070b16);
+  fill: currentColor;
 }
 
 body.ttms-logged-in .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap .account-badge:not(.account-badge--on-logo) {
@@ -189,34 +213,33 @@ html.ttms-mobile-menublock body.ttms-logged-in .dashboard-menu-btn-wrap .account
   min-width: 2.75rem;
   height: 2.75rem;
   border-radius: 12px;
-  color: var(--main-text-color);
-  background: color-mix(in srgb, var(--dash-ink) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dash-ink) 20%, transparent);
+  color: var(--main-text-color, #f6f1e6);
+  background: color-mix(in srgb, var(--main-text-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--main-text-color) 20%, transparent);
   text-decoration: none;
   cursor: pointer;
 }
 
-#dashboard .account-panel-btn svg.icon {
-  width: 28px;
-  height: 28px;
+#dashboard .account-panel-btn svg.icon,
+#dashboard .account-panel-btn svg.icon path {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: inherit;
+  fill: currentColor;
 }
 
 body.ttms-logged-in #dashboard .account-panel-btn {
   display: inline-flex;
-  color: var(--success);
-  border-color: color-mix(in srgb, var(--success) 55%, transparent);
-}
-
-body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
-  color: var(--success);
+  color: var(--scheme-accent, var(--accent-color, #f0c43a));
+  border-color: color-mix(in srgb, var(--scheme-accent, var(--accent-color, #f0c43a)) 55%, transparent);
 }
 
 #account-dashboard .header.account-dashboard-panel-header {
   display: flex;
   flex-direction: column;
   padding: 0.75em 1em;
-  border-bottom: 1px solid color-mix(in srgb, var(--dash-black) 8%, transparent);
-  background: color-mix(in srgb, var(--dash-black) 3%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--account-ink) 10%, transparent);
+  background: transparent;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -242,7 +265,7 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--account-ink, var(--main-text-color, #f6f1e6));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -256,11 +279,7 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   position: relative;
   z-index: 2;
   padding-left: 0.25em;
-  background: linear-gradient(
-    90deg,
-    transparent 0,
-    color-mix(in srgb, var(--dash-ink) 92%, transparent) 0.65em
-  );
+  background: none;
 }
 
 #account-dashboard .account-dashboard-user-info--header .user-info-header {
@@ -286,8 +305,8 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   height: 44px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--account-ink) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--account-ink) 14%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -302,12 +321,12 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
 
 #account-dashboard .user-name {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--account-ink, var(--main-text-color, #f6f1e6));
 }
 
 #account-dashboard .user-email {
   font-size: 0.8rem;
-  color: var(--text-secondary);
+  color: var(--account-ink-muted, color-mix(in srgb, var(--main-text-color, #f6f1e6) 62%, transparent));
 }
 
 @media (max-width: 480px) {
@@ -336,7 +355,6 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   }
 }
 
-/* Header icon buttons (admin, close): dark icons on light panel */
 #account-dashboard .account-dashboard-panel-header .account-dashboard-panel-tools .ttms-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -344,21 +362,21 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--dash-black) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dash-black) 14%, transparent);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--account-ink) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--account-ink) 16%, transparent);
+  color: var(--account-ink, var(--main-text-color, #f6f1e6));
   text-decoration: none;
   cursor: pointer;
   box-shadow: none;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 #account-dashboard .account-dashboard-panel-header .account-dashboard-panel-tools .ttms-icon-btn:hover,
 #account-dashboard .account-dashboard-panel-header .account-dashboard-panel-tools .ttms-icon-btn:focus-visible {
-  background: color-mix(in srgb, var(--dash-black) 10%, transparent);
-  border-color: color-mix(in srgb, var(--dash-black) 22%, transparent);
-  color: var(--text-primary);
-  transform: none;
+  background: color-mix(in srgb, var(--account-ink) 14%, transparent);
+  border-color: color-mix(in srgb, var(--account-ink) 28%, transparent);
+  color: var(--account-ink, var(--main-text-color, #f6f1e6));
+  transform: translateY(-1px);
 }
 
 #account-dashboard .account-dashboard-panel-header .account-dashboard-panel-tools .account-dashboard-admin-link i {
@@ -367,11 +385,11 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
 }
 
 #account-dashboard .account-dashboard-panel-header .account-dashboard-panel-tools .dashboard-header-close-img {
-  width: 1.45rem;
-  height: 1.45rem;
+  width: 1.15rem;
+  height: 1.15rem;
   object-fit: contain;
-  filter: brightness(0);
-  opacity: 0.82;
+  filter: none;
+  opacity: 0.88;
 }
 
 #account-dashboard
@@ -400,7 +418,7 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
 
 #account-dashboard .account-dashboard-panel-header .account-dashboard-profile-link:hover,
 #account-dashboard .account-dashboard-panel-header .account-dashboard-profile-link:focus-visible {
-  background: color-mix(in srgb, var(--dash-black) 5%, transparent);
+  background: color-mix(in srgb, var(--account-ink) 8%, transparent);
   transform: none;
   box-shadow: none;
   border: none;
@@ -409,7 +427,8 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
 #account-dashboard .account-dashboard-panel-header .user-avatar .icon.account {
   width: 1.35rem;
   height: 1.35rem;
-  color: var(--text-primary);
+  color: var(--scheme-accent, var(--accent-color, var(--main-text-color, #f6f1e6)));
+  fill: currentColor;
 }
 
 .ttms-icon-btn {
@@ -437,9 +456,9 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   gap: 0.5em;
   padding: 0.6em 1.2em;
   border-radius: 25px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
+  background: color-mix(in srgb, var(--account-ink) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--account-ink) 12%, transparent);
+  color: var(--account-ink, var(--main-text-color, #f6f1e6));
   text-decoration: none;
   font-weight: 500;
   cursor: pointer;
@@ -449,7 +468,7 @@ body.ttms-logged-in #dashboard .account-panel-btn svg.icon {
   width: 100%;
   justify-content: flex-start;
   border-radius: 14px;
-  border-color: color-mix(in srgb, var(--dash-error) 22%, transparent);
+  border-color: color-mix(in srgb, var(--account-danger) 38%, transparent);
   position: relative;
   z-index: 2;
 }
@@ -467,7 +486,7 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
 
 .login-prompt-content p {
   margin: 0 0 1em;
-  color: var(--text-secondary);
+  color: var(--account-ink-muted);
   font-size: 0.95rem;
 }
 
@@ -492,7 +511,7 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-secondary);
+  color: var(--account-ink-muted);
   margin: 0 0 0.45em;
 }
 
@@ -525,9 +544,9 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
   margin: 0;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--dash-error) 28%, var(--glass-border));
-  background: color-mix(in srgb, var(--dash-ink) 40%, var(--glass-bg));
-  color: var(--dash-error);
+  border: 1px solid color-mix(in srgb, var(--account-danger) 40%, color-mix(in srgb, var(--account-ink) 14%, transparent));
+  background: color-mix(in srgb, var(--account-danger) 16%, transparent);
+  color: var(--account-danger-ink);
   font-size: 1.35rem;
   line-height: 1;
   font-weight: 600;
@@ -536,8 +555,8 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
 }
 
 .account-dashboard-favorites__remove:hover {
-  background: var(--dash-ink);
-  border-color: var(--dash-error);
+  background: color-mix(in srgb, var(--account-danger) 24%, transparent);
+  border-color: color-mix(in srgb, var(--account-danger) 55%, transparent);
   transform: scale(1.05);
 }
 
@@ -572,52 +591,23 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
 
 .user-data-empty {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: var(--account-ink-muted);
 }
 .hero_logo_container .dashboard-edit-btn{
   top: 7em;
   position: relative;
 }
 [data-theme="dark"] #account-dashboard {
-  background: color-mix(in srgb, var(--dash-info) 96%, transparent);
-  color: var(--text-primary);
+  background: var(--main-bg, #070b16);
+  color: var(--account-ink);
 }
 
 [data-theme="dark"] #account-dashboard .header.account-dashboard-panel-header {
-  border-bottom-color: color-mix(in srgb, var(--dash-ink) 10%, transparent);
-  background: color-mix(in srgb, var(--dash-ink) 4%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--account-ink) 10%, transparent);
 }
 
 [data-theme="dark"] #account-dashboard .account-dashboard-panel-tools {
-  background: linear-gradient(
-    90deg,
-    transparent 0,
-    color-mix(in srgb, var(--dash-info) 96%, transparent) 0.65em
-  );
-}
-
-[data-theme="dark"]
-  #account-dashboard
-  .account-dashboard-panel-header
-  .account-dashboard-panel-tools
-  .ttms-icon-btn {
-  background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
-  border-color: color-mix(in srgb, var(--dash-ink) 18%, transparent);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"]
-  #account-dashboard
-  .account-dashboard-panel-header
-  .account-dashboard-panel-tools
-  .ttms-icon-btn:hover,
-[data-theme="dark"]
-  #account-dashboard
-  .account-dashboard-panel-header
-  .account-dashboard-panel-tools
-  .ttms-icon-btn:focus-visible {
-  background: color-mix(in srgb, var(--dash-ink) 14%, transparent);
-  border-color: color-mix(in srgb, var(--dash-ink) 28%, transparent);
+  background: none;
 }
 
 [data-theme="dark"]
@@ -625,19 +615,8 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
   .account-dashboard-panel-header
   .account-dashboard-panel-tools
   .dashboard-header-close-img {
-  filter: brightness(0) invert(1);
+  filter: none;
   opacity: 0.9;
-}
-
-[data-theme="dark"]
-  #account-dashboard
-  .account-dashboard-panel-header
-  .account-dashboard-profile-link:hover,
-[data-theme="dark"]
-  #account-dashboard
-  .account-dashboard-panel-header
-  .account-dashboard-profile-link:focus-visible {
-  background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
 }
 
 [data-theme="dark"]
@@ -645,5 +624,5 @@ body.account-dashboard-open #whatsappOrderBtn .placeOrder {
   .account-dashboard-panel-header
   .user-avatar
   .icon.account {
-  color: var(--text-primary);
+  color: var(--account-accent);
 }

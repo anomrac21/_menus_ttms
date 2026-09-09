@@ -441,6 +441,23 @@
     return '';
   }
 
+  function buildCommunityEmptyStateHtml(clientId) {
+    var client = escapeHtml(clientId || clientIdForRoot(null) || '_ttms_menu_demo');
+    return (
+      '<div class="menu-smash-pass__empty-state menu-smash-pass__empty-state--community hidden" role="region" aria-label="Add community photos" data-menu-item-path="/">' +
+      '<div class="menu-smash-pass__empty-visual" aria-hidden="true">' +
+      '<span class="menu-smash-pass__empty-icon"><i class="fa fa-camera"></i></span></div>' +
+      '<h3 class="menu-smash-pass__empty-title">Be the first</h3>' +
+      '<p class="menu-smash-pass__empty-lead">This reel is empty. Share a community photo.</p>' +
+      '<p class="menu-smash-pass__empty-hint">Snap a dish, a table, or a night out. An admin reviews it, then everyone can like it here.</p>' +
+      '<button type="button" class="menu-add-photo-btn menu-smash-pass__empty-cta" data-menu-image-client-id="' +
+      client +
+      '" data-menu-item-path="/" aria-label="Add a community photo">' +
+      '<span class="menu-smash-pass__empty-cta-icon" aria-hidden="true"><i class="fa fa-camera"></i></span>' +
+      '<span class="menu-smash-pass__empty-cta-label">Add a photo</span></button></div>'
+    );
+  }
+
   function buildAddPhotoCardHtml(stackIndex, compact) {
     var depth = stackIndex === 0 ? ' is-top' : ' is-behind';
     return (
@@ -508,9 +525,13 @@
       return;
     }
     if (reel) reel.classList.add('hidden');
-    inst.root.classList.remove('menu-smash-pass--no-photos');
-    if (emptyState) emptyState.classList.add('hidden');
-    if (empty) empty.classList.remove('hidden');
+    inst.root.classList.add('menu-smash-pass--no-photos');
+    if (emptyState) {
+      emptyState.classList.remove('hidden');
+      if (empty) empty.classList.add('hidden');
+    } else if (empty) {
+      empty.classList.remove('hidden');
+    }
     updateVoteActions(inst);
   }
 
@@ -1543,7 +1564,7 @@
       '>' +
       '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
       '<p class="menu-smash-pass__empty hidden">No community photos yet: check back after guests upload and admins approve.</p>' +
-      (path ? buildItemEmptyStateHtml() : '') +
+      (path ? buildItemEmptyStateHtml() : buildCommunityEmptyStateHtml(client)) +
       '<div class="menu-smash-pass__reel hidden">' +
       reelInner +
       '</div></div>'

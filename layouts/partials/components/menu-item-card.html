@@ -1,7 +1,15 @@
 {{- /*
 Renders menu item card for list and tag term pages.
-@context {page} . The menu item page.
+@context {page} . The menu item page, or dict "page" and "reels".
 */ -}}
+{{- $page := . -}}
+{{- $reels := false -}}
+{{- if reflect.IsMap . -}}
+  {{- with index . "page" -}}{{- $page = . -}}{{- end -}}
+  {{- $reels = index . "reels" | default false -}}
+{{- end -}}
+{{- $useSmash := and $reels site.Params.menuImageService.enabled -}}
+{{- with $page -}}
 {{- $variable1Values := slice -}}
 {{- range .Params.prices -}}
   {{- if not (in $variable1Values .variable1) -}}
@@ -95,7 +103,8 @@ Renders menu item card for list and tag term pages.
   {{- $defaultVariable2 = index $variable2Values 0 -}}
 {{- end -}}
 
-<div class="menu-item-card{{ if $imgData.hasImage }} menu-item-card--has-image{{ end }}"
+{{ if $reels }}<section{{ else }}<div{{ end }} class="menu-item-card{{ if $reels }} menu-reels-slide{{ end }}{{ if and $imgData.hasImage (not $useSmash) }} menu-item-card--has-image{{ end }}"
+      {{- if $reels }} data-reel-section="{{ .CurrentSection.LinkTitle }}" data-section-slug="{{ partial "menu/section-slug.html" . }}"{{ end }}
       data-item-url="{{ .RelPermalink }}"
       role="button"
       tabindex="0"
@@ -119,8 +128,19 @@ Renders menu item card for list and tag term pages.
       data-cookingmethods="{{ (.Params.cookingmethods | default (slice)) | jsonify }}"
       data-types="{{ (.Params.types | default (slice)) | jsonify }}"
       data-events="{{ (.Params.events | default (slice)) | jsonify }}">
+  {{- if $useSmash -}}
+  <div class="menu-item-title-row">
+    {{ partial "components/menu-favorite-btn.html" . }}
+    <h3 class="menu-item-title">
+      <span class="menu-item-title-text">{{ .LinkTitle }}</span>
+      {{- if and $activePromo (index $activePromo "label") -}}<span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{- end -}}
+    </h3>
+    {{ partial "components/menu-item-actions-menu.html" . }}
+  </div>
+  {{ partial "components/menu-smash-pass.html" (dict "menuItemPath" .RelPermalink) }}
+  {{- end -}}
   <div class="menu-item-row-top">
-    {{- if $imgData.hasImage -}}
+    {{- if and $imgData.hasImage (not $useSmash) -}}
       <a href="{{ .RelPermalink }}" class="menu-item-image-link" aria-label="View {{ .LinkTitle }}">
         <div class="menu-item-image">
           {{ partial "ttms/menu-item-card-img.html" (dict "path" $firstImage "title" .LinkTitle) }}
@@ -128,14 +148,20 @@ Renders menu item card for list and tag term pages.
       </a>
     {{- end -}}
     <div class="menu-item-header-content">
+      {{- if not $useSmash -}}
       <div class="menu-item-title-row">
         {{ partial "components/menu-favorite-btn.html" . }}
         <h3 class="menu-item-title">
+          {{- if $reels -}}
+          <span class="menu-item-title-text">{{ .LinkTitle }}</span>
+          {{- else -}}
           <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+          {{- end -}}
           {{- if and $activePromo (index $activePromo "label") -}}<span class="menu-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">{{ index $activePromo "label" }}</span></span>{{- end -}}
         </h3>
         {{ partial "components/menu-item-actions-menu.html" . }}
       </div>
+      {{- end -}}
       <div class="menu-item-row-middle">
         {{- $avail := .Params.availability | default .CurrentSection.Params.availability -}}
         {{- with $avail }}{{ partial "ttms/availability-schedule.html" . }}{{ end }}
@@ -179,19 +205,22 @@ Renders menu item card for list and tag term pages.
       <div class="menu-item-options">
         <ul class="sizes">
           {{- range $variable1Values -}}
-            {{- if not (or (eq . "-") (eq . "None")) -}}
+            {{- if not (or (eq . "-") (eq . "None") (eq . "")) -}}
               <li>{{ . }}</li>
             {{- end -}}
           {{- end -}}
         </ul>
         <ul class="flavours">
           {{- range $variable2Values -}}
-            {{- if not (or (eq . "-") (eq . "None")) -}}
+            {{- if not (or (eq . "-") (eq . "None") (eq . "")) -}}
               <li>{{ . }}</li>
             {{- end -}}
           {{- end -}}
         </ul>
       </div>
+      {{- if not $reels -}}
+      {{ partial "components/expanded-item-taxonomies.html" . }}
+      {{- end -}}
     </div>
   </div>
   <div class="menu-item-expanded-content" style="display: none;">
@@ -201,4 +230,5 @@ Renders menu item card for list and tag term pages.
     </div>
     <div class="menu-item-expanded-data" style="display: none;"></div>
   </div>
-</div>
+{{ if $reels }}</section>{{ else }}</div>{{ end }}
+{{- end -}}

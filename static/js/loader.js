@@ -908,8 +908,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (typeof closeCart === 'function') {
                     closeCart();
                 }
+                if (typeof closeNotifyInbox === 'function') {
+                    closeNotifyInbox({ instant: true });
+                }
                 if (typeof closeDashboard === 'function') {
-                    closeDashboard();
+                    closeDashboard({ instant: true });
                 }
                 if (typeof closeShop === 'function') {
                     closeShop();
