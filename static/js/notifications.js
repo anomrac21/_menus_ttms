@@ -16,6 +16,20 @@ function resolveNotifyConfig() {
     window.NOTIFY_CONFIG = cfg;
     return cfg;
   }
+  const site = window.SiteConfig || {};
+  if (site.notifyServiceUrl) {
+    const serviceUrl = String(site.notifyServiceUrl).replace(/\/+$/, '');
+    const wsBase = serviceUrl.replace(/^http/i, 'ws');
+    cfg = {
+      enabled: true,
+      serviceUrl: serviceUrl,
+      apiUrl: serviceUrl + '/api/v1',
+      websocketUrl: wsBase + '/api/v1/ws/connect',
+      clientDomain: (window.location.hostname || '').replace(/^www\./i, ''),
+    };
+    window.NOTIFY_CONFIG = cfg;
+    return cfg;
+  }
   return window.NOTIFY_CONFIG || {};
 }
 
@@ -111,7 +125,7 @@ const NotificationService = {
       await this.verifyPushSubscription();
     }
 
-    if (this.subscriptionId && this.isCurrentUserAdmin()) {
+    if (this.subscriptionId) {
       const userId = this.generateUserID();
       const stored = localStorage.getItem('ttmenus_notification_subscription');
       let linked = false;
@@ -488,10 +502,64 @@ const NotificationService = {
     localStorage.setItem(this.PHOTO_REVIEW_ALERTS_STORAGE, enabled ? '1' : '0');
   },
 
-  buildPreferencesPayload() {
+  readLocalAlertPrefs() {
+    let prefs = {};
+    try {
+      if (typeof AuthClient !== 'undefined' && AuthClient.getCachedPreferences) {
+        const cached = AuthClient.getCachedPreferences();
+        if (cached && typeof cached === 'object') prefs = cached;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    if ((!prefs.alert_topics || !prefs.alert_topics.length) && !prefs.alert_frequency) {
+      try {
+        const raw = localStorage.getItem('ttms_guest_taste_prefs');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') prefs = Object.assign({}, parsed, prefs);
+        }
+      } catch (e2) {
+        /* ignore */
+      }
+    }
     return {
+      alert_topics: Array.isArray(prefs.alert_topics) ? prefs.alert_topics.slice() : [],
+      alert_frequency: String(prefs.alert_frequency || ''),
+    };
+  },
+
+  buildPreferencesPayload() {
+    const alerts = this.readLocalAlertPrefs();
+    const payload = {
       enable_photo_review_alerts: this.getPhotoReviewAlertsEnabled(),
     };
+    if (alerts.alert_topics.length) payload.alert_topics = alerts.alert_topics;
+    if (alerts.alert_frequency) payload.alert_frequency = alerts.alert_frequency;
+    return payload;
+  },
+
+  notifyAuthHeaders() {
+    const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
+    try {
+      const token =
+        typeof AuthClient !== 'undefined' && AuthClient.getAccessToken
+          ? AuthClient.getAccessToken()
+          : null;
+      if (token) headers.Authorization = 'Bearer ' + token;
+    } catch (e) {
+      /* ignore */
+    }
+    return headers;
+  },
+
+  notifyApiUrl() {
+    return resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
+  },
+
+  isSignedInNotifyUser() {
+    const userId = this.generateUserID();
+    return typeof userId === 'string' && userId.indexOf('auth_') === 0;
   },
 
   async updatePhotoReviewPreference(enabled) {
@@ -938,6 +1006,13 @@ const NotificationService = {
       this.connectWebSocket();
 
       this.updateSubscribeButton(true, { backgroundPush: true });
+      this.followCurrentVenueIfSignedIn();
+      if (typeof this.renderNotificationFeed === 'function') {
+        this.renderNotificationFeed();
+      }
+      if (typeof this.renderSubscriptionManager === 'function') {
+        this.renderSubscriptionManager();
+      }
       if (window.NotifyInbox && typeof window.NotifyInbox.refresh === 'function') {
         window.NotifyInbox.refresh();
       }
@@ -1457,6 +1532,411 @@ const NotificationService = {
     }
   },
 
+  domainFromMenuUrl(url) {
+    try {
+      const parsed = new URL(String(url || ''), window.location.origin);
+      return (parsed.hostname || '').replace(/^www\./i, '');
+    } catch (e) {
+      return '';
+    }
+  },
+
+  async followVenue(domain) {
+    domain = String(domain || '').replace(/^www\./i, '').trim();
+    if (!this.isSignedInNotifyUser() || !domain) return { ok: false };
+    if (domain === 'ttmenus.com' || domain === 'localhost' || domain === '127.0.0.1') {
+      return { ok: false };
+    }
+    try {
+      const res = await fetch(`${this.notifyApiUrl()}/me/follows`, {
+        method: 'POST',
+        headers: this.notifyAuthHeaders(),
+        body: JSON.stringify({ client_domain: domain }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { ok: false, reason: data.error || res.status };
+      }
+      if (typeof this.renderSubscriptionManager === 'function') {
+        this.renderSubscriptionManager();
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, reason: e && e.message ? e.message : 'network_error' };
+    }
+  },
+
+  followVenueFromUrl(url) {
+    const domain = this.domainFromMenuUrl(url);
+    if (!domain) return;
+    this.followVenue(domain).catch(function () {});
+  },
+
+  async followCurrentVenueIfSignedIn() {
+    return this.followVenue(this.getClientDomain());
+  },
+
+  async syncUserAlertPreferences(prefs) {
+    const src = prefs && typeof prefs === 'object' ? prefs : this.readLocalAlertPrefs();
+    const topics = Array.isArray(src.alert_topics) ? src.alert_topics : [];
+    const frequency = String(src.alert_frequency || '');
+    const patch = { alert_topics: topics };
+    if (frequency) patch.alert_frequency = frequency;
+
+    if (this.subscriptionId) {
+      try {
+        await fetch(`${this.notifyApiUrl()}/subscriptions/${encodeURIComponent(this.subscriptionId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preferences: patch }),
+        });
+      } catch (e) {
+        console.warn('Local subscription preference sync failed:', e);
+      }
+    }
+
+    if (!this.isSignedInNotifyUser()) return { ok: false, reason: 'not_signed_in' };
+    try {
+      const res = await fetch(`${this.notifyApiUrl()}/me/preferences`, {
+        method: 'PATCH',
+        headers: this.notifyAuthHeaders(),
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        return { ok: false, reason: 'http_' + res.status };
+      }
+      if (typeof this.renderSubscriptionManager === 'function') {
+        this.renderSubscriptionManager();
+      }
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, reason: err && err.message ? err.message : 'network_error' };
+    }
+  },
+
+  async fetchMySubscriptions() {
+    if (!this.isSignedInNotifyUser()) {
+      return { success: false, subscriptions: [] };
+    }
+    try {
+      const res = await fetch(`${this.notifyApiUrl()}/me/subscriptions`, {
+        headers: this.notifyAuthHeaders(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, subscriptions: [], error: data.error };
+      }
+      return {
+        success: true,
+        subscriptions: Array.isArray(data.subscriptions) ? data.subscriptions : [],
+      };
+    } catch (err) {
+      return { success: false, subscriptions: [], error: err && err.message };
+    }
+  },
+
+  async fetchNotificationFeed(limit) {
+    const lim = Math.min(Math.max(Number(limit) || 30, 1), 100);
+    if (this.isSignedInNotifyUser()) {
+      try {
+        const res = await fetch(
+          `${this.notifyApiUrl()}/me/notifications?limit=${lim}`,
+          { headers: this.notifyAuthHeaders() }
+        );
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          return {
+            success: true,
+            notifications: Array.isArray(data.notifications) ? data.notifications : [],
+            count: data.count || 0,
+          };
+        }
+      } catch (e) {
+        /* fall through to device feed */
+      }
+    }
+    if (!this.subscriptionId) {
+      this.loadSubscriptionFromStorage();
+    }
+    if (!this.subscriptionId) {
+      return { success: false, error: 'not_subscribed', notifications: [] };
+    }
+    try {
+      const response = await fetch(
+        `${this.notifyApiUrl()}/subscriptions/${encodeURIComponent(this.subscriptionId)}/notifications?limit=${lim}`,
+        { headers: { Accept: 'application/json' } }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { success: false, error: data.error || `HTTP ${response.status}`, notifications: [] };
+      }
+      return {
+        success: true,
+        notifications: Array.isArray(data.notifications) ? data.notifications : [],
+        count: data.count || 0,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: err && err.message ? err.message : 'Failed to load feed',
+        notifications: [],
+      };
+    }
+  },
+
+  escapeFeedHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  },
+
+  formatFeedTime(raw) {
+    if (!raw) return '';
+    try {
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch (_) {
+      return '';
+    }
+  },
+
+  async renderNotificationFeed() {
+    const list = document.getElementById('ttms-guest-notify-feed-list');
+    const status = document.getElementById('ttms-guest-notify-feed-status');
+    if (!list || !status) return;
+
+    if (
+      !this.subscriptionId &&
+      !localStorage.getItem('ttmenus_notification_subscription') &&
+      !this.isSignedInNotifyUser()
+    ) {
+      list.hidden = true;
+      list.innerHTML = '';
+      status.hidden = false;
+      status.textContent = 'Subscribe to see notifications here.';
+      return;
+    }
+    if (!this.subscriptionId) {
+      this.loadSubscriptionFromStorage();
+    }
+
+    status.hidden = false;
+    status.textContent = 'Loading…';
+    list.hidden = true;
+
+    const result = await this.fetchNotificationFeed(30);
+    if (!result.success) {
+      list.hidden = true;
+      list.innerHTML = '';
+      status.hidden = false;
+      status.textContent =
+        result.error === 'not_subscribed'
+          ? 'Subscribe to see notifications here.'
+          : 'Could not load notifications.';
+      return;
+    }
+
+    const items = result.notifications || [];
+    if (!items.length) {
+      list.hidden = true;
+      list.innerHTML = '';
+      status.hidden = false;
+      status.textContent = 'No notifications yet.';
+      return;
+    }
+
+    status.hidden = true;
+    status.textContent = '';
+    list.hidden = false;
+    list.innerHTML = items
+      .map((item) => {
+        const title = this.escapeFeedHtml(item.title || 'Notification');
+        const message = this.escapeFeedHtml(item.message || '');
+        const venue = this.escapeFeedHtml(item.client_name || '');
+        const when = this.escapeFeedHtml(
+          this.formatFeedTime(item.delivered_at || item.created_at)
+        );
+        const type = this.escapeFeedHtml(item.type || 'update');
+        const url = typeof item.url === 'string' ? item.url.trim() : '';
+        const safeUrl =
+          url && /^(https?:\/\/|\/)/i.test(url) ? this.escapeFeedHtml(url) : '';
+        const body = safeUrl
+          ? `<a class="ttms-guest-notify-feed__link" href="${safeUrl}">${message || title}</a>`
+          : `<p class="ttms-guest-notify-feed__message">${message}</p>`;
+        return (
+          `<li class="ttms-guest-notify-feed__item" data-notification-id="${this.escapeFeedHtml(item.id)}">` +
+          `<div class="ttms-guest-notify-feed__meta">` +
+          `<span class="ttms-guest-notify-feed__type">${venue || type}</span>` +
+          (when ? `<time class="ttms-guest-notify-feed__time">${when}</time>` : '') +
+          `</div>` +
+          `<h4 class="ttms-guest-notify-feed__item-title">${title}</h4>` +
+          body +
+          `</li>`
+        );
+      })
+      .join('');
+  },
+
+  async renderSubscriptionManager() {
+    const lists = document.querySelectorAll('[data-notify-venues-list]');
+    if (!lists.length) return;
+    const status = document.getElementById('ttms-guest-notify-venues-status') ||
+      document.getElementById('ttms-account-notify-venues-status');
+
+    const fillStatus = (msg) => {
+      lists.forEach((el) => {
+        el.innerHTML = '';
+      });
+      if (status) {
+        status.hidden = !msg;
+        status.textContent = msg || '';
+      }
+    };
+
+    if (!this.isSignedInNotifyUser()) {
+      fillStatus('Sign in to see and edit every place you follow.');
+      return;
+    }
+
+    if (status) {
+      status.hidden = false;
+      status.textContent = 'Loading your places…';
+    }
+    const result = await this.fetchMySubscriptions();
+    if (!result.success) {
+      fillStatus('Could not load your subscriptions.');
+      return;
+    }
+
+    const rows = result.subscriptions || [];
+    if (!rows.length) {
+      fillStatus('No venue alerts yet. Follow a restaurant or tap Notify me on a menu.');
+      return;
+    }
+
+    if (status) {
+      status.hidden = true;
+      status.textContent = '';
+    }
+    const html = rows
+      .map((row) => {
+        const name = this.escapeFeedHtml(row.client_name || row.client_domain || 'TTMenus');
+        const domain = this.escapeFeedHtml(row.client_domain || '');
+        const kind = row.kind === 'follow' ? 'Following' : row.is_hub ? 'This device' : 'Menu alerts';
+        const muted = !!row.muted;
+        const id = row.id ? String(row.id) : '';
+        const muteBtn =
+          row.kind === 'device' && id
+            ? `<button type="button" class="ttms-guest-notify-venues__btn" data-notify-mute="${this.escapeFeedHtml(id)}" data-muted="${muted ? '1' : '0'}">${
+                muted ? 'Unmute' : 'Mute'
+              }</button>`
+            : '';
+        const removeBtn =
+          row.kind === 'follow'
+            ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unfollow="${domain}">Unfollow</button>`
+            : id
+              ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unsub="${this.escapeFeedHtml(id)}">Unsubscribe</button>`
+              : '';
+        return (
+          `<li class="ttms-guest-notify-venues__item" data-kind="${this.escapeFeedHtml(row.kind || '')}">` +
+          `<div class="ttms-guest-notify-venues__copy">` +
+          `<strong class="ttms-guest-notify-venues__name">${name}</strong>` +
+          `<span class="ttms-guest-notify-venues__meta">${kind}${muted ? ' · muted' : ''}</span>` +
+          `</div>` +
+          `<div class="ttms-guest-notify-venues__actions">${muteBtn}${removeBtn}</div>` +
+          `</li>`
+        );
+      })
+      .join('');
+    lists.forEach((el) => {
+      el.innerHTML = html;
+      this.bindSubscriptionManager(el);
+    });
+  },
+
+  bindSubscriptionManager(list) {
+    if (!list || list.dataset.notifyVenuesBound === '1') return;
+    list.dataset.notifyVenuesBound = '1';
+    const self = this;
+    list.addEventListener('click', function (e) {
+      const mute = e.target.closest('[data-notify-mute]');
+      const unsub = e.target.closest('[data-notify-unsub]');
+      const unfollow = e.target.closest('[data-notify-unfollow]');
+      if (mute) {
+        e.preventDefault();
+        const id = mute.getAttribute('data-notify-mute');
+        const nextMuted = mute.getAttribute('data-muted') !== '1';
+        self.patchMySubscription(id, { muted: nextMuted }).then(() => self.renderSubscriptionManager());
+        return;
+      }
+      if (unsub) {
+        e.preventDefault();
+        if (!confirm('Unsubscribe this device from these alerts?')) return;
+        self.deleteMySubscription(unsub.getAttribute('data-notify-unsub')).then(() => {
+          self.renderSubscriptionManager();
+          self.renderNotificationFeed();
+        });
+        return;
+      }
+      if (unfollow) {
+        e.preventDefault();
+        if (!confirm('Stop following this restaurant?')) return;
+        self.unfollowVenue(unfollow.getAttribute('data-notify-unfollow')).then(() => {
+          self.renderSubscriptionManager();
+        });
+      }
+    });
+  },
+
+  async patchMySubscription(id, body) {
+    const res = await fetch(`${this.notifyApiUrl()}/me/subscriptions/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: this.notifyAuthHeaders(),
+      body: JSON.stringify(body || {}),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Could not update subscription');
+    }
+    return res.json();
+  },
+
+  async deleteMySubscription(id) {
+    const res = await fetch(`${this.notifyApiUrl()}/me/subscriptions/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: this.notifyAuthHeaders(),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Could not unsubscribe');
+    }
+    if (this.subscriptionId && String(this.subscriptionId) === String(id)) {
+      this.subscriptionId = null;
+      localStorage.removeItem('ttmenus_notification_subscription');
+    }
+    return res.json().catch(() => ({}));
+  },
+
+  async unfollowVenue(domain) {
+    const res = await fetch(
+      `${this.notifyApiUrl()}/me/follows/${encodeURIComponent(domain)}`,
+      { method: 'DELETE', headers: this.notifyAuthHeaders() }
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Could not unfollow');
+    }
+    return res.json().catch(() => ({}));
+  },
+
   /**
    * Toggle subscription (or re-register background push if it was lost)
    */
@@ -1497,11 +1977,16 @@ if (document.readyState === 'loading') {
 }
 
 window.addEventListener('auth:login', function () {
-  if (!resolveNotifyConfig().enabled || !NotificationService.subscriptionId) return;
-  if (!NotificationService.isCurrentUserAdmin()) return;
-  NotificationService.relinkSubscriptionToAuthUser().catch(function (err) {
-    console.warn('Could not relink push subscription to admin account:', err);
-  });
+  if (!resolveNotifyConfig().enabled) return;
+  if (NotificationService.subscriptionId) {
+    NotificationService.relinkSubscriptionToAuthUser().catch(function (err) {
+      console.warn('Could not relink push subscription to account:', err);
+    });
+    NotificationService.followCurrentVenueIfSignedIn();
+  }
+  if (typeof NotificationService.renderSubscriptionManager === 'function') {
+    NotificationService.renderSubscriptionManager();
+  }
 });
 
 // Export for global use

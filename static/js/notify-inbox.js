@@ -337,7 +337,30 @@
     var domain = clientDomain();
     var base = apiBase();
 
-    if (subId) {
+    function authHeaders() {
+      var headers = { Accept: 'application/json' };
+      try {
+        var token =
+          window.AuthClient && AuthClient.getAccessToken ? AuthClient.getAccessToken() : '';
+        if (token) headers.Authorization = 'Bearer ' + token;
+      } catch (e) {}
+      return headers;
+    }
+
+    async function fetchAuthJson(url) {
+      var res = await fetch(url, { headers: authHeaders() });
+      if (!res.ok) throw new Error(String(res.status));
+      return res.json();
+    }
+
+    try {
+      if (window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated()) {
+        var mine = await fetchAuthJson(base + '/me/notifications?limit=30');
+        remote = remote.concat((mine && mine.notifications) || []);
+      }
+    } catch (eMe) {}
+
+    if (subId && !remote.length) {
       try {
         var feed = await fetchJson(
           base + '/subscriptions/' + encodeURIComponent(subId) + '/notifications?limit=30'
