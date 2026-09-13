@@ -145,6 +145,7 @@ const NotificationService = {
     if (this.subscriptionId) {
       this.connectWebSocket();
     }
+    this.syncNearbyClientWatcher();
   },
 
   /**
@@ -1576,6 +1577,178 @@ const NotificationService = {
     return this.followVenue(this.getClientDomain());
   },
 
+  wantsNearbyClientAlerts() {
+    const topics = this.readLocalAlertPrefs().alert_topics || [];
+    return topics.indexOf('nearby_client') !== -1;
+  },
+
+  haversineMeters(lat1, lon1, lat2, lon2) {
+    const toRad = (d) => (Number(d) * Math.PI) / 180;
+    const r = 6371000;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  },
+
+  stopNearbyClientWatcher() {
+    if (this._nearbyWatchId != null && navigator.geolocation) {
+      try {
+        navigator.geolocation.clearWatch(this._nearbyWatchId);
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    this._nearbyWatchId = null;
+  },
+
+  syncNearbyClientWatcher() {
+    if (!this.subscriptionId || !this.wantsNearbyClientAlerts() || !navigator.geolocation) {
+      this.stopNearbyClientWatcher();
+      return;
+    }
+    if (this._nearbyWatchId != null) return;
+    const self = this;
+    this._nearbyWatchId = navigator.geolocation.watchPosition(
+      function (pos) {
+        self.handleNearbyPosition(pos);
+      },
+      function (err) {
+        console.warn('Nearby restaurant alerts need location permission:', err && err.message);
+      },
+      { enableHighAccuracy: false, maximumAge: 60000, timeout: 20000 }
+    );
+  },
+
+  async handleNearbyPosition(pos) {
+    if (!pos || !pos.coords) return;
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    const venues = await this.loadNearbyVenueTargets();
+    if (!venues.length) return;
+    const radius = 250;
+    const seen = this.readNearbyAlertSeen();
+    const now = Date.now();
+    const cooldown = 6 * 60 * 60 * 1000;
+    venues.forEach((venue) => {
+      if (!venue || !Number.isFinite(venue.lat) || !Number.isFinite(venue.lon)) return;
+      const meters = this.haversineMeters(lat, lon, venue.lat, venue.lon);
+      if (meters > radius) return;
+      const key = venue.domain || venue.name;
+      if (seen[key] && now - seen[key] < cooldown) return;
+      seen[key] = now;
+      this.showNearbyClientNotification(venue, Math.round(meters));
+    });
+    this.writeNearbyAlertSeen(seen);
+  },
+
+  readNearbyAlertSeen() {
+    try {
+      const raw = localStorage.getItem('ttmenus_nearby_alert_seen');
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  },
+
+  writeNearbyAlertSeen(seen) {
+    try {
+      localStorage.setItem('ttmenus_nearby_alert_seen', JSON.stringify(seen || {}));
+    } catch (e) {
+      /* ignore */
+    }
+  },
+
+  async loadNearbyVenueTargets() {
+    let menus = [];
+    try {
+      const res = await fetch('/locations/index.json', { headers: { Accept: 'application/json' } });
+      if (!res.ok) return [];
+      const data = await res.json();
+      menus = Array.isArray(data && data.menus) ? data.menus : [];
+    } catch (e) {
+      return [];
+    }
+
+    const followSet = {};
+    try {
+      const mine = await this.fetchMySubscriptions();
+      (mine.subscriptions || []).forEach((row) => {
+        const domain = String((row && row.client_domain) || '').replace(/^www\./i, '');
+        if (domain && domain !== 'ttmenus.com') followSet[domain] = true;
+      });
+    } catch (e) {
+      /* ignore */
+    }
+
+    const out = [];
+    const seen = {};
+    menus.forEach((menu) => {
+      const domain = this.domainFromMenuUrl(menu && menu.menu);
+      if (!domain || seen[domain]) return;
+      const locs = Array.isArray(menu.locations) ? menu.locations : [];
+      locs.forEach((loc) => {
+        let vLat = Number(loc && loc.lat);
+        let vLon = Number(loc && loc.lon);
+        if ((!Number.isFinite(vLat) || !Number.isFinite(vLon)) && loc && Array.isArray(loc.latlon)) {
+          vLat = parseFloat(loc.latlon[0]);
+          vLon = parseFloat(loc.latlon[1]);
+        }
+        if (!Number.isFinite(vLat) || !Number.isFinite(vLon)) return;
+        if (Object.keys(followSet).length && !followSet[domain]) return;
+        seen[domain] = true;
+        out.push({
+          domain: domain,
+          name: String((menu && menu.name) || domain),
+          lat: vLat,
+          lon: vLon,
+          url: menu.menu && String(menu.menu).indexOf('://') !== -1 ? menu.menu : 'https://' + domain + '/',
+        });
+      });
+    });
+    return out;
+  },
+
+  showNearbyClientNotification(venue, meters) {
+    if (!venue) return;
+    const title = venue.name || 'Restaurant nearby';
+    const body =
+      meters != null
+        ? "You're about " + meters + ' meters away. Open the menu?'
+        : "You're close by. Open the menu?";
+    const payload = {
+      title: title,
+      body: body,
+      data: { url: venue.url || '/', nearby_client: true },
+    };
+    if (this.serviceWorkerRegistration && this.serviceWorkerRegistration.active) {
+      this.serviceWorkerRegistration.active.postMessage({
+        type: 'SHOW_NOTIFICATION',
+        title: title,
+        options: {
+          body: body,
+          data: payload.data,
+          tag: 'nearby-' + (venue.domain || 'venue'),
+        },
+      });
+      return;
+    }
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        const n = new Notification(title, { body: body, data: payload.data });
+        n.onclick = function () {
+          if (payload.data.url) window.open(payload.data.url, '_blank');
+        };
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  },
+
   async syncUserAlertPreferences(prefs) {
     const src = prefs && typeof prefs === 'object' ? prefs : this.readLocalAlertPrefs();
     const topics = Array.isArray(src.alert_topics) ? src.alert_topics : [];
@@ -1595,7 +1768,10 @@ const NotificationService = {
       }
     }
 
-    if (!this.isSignedInNotifyUser()) return { ok: false, reason: 'not_signed_in' };
+    if (!this.isSignedInNotifyUser()) {
+      this.syncNearbyClientWatcher();
+      return { ok: false, reason: 'not_signed_in' };
+    }
     try {
       const res = await fetch(`${this.notifyApiUrl()}/me/preferences`, {
         method: 'PATCH',
@@ -1603,13 +1779,16 @@ const NotificationService = {
         body: JSON.stringify(patch),
       });
       if (!res.ok) {
+        this.syncNearbyClientWatcher();
         return { ok: false, reason: 'http_' + res.status };
       }
       if (typeof this.renderSubscriptionManager === 'function') {
         this.renderSubscriptionManager();
       }
+      this.syncNearbyClientWatcher();
       return { ok: true };
     } catch (err) {
+      this.syncNearbyClientWatcher();
       return { ok: false, reason: err && err.message ? err.message : 'network_error' };
     }
   },
