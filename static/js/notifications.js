@@ -63,6 +63,75 @@ const NotificationService = {
     return (window.location.hostname || '').replace(/^www\./i, '');
   },
 
+  isHubClientDomain(domain) {
+    const host = String(domain || '')
+      .replace(/^www\./i, '')
+      .toLowerCase();
+    return host === 'ttmenus.com' || host === 'localhost' || host === '127.0.0.1';
+  },
+
+  notifyClientDisplayName() {
+    const og = document.querySelector('meta[property="og:site_name"], meta[name="application-name"]');
+    const site = window.SiteConfig || {};
+    const raw =
+      (og && og.getAttribute('content')) ||
+      site.restaurantName ||
+      site.siteName ||
+      site.name ||
+      document.title ||
+      '';
+    let name = String(raw)
+      .replace(/\s*\|\s*Digital Menu & Online Ordering/gi, '')
+      .replace(/^\|\s*/, '')
+      .trim();
+    if (!name || /^digital menu/i.test(name)) {
+      name = this.getClientDomain();
+    }
+    return name;
+  },
+
+  getLocationKey(url) {
+    let host = this.getClientDomain();
+    let path = window.location.pathname || '';
+    if (url) {
+      try {
+        const parsed = new URL(String(url), window.location.origin);
+        host = (parsed.hostname || '').replace(/^www\./i, '');
+        path = parsed.pathname || '';
+      } catch (e) {
+        /* keep current page */
+      }
+    }
+    if (this.isHubClientDomain(host)) {
+      return '';
+    }
+    if (!url) {
+      try {
+        if (typeof getCurrentLocationData === 'function') {
+          const loc = getCurrentLocationData();
+          const slug = loc && (loc.slug || loc.location_slug || loc.key);
+          if (slug) {
+            return String(slug).toLowerCase().trim().replace(/\s+/g, '-');
+          }
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    const first = String(path)
+      .split('/')
+      .filter(Boolean)[0] || '';
+    const needle = first.toLowerCase();
+    const slugs = (window.MENU_CONFIG && window.MENU_CONFIG.locationSlugs) || [];
+    if (needle && slugs.some((s) => String(s).toLowerCase() === needle)) {
+      return needle;
+    }
+    if (url && needle && !/^(menu|account|search|recipes|promotions|about|login)$/i.test(needle)) {
+      return needle;
+    }
+    return '';
+  },
+
   /** True when browser can receive push while site/app is closed (service worker + PushManager). */
   supportsBackgroundPush() {
     return (
@@ -694,7 +763,7 @@ const NotificationService = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           domain: clientDomain,
-          client_name: document.title || clientDomain,
+          client_name: this.notifyClientDisplayName() || clientDomain,
           service_group: 'ttmenus',
           auth_client_id: authClientId || undefined,
         }),
@@ -940,6 +1009,7 @@ const NotificationService = {
         platform: platform,
         demographics: demographics,
         ws_connection_id: wsConnectionId,
+        location_key: this.getLocationKey() || undefined,
       };
 
       // Add push subscription details (required for background delivery on phones)
@@ -1542,17 +1612,20 @@ const NotificationService = {
     }
   },
 
-  async followVenue(domain) {
+  async followVenue(domain, locationKey) {
     domain = String(domain || '').replace(/^www\./i, '').trim();
+    locationKey = String(locationKey || '').trim();
     if (!this.isSignedInNotifyUser() || !domain) return { ok: false };
-    if (domain === 'ttmenus.com' || domain === 'localhost' || domain === '127.0.0.1') {
+    if (this.isHubClientDomain(domain)) {
       return { ok: false };
     }
     try {
+      const body = { client_domain: domain };
+      if (locationKey) body.location_key = locationKey;
       const res = await fetch(`${this.notifyApiUrl()}/me/follows`, {
         method: 'POST',
         headers: this.notifyAuthHeaders(),
-        body: JSON.stringify({ client_domain: domain }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -1570,11 +1643,11 @@ const NotificationService = {
   followVenueFromUrl(url) {
     const domain = this.domainFromMenuUrl(url);
     if (!domain) return;
-    this.followVenue(domain).catch(function () {});
+    this.followVenue(domain, this.getLocationKey(url)).catch(function () {});
   },
 
   async followCurrentVenueIfSignedIn() {
-    return this.followVenue(this.getClientDomain());
+    return this.followVenue(this.getClientDomain(), this.getLocationKey());
   },
 
   wantsNearbyClientAlerts() {
@@ -1964,6 +2037,70 @@ const NotificationService = {
       .join('');
   },
 
+  displayPlaceName(row) {
+    row = row || {};
+    let name = String(row.client_name || row.client_domain || 'TTMenus');
+    name = name.replace(/\s*\|\s*Digital Menu & Online Ordering/gi, '').replace(/^\|\s*/, '').trim();
+    if (!name) {
+      name = row.is_hub ? 'TTMenus' : row.client_domain || 'TTMenus';
+    }
+    const loc = row.location_name || row.location_key;
+    if (loc) {
+      name += ' · ' + loc;
+    }
+    return name;
+  },
+
+  collapseMySubscriptionRows(rows) {
+    const map = new Map();
+    (rows || []).forEach((row) => {
+      if (!row) return;
+      const domain = String(row.client_domain || '')
+        .toLowerCase()
+        .replace(/^www\./, '');
+      const nameKey = String(row.client_name || '')
+        .toLowerCase()
+        .replace(/\s*\|\s*digital menu & online ordering/gi, '')
+        .trim();
+      const isHub =
+        !!row.is_hub ||
+        this.isHubClientDomain(domain) ||
+        nameKey === 'ttmenus' ||
+        nameKey === 'localhost';
+      const kind = row.kind || 'device';
+      const loc = kind === 'follow' ? String(row.location_key || '').toLowerCase() : '';
+      const place = domain || nameKey || row.id || 'place';
+      const key = isHub ? 'hub-device' : `${kind}|${place}|${loc}`;
+      const id = row.id ? String(row.id) : '';
+      const prev = map.get(key);
+      if (!prev) {
+        map.set(key, Object.assign({}, row, { is_hub: isHub || !!row.is_hub, _ids: id ? [id] : [] }));
+        return;
+      }
+      const ids = prev._ids ? prev._ids.slice() : prev.id ? [String(prev.id)] : [];
+      if (id && ids.indexOf(id) < 0) ids.push(id);
+      const prevTime = Date.parse(prev.subscribed_at || '') || 0;
+      const nextTime = Date.parse(row.subscribed_at || '') || 0;
+      const keep = nextTime >= prevTime ? row : prev;
+      map.set(key, Object.assign({}, keep, { is_hub: isHub || !!keep.is_hub, _ids: ids }));
+    });
+    const deviceDomains = new Set();
+    map.forEach((row) => {
+      if (!row || row.kind === 'follow' || row.is_hub) return;
+      const domain = String(row.client_domain || '')
+        .toLowerCase()
+        .replace(/^www\./, '');
+      if (domain) deviceDomains.add(domain);
+    });
+    return Array.from(map.values()).filter((row) => {
+      if (!row || row.kind !== 'follow' || row.location_key) return true;
+      const domain = String(row.client_domain || '')
+        .toLowerCase()
+        .replace(/^www\./, '');
+      return !deviceDomains.has(domain);
+    });
+  },
+
   async renderSubscriptionManager() {
     const lists = document.querySelectorAll('[data-notify-venues-list]');
     if (!lists.length) return;
@@ -1995,7 +2132,7 @@ const NotificationService = {
       return;
     }
 
-    const rows = result.subscriptions || [];
+    const rows = this.collapseMySubscriptionRows(result.subscriptions || []);
     if (!rows.length) {
       fillStatus('No venue alerts yet. Follow a restaurant or tap Notify me on a menu.');
       return;
@@ -2007,22 +2144,28 @@ const NotificationService = {
     }
     const html = rows
       .map((row) => {
-        const name = this.escapeFeedHtml(row.client_name || row.client_domain || 'TTMenus');
+        const name = this.escapeFeedHtml(this.displayPlaceName(row));
         const domain = this.escapeFeedHtml(row.client_domain || '');
-        const kind = row.kind === 'follow' ? 'Following' : row.is_hub ? 'This device' : 'Menu alerts';
+        const loc = this.escapeFeedHtml(row.location_key || '');
+        const kind = row.kind === 'follow'
+          ? (row.location_key ? 'Location alerts' : 'Following')
+          : row.is_hub
+            ? 'This device'
+            : 'Menu alerts';
         const muted = !!row.muted;
-        const id = row.id ? String(row.id) : '';
+        const ids = (row._ids && row._ids.length ? row._ids : row.id ? [row.id] : []).map(String);
+        const idAttr = this.escapeFeedHtml(ids.join(','));
         const muteBtn =
-          row.kind === 'device' && id
-            ? `<button type="button" class="ttms-guest-notify-venues__btn" data-notify-mute="${this.escapeFeedHtml(id)}" data-muted="${muted ? '1' : '0'}">${
+          row.kind === 'device' && ids.length
+            ? `<button type="button" class="ttms-guest-notify-venues__btn" data-notify-mute="${idAttr}" data-muted="${muted ? '1' : '0'}">${
                 muted ? 'Unmute' : 'Mute'
               }</button>`
             : '';
         const removeBtn =
           row.kind === 'follow'
-            ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unfollow="${domain}">Unfollow</button>`
-            : id
-              ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unsub="${this.escapeFeedHtml(id)}">Unsubscribe</button>`
+            ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unfollow="${domain}" data-notify-unfollow-location="${loc}">Unfollow</button>`
+            : ids.length
+              ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unsub="${idAttr}">Unsubscribe</button>`
               : '';
         return (
           `<li class="ttms-guest-notify-venues__item" data-kind="${this.escapeFeedHtml(row.kind || '')}">` +
@@ -2051,15 +2194,18 @@ const NotificationService = {
       const unfollow = e.target.closest('[data-notify-unfollow]');
       if (mute) {
         e.preventDefault();
-        const id = mute.getAttribute('data-notify-mute');
+        const ids = (mute.getAttribute('data-notify-mute') || '').split(',').map((id) => id.trim()).filter(Boolean);
         const nextMuted = mute.getAttribute('data-muted') !== '1';
-        self.patchMySubscription(id, { muted: nextMuted }).then(() => self.renderSubscriptionManager());
+        Promise.all(ids.map((id) => self.patchMySubscription(id, { muted: nextMuted }))).then(() =>
+          self.renderSubscriptionManager()
+        );
         return;
       }
       if (unsub) {
         e.preventDefault();
         if (!confirm('Unsubscribe this device from these alerts?')) return;
-        self.deleteMySubscription(unsub.getAttribute('data-notify-unsub')).then(() => {
+        const ids = (unsub.getAttribute('data-notify-unsub') || '').split(',').map((id) => id.trim()).filter(Boolean);
+        Promise.all(ids.map((id) => self.deleteMySubscription(id))).then(() => {
           self.renderSubscriptionManager();
           self.renderNotificationFeed();
         });
@@ -2067,8 +2213,9 @@ const NotificationService = {
       }
       if (unfollow) {
         e.preventDefault();
-        if (!confirm('Stop following this restaurant?')) return;
-        self.unfollowVenue(unfollow.getAttribute('data-notify-unfollow')).then(() => {
+        const loc = unfollow.getAttribute('data-notify-unfollow-location') || '';
+        if (!confirm(loc ? 'Stop alerts for this location?' : 'Stop following this restaurant?')) return;
+        self.unfollowVenue(unfollow.getAttribute('data-notify-unfollow'), loc).then(() => {
           self.renderSubscriptionManager();
         });
       }
@@ -2104,11 +2251,12 @@ const NotificationService = {
     return res.json().catch(() => ({}));
   },
 
-  async unfollowVenue(domain) {
-    const res = await fetch(
-      `${this.notifyApiUrl()}/me/follows/${encodeURIComponent(domain)}`,
-      { method: 'DELETE', headers: this.notifyAuthHeaders() }
-    );
+  async unfollowVenue(domain, locationKey) {
+    let path = `${this.notifyApiUrl()}/me/follows/${encodeURIComponent(domain)}`;
+    if (locationKey) {
+      path += `?location=${encodeURIComponent(locationKey)}`;
+    }
+    const res = await fetch(path, { method: 'DELETE', headers: this.notifyAuthHeaders() });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || 'Could not unfollow');
