@@ -623,6 +623,16 @@ const NotificationService = {
     return headers;
   },
 
+  async ensureNotifyAccessToken() {
+    try {
+      if (typeof AuthClient !== 'undefined' && typeof AuthClient.ensureAccessToken === 'function') {
+        await AuthClient.ensureAccessToken();
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  },
+
   notifyApiUrl() {
     return resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
   },
@@ -1846,6 +1856,7 @@ const NotificationService = {
       return { ok: false, reason: 'not_signed_in' };
     }
     try {
+      await this.ensureNotifyAccessToken();
       const res = await fetch(`${this.notifyApiUrl()}/me/preferences`, {
         method: 'PATCH',
         headers: this.notifyAuthHeaders(),
@@ -1871,6 +1882,7 @@ const NotificationService = {
       return { success: false, subscriptions: [] };
     }
     try {
+      await this.ensureNotifyAccessToken();
       const res = await fetch(`${this.notifyApiUrl()}/me/subscriptions`, {
         headers: this.notifyAuthHeaders(),
       });
@@ -1889,51 +1901,64 @@ const NotificationService = {
 
   async fetchNotificationFeed(limit) {
     const lim = Math.min(Math.max(Number(limit) || 30, 1), 100);
+    const seen = {};
+    const notifications = [];
+    const add = (list) => {
+      (list || []).forEach((item) => {
+        if (!item) return;
+        const id = item.id || item.delivery_id || '';
+        const key = id || String(item.title || '') + '|' + String(item.created_at || '');
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        notifications.push(item);
+      });
+    };
+
+    await this.ensureNotifyAccessToken();
     if (this.isSignedInNotifyUser()) {
       try {
-        const res = await fetch(
-          `${this.notifyApiUrl()}/me/notifications?limit=${lim}`,
-          { headers: this.notifyAuthHeaders() }
-        );
+        const res = await fetch(`${this.notifyApiUrl()}/me/notifications?limit=${lim}`, {
+          headers: this.notifyAuthHeaders(),
+        });
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
-          return {
-            success: true,
-            notifications: Array.isArray(data.notifications) ? data.notifications : [],
-            count: data.count || 0,
-          };
+          add(data.notifications);
         }
       } catch (e) {
-        /* fall through to device feed */
+        /* still try the device feed */
       }
     }
     if (!this.subscriptionId) {
       this.loadSubscriptionFromStorage();
     }
-    if (!this.subscriptionId) {
+    if (this.subscriptionId) {
+      try {
+        const response = await fetch(
+          `${this.notifyApiUrl()}/subscriptions/${encodeURIComponent(this.subscriptionId)}/notifications?limit=${lim}`,
+          { headers: { Accept: 'application/json' } }
+        );
+        const data = await response.json().catch(() => ({}));
+        if (response.ok) {
+          add(data.notifications);
+        }
+      } catch (err) {
+        if (!notifications.length) {
+          return {
+            success: false,
+            error: err && err.message ? err.message : 'Failed to load feed',
+            notifications: [],
+          };
+        }
+      }
+    }
+    if (!notifications.length && !this.subscriptionId && !this.isSignedInNotifyUser()) {
       return { success: false, error: 'not_subscribed', notifications: [] };
     }
-    try {
-      const response = await fetch(
-        `${this.notifyApiUrl()}/subscriptions/${encodeURIComponent(this.subscriptionId)}/notifications?limit=${lim}`,
-        { headers: { Accept: 'application/json' } }
-      );
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        return { success: false, error: data.error || `HTTP ${response.status}`, notifications: [] };
-      }
-      return {
-        success: true,
-        notifications: Array.isArray(data.notifications) ? data.notifications : [],
-        count: data.count || 0,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        error: err && err.message ? err.message : 'Failed to load feed',
-        notifications: [],
-      };
-    }
+    return {
+      success: true,
+      notifications: notifications,
+      count: notifications.length,
+    };
   },
 
   escapeFeedHtml(value) {
@@ -2180,49 +2205,119 @@ const NotificationService = {
       .join('');
     lists.forEach((el) => {
       el.innerHTML = html;
-      this.bindSubscriptionManager(el);
+      el.dataset.notifyVenuesPainted = '1';
+    });
+    this.bindSubscriptionManager();
+  },
+
+  playPlaceRowExit(item) {
+    return new Promise((resolve) => {
+      if (!item) {
+        resolve();
+        return;
+      }
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) {
+        resolve();
+        return;
+      }
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      item.classList.add('is-leaving');
+      item.addEventListener('animationend', finish, { once: true });
+      setTimeout(finish, 380);
     });
   },
 
-  bindSubscriptionManager(list) {
-    if (!list || list.dataset.notifyVenuesBound === '1') return;
-    list.dataset.notifyVenuesBound = '1';
+  reportPlaceActionError(err) {
+    const status =
+      document.getElementById('ttms-account-notify-venues-status') ||
+      document.getElementById('ttms-guest-notify-venues-status');
+    const msg = err && err.message ? err.message : 'Could not update this place.';
+    if (status) {
+      status.hidden = false;
+      status.textContent = msg;
+    }
+    console.error('Place alerts action failed:', err);
+  },
+
+  bindSubscriptionManager() {
+    if (this._venuesClickBound) return;
+    this._venuesClickBound = true;
     const self = this;
-    list.addEventListener('click', function (e) {
-      const mute = e.target.closest('[data-notify-mute]');
-      const unsub = e.target.closest('[data-notify-unsub]');
-      const unfollow = e.target.closest('[data-notify-unfollow]');
-      if (mute) {
+    const clickEl = function (e) {
+      const node = e.target;
+      const el = node && node.nodeType === 1 ? node : node && node.parentElement;
+      return el && typeof el.closest === 'function' ? el : null;
+    };
+    document.addEventListener(
+      'click',
+      function (e) {
+        const el = clickEl(e);
+        if (!el) return;
+        const mute = el.closest('[data-notify-mute]');
+        const unsub = el.closest('[data-notify-unsub]');
+        const unfollow = el.closest('[data-notify-unfollow]');
+        if (!mute && !unsub && !unfollow) return;
         e.preventDefault();
-        const ids = (mute.getAttribute('data-notify-mute') || '').split(',').map((id) => id.trim()).filter(Boolean);
-        const nextMuted = mute.getAttribute('data-muted') !== '1';
-        Promise.all(ids.map((id) => self.patchMySubscription(id, { muted: nextMuted }))).then(() =>
-          self.renderSubscriptionManager()
-        );
-        return;
-      }
-      if (unsub) {
-        e.preventDefault();
-        if (!confirm('Unsubscribe this device from these alerts?')) return;
-        const ids = (unsub.getAttribute('data-notify-unsub') || '').split(',').map((id) => id.trim()).filter(Boolean);
-        Promise.all(ids.map((id) => self.deleteMySubscription(id))).then(() => {
-          self.renderSubscriptionManager();
-          self.renderNotificationFeed();
-        });
-        return;
-      }
-      if (unfollow) {
-        e.preventDefault();
+        e.stopPropagation();
+        const item = el.closest('.ttms-guest-notify-venues__item');
+        if (mute) {
+          if (item) item.classList.add('is-updating');
+          const ids = (mute.getAttribute('data-notify-mute') || '')
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean);
+          const nextMuted = mute.getAttribute('data-muted') !== '1';
+          Promise.all(ids.map((id) => self.patchMySubscription(id, { muted: nextMuted })))
+            .then(() => self.renderSubscriptionManager())
+            .catch((err) => {
+              if (item) item.classList.remove('is-updating', 'is-busy');
+              self.reportPlaceActionError(err);
+            });
+          return;
+        }
+        if (unsub) {
+          if (!window.confirm('Unsubscribe this device from these alerts?')) return;
+          if (item) item.classList.add('is-busy');
+          const ids = (unsub.getAttribute('data-notify-unsub') || '')
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean);
+          Promise.all(ids.map((id) => self.deleteMySubscription(id)))
+            .then(() => self.playPlaceRowExit(item))
+            .then(() => {
+              self.renderSubscriptionManager();
+              self.renderNotificationFeed();
+            })
+            .catch((err) => {
+              if (item) item.classList.remove('is-busy');
+              self.reportPlaceActionError(err);
+            });
+          return;
+        }
         const loc = unfollow.getAttribute('data-notify-unfollow-location') || '';
-        if (!confirm(loc ? 'Stop alerts for this location?' : 'Stop following this restaurant?')) return;
-        self.unfollowVenue(unfollow.getAttribute('data-notify-unfollow'), loc).then(() => {
-          self.renderSubscriptionManager();
-        });
-      }
-    });
+        if (!window.confirm(loc ? 'Stop alerts for this location?' : 'Stop following this restaurant?')) return;
+        if (item) item.classList.add('is-busy');
+        self
+          .unfollowVenue(unfollow.getAttribute('data-notify-unfollow'), loc)
+          .then(() => self.playPlaceRowExit(item))
+          .then(() => self.renderSubscriptionManager())
+          .catch((err) => {
+            if (item) item.classList.remove('is-busy');
+            self.reportPlaceActionError(err);
+          });
+      },
+      true
+    );
   },
 
   async patchMySubscription(id, body) {
+    await this.ensureNotifyAccessToken();
     const res = await fetch(`${this.notifyApiUrl()}/me/subscriptions/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: this.notifyAuthHeaders(),
@@ -2236,6 +2331,7 @@ const NotificationService = {
   },
 
   async deleteMySubscription(id) {
+    await this.ensureNotifyAccessToken();
     const res = await fetch(`${this.notifyApiUrl()}/me/subscriptions/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: this.notifyAuthHeaders(),
@@ -2252,6 +2348,7 @@ const NotificationService = {
   },
 
   async unfollowVenue(domain, locationKey) {
+    await this.ensureNotifyAccessToken();
     let path = `${this.notifyApiUrl()}/me/follows/${encodeURIComponent(domain)}`;
     if (locationKey) {
       path += `?location=${encodeURIComponent(locationKey)}`;

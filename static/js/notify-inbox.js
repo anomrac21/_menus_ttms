@@ -139,11 +139,22 @@
       id: raw.id || raw.delivery_id || '',
       title: raw.title || 'Menu alert',
       message: raw.message || raw.body || '',
-      type: raw.type || 'general',
+      type: raw.type || data.action || 'general',
       created_at: raw.created_at || raw.delivered_at || new Date().toISOString(),
       url: raw.url || data.url || data.link || '',
+      client_domain: raw.client_domain || data.client_domain || '',
       data: data,
     };
+  }
+
+  function matchesThisVenue(item) {
+    var domain = clientDomain().toLowerCase();
+    if (!domain || !item) return true;
+    var d = String(item.client_domain || '')
+      .replace(/^www\./i, '')
+      .toLowerCase();
+    if (!d) return true;
+    return d === domain;
   }
 
   function mergeItems() {
@@ -152,7 +163,7 @@
     Array.prototype.forEach.call(arguments, function (group) {
       (group || []).forEach(function (raw) {
         var item = normalizeItem(raw);
-        if (!item || !isGuestVisible(item)) return;
+        if (!item || !isGuestVisible(item) || !matchesThisVenue(item)) return;
         var key = item.id || item.title + '|' + item.created_at;
         if (byId[key]) return;
         byId[key] = true;
@@ -175,9 +186,11 @@
   }
 
   function typeLabel(type) {
-    if (type === 'menu_update') return 'Menu';
-    if (type === 'promotion') return 'Special';
-    if (type === 'order') return 'Order';
+    if (type === 'menu_update' || type === 'new_menu') return 'Menu';
+    if (type === 'promotion' || type === 'deals') return 'Special';
+    if (type === 'order' || type === 'order_ready' || type === 'order_paid' || type === 'delivered')
+      return 'Order';
+    if (type === 'nearby_client' || type === 'new_near') return 'Nearby';
     if (type === 'system') return 'Update';
     return 'Alert';
   }
@@ -320,10 +333,19 @@
     });
   }
 
-  async function fetchJson(url) {
-    var res = await fetch(url, { headers: { Accept: 'application/json' } });
+  async function fetchJson(url, headers) {
+    var res = await fetch(url, { headers: headers || { Accept: 'application/json' } });
     if (!res.ok) throw new Error(String(res.status));
     return res.json();
+  }
+
+  function authHeaders() {
+    var headers = { Accept: 'application/json' };
+    try {
+      var token = window.AuthClient && AuthClient.getAccessToken ? AuthClient.getAccessToken() : '';
+      if (token) headers.Authorization = 'Bearer ' + token;
+    } catch (e) {}
+    return headers;
   }
 
   async function loadInbox() {
@@ -333,54 +355,38 @@
     renderList(cached);
 
     var remote = [];
+    var errors = [];
     var subId = subscriptionId();
-    var domain = clientDomain();
     var base = apiBase();
 
-    function authHeaders() {
-      var headers = { Accept: 'application/json' };
+    if (window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated()) {
       try {
-        var token =
-          window.AuthClient && AuthClient.getAccessToken ? AuthClient.getAccessToken() : '';
-        if (token) headers.Authorization = 'Bearer ' + token;
-      } catch (e) {}
-      return headers;
-    }
-
-    async function fetchAuthJson(url) {
-      var res = await fetch(url, { headers: authHeaders() });
-      if (!res.ok) throw new Error(String(res.status));
-      return res.json();
-    }
-
-    try {
-      if (window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated()) {
-        var mine = await fetchAuthJson(base + '/me/notifications?limit=30');
+        if (typeof AuthClient.ensureAccessToken === 'function') {
+          await AuthClient.ensureAccessToken();
+        }
+      } catch (eToken) {}
+      try {
+        var mine = await fetchJson(base + '/me/notifications?limit=30', authHeaders());
         remote = remote.concat((mine && mine.notifications) || []);
+      } catch (eMe) {
+        errors.push('Could not load account alerts');
       }
-    } catch (eMe) {}
+    }
 
-    if (subId && !remote.length) {
+    if (subId) {
       try {
         var feed = await fetchJson(
           base + '/subscriptions/' + encodeURIComponent(subId) + '/notifications?limit=30'
         );
         remote = remote.concat((feed && feed.notifications) || []);
-      } catch (e) {}
-    }
-
-    if (domain) {
-      try {
-        var pub = await fetchJson(
-          base + '/notifications?client_domain=' + encodeURIComponent(domain) + '&limit=20'
-        );
-        remote = remote.concat((pub && pub.notifications) || []);
-      } catch (e) {}
+      } catch (eFeed) {
+        errors.push('Could not load device alerts');
+      }
     }
 
     var merged = mergeItems(remote, cached);
     writeCache(merged);
-    setStatus('');
+    setStatus(merged.length ? '' : errors[0] || '');
     renderList(merged);
     syncBadge(merged);
   }
