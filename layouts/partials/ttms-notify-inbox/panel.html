@@ -10,9 +10,12 @@
 					<p class="notify-inbox-subtitle">Recent updates from this menu</p>
 				</div>
 			</div>
-			<button type="button" class="notify-inbox-close ttms-icon-btn ttms-icon-btn--on-dark" onclick="if (typeof closeNotifyInbox === 'function') closeNotifyInbox(); return false;" aria-label="Close alerts">
-				<img src="https://cdn.ttmenus.com/icons/ui/close.svg" alt="" width="24" height="24" decoding="async">
-			</button>
+			<div class="notify-inbox-header-trailing">
+				{{ partial "ttms-account-dashboard/panel-button.html" . }}
+				<button type="button" class="notify-inbox-close ttms-icon-btn ttms-icon-btn--on-dark" onclick="if (typeof closeNotifyInbox === 'function') closeNotifyInbox(); return false;" aria-label="Close alerts">
+					<img src="https://cdn.ttmenus.com/icons/ui/close.svg" alt="" width="24" height="24" decoding="async">
+				</button>
+			</div>
 		</div>
 
 		<div class="notify-inbox-subscribe" id="notify-inbox-subscribe">

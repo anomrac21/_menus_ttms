@@ -132,6 +132,14 @@
     color: var(--notify-ink-muted);
 }
 
+.notify-inbox-header-trailing {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.notify-inbox-header .account-panel-btn,
 .notify-inbox-close {
     display: inline-flex;
     align-items: center;
@@ -143,13 +151,23 @@
     border-radius: 50%;
     border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
     background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    color: var(--notify-ink);
+    text-decoration: none;
     cursor: pointer;
 }
 
+.notify-inbox-header .account-panel-btn svg.icon,
 .notify-inbox-close img {
     width: 1.15rem;
     height: 1.15rem;
     opacity: 0.88;
+    color: inherit;
+    fill: currentColor;
+}
+
+body.ttms-logged-in .notify-inbox-header .account-panel-btn {
+    color: var(--scheme-success, #3dd68c);
+    border-color: color-mix(in srgb, var(--scheme-success, #3dd68c) 45%, transparent);
 }
 
 .notify-inbox-subscribe {
