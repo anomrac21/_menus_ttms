@@ -2,7 +2,13 @@
 {{- $deliveryEnabled := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
 {{- if $deliveryEnabled -}}
 {{- $loc := site.Params.location | default dict -}}
+{{- $mappin := site.Data.mappin | default dict -}}
+{{- $ms := site.Params.mapService | default dict -}}
+{{- $osrm := site.Params.osrm | default dict -}}
+{{- $mapUrl := $ms.url | default "https://maps.ttmenus.com" | strings.TrimSuffix "/" -}}
+{{- $osrmUrl := printf "%s/route/v1" ($osrm.url | default "https://osrm.ttmenus.com" | strings.TrimSuffix "/") -}}
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/delivery.css" }}">
+{{ partial "features/delivery_map.html" . }}
 <script>
 window.DELIVERY_CONFIG = {
   enabled: true,
@@ -14,7 +20,18 @@ window.DELIVERY_CONFIG = {
   restaurantLat: {{ default 0 $loc.lat }},
   restaurantLng: {{ default 0 $loc.lng }},
   currency: {{ ($ds.currency | default site.Params.paymentService.currency | default "TTD") | jsonify | safeJS }},
-  deliveryFee: {{ default 30 $ds.deliveryFee }}
+  deliveryFee: {{ default 30 $ds.deliveryFee }},
+  mapServiceUrl: {{ ($ms.url | default "https://maps.ttmenus.com") | jsonify | safeJS }},
+  dataSource: {{ ($ms.dataSource | default "trinidad-tobago") | jsonify | safeJS }},
+  osrmUrl: {{ $osrmUrl | jsonify | safeJS }},
+  dayStyle: {{ ($ms.dayStyle | default "/src/map/styles/ttmenus-day.json") | jsonify | safeJS }},
+  nightStyle: {{ ($ms.nightStyle | default "/src/map/styles/ttmenus-dark.json") | jsonify | safeJS }},
+  mappin: {
+    url: "/branding/mappin.webp",
+    fill: {{ (default "#000000" $mappin.fill) | jsonify | safeJS }},
+    border: {{ (default "#ffffff" $mappin.border) | jsonify | safeJS }},
+    borderWidth: {{ default 2 $mappin.border_width }}
+  }
 };
 (function (cfg) {
   if (!cfg) return;
@@ -28,12 +45,18 @@ window.DELIVERY_CONFIG = {
     }
     return s;
   }
+  var map = window.TTMS_MAP_CONFIG || {};
   cfg.apiUrl = unwrap(cfg.apiUrl);
   cfg.wsUrl = unwrap(cfg.wsUrl);
   cfg.clientId = unwrap(cfg.clientId);
   cfg.clientDomain = unwrap(cfg.clientDomain);
   cfg.restaurantName = unwrap(cfg.restaurantName);
   cfg.currency = unwrap(cfg.currency);
+  cfg.mapServiceUrl = unwrap(cfg.mapServiceUrl || map.mapServiceUrl);
+  cfg.dataSource = unwrap(cfg.dataSource || map.dataSource);
+  cfg.osrmUrl = unwrap(cfg.osrmUrl || map.osrmUrl);
+  cfg.dayStyle = unwrap(cfg.dayStyle || map.dayStyle);
+  cfg.nightStyle = unwrap(cfg.nightStyle || map.nightStyle);
 })(window.DELIVERY_CONFIG);
 </script>
 <script src="{{ partial "head/asset-url.html" "/js/delivery-client.js" }}" defer></script>

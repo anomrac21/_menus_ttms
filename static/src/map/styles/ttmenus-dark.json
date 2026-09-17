@@ -1,0 +1,303 @@
+{
+  "version": 8,
+  "name": "TT Menus Dark",
+  "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "tt": {
+      "type": "vector",
+      "tiles": ["https://maps.ttmenus.com/data/trinidad-tobago/{z}/{x}/{y}.pbf"],
+      "minzoom": 0,
+      "maxzoom": 14,
+      "bounds": [-62.083056, 9.873211, -60.289585, 11.562837],
+      "attribution": "© TT Menus Dark © OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#0a1a28" }
+    },
+    {
+      "id": "island-land",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "place", "island"]],
+      "paint": {
+        "fill-color": "#1a2430",
+        "fill-opacity": 1
+      }
+    },
+    {
+      "id": "admin-land",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": [
+        "all",
+        ["==", "$type", "Polygon"],
+        ["==", "boundary", "administrative"],
+        ["==", "admin_level", "4"]
+      ],
+      "paint": {
+        "fill-color": "#1c2632",
+        "fill-opacity": 0.5
+      }
+    },
+    {
+      "id": "landuse",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": ["all", ["==", "$type", "Polygon"], ["has", "landuse"]],
+      "paint": {
+        "fill-color": [
+          "match",
+          ["get", "landuse"],
+          "residential", "#1a1f27",
+          "commercial", "#1e222b",
+          "industrial", "#181c22",
+          "retail", "#1f2430",
+          "forest", "#132018",
+          "grass", "#15241a",
+          "meadow", "#15241a",
+          "farmland", "#1a2218",
+          "#161b22"
+        ],
+        "fill-opacity": 0.95
+      }
+    },
+    {
+      "id": "natural-land",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": [
+        "all",
+        ["==", "$type", "Polygon"],
+        ["has", "natural"],
+        ["!in", "natural", "water", "bay", "strait"]
+      ],
+      "paint": {
+        "fill-color": [
+          "match",
+          ["get", "natural"],
+          "wood", "#102018",
+          "scrub", "#14241c",
+          "grassland", "#15241a",
+          "beach", "#2a2618",
+          "sand", "#2a2618",
+          "wetland", "#122028",
+          "#132018"
+        ],
+        "fill-opacity": 0.95
+      }
+    },
+    {
+      "id": "leisure",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": ["all", ["==", "$type", "Polygon"], ["has", "leisure"]],
+      "paint": {
+        "fill-color": "#15241a",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": [
+        "all",
+        ["==", "$type", "Polygon"],
+        ["any", ["==", "natural", "water"], ["has", "water"]]
+      ],
+      "paint": { "fill-color": "#0b2a3d", "fill-opacity": 1 }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": ["all", ["==", "$type", "LineString"], ["has", "waterway"]],
+      "paint": {
+        "line-color": "#1a4a66",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 2]
+      }
+    },
+    {
+      "id": "buildings",
+      "type": "fill",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "minzoom": 12,
+      "filter": ["all", ["==", "$type", "Polygon"], ["has", "building"]],
+      "paint": {
+        "fill-color": "#252b36",
+        "fill-opacity": 0.9,
+        "fill-outline-color": "#323844"
+      }
+    },
+    {
+      "id": "road-casing",
+      "type": "line",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["has", "highway"],
+        ["!in", "highway", "path", "footway", "cycleway", "steps", "pedestrian"]
+      ],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#0a0c10",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8,
+          ["match", ["get", "highway"], "motorway", 3, "trunk", 2.5, "primary", 2, 1],
+          14,
+          ["match", ["get", "highway"], "motorway", 10, "trunk", 8, "primary", 7, "secondary", 5.5, "tertiary", 4.5, 3]
+        ]
+      }
+    },
+    {
+      "id": "road-fill",
+      "type": "line",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["has", "highway"],
+        ["!in", "highway", "path", "footway", "cycleway", "steps", "pedestrian"]
+      ],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": [
+          "match",
+          ["get", "highway"],
+          "motorway", "#c9a227",
+          "trunk", "#b8963a",
+          "primary", "#8a7a4a",
+          "secondary", "#4a5564",
+          "tertiary", "#3d4654",
+          "#343c48"
+        ],
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8,
+          ["match", ["get", "highway"], "motorway", 2, "trunk", 1.6, "primary", 1.2, 0.6],
+          14,
+          ["match", ["get", "highway"], "motorway", 7, "trunk", 6, "primary", 5, "secondary", 4, "tertiary", 3.2, 2]
+        ]
+      }
+    },
+    {
+      "id": "road-path",
+      "type": "line",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "minzoom": 13,
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["in", "highway", "path", "footway", "cycleway", "steps", "pedestrian"]
+      ],
+      "paint": {
+        "line-color": "#3a4250",
+        "line-width": 1,
+        "line-dasharray": [2, 2]
+      }
+    },
+    {
+      "id": "boundary",
+      "type": "line",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["==", "boundary", "administrative"]
+      ],
+      "paint": {
+        "line-color": "#4a5564",
+        "line-width": 1,
+        "line-dasharray": [4, 3],
+        "line-opacity": 0.5
+      }
+    },
+    {
+      "id": "island-outline",
+      "type": "line",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "place", "island"]],
+      "paint": {
+        "line-color": "#3a5060",
+        "line-width": 1.2,
+        "line-opacity": 0.8
+      }
+    },
+    {
+      "id": "place-label",
+      "type": "symbol",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "minzoom": 7,
+      "filter": ["all", ["has", "name"], ["has", "place"]],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          ["match", ["get", "place"], "island", 16, "city", 14, "town", 12, 10],
+          14,
+          ["match", ["get", "place"], "island", 22, "city", 20, "town", 16, 13]
+        ],
+        "text-max-width": 8,
+        "text-padding": 2
+      },
+      "paint": {
+        "text-color": "#d0d4da",
+        "text-halo-color": "#0d1117",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "road-label",
+      "type": "symbol",
+      "source": "tt",
+      "source-layer": "trinidad-tobago",
+      "minzoom": 12,
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["has", "name"],
+        ["has", "highway"]
+      ],
+      "layout": {
+        "symbol-placement": "line",
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 11,
+        "text-max-angle": 30
+      },
+      "paint": {
+        "text-color": "#a8b0bc",
+        "text-halo-color": "#0d1117",
+        "text-halo-width": 1.2
+      }
+    }
+  ]
+}

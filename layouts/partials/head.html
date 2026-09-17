@@ -2,6 +2,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 {{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
+{{- $siteName := partial "site-name.html" . -}}
+{{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
+{{- $metaDesc := .Description | default site.Params.description | default (printf "%s: view our full menu, prices, and order online." $siteName) -}}
+{{- $ogTitle := cond .IsHome $pageTitle (printf "%s | %s" .Title site.Title) -}}
+{{- $ogDesc := $metaDesc -}}
+{{- if and (not .IsHome) .Summary -}}
+  {{- $ogDesc = printf "%s. Digital Menu" (.Summary | plainify | truncate 155) -}}
+{{- end -}}
+<title>{{ $pageTitle }}</title>
+<meta name="description" content="{{ $metaDesc }}">
+{{- $canonical := .Permalink | absURL -}}
+{{- if hasPrefix $canonical "//" -}}
+  {{- $canonical = printf "https:%s" $canonical -}}
+{{- end -}}
+{{- if or (not (findRE `(?i)^https?://` $canonical)) (eq $canonical "/") -}}
+  {{- $canonicalBase := site.BaseURL | absURL -}}
+  {{- if eq hugo.Environment "development" -}}
+    {{- $canonicalBase = "http://localhost:1313" -}}
+  {{- end -}}
+  {{- $canonical = printf "%s%s" (strings.TrimSuffix "/" $canonicalBase) (cond (eq .RelPermalink "/") "/" .RelPermalink) -}}
+{{- else if eq hugo.Environment "development" -}}
+  {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
+{{- end -}}
+<link rel="canonical" href="{{ $canonical }}">
+{{ partial "head/open-graph.html" (dict "Page" . "Title" $ogTitle "Description" $ogDesc "URL" $canonical "SiteName" $siteName) }}
 <script>
 (function (doc) {
   if (/Android/i.test(navigator.userAgent || '')) {
@@ -184,32 +209,6 @@
     padding-block-end: calc(8.5rem + var(--ttms-safe-bottom, 0px));
   }
 </style>
-{{- $siteName := partial "site-name.html" . -}}
-{{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
-{{- $metaDesc := .Description | default site.Params.description | default (printf "%s: view our full menu, prices, and order online." $siteName) -}}
-{{- $ogTitle := cond .IsHome $pageTitle (printf "%s | %s" .Title site.Title) -}}
-{{- $ogDesc := $metaDesc -}}
-{{- if and (not .IsHome) .Summary -}}
-  {{- $ogDesc = printf "%s. Digital Menu" (.Summary | plainify | truncate 155) -}}
-{{- end -}}
-<title>{{ $pageTitle }}</title>
-<meta name="description" content="{{ $metaDesc }}">
-{{- $canonical := .Permalink | absURL -}}
-{{- if hasPrefix $canonical "//" -}}
-  {{- $canonical = printf "https:%s" $canonical -}}
-{{- end -}}
-{{- if or (not (findRE `(?i)^https?://` $canonical)) (eq $canonical "/") -}}
-  {{- $canonicalBase := site.BaseURL | absURL -}}
-  {{- if eq hugo.Environment "development" -}}
-    {{- $canonicalBase = "http://localhost:1313" -}}
-  {{- end -}}
-  {{- $canonical = printf "%s%s" (strings.TrimSuffix "/" $canonicalBase) (cond (eq .RelPermalink "/") "/" .RelPermalink) -}}
-{{- else if eq hugo.Environment "development" -}}
-  {{- $canonical = printf "http://localhost:1313%s" .RelPermalink -}}
-{{- end -}}
-<link rel="canonical" href="{{ $canonical }}">
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") -}}
-{{- $menuPublicSite := not $dashboardLayout -}}
 
 <!-- Preload critical loader resources FIRST -->
 <link rel="preload" href="https://cdn.ttmenus.com/branding/ttmenus/ttmenus.gif" as="image" fetchpriority="high">
@@ -805,29 +804,6 @@
 {{- if $menuPublicSite -}}
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-panel.js" }}" defer></script>
 {{- end -}}
-{{- $ogImage := "/branding/favicon152.webp" -}}
-{{- $images := slice -}}
-{{- if and .Params.images (hasPrefix (printf "%T" .Params.images) "map") -}}
-  {{- with index .Params.images "primary" }}{{ $images = $images | append . }}{{ end -}}
-  {{- with index .Params.images "secondary" }}{{ $images = $images | append . }}{{ end -}}
-{{- else if .Params.images -}}
-  {{- range .Params.images -}}
-    {{- if .image }}{{ $images = $images | append .image }}{{ end -}}
-  {{- end -}}
-{{- end -}}
-{{- if gt (len $images) 0 -}}
-  {{- $ogImage = printf "/%s" (index $images 0) -}}
-{{- end -}}
-<meta property="og:title" content="{{ $ogTitle }}">
-<meta property="og:description" content="{{ $ogDesc }}">
-<meta property="og:url" content="{{ .Permalink | absURL }}">
-<meta property="og:type" content="{{ if .IsHome }}website{{ else }}article{{ end }}">
-<meta property="og:site_name" content="{{ $siteName }}">
-<meta property="og:image" content="{{ $ogImage | absURL }}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ $ogTitle }}">
-<meta name="twitter:description" content="{{ $ogDesc }}">
-<meta name="twitter:image" content="{{ $ogImage | absURL }}">
 
 <!--APPLE SUPPORT-->
 <meta name="apple-mobile-web-app-capable" content="yes">

@@ -65,14 +65,17 @@
   }
 
   async function ensureNotifyToken() {
-    if (window.AuthClient && AuthClient.getAccessToken && AuthClient.getAccessToken()) {
-      return AuthClient.getAccessToken();
+    try {
+      if (window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
+        var result = await AuthClient.ensureAccessToken();
+        if (result && result.success === false) {
+          /* keep any existing token */
+        }
+      }
+    } catch (e) {
+      /* ignore */
     }
-    if (window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
-      var result = await AuthClient.ensureAccessToken();
-      if (result.success) return AuthClient.getAccessToken();
-    }
-    return null;
+    return window.AuthClient && AuthClient.getAccessToken ? AuthClient.getAccessToken() : null;
   }
 
   async function notifyFetch(path, options) {

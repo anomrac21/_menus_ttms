@@ -30,6 +30,8 @@ body.ttms-scroll-locked {
 /* Fallback when JS has not yet toggled ttms-scroll-locked */
 body.cart-open,
 body.modal-open,
+body.is-notify-opening,
+body.is-notify-closing,
 body.table-modal-open,
 body.menu-reels-item-modal-open,
 body.ads-reels-open {

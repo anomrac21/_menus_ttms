@@ -18,7 +18,11 @@
   }
 
   function getHeaderBtn() {
-    return document.querySelector('[data-opens="notify-inbox"]') || document.getElementById('subBtnHeader');
+    return (
+      document.querySelector('[data-opens="notify-inbox"]') ||
+      document.getElementById('headerNotificationBtn') ||
+      document.getElementById('subBtnHeader')
+    );
   }
 
   function prefersReducedMotion() {
@@ -34,12 +38,18 @@
         cfg = {};
       }
     }
+    if ((!cfg || typeof cfg !== 'object') && window.SiteConfig) {
+      cfg = {};
+    }
     return cfg && typeof cfg === 'object' ? cfg : {};
   }
 
   function apiBase() {
     var cfg = notifyConfig();
-    return String(cfg.apiUrl || 'https://notify.ttmenus.com/api/v1').replace(/\/+$/, '');
+    if (cfg.apiUrl) return String(cfg.apiUrl).replace(/\/+$/, '');
+    var service =
+      (window.SiteConfig && window.SiteConfig.notifyServiceUrl) || 'https://notify.ttmenus.com';
+    return String(service).replace(/\/+$/, '') + '/api/v1';
   }
 
   function clientDomain() {
@@ -435,9 +445,15 @@
     document.body.classList.remove('is-notify-opening', 'is-notify-closing');
     var dash = document.getElementById('dashboard');
     var account = document.getElementById('account-dashboard');
+    var tastes = document.getElementById('ttms-guest-taste-modal');
     var otherOpen =
-      (dash && !dash.classList.contains('loader-hide-left') && !dash.classList.contains('is-dashboard-closing')) ||
-      (account && !account.classList.contains('loader-hide-right'));
+      (dash &&
+        !dash.classList.contains('loader-hide-left') &&
+        !dash.classList.contains('is-dashboard-closing')) ||
+      (account && !account.classList.contains('loader-hide-right')) ||
+      (tastes &&
+        !tastes.classList.contains('ttms-guest-taste-hidden') &&
+        !tastes.classList.contains('is-taste-closing'));
     if (!otherOpen) document.body.classList.remove('modal-open');
     syncExpanded();
   }
@@ -450,6 +466,7 @@
     if (typeof window.closeAllUiPanels === 'function') {
       window.closeAllUiPanels({ keepNotifyInbox: true, skipReelsModal: true });
     }
+    if (typeof window.closeGuestTasteModal === 'function') window.closeGuestTasteModal({ instant: true });
 
     clearTimeout(animTimer);
     setOrigin(panel);

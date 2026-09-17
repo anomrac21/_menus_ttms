@@ -1544,6 +1544,9 @@
     if (!options.keepNotifyInbox && typeof window.closeNotifyInbox === 'function') {
       window.closeNotifyInbox({ instant: true });
     }
+    if (typeof window.closeGuestTasteModal === 'function') {
+      window.closeGuestTasteModal({ instant: true });
+    }
     if (!options.keepSearch) {
       if (typeof window.closeSearch === 'function') {
         window.closeSearch();

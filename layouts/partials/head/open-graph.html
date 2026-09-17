@@ -1,0 +1,79 @@
+{{- /*
+  Share tags for WhatsApp / Facebook / iMessage. Must render near the top of <head>
+  (before the loader CSS) or crawlers never see them.
+*/ -}}
+{{- $p := .Page -}}
+{{- $ogTitle := .Title -}}
+{{- $ogDesc := .Description -}}
+{{- $ogURL := .URL -}}
+{{- $siteName := .SiteName -}}
+{{- $ogPath := "" -}}
+{{- with $p.Site.Params.og.image }}{{ $ogPath = . }}{{ end -}}
+{{- if not $ogPath -}}
+  {{- with $p.Params.image }}{{ $ogPath = . }}{{ end -}}
+{{- end -}}
+{{- if not $ogPath -}}
+  {{- $images := slice -}}
+  {{- if and $p.Params.images (hasPrefix (printf "%T" $p.Params.images) "map") -}}
+    {{- with index $p.Params.images "primary" }}{{ $images = $images | append . }}{{ end -}}
+    {{- with index $p.Params.images "secondary" }}{{ $images = $images | append . }}{{ end -}}
+  {{- else if $p.Params.images -}}
+    {{- range $p.Params.images -}}
+      {{- if .image }}{{ $images = $images | append .image }}{{ end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if gt (len $images) 0 -}}
+    {{- $ogPath = index $images 0 -}}
+  {{- end -}}
+{{- end -}}
+{{- $isBranding := or (hasPrefix (printf "%s" $ogPath) "/branding") (hasPrefix (printf "%s" $ogPath) "branding/") -}}
+{{- if not $ogPath -}}
+  {{- $ogPath = "/branding/favicon512.webp" -}}
+  {{- $isBranding = true -}}
+{{- end -}}
+{{- $ogImage := "" -}}
+{{- if findRE `(?i)^https?://` $ogPath -}}
+  {{- $ogImage = $ogPath -}}
+{{- else -}}
+  {{- $rel := $ogPath -}}
+  {{- if not (hasPrefix $rel "/") -}}{{- $rel = printf "/%s" $rel -}}{{- end -}}
+  {{- $ogImage = $rel | absURL -}}
+{{- end -}}
+{{- $ogType := "image/webp" -}}
+{{- if findRE `(?i)\.jpe?g(\?|$)` $ogImage }}{{ $ogType = "image/jpeg" }}{{ end -}}
+{{- if findRE `(?i)\.png(\?|$)` $ogImage }}{{ $ogType = "image/png" }}{{ end -}}
+{{- $ogW := 1200 -}}
+{{- $ogH := 630 -}}
+{{- $card := "summary_large_image" -}}
+{{- if $isBranding -}}
+  {{- $card = "summary" -}}
+  {{- $ogW = 512 -}}
+  {{- $ogH = 512 -}}
+{{- end -}}
+{{- $thumborOn := or $p.Site.Params.thumbor.menuImagesUseThumbor $p.Site.Params.thumbor.enabled -}}
+{{- if eq hugo.Environment "development" }}{{ $thumborOn = false }}{{ end -}}
+{{- $skipThumbor := or $isBranding (findRE `(?i)^https?://([^/]*\.)?cdn\.ttmenus\.com/` $ogImage) (findRE `(?i)thumbor\.ttmenus\.com` $ogImage) -}}
+{{- if and $thumborOn (not $skipThumbor) $ogImage -}}
+  {{- $base := strings.TrimSuffix "/" ($p.Site.Params.thumbor.url | default "https://thumbor.ttmenus.com") -}}
+  {{- $abs := strings.Replace $ogImage "+" "%2B" -}}
+  {{- $enc := strings.Replace ($abs | urlquery) "+" "%20" -}}
+  {{- $ogImage = print $base "/unsafe/" $ogW "x" $ogH "/filters:format(jpeg)/" $enc -}}
+  {{- $ogType = "image/jpeg" -}}
+{{- end -}}
+<meta property="og:title" content="{{ $ogTitle }}">
+<meta property="og:description" content="{{ $ogDesc }}">
+<meta property="og:url" content="{{ $ogURL }}">
+<meta property="og:type" content="{{ if $p.IsHome }}website{{ else }}article{{ end }}">
+<meta property="og:site_name" content="{{ $siteName }}">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="{{ $ogImage }}">
+<meta property="og:image:secure_url" content="{{ $ogImage }}">
+<meta property="og:image:type" content="{{ $ogType }}">
+<meta property="og:image:width" content="{{ $ogW }}">
+<meta property="og:image:height" content="{{ $ogH }}">
+<meta property="og:image:alt" content="{{ $ogTitle }}">
+<meta name="twitter:card" content="{{ $card }}">
+<meta name="twitter:title" content="{{ $ogTitle }}">
+<meta name="twitter:description" content="{{ $ogDesc }}">
+<meta name="twitter:image" content="{{ $ogImage }}">
+<meta name="twitter:image:alt" content="{{ $ogTitle }}">

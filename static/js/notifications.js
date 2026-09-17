@@ -180,6 +180,7 @@ const NotificationService = {
     this.setupServiceWorkerMessageHandler();
     this.checkSubscriptionStatus();
     this.loadSubscriptionFromStorage();
+    this.bindSubscriptionManager();
 
     // Defer service worker / push / WebSocket until user has subscribed.
     // Avoids Local Network Access prompts on first visit (Chrome/Edge).
@@ -1579,6 +1580,15 @@ const NotificationService = {
       backgroundPush
     );
 
+    this.applySubscribeButtonState(
+      document.getElementById('headerNotificationBtn'),
+      document.getElementById('headerNotificationBtn') &&
+        document.getElementById('headerNotificationBtn').querySelector('.notification-subscribe-btn__text'),
+      null,
+      isSubscribed,
+      backgroundPush
+    );
+
     if (window.NotifyInbox && typeof window.NotifyInbox.syncSubscribe === 'function') {
       window.NotifyInbox.syncSubscribe();
     }
@@ -1630,6 +1640,7 @@ const NotificationService = {
       return { ok: false };
     }
     try {
+      await this.ensureNotifyAccessToken();
       const body = { client_domain: domain };
       if (locationKey) body.location_key = locationKey;
       const res = await fetch(`${this.notifyApiUrl()}/me/follows`, {
@@ -2135,6 +2146,7 @@ const NotificationService = {
     const fillStatus = (msg) => {
       lists.forEach((el) => {
         el.innerHTML = '';
+        delete el.dataset.notifyVenuesPainted;
       });
       if (status) {
         status.hidden = !msg;
@@ -2167,8 +2179,9 @@ const NotificationService = {
       status.hidden = true;
       status.textContent = '';
     }
+    const settled = Array.from(lists).some((el) => el.dataset.notifyVenuesPainted === '1');
     const html = rows
-      .map((row) => {
+      .map((row, idx) => {
         const name = this.escapeFeedHtml(this.displayPlaceName(row));
         const domain = this.escapeFeedHtml(row.client_domain || '');
         const loc = this.escapeFeedHtml(row.location_key || '');
@@ -2192,8 +2205,9 @@ const NotificationService = {
             : ids.length
               ? `<button type="button" class="ttms-guest-notify-venues__btn ttms-guest-notify-venues__btn--danger" data-notify-unsub="${idAttr}">Unsubscribe</button>`
               : '';
+        const settledClass = settled ? ' is-settled' : '';
         return (
-          `<li class="ttms-guest-notify-venues__item" data-kind="${this.escapeFeedHtml(row.kind || '')}">` +
+          `<li class="ttms-guest-notify-venues__item${settledClass}" style="--i:${idx}" data-kind="${this.escapeFeedHtml(row.kind || '')}">` +
           `<div class="ttms-guest-notify-venues__copy">` +
           `<strong class="ttms-guest-notify-venues__name">${name}</strong>` +
           `<span class="ttms-guest-notify-venues__meta">${kind}${muted ? ' · muted' : ''}</span>` +

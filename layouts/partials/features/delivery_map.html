@@ -1,0 +1,18 @@
+{{- $ms := site.Params.mapService | default dict -}}
+{{- $osrm := site.Params.osrm | default dict -}}
+{{- $mapUrl := $ms.url | default "https://maps.ttmenus.com" | strings.TrimSuffix "/" -}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/maplibre-clusters.css" }}">
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/ttms-map-pins.css" }}">
+<script>
+window.TTMS_MAP_CONFIG = {
+  mapServiceUrl: {{ $mapUrl | jsonify | safeJS }},
+  dataSource: {{ ($ms.dataSource | default "trinidad-tobago") | jsonify | safeJS }},
+  osrmUrl: {{ (printf "%s/route/v1" ($osrm.url | default "https://osrm.ttmenus.com" | strings.TrimSuffix "/")) | jsonify | safeJS }},
+  dayStyle: {{ ($ms.dayStyle | default "/src/map/styles/ttmenus-day.json") | jsonify | safeJS }},
+  nightStyle: {{ ($ms.nightStyle | default "/src/map/styles/ttmenus-dark.json") | jsonify | safeJS }}
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js" crossorigin="anonymous"></script>
+<script src="{{ partial "head/asset-url.html" "/js/ttms-maplibre.js" }}"></script>
+<script src="{{ partial "head/asset-url.html" "/js/delivery-map.js" }}"></script>

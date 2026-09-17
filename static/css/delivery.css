@@ -191,6 +191,341 @@ body.ttms-delivery-open {
   gap: 0.85rem;
 }
 
+.ttms-delivery-stepper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0 0 0.15rem;
+  padding: 0;
+}
+
+.ttms-delivery-stepper li {
+  position: relative;
+  margin: 0;
+  padding: 0.45rem 0.55rem 0.5rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 5%, transparent);
+  color: var(--ttms-del-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.ttms-delivery-stepper li::before {
+  content: attr(data-step-dot);
+  display: inline-block;
+  margin-right: 0.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  line-height: 1.15rem;
+  background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
+}
+
+.ttms-delivery-stepper li.is-active {
+  color: var(--ttms-del-ink);
+  border-color: color-mix(in srgb, var(--scheme-button-bg) 40%, color-mix(in srgb, var(--scheme-white) 12%, transparent));
+  background: color-mix(in srgb, var(--scheme-button-bg) 16%, color-mix(in srgb, var(--scheme-white) 5%, transparent));
+}
+
+.ttms-delivery-stepper li.is-active::before,
+.ttms-delivery-stepper li.is-done::before {
+  background: color-mix(in srgb, var(--scheme-button-bg) 82%, var(--scheme-white));
+  color: color-mix(in srgb, var(--scheme-black) 82%, transparent);
+}
+
+.ttms-delivery-stepper li.is-done {
+  color: var(--ttms-del-ink);
+}
+
+.ttms-delivery-step[hidden] {
+  display: none !important;
+}
+
+.ttms-delivery-form[data-step="2"] .ttms-delivery-map {
+  height: min(22rem, 52vh);
+}
+
+.ttms-delivery-panel.is-checkout {
+  padding: 0;
+  place-items: stretch;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-panel__sheet {
+  width: 100%;
+  max-height: none;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0a1a28;
+  box-shadow: none;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-panel__header {
+  flex-shrink: 0;
+  padding-top: max(0.85rem, env(safe-area-inset-top, 0));
+  border-bottom: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--scheme-black) 28%, #0a1a28) 0%,
+      #0a1a28 100%
+    );
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-panel__header h2,
+.ttms-delivery-panel.is-checkout .ttms-delivery-panel__sub,
+.ttms-delivery-panel.is-checkout .ttms-delivery-panel__close {
+  color: #fff;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-form {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  gap: 0;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-stepper {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 1rem 0.75rem;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-step[data-step-panel="1"]:not([hidden]) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-step[data-step-panel="1"] .ttms-delivery-lede {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 1rem 0.85rem;
+  color: color-mix(in srgb, #fff 68%, transparent);
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-step[data-step-panel="1"] .ttms-delivery-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 1rem 0.5rem;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-step[data-step-panel="1"] .ttms-delivery-actions {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.85rem max(1rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--scheme-black) 42%, transparent) 28%,
+    color-mix(in srgb, var(--scheme-black) 72%, transparent) 100%
+  );
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-step[data-step-panel="1"] .ttms-delivery-cta--primary {
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+.ttms-delivery-panel.is-checkout .ttms-delivery-field span {
+  color: color-mix(in srgb, #fff 72%, transparent);
+}
+
+.ttms-delivery-panel.is-map-step {
+  padding: 0;
+  place-items: stretch;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-panel__sheet {
+  width: 100%;
+  max-height: none;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0a1a28;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-panel__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  padding-top: max(0.85rem, env(safe-area-inset-top, 0));
+  border-bottom: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--scheme-black) 62%, transparent) 0%,
+      color-mix(in srgb, var(--scheme-black) 18%, transparent) 70%,
+      transparent 100%
+    );
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-panel__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-form,
+.ttms-delivery-panel.is-map-step .ttms-delivery-step--map,
+.ttms-delivery-panel.is-map-step .ttms-delivery-map-stage,
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-stepper {
+  display: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-panel__header h2,
+.ttms-delivery-panel.is-map-step .ttms-delivery-panel__sub,
+.ttms-delivery-panel.is-map-step .ttms-delivery-panel__close {
+  color: #fff;
+}
+
+.ttms-delivery-panel.is-map-step .maplibregl-ctrl-top-right {
+  top: calc(5.35rem + env(safe-area-inset-top, 0px));
+  right: 0.75rem;
+}
+
+.ttms-delivery-panel.is-map-step .maplibregl-ctrl-top-left {
+  top: calc(5.35rem + env(safe-area-inset-top, 0px));
+  left: 0.75rem;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-map-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem max(0.85rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px)) max(0.85rem, env(safe-area-inset-left, 0px));
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--scheme-black) 42%, transparent) 28%,
+    color-mix(in srgb, var(--scheme-black) 72%, transparent) 100%
+  );
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__head {
+  position: static;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__head strong {
+  display: inline;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__hint {
+  color: #fff;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__locate {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--scheme-white) 24%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__locate:hover,
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__locate:focus-visible {
+  background: color-mix(in srgb, var(--scheme-white) 22%, transparent);
+  border-color: color-mix(in srgb, var(--scheme-white) 36%, transparent);
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-pin__hint {
+  position: absolute;
+  left: max(0.85rem, env(safe-area-inset-left, 0px));
+  right: max(0.85rem, env(safe-area-inset-right, 0px));
+  bottom: calc(7.4rem + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+  margin: 0;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--scheme-black) 62%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-align: center;
+  pointer-events: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-actions {
+  position: static;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-actions .ttms-delivery-cta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-eta {
+  margin: 0;
+}
+
 .ttms-delivery-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -265,7 +600,7 @@ body.ttms-delivery-open {
 
 .ttms-delivery-pin__head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.7rem;
@@ -275,15 +610,219 @@ body.ttms-delivery-open {
   font-size: 0.88rem;
 }
 
-.ttms-delivery-pin__head span {
+.ttms-delivery-pin__head span,
+.ttms-delivery-pin__hint {
   font-size: 0.75rem;
   color: var(--ttms-del-muted);
+}
+
+.ttms-delivery-pin__hint {
+  margin: 0.65rem 0 0;
+}
+
+.ttms-delivery-pin__locate {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+  color: var(--ttms-del-ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 8%, transparent);
+}
+
+.ttms-delivery-pin__locate:hover,
+.ttms-delivery-pin__locate:focus-visible {
+  background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
+  border-color: color-mix(in srgb, var(--scheme-white) 28%, transparent);
+  outline: none;
+}
+
+.ttms-delivery-pin__locate:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .ttms-delivery-coords {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.65rem;
+}
+
+.ttms-delivery-map {
+  position: relative;
+  width: 100%;
+  height: 15.5rem;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  background: color-mix(in srgb, var(--scheme-black) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 6%, transparent);
+}
+
+.ttms-delivery-map:empty::before {
+  content: 'Loading map…';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.82rem;
+  color: var(--ttms-del-muted);
+}
+
+.ttms-delivery-map .maplibregl-map {
+  width: 100%;
+  height: 100%;
+  background: color-mix(in srgb, var(--scheme-black) 22%, #d7d3c8);
+  font: inherit;
+}
+
+.ttms-delivery-map .maplibregl-ctrl-attrib {
+  max-width: 70%;
+  font-size: 0.62rem;
+}
+
+.ttms-map-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ttms-map-marker__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  color: #111;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--scheme-black) 35%, transparent);
+}
+
+.ttms-map-marker__pin i {
+  transform: rotate(45deg);
+  font-size: 0.85rem;
+}
+
+.ttms-map-marker--dropoff .ttms-map-marker__pin {
+  background: color-mix(in srgb, var(--scheme-button-bg) 88%, var(--scheme-white));
+}
+
+.ttms-map-marker--shop .ttms-map-marker__pin {
+  background: color-mix(in srgb, var(--selected-button-color3) 82%, var(--scheme-white));
+}
+
+.ttms-map-marker--driver .ttms-map-marker__pin {
+  background: color-mix(in srgb, var(--scheme-white) 92%, var(--scheme-button-bg));
+}
+
+.ttms-delivery-map .ttms-map-pin {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--ttms-map-pin-color, #000);
+}
+
+.ttms-delivery-map .ttms-map-pin__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+.ttms-delivery-map .ttms-map-pin__icon {
+  position: absolute;
+  left: 50%;
+  top: 36%;
+  transform: translate(-50%, -50%);
+  width: 52%;
+  height: 52%;
+  border-radius: 50%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ttms-delivery-eta {
+  margin: 0 0 1.65rem 0.45rem;
+  padding: 0.42rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+  background: color-mix(in srgb, var(--scheme-black) 72%, transparent);
+  color: var(--scheme-white);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--scheme-black) 28%, transparent);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ttms-delivery-eta[hidden] {
+  display: none;
+}
+
+.ttms-delivery-map[data-map-mode="night"],
+.ttms-delivery-map.is-night,
+.ttms-delivery-map[data-map-mode="night"] .maplibregl-map,
+.ttms-delivery-map.is-night .maplibregl-map {
+  background: #0a1a28;
+}
+
+.ttms-delivery-map[data-map-mode="night"] .maplibregl-ctrl-attrib,
+.ttms-delivery-map.is-night .maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, #0a1a28 82%, transparent);
+  color: #c5d0dc;
+}
+
+.ttms-delivery-map[data-map-mode="night"] .maplibregl-ctrl-attrib a,
+.ttms-delivery-map.is-night .maplibregl-ctrl-attrib a {
+  color: #d7e4f4;
+}
+
+.ttms-delivery-map-mode {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin: 10px 10px 0 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--scheme-white) 88%, transparent);
+  color: #1c1c1c;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--scheme-black) 16%, transparent);
+  cursor: pointer;
+}
+
+.ttms-delivery-map[data-map-mode="night"] .ttms-delivery-map-mode,
+.ttms-delivery-map.is-night .ttms-delivery-map-mode {
+  background: #1a2a38;
+  color: #e8eef6;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.ttms-delivery-map-mode__moon,
+.ttms-delivery-map-mode.is-night .ttms-delivery-map-mode__sun {
+  display: none;
+}
+
+.ttms-delivery-map-mode.is-night .ttms-delivery-map-mode__moon {
+  display: inline-flex;
 }
 
 .ttms-delivery-actions {
@@ -481,9 +1020,9 @@ body.ttms-delivery-open {
   background: color-mix(in srgb, var(--scheme-white) 5%, transparent);
 }
 
-.ttms-live-map {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.85rem;
+.ttms-live-map.ttms-delivery-map {
+  padding: 0;
+  height: 16rem;
 }
 
 .ttms-delivery-scan label {
@@ -582,6 +1121,12 @@ body.ttms-delivery-open {
   background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.82rem;
+}
+
+.dashboard-delivery-page .ttms-delivery-order-track.ttms-delivery-map {
+  padding: 0;
+  height: 14.5rem;
+  font-family: inherit;
 }
 
 @keyframes ttms-del-scrim-in {

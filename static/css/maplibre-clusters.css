@@ -1,0 +1,581 @@
+/* Cluster bubbles for MapLibre HTML markers (Supercluster)
+ * Root .marker-cluster is the MapLibre host (owns translate transform).
+ * Visual bounce lives on .marker-cluster__visual so it never fights MapLibre.
+ *
+ * Size tiers (point count → meaning):
+ *   tiny   2–4   sparse neighborhood
+ *   small  5–9   local group
+ *   medium 10–24 busy area
+ *   large  25–49 dense hub
+ *   xl     50+   major hotspot
+ */
+.marker-cluster {
+  --ttms-cluster-ring: color-mix(in srgb, var(--ttms-cluster-hue, #2d8a4e) 40%, transparent);
+  --ttms-cluster-border: color-mix(in srgb, var(--ttms-cluster-hue, #2d8a4e) 55%, #fff 18%);
+  --ttms-cluster-core: color-mix(in srgb, var(--ttms-cluster-hue, #2d8a4e) 88%, #0a1210);
+  --ttms-cluster-ink: #ffffff;
+  --ttms-cluster-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  width: 46px;
+  height: 46px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.marker-cluster__visual {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--ttms-cluster-ring);
+  border: 1px solid var(--ttms-cluster-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--ttms-cluster-shadow);
+  transform-origin: 50% 50%;
+  transition: box-shadow .15s ease, background .2s ease, border-color .2s ease;
+}
+
+.marker-cluster__visual > div {
+  width: 34px;
+  height: 34px;
+  margin: 0 !important;
+  border-radius: 50%;
+  background: var(--ttms-cluster-core);
+  color: var(--ttms-cluster-ink);
+  font: 700 13px/34px "Segoe UI", system-ui, sans-serif;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  transition: background .2s ease, color .2s ease;
+}
+
+.marker-cluster:hover .marker-cluster__visual {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transform: scale(1.08);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* —— Count tiers —— */
+.marker-cluster-tiny {
+  --ttms-cluster-hue: #2d8a4e; /* green — sparse */
+}
+
+.marker-cluster-small {
+  --ttms-cluster-hue: #0d9488; /* teal — local group */
+}
+
+.marker-cluster-medium {
+  --ttms-cluster-hue: #3943e7; /* blue — busy */
+  width: 50px;
+  height: 50px;
+}
+
+.marker-cluster-medium .marker-cluster__visual > div {
+  width: 38px;
+  height: 38px;
+  font-size: 12px;
+  line-height: 38px;
+}
+
+.marker-cluster-large {
+  --ttms-cluster-hue: #7c3aed; /* violet — dense hub */
+  width: 56px;
+  height: 56px;
+}
+
+.marker-cluster-large .marker-cluster__visual > div {
+  width: 42px;
+  height: 42px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 42px;
+}
+
+.marker-cluster-xl {
+  --ttms-cluster-hue: #d97706; /* amber — major hotspot */
+  width: 62px;
+  height: 62px;
+}
+
+.marker-cluster-xl .marker-cluster__visual > div {
+  width: 46px;
+  height: 46px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 46px;
+}
+
+/* —— Day basemap —— bright cores that read on light tiles —— */
+[data-map-mode="day"] .marker-cluster {
+  --ttms-cluster-ring: color-mix(in srgb, var(--ttms-cluster-hue) 24%, #ffffff 58%);
+  --ttms-cluster-border: color-mix(in srgb, var(--ttms-cluster-hue) 72%, #ffffff 18%);
+  --ttms-cluster-core: color-mix(in srgb, var(--ttms-cluster-hue) 94%, #ffffff 6%);
+  --ttms-cluster-ink: #ffffff;
+  --ttms-cluster-shadow:
+    0 2px 10px color-mix(in srgb, var(--ttms-cluster-hue) 32%, transparent),
+    0 1px 3px rgba(15, 23, 42, 0.16);
+}
+
+/* Clear daylight ladder: green → teal → blue → rose → orange */
+[data-map-mode="day"] .marker-cluster-tiny { --ttms-cluster-hue: #16a34a; }
+[data-map-mode="day"] .marker-cluster-small { --ttms-cluster-hue: #0d9488; }
+[data-map-mode="day"] .marker-cluster-medium { --ttms-cluster-hue: #2563eb; }
+[data-map-mode="day"] .marker-cluster-large { --ttms-cluster-hue: #e11d48; }
+[data-map-mode="day"] .marker-cluster-xl { --ttms-cluster-hue: #ea580c; }
+
+[data-map-mode="day"] .marker-cluster__visual > div {
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset;
+}
+
+/* —— Night basemap —— glow on dark tiles —— */
+[data-map-mode="night"] .marker-cluster {
+  --ttms-cluster-ring: color-mix(in srgb, var(--ttms-cluster-hue) 38%, transparent);
+  --ttms-cluster-border: color-mix(in srgb, var(--ttms-cluster-hue) 55%, #fff 12%);
+  --ttms-cluster-core: color-mix(in srgb, var(--ttms-cluster-hue) 78%, #020617 18%);
+  --ttms-cluster-ink: #f8fafc;
+  --ttms-cluster-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+
+[data-map-mode="night"] .marker-cluster-tiny { --ttms-cluster-hue: #34d399; }
+[data-map-mode="night"] .marker-cluster-small { --ttms-cluster-hue: #2dd4bf; }
+[data-map-mode="night"] .marker-cluster-medium { --ttms-cluster-hue: #818cf8; }
+[data-map-mode="night"] .marker-cluster-large { --ttms-cluster-hue: #c084fc; }
+[data-map-mode="night"] .marker-cluster-xl { --ttms-cluster-hue: #fbbf24; }
+
+[data-map-mode="night"] .marker-cluster__visual > div {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/*
+ * 0×0 tip root — MapLibre transforms THIS point to the lat/lng.
+ * Pin and label are absolute children and must never change root size.
+ */
+/* Stack: you-pin < clusters < venue pins < car < selected */
+.maplibregl-marker:has(.ttms-map-pin--user),
+.maplibregl-marker.ttms-ml-marker-root:has(.ttms-map-pin--user) {
+  z-index: 1 !important;
+}
+
+.maplibregl-marker.marker-cluster {
+  z-index: 2 !important;
+}
+
+.maplibregl-marker.ttms-ml-marker-root:not(:has(.ttms-map-pin--user)):not(:has(.ttms-map-pin--car)),
+.maplibregl-marker:has(.ttms-ml-marker-root):not(:has(.ttms-map-pin--user)):not(:has(.ttms-map-pin--car)) {
+  z-index: 3 !important;
+}
+
+.maplibregl-marker:has(.ttms-map-pin--car),
+.maplibregl-marker.ttms-ml-marker-root:has(.ttms-map-pin--car) {
+  z-index: 12 !important;
+}
+
+.maplibregl-marker.ttms-ml-marker--raised,
+.maplibregl-marker:has(.ttms-ml-marker--raised) {
+  z-index: 20 !important;
+}
+
+/* First tap: pin grows + pulse so selection + second-tap affordance are obvious */
+.maplibregl-marker.ttms-ml-marker--preview-selected,
+.maplibregl-marker:has(.ttms-ml-marker--preview-selected),
+.ttms-ml-marker-root.ttms-ml-marker--preview-selected {
+  z-index: 22 !important;
+}
+
+@keyframes ttms-pin-preview-pop {
+  0% {
+    transform: perspective(220px) scale(1) rotateY(0deg);
+  }
+  55% {
+    transform: perspective(220px) scale(1.42) rotateY(300deg);
+  }
+  100% {
+    transform: perspective(220px) scale(1.3) rotateY(360deg);
+  }
+}
+
+/* Slow bob on bottom — independent of the tip pulse */
+@keyframes ttms-pin-preview-bob {
+  0%,
+  100% {
+    bottom: 0;
+  }
+  45% {
+    bottom: 7px;
+  }
+}
+
+@keyframes ttms-pin-preview-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.75;
+  }
+  70% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+/* Outer wrap: bob only — pulse ::before stays flat on the map */
+.ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin,
+.maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-marker-pin,
+.ttms-ml-marker-pin.ttms-pin--preview-selected {
+  animation: ttms-pin-preview-bob 2.8s ease-in-out 0.72s infinite;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Inner pin graphic: Y-axis spin + grow (pulse is NOT a child of this) */
+.ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin > .ttms-map-pin,
+.maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-marker-pin > .ttms-map-pin,
+.ttms-ml-marker-pin.ttms-pin--preview-selected > .ttms-map-pin {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  animation: ttms-pin-preview-pop 0.72s cubic-bezier(0.22, 1.15, 0.36, 1) forwards;
+}
+
+/* Name label gap above scaled pin — bottom is bumped in JS; ease the move */
+.ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-label-host,
+.maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-label-host {
+  transition: bottom 0.45s cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+
+/* Soft ring under the tip — centered with margin (not transform) so spin delay can't offset it */
+.ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin::before,
+.maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-marker-pin::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--accent, #1d4ed8) 85%, #fff);
+  background: color-mix(in srgb, var(--accent, #1d4ed8) 18%, transparent);
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: 50% 50%;
+  transform: scale(0.7);
+  opacity: 0;
+  animation: ttms-pin-preview-pulse 1.55s ease-out 0.72s infinite both;
+}
+
+/* Route destination (2nd tap): keep bob + ring while journey is on screen */
+.maplibregl-marker.ttms-ml-marker--route-dest,
+.maplibregl-marker:has(.ttms-ml-marker--route-dest),
+.ttms-ml-marker-root.ttms-ml-marker--route-dest {
+  z-index: 23 !important;
+}
+
+.ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-marker-pin,
+.maplibregl-marker.ttms-ml-marker--route-dest .ttms-ml-marker-pin,
+.ttms-ml-marker-pin.ttms-pin--route-dest,
+/* Beat marker-enter animation so bob/ring stay on after route draws */
+.ttms-ml-marker-root.ttms-ml-marker--route-dest.ttms-marker-enter .ttms-ml-marker-pin {
+  animation: ttms-pin-preview-bob 2.8s ease-in-out infinite !important;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+  z-index: 2;
+  overflow: visible !important;
+}
+
+.ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-marker-pin > .ttms-map-pin,
+.maplibregl-marker.ttms-ml-marker--route-dest .ttms-ml-marker-pin > .ttms-map-pin,
+.ttms-ml-marker-pin.ttms-pin--route-dest > .ttms-map-pin {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  transform: scale(1.22);
+}
+
+.ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-label-host,
+.maplibregl-marker.ttms-ml-marker--route-dest .ttms-ml-label-host {
+  transition: bottom 0.35s cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+
+.ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-marker-pin::before,
+.maplibregl-marker.ttms-ml-marker--route-dest .ttms-ml-marker-pin::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--accent, #1d4ed8) 85%, #fff);
+  background: color-mix(in srgb, var(--accent, #1d4ed8) 18%, transparent);
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: 50% 50%;
+  transform: scale(0.7);
+  opacity: 0;
+  animation: ttms-pin-preview-pulse 1.55s ease-out infinite both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin,
+  .ttms-ml-marker-pin.ttms-pin--preview-selected,
+  .ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-marker-pin,
+  .ttms-ml-marker-pin.ttms-pin--route-dest,
+  .ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin::before,
+  .ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-marker-pin::before {
+    animation: none !important;
+  }
+
+  .ttms-ml-marker-root.ttms-ml-marker--route-dest .ttms-ml-marker-pin > .ttms-map-pin,
+  .ttms-ml-marker-pin.ttms-pin--route-dest > .ttms-map-pin {
+    transform: scale(1.15);
+  }
+}
+
+.ttms-ml-marker-root {
+  position: relative;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 0;
+  cursor: pointer;
+  pointer-events: none;
+  will-change: auto;
+}
+
+.ttms-ml-marker-pin {
+  position: absolute;
+  z-index: 1;
+  pointer-events: auto;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  line-height: 0;
+}
+
+.ttms-ml-label-host {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: max-content;
+  max-width: 14em;
+  pointer-events: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ttms-ml-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  box-sizing: border-box;
+  min-height: 1.7em;
+  padding: 0.4em 0.7em;
+  background: color-mix(in srgb, var(--bg-surface, #fff) 92%, transparent);
+  color: var(--text-primary, #111);
+  border: 1px solid color-mix(in srgb, var(--glass-border, #ccc) 70%, transparent);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.96;
+  pointer-events: none;
+  margin: 0;
+  text-align: center;
+}
+
+.ttms-ml-tooltip b,
+.ttms-ml-tooltip strong {
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+[data-map-mode="night"] .ttms-ml-tooltip {
+  background: rgba(18, 24, 32, 0.92);
+  color: #f2f4f7;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+[data-map-mode="day"] .ttms-ml-tooltip {
+  background: color-mix(in srgb, #fff 92%, transparent);
+  color: #111827;
+  border-color: color-mix(in srgb, #94a3b8 45%, transparent);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* Only force 0×0 on venue pin wrappers — not cluster bubbles */
+.maplibregl-marker.ttms-ml-marker-root,
+.maplibregl-marker:has(.ttms-ml-marker-root) {
+  width: 0 !important;
+  height: 0 !important;
+  overflow: visible !important;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  margin-left: 0.35em;
+  vertical-align: middle;
+}
+
+.ttms-ml-tooltip .status-dot,
+.leaflet-tooltip .status-dot {
+  margin: 0 !important;
+  margin-inline: 0 !important;
+  width: 7px;
+  height: 7px;
+  min-width: 7px;
+  min-height: 7px;
+  flex-shrink: 0;
+  align-self: center;
+  display: block;
+}
+
+.status-dot.green { background: #22c55e; }
+.status-dot.red { background: #ef4444; }
+.status-dot.yellow,
+.status-dot.orange { background: #eab308; }
+.status-dot.gray { background: #9ca3af; }
+
+/* —— Pin / cluster enter & exit (bounce, no fade) —— */
+@keyframes ttms-marker-in {
+  0% {
+    transform: scale(0.35);
+  }
+  55% {
+    transform: scale(1.14);
+  }
+  78% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ttms-marker-out {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(0.2);
+  }
+}
+
+.ttms-ml-marker-root.ttms-marker-enter .ttms-ml-marker-pin {
+  animation-name: ttms-marker-in;
+  animation-duration: var(--ttms-marker-anim-dur, .42s);
+  animation-delay: var(--ttms-marker-anim-delay, 0s);
+  animation-timing-function: cubic-bezier(.22,1.4,.36,1);
+  animation-fill-mode: both;
+  transform-origin: 50% 100%;
+}
+
+.ttms-ml-marker-root.ttms-marker-exit .ttms-ml-marker-pin {
+  animation-name: ttms-marker-out;
+  animation-duration: var(--ttms-marker-anim-dur, .22s);
+  animation-delay: var(--ttms-marker-anim-delay, 0s);
+  animation-timing-function: cubic-bezier(.4,0,.7,.2);
+  animation-fill-mode: both;
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+
+.ttms-ml-marker-root:has(.ttms-map-pin--car).ttms-marker-enter .ttms-ml-marker-pin,
+.ttms-ml-marker-root:has(.ttms-map-pin--car).ttms-marker-exit .ttms-ml-marker-pin,
+.ttms-ml-marker-root:has(.ttms-map-pin--user).ttms-marker-enter .ttms-ml-marker-pin,
+.ttms-ml-marker-root:has(.ttms-map-pin--user).ttms-marker-exit .ttms-ml-marker-pin {
+  transform-origin: 50% 50%;
+}
+
+.marker-cluster.ttms-marker-enter .marker-cluster__visual {
+  animation-name: ttms-marker-in;
+  animation-duration: var(--ttms-marker-anim-dur, .42s);
+  animation-delay: var(--ttms-marker-anim-delay, 0s);
+  animation-timing-function: cubic-bezier(.22,1.4,.36,1);
+  animation-fill-mode: both;
+  transform-origin: 50% 50%;
+}
+
+.marker-cluster.ttms-marker-exit {
+  pointer-events: none;
+}
+
+.marker-cluster.ttms-marker-exit .marker-cluster__visual {
+  animation-name: ttms-marker-out;
+  animation-duration: var(--ttms-marker-anim-dur, .22s);
+  animation-delay: var(--ttms-marker-anim-delay, 0s);
+  animation-timing-function: cubic-bezier(.4,0,.7,.2);
+  animation-fill-mode: both;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttms-ml-marker-root.ttms-marker-enter .ttms-ml-marker-pin,
+  .ttms-ml-marker-root.ttms-marker-exit .ttms-ml-marker-pin,
+  .marker-cluster.ttms-marker-enter .marker-cluster__visual,
+  .marker-cluster.ttms-marker-exit .marker-cluster__visual {
+    animation: none;
+  }
+
+  .ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin,
+  .maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-marker-pin,
+  .ttms-ml-marker-pin.ttms-pin--preview-selected {
+    animation: none;
+  }
+
+  .ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin > .ttms-map-pin,
+  .maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-marker-pin > .ttms-map-pin,
+  .ttms-ml-marker-pin.ttms-pin--preview-selected > .ttms-map-pin {
+    animation: none;
+    transform: scale(1.28);
+  }
+
+  .ttms-ml-marker-root.ttms-ml-marker--preview-selected .ttms-ml-marker-pin::before,
+  .maplibregl-marker.ttms-ml-marker--preview-selected .ttms-ml-marker-pin::before {
+    animation: none;
+    opacity: 0.55;
+    transform: scale(1.1);
+  }
+}

@@ -46,3 +46,11 @@ weight = 30
   currency = "TTD"
   provider = "wipay"
   apiKey = ""
+
+# Cluster map-service (TileServer GL) + OSRM — no third-party map key
+[params.mapService]
+  url = "https://maps.ttmenus.com"
+  dataSource = "trinidad-tobago"
+
+[params.osrm]
+  url = "https://osrm.ttmenus.com"

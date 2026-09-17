@@ -29,6 +29,9 @@
 
   async function refresh(listEl) {
     if (!window.DeliveryClient) return;
+    if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.destroyAll === 'function') {
+      TTMSDeliveryMap.destroyAll();
+    }
     listEl.innerHTML = '<p class="dashboard-delivery-empty">Loading orders…</p>';
     try {
       var res = await DeliveryClient.listClientOrders();
@@ -87,20 +90,43 @@
         if (['awaiting_client', 'preparing', 'ready', 'delivering', 'picked_up', 'payment_pending'].indexOf(o.status) >= 0) {
           actions.appendChild(actionBtn('Track driver', 'btn-dash btn-dash-secondary', function () {
             var track = $('.ttms-delivery-order-track', card);
+            var mapId = 'ttms-dash-track-' + o.id;
             track.hidden = false;
+            track.id = mapId;
+            track.classList.add('ttms-delivery-map');
             track.textContent = 'Connecting…';
+            function applyLoc(loc) {
+              if (!loc) {
+                if (!track.querySelector('.maplibregl-map')) {
+                  track.textContent = 'No location yet';
+                }
+                return;
+              }
+              if (!window.TTMSDeliveryMap) {
+                track.textContent = 'Driver @ ' + loc.lat.toFixed(5) + ', ' + loc.lng.toFixed(5);
+                return;
+              }
+              TTMSDeliveryMap.setDriver(mapId, loc.lat, loc.lng, 'Driver');
+            }
+            if (window.TTMSDeliveryMap) {
+              TTMSDeliveryMap.mountTrack({
+                containerId: mapId,
+                restaurantLat: o.restaurant_lat,
+                restaurantLng: o.restaurant_lng,
+                restaurantLabel: o.restaurant_name || '',
+                dropoffLat: o.dropoff_lat,
+                dropoffLng: o.dropoff_lng,
+                dropoffLabel: o.dropoff_address || 'Drop-off',
+              }).catch(function () {
+                track.textContent = 'Map unavailable';
+              });
+            }
             DeliveryClient.track(o.id).then(function (t) {
-              var loc = t.location;
-              track.textContent = loc
-                ? 'Driver @ ' + loc.lat.toFixed(5) + ', ' + loc.lng.toFixed(5)
-                : 'No location yet';
+              applyLoc(t && t.location);
             });
             DeliveryClient.connectTrackWS(o.id, function (msg) {
-              if (msg && msg.location) {
-                track.textContent = 'Driver @ ' + msg.location.lat.toFixed(5) + ', ' + msg.location.lng.toFixed(5);
-              } else if (msg && msg.type === 'driver_location' && msg.location) {
-                track.textContent = 'Driver @ ' + msg.location.lat.toFixed(5) + ', ' + msg.location.lng.toFixed(5);
-              }
+              if (msg && msg.location) applyLoc(msg.location);
+              else if (msg && msg.type === 'driver_location' && msg.location) applyLoc(msg.location);
             });
           }));
         }
