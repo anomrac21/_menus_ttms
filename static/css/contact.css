@@ -977,13 +977,13 @@
     position: relative;
 }
 
-#appleMessage .msg {
+#appleMessage .msg:not(.hide) {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     text-align: center;
-    min-height: 100%;
+    min-height: 0;
     gap: .5em;
     animation: fadeIn 0.3s ease;
 }
@@ -999,26 +999,105 @@
     }
 }
 
-#appleMessage .msg.hide {
-    display: none;
+#appleMessage .msg.hide,
+#appleMessage .apple-ios-guide .msg.hide {
+    display: none !important;
 }
 
-#appleMessage .msgtxt {
-    color: var(--hero-text-color);
-    font-size: 1.5em;
-    font-weight: 700;
-    margin-bottom: 0.5em;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
+#appleMessage .apple-ios-guide {
+    min-height: 0;
+    height: 100%;
 }
 
-#appleMessage .msgtxt p {
+#appleMessage .apple-ios-guide #slides {
+    display: block;
+}
+
+#appleMessage .apple-ios-guide__kicker {
     margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--scheme-white) 70%, transparent);
+}
+
+#appleMessage .apple-ios-guide__title {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.25;
+    text-align: center;
     color: var(--hero-text-color);
 }
 
-#appleMessage .msgtxt img.icon {
+#appleMessage .apple-ios-guide__copy {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    text-align: center;
+    color: color-mix(in srgb, var(--scheme-white) 85%, transparent);
+}
+
+#appleMessage .apple-ios-guide__img {
+    display: block;
+    width: auto;
+    max-width: min(100%, 240px);
+    height: auto;
+    max-height: min(42dvh, 340px);
+    margin: 0.25rem auto;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--scheme-black) 50%, transparent);
+}
+
+#appleMessage .apple-ios-guide__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+#appleMessage .apple-ios-guide__dots {
+    display: flex;
+    gap: 0.35rem;
+}
+
+#appleMessage .apple-ios-guide__dots i {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--scheme-white) 35%, transparent);
+}
+
+#appleMessage .msg_1 .apple-ios-guide__dots i:nth-child(1),
+#appleMessage .msg_2 .apple-ios-guide__dots i:nth-child(2),
+#appleMessage .msg_3 .apple-ios-guide__dots i:nth-child(3),
+#appleMessage .msg_4 .apple-ios-guide__dots i:nth-child(4) {
+    background: var(--hero-text-color);
+}
+
+#appleMessage .apple-ios-guide__nav .apple-ios-guide__back,
+#appleMessage .apple-ios-guide__nav .apple-ios-guide__next {
+    appearance: none;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 40%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    color: var(--hero-text-color);
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+
+#appleMessage .apple-ios-guide__nav .apple-ios-guide__next {
+    background: var(--hero-text-color);
+    color: var(--scheme-black);
+    margin-left: auto;
 }
 
 #appleMessage .msg > p {
@@ -1026,14 +1105,6 @@
     font-size: 1em;
     margin: 0;
     line-height: 1.5;
-}
-
-#appleMessage .apple_tutorial_img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px color-mix(in srgb, var(--scheme-black) 50%, transparent);
-    margin: 1em 0;
 }
 
 #appleMessage .appleMsgBtns {
@@ -1064,23 +1135,6 @@
     font-size: 1.2em;
 }
 
-#appleMessage .appleMsgBtnLeft,
-#appleMessage .appleMsgBtnRight {
-    position: relative;
-}
-
-/* Navigation buttons wrapper for better positioning */
-#appleMessage .msg {
-    position: relative;
-}
-
-#appleMessage .msg .appleMsgBtns {
-    z-index: 10;
-}
-#appleMessage .msg-content {
-    display: flex;
-    gap: 1em;
-}
 .appleInstallHide {
     display: none !important;
 }
@@ -1195,31 +1249,8 @@
     overflow-y: auto;
 }
 
-#appleMessage .msgtxt {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin-bottom: 0.3em;
-    width: 100%;
-}
-
-#appleMessage .msgtxt p {
-    font-size: 1em;
-    line-height: 1.3;
-}
-
-#appleMessage .msg > p {
-    font-size: 0.85em;
-    padding: 0 0.8em;
-    line-height: 1.4;
-    margin: 0;
-    max-width: 100%;
-}
-
-#appleMessage .apple_tutorial_img {
-    border-radius: 12px;
-    width: auto;
-    height: 50vh;
-    object-fit: contain;
+#appleMessage .apple-ios-guide__img {
+    max-height: min(42dvh, 320px);
 }
 
 #appleMessage .appleMsgBtns {
@@ -1231,24 +1262,6 @@
 
 #appleMessage .appleMsgBtns i {
     font-size: 1em;
-}
-
-#appleMessage .msg .appleMsgBtnLeft,
-#appleMessage .msg .appleMsgBtnRight {
-    margin: 0;
-}
-
-#appleMessage .msg_1 .appleMsgBtnLeft {
-    display: none;
-}
-
-#appleMessage .msg_5 .appleMsgBtnRight {
-    display: none;
-}
-
-#appleMessage .msg_5 .appleMsgBtnLeft {
-    left: 50%;
-    transform: translateX(-50%);
 }
 
 #appleMessage .msg > * {
@@ -1264,16 +1277,17 @@
         padding: 0.5em 0.5em;
     }
 
-    #appleMessage .msgtxt {
+    #appleMessage .apple-ios-guide__title {
         font-size: 1em;
     }
 
+    #appleMessage .apple-ios-guide__copy,
     #appleMessage .msg > p {
         font-size: 0.8em;
     }
 
-    #appleMessage .apple_tutorial_img {
-        margin: 0.3em 0;
+    #appleMessage .apple-ios-guide__img {
+        max-height: min(34dvh, 240px);
     }
 }
 

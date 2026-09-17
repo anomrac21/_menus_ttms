@@ -5,100 +5,120 @@
     width: fit-content !important;
     display: none;
 }
-#appleMessage{
-  position: fixed;
-  background-color: color-mix(in srgb, var(--scheme-black) 67%, transparent);
-  height: calc(100dvh);
-  width: 100vw;
+
+#appleMessage .msg.hide,
+#appleMessage .apple-ios-guide .msg.hide {
+  display: none !important;
+}
+
+#appleMessage .apple-ios-guide {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+#appleMessage .apple-ios-guide #slides {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  align-items: stretch;
+}
+
+#appleMessage .apple-ios-guide .msg:not(.hide) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 0 0.5rem 0.75rem;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+#appleMessage .apple-ios-guide__kicker {
   margin: 0;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  color: var(--scheme-black);
-  /*display: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
-.appleInstallHide{
-    display:none !important;
-*/
-  }
-#appleMessage .container{
-  margin-block: 5em;
-  background: linear-gradient(var(--scheme-white), color-mix(in srgb, var(--scheme-white) 67%, transparent));
-  position: relative;
-  border-radius: 15px;
-  height: calc(100dvh - 10em);
-}
-#appleMessage .card{
-  background: url(https://ct.ttmenus.com/tutorial/apple/bg1.webp);
-  padding: 0 15px 15px;
-  position: relative;
-  border-radius: 15px;
-  width: -webkit-fill-available;
-  height: -webkit-fill-available;
-}
-#appleMessage .header{
-    display: flex;
-  position: relative;
-}
-#appleMessage #slides{
-    display: flex;
-    margin: 0 auto;
-    width: fit-content;
-    height: -webkit-fill-available;
-    align-items: stretch;
-}
-#appleMessage .text{
-    padding: 10px;
-  width: -webkit-fill-available;
+
+#appleMessage .apple-ios-guide__title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.25;
   text-align: center;
 }
-#appleMessage .msg .msgtxt{
-    display: flex;
-   
-    margin: 0 auto;
-    width: fit-content;
-    padding: 0px;
-}
-#appleMessage .msg p{
-    padding: 5px 0;
-     text-align: center;
-}
-#appleMessage .appleMsgBtns{
-    padding: 0;
-  position: absolute;
+
+#appleMessage .apple-ios-guide__copy {
   margin: 0;
-  color: var(--scheme-black);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  text-align: center;
 }
-#appleMessage .appleMsgBtnClose{
-    right: 0;
-}
-#appleMessage .appleMsgBtnRight{
-    right: 0;
-    top: 50%;
-}
-#appleMessage .appleMsgBtnLeft{
-    left: 0;
-    top: 50%;
-}
-#appleMessage .appleMsgBtns .fa{
-  font-size: xx-large;
-}
-#appleMessage .apple_tutorial_img{
-  height: 100%;
-  width: auto;
-  max-width: 100%;
-  margin: 10px auto;
+
+#appleMessage .apple-ios-guide__img {
   display: block;
-  border-radius: 15px;
+  width: auto;
+  max-width: min(100%, 220px);
+  height: auto;
+  max-height: min(42dvh, 320px);
+  margin: 0.25rem auto;
+  border-radius: 16px;
+  object-fit: contain;
 }
-#appleMessage .icon{
-    height: 24px;
-  width: 24px;
-  padding:0 5px ;
+
+#appleMessage .apple-ios-guide__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  width: 100%;
 }
-#appleMessage .fa-warning{
-    color: var(--scheme-accent);
-    text-shadow: 0 0 1px var(--scheme-black);
+
+#appleMessage .apple-ios-guide__nav .apple-ios-guide__back,
+#appleMessage .apple-ios-guide__nav .apple-ios-guide__next {
+  position: static;
+  appearance: none;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+#appleMessage .apple-ios-guide__nav .apple-ios-guide__next {
+  margin-left: auto;
+}
+
+#appleMessage .apple-ios-guide__dots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+#appleMessage .apple-ios-guide__dots i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+#appleMessage .msg_1 .apple-ios-guide__dots i:nth-child(1),
+#appleMessage .msg_2 .apple-ios-guide__dots i:nth-child(2),
+#appleMessage .msg_3 .apple-ios-guide__dots i:nth-child(3),
+#appleMessage .msg_4 .apple-ios-guide__dots i:nth-child(4) {
+  background: currentColor;
 }
 
 @supports (-webkit-touch-callout: none) { /* CSS specific to iOS devices */

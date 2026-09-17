@@ -1,41 +1,50 @@
 <div id="SubBtnItems" class="hide">
 	<div id="appleMessage" class="appleInstallHide">
 		<div class="container">
-			<div class="card">
+			<div class="card apple-ios-guide">
 				<div class="header">
-					<b class="text"><i class="fa fa-warning"></i> <i class="fa fa-apple"></i> Apple iOS users <i class="fa fa-warning"></i></b>
+					<b class="text"><i class="fa fa-apple" aria-hidden="true"></i> Add to Home Screen</b>
 					<button type="button" class="appleMsgBtns appleMsgBtnClose" onclick="expandAppMenu();" aria-label="Close tutorial"><i class="fa fa-close" aria-hidden="true"></i></button>
 				</div>
 				<div id="slides">
 					<div class="msg msg_1">
-						<div class="msgtxt msg_1_text"><p>1. Open Menu</p><img class="icon center" src="https://cdn.ttmenus.com/tutorial/apple/box-arrow-up_ios.webp"></div>
-						<p>Located at the bottom of the screen.</p>
-						<div class="msg-content">
-							<button type="button" class="appleMsgBtns appleMsgBtnRight" onclick="showAppleMsg(1);" aria-label="Next step"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+						<p class="apple-ios-guide__kicker">Step 1 of 4</p>
+						<h2 class="apple-ios-guide__title">Tap Share in Safari</h2>
+						<p class="apple-ios-guide__copy">Open this menu in <strong>Safari</strong> (not Chrome or Instagram). Tap the Share button — a square with an arrow pointing up — in the toolbar at the <strong>bottom</strong> of the screen.</p>
+						<img class="apple-ios-guide__img" src="https://cdn.ttmenus.com/tutorial/apple/1.webp" alt="Safari toolbar with the Share button at the bottom of the screen" width="390" height="844">
+						<div class="apple-ios-guide__nav">
+							<span class="apple-ios-guide__dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+							<button type="button" class="apple-ios-guide__next" onclick="showAppleMsg(1);">Next</button>
 						</div>
-						<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/1.webp">
 					</div>
 					<div class="msg msg_2 hide">
-						<div class="msgtxt msg_1_text"><p>2. Add to Home Screen</p></div>
-						<p>Select add to home screen from menu, then confirm and add</p>
-						<div class="msg-content">
-							<button type="button" class="appleMsgBtns appleMsgBtnLeft" onclick="showAppleMsg(0);" aria-label="Previous step"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-							<button type="button" class="appleMsgBtns appleMsgBtnRight" onclick="showAppleMsg(2);" aria-label="Next step"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
-						</div>
-						<div class="msg-images">
-							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/2.webp">
-							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/3.webp">
+						<p class="apple-ios-guide__kicker">Step 2 of 4</p>
+						<h2 class="apple-ios-guide__title">Tap Add to Home Screen</h2>
+						<p class="apple-ios-guide__copy">In the share sheet, scroll down if needed, then tap <strong>Add to Home Screen</strong>.</p>
+						<img class="apple-ios-guide__img" src="https://cdn.ttmenus.com/tutorial/apple/2.webp" alt="iOS share sheet with Add to Home Screen" width="390" height="844">
+						<div class="apple-ios-guide__nav">
+							<button type="button" class="apple-ios-guide__back" onclick="showAppleMsg(0);">Back</button>
+							<button type="button" class="apple-ios-guide__next" onclick="showAppleMsg(2);">Next</button>
 						</div>
 					</div>
 					<div class="msg msg_3 hide">
-						<div class="msgtxt msg_1_text"><p>3. Open App & Subscribe to Notifications</p></div>
-						<p>Select app from home screen, then subscribe to enjoy updates from {{ .Site.Title }}</p>
-						<div class="msg-content">
-							<button type="button" class="appleMsgBtns appleMsgBtnLeft" onclick="showAppleMsg(1);" aria-label="Previous step"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+						<p class="apple-ios-guide__kicker">Step 3 of 4</p>
+						<h2 class="apple-ios-guide__title">Tap Add</h2>
+						<p class="apple-ios-guide__copy">Check the name, then tap <strong>Add</strong> in the top right.</p>
+						<img class="apple-ios-guide__img" src="https://cdn.ttmenus.com/tutorial/apple/3.webp" alt="Add to Home Screen confirmation with Add in the corner" width="390" height="844">
+						<div class="apple-ios-guide__nav">
+							<button type="button" class="apple-ios-guide__back" onclick="showAppleMsg(1);">Back</button>
+							<button type="button" class="apple-ios-guide__next" onclick="showAppleMsg(3);">Next</button>
 						</div>
-						<div class="msg-images">
-							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/4.webp">
-							<img class="center apple_tutorial_img" src="https://cdn.ttmenus.com/tutorial/apple/5.webp">
+					</div>
+					<div class="msg msg_4 hide">
+						<p class="apple-ios-guide__kicker">Step 4 of 4</p>
+						<h2 class="apple-ios-guide__title">Open the icon, then subscribe</h2>
+						<p class="apple-ios-guide__copy">Leave Safari and open <strong>{{ .Site.Title }}</strong> from your Home Screen. Tap Get menu alerts from that icon — Safari in a tab cannot enable them.</p>
+						<img class="apple-ios-guide__img" src="https://cdn.ttmenus.com/tutorial/apple/4.webp" alt="Home Screen with the installed menu app icon" width="390" height="844">
+						<div class="apple-ios-guide__nav">
+							<button type="button" class="apple-ios-guide__back" onclick="showAppleMsg(2);">Back</button>
+							<button type="button" class="apple-ios-guide__next" onclick="expandAppMenu();">Done</button>
 						</div>
 					</div>
 				</div>

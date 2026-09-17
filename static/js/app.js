@@ -287,14 +287,17 @@ function expandAppMenu() {
   }
 
 function showAppleMsg(x) {
-    var msg = document.getElementsByClassName("msg");
-    for (var i = msg.length - 1; i >= 0; i--) {
-      if(x==i){
+    var root = document.getElementById("appleMessage");
+    if (!root) {
+      return;
+    }
+    var msg = root.getElementsByClassName("msg");
+    for (var i = 0; i < msg.length; i++) {
+      if (i === x) {
         msg[i].classList.remove('hide');
-      }else{
+      } else {
         msg[i].classList.add('hide');
       }
-      
     }
   }
 
