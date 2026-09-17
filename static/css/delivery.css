@@ -396,6 +396,7 @@ body.ttms-delivery-open {
 .ttms-delivery-panel.is-map-step .ttms-delivery-form,
 .ttms-delivery-panel.is-map-step .ttms-delivery-step--map,
 .ttms-delivery-panel.is-map-step .ttms-delivery-map-stage,
+.ttms-delivery-panel.is-map-step .ttms-delivery-offers-stage,
 .ttms-delivery-panel.is-map-step .ttms-delivery-pin {
   position: relative;
   height: 100%;
@@ -520,6 +521,40 @@ body.ttms-delivery-open {
 .ttms-delivery-panel.is-map-step .ttms-delivery-actions .ttms-delivery-cta {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-offers-stage .ttms-delivery-actions {
+  grid-template-columns: 1fr;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-status {
+  margin: 0;
+  color: #fff;
+  border-color: color-mix(in srgb, var(--scheme-white) 16%, transparent);
+  background: color-mix(in srgb, var(--scheme-black) 58%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-status p,
+.ttms-delivery-panel.is-map-step .ttms-driver-offers:empty::after,
+.ttms-delivery-panel.is-map-step .ttms-driver-offer__meta {
+  color: color-mix(in srgb, #fff 72%, transparent);
+}
+
+.ttms-delivery-panel.is-map-step .ttms-driver-offers {
+  margin: 0;
+  max-height: min(28vh, 14rem);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-driver-offers li {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--scheme-white) 16%, transparent);
+  background: color-mix(in srgb, var(--scheme-black) 52%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .ttms-delivery-panel.is-map-step .ttms-delivery-eta {
