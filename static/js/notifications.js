@@ -188,6 +188,7 @@ const NotificationService = {
       return;
     }
 
+    await this.waitForAuthReady();
     await this.registerServiceWorker();
 
     // Verify push subscription is still valid and sync keys to server
@@ -207,6 +208,37 @@ const NotificationService = {
       this.connectWebSocket();
     }
     this.syncNearbyClientWatcher();
+  },
+
+  async waitForAuthReady() {
+    try {
+      if (typeof AuthClient !== 'undefined' && AuthClient.whenReady) {
+        await AuthClient.whenReady();
+      }
+    } catch (e) {}
+    try {
+      if (typeof AuthClient !== 'undefined' && AuthClient.ensureAccessToken) {
+        await AuthClient.ensureAccessToken();
+      }
+    } catch (e2) {}
+  },
+
+  async relinkAfterAuth() {
+    if (!resolveNotifyConfig().enabled || !this.subscriptionId) return;
+    try {
+      await this.waitForAuthReady();
+      const userId = this.generateUserID();
+      if (!userId.startsWith('auth_')) return;
+      await this.relinkSubscriptionToAuthUser();
+      if (typeof this.followCurrentVenueIfSignedIn === 'function') {
+        this.followCurrentVenueIfSignedIn();
+      }
+    } catch (err) {
+      console.warn('Could not relink push subscription to account:', err);
+    }
+    if (typeof this.renderSubscriptionManager === 'function') {
+      this.renderSubscriptionManager();
+    }
   },
 
   /**
@@ -301,7 +333,7 @@ const NotificationService = {
     try {
       const res = await fetch(`${apiUrl}/subscriptions/${encodeURIComponent(this.subscriptionId)}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.notifyAuthHeaders(),
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -547,6 +579,15 @@ const NotificationService = {
         return 'auth_' + String(user.id);
       }
     }
+    try {
+      if (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken && AuthClient.parseJWT) {
+        const payload = AuthClient.parseJWT(AuthClient.getAccessToken());
+        const id = payload && (payload.user_id || payload.id || payload.sub);
+        if (id != null && String(id) !== '' && /^\d+$/.test(String(id))) {
+          return 'auth_' + String(id);
+        }
+      }
+    } catch (e) {}
     let userId = localStorage.getItem('ttmenus_user_id');
     if (!userId) {
       userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -681,19 +722,32 @@ const NotificationService = {
     return false;
   },
 
-  shouldDisplayNotification(notification) {
+  notificationTargetsCurrentUser(notification) {
     var data = notification && notification.data;
-    if (!data || data.admin_only !== true) return true;
-    if (!this.isCurrentUserAdmin()) return false;
-    var adminIds = data.admin_user_ids;
-    if (!adminIds || !adminIds.length) return true;
+    if (!data) return false;
     var userId = this.generateUserID();
     if (!userId || userId.indexOf('auth_') !== 0) return false;
     var numericId = userId.slice(5);
-    for (var i = 0; i < adminIds.length; i++) {
-      if (String(adminIds[i]) === numericId) return true;
+    var pools = []
+      .concat(data.target_user_ids || [])
+      .concat(data.user_ids || [])
+      .concat(data.admin_user_ids || []);
+    for (var i = 0; i < pools.length; i++) {
+      var raw = String(pools[i] == null ? '' : pools[i]).trim();
+      if (!raw) continue;
+      if (raw === userId || raw === numericId || raw === 'auth_' + numericId) return true;
     }
     return false;
+  },
+
+  shouldDisplayNotification(notification) {
+    var data = notification && notification.data;
+    if (!data || data.admin_only !== true) return true;
+    if (this.notificationTargetsCurrentUser(notification)) return true;
+    if (!this.isCurrentUserAdmin()) return false;
+    var adminIds = data.admin_user_ids;
+    if (!adminIds || !adminIds.length) return true;
+    return this.notificationTargetsCurrentUser({ data: { admin_user_ids: adminIds } });
   },
 
   /**
@@ -935,6 +989,7 @@ const NotificationService = {
   async subscribe() {
     try {
       const platform = 'web';
+      await this.waitForAuthReady();
       
       // Check if browser supports notifications
       if (!('Notification' in window)) {
@@ -1034,9 +1089,7 @@ const NotificationService = {
 
       const response = await fetch(subscribeUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: this.notifyAuthHeaders(),
         body: JSON.stringify(subscriptionData),
       });
 
@@ -2406,16 +2459,10 @@ if (document.readyState === 'loading') {
 }
 
 window.addEventListener('auth:login', function () {
-  if (!resolveNotifyConfig().enabled) return;
-  if (NotificationService.subscriptionId) {
-    NotificationService.relinkSubscriptionToAuthUser().catch(function (err) {
-      console.warn('Could not relink push subscription to account:', err);
-    });
-    NotificationService.followCurrentVenueIfSignedIn();
-  }
-  if (typeof NotificationService.renderSubscriptionManager === 'function') {
-    NotificationService.renderSubscriptionManager();
-  }
+  NotificationService.relinkAfterAuth();
+});
+window.addEventListener('ttms:auth-ready', function () {
+  NotificationService.relinkAfterAuth();
 });
 
 // Export for global use

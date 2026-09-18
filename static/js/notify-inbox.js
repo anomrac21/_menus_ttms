@@ -158,8 +158,19 @@
   }
 
   function matchesThisVenue(item) {
+    if (!item) return true;
+    var data = item.data || {};
+    if (
+      item.type === 'order' ||
+      item.type === 'order_ready' ||
+      data.role === 'customer' ||
+      data.role === 'client' ||
+      data.order_id
+    ) {
+      return true;
+    }
     var domain = clientDomain().toLowerCase();
-    if (!domain || !item) return true;
+    if (!domain) return true;
     var d = String(item.client_domain || '')
       .replace(/^www\./i, '')
       .toLowerCase();
@@ -358,6 +369,19 @@
     return headers;
   }
 
+  async function waitForAuth() {
+    try {
+      if (window.AuthClient && AuthClient.whenReady) {
+        await AuthClient.whenReady();
+      }
+    } catch (e) {}
+    try {
+      if (window.AuthClient && AuthClient.ensureAccessToken) {
+        await AuthClient.ensureAccessToken();
+      }
+    } catch (eToken) {}
+  }
+
   async function loadInbox() {
     syncSubscribeChrome();
     setStatus('Loading alerts…');
@@ -369,12 +393,9 @@
     var subId = subscriptionId();
     var base = apiBase();
 
+    await waitForAuth();
+
     if (window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated()) {
-      try {
-        if (typeof AuthClient.ensureAccessToken === 'function') {
-          await AuthClient.ensureAccessToken();
-        }
-      } catch (eToken) {}
       try {
         var mine = await fetchJson(base + '/me/notifications?limit=30', authHeaders());
         remote = remote.concat((mine && mine.notifications) || []);
