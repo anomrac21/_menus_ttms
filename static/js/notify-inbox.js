@@ -258,13 +258,13 @@
     if (btn) btn.textContent = on ? 'Alerts on' : 'Get menu alerts';
     if (copy) {
       copy.textContent = on
-        ? 'You get specials, hours, and menu updates on this phone.'
-        : 'Get specials, hours, and menu updates on this phone.';
+        ? 'You get specials, hours, order, and menu updates on this phone.'
+        : 'Get specials, hours, order, and menu updates on this phone.';
     }
     if (emptyHint) {
       emptyHint.textContent = on
-        ? 'When this restaurant sends specials or menu updates, they show up here.'
-        : 'Turn on alerts, then specials and menu updates from this restaurant will land here.';
+        ? 'When this restaurant sends specials, menu updates, or order events, they show up here.'
+        : 'Turn on alerts, then specials, menu updates, and order events from this restaurant will land here.';
     }
   }
 

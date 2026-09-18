@@ -197,16 +197,7 @@ const NotificationService = {
 
     if (this.subscriptionId) {
       const userId = this.generateUserID();
-      const stored = localStorage.getItem('ttmenus_notification_subscription');
-      let linked = false;
-      if (stored) {
-        try {
-          linked = JSON.parse(stored).user_id === userId;
-        } catch (e) {
-          linked = false;
-        }
-      }
-      if (!linked && userId.startsWith('auth_')) {
+      if (userId.startsWith('auth_')) {
         await this.relinkSubscriptionToAuthUser();
       }
     }
