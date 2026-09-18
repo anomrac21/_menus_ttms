@@ -740,8 +740,34 @@ const NotificationService = {
     return false;
   },
 
+  notificationHasTargets(notification) {
+    var data = notification && notification.data;
+    if (!data) return false;
+    var pools = []
+      .concat(data.target_user_ids || [])
+      .concat(data.user_ids || [])
+      .concat(data.admin_user_ids || []);
+    for (var i = 0; i < pools.length; i++) {
+      if (String(pools[i] == null ? '' : pools[i]).trim()) return true;
+    }
+    return false;
+  },
+
+  isOrderLikeNotification(notification) {
+    var data = (notification && notification.data) || {};
+    var type = String((notification && notification.type) || '').toLowerCase();
+    if (type === 'order' || type === 'order_ready') return true;
+    var role = String(data.role || '').toLowerCase();
+    if (role === 'customer' || role === 'driver' || role === 'client') return true;
+    return !!(data.order_id || data.delivery_order_id);
+  },
+
   shouldDisplayNotification(notification) {
     var data = notification && notification.data;
+    if (data && (data.welcome === true || data.welcome === 'true')) return false;
+    if (this.isOrderLikeNotification(notification) || this.notificationHasTargets(notification)) {
+      return this.notificationTargetsCurrentUser(notification);
+    }
     if (!data || data.admin_only !== true) return true;
     if (this.notificationTargetsCurrentUser(notification)) return true;
     if (!this.isCurrentUserAdmin()) return false;

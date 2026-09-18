@@ -132,13 +132,13 @@
 
   function isGuestVisible(item) {
     if (!item) return false;
-    if (window.NotificationService && NotificationService.shouldDisplayNotification) {
-      if (!NotificationService.shouldDisplayNotification(item)) return false;
-    }
     if (isPhotoReview(item)) {
       return !!(window.NotificationService && NotificationService.isCurrentUserAdmin && NotificationService.isCurrentUserAdmin());
     }
     if (isWelcome(item)) return false;
+    if (window.NotificationService && NotificationService.shouldDisplayNotification) {
+      return !!NotificationService.shouldDisplayNotification(item);
+    }
     return !!(item.title || item.message || item.body);
   }
 
@@ -160,18 +160,10 @@
   function matchesThisVenue(item) {
     if (!item) return true;
     var data = item.data || {};
-    if (
-      item.type === 'order' ||
-      item.type === 'order_ready' ||
-      data.role === 'customer' ||
-      data.role === 'client' ||
-      data.order_id
-    ) {
-      return true;
-    }
+    if (String(data.role || '').toLowerCase() === 'driver') return false;
     var domain = clientDomain().toLowerCase();
     if (!domain) return true;
-    var d = String(item.client_domain || '')
+    var d = String(item.client_domain || data.client_domain || '')
       .replace(/^www\./i, '')
       .toLowerCase();
     if (!d) return true;
