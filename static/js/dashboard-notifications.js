@@ -85,29 +85,50 @@
     }
     await ensureNotifyToken();
     var url = base + path;
-    var headers = Object.assign({}, authHeaders(), (options && options.headers) || {});
-    var res = await fetch(url, Object.assign({ credentials: 'include' }, options || {}, { headers: headers }));
-    if (res.status === 401) {
-      if (window.AuthClient && AuthClient.logout) {
-        await AuthClient.logout().catch(function () {});
-      }
-      window.location.href = '/login/';
-      throw new Error('Session expired. Please sign in again.');
+    options = options || {};
+    var headers = Object.assign({}, authHeaders(), options.headers || {});
+    var timeoutMs = options.timeoutMs || 20000;
+    var controller = options.signal ? null : new AbortController();
+    var timer = null;
+    if (controller) {
+      timer = setTimeout(function () {
+        controller.abort();
+      }, timeoutMs);
     }
-    var text = await res.text();
-    var data = null;
+    var fetchOpts = Object.assign({ credentials: 'include' }, options, { headers: headers });
+    delete fetchOpts.timeoutMs;
+    if (controller) fetchOpts.signal = controller.signal;
     try {
-      data = text ? JSON.parse(text) : null;
-    } catch (e) {
-      if (!res.ok) throw new Error(text || res.statusText);
+      var res = await fetch(url, fetchOpts);
+      if (res.status === 401) {
+        if (window.AuthClient && AuthClient.logout) {
+          await AuthClient.logout().catch(function () {});
+        }
+        window.location.href = '/login/';
+        throw new Error('Session expired. Please sign in again.');
+      }
+      var text = await res.text();
+      var data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (e) {
+        if (!res.ok) throw new Error(text || res.statusText);
+      }
+      if (!res.ok) {
+        var msg =
+          (data && (data.error || data.message)) || text || 'Request failed (' + res.status + ')';
+        if (data && data.details) msg += ': ' + data.details;
+        throw new Error(msg);
+      }
+      return data;
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        throw new Error('Notification API timed out');
+      }
+      throw err;
+    } finally {
+      if (timer) clearTimeout(timer);
     }
-    if (!res.ok) {
-      var msg =
-        (data && (data.error || data.message)) || text || 'Request failed (' + res.status + ')';
-      if (data && data.details) msg += ': ' + data.details;
-      throw new Error(msg);
-    }
-    return data;
   }
 
   function formatNum(n) {
@@ -451,7 +472,7 @@
     overviewBundlePromise = null;
   }
 
-  /** Shared parallel fetch for overview metrics + chart (dedupes concurrent callers). */
+  /** Overview metrics first; trends load separately so the spinner cannot block cards. */
   function fetchOverviewBundle(options) {
     options = options || {};
     if (options.force) invalidateOverviewBundle();
@@ -461,21 +482,14 @@
     var domain = getClientDomain();
     var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
     var headers = authHeaders();
+    var emptyTrends = { data: [] };
 
-    overviewBundlePromise = Promise.all([
-      notifyFetch('/analytics/overview' + q, { headers: headers }),
-      notifyFetch('/analytics/subscription-trends' + q, { headers: headers }).catch(function () {
-        return { data: [] };
-      }),
-      notifyFetch('/analytics/engagement-trends' + q, { headers: headers }).catch(function () {
-        return { data: [] };
-      }),
-    ])
-      .then(function (results) {
+    overviewBundlePromise = notifyFetch('/analytics/overview' + q, { headers: headers, timeoutMs: 20000 })
+      .then(function (overview) {
         overviewBundleCache = {
-          overview: results[0],
-          subTrends: results[1],
-          engagement: results[2],
+          overview: overview,
+          subTrends: emptyTrends,
+          engagement: emptyTrends,
         };
         return overviewBundleCache;
       })
@@ -742,12 +756,28 @@
   async function loadEngagementTrends() {
     setTrendsLoading(true);
     try {
-      var bundle = await fetchOverviewBundle();
+      var domain = getClientDomain();
+      var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
+      var headers = authHeaders();
+      var results = await Promise.all([
+        notifyFetch('/analytics/engagement-trends' + q, { headers: headers, timeoutMs: 20000 }).catch(
+          function () {
+            return { data: [] };
+          }
+        ),
+        notifyFetch('/analytics/subscription-trends' + q, { headers: headers, timeoutMs: 20000 }).catch(
+          function () {
+            return { data: [] };
+          }
+        ),
+      ]);
+      if (overviewBundleCache) {
+        overviewBundleCache.engagement = results[0];
+        overviewBundleCache.subTrends = results[1];
+        applyOverviewMetrics(overviewBundleCache).catch(function () {});
+      }
       renderNotifyTrendChart(
-        mergeNotifyTrendRows(
-          (bundle.engagement && bundle.engagement.data) || [],
-          (bundle.subTrends && bundle.subTrends.data) || []
-        )
+        mergeNotifyTrendRows((results[0] && results[0].data) || [], (results[1] && results[1].data) || [])
       );
     } finally {
       setTrendsLoading(false);
@@ -1020,6 +1050,20 @@
     );
   }
 
+  function photoMatchesThisSite(sub) {
+    var id = String((sub && sub.client_id) || '');
+    if (!id) return false;
+    if (window.AuthClientAccess && typeof AuthClientAccess.clientIdsMatch === 'function') {
+      if (typeof AuthClientAccess.getSiteClientIdCandidates === 'function') {
+        return AuthClientAccess.getSiteClientIdCandidates().some(function (candidate) {
+          return AuthClientAccess.clientIdsMatch(id, candidate);
+        });
+      }
+      return AuthClientAccess.clientIdsMatch(id, menuImageClientId());
+    }
+    return id === String(menuImageClientId() || '');
+  }
+
   function photoThumbUrl(url) {
     if (!url) return '';
     if (typeof window.TtmsThumbor !== 'undefined' && window.TtmsThumbor.menuImageSrc) {
@@ -1120,10 +1164,7 @@
         throw new Error(json.error || 'Could not load pending photos.');
       }
 
-      var clientId = menuImageClientId();
-      var items = (json.data || []).filter(function (sub) {
-        return String(sub.client_id || '') === String(clientId || '');
-      });
+      var items = (json.data || []).filter(photoMatchesThisSite);
 
       if (!items.length) {
         if (empty) empty.hidden = false;
@@ -1526,6 +1567,10 @@
           NotificationService.relinkSubscriptionToAuthUser().then(function (result) {
             if (result.ok) {
               finish('This device is linked to your admin account for photo approval alerts.', true);
+              return;
+            }
+            if (result.reason === 'sync_failed') {
+              finish('Could not link this device to notify-service. Sign in again, then retry Link this device.', false);
               return;
             }
             if (result.reason === 'not_subscribed') {

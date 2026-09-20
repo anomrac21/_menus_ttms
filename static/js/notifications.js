@@ -302,35 +302,39 @@ const NotificationService = {
    * Keep server push endpoint/keys in sync with the browser (required for closed-app delivery).
    */
   async syncPushSubscriptionToServer(pushSubscription) {
-    if (!this.subscriptionId) return;
+    if (!this.subscriptionId) return false;
 
     const pushManager =
       this.serviceWorkerRegistration && this.serviceWorkerRegistration.pushManager;
     if (!pushSubscription && pushManager) {
       pushSubscription = await pushManager.getSubscription();
     }
-    if (!pushSubscription) {
-      console.warn('⚠️ No browser push subscription to sync');
-      return;
-    }
 
     const apiUrl = resolveNotifyConfig().apiUrl || `${this.notifyServiceUrl}/api/v1`;
     const payload = {
-      push_endpoint: pushSubscription.endpoint,
-      push_keys: {
-        p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
-        auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
-      },
       ws_connection_id: this.getWebSocketConnectionID(),
       preferences: this.buildPreferencesPayload(),
     };
+    if (pushSubscription) {
+      payload.push_endpoint = pushSubscription.endpoint;
+      payload.push_keys = {
+        p256dh: this.arrayBufferToBase64(pushSubscription.getKey('p256dh')),
+        auth: this.arrayBufferToBase64(pushSubscription.getKey('auth')),
+      };
+    }
 
     const authUserId = this.generateUserID();
     if (authUserId.startsWith('auth_')) {
       payload.user_id = authUserId;
     }
 
+    if (!pushSubscription && !payload.user_id) {
+      console.warn('⚠️ No browser push subscription to sync');
+      return false;
+    }
+
     try {
+      await this.ensureNotifyAccessToken();
       const res = await fetch(`${apiUrl}/subscriptions/${encodeURIComponent(this.subscriptionId)}`, {
         method: 'PATCH',
         headers: this.notifyAuthHeaders(),
@@ -339,29 +343,31 @@ const NotificationService = {
       if (!res.ok) {
         const body = await res.text().catch(() => '');
         console.warn('Push sync failed (HTTP ' + res.status + '):', body);
-        return;
+        return false;
       }
       const data = await res.json().catch(() => ({}));
       console.log(
         '✅ Push subscription synced to server',
         data.has_background_push ? '(background push ready)' : '(incomplete keys)'
       );
-      if (data.user_id || data.preferences) {
-        const stored = localStorage.getItem('ttmenus_notification_subscription');
-        if (stored) {
-          try {
-            const sub = JSON.parse(stored);
-            if (data.user_id) sub.user_id = data.user_id;
-            if (data.preferences) sub.preferences = data.preferences;
-            localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(sub));
-          } catch (e) {
-            /* ignore */
-          }
+      const stored = localStorage.getItem('ttmenus_notification_subscription');
+      if (stored) {
+        try {
+          const sub = JSON.parse(stored);
+          if (data.user_id) sub.user_id = data.user_id;
+          else if (payload.user_id) sub.user_id = payload.user_id;
+          if (data.preferences) sub.preferences = data.preferences;
+          if (payload.ws_connection_id) sub.ws_connection_id = payload.ws_connection_id;
+          localStorage.setItem('ttmenus_notification_subscription', JSON.stringify(sub));
+        } catch (e) {
+          /* ignore */
         }
       }
       this.notifyServiceWorkerSubscription(this.subscriptionId);
+      return true;
     } catch (err) {
       console.warn('Push sync error:', err && err.message ? err.message : err);
+      return false;
     }
   },
 
@@ -799,7 +805,12 @@ const NotificationService = {
       }
     }
 
-    await this.syncPushSubscriptionToServer(pushSubscription);
+    await this.ensureNotifyAccessToken();
+    const synced = await this.syncPushSubscriptionToServer(pushSubscription);
+    if (!synced) {
+      return { ok: false, reason: 'sync_failed' };
+    }
+    this.connectWebSocket();
     return { ok: true, userId };
   },
 
@@ -1269,9 +1280,8 @@ const NotificationService = {
    */
   connectWebSocket(options) {
     options = options || {};
-    if (this.wsConnection && this.wsConnection.readyState === WebSocket.OPEN) {
-      console.log('✅ WebSocket already connected');
-      return; // Already connected
+    if (this.wsConnection && (this.wsConnection.readyState === WebSocket.OPEN || this.wsConnection.readyState === WebSocket.CONNECTING)) {
+      return;
     }
     
     if (!options.allowWithoutSubscription && !this.subscriptionId) {

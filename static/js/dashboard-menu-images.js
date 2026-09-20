@@ -165,10 +165,19 @@
       return {};
     });
     if (!res.ok) {
-      throw new Error(json.error || 'Could not load pending photos.');
+      throw new Error(json.error || json.details || 'Could not load pending photos (HTTP ' + res.status + ').');
     }
     return (json.data || []).filter(function (sub) {
-      return String(sub.client_id || '') === clientId();
+      var id = String(sub.client_id || '');
+      if (window.AuthClientAccess && typeof AuthClientAccess.clientIdsMatch === 'function') {
+        if (typeof AuthClientAccess.getSiteClientIdCandidates === 'function') {
+          return AuthClientAccess.getSiteClientIdCandidates().some(function (candidate) {
+            return AuthClientAccess.clientIdsMatch(id, candidate);
+          });
+        }
+        return AuthClientAccess.clientIdsMatch(id, clientId());
+      }
+      return id === clientId();
     });
   }
 

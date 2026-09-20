@@ -19,7 +19,7 @@
   };
   window.SITE_CLIENT_ID = window.CLIENT_ID || {{ $dashClient | jsonify }};
   </script>
-  <script src="/js/dashboard-menu-images.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-images.js` }}" defer></script>
   {{- end }}
   <script src="/js/dashboard-analytics-snapshot.js" defer></script>
   <script src="/js/dashboard-menu-status.js" defer></script>
