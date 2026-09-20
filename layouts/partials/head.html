@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") -}}
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") (eq .Layout "client-dashboard-auth") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 {{- $siteName := partial "site-name.html" . -}}
 {{- $pageTitle := cond .IsHome (printf "%s | Digital Menu & Online Ordering" site.Title) (printf "%s | %s" .Title site.Title) -}}
