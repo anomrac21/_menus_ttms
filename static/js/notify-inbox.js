@@ -153,8 +153,58 @@
       created_at: raw.created_at || raw.delivered_at || new Date().toISOString(),
       url: raw.url || data.url || data.link || '',
       client_domain: raw.client_domain || data.client_domain || '',
+      client_name: raw.client_name || data.restaurant_name || data.client_name || '',
       data: data,
     };
+  }
+
+  function orderKeyFromItem(item) {
+    var data = (item && item.data) || {};
+    var oid = data.order_id || data.delivery_order_id || item.order_id;
+    if (oid) return 'order:' + String(oid).toLowerCase();
+    var href = String((item && item.url) || '');
+    var match = href.match(/[?&#]order=([^&#]+)/i);
+    if (match && match[1]) {
+      try {
+        return 'order:' + decodeURIComponent(match[1]).toLowerCase();
+      } catch (e) {
+        return 'order:' + match[1].toLowerCase();
+      }
+    }
+    if (data.ticket_number) return 'ticket:' + String(data.ticket_number).toLowerCase();
+    return '';
+  }
+
+  function groupItems(items) {
+    var groups = [];
+    var byKey = {};
+    (items || []).forEach(function (item) {
+      var key = orderKeyFromItem(item) || 'id:' + (item.id || item.title + '|' + item.created_at);
+      var group = byKey[key];
+      if (!group) {
+        group = { key: key, items: [] };
+        byKey[key] = group;
+        groups.push(group);
+      }
+      group.items.push(item);
+    });
+    groups.forEach(function (group) {
+      group.items.sort(function (a, b) {
+        return itemTime(b) - itemTime(a);
+      });
+      group.latest = group.items[0];
+    });
+    groups.sort(function (a, b) {
+      return itemTime(b.latest) - itemTime(a.latest);
+    });
+    return groups;
+  }
+
+  function threadPlace(group) {
+    var latest = group && group.latest;
+    if (!latest) return '';
+    var data = latest.data || {};
+    return latest.client_name || data.restaurant_name || data.client_name || '';
   }
 
   function matchesThisVenue(item) {
@@ -283,6 +333,56 @@
     el.textContent = text;
   }
 
+  function bindCardClick(node, item) {
+    if (!node || !item) return;
+    node.addEventListener('click', function () {
+      if (
+        item.id &&
+        window.NotificationService &&
+        typeof NotificationService.trackNotificationClick === 'function'
+      ) {
+        NotificationService.trackNotificationClick(item.id);
+      }
+      if (typeof window.closeNotifyInbox === 'function') {
+        window.closeNotifyInbox({ instant: !item.url });
+      }
+    });
+  }
+
+  function cardMarkup(item, unread, extraClass) {
+    var href = item.url || '';
+    var tag = href ? 'a' : 'button';
+    return (
+      '<' +
+      tag +
+      ' class="notify-inbox-card' +
+      (extraClass ? ' ' + extraClass : '') +
+      (unread ? ' is-unread' : '') +
+      '"' +
+      (href ? ' href="' + escapeHtml(href) + '"' : ' type="button"') +
+      ' data-notify-id="' +
+      escapeHtml(item.id) +
+      '">' +
+      '<span class="notify-inbox-card__top">' +
+      '<span class="notify-inbox-card__type">' +
+      escapeHtml(typeLabel(item.type)) +
+      '</span>' +
+      '<span class="notify-inbox-card__time">' +
+      escapeHtml(formatWhen(item.created_at)) +
+      '</span>' +
+      '</span>' +
+      '<strong class="notify-inbox-card__title">' +
+      escapeHtml(item.title) +
+      '</strong>' +
+      (item.message
+        ? '<p class="notify-inbox-card__body">' + escapeHtml(item.message) + '</p>'
+        : '') +
+      '</' +
+      tag +
+      '>'
+    );
+  }
+
   function renderList(items) {
     var list = document.getElementById('notify-inbox-list');
     var empty = document.getElementById('notify-inbox-empty');
@@ -294,54 +394,62 @@
     }
     if (empty) empty.hidden = true;
     var seen = seenAt();
-    items.forEach(function (item) {
+    groupItems(items).forEach(function (group) {
+      var latest = group.latest;
+      var rest = group.items.slice(1);
       var li = document.createElement('li');
-      li.className = 'notify-inbox-item';
-      var unread = itemTime(item) > seen;
-      var href = item.url || '';
-      var tag = href ? 'a' : 'button';
-      li.innerHTML =
-        '<' +
-        tag +
-        ' class="notify-inbox-card' +
-        (unread ? ' is-unread' : '') +
-        '"' +
-        (href ? ' href="' + escapeHtml(href) + '"' : ' type="button"') +
-        ' data-notify-id="' +
-        escapeHtml(item.id) +
-        '">' +
-        '<span class="notify-inbox-card__top">' +
-        '<span class="notify-inbox-card__type">' +
-        escapeHtml(typeLabel(item.type)) +
-        '</span>' +
-        '<span class="notify-inbox-card__time">' +
-        escapeHtml(formatWhen(item.created_at)) +
-        '</span>' +
-        '</span>' +
-        '<strong class="notify-inbox-card__title">' +
-        escapeHtml(item.title) +
-        '</strong>' +
-        (item.message
-          ? '<p class="notify-inbox-card__body">' + escapeHtml(item.message) + '</p>'
-          : '') +
-        '</' +
-        tag +
-        '>';
-      var card = li.firstElementChild;
-      if (card) {
-        card.addEventListener('click', function () {
-          if (
-            item.id &&
-            window.NotificationService &&
-            typeof NotificationService.trackNotificationClick === 'function'
-          ) {
-            NotificationService.trackNotificationClick(item.id);
-          }
-          if (typeof window.closeNotifyInbox === 'function') {
-            window.closeNotifyInbox({ instant: !href });
-          }
-        });
+      var unread = group.items.some(function (item) {
+        return itemTime(item) > seen;
+      });
+      if (!rest.length) {
+        li.className = 'notify-inbox-item';
+        li.innerHTML = cardMarkup(latest, unread, '');
+        bindCardClick(li.firstElementChild, latest);
+        list.appendChild(li);
+        return;
       }
+      var place = threadPlace(group);
+      li.className = 'notify-inbox-item notify-inbox-item--thread';
+      li.innerHTML =
+        '<article class="notify-inbox-thread' +
+        (unread ? ' is-unread' : '') +
+        '">' +
+        cardMarkup(latest, unread, 'notify-inbox-card--lead') +
+        (place
+          ? '<p class="notify-inbox-thread__place">' + escapeHtml(place) + '</p>'
+          : '') +
+        '<p class="notify-inbox-thread__count">' +
+        escapeHtml(String(group.items.length) + ' updates') +
+        '</p>' +
+        '<ul class="notify-inbox-thread__events">' +
+        rest
+          .map(function (item) {
+            var href = item.url || '';
+            var tag = href ? 'a' : 'button';
+            return (
+              '<li><' +
+              tag +
+              ' class="notify-inbox-thread__event' +
+              (itemTime(item) > seen ? ' is-unread' : '') +
+              '"' +
+              (href ? ' href="' + escapeHtml(href) + '"' : ' type="button"') +
+              ' data-notify-id="' +
+              escapeHtml(item.id) +
+              '"><span class="notify-inbox-thread__event-title">' +
+              escapeHtml(item.title) +
+              '</span><span class="notify-inbox-thread__event-time">' +
+              escapeHtml(formatWhen(item.created_at)) +
+              '</span></' +
+              tag +
+              '></li>'
+            );
+          })
+          .join('') +
+        '</ul></article>';
+      bindCardClick(li.querySelector('.notify-inbox-card'), latest);
+      Array.prototype.forEach.call(li.querySelectorAll('.notify-inbox-thread__event'), function (node, idx) {
+        bindCardClick(node, rest[idx]);
+      });
       list.appendChild(li);
     });
   }

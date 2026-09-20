@@ -89,9 +89,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    min-height: 4.25rem;
-    padding: 0.7rem 0.85rem 0.7rem 1rem;
+    gap: 0.6rem;
+    min-height: 3.4rem;
+    padding: 0.5rem 0.75rem 0.5rem 0.85rem;
     border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     background: linear-gradient(
         180deg,
@@ -103,7 +103,7 @@
 .notify-inbox-heading {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
     min-width: 0;
 }
 
@@ -111,17 +111,22 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.55rem;
-    height: 2.55rem;
+    width: 2.15rem;
+    height: 2.15rem;
     border-radius: 50%;
     background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
     color: var(--notify-ink);
     flex-shrink: 0;
 }
 
+.notify-inbox-heading__icon svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
 .notify-inbox-title {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 800;
     letter-spacing: -0.02em;
 }
@@ -144,8 +149,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.65rem;
-    height: 2.65rem;
+    width: 2.25rem;
+    height: 2.25rem;
     margin: 0;
     padding: 0;
     border-radius: 50%;
@@ -194,8 +199,8 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.85rem 1rem;
+    gap: 0.65rem;
+    padding: 0.55rem 0.85rem;
     border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 8%, transparent);
 }
 
@@ -208,8 +213,8 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 
 .notify-inbox-subscribe__btn {
     flex-shrink: 0;
-    min-height: 2.4rem;
-    padding: 0.45rem 0.95rem;
+    min-height: 2.1rem;
+    padding: 0.35rem 0.8rem;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--notify-accent) 45%, transparent);
     background: linear-gradient(
@@ -235,7 +240,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0.75rem 0.85rem 1.25rem;
+    padding: 0.6rem 0.75rem 1rem;
 }
 
 .notify-inbox-status {
@@ -251,18 +256,19 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-inbox-item {
-    margin: 0 0 0.55rem;
+    margin: 0 0 0.45rem;
 }
 
 .notify-inbox-card {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.28rem;
+    gap: 0.18rem;
     width: 100%;
     margin: 0;
-    padding: 0.9rem 0.95rem;
-    border-radius: 1rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.8rem;
+    box-sizing: border-box;
     border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     background: linear-gradient(
         165deg,
@@ -312,14 +318,104 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 
 .notify-inbox-card__title {
     margin: 0;
-    font-size: 0.98rem;
+    font-size: 0.9rem;
     font-weight: 700;
+    line-height: 1.25;
 }
 
 .notify-inbox-card__body {
     margin: 0;
-    font-size: 0.84rem;
-    line-height: 1.45;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--notify-ink-muted);
+}
+
+.notify-inbox-item--thread {
+    margin-bottom: 0.65rem;
+}
+
+.notify-inbox-thread {
+    overflow: hidden;
+    border-radius: 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
+    background: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--scheme-white) 8%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-white) 3%, transparent) 100%
+    );
+}
+
+.notify-inbox-thread.is-unread {
+    border-color: color-mix(in srgb, var(--notify-accent) 38%, transparent);
+}
+
+.notify-inbox-thread .notify-inbox-card--lead {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding-bottom: 0.4rem;
+}
+
+.notify-inbox-thread__place,
+.notify-inbox-thread__count {
+    margin: 0;
+    padding: 0 0.75rem;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    color: var(--notify-ink-muted);
+}
+
+.notify-inbox-thread__place {
+    font-weight: 700;
+    color: var(--notify-ink);
+}
+
+.notify-inbox-thread__count {
+    padding-bottom: 0.35rem;
+}
+
+.notify-inbox-thread__events {
+    list-style: none;
+    margin: 0;
+    padding: 0 0.55rem 0.45rem;
+    border-top: 1px solid color-mix(in srgb, var(--scheme-white) 8%, transparent);
+}
+
+.notify-inbox-thread__events > li {
+    margin: 0;
+}
+
+.notify-inbox-thread__event {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.65rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.42rem 0.2rem;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.notify-inbox-thread__events > li:last-child .notify-inbox-thread__event {
+    border-bottom: 0;
+}
+
+.notify-inbox-thread__event-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.notify-inbox-thread__event-time {
+    flex-shrink: 0;
+    font-size: 0.68rem;
     color: var(--notify-ink-muted);
 }
 
