@@ -349,38 +349,84 @@
     });
   }
 
-  function cardMarkup(item, unread, extraClass) {
+  function roleLabel(item) {
+    var role = String(((item && item.data) || {}).role || '').toLowerCase();
+    if (role === 'driver') return 'Driver';
+    if (role === 'client') return 'Restaurant';
+    if (role === 'customer') return 'You';
+    var href = String((item && item.url) || '');
+    if (/\/drive\//i.test(href)) return 'Driver';
+    if (/dashboard/i.test(href)) return 'Restaurant';
+    if (/\/delivery\/track|#cart/i.test(href)) return 'You';
+    return '';
+  }
+
+  var BELL_ICON =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"></path></svg>';
+
+  function iosCardInner(item, place) {
+    var app = place || item.client_name || 'TTMenus';
+    var role = roleLabel(item);
+    return (
+      '<span class="notify-ios__meta">' +
+      '<span class="notify-ios__icon" aria-hidden="true">' +
+      BELL_ICON +
+      '</span>' +
+      '<span class="notify-ios__app">' +
+      escapeHtml(app) +
+      '</span>' +
+      (role ? '<span class="notify-ios__role">' + escapeHtml(role) + '</span>' : '') +
+      '<span class="notify-ios__time">' +
+      escapeHtml(formatWhen(item.created_at)) +
+      '</span>' +
+      '</span>' +
+      '<strong class="notify-ios__title">' +
+      escapeHtml(item.title) +
+      '</strong>' +
+      (item.message
+        ? '<span class="notify-ios__body">' + escapeHtml(item.message) + '</span>'
+        : '')
+    );
+  }
+
+  function iosLinkMarkup(item, unread, place) {
     var href = item.url || '';
     var tag = href ? 'a' : 'button';
     return (
       '<' +
       tag +
-      ' class="notify-inbox-card' +
-      (extraClass ? ' ' + extraClass : '') +
+      ' class="notify-ios' +
       (unread ? ' is-unread' : '') +
       '"' +
       (href ? ' href="' + escapeHtml(href) + '"' : ' type="button"') +
       ' data-notify-id="' +
       escapeHtml(item.id) +
       '">' +
-      '<span class="notify-inbox-card__top">' +
-      '<span class="notify-inbox-card__type">' +
-      escapeHtml(typeLabel(item.type)) +
-      '</span>' +
-      '<span class="notify-inbox-card__time">' +
-      escapeHtml(formatWhen(item.created_at)) +
-      '</span>' +
-      '</span>' +
-      '<strong class="notify-inbox-card__title">' +
-      escapeHtml(item.title) +
-      '</strong>' +
-      (item.message
-        ? '<p class="notify-inbox-card__body">' + escapeHtml(item.message) + '</p>'
-        : '') +
+      iosCardInner(item, place) +
       '</' +
       tag +
       '>'
     );
+  }
+
+  function bindStack(root) {
+    var front = root.querySelector('.notify-stack__front');
+    var sheet = root.querySelector('.notify-stack__sheet');
+    var collapse = root.querySelector('.notify-stack__collapse');
+    if (!front || !sheet) return;
+    function setOpen(open) {
+      root.classList.toggle('is-open', open);
+      front.setAttribute('aria-expanded', open ? 'true' : 'false');
+      sheet.hidden = !open;
+    }
+    front.addEventListener('click', function () {
+      setOpen(true);
+    });
+    if (collapse) {
+      collapse.addEventListener('click', function () {
+        setOpen(false);
+      });
+    }
   }
 
   function renderList(items) {
@@ -396,59 +442,55 @@
     var seen = seenAt();
     groupItems(items).forEach(function (group) {
       var latest = group.latest;
-      var rest = group.items.slice(1);
       var li = document.createElement('li');
       var unread = group.items.some(function (item) {
         return itemTime(item) > seen;
       });
-      if (!rest.length) {
+      var place = threadPlace(group);
+      if (group.items.length < 2) {
         li.className = 'notify-inbox-item';
-        li.innerHTML = cardMarkup(latest, unread, '');
+        li.innerHTML = iosLinkMarkup(latest, unread, place);
         bindCardClick(li.firstElementChild, latest);
         list.appendChild(li);
         return;
       }
-      var place = threadPlace(group);
-      li.className = 'notify-inbox-item notify-inbox-item--thread';
+      var flow = group.items.slice().reverse();
+      li.className = 'notify-inbox-item notify-inbox-item--stack';
       li.innerHTML =
-        '<article class="notify-inbox-thread' +
+        '<article class="notify-stack' +
         (unread ? ' is-unread' : '') +
         '">' +
-        cardMarkup(latest, unread, 'notify-inbox-card--lead') +
-        (place
-          ? '<p class="notify-inbox-thread__place">' + escapeHtml(place) + '</p>'
-          : '') +
-        '<p class="notify-inbox-thread__count">' +
-        escapeHtml(String(group.items.length) + ' updates') +
-        '</p>' +
-        '<ul class="notify-inbox-thread__events">' +
-        rest
-          .map(function (item) {
-            var href = item.url || '';
-            var tag = href ? 'a' : 'button';
+        '<div class="notify-stack__peeks" aria-hidden="true">' +
+        '<span class="notify-stack__peek notify-stack__peek--2"></span>' +
+        '<span class="notify-stack__peek notify-stack__peek--1"></span>' +
+        '</div>' +
+        '<button type="button" class="notify-stack__front notify-ios" aria-expanded="false">' +
+        iosCardInner(latest, place) +
+        '<span class="notify-stack__hint">' +
+        escapeHtml(String(group.items.length) + ' notifications · tap to see the flow') +
+        '</span>' +
+        '</button>' +
+        '<div class="notify-stack__sheet" hidden>' +
+        '<p class="notify-stack__sheet-label">How this order progressed</p>' +
+        '<ol class="notify-stack__flow">' +
+        flow
+          .map(function (item, idx) {
             return (
-              '<li><' +
-              tag +
-              ' class="notify-inbox-thread__event' +
-              (itemTime(item) > seen ? ' is-unread' : '') +
-              '"' +
-              (href ? ' href="' + escapeHtml(href) + '"' : ' type="button"') +
-              ' data-notify-id="' +
-              escapeHtml(item.id) +
-              '"><span class="notify-inbox-thread__event-title">' +
-              escapeHtml(item.title) +
-              '</span><span class="notify-inbox-thread__event-time">' +
-              escapeHtml(formatWhen(item.created_at)) +
-              '</span></' +
-              tag +
-              '></li>'
+              '<li data-step="' +
+              escapeHtml(String(idx + 1)) +
+              '">' +
+              iosLinkMarkup(item, itemTime(item) > seen, place) +
+              '</li>'
             );
           })
           .join('') +
-        '</ul></article>';
-      bindCardClick(li.querySelector('.notify-inbox-card'), latest);
-      Array.prototype.forEach.call(li.querySelectorAll('.notify-inbox-thread__event'), function (node, idx) {
-        bindCardClick(node, rest[idx]);
+        '</ol>' +
+        '<button type="button" class="notify-stack__collapse">Show less</button>' +
+        '</div>' +
+        '</article>';
+      bindStack(li.querySelector('.notify-stack'));
+      Array.prototype.forEach.call(li.querySelectorAll('.notify-stack__flow .notify-ios'), function (node, idx) {
+        bindCardClick(node, flow[idx]);
       });
       list.appendChild(li);
     });
