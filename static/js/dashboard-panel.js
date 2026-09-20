@@ -9,7 +9,7 @@
   var OPENING_CLASS = 'is-dashboard-opening';
   var CLOSING_CLASS = 'is-dashboard-closing';
   var OPEN_MS = 920;
-  var CLOSE_MS = 440;
+  var CLOSE_MS = 360;
   var dashAnimTimer = null;
 
   function getDashboard() {
@@ -32,36 +32,6 @@
   function isDashboardVisiblyOpen(dashboard) {
     if (!dashboard) return false;
     return !isDashboardHidden(dashboard) && !dashboard.classList.contains(CLOSING_CLASS);
-  }
-
-  function getDashboardOriginTarget() {
-    return (
-      document.getElementById('dashboardBtn') ||
-      document.querySelector('[data-dashboard-toggle]') ||
-      document.querySelector('.dashboard-menu-btn-wrap')
-    );
-  }
-
-  function setDashboardOriginFromBtn(dashboard) {
-    if (!dashboard) return;
-    var vw = window.innerWidth || 1;
-    var vh = window.innerHeight || 1;
-    var target = getDashboardOriginTarget();
-    if (!target || !target.getBoundingClientRect) {
-      dashboard.style.setProperty('--dash-from-x', Math.round(vw * -0.36) + 'px');
-      dashboard.style.setProperty('--dash-from-y', Math.round(vh * -0.38) + 'px');
-      return;
-    }
-    var rect = target.getBoundingClientRect();
-    if (!rect.width || !rect.height) {
-      dashboard.style.setProperty('--dash-from-x', Math.round(vw * -0.36) + 'px');
-      dashboard.style.setProperty('--dash-from-y', Math.round(vh * -0.38) + 'px');
-      return;
-    }
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    dashboard.style.setProperty('--dash-from-x', (cx - vw / 2) + 'px');
-    dashboard.style.setProperty('--dash-from-y', (cy - vh / 2) + 'px');
   }
 
   function syncDashboardBtnExpanded() {
@@ -106,7 +76,6 @@
 
     clearTimeout(dashAnimTimer);
     dashAnimTimer = null;
-    setDashboardOriginFromBtn(dashboard);
 
     if (prefersReducedMotion()) {
       dashboard.classList.remove(HIDDEN_CLASS, OPENING_CLASS, CLOSING_CLASS);
@@ -162,7 +131,6 @@
 
     document.body.classList.add('modal-open', 'is-dashboard-closing');
     document.body.classList.remove('is-dashboard-opening');
-    setDashboardOriginFromBtn(dashboard);
     dashboard.classList.remove(OPENING_CLASS, HIDDEN_CLASS);
     void dashboard.offsetWidth;
     dashboard.classList.add(CLOSING_CLASS);

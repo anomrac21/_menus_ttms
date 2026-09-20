@@ -6,8 +6,6 @@
     --dashboard-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--dash-ink));
     --dashboard-ink: var(--main-text-color);
     --dashboard-ink-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
-    --dash-from-x: -36vw;
-    --dash-from-y: -38vh;
     background: var(--main-bg, #070b16);
     display: flex;
     flex-direction: column;
@@ -49,41 +47,12 @@
     pointer-events: none !important;
 }
 
-#dashboard.dashboard-panel.is-dashboard-opening::before,
-#dashboard.dashboard-panel.is-dashboard-closing::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--scheme-surface) 45%, transparent), transparent 55%),
-        color-mix(in srgb, var(--main-bg, #070b16) 88%, #000);
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening::before {
-    animation: dash-scrim-in 0.42s ease both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-closing::before {
-    animation: dash-scrim-out 0.32s ease both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-motion,
-#dashboard.dashboard-panel.is-dashboard-closing .dashboard-panel-motion {
-    transform-origin: 50% 50%;
-    will-change: transform;
-    box-shadow:
-        0 28px 72px color-mix(in srgb, var(--dash-black) 48%, transparent),
-        0 0 0 1px color-mix(in srgb, var(--dashboard-accent) 28%, transparent);
-}
-
 #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-motion {
-    animation: dash-panel-from-btn 0.68s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: dash-panel-from-left 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 #dashboard.dashboard-panel.is-dashboard-closing .dashboard-panel-motion {
-    animation: dash-panel-into-btn 0.42s cubic-bezier(0.3, 0.02, 0.2, 1) both;
+    animation: dash-panel-into-left 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 #dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-bar::after {
@@ -98,65 +67,6 @@
         transparent 72%
     );
     animation: dash-shine 0.72s 0.16s ease both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-brand__mark {
-    animation: dash-mark-pop 0.56s 0.2s cubic-bezier(0.22, 1.35, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-logo--wordmark {
-    animation: dash-word-in 0.48s 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-trailing {
-    animation: dash-trail-in 0.4s 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-empty__icon-wrap {
-    animation: dash-logo-bloom 0.64s 0.3s cubic-bezier(0.22, 1.2, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-empty__title {
-    animation: dash-rise 0.42s 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-empty__hint {
-    animation: dash-rise 0.42s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-orders__title {
-    animation: dash-rise 0.38s 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .body.dashboard-panel-list li {
-    animation: dash-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .body.dashboard-panel-list li:nth-child(1) { animation-delay: 0.3s; }
-#dashboard.dashboard-panel.is-dashboard-opening .body.dashboard-panel-list li:nth-child(2) { animation-delay: 0.36s; }
-#dashboard.dashboard-panel.is-dashboard-opening .body.dashboard-panel-list li:nth-child(3) { animation-delay: 0.42s; }
-#dashboard.dashboard-panel.is-dashboard-opening .body.dashboard-panel-list li:nth-child(n + 4) { animation-delay: 0.48s; }
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer {
-    animation: dash-footer-in 0.46s 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row a {
-    animation: dash-chip-in 0.36s cubic-bezier(0.22, 1.25, 0.36, 1) both;
-}
-
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row:first-child a:nth-child(1) { animation-delay: 0.4s; }
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row:first-child a:nth-child(2) { animation-delay: 0.46s; }
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row:first-child a:nth-child(3) { animation-delay: 0.52s; }
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row:last-child a:nth-child(1) { animation-delay: 0.56s; }
-#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row:last-child a:nth-child(2) { animation-delay: 0.62s; }
-
-body.is-dashboard-opening #dashboardBtn img {
-    animation: dash-btn-release 0.5s cubic-bezier(0.22, 1.4, 0.36, 1) both;
-}
-
-body.is-dashboard-closing #dashboardBtn img {
-    animation: dash-btn-catch 0.46s 0.12s cubic-bezier(0.22, 1.4, 0.36, 1) both;
 }
 
 #dashboard.dashboard-panel .dashboard-panel-header,
@@ -559,130 +469,20 @@ html.ttms-ios body.ttms-scroll-locked #dashboard.dashboard-panel {
     }
 }
 
-@keyframes dash-scrim-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@keyframes dash-panel-from-left {
+    from { transform: translateX(-100%); }
+    to { transform: none; }
 }
 
-@keyframes dash-scrim-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-@keyframes dash-panel-from-btn {
-    0% {
-        transform: translate(var(--dash-from-x), var(--dash-from-y)) scale(0.08);
-        opacity: 0.82;
-        border-radius: 50%;
-        filter: brightness(1.35);
-    }
-    36% {
-        transform: translate(calc(var(--dash-from-x) * 0.14), calc(var(--dash-from-y) * 0.14)) scale(0.2);
-        opacity: 1;
-        border-radius: 1.75rem;
-        filter: brightness(1.12);
-    }
-    74% {
-        transform: scale(1.02);
-        opacity: 1;
-        border-radius: 0.4rem;
-        filter: brightness(1.04);
-    }
-    100% {
-        transform: none;
-        opacity: 1;
-        border-radius: 0;
-        filter: none;
-    }
-}
-
-@keyframes dash-panel-into-btn {
-    0% {
-        transform: none;
-        opacity: 1;
-        border-radius: 0;
-        filter: none;
-    }
-    42% {
-        transform: scale(0.18);
-        opacity: 1;
-        border-radius: 1.5rem;
-        filter: brightness(1.1);
-    }
-    100% {
-        transform: translate(var(--dash-from-x), var(--dash-from-y)) scale(0.06);
-        opacity: 0;
-        border-radius: 50%;
-        filter: brightness(1.2);
-    }
+@keyframes dash-panel-into-left {
+    from { transform: none; }
+    to { transform: translateX(-100%); }
 }
 
 @keyframes dash-shine {
     0% { transform: translateX(-120%); opacity: 0; }
     18% { opacity: 0.85; }
     100% { transform: translateX(120%); opacity: 0; }
-}
-
-@keyframes dash-mark-pop {
-    0% { transform: scale(0.35) rotate(-12deg); opacity: 0; }
-    62% { transform: scale(1.12) rotate(3deg); opacity: 1; }
-    100% { transform: none; opacity: 1; }
-}
-
-@keyframes dash-word-in {
-    0% { transform: translate3d(-1.1rem, 0, 0); opacity: 0; }
-    100% { transform: none; opacity: 1; }
-}
-
-@keyframes dash-trail-in {
-    0% { transform: translate3d(0.85rem, 0, 0); opacity: 0; }
-    100% { transform: none; opacity: 1; }
-}
-
-@keyframes dash-logo-bloom {
-    0% {
-        transform: scale(0.4);
-        opacity: 0;
-        box-shadow: 0 0 0 0 color-mix(in srgb, var(--selected-button-color3, #f0c43a) 55%, transparent);
-    }
-    58% {
-        transform: scale(1.1);
-        opacity: 1;
-        box-shadow: 0 0 0 1.1rem transparent;
-    }
-    100% {
-        transform: none;
-        opacity: 1;
-        box-shadow: none;
-    }
-}
-
-@keyframes dash-rise {
-    0% { transform: translate3d(0, 0.85rem, 0); opacity: 0; }
-    100% { transform: none; opacity: 1; }
-}
-
-@keyframes dash-footer-in {
-    0% { transform: translate3d(0, 1.15rem, 0); opacity: 0; }
-    100% { transform: none; opacity: 1; }
-}
-
-@keyframes dash-chip-in {
-    0% { transform: translate3d(0, 0.55rem, 0) scale(0.86); opacity: 0; }
-    70% { transform: translate3d(0, -0.06rem, 0) scale(1.04); opacity: 1; }
-    100% { transform: none; opacity: 1; }
-}
-
-@keyframes dash-btn-release {
-    0% { transform: scale(1); }
-    34% { transform: scale(1.28); }
-    100% { transform: scale(1); }
-}
-
-@keyframes dash-btn-catch {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.22); }
-    100% { transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -693,25 +493,9 @@ html.ttms-ios body.ttms-scroll-locked #dashboard.dashboard-panel {
         transition: none;
     }
 
-    #dashboard.dashboard-panel.is-dashboard-opening,
-    #dashboard.dashboard-panel.is-dashboard-closing,
-    #dashboard.dashboard-panel.is-dashboard-opening::before,
-    #dashboard.dashboard-panel.is-dashboard-closing::before,
     #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-motion,
     #dashboard.dashboard-panel.is-dashboard-closing .dashboard-panel-motion,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-bar::after,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-brand__mark,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-logo--wordmark,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-trailing,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-empty__icon-wrap,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-empty__title,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-empty__hint,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-orders__title,
-    #dashboard.dashboard-panel.is-dashboard-opening .body.dashboard-panel-list li,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer,
-    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer__row a,
-    body.is-dashboard-opening #dashboardBtn img,
-    body.is-dashboard-closing #dashboardBtn img {
+    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-header-bar::after {
         animation: none;
     }
 }
