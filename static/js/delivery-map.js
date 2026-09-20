@@ -147,7 +147,11 @@
   }
 
   function routeColor(mode) {
-    return mode === 'night' ? '#8b93ff' : '#3943e7';
+    return mode === 'night' ? '#a5b4ff' : '#4f46e5';
+  }
+
+  function routeCasing(mode) {
+    return mode === 'night' ? '#0a1a28' : '#ffffff';
   }
 
   function checkMapService() {
@@ -505,9 +509,14 @@
     else if (typeof inst.map.setStyle === 'function') inst.map.setStyle(url);
     if (inst.router) {
       inst.router.options.lineColor = routeColor(mode);
+      inst.router.options.casingColor = routeCasing(mode);
       if (inst.router._line && typeof inst.router._line.setStyle === 'function') {
-        inst.router._line.setStyle({ color: routeColor(mode) });
+        inst.router._line.setStyle({
+          color: routeColor(mode),
+          casingColor: routeCasing(mode),
+        });
       }
+      if (typeof inst.router.repaint === 'function') inst.router.repaint();
     }
     var el = inst.map.getContainer && inst.map.getContainer();
     if (el) {
@@ -557,8 +566,9 @@
         serviceUrl: osrmBase(),
         profile: 'driving',
         lineColor: routeColor(currentMode),
-        lineWeight: 6,
-        lineOpacity: 0.9,
+        lineWeight: 7,
+        lineOpacity: 1,
+        casingColor: routeCasing(currentMode),
         createMarker: function () {
           return null;
         },
@@ -577,6 +587,7 @@
     } else {
       inst.router.options.serviceUrl = osrmBase();
       inst.router.options.lineColor = routeColor(currentMode);
+      inst.router.options.casingColor = routeCasing(currentMode);
     }
     inst.router.setWaypoints(inst.shop, inst.dropoff);
     var run = function () {
@@ -770,6 +781,9 @@
           if (shop) map.setView(shop, 13);
         }
         resizeMap(map);
+        map.once('idle', function () {
+          if (inst.router && typeof inst.router.repaint === 'function') inst.router.repaint();
+        });
         return inst;
       });
   }
@@ -863,6 +877,10 @@
         else fitPoints(map, [shop, dropoff]);
         if (driver) setDriver(id, driver.lat, driver.lng, opts.driverLabel || 'Driver');
         resizeMap(map);
+        map.once('idle', function () {
+          if (inst.router && typeof inst.router.repaint === 'function') inst.router.repaint();
+          else if (inst.shop && inst.dropoff) refreshRoute(inst, true);
+        });
         return inst;
       });
   }

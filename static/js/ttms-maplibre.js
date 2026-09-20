@@ -681,19 +681,6 @@
 
     setStyle(style) {
       Object.assign(this.options, style || {});
-      if (this._map && this._map.getLayer(this.id)) {
-        this._map.setPaintProperty(this.id, 'line-color', this.options.color);
-        this._map.setPaintProperty(this.id, 'line-width', this.options.weight);
-        this._map.setPaintProperty(this.id, 'line-opacity', this.options.opacity);
-        try {
-          this._map.setPaintProperty(
-            this.id,
-            'line-dasharray',
-            this.options.dashed ? [1.6, 1.4] : [1, 0]
-          );
-        } catch (_) {}
-        return this;
-      }
       this._paint();
       return this;
     }
@@ -701,7 +688,9 @@
     remove() {
       if (this._map) {
         try {
+          const casingId = this.id + '-casing';
           if (this._map.getLayer(this.id)) this._map.removeLayer(this.id);
+          if (this._map.getLayer(casingId)) this._map.removeLayer(casingId);
           if (this._map.getSource(this.id)) this._map.removeSource(this.id);
         } catch (e) {
           console.warn('RouteLine.remove:', e);
@@ -711,18 +700,47 @@
       return this;
     }
 
+    _bringToFront(map) {
+      try {
+        const casingId = this.id + '-casing';
+        if (map.getLayer(casingId)) map.moveLayer(casingId);
+        if (map.getLayer(this.id)) map.moveLayer(this.id);
+      } catch (_) {}
+    }
+
     _applyLayer(map, geo) {
       if (map.getSource(this.id)) {
         map.getSource(this.id).setData(geo);
       } else {
         map.addSource(this.id, { type: 'geojson', data: geo });
       }
+      const casingId = this.id + '-casing';
+      const weight = this.options.weight || 7;
+      const casingColor = this.options.casingColor || '#ffffff';
+      const dash = this.options.dashed ? [1.6, 1.4] : undefined;
+      if (!map.getLayer(casingId)) {
+        map.addLayer({
+          id: casingId,
+          type: 'line',
+          source: this.id,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': casingColor,
+            'line-width': weight + 6,
+            'line-opacity': 0.95,
+          },
+        });
+      } else {
+        map.setPaintProperty(casingId, 'line-color', casingColor);
+        map.setPaintProperty(casingId, 'line-width', weight + 6);
+        map.setPaintProperty(casingId, 'line-opacity', 0.95);
+      }
       const paint = {
         'line-color': this.options.color,
-        'line-width': this.options.weight,
-        'line-opacity': this.options.opacity,
+        'line-width': weight,
+        'line-opacity': this.options.opacity == null ? 1 : this.options.opacity,
       };
-      if (this.options.dashed) paint['line-dasharray'] = [1.6, 1.4];
+      if (dash) paint['line-dasharray'] = dash;
       if (!map.getLayer(this.id)) {
         map.addLayer({
           id: this.id,
@@ -732,17 +750,14 @@
           paint: paint,
         });
       } else {
-        map.setPaintProperty(this.id, 'line-color', this.options.color);
-        map.setPaintProperty(this.id, 'line-width', this.options.weight);
-        map.setPaintProperty(this.id, 'line-opacity', this.options.opacity);
+        map.setPaintProperty(this.id, 'line-color', paint['line-color']);
+        map.setPaintProperty(this.id, 'line-width', paint['line-width']);
+        map.setPaintProperty(this.id, 'line-opacity', paint['line-opacity']);
         try {
-          map.setPaintProperty(
-            this.id,
-            'line-dasharray',
-            this.options.dashed ? [1.6, 1.4] : undefined
-          );
+          map.setPaintProperty(this.id, 'line-dasharray', dash);
         } catch (_) {}
       }
+      this._bringToFront(map);
       if (!map.getLayer(this.id)) throw new Error('route layer missing');
     }
 
@@ -1248,8 +1263,9 @@
             'https://osrm.ttmenus.com/route/v1',
           profile: 'driving',
           lineColor: '#3943e7',
-          lineWeight: 6,
-          lineOpacity: 0.8,
+          lineWeight: 7,
+          lineOpacity: 1,
+          casingColor: '#ffffff',
         },
         options || {}
       );
@@ -1301,9 +1317,10 @@
       this._map._ttmsActiveRoute = this;
       const style = {
         color: this.options.lineColor,
-        weight: this.options.lineWeight,
-        opacity: o.fallback ? 0.75 : this.options.lineOpacity,
+        weight: this.options.lineWeight || 7,
+        opacity: o.fallback ? 0.95 : this.options.lineOpacity,
         dashed: !!o.fallback,
+        casingColor: this.options.casingColor || '#ffffff',
       };
       if (this._line) {
         this._line._map = this._map;
