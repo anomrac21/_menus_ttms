@@ -350,6 +350,19 @@
     });
   }
 
+  function paintNotifyCardCount(active) {
+    var countEl = document.getElementById('dashboardCardNotifyCount');
+    if (!countEl) return;
+    var n = Number(active);
+    if (isNaN(n)) n = 0;
+    countEl.classList.remove('is-loading');
+    countEl.removeAttribute('aria-busy');
+    countEl.textContent = formatCount(n) || '0';
+    countEl.setAttribute('data-count', String(Math.floor(n)));
+    countEl.classList.toggle('is-zero', n === 0);
+    countEl.classList.toggle('is-hot', n > 0);
+  }
+
   /**
    * Dashboard control-room card: subscribers + sent (30d).
    */
@@ -362,24 +375,24 @@
     var snap = document.getElementById('dashboardCardNotifySnapshot');
     if (!subsEl || !sentEl) return Promise.resolve();
 
-    if (!getApiBase()) {
-      if (hint) {
-        hint.textContent = 'Notification API is not configured.';
-        hint.classList.remove('hidden');
+    return ensureNotifyToken().then(function () {
+      if (!getApiBase()) {
+        if (hint) {
+          hint.textContent = 'Notification API is not configured.';
+          hint.classList.remove('hidden');
+        }
+        return;
       }
-      return Promise.resolve();
-    }
 
-    if (!authHeaders().Authorization) {
-      if (hint) {
-        hint.textContent = 'Sign in to load notification stats.';
-        hint.classList.remove('hidden');
+      if (!authHeaders().Authorization) {
+        if (hint) {
+          hint.textContent = 'Sign in to load notification stats.';
+          hint.classList.remove('hidden');
+        }
+        return;
       }
-      return Promise.resolve();
-    }
 
-    return fetchOverview(days)
-      .then(function (x) {
+      return fetchOverview(days).then(function (x) {
         if (!x.ok) {
           if (hint) {
             hint.textContent = cardErrorMessage(x.status, x.data);
@@ -391,8 +404,11 @@
         var ov = (x.data && x.data.overview) || {};
         var sub = ov.subscriptions || {};
         var notif = ov.notifications || {};
-        subsEl.textContent = formatCount(sub.active);
-        sentEl.textContent = formatCount(notif.in_period);
+        var active = sub.active;
+        var sent = notif.in_period;
+        subsEl.textContent = formatCount(active);
+        sentEl.textContent = formatCount(sent);
+        paintNotifyCardCount(active);
         if (hint) hint.classList.add('hidden');
         if (snap) {
           snap.setAttribute(
@@ -400,19 +416,19 @@
             'Notification snapshot, last ' +
               days +
               ' days: ' +
-              formatCount(sub.active) +
+              formatCount(active) +
               ' subscribers, ' +
-              formatCount(notif.in_period) +
+              formatCount(sent) +
               ' sent'
           );
         }
-      })
-      .catch(function () {
-        if (hint) {
-          hint.textContent = 'Could not load notification stats. Try again later.';
-          hint.classList.remove('hidden');
-        }
       });
+    }).catch(function () {
+      if (hint) {
+        hint.textContent = 'Could not load notification stats. Try again later.';
+        hint.classList.remove('hidden');
+      }
+    });
   }
 
   function setStatus(el, msg, isError) {

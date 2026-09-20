@@ -190,6 +190,7 @@
     setInterval(refresh, POLL_MS);
     setTimeout(function () {
       COUNT_IDS.forEach(function (id) {
+        if (id === 'dashboardCardNotifyCount') return;
         var el = $(id);
         if (el && el.classList.contains('is-loading')) setCount(id, 0);
       });
