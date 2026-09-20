@@ -24,7 +24,7 @@ window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '')
 window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 </script>
 <script src="/js/auth-client.js"></script>
-<script src="/js/auth-client-access.js"></script>
+<script src="{{ partial "head/asset-url.html" `/js/auth-client-access.js` }}"></script>
 {{- end -}}
 <script src="/js/cdn-config.js"></script>
 <script src="/js/dashboard-menu-rearrange.js" defer></script>

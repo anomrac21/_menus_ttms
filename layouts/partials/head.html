@@ -1347,7 +1347,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 </script>
 <script src="/js/auth-client.js" defer></script>
 <script src="/js/auth-google-oauth.js" defer></script>
-<script src="/js/auth-client-access.js" defer></script>
+<script src="{{ partial "head/asset-url.html" `/js/auth-client-access.js` }}" defer></script>
 <script src="/js/auth-middleware.js" defer></script>
 <script src="/js/admin-users.js" defer></script>
 {{- if $menuPublicSite -}}

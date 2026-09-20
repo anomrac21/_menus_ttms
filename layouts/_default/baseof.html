@@ -1,8 +1,9 @@
 {{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") -}}
 {{- if $dashboardLayout -}}
 <!DOCTYPE html>
-<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
+<html class="ttms-dash-pending" lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
 <head>
+  {{ partial "dashboard/access-lock.html" . }}
   {{ partial "head.html" . }}
   {{- $authCss := partial "head/asset-url.html" `/css/auth.css` -}}
   {{- $dashCss := partial "head/asset-url.html" `/css/dashboard.css` -}}

@@ -25,7 +25,7 @@ window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '')
 window.CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
 </script>
 <script src="/js/auth-client.js"></script>
-<script src="/js/auth-client-access.js"></script>
+<script src="{{ partial "head/asset-url.html" `/js/auth-client-access.js` }}"></script>
 {{- end -}}
 {{- $thumborUrl := site.Params.thumbor.url | default "https://thumbor.ttmenus.com" -}}
 {{- $sourceBase := site.Params.thumbor.sourceBaseUrl | default site.BaseURL | default "" -}}

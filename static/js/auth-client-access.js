@@ -213,6 +213,30 @@ const AuthClientAccess = {
     }
   },
 
+  lockProtectedPage() {
+    document.documentElement.classList.add('ttms-dash-pending');
+    document.documentElement.classList.remove('ttms-dash-ready');
+    if (document.body) {
+      document.body.setAttribute('inert', '');
+    }
+  },
+
+  revealProtectedPage() {
+    document.documentElement.classList.remove('ttms-dash-pending');
+    document.documentElement.classList.add('ttms-dash-ready');
+    if (document.body) {
+      document.body.removeAttribute('inert');
+    }
+  },
+
+  denyProtectedPage(message, href) {
+    this.lockProtectedPage();
+    if (message) {
+      alert(message);
+    }
+    window.location.replace(href || '/');
+  },
+
   /**
    * Protect client dashboard/control room: only authenticated users with access to this client
    */
@@ -223,25 +247,27 @@ const AuthClientAccess = {
       showError = true,
     } = options;
 
+    this.lockProtectedPage();
     await this.ensureAuthSessionReady();
 
     if (!AuthClient.isAuthenticated()) {
       sessionStorage.setItem('ttmenus_redirect_after_login', window.location.pathname);
-      window.location.href = redirectUrl;
+      this.denyProtectedPage('', redirectUrl);
       return false;
     }
 
     if (!this.hasClientAccess()) {
-      if (showError) {
-        const currentClientID = this.getCurrentClientID();
-        alert(
-          `Access denied. You don't have permission to access this menu for ${currentClientID || 'this site'}.`
-        );
-      }
-      window.location.href = noAccessRedirect;
+      const currentClientID = this.getCurrentClientID();
+      this.denyProtectedPage(
+        showError
+          ? `Access denied. You don't have permission to access this menu for ${currentClientID || 'this site'}.`
+          : '',
+        noAccessRedirect
+      );
       return false;
     }
 
+    this.revealProtectedPage();
     return true;
   },
 
@@ -251,30 +277,34 @@ const AuthClientAccess = {
   async protectAdminPage(options = {}) {
     const { redirectUrl = '/', showError = true } = options;
 
+    this.lockProtectedPage();
     await this.ensureAuthSessionReady();
 
     if (!AuthClient.isAuthenticated()) {
-      window.location.href = '/login/';
+      this.denyProtectedPage('', '/login/');
       return false;
     }
 
     if (!AuthClient.isAdmin()) {
-      alert('Access denied. Admin privileges required.');
-      window.location.href = redirectUrl;
+      this.denyProtectedPage(
+        showError ? 'Access denied. Admin privileges required.' : '',
+        redirectUrl
+      );
       return false;
     }
 
     if (!this.hasClientAccess()) {
       const currentClientID = this.getCurrentClientID();
-
-      if (showError) {
-        alert(`Access denied. You don't have permission to manage ${currentClientID || 'this site'}.`);
-      }
-
-      window.location.href = redirectUrl;
+      this.denyProtectedPage(
+        showError
+          ? `Access denied. You don't have permission to manage ${currentClientID || 'this site'}.`
+          : '',
+        redirectUrl
+      );
       return false;
     }
 
+    this.revealProtectedPage();
     return true;
   },
 

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="{{ site.Language.Lang }}">
+<html class="ttms-dash-pending" lang="{{ site.Language.Lang }}">
 <head>
+  {{ partial "dashboard/access-lock.html" . }}
   {{ partial "head.html" . }}
   {{ partial "dashboard/theme-boot.html" . }}
   <link rel="stylesheet" href="/css/auth.css">
