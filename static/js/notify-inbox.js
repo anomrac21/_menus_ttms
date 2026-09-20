@@ -364,14 +364,15 @@
   var BELL_ICON =
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"></path></svg>';
 
-  function iosCardInner(item, place) {
+  function iosCardInner(item, place, step) {
     var app = place || item.client_name || 'TTMenus';
     var role = roleLabel(item);
+    var badge = step
+      ? '<span class="notify-ios__step" aria-hidden="true">' + escapeHtml(String(step)) + '</span>'
+      : '<span class="notify-ios__icon" aria-hidden="true">' + BELL_ICON + '</span>';
     return (
       '<span class="notify-ios__meta">' +
-      '<span class="notify-ios__icon" aria-hidden="true">' +
-      BELL_ICON +
-      '</span>' +
+      badge +
       '<span class="notify-ios__app">' +
       escapeHtml(app) +
       '</span>' +
@@ -389,7 +390,7 @@
     );
   }
 
-  function iosLinkMarkup(item, unread, place) {
+  function iosLinkMarkup(item, unread, place, step) {
     var href = item.url || '';
     var tag = href ? 'a' : 'button';
     return (
@@ -402,7 +403,7 @@
       ' data-notify-id="' +
       escapeHtml(item.id) +
       '">' +
-      iosCardInner(item, place) +
+      iosCardInner(item, place, step) +
       '</' +
       tag +
       '>'
@@ -484,7 +485,7 @@
               '" style="--i:' +
               escapeHtml(String(idx)) +
               '">' +
-              iosLinkMarkup(item, itemTime(item) > seen, place) +
+              iosLinkMarkup(item, itemTime(item) > seen, place, idx + 1) +
               '</li>'
             );
           })

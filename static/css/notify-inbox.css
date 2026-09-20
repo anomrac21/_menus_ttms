@@ -311,7 +311,8 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     min-width: 0;
 }
 
-.notify-ios__icon {
+.notify-ios__icon,
+.notify-ios__step {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -321,6 +322,15 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     background: var(--notify-accent);
     color: var(--main-bg, #070b16);
     flex-shrink: 0;
+}
+
+.notify-ios__step {
+    border-radius: 50%;
+    font-size: 0.68rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: 0;
 }
 
 .notify-ios__app {
@@ -464,8 +474,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 .notify-stack__flow {
     list-style: none;
     margin: 0;
-    padding: 0 0 0 0.7rem;
-    border-left: 2px solid color-mix(in srgb, var(--notify-accent) 32%, transparent);
+    padding: 0;
 }
 
 .notify-stack__flow > li {
@@ -476,23 +485,6 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 .notify-stack.is-open .notify-stack__flow > li {
     animation: notify-step-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: calc(var(--i, 0) * 58ms);
-}
-
-.notify-stack__flow > li::before {
-    content: attr(data-step);
-    position: absolute;
-    left: -1.05rem;
-    top: 0.85rem;
-    width: 1.2rem;
-    height: 1.2rem;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--notify-accent) 88%, var(--scheme-white));
-    color: var(--main-bg, #070b16);
-    font-size: 0.62rem;
-    font-weight: 800;
-    line-height: 1.2rem;
-    text-align: center;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-bg, #070b16) 70%, transparent);
 }
 
 .notify-stack__collapse {
