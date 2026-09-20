@@ -417,7 +417,7 @@
     function setOpen(open) {
       root.classList.toggle('is-open', open);
       front.setAttribute('aria-expanded', open ? 'true' : 'false');
-      sheet.hidden = !open;
+      sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
     }
     front.addEventListener('click', function () {
       setOpen(true);
@@ -440,9 +440,10 @@
     }
     if (empty) empty.hidden = true;
     var seen = seenAt();
-    groupItems(items).forEach(function (group) {
+    groupItems(items).forEach(function (group, index) {
       var latest = group.latest;
       var li = document.createElement('li');
+      li.style.setProperty('--i', String(index));
       var unread = group.items.some(function (item) {
         return itemTime(item) > seen;
       });
@@ -460,6 +461,7 @@
         '<article class="notify-stack' +
         (unread ? ' is-unread' : '') +
         '">' +
+        '<div class="notify-stack__pile">' +
         '<div class="notify-stack__peeks" aria-hidden="true">' +
         '<span class="notify-stack__peek notify-stack__peek--2"></span>' +
         '<span class="notify-stack__peek notify-stack__peek--1"></span>' +
@@ -470,7 +472,8 @@
         escapeHtml(String(group.items.length) + ' notifications · tap to see the flow') +
         '</span>' +
         '</button>' +
-        '<div class="notify-stack__sheet" hidden>' +
+        '</div>' +
+        '<div class="notify-stack__sheet" aria-hidden="true">' +
         '<p class="notify-stack__sheet-label">How this order progressed</p>' +
         '<ol class="notify-stack__flow">' +
         flow
@@ -478,6 +481,8 @@
             return (
               '<li data-step="' +
               escapeHtml(String(idx + 1)) +
+              '" style="--i:' +
+              escapeHtml(String(idx)) +
               '">' +
               iosLinkMarkup(item, itemTime(item) > seen, place) +
               '</li>'

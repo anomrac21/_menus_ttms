@@ -93,11 +93,9 @@
     min-height: 3.4rem;
     padding: 0.5rem 0.75rem 0.5rem 0.85rem;
     border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
-    background: linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--scheme-white) 8%, transparent)) 0%,
-        color-mix(in srgb, var(--scheme-surface) 92%, transparent) 100%
-    );
+    background: color-mix(in srgb, var(--scheme-surface) 62%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
 }
 
 .notify-inbox-heading {
@@ -256,45 +254,84 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-inbox-item {
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.55rem;
+    animation: notify-card-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 55ms);
 }
 
 .notify-ios {
+    position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0.12rem;
     width: 100%;
     margin: 0;
-    padding: 0.7rem 0.8rem 0.75rem;
-    border: 0;
-    border-radius: 1.15rem;
-    background: color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    padding: 0.72rem 0.85rem 0.78rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+    border-radius: 1.2rem;
+    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
     box-shadow:
-        0 1px 0 color-mix(in srgb, var(--scheme-white) 16%, transparent) inset,
-        0 10px 24px rgba(0, 0, 0, 0.18);
+        0 1px 0 color-mix(in srgb, var(--scheme-white) 22%, transparent) inset,
+        0 -16px 32px color-mix(in srgb, #000 18%, transparent) inset,
+        0 16px 36px rgba(0, 0, 0, 0.22);
     color: inherit;
     font: inherit;
     text-align: left;
     text-decoration: none;
     cursor: pointer;
     box-sizing: border-box;
-    -webkit-backdrop-filter: blur(18px);
-    backdrop-filter: blur(18px);
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    transition:
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.32s ease,
+        border-color 0.32s ease;
+}
+
+.notify-ios::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--scheme-white) 24%, transparent) 0%,
+        color-mix(in srgb, var(--scheme-white) 6%, transparent) 42%,
+        transparent 70%
+    );
+}
+
+.notify-ios > * {
+    position: relative;
+    z-index: 1;
 }
 
 .notify-ios:hover,
 .notify-ios:focus-visible {
     outline: none;
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--scheme-white) 28%, transparent);
     box-shadow:
-        0 1px 0 color-mix(in srgb, var(--scheme-white) 20%, transparent) inset,
-        0 12px 26px rgba(0, 0, 0, 0.22);
+        0 1px 0 color-mix(in srgb, var(--scheme-white) 28%, transparent) inset,
+        0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.notify-ios:active {
+    transform: scale(0.985);
 }
 
 .notify-ios.is-unread {
+    border-color: color-mix(in srgb, var(--notify-accent) 46%, transparent);
     box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--notify-accent) 40%, transparent),
-        0 10px 24px rgba(0, 0, 0, 0.18);
+        0 0 0 1px color-mix(in srgb, var(--notify-accent) 28%, transparent),
+        0 1px 0 color-mix(in srgb, var(--scheme-white) 22%, transparent) inset,
+        0 16px 36px rgba(0, 0, 0, 0.22);
 }
 
 .notify-ios__meta {
@@ -329,8 +366,11 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     font-weight: 700;
     padding: 0.08rem 0.38rem;
     border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--notify-accent) 32%, transparent);
     background: color-mix(in srgb, var(--notify-accent) 20%, transparent);
     color: var(--notify-ink);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 .notify-ios__time {
@@ -353,29 +393,46 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-inbox-item--stack {
-    margin: 0 0 1.15rem;
+    margin: 0 0 1.2rem;
 }
 
 .notify-stack {
     position: relative;
-    padding-bottom: 0.7rem;
+}
+
+.notify-stack__pile {
+    position: relative;
+    max-height: 16rem;
+    overflow: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+        max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        margin 0.42s ease;
 }
 
 .notify-stack__peeks {
     position: absolute;
     inset: 0 0 auto;
-    height: 100%;
+    height: calc(100% + 0.7rem);
     pointer-events: none;
 }
 
 .notify-stack__peek {
     position: absolute;
-    left: 0.7rem;
-    right: 0.7rem;
+    left: 0.72rem;
+    right: 0.72rem;
     top: 0.55rem;
     height: calc(100% - 0.55rem);
-    border-radius: 1.15rem;
+    border-radius: 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
     background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    animation: notify-peek-float 3.8s ease-in-out infinite;
 }
 
 .notify-stack__peek--1 {
@@ -383,11 +440,12 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     right: 0.38rem;
     top: 0.3rem;
     height: calc(100% - 0.3rem);
-    background: color-mix(in srgb, var(--scheme-white) 9%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    animation-delay: 0.18s;
 }
 
 .notify-stack__peek--2 {
-    opacity: 0.8;
+    opacity: 0.78;
 }
 
 .notify-stack__front {
@@ -402,17 +460,36 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     color: var(--notify-accent);
 }
 
-.notify-stack.is-open {
-    padding-bottom: 0;
+.notify-stack__sheet {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition:
+        max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.32s ease,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.notify-stack.is-open .notify-stack__peeks,
-.notify-stack.is-open .notify-stack__front {
-    display: none;
+.notify-stack.is-open .notify-stack__pile {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    overflow: hidden;
+    transform: translateY(-8px) scale(0.97);
+    pointer-events: none;
+}
+
+.notify-stack.is-open .notify-stack__sheet {
+    max-height: 92rem;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
 }
 
 .notify-stack__sheet-label {
-    margin: 0 0 0.45rem 0.15rem;
+    margin: 0 0 0.5rem 0.15rem;
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -432,6 +509,11 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     margin: 0 0 0.5rem;
 }
 
+.notify-stack.is-open .notify-stack__flow > li {
+    animation: notify-step-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 58ms);
+}
+
 .notify-stack__flow > li::before {
     content: attr(data-step);
     position: absolute;
@@ -440,27 +522,40 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     width: 1.2rem;
     height: 1.2rem;
     border-radius: 50%;
-    background: var(--notify-accent);
+    background: color-mix(in srgb, var(--notify-accent) 88%, var(--scheme-white));
     color: var(--main-bg, #070b16);
     font-size: 0.62rem;
     font-weight: 800;
     line-height: 1.2rem;
     text-align: center;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-bg, #070b16) 70%, transparent);
 }
 
 .notify-stack__collapse {
     display: block;
     width: 100%;
-    margin: 0.15rem 0 0;
-    padding: 0.55rem 0.75rem;
-    border: 0;
+    margin: 0.2rem 0 0;
+    padding: 0.58rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
     border-radius: 999px;
-    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
     color: var(--notify-ink);
     font: inherit;
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    transition:
+        transform 0.24s ease,
+        background 0.24s ease;
+}
+
+.notify-stack__collapse:hover,
+.notify-stack__collapse:focus-visible {
+    outline: none;
+    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
 }
 
 .notify-inbox-empty {
@@ -542,6 +637,38 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     display: none !important;
 }
 
+@keyframes notify-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes notify-step-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes notify-peek-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(3px);
+    }
+}
+
 @keyframes notify-scrim-in {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -582,7 +709,25 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     #notify-inbox.is-notify-opening::before,
     #notify-inbox.is-notify-closing::before,
     #notify-inbox.is-notify-opening .notify-inbox-motion,
-    #notify-inbox.is-notify-closing .notify-inbox-motion {
+    #notify-inbox.is-notify-closing .notify-inbox-motion,
+    .notify-inbox-item,
+    .notify-stack__peek,
+    .notify-stack.is-open .notify-stack__flow > li {
         animation: none;
+    }
+
+    .notify-ios,
+    .notify-stack__pile,
+    .notify-stack__sheet,
+    .notify-stack__collapse {
+        transition: none;
+    }
+
+    .notify-ios:hover,
+    .notify-ios:focus-visible,
+    .notify-ios:active,
+    .notify-stack__collapse:hover,
+    .notify-stack__collapse:focus-visible {
+        transform: none;
     }
 }
