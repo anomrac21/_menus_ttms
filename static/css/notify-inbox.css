@@ -93,9 +93,11 @@
     min-height: 3.4rem;
     padding: 0.5rem 0.75rem 0.5rem 0.85rem;
     border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
-    background: color-mix(in srgb, var(--scheme-surface) 62%, transparent);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    backdrop-filter: blur(20px) saturate(160%);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--scheme-white) 8%, transparent)) 0%,
+        color-mix(in srgb, var(--scheme-surface) 92%, transparent) 100%
+    );
 }
 
 .notify-inbox-heading {
@@ -261,7 +263,6 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 
 .notify-ios {
     position: relative;
-    isolation: isolate;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -269,14 +270,10 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     width: 100%;
     margin: 0;
     padding: 0.72rem 0.85rem 0.78rem;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+    border: 0;
     border-radius: 1.2rem;
-    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
-    box-shadow:
-        0 1px 0 color-mix(in srgb, var(--scheme-white) 22%, transparent) inset,
-        0 -16px 32px color-mix(in srgb, #000 18%, transparent) inset,
-        0 16px 36px rgba(0, 0, 0, 0.22);
+    background: color-mix(in srgb, var(--scheme-surface, #141820) 88%, var(--scheme-white));
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
     color: inherit;
     font: inherit;
     text-align: left;
@@ -285,41 +282,16 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     box-sizing: border-box;
     appearance: none;
     -webkit-appearance: none;
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
     transition:
         transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.32s ease,
-        border-color 0.32s ease;
-}
-
-.notify-ios::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--scheme-white) 24%, transparent) 0%,
-        color-mix(in srgb, var(--scheme-white) 6%, transparent) 42%,
-        transparent 70%
-    );
-}
-
-.notify-ios > * {
-    position: relative;
-    z-index: 1;
+        box-shadow 0.32s ease;
 }
 
 .notify-ios:hover,
 .notify-ios:focus-visible {
     outline: none;
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--scheme-white) 28%, transparent);
-    box-shadow:
-        0 1px 0 color-mix(in srgb, var(--scheme-white) 28%, transparent) inset,
-        0 18px 40px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
 }
 
 .notify-ios:active {
@@ -327,11 +299,9 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-ios.is-unread {
-    border-color: color-mix(in srgb, var(--notify-accent) 46%, transparent);
     box-shadow:
-        0 0 0 1px color-mix(in srgb, var(--notify-accent) 28%, transparent),
-        0 1px 0 color-mix(in srgb, var(--scheme-white) 22%, transparent) inset,
-        0 16px 36px rgba(0, 0, 0, 0.22);
+        0 0 0 1px color-mix(in srgb, var(--notify-accent) 40%, transparent),
+        0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
 .notify-ios__meta {
@@ -366,11 +336,8 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     font-weight: 700;
     padding: 0.08rem 0.38rem;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--notify-accent) 32%, transparent);
     background: color-mix(in srgb, var(--notify-accent) 20%, transparent);
     color: var(--notify-ink);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
 }
 
 .notify-ios__time {
@@ -427,11 +394,8 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     top: 0.55rem;
     height: calc(100% - 0.55rem);
     border-radius: 1.2rem;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
-    background: color-mix(in srgb, var(--scheme-white) 6%, transparent);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-    backdrop-filter: blur(18px) saturate(150%);
+    background: color-mix(in srgb, var(--scheme-white) 8%, var(--scheme-surface, #141820));
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
     animation: notify-peek-float 3.8s ease-in-out infinite;
 }
 
@@ -440,7 +404,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     right: 0.38rem;
     top: 0.3rem;
     height: calc(100% - 0.3rem);
-    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 12%, var(--scheme-surface, #141820));
     animation-delay: 0.18s;
 }
 
@@ -536,16 +500,14 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     width: 100%;
     margin: 0.2rem 0 0;
     padding: 0.58rem 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
+    border: 0;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
     color: var(--notify-ink);
     font: inherit;
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    backdrop-filter: blur(16px) saturate(160%);
     transition:
         transform 0.24s ease,
         background 0.24s ease;
@@ -555,7 +517,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 .notify-stack__collapse:focus-visible {
     outline: none;
     transform: translateY(-1px);
-    background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    background: color-mix(in srgb, var(--scheme-white) 16%, transparent);
 }
 
 .notify-inbox-empty {
