@@ -37,10 +37,18 @@
 
   function loginWithGoogle(options) {
     options = options || {};
+    var returnTo = options.returnTo || window.location.href;
+    try {
+      var returnUrl = new URL(returnTo, window.location.origin);
+      returnUrl.searchParams.delete('oauth');
+      returnUrl.searchParams.delete('oauth_error');
+      returnUrl.searchParams.delete('registered');
+      returnTo = returnUrl.toString();
+    } catch (e) {}
     var params = new URLSearchParams();
-    params.set('return_to', options.returnTo || window.location.href);
-    params.set('action', options.action === 'signup' ? 'signup' : 'login');
-    if (options.acceptLegal) {
+    params.set('return_to', returnTo);
+    params.set('action', options.action === 'login' ? 'login' : 'signup');
+    if (options.acceptLegal !== false) {
       params.set('accept_legal', '1');
     }
     window.location.href = resolveAuthApiUrl() + '/oauth/google?' + params.toString();

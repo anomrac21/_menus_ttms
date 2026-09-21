@@ -551,10 +551,18 @@ const AuthClient = {
    */
   loginWithGoogle(options) {
     options = options || {};
+    var returnTo = options.returnTo || window.location.href;
+    try {
+      var returnUrl = new URL(returnTo, window.location.origin);
+      returnUrl.searchParams.delete('oauth');
+      returnUrl.searchParams.delete('oauth_error');
+      returnUrl.searchParams.delete('registered');
+      returnTo = returnUrl.toString();
+    } catch (e) {}
     var params = new URLSearchParams();
-    params.set('return_to', options.returnTo || window.location.href);
-    params.set('action', options.action === 'signup' ? 'signup' : 'login');
-    if (options.acceptLegal) {
+    params.set('return_to', returnTo);
+    params.set('action', options.action === 'login' ? 'login' : 'signup');
+    if (options.acceptLegal !== false) {
       params.set('accept_legal', '1');
     }
     window.location.href = AuthClient.config.apiUrl + '/oauth/google?' + params.toString();
@@ -590,12 +598,29 @@ const AuthClient = {
     try {
       const response = await fetch(this.config.apiUrl + '/signup', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Signup failed');
-      return { success: true, message: data.message, userId: data.user_id };
+
+      if (data.access_token) {
+        this.storeAuth(data.access_token, null, data.user);
+        this._lastSessionState = true;
+        try {
+          this._syncBodyAuthClasses();
+          window.dispatchEvent(new CustomEvent('auth:login', { detail: { user: data.user } }));
+        } catch (e) {}
+      }
+
+      return {
+        success: true,
+        message: data.message,
+        userId: data.user_id,
+        user: data.user,
+        signedIn: !!data.signed_in || !!data.access_token || this.isAuthenticated(),
+      };
     } catch (error) {
       return { success: false, error: error.message };
     }

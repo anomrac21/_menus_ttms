@@ -26,6 +26,7 @@
         </svg>
         Continue with Google
       </button>
+      <p class="auth-legal-note">By continuing with Google, you agree to the <a href="https://ttmenus.com/terms-and-conditions/" target="_blank" rel="noopener">Terms</a> and <a href="https://ttmenus.com/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a>.</p>
 
       <div class="auth-divider auth-divider-or">
         <span>or sign in with email</span>
@@ -142,21 +143,29 @@
           showAlert(oauthMsg.type === 'success' ? 'success' : 'error', oauthMsg.message);
           AuthClient.clearOAuthRedirectParams && AuthClient.clearOAuthRedirectParams();
           if (oauthMsg.type === 'success') {
-            AuthClient.syncHubSession().then(function() {
-              setTimeout(redirectAfterSuccessfulLogin, 800);
-            });
+            var synced = await AuthClient.syncHubSession();
+            if (synced && synced.success !== false && AuthClient.isAuthenticated()) {
+              setTimeout(redirectAfterSuccessfulLogin, 400);
+              return;
+            }
+            showAlert('error', 'Google sign-in completed but your session could not be established. Please try again or use email login.');
           }
         }
 
         var googleBtn = document.getElementById('googleLoginBtn');
         if (googleBtn) {
           googleBtn.addEventListener('click', function() {
+            var returnUrl = new URL(window.location.href);
+            returnUrl.searchParams.delete('oauth');
+            returnUrl.searchParams.delete('oauth_error');
+            returnUrl.searchParams.delete('registered');
+            var opts = { action: 'signup', acceptLegal: true, returnTo: returnUrl.href };
             if (typeof AuthClient.loginWithGoogle === 'function') {
-              AuthClient.loginWithGoogle({ action: 'login', returnTo: window.location.href });
+              AuthClient.loginWithGoogle(opts);
               return;
             }
             if (window.TTMSGoogleAuth && typeof TTMSGoogleAuth.loginWithGoogle === 'function') {
-              TTMSGoogleAuth.loginWithGoogle({ action: 'login', returnTo: window.location.href });
+              TTMSGoogleAuth.loginWithGoogle(opts);
               return;
             }
             showAlert('error', 'Google sign-in is unavailable. Please refresh the page.');
@@ -366,8 +375,8 @@
           return;
         }
         var base = new URL('/js/', window.location.origin).href;
-        loadScript(base + 'auth-client.js?v=google-oauth', function() {
-          loadScript(base + 'auth-google-oauth.js?v=google-oauth', runLoginPage);
+        loadScript(base + 'auth-client.js?v=google-signup-fix', function() {
+          loadScript(base + 'auth-google-oauth.js?v=google-signup-fix', runLoginPage);
         });
       }
 

@@ -185,6 +185,19 @@ a.btn-secondary {
   line-height: 1.45;
 }
 
+.auth-legal-note {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--dash-ink-muted);
+}
+
+.auth-legal-note a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .auth-divider {
   text-align: center;
   margin: 25px 0;
