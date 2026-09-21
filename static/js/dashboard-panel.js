@@ -8,8 +8,8 @@
   var HIDDEN_CLASS = 'loader-hide-left';
   var OPENING_CLASS = 'is-dashboard-opening';
   var CLOSING_CLASS = 'is-dashboard-closing';
-  var OPEN_MS = 920;
-  var CLOSE_MS = 360;
+  var OPEN_MS = 600;
+  var CLOSE_MS = 300;
   var dashAnimTimer = null;
 
   function getDashboard() {
@@ -49,7 +49,12 @@
     var accountPanel = document.getElementById('account-dashboard');
     var accountOpen =
       accountPanel && !accountPanel.classList.contains('loader-hide-right');
-    if (!accountOpen) {
+    var notify = document.getElementById('notify-inbox');
+    var notifyOpen =
+      notify &&
+      !notify.classList.contains('notify-inbox-hidden') &&
+      !notify.classList.contains('is-notify-closing');
+    if (!accountOpen && !notifyOpen) {
       document.body.classList.remove('modal-open');
     }
     syncDashboardBtnExpanded();

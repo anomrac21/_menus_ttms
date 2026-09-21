@@ -9,8 +9,8 @@
   var CLOSING = 'is-notify-closing';
   var CACHE_KEY = 'ttmenus_notify_inbox';
   var SEEN_KEY = 'ttmenus_notify_inbox_seen';
-  var OPEN_MS = 560;
-  var CLOSE_MS = 360;
+  var OPEN_MS = 420;
+  var CLOSE_MS = 280;
   var animTimer = null;
 
   function getPanel() {
@@ -588,15 +588,22 @@
     if (!panel) return;
     var vw = window.innerWidth || 1;
     var vh = window.innerHeight || 1;
+    var panelW = Math.min(400, vw);
+    var panelLeft = vw - panelW;
     var btn = getHeaderBtn();
-    if (!btn || !btn.getBoundingClientRect) {
-      panel.style.setProperty('--notify-from-x', Math.round(vw * -0.12) + 'px');
-      panel.style.setProperty('--notify-from-y', Math.round(vh * -0.38) + 'px');
-      return;
+    var cx = vw - Math.min(56, vw * 0.08);
+    var cy = Math.min(40, vh * 0.08);
+    if (btn && btn.getBoundingClientRect) {
+      var rect = btn.getBoundingClientRect();
+      cx = rect.left + rect.width / 2;
+      cy = rect.top + rect.height / 2;
     }
-    var rect = btn.getBoundingClientRect();
-    panel.style.setProperty('--notify-from-x', rect.left + rect.width / 2 - vw / 2 + 'px');
-    panel.style.setProperty('--notify-from-y', rect.top + rect.height / 2 - vh / 2 + 'px');
+    var ox = ((cx - panelLeft) / panelW) * 100;
+    var oy = (cy / vh) * 100;
+    if (!isFinite(ox)) ox = 92;
+    if (!isFinite(oy)) oy = 8;
+    panel.style.setProperty('--notify-origin-x', Math.max(-20, Math.min(120, ox)).toFixed(2) + '%');
+    panel.style.setProperty('--notify-origin-y', Math.max(-20, Math.min(120, oy)).toFixed(2) + '%');
   }
 
   function syncExpanded() {

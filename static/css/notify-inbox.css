@@ -2,16 +2,26 @@
  * Guest alerts inbox (#notify-inbox): recent notifications from this restaurant.
  */
 
+body.modal-open,
+body.is-notify-opening,
+body.is-notify-closing {
+    overflow: hidden;
+}
+
 #notify-inbox.notify-inbox-panel {
     --notify-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
     --notify-ink: var(--main-text-color);
     --notify-ink-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
-    --notify-from-x: -12vw;
-    --notify-from-y: -38vh;
+    --notify-origin-x: 92%;
+    --notify-origin-y: 8%;
     position: fixed;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
     z-index: var(--ttms-z-notify-inbox, 10040);
     width: 100%;
+    max-width: 400px;
     height: var(--ttms-overlay-height, 100dvh);
     max-height: var(--ttms-overlay-height, 100dvh);
     display: flex;
@@ -20,6 +30,8 @@
     background: var(--main-bg, #070b16);
     color: var(--notify-ink);
     box-sizing: border-box;
+    border-left: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    box-shadow: 0 18px 48px color-mix(in srgb, #000 42%, transparent);
 }
 
 #notify-inbox.notify-inbox-hidden {
@@ -43,6 +55,11 @@
         linear-gradient(180deg, color-mix(in srgb, var(--main-bg) 90%, #000) 0%, var(--main-bg) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    contain: layout paint;
+    isolation: isolate;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform-origin: var(--notify-origin-x, 92%) var(--notify-origin-y, 8%);
 }
 
 #notify-inbox.is-notify-opening,
@@ -63,7 +80,7 @@
 #notify-inbox.is-notify-opening::before,
 #notify-inbox.is-notify-closing::before {
     content: '';
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: color-mix(in srgb, var(--main-bg, #070b16) 88%, #000);
 }
@@ -76,12 +93,19 @@
     animation: notify-scrim-out 0.26s ease both;
 }
 
+#notify-inbox.is-notify-opening .notify-inbox-motion,
+#notify-inbox.is-notify-closing .notify-inbox-motion {
+    will-change: transform, opacity;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 #notify-inbox.is-notify-opening .notify-inbox-motion {
-    animation: notify-panel-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: notify-panel-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 #notify-inbox.is-notify-closing .notify-inbox-motion {
-    animation: notify-panel-out 0.34s cubic-bezier(0.3, 0.02, 0.2, 1) both;
+    animation: notify-panel-out 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .notify-inbox-header {
@@ -89,9 +113,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.6rem;
-    min-height: 3.4rem;
-    padding: 0.5rem 0.75rem 0.5rem 0.85rem;
+    gap: 0.75rem;
+    min-height: 4.25rem;
+    padding: 0.7rem 0.85rem 0.7rem 1rem;
     border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     background: linear-gradient(
         180deg,
@@ -149,8 +173,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.65rem;
+    height: 2.65rem;
+    min-width: 2.65rem;
     margin: 0;
     padding: 0;
     border-radius: 50%;
@@ -635,14 +660,12 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 
 @keyframes notify-panel-in {
     0% {
-        transform: translate(var(--notify-from-x), var(--notify-from-y)) scale(0.1);
-        opacity: 0.85;
-        border-radius: 50%;
+        transform: scale(0.14);
+        opacity: 0.55;
     }
     100% {
         transform: none;
         opacity: 1;
-        border-radius: 0;
     }
 }
 
@@ -650,12 +673,17 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     0% {
         transform: none;
         opacity: 1;
-        border-radius: 0;
     }
     100% {
-        transform: translate(var(--notify-from-x), var(--notify-from-y)) scale(0.08);
+        transform: scale(0.14);
         opacity: 0;
-        border-radius: 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    #notify-inbox.notify-inbox-panel {
+        max-width: 100%;
+        border-left: 0;
     }
 }
 
