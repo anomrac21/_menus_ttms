@@ -24,7 +24,10 @@
     var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
     g.async = true;
     g.src = u + 'matomo.js';
-    g.onload = function () { window.dispatchEvent(new Event('ttms:matomo-ready')); };
+    g.onload = function () {
+      window.__ttmsMatomoReady = true;
+      window.dispatchEvent(new Event('ttms:matomo-ready'));
+    };
     s.parentNode.insertBefore(g, s);
   })();
 </script>

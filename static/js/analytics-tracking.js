@@ -11,7 +11,7 @@ class TTMSAnalytics {
     this.trackedAdImpressions = new Set();
     this.trackedAdClicks = new Set();
     this.matomoInitAttempts = 0;
-    this.maxMatomoInitAttempts = 5;
+    this.maxMatomoInitAttempts = 12;
     this.adImpressionRetries = 0;
     this.maxAdImpressionRetries = 4;
     this._trackingError = false;
@@ -25,11 +25,21 @@ class TTMSAnalytics {
     return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local');
   }
 
+  isMatomoTrackerReady() {
+    return (
+      typeof _paq !== 'undefined' &&
+      (window.__ttmsMatomoReady === true ||
+        typeof window.Matomo !== 'undefined' ||
+        typeof window.Piwik !== 'undefined')
+    );
+  }
+
   /**
    * Initialize analytics tracking
    */
   init() {
-    if (typeof _paq !== 'undefined' && window.__ttmsMatomoReady) {
+    if (this.isMatomoTrackerReady()) {
+      window.__ttmsMatomoReady = true;
       this.enabled = true;
       console.log('🎯 TTMS Analytics initialized');
 
@@ -42,9 +52,6 @@ class TTMSAnalytics {
 
     this.matomoInitAttempts++;
     if (this.matomoInitAttempts < this.maxMatomoInitAttempts) {
-      if (!this.isDevHost() && this.matomoInitAttempts === 1) {
-        console.warn('⚠️ Matomo not ready, waiting...');
-      }
       setTimeout(() => this.init(), 500);
     } else if (!this.isDevHost()) {
       console.warn('⚠️ Matomo not available after retries; analytics disabled');
@@ -525,8 +532,14 @@ class TTMSAnalytics {
   }
 }
 
-// Initialize when DOM is ready; wait for Matomo script load
-window.__ttmsMatomoReady = false;
+// Do not reset a flag already set by the head snippet onload (cached matomo.js
+// can finish before this file runs, which used to miss ttms:matomo-ready).
+if (typeof window.__ttmsMatomoReady !== 'boolean') {
+  window.__ttmsMatomoReady = false;
+}
+if (typeof window.Matomo !== 'undefined' || typeof window.Piwik !== 'undefined') {
+  window.__ttmsMatomoReady = true;
+}
 window.addEventListener('ttms:matomo-ready', function () {
   window.__ttmsMatomoReady = true;
   if (window.ttmsAnalytics) {

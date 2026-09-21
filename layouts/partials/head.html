@@ -1211,7 +1211,10 @@ window.MENU_CONFIG = {
       _paq.push(['setSiteId', '1']);
       var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
       g.async=true; g.src=u+'matomo.js';
-      g.onload=function(){ window.dispatchEvent(new Event('ttms:matomo-ready')); };
+      g.onload=function(){
+        window.__ttmsMatomoReady = true;
+        window.dispatchEvent(new Event('ttms:matomo-ready'));
+      };
       s.parentNode.insertBefore(g,s);
     })();
   }
@@ -1347,8 +1350,8 @@ window.SiteConfig.thumborUrl = window.MENU_IMAGE_THUMBOR_URL;
 window.SiteConfig.menuImageSourceBaseUrl = window.MENU_IMAGE_SOURCE_BASE_URL;
 window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 </script>
-<script src="/js/auth-client.js" defer></script>
-<script src="/js/auth-google-oauth.js" defer></script>
+<script src="/js/auth-client.js?v=google-signup-fix" defer></script>
+<script src="/js/auth-google-oauth.js?v=google-signup-fix" defer></script>
 <script src="{{ partial "head/asset-url.html" `/js/auth-client-access.js` }}" defer></script>
 <script src="/js/auth-middleware.js" defer></script>
 <script src="/js/admin-users.js" defer></script>
