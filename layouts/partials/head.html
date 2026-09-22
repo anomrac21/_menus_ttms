@@ -28,6 +28,14 @@
 <link rel="canonical" href="{{ $canonical }}">
 {{ partial "head/open-graph.html" (dict "Page" . "Title" $ogTitle "Description" $ogDesc "URL" $canonical "SiteName" $siteName) }}
 <script>
+  (function () {
+    try {
+      if (!/(?:^|;\s*)ttms-driver-shift=1(?:;|$)/.test(document.cookie)) return;
+      location.replace((window.TTMS_HUB_URL || 'https://www.ttmenus.com').replace(/\/+$/, '') + '/drive/');
+    } catch (e) {}
+  })();
+</script>
+<script>
 (function (doc) {
   if (/Android/i.test(navigator.userAgent || '')) {
     doc.documentElement.classList.add('ttms-android');

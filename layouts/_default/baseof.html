@@ -15,6 +15,8 @@
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
   {{ block "main" . }}{{ end }}
+  <script>window.TTMS_HUB_URL = window.TTMS_HUB_URL || 'https://www.ttmenus.com';</script>
+  <script src="{{ partial "head/asset-url.html" "/js/driver-shift-guard.js" }}"></script>
 </body>
 </html>
 {{- else -}}
@@ -108,6 +110,8 @@
   {{ partial "features/whatsapp_ordering_system.html" . }}
   {{ partial "features/notifications.html" . }}
   {{ partial "features/delivery_scripts.html" . }}
+  <script>window.TTMS_HUB_URL = window.TTMS_HUB_URL || 'https://www.ttmenus.com';</script>
+  <script src="{{ partial "head/asset-url.html" "/js/driver-shift-guard.js" }}"></script>
 
 </body>
 </html>
