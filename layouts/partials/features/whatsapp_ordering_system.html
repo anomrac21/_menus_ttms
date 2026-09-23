@@ -12,7 +12,7 @@ const hastables = {{ default false site.Params.orderingsystem.hastables }};
 const orderingEnabled = {{ default true site.Params.orderingsystem.enabled }};
 const orderingDisabledMessage = {{ (site.Params.orderingsystem.orderingDisabledMessage | default "Ordering is currently unavailable.") | jsonify }};
 {{- $checkoutChannel := partial "ordering/checkout-channel.html" . -}}
-const orderCheckoutChannel = {{ $checkoutChannel | jsonify }};
+const orderCheckoutChannel = String({{ $checkoutChannel | jsonify | safeJS }}).replace(/^["']+|["']+$/g, '');
 const usephonecall = orderCheckoutChannel === 'phone';
 const orderPhone = '{{ site.Params.orderingsystem.phone }}';
 const paymentsEnabled = {{ and site.Params.features.payments site.Params.paymentService.enabled }};
