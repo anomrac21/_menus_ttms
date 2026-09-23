@@ -15,7 +15,8 @@ body.menu-reels-mode {
 html.menu-nav-smooth,
 html.menu-nav-smooth body.menu-reels-mode {
     overflow: auto;
-    scroll-behavior: smooth;
+    /* Native scrolling stays 1:1. End-of-gesture alignment is animated in JS. */
+    scroll-behavior: auto;
 }
 
 html.menu-nav-smooth body.menu-reels-mode {
@@ -55,6 +56,21 @@ body.menu-nav-smooth .menu-reels-track {
     scroll-snap-type: none;
 }
 
+/* Smooth scroll already moves the page. Replaying the reel-enter
+   translate on each settle makes item cards jump. */
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-slide > *:not(.menu-anchor):not(.sr-only),
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .ads-reels-slide > *:not(.menu-anchor):not(.sr-only),
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-slide.is-reel-in > *:not(.menu-anchor):not(.sr-only),
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .ads-reels-slide.is-reel-in > *:not(.menu-anchor):not(.sr-only),
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-slide > .menu-smash-pass,
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-slide > .menu-item-smash-pass,
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-slide.is-reel-in > .menu-smash-pass,
+html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-slide.is-reel-in > .menu-item-smash-pass {
+    transform: none;
+    opacity: 1;
+    transition: none;
+}
+
 /* Smooth scroll: same slide heights as snap, without scroll-snap */
 html.menu-nav-smooth .menu-reels-track .menu-reels-slide,
 html.menu-nav-smooth .menu-reels-track .ads-reels-slide,
@@ -76,6 +92,91 @@ html.menu-nav-smooth .menu-reels-slide--bottom-ads,
 body.menu-nav-smooth .menu-reels-slide--bottom-ads {
     min-height: calc(100dvh - var(--ttms-header-height, 5em));
     height: calc(100dvh - var(--ttms-header-height, 5em));
+    max-height: calc(100dvh - var(--ttms-header-height, 5em));
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+/* Smooth page scroll must not stick inside the sponsored slide.
+   The preview still fills that one screen. */
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads {
+    display: flex !important;
+    flex-direction: column;
+    visibility: visible !important;
+}
+
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads .bottomads,
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads #pageadscontainer,
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads #pageadscontainer.frontpageads {
+    display: flex !important;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    visibility: visible !important;
+}
+
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads section.sticky,
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads .menu-ad.sticky,
+html.menu-nav-smooth #pageadscontainer section.sticky,
+html.menu-nav-smooth #menu-reels-sponsored-ads .menu-ad.sticky {
+    position: relative !important;
+    top: auto !important;
+    display: flex !important;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    scroll-snap-align: none !important;
+    scroll-snap-stop: normal !important;
+    scroll-margin-top: 0 !important;
+    visibility: visible !important;
+}
+
+html.menu-nav-smooth #menu-reels-sponsored-ads .menu-ad-scroll-end,
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads .menu-ad-scroll-end {
+    display: none !important;
+    flex: 0 0 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+html.menu-nav-smooth .bottomads #pageadscontainer.frontpageads section.menu-ad--reels-preview,
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads section.menu-ad--reels-preview {
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    flex: 1 1 auto;
+}
+
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads #ads-list,
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads #ads-list[data-aos],
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads .inner.ads-list--preview {
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+    overflow: hidden;
+    scroll-snap-type: none;
+    touch-action: pan-y;
+}
+
+html.menu-nav-smooth #menu-reels-track .menu-reels-slide--bottom-ads .ad-panel--preview {
+    height: 100%;
+    min-height: 0;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 html.menu-nav-smooth #homepage-ads-container .ads-loading,

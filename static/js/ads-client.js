@@ -87,6 +87,14 @@
       return;
     }
 
+    if (self.isHomeSmoothNavMode()) {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(run, { timeout: 800 });
+      } else {
+        setTimeout(run, 200);
+      }
+    }
+
     var observer = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
@@ -97,7 +105,7 @@
       },
       scrollRoot
         ? { root: scrollRoot, rootMargin: '80% 0px', threshold: 0.01 }
-        : { root: null, rootMargin: '120px 0px', threshold: 0.01 }
+        : { root: null, rootMargin: '100% 0px', threshold: 0.01 }
     );
     observer.observe(target);
   },
@@ -490,6 +498,11 @@
 
     this.updateReelsPreviewScrollProgressBar();
 
+    if (this.isHomeSmoothNavMode()) {
+      this._lastReelsPreviewScrollProgress = progress;
+      return;
+    }
+
     if (this.isHomeSmoothNavMode() && this._reelsAutoOpenSuppressed) {
       if (progress < 50) {
         this._reelsAutoOpenSuppressed = false;
@@ -555,25 +568,8 @@
    */
   releaseSmoothPreviewScrollLock() {
     if (!this.isHomeSmoothNavMode()) return;
-
-    const slide =
-      document.getElementById('menu-reels-sponsored-ads') ||
-      document.querySelector('.menu-reels-slide--bottom-ads');
-    if (!slide) return;
-
-    const headerOffset = this.getHeaderScrollOffset();
-    const slideDocTop = slide.getBoundingClientRect().top + window.scrollY;
-    const releaseY = slideDocTop - headerOffset - window.innerHeight * 0.22;
-
-    window.scrollTo({
-      top: Math.max(0, releaseY),
-      left: 0,
-      behavior: 'auto',
-    });
-    this._lastReelsPreviewScrollProgress = Math.min(
-      this._lastReelsPreviewScrollProgress,
-      60
-    );
+    this._reelsAutoOpenSuppressed = true;
+    this._lastReelsPreviewScrollProgress = 0;
     this.updateReelsPreviewScrollProgressBar();
   },
 

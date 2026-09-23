@@ -1023,13 +1023,17 @@
     header.dataset.homeMenuLoaded = '1';
     finalizeSectionItemCount(header, items.length);
     if (preserveScrollY != null) {
-      requestAnimationFrame(function () {
-        if (isSmoothNavMode()) {
-          window.scrollTo({ top: preserveScrollY, left: 0, behavior: 'auto' });
-        } else if (track) {
-          track.scrollTop = preserveScrollY;
+      if (isSmoothNavMode()) {
+        if (Math.abs(window.scrollY - preserveScrollY) > 1) {
+          try {
+            window.scrollTo({ top: preserveScrollY, left: 0, behavior: 'instant' });
+          } catch (e) {
+            window.scrollTo(0, preserveScrollY);
+          }
         }
-      });
+      } else if (track) {
+        track.scrollTop = preserveScrollY;
+      }
     }
     scheduleReelsRefresh();
     refreshInjectedMenuAuth();

@@ -582,13 +582,8 @@
     if (restoreScrollY != null) {
       var y = restoreScrollY;
       var anchor = anchorSlide;
-      requestAnimationFrame(function () {
-        if (anchor && anchor.isConnected) {
-          window.scrollTo({ top: slideScrollTop(track, anchor), left: 0, behavior: 'auto' });
-        } else {
-          window.scrollTo({ top: Math.max(0, y), left: 0, behavior: 'auto' });
-        }
-      });
+      var top = anchor && anchor.isConnected ? slideScrollTop(track, anchor) : Math.max(0, y);
+      scrollWindowInstant(top);
     }
 
     try {
@@ -610,6 +605,10 @@
         window.removeEventListener('scroll', scrollHandler);
         track._ttmsReelsWindowScrollBound = false;
       }
+    }
+    if (typeof track._ttmsSmoothRestCleanup === 'function') {
+      track._ttmsSmoothRestCleanup();
+      track._ttmsSmoothRestCleanup = null;
     }
     track._ttmsReelsTrackBound = false;
   }
@@ -752,6 +751,230 @@
     return (delta < 0 && atTop) || (delta > 0 && atBottom);
   }
 
+  var SMOOTH_REST_VELOCITY = 0.04;
+  var SMOOTH_REST_IDLE_MS = 220;
+  var SMOOTH_ALIGN_PX = 10;
+  var SMOOTH_LOCK_PX = 28;
+
+  function scrollWindowInstant(top) {
+    var y = Math.max(0, top);
+    try {
+      window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+    } catch (e) {
+      window.scrollTo(0, y);
+    }
+  }
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function nearestSmoothSlideTop(track, leavingAds) {
+    var slides = getSlides(track);
+    var y = window.scrollY;
+    var best = null;
+    var bestDist = Infinity;
+    var bestSlide = null;
+    var i;
+    for (i = 0; i < slides.length; i++) {
+      var slide = slides[i];
+      var top = Math.max(0, slideScrollTop(track, slide));
+      var dist = Math.abs(top - y);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = top;
+        bestSlide = slide;
+      }
+    }
+    if (
+      leavingAds &&
+      bestSlide &&
+      bestSlide.classList.contains('menu-reels-slide--bottom-ads')
+    ) {
+      var adsIndex = slides.indexOf(bestSlide);
+      var prev = adsIndex > 0 ? slides[adsIndex - 1] : null;
+      var adsTop = best;
+      if (prev && y < adsTop - 36) {
+        return Math.max(0, slideScrollTop(track, prev));
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Smooth scroll stays free while it is moving.
+   * Once velocity is 0, ease into the nearest slide without interrupting the gesture.
+   */
+  function bindSmoothRestSnap(track) {
+    var abort = new AbortController();
+    var signal = abort.signal;
+    var lastY = window.scrollY;
+    var lastT = performance.now();
+    var velocity = 0;
+    var scrollDir = 0;
+    var pointers = 0;
+    var idleTimer = null;
+    var alignRaf = 0;
+    var aligning = false;
+    var gestureLock = false;
+    var settledY = window.scrollY;
+
+    function lockGesture(y) {
+      gestureLock = true;
+      settledY = y;
+      lastY = y;
+      lastT = performance.now();
+      velocity = 0;
+      clearIdle();
+    }
+
+    function clearIdle() {
+      if (idleTimer == null) return;
+      window.clearTimeout(idleTimer);
+      idleTimer = null;
+    }
+
+    function cancelAlign() {
+      aligning = false;
+      if (alignRaf) {
+        cancelAnimationFrame(alignRaf);
+        alignRaf = 0;
+      }
+    }
+
+    function alignIfVelocityZero() {
+      if (!isSmoothNavMode() || pointers > 0 || aligning) return;
+      if (document.body.classList.contains('menu-reels-item-modal-open')) return;
+      if (Math.abs(velocity) > SMOOTH_REST_VELOCITY) return;
+      var target = nearestSmoothSlideTop(track, false);
+      if (scrollDir < 0) {
+        var adsSlide = document.getElementById('menu-reels-sponsored-ads');
+        if (adsSlide && track.contains(adsSlide)) {
+          var adsTop = Math.max(0, slideScrollTop(track, adsSlide));
+          if (Math.abs(settledY - adsTop) < 48) {
+            target = nearestSmoothSlideTop(track, true);
+          }
+        }
+      }
+      if (target == null) return;
+      var start = window.scrollY;
+      var dist = target - start;
+      var abs = Math.abs(dist);
+      if (abs <= SMOOTH_ALIGN_PX) {
+        lockGesture(start);
+        return;
+      }
+
+      if (prefersReducedMotion() || abs < 36) {
+        scrollWindowInstant(target);
+        lockGesture(window.scrollY);
+        return;
+      }
+
+      var duration = Math.min(780, Math.max(420, 260 + abs * 0.7));
+      var t0 = performance.now();
+      aligning = true;
+      velocity = 0;
+      clearIdle();
+
+      function frame(now) {
+        if (!aligning) return;
+        var p = Math.min(1, (now - t0) / duration);
+        scrollWindowInstant(start + dist * easeInOutCubic(p));
+        if (p < 1) {
+          alignRaf = requestAnimationFrame(frame);
+        } else {
+          aligning = false;
+          alignRaf = 0;
+          lockGesture(window.scrollY);
+        }
+      }
+      alignRaf = requestAnimationFrame(frame);
+    }
+
+    function scheduleIdle(delay) {
+      clearIdle();
+      idleTimer = window.setTimeout(function () {
+        idleTimer = null;
+        velocity = 0;
+        alignIfVelocityZero();
+      }, delay);
+    }
+
+    function noteUserInput() {
+      gestureLock = false;
+      cancelAlign();
+      clearIdle();
+    }
+
+    window.addEventListener('scroll', function () {
+      if (aligning) return;
+      var now = performance.now();
+      var y = window.scrollY;
+      var dt = now - lastT;
+      var instant = dt > 0 && dt < 240 ? (y - lastY) / dt : 0;
+      if (gestureLock && Math.abs(y - settledY) <= SMOOTH_LOCK_PX) {
+        lastY = y;
+        lastT = now;
+        velocity = 0;
+        clearIdle();
+        return;
+      }
+      if (y > lastY + 1) scrollDir = 1;
+      else if (y < lastY - 1) scrollDir = -1;
+      gestureLock = false;
+      lastY = y;
+      lastT = now;
+      if (dt > 0 && dt < 240) {
+        velocity = velocity * 0.5 + instant * 0.5;
+      } else {
+        velocity = 0;
+      }
+      if (pointers > 0) {
+        clearIdle();
+        return;
+      }
+      scheduleIdle(SMOOTH_REST_IDLE_MS);
+    }, { passive: true, signal: signal });
+
+    window.addEventListener('scrollend', function () {
+      if (aligning || pointers > 0 || gestureLock) return;
+      velocity = 0;
+      scheduleIdle(64);
+    }, { passive: true, signal: signal });
+
+    window.addEventListener('pointerdown', function () {
+      pointers += 1;
+      noteUserInput();
+    }, { passive: true, signal: signal });
+
+    function onPointerEnd() {
+      pointers = Math.max(0, pointers - 1);
+      if (pointers > 0) return;
+      if (Math.abs(velocity) <= SMOOTH_REST_VELOCITY) {
+        velocity = 0;
+        scheduleIdle(80);
+      }
+    }
+
+    window.addEventListener('pointerup', onPointerEnd, { passive: true, signal: signal });
+    window.addEventListener('pointercancel', onPointerEnd, { passive: true, signal: signal });
+    window.addEventListener('wheel', function (e) {
+      if (!aligning) return;
+      if (Math.abs(e.deltaY) < 12 && Math.abs(e.deltaX) < 12) return;
+      noteUserInput();
+    }, { passive: true, signal: signal });
+    window.addEventListener('touchmove', function () {
+      if (pointers > 0) noteUserInput();
+    }, { passive: true, signal: signal });
+
+    track._ttmsSmoothRestCleanup = function () {
+      clearIdle();
+      cancelAlign();
+      abort.abort();
+    };
+  }
+
   function bindTrackScroll() {
     var track = getTrack();
     if (!track || track._ttmsReelsTrackBound) return;
@@ -771,6 +994,7 @@
     if (isSmoothNavMode()) {
       window.addEventListener('scroll', scrollHandler, { passive: true });
       track._ttmsReelsWindowScrollBound = true;
+      bindSmoothRestSnap(track);
       return;
     }
 
@@ -977,7 +1201,7 @@
         : track.getBoundingClientRect();
       var visible = Math.max(0, Math.min(rect.bottom, rootRect.bottom) - Math.max(rect.top, rootRect.top));
       var ratio = visible / Math.max(1, rect.height);
-      setSlideRevealed(slide, ratio >= REVEAL_IN);
+      setSlideRevealed(slide, isSmoothNavMode() ? ratio > 0.02 : ratio >= REVEAL_IN);
     });
   }
 
@@ -1018,7 +1242,13 @@
       function (entries) {
         entries.forEach(function (entry) {
           var ratio = entry.intersectionRatio;
-          if (entry.isIntersecting && ratio >= REVEAL_IN) {
+          if (isSmoothNavMode()) {
+            if (entry.isIntersecting && ratio > 0) {
+              setSlideRevealed(entry.target, true);
+            } else if (!entry.isIntersecting) {
+              setSlideRevealed(entry.target, false);
+            }
+          } else if (entry.isIntersecting && ratio >= REVEAL_IN) {
             setSlideRevealed(entry.target, true);
           } else if (ratio <= REVEAL_OUT) {
             setSlideRevealed(entry.target, false);

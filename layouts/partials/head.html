@@ -908,11 +908,11 @@ window.MENU_CONFIG = {
 <script>
 (function () {
   try {
-    var mode = 'snap';
+    var mode = 'smooth';
     var raw = localStorage.getItem('userPreferences');
     if (raw) {
       var prefs = JSON.parse(raw);
-      if (prefs && prefs.homeNavMode === 'smooth') mode = 'smooth';
+      if (prefs && prefs.homeNavMode === 'snap') mode = 'snap';
     }
     if (mode === 'smooth') {
       document.documentElement.classList.add('menu-nav-smooth');
@@ -928,7 +928,7 @@ window.MENU_CONFIG = {
   }
   html.menu-nav-smooth,
   body.menu-nav-smooth {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     background: var(--main-bg);
   }
   html:not(.menu-nav-smooth) body.menu-reels-mode main.main--home,

@@ -1,5 +1,6 @@
 /**
- * Home navigation mode: snap (reels) vs smooth (regular page scroll).
+ * Home navigation mode: snap (one slide per gesture) vs smooth (free scroll).
+ * Smooth is the default. It still aligns to a slide once scroll velocity is 0.
  */
 (function () {
   'use strict';
@@ -10,16 +11,16 @@
   function readPreference() {
     try {
       if (window.LocalStorageManager && LocalStorageManager.preferences) {
-        var mode = LocalStorageManager.preferences.get(PREF_KEY, 'snap');
-        return mode === MODES.smooth ? MODES.smooth : MODES.snap;
+        var mode = LocalStorageManager.preferences.get(PREF_KEY, MODES.smooth);
+        return mode === MODES.snap ? MODES.snap : MODES.smooth;
       }
       var raw = localStorage.getItem('userPreferences');
       if (raw) {
         var prefs = JSON.parse(raw);
-        if (prefs && prefs[PREF_KEY] === MODES.smooth) return MODES.smooth;
+        if (prefs && prefs[PREF_KEY] === MODES.snap) return MODES.snap;
       }
     } catch (e) { /* ignore */ }
-    return MODES.snap;
+    return MODES.smooth;
   }
 
   function writePreference(mode) {
