@@ -3,7 +3,16 @@
 		<div id="menu" class="account-dashboard-panel-menu">
 			<div class="account-dashboard-panel-header-inner">
 				<div class="account-dashboard-panel-heading">
-					<h2 id="account-dashboard-header-placeholder-title" class="account-dashboard-panel-title">Account</h2>
+					<span class="account-dashboard-panel-mark" aria-hidden="true">
+						<svg class="icon account" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+							<path d="M8 7C9.65685 7 11 5.65685 11 4C11 2.34315 9.65685 1 8 1C6.34315 1 5 2.34315 5 4C5 5.65685 6.34315 7 8 7Z" fill="currentColor"/>
+							<path d="M14 12C14 10.3431 12.6569 9 11 9H5C3.34315 9 2 10.3431 2 12V15H14V12Z" fill="currentColor"/>
+						</svg>
+					</span>
+					<div class="account-dashboard-panel-heading-copy">
+						<h2 id="account-dashboard-header-placeholder-title" class="account-dashboard-panel-title">Account</h2>
+						<p class="account-dashboard-panel-subtitle">Save favorites across menus</p>
+					</div>
 					<div id="account-dashboard-user-info" class="account-dashboard-user-info account-dashboard-user-info--header" style="display: none;">
 						<a href="https://www.ttmenus.com/account/" class="user-info-header account-dashboard-profile-link" target="_blank" rel="noopener noreferrer" onclick="if (typeof closeAll === 'function') closeAll();" aria-label="Open your TT Menus account">
 							<div class="user-avatar">

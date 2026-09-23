@@ -19,34 +19,124 @@
     box-shadow: -16px 0 40px color-mix(in srgb, #000 42%, transparent);
     color: var(--account-ink);
     overflow: hidden;
+    left: auto;
+    right: 0;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
 }
 
-#account-dashboard.account-dashboard-panel .header.account-dashboard-panel-header,
-#account-dashboard.account-dashboard-panel .account-dashboard-panel__header {
+#account-dashboard.account-dashboard-panel.loader-hide-right {
+    transform: translate3d(100%, 0, 0);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.28s, opacity 0.28s ease;
+}
+
+#account-dashboard.account-dashboard-panel:not(.loader-hide-right) {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s 0s, opacity 0.32s ease;
+}
+
+#account-dashboard.account-dashboard-panel .header.account-dashboard-panel-header.account-dashboard-panel__header {
     position: relative;
+    overflow: hidden;
     top: auto;
     flex-shrink: 0;
-    padding: 0.65rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    min-height: calc(4em + 1.3rem);
+    max-height: none;
+    height: auto;
+    box-sizing: border-box;
+    padding: 0;
     margin: 0;
+    border: none;
     border-bottom: 1px solid color-mix(in srgb, var(--account-ink) 10%, transparent);
     background: linear-gradient(
         180deg,
         color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--account-ink) 8%, transparent)) 0%,
         color-mix(in srgb, var(--scheme-surface) 92%, color-mix(in srgb, var(--main-bg) 20%, transparent)) 100%
     );
-    box-shadow: 0 8px 24px color-mix(in srgb, #000 22%, transparent);
+    box-shadow: none;
+    z-index: 2;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: calc(4em + 1.3rem);
+    width: 100%;
+    padding: 0.65rem 0.85rem 0.65rem 1rem;
+    box-sizing: border-box;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--account-ink) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--account-ink) 16%, transparent);
+    color: var(--account-ink);
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-mark .icon.account {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-heading-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-title {
+    margin: 0;
     color: var(--account-ink);
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-subtitle {
+    margin: 0.1rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--account-ink-muted);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-panel-tools {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
     background: none;
-    padding-left: 0;
+    margin: 0;
+    padding: 0;
     gap: 0.4rem;
 }
 
@@ -57,6 +147,8 @@
     justify-content: center;
     width: 2.65rem;
     height: 2.65rem;
+    min-width: 2.65rem;
+    min-height: 2.65rem;
     margin: 0;
     padding: 0;
     border-radius: 50%;
@@ -80,7 +172,9 @@
     outline: none;
 }
 
-#account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .dashboard-header-close-img {
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .ttms-icon-btn svg,
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .dashboard-header-close-img,
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-tools .cart-btn-icon {
     width: 1.15rem;
     height: 1.15rem;
     filter: none;
@@ -184,27 +278,43 @@
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-login-prompt {
-    padding: 1.35rem 1.1rem 1.5rem;
+    margin: 0;
+    padding: 1.55rem 1.15rem 1.35rem;
     text-align: center;
+    border: 1px solid color-mix(in srgb, var(--account-ink) 12%, transparent);
+    border-radius: 1.05rem;
+    background: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--account-ink) 9%, transparent) 0%,
+        color-mix(in srgb, var(--account-ink) 3%, transparent) 100%
+    );
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--account-ink) 8%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .login-prompt-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.85rem;
+    width: 100%;
+    gap: 0.75rem;
+    text-align: center;
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-login-prompt__icon-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: center;
     width: 4.25rem;
     height: 4.25rem;
+    margin-bottom: 0.2rem;
     border-radius: 50%;
-    border: 1px dashed color-mix(in srgb, var(--account-ink) 18%, transparent);
-    background: color-mix(in srgb, var(--account-ink) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--account-accent) 48%, color-mix(in srgb, var(--account-ink) 16%, transparent));
+    background:
+        radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--account-accent) 32%, transparent), transparent 68%),
+        color-mix(in srgb, var(--account-ink) 5%, transparent);
     color: var(--account-accent);
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--account-accent) 18%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-login-prompt__icon-wrap .icon.account {
@@ -216,8 +326,10 @@
 
 #account-dashboard.account-dashboard-panel .account-dashboard-login-prompt__text,
 #account-dashboard.account-dashboard-panel .login-prompt-content p {
-    margin: 0;
-    max-width: 16rem;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 18rem;
+    text-align: center;
     font-size: 0.88rem;
     line-height: 1.45;
     color: var(--account-ink-muted);
@@ -245,7 +357,7 @@
         color-mix(in srgb, var(--account-accent) 88%, var(--account-ink)) 0%,
         color-mix(in srgb, var(--account-accent) 72%, var(--main-bg)) 100%
     );
-    color: color-mix(in srgb, var(--main-bg) 85%, var(--main-bg));
+    color: var(--scheme-black, #16120c);
     box-shadow:
         0 4px 16px color-mix(in srgb, var(--account-accent) 28%, transparent),
         inset 0 1px 0 color-mix(in srgb, var(--account-ink) 35%, transparent);
@@ -259,6 +371,40 @@
         0 6px 20px color-mix(in srgb, var(--account-accent) 35%, transparent),
         inset 0 1px 0 color-mix(in srgb, var(--account-ink) 40%, transparent);
     outline: none;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-login-prompt .account-dashboard-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.65rem 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--account-ink) 16%, transparent);
+    background: color-mix(in srgb, var(--account-ink) 8%, transparent);
+    color: var(--account-ink);
+    box-shadow: none;
+    text-decoration: none;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-login-prompt .account-dashboard-btn:hover,
+#account-dashboard.account-dashboard-panel .account-dashboard-login-prompt .account-dashboard-btn:focus-visible {
+    background: color-mix(in srgb, var(--account-ink) 14%, transparent);
+    border-color: color-mix(in srgb, var(--account-accent) 40%, color-mix(in srgb, var(--account-ink) 16%, transparent));
+    color: var(--account-ink);
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-login-prompt .account-dashboard-btn--primary,
+#account-dashboard.account-dashboard-panel .account-dashboard-login-prompt .account-dashboard-btn--primary:hover,
+#account-dashboard.account-dashboard-panel .account-dashboard-login-prompt .account-dashboard-btn--primary:focus-visible {
+    border-color: color-mix(in srgb, var(--account-accent) 45%, color-mix(in srgb, var(--account-ink) 20%, transparent));
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--account-accent) 88%, #fff) 0%,
+        color-mix(in srgb, var(--account-accent) 70%, var(--scheme-black, #16120c)) 100%
+    );
+    color: var(--scheme-black, #16120c);
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--account-accent) 28%, transparent),
+        inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent);
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-user-data {
@@ -382,19 +528,21 @@
     border-color: color-mix(in srgb, var(--account-danger) 50%, color-mix(in srgb, var(--account-ink) 16%, transparent));
 }
 
-#account-dashboard.account-dashboard-panel .account-dashboard-panel-heading:has(.account-dashboard-user-info--header:not([style*="display: none"])) .account-dashboard-panel-title {
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-heading:has(.account-dashboard-user-info--header:not([style*="display: none"])) .account-dashboard-panel-heading-copy,
+#account-dashboard.account-dashboard-panel .account-dashboard-panel-heading:has(.account-dashboard-user-info--header:not([style*="display: none"])) .account-dashboard-panel-mark {
     display: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     #account-dashboard.account-dashboard-panel {
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
     }
 
-    #account-dashboard.account-dashboard-panel .header.account-dashboard-panel-header,
-    #account-dashboard.account-dashboard-panel .account-dashboard-panel__header {
-        padding-inline: 0.65rem;
-    }
+}
+
+#account-dashboard.is-account-opening .account-dashboard-panel-mark {
+    animation: account-mark 0.5s 0.08s cubic-bezier(0.22, 1.35, 0.36, 1) both;
 }
 
 #account-dashboard.is-account-opening .account-dashboard-user-info--header,
@@ -462,6 +610,7 @@
         transition: none;
     }
 
+    #account-dashboard.is-account-opening .account-dashboard-panel-mark,
     #account-dashboard.is-account-opening .account-dashboard-user-info--header,
     #account-dashboard.is-account-opening .account-dashboard-panel-title,
     #account-dashboard.is-account-opening .account-dashboard-panel-tools,
