@@ -635,6 +635,7 @@ const NotificationService = {
     return {
       alert_topics: Array.isArray(prefs.alert_topics) ? prefs.alert_topics.slice() : [],
       alert_frequency: String(prefs.alert_frequency || ''),
+      cuisine_notes: String(prefs.cuisine_notes || ''),
     };
   },
 
@@ -645,6 +646,7 @@ const NotificationService = {
     };
     if (alerts.alert_topics.length) payload.alert_topics = alerts.alert_topics;
     if (alerts.alert_frequency) payload.alert_frequency = alerts.alert_frequency;
+    if (alerts.cuisine_notes) payload.cuisine_notes = alerts.cuisine_notes;
     return payload;
   },
 
@@ -1779,7 +1781,7 @@ const NotificationService = {
   },
 
   syncNearbyClientWatcher() {
-    if (!this.subscriptionId || !this.wantsNearbyClientAlerts() || !navigator.geolocation) {
+    if (!this.isSignedInNotifyUser() || !this.subscriptionId || !this.wantsNearbyClientAlerts() || !navigator.geolocation) {
       this.stopNearbyClientWatcher();
       return;
     }
@@ -1927,8 +1929,10 @@ const NotificationService = {
     const src = prefs && typeof prefs === 'object' ? prefs : this.readLocalAlertPrefs();
     const topics = Array.isArray(src.alert_topics) ? src.alert_topics : [];
     const frequency = String(src.alert_frequency || '');
-    const patch = { alert_topics: topics };
+    const notes = String(src.cuisine_notes || '');
+    const patch = { alert_topics: topics, cuisine_notes: notes };
     if (frequency) patch.alert_frequency = frequency;
+    if (src.taste_onboarding_completed) patch.alerts_configured = true;
 
     if (this.subscriptionId) {
       try {

@@ -1283,6 +1283,28 @@
     }
   }
 
+  function tasteTagsFromAlert(title, message) {
+    var stop = {
+      the: true, and: true, for: true, with: true, your: true, you: true,
+      our: true, this: true, that: true, from: true, are: true, was: true,
+      today: true, only: true, new: true, now: true, off: true, all: true,
+    };
+    var seen = {};
+    var out = [];
+    String(title || '')
+      .concat(' ', String(message || ''))
+      .split(/[^A-Za-z0-9]+/)
+      .forEach(function (part) {
+        var word = String(part || '').trim();
+        if (word.length < 3 || word.length > 48) return;
+        var key = word.toLowerCase();
+        if (stop[key] || seen[key]) return;
+        seen[key] = true;
+        out.push(key.charAt(0).toUpperCase() + key.slice(1));
+      });
+    return out.slice(0, 12);
+  }
+
   async function sendNotification(ev) {
     ev.preventDefault();
     var form = document.getElementById('dashboardNotifySendForm');
@@ -1320,6 +1342,8 @@
     if (link) body.data.url = String(link).trim();
     if (icon) body.data.icon = String(icon).trim();
     if (image) body.data.image = String(image).trim();
+    var tastes = tasteTagsFromAlert(title, message);
+    if (tastes.length) body.data.tastes = tastes;
     if (!Object.keys(body.data).length) delete body.data;
 
     submitBtn.disabled = true;

@@ -77,6 +77,14 @@
     return !!subscriptionId();
   }
 
+  function signedIn() {
+    try {
+      return !!(window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated());
+    } catch (e) {
+      return false;
+    }
+  }
+
   function escapeHtml(text) {
     if (text == null) return '';
     return String(text)
@@ -240,6 +248,7 @@
   }
 
   function rememberItem(raw) {
+    if (!signedIn()) return;
     var item = normalizeItem(raw);
     if (!item || !isGuestVisible(item)) return;
     var next = mergeItems([item], readCache());
@@ -283,7 +292,7 @@
   function syncBadge(items) {
     var badge = document.getElementById('notify-inbox-badge');
     var btn = getHeaderBtn();
-    var count = unreadCount(items || readCache());
+    var count = signedIn() ? unreadCount(items || readCache()) : 0;
     if (badge) {
       if (count > 0) {
         badge.hidden = false;
@@ -532,6 +541,13 @@
 
   async function loadInbox() {
     syncSubscribeChrome();
+    await waitForAuth();
+    if (!signedIn()) {
+      setStatus('');
+      renderList([]);
+      syncBadge([]);
+      return;
+    }
     setStatus('Loading alerts…');
     var cached = readCache();
     renderList(cached);
@@ -541,9 +557,7 @@
     var subId = subscriptionId();
     var base = apiBase();
 
-    await waitForAuth();
-
-    if (window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated()) {
+    if (signedIn()) {
       try {
         var mine = await fetchJson(base + '/me/notifications?limit=30', authHeaders());
         remote = remote.concat((mine && mine.notifications) || []);
@@ -723,14 +737,23 @@
     syncSubscribe: syncSubscribeChrome,
   };
 
+  function bootInboxChrome() {
+    waitForAuth().then(
+      function () {
+        syncBadge(signedIn() ? readCache() : []);
+        syncSubscribeChrome();
+      },
+      function () {
+        syncBadge([]);
+        syncSubscribeChrome();
+      }
+    );
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      syncBadge(readCache());
-      syncSubscribeChrome();
-    });
+    document.addEventListener('DOMContentLoaded', bootInboxChrome);
   } else {
-    syncBadge(readCache());
-    syncSubscribeChrome();
+    bootInboxChrome();
   }
 
   document.addEventListener('keydown', onKeydown);
