@@ -1,7 +1,6 @@
 {{- $os := site.Params.orderingsystem | default dict -}}
 {{- $pos := site.Params.posintegration | default dict -}}
-{{- $usePhone := true -}}
-{{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
+{{- $checkoutChannel := partial "ordering/checkout-channel.html" . -}}
 {{- $orderingOn := default true $os.enabled -}}
 {{- $loyverseConnect := false -}}
 {{- with site.Params.features -}}
@@ -84,33 +83,37 @@
           </div>
         </fieldset>
 
-        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if or (not $orderingOn) $posOn }} hidden{{ end }}>
+        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if not $orderingOn }} hidden{{ end }}>
           <legend class="dashboard-ordering-group-title">Guest checkout</legend>
-          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">{{ if $posOn }}Phone is dialer-only and does not create a POS order.{{ else }}Phone opens the dialer. WhatsApp sends the order summary.{{ end }}</p>
+          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.</p>
           <div class="dashboard-ordering-channel">
-            <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="Order via">
-              <button type="button" class="dashboard-ordering-channel-btn{{ if $usePhone }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if $usePhone }}true{{ else }}false{{ end }}">
-                <i class="fa fa-phone" aria-hidden="true"></i><span>Phone call</span>
+            <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="How guests send an order">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "phone" }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
+                <i class="fa fa-phone" aria-hidden="true"></i><span>Phone</span>
               </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if not $usePhone }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if not $usePhone }}true{{ else }}false{{ end }}">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "whatsapp" }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if eq $checkoutChannel "whatsapp" }}true{{ else }}false{{ end }}">
                 <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
               </button>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "none" }} active{{ end }}" id="os-channel-none" data-channel="none" aria-pressed="{{ if eq $checkoutChannel "none" }}true{{ else }}false{{ end }}">
+                <i class="fa fa-ban" aria-hidden="true"></i><span>None</span>
+              </button>
             </div>
-            <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if $usePhone }}true{{ else }}false{{ end }}">
-            <div class="dashboard-ordering-contact">
-              <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if $usePhone }}Phone number{{ else }}WhatsApp number{{ end }}</label>
+            <input type="hidden" id="os-checkout-channel" name="checkoutchannel" value="{{ $checkoutChannel }}">
+            <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
+            <div class="dashboard-ordering-contact" id="os-contact-wrap"{{ if eq $checkoutChannel "none" }} hidden{{ end }}>
+              <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if eq $checkoutChannel "phone" }}Phone number{{ else }}WhatsApp number{{ end }}</label>
               <div class="dashboard-ordering-contact-field">
-                <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if $usePhone }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
-                <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if $usePhone }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
+                <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if eq $checkoutChannel "phone" }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
+                <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if eq $checkoutChannel "phone" }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
               </div>
-              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if $usePhone }}Opens the phone dialer only{{ if $posOn }}: does not create a Loyverse order{{ end }}.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now{{ if $posOn }} (optional alongside Loyverse){{ end }}.{{ end }}</p>
+              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if eq $checkoutChannel "phone" }}Opens the phone dialer only.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now.{{ end }}</p>
             </div>
             <input type="hidden" id="os-whatsapp" name="whatsapp" value="{{ default "" $os.whatsapp }}">
             <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">
           </div>
         </fieldset>
       </div>
-      <div class="dashboard-card-actions" id="orderingSystemFormActions"{{ if and $posOn $orderingOn }} hidden{{ end }}>
+      <div class="dashboard-card-actions" id="orderingSystemFormActions">
         <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveOrderingSystem"><i class="fa fa-save" aria-hidden="true"></i> Save ordering settings</button>
         <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
       </div>

@@ -1,0 +1,18 @@
+{{- $os := site.Params.orderingsystem | default dict -}}
+{{- $channel := "" -}}
+{{- with $os.checkoutchannel -}}
+  {{- $c := lower (trim . " ") -}}
+  {{- if or (eq $c "phone") (eq $c "whatsapp") (eq $c "none") -}}
+    {{- $channel = $c -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $channel -}}
+  {{- $usePhone := true -}}
+  {{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
+  {{- if $usePhone -}}
+    {{- $channel = "phone" -}}
+  {{- else -}}
+    {{- $channel = "whatsapp" -}}
+  {{- end -}}
+{{- end -}}
+{{- return $channel -}}

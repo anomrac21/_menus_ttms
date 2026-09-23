@@ -11,11 +11,9 @@ const name = '{{ site.Params.title }}'
 const hastables = {{ default false site.Params.orderingsystem.hastables }};
 const orderingEnabled = {{ default true site.Params.orderingsystem.enabled }};
 const orderingDisabledMessage = {{ (site.Params.orderingsystem.orderingDisabledMessage | default "Ordering is currently unavailable.") | jsonify }};
-{{- $usePhoneCall := true -}}
-{{- with site.Params.orderingsystem -}}
-  {{- if isset . "usephonecall" -}}{{- $usePhoneCall = .usephonecall -}}{{- end -}}
-{{- end -}}
-const usephonecall = {{ $usePhoneCall }};
+{{- $checkoutChannel := partial "ordering/checkout-channel.html" . -}}
+const orderCheckoutChannel = {{ $checkoutChannel | jsonify }};
+const usephonecall = orderCheckoutChannel === 'phone';
 const orderPhone = '{{ site.Params.orderingsystem.phone }}';
 const paymentsEnabled = {{ and site.Params.features.payments site.Params.paymentService.enabled }};
 
@@ -2499,14 +2497,44 @@ function ttmsShouldSendOrderToLoyverse() {
 }
 
 function ttmsShouldOpenWhatsAppCheckout() {
-	// Phone channel is dialer-only (never WhatsApp / never Loyverse from this path).
-	if (usephonecall) return false;
-	var c = window.POS_CONFIG || {};
-	// When Loyverse is on and "Keep WhatsApp" is off, Loyverse stands alone.
-	if (window.posIntegration && window.posIntegration.isPOSEnabled && c.fallbackToWhatsapp === false) {
-		return false;
+	return orderCheckoutChannel === 'whatsapp';
+}
+
+var ttmsWaTab = null;
+
+function ttmsMayPromptForTable() {
+	if (hastables) return true;
+	var loc = typeof getCurrentLocationData === 'function' ? getCurrentLocationData() : null;
+	return !!(loc && Array.isArray(loc.orderingtables) && loc.orderingtables.length);
+}
+
+function ttmsReserveWhatsAppTab() {
+	if (orderCheckoutChannel !== 'whatsapp') return;
+	if (ttmsWaTab && !ttmsWaTab.closed) return;
+	ttmsWaTab = window.open('about:blank', '_blank');
+}
+
+function ttmsCloseReservedWhatsAppTab() {
+	if (ttmsWaTab && !ttmsWaTab.closed) {
+		try { ttmsWaTab.close(); } catch (e) {}
 	}
-	return true;
+	ttmsWaTab = null;
+}
+
+function ttmsOpenWhatsApp(url) {
+	if (!url) {
+		ttmsCloseReservedWhatsAppTab();
+		return;
+	}
+	if (ttmsWaTab && !ttmsWaTab.closed) {
+		try {
+			ttmsWaTab.location.href = url;
+			ttmsWaTab = null;
+			return;
+		} catch (e) {}
+	}
+	var opened = window.open(url, '_blank');
+	if (!opened) window.location.href = url;
 }
 
 function ttmsFulfillmentFromCart() {
@@ -2559,6 +2587,9 @@ async function ttmsSubmitOrderTicket() {
 		return { skipped: true, reason: 'order_service_off' };
 	}
 	if (!window.OrderClient.isSignedIn()) {
+		if (orderCheckoutChannel === 'whatsapp') {
+			return { skipped: true, reason: 'guest_whatsapp' };
+		}
 		window.OrderClient.requireSignIn();
 		return { skipped: true, reason: 'auth' };
 	}
@@ -2605,17 +2636,28 @@ function placeOrderClick(){
 	if (!Array.isArray(order) || order.length === 0) {
 		return;
 	}
-	// Phone = call only (no Loyverse, no WhatsApp).
-	if (usephonecall) {
+	if (orderCheckoutChannel === 'phone') {
+		if (!orderPhone) {
+			alert('Add a phone number in Ordering settings.');
+			return;
+		}
 		window.location.href = 'tel:' + orderPhone;
 		return;
+	}
+	if (orderCheckoutChannel === 'whatsapp' && !ttmsMayPromptForTable()) {
+		ttmsReserveWhatsAppTab();
 	}
 	celebrateOrderNowButton();
 	placeOrderClickAsync();
 }
 
 async function placeOrderClickAsync(){
-	if (window.OrderClient && !window.OrderClient.isSignedIn()) {
+	var needsAccount = orderCheckoutChannel !== 'whatsapp'
+		&& window.OrderClient
+		&& window.OrderClient.enabled()
+		&& !window.OrderClient.isSignedIn();
+	if (needsAccount) {
+		ttmsCloseReservedWhatsAppTab();
 		window.OrderClient.requireSignIn();
 		return;
 	}
@@ -2679,6 +2721,7 @@ function advanceOrder(){
 	}
 
 	if (shouldPromptForTableSelection(currentLocationData)) {
+		ttmsCloseReservedWhatsAppTab();
 		if (currentLocationData) {
 			if (currentLocationData.whatsapp) {
 				number = currentLocationData.whatsapp;
@@ -2827,12 +2870,16 @@ async function confirmSendOrder(){
 		});
 	}
 
-	if (window.OrderClient && !window.OrderClient.isSignedIn()) {
+	var openWhatsApp = ttmsShouldOpenWhatsAppCheckout();
+	var needsAccount = !openWhatsApp
+		&& window.OrderClient
+		&& window.OrderClient.enabled()
+		&& !window.OrderClient.isSignedIn();
+	if (needsAccount) {
+		ttmsCloseReservedWhatsAppTab();
 		window.OrderClient.requireSignIn();
 		return;
 	}
-
-	var openWhatsApp = ttmsShouldOpenWhatsAppCheckout();
 	ttmsSetConfirmOrderBusy(true);
 	var result;
 	try {
@@ -2841,15 +2888,21 @@ async function confirmSendOrder(){
 		ttmsSetConfirmOrderBusy(false);
 	}
 
+	if (openWhatsApp && message && !(result && result.skipped && result.reason === 'auth')) {
+		var digits = String(number || '').replace(/\D/g, '');
+		if (!digits) {
+			ttmsCloseReservedWhatsAppTab();
+			alert('Add a WhatsApp number in Ordering settings.');
+		} else {
+			ttmsOpenWhatsApp(message);
+		}
+	}
+
 	if (result && result.ok && result.data) {
 		var ticket = result.data.ticket_number || result.data.order_ref || '';
 		var extra = '';
 		if (result.data.loyverse_error) extra = '\nLoyverse: ' + result.data.loyverse_error;
-		if (!openWhatsApp) {
-			alert('Order placed. Ticket #' + ticket + extra);
-		} else {
-			alert('Order placed. Ticket #' + ticket + extra + '\nOpening WhatsApp.');
-		}
+		alert('Order placed. Ticket #' + ticket + extra);
 		try {
 			if (typeof saveCart === 'function') {
 				order = [];
@@ -2859,17 +2912,19 @@ async function confirmSendOrder(){
 			}
 		} catch (_) {}
 	} else if (result && result.skipped && result.reason === 'auth') {
+		ttmsCloseReservedWhatsAppTab();
 		return;
+	} else if (result && result.skipped && result.reason === 'guest_whatsapp') {
+		// WhatsApp already opened for a guest who is not signed in.
 	} else if (result && !result.skipped) {
 		alert((result.error || 'Could not place order.') + (openWhatsApp ? '\n\nOpening WhatsApp as fallback.' : ''));
 	} else if (!openWhatsApp) {
+		ttmsCloseReservedWhatsAppTab();
 		alert('Could not place order. Sign in and try again.');
 		return;
 	}
 
-	if (openWhatsApp && message) {
-		window.open(message, '_blank');
-	}
+	if (!openWhatsApp) ttmsCloseReservedWhatsAppTab();
 
 	if (typeof closeTableModal === 'function') {
 		try { closeTableModal({ instant: true }); } catch (e) {}
@@ -3098,10 +3153,21 @@ function confirmTable(state){
 		askforserver();
 		return;
 	}
+	if (orderCheckoutChannel === 'whatsapp') ttmsReserveWhatsAppTab();
 	confirmWhatsAppOrder();
 }
 
 function askforserver(){
+	if (orderCheckoutChannel === 'phone') {
+		if (orderPhone) window.location.href = 'tel:' + orderPhone;
+		else alert('Add a phone number in Ordering settings.');
+		return;
+	}
+	if (orderCheckoutChannel !== 'whatsapp') {
+		alert('WhatsApp is turned off for this menu.');
+		return;
+	}
+	ttmsReserveWhatsAppTab();
 	message = 'https://wa.me/'+number+'?text='+encodeURIComponent('Powered by TTMenus\n'+name+'\n\nHello, Good Day\n'+'Server Requested at Table# '+myTable);
 	confirmSendOrder();
 }
@@ -3499,6 +3565,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Make functions globally available for table modal integration
 window.setTableNumber = setTableNumber;
+window.ttmsReserveWhatsAppTab = ttmsReserveWhatsAppTab;
 window.confirmWhatsAppOrder = confirmWhatsAppOrder;
 window.advanceOrder = advanceOrder;
 window.placeOrderClick = placeOrderClick;
@@ -3997,6 +4064,7 @@ window.testTablePopulation = function() {
         closeTableModal({ instant: true });
         
         // Trigger the order confirmation in the WhatsApp ordering system
+        if (typeof window.ttmsReserveWhatsAppTab === 'function') window.ttmsReserveWhatsAppTab();
         if (typeof window.confirmWhatsAppOrder === 'function') {
             window.confirmWhatsAppOrder();
         } else {

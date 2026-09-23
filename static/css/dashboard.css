@@ -11904,7 +11904,7 @@ button.dashboard-settings-panel-toggle:focus-visible {
 
 .dashboard-ordering-channel-switch {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
   padding: 0.28rem;
   gap: 0.28rem;
@@ -11968,6 +11968,15 @@ button.dashboard-settings-panel-toggle:focus-visible {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--dash-info) 40%, transparent) 0%, color-mix(in srgb, var(--dash-info) 28%, transparent) 100%);
   border-color: color-mix(in srgb, var(--dash-info) 45%, transparent);
+  box-shadow:
+    0 6px 16px color-mix(in srgb, var(--dash-black) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 8%, transparent);
+}
+
+#os-channel-none.active {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--dash-ink) 16%, transparent) 0%, color-mix(in srgb, var(--dash-ink) 8%, transparent) 100%);
+  border-color: color-mix(in srgb, var(--dash-ink) 28%, transparent);
   box-shadow:
     0 6px 16px color-mix(in srgb, var(--dash-black) 18%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 8%, transparent);

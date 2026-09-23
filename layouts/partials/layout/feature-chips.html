@@ -30,15 +30,16 @@
 {{- $fallbackWa := true -}}
 {{- if isset $pos "fallback_to_whatsapp" -}}{{- $fallbackWa = $pos.fallback_to_whatsapp -}}{{- end -}}
 {{- $guestCheckout := or (not $posOn) $fallbackWa -}}
-{{- $usePhone := true -}}
-{{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
-{{- $hasPhone := and $guestCheckout $usePhone $os.phone -}}
-{{- $hasWhatsApp := and $guestCheckout (not $usePhone) $os.whatsapp -}}
+{{- $checkoutChannel := partial "ordering/checkout-channel.html" . -}}
+{{- $hasPhone := and $guestCheckout (eq $checkoutChannel "phone") $os.phone -}}
+{{- $hasWhatsApp := and $guestCheckout (eq $checkoutChannel "whatsapp") $os.whatsapp -}}
 {{- $orderingDetail := "Add items from the menu and place your order." -}}
 {{- if and $posOn $hasPhone -}}
   {{- $orderingDetail = "Orders go to the POS, or call to place your order." -}}
 {{- else if and $posOn $hasWhatsApp -}}
   {{- $orderingDetail = "Orders go to the POS, or send your cart on WhatsApp." -}}
+{{- else if eq $checkoutChannel "none" -}}
+  {{- $orderingDetail = "Add items and place the order in the menu." -}}
 {{- else if $posOn -}}
   {{- $orderingDetail = "Orders are sent to the connected POS." -}}
 {{- else if $hasPhone -}}
