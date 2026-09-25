@@ -1033,19 +1033,25 @@
     });
   }
 
+  function plainMenuImageValue(value) {
+    return String(value || '')
+      .trim()
+      .replace(/^["']+|["']+$/g, '');
+  }
+
   function menuImageApiBase() {
     var cfg =
       typeof window.MENU_IMAGE_CONFIG !== 'undefined' ? window.MENU_IMAGE_CONFIG : null;
-    return cfg && cfg.apiUrl ? String(cfg.apiUrl).replace(/\/+$/, '') : '';
+    return cfg && cfg.apiUrl ? plainMenuImageValue(cfg.apiUrl).replace(/\/+$/, '') : '';
   }
 
   function menuImageClientId() {
     var cfg =
       typeof window.MENU_IMAGE_CONFIG !== 'undefined' ? window.MENU_IMAGE_CONFIG : null;
     return (
-      window.CLIENT_ID ||
-      window.SITE_CLIENT_ID ||
-      (cfg && cfg.clientId) ||
+      plainMenuImageValue(window.CLIENT_ID) ||
+      plainMenuImageValue(window.SITE_CLIENT_ID) ||
+      plainMenuImageValue(cfg && cfg.clientId) ||
       ''
     );
   }

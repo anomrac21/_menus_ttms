@@ -62,9 +62,12 @@
   }
 
   function checkoutChannel() {
+    var loyverse = document.getElementById('posEnabledCb');
+    if (loyverse && !loyverse.disabled && loyverse.checked) return 'loyverse';
     var el = document.getElementById('os-checkout-channel');
     var value = el && el.value;
     if (value === 'phone' || value === 'whatsapp' || value === 'none') return value;
+    if (value === 'loyverse') return 'none';
     var phoneEl = document.getElementById('os-phonecall');
     return !phoneEl || phoneEl.value === 'true' ? 'phone' : 'whatsapp';
   }
@@ -106,12 +109,21 @@
       setHidden(el, !connected);
     });
 
+    ['phone', 'whatsapp', 'none', 'loyverse'].forEach(function (name) {
+      var btn = document.getElementById('os-channel-' + name);
+      if (!btn) return;
+      var on = name === channel;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
     var channelHint = document.getElementById('os-channel-group-hint');
     if (channelHint) {
-      channelHint.textContent = 'Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.';
+      channelHint.textContent = channel === 'loyverse'
+        ? 'Orders go to the Loyverse till. Phone and WhatsApp stay closed.'
+        : 'Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.';
     }
     var contactWrap = document.getElementById('os-contact-wrap');
-    setHidden(contactWrap, channel === 'none');
+    setHidden(contactWrap, channel === 'none' || channel === 'loyverse');
     var contactHint = document.getElementById('os-contact-hint');
     if (contactHint) {
       contactHint.textContent = channel === 'phone'
@@ -158,7 +170,7 @@
       var phoneEl = document.getElementById('os-phone');
       var channel = checkoutChannel();
       if (!contactEl || !whatsappEl || !phoneEl) return;
-      if (channel === 'none') {
+      if (channel === 'none' || channel === 'loyverse') {
         phoneEl.value = contactEl.getAttribute('data-phone') || phoneEl.value;
         whatsappEl.value = contactEl.getAttribute('data-whatsapp') || whatsappEl.value;
         return;
@@ -174,7 +186,11 @@
     }
 
     function setOrderingChannel(channel) {
-      if (channel !== 'phone' && channel !== 'whatsapp' && channel !== 'none') channel = 'whatsapp';
+      if (channel !== 'phone' && channel !== 'whatsapp' && channel !== 'none' && channel !== 'loyverse') {
+        channel = 'whatsapp';
+      }
+      var loyverseCb = document.getElementById('posEnabledCb');
+      if (channel === 'loyverse' && (!loyverseCb || loyverseCb.disabled)) return;
       var channelEl = document.getElementById('os-checkout-channel');
       var phonecallEl = document.getElementById('os-phonecall');
       var contactEl = document.getElementById('os-contact');
@@ -185,20 +201,20 @@
       var currentContact = digitsOnly(contactEl.value);
       if (previous === 'phone') contactEl.setAttribute('data-phone', currentContact);
       if (previous === 'whatsapp') contactEl.setAttribute('data-whatsapp', currentContact);
-      channelEl.value = channel;
+      if (loyverseCb) {
+        var wasLoyverse = loyverseCb.checked;
+        loyverseCb.checked = channel === 'loyverse';
+        if (wasLoyverse !== loyverseCb.checked) {
+          loyverseCb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+      channelEl.value = channel === 'loyverse' ? 'none' : channel;
       phonecallEl.value = channel === 'phone' ? 'true' : 'false';
-      if (channel !== 'none') {
+      if (channel === 'phone' || channel === 'whatsapp') {
         contactEl.value = channel === 'phone'
           ? contactEl.getAttribute('data-phone') || ''
           : contactEl.getAttribute('data-whatsapp') || '';
       }
-      ['phone', 'whatsapp', 'none'].forEach(function (name) {
-        var btn = document.getElementById('os-channel-' + name);
-        if (!btn) return;
-        var on = name === channel;
-        btn.classList.toggle('active', on);
-        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
       if (contactLabel) {
         contactLabel.textContent = channel === 'phone' ? 'Phone number' : 'WhatsApp number';
       }
@@ -218,7 +234,7 @@
       });
     }
 
-    ['phone', 'whatsapp', 'none'].forEach(function (name) {
+    ['phone', 'whatsapp', 'none', 'loyverse'].forEach(function (name) {
       var btn = document.getElementById('os-channel-' + name);
       if (!btn) return;
       btn.addEventListener('click', function () {
@@ -259,7 +275,7 @@
         vat: parseFloat(document.getElementById('os-vat').value) || 0,
         servicecharge: parseFloat(document.getElementById('os-service').value) || 0,
         hastables: osHastablesPreserve,
-        checkoutchannel: checkoutChannel(),
+        checkoutchannel: checkoutChannel() === 'loyverse' ? 'none' : checkoutChannel(),
         usephonecall: checkoutChannel() === 'phone',
         whatsapp: digitsOnly(document.getElementById('os-whatsapp').value),
         phone: digitsOnly(document.getElementById('os-phone').value),

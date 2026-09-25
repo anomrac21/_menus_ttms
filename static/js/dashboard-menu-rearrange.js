@@ -1601,11 +1601,21 @@
   }
 
   function start() {
-    if (global.AuthClient && typeof global.AuthClient.whenReady === 'function') {
-      global.AuthClient.whenReady().then(init);
-      return;
-    }
-    init();
+    var ready = global.AuthClient && typeof global.AuthClient.whenReady === 'function'
+      ? global.AuthClient.whenReady()
+      : Promise.resolve();
+    ready.then(function () {
+      if (!global.AuthClientAccess || typeof global.AuthClientAccess.protectClientPage !== 'function') {
+        init();
+        return;
+      }
+      return global.AuthClientAccess.protectClientPage({
+        redirectUrl: '/login/',
+        noAccessRedirect: '/'
+      }).then(function (ok) {
+        if (ok) init();
+      });
+    });
   }
 
   if (document.readyState === 'loading') {

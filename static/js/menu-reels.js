@@ -907,7 +907,52 @@
       clearIdle();
     }
 
+    var resizeTimer = 0;
+    var resizing = false;
+    var pinnedSlide = null;
+
+    function pinSlideDuringResize() {
+      cancelAlign();
+      clearIdle();
+      velocity = 0;
+      if (!pinnedSlide || !pinnedSlide.isConnected) {
+        var slides = getSlides(track);
+        var y = window.scrollY;
+        var best = null;
+        var bestDist = Infinity;
+        var i;
+        for (i = 0; i < slides.length; i++) {
+          var top = Math.max(0, slideScrollTop(track, slides[i]));
+          var dist = Math.abs(top - y);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = slides[i];
+          }
+        }
+        pinnedSlide = best;
+      }
+      if (!pinnedSlide) return;
+      var pinTop = Math.max(0, slideScrollTop(track, pinnedSlide));
+      gestureLock = true;
+      settledY = pinTop;
+      lastY = pinTop;
+      scrollWindowInstant(pinTop);
+    }
+
+    window.addEventListener('resize', function () {
+      resizing = true;
+      pinSlideDuringResize();
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        resizeTimer = 0;
+        resizing = false;
+        pinnedSlide = null;
+        gestureLock = false;
+      }, 200);
+    }, { passive: true, signal: signal });
+
     window.addEventListener('scroll', function () {
+      if (resizing) return;
       if (aligning) return;
       var now = performance.now();
       var y = window.scrollY;
@@ -971,6 +1016,7 @@
     track._ttmsSmoothRestCleanup = function () {
       clearIdle();
       cancelAlign();
+      window.clearTimeout(resizeTimer);
       abort.abort();
     };
   }

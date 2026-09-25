@@ -1,0 +1,52 @@
+<nav class="dashboard-side" id="dashboardSide" aria-label="Control room sections">
+  <p class="dashboard-side-kicker">Sections</p>
+  <div class="dashboard-side-nav" id="dashboardSideNav">
+    <button type="button" class="dashboard-side-link is-active" data-dashboard-nav="orders" aria-current="page">
+      <i class="fa fa-ticket" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Orders</span>
+      <span class="dashboard-side-count" data-side-count="orders" hidden></span>
+    </button>
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="delivery" aria-current="false">
+      <i class="fa fa-truck" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Delivery</span>
+      <span class="dashboard-side-count" data-side-count="delivery" hidden></span>
+    </button>
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="edit-menu" aria-current="false">
+      <i class="fa fa-cutlery" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Edit menu</span>
+      <span class="dashboard-side-count" data-side-count="edit-menu" hidden></span>
+    </button>
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="ordering" aria-current="false">
+      <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Ordering</span>
+      <span class="dashboard-side-count" data-side-count="ordering" hidden></span>
+    </button>
+    {{- if site.Params.menuImageService.enabled }}
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="menu-images" aria-current="false">
+      <i class="fa fa-picture-o" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Photo reel</span>
+      <span class="dashboard-side-count" data-side-count="menu-images" hidden></span>
+    </button>
+    {{- end }}
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="ads" aria-current="false">
+      <i class="fa fa-bullhorn" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Ads</span>
+      <span class="dashboard-side-count" data-side-count="ads" hidden></span>
+    </button>
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="analytics" aria-current="false">
+      <i class="fa fa-bar-chart" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Analytics</span>
+      <span class="dashboard-side-count" data-side-count="analytics" hidden></span>
+    </button>
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="notifications" aria-current="false">
+      <i class="fa fa-bell-o" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Notifications</span>
+      <span class="dashboard-side-count" data-side-count="notifications" hidden></span>
+    </button>
+    <button type="button" class="dashboard-side-link" data-dashboard-nav="auth" aria-current="false">
+      <i class="fa fa-lock" aria-hidden="true"></i>
+      <span class="dashboard-side-label">Auth</span>
+      <span class="dashboard-side-count" data-side-count="auth" hidden></span>
+    </button>
+  </div>
+</nav>

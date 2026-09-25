@@ -17,7 +17,8 @@
   var mobileMenublockMq = window.matchMedia(MOBILE_MENUBLOCK_MQ);
 
   function syncMobileMenublockClass() {
-    document.documentElement.classList.toggle('ttms-mobile-menublock', mobileMenublockMq.matches);
+    var wide = (window.innerWidth || 0) >= 1100;
+    document.documentElement.classList.toggle('ttms-mobile-menublock', !wide && mobileMenublockMq.matches);
   }
 
   function isMobileMenublockMode() {
@@ -377,10 +378,16 @@
       if (!menublock || !menublock.contains(target)) {
         return null;
       }
-      if (menublock.scrollWidth <= menublock.clientWidth + 1) {
-        return null;
+      var vertical = menublock.scrollHeight > menublock.clientHeight + 1
+        && menublock.scrollWidth <= menublock.clientWidth + 8;
+      var horizontal = menublock.scrollWidth > menublock.clientWidth + 1;
+      if (vertical) {
+        return { el: menublock, axis: 'y' };
       }
-      return menublock;
+      if (horizontal) {
+        return { el: menublock, axis: 'x' };
+      }
+      return null;
     }
 
     function resetTouchScroll() {
@@ -397,11 +404,11 @@
         }
         var mobileTarget = getMobileScrollTarget(e.target);
         var desktopTarget = getDesktopScrollTarget(e.target);
-        activeEl = mobileTarget || desktopTarget;
+        activeEl = mobileTarget || (desktopTarget && desktopTarget.el);
         if (!activeEl) {
           return;
         }
-        axis = mobileTarget ? 'y' : 'x';
+        axis = mobileTarget ? 'y' : desktopTarget.axis;
         startPrimary = axis === 'y' ? e.touches[0].clientY : e.touches[0].clientX;
         startScroll = axis === 'y' ? activeEl.scrollTop : activeEl.scrollLeft;
         moved = false;
@@ -638,13 +645,32 @@
 
     var linkRect = link.getBoundingClientRect();
     var blockRect = menublock.getBoundingClientRect();
-    var linkCenter = linkRect.left + linkRect.width / 2;
-    var blockCenter = blockRect.left + blockRect.width / 2;
-    var targetLeft = menublock.scrollLeft + (linkCenter - blockCenter);    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);    targetLeft = Math.max(0, Math.min(maxScroll, targetLeft));
-
+    var vertical = menublock.scrollHeight > menublock.clientHeight + 1
+      && menublock.scrollWidth <= menublock.clientWidth + 8;
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    scrollMenublockTo(targetLeft, !(reducedMotion || coarsePointer));
+    var smooth = !(reducedMotion || coarsePointer);
+
+    if (vertical) {
+      var linkMid = linkRect.top + linkRect.height / 2;
+      var blockMid = blockRect.top + blockRect.height / 2;
+      var targetTop = menublock.scrollTop + (linkMid - blockMid);
+      var maxTop = Math.max(0, menublock.scrollHeight - menublock.clientHeight);
+      targetTop = Math.max(0, Math.min(maxTop, targetTop));
+      if (menublock.scrollTo) {
+        menublock.scrollTo({ top: targetTop, behavior: smooth ? 'smooth' : 'auto' });
+      } else {
+        menublock.scrollTop = targetTop;
+      }
+      return;
+    }
+
+    var linkCenter = linkRect.left + linkRect.width / 2;
+    var blockCenter = blockRect.left + blockRect.width / 2;
+    var targetLeft = menublock.scrollLeft + (linkCenter - blockCenter);
+    var maxScroll = Math.max(0, menublock.scrollWidth - menublock.clientWidth);
+    targetLeft = Math.max(0, Math.min(maxScroll, targetLeft));
+    scrollMenublockTo(targetLeft, smooth);
   }
 
   window.scrollMenublockLinkIntoView = scrollMenublockLinkIntoView;

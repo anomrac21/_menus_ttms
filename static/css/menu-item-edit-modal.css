@@ -1,3 +1,9 @@
+html:has(.menu-item-edit-modal.is-open),
+body.menu-item-edit-modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 .menu-item-edit-modal {
   --dash-bg: #f4f4f4;
   --dash-ink: #090a13;
@@ -13,6 +19,11 @@
   justify-content: center;
   padding: 0;
   box-sizing: border-box;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.28s ease;
@@ -45,7 +56,9 @@
   flex-direction: column;
   width: min(100%, 720px);
   max-width: 100%;
-  height: min(100dvh, 100%);
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   margin: 0 auto;
   background: var(--dash-bg);
   border-left: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
@@ -65,7 +78,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.55rem 0.7rem;
+  padding: calc(0.55rem + env(safe-area-inset-top, 0px)) calc(0.7rem + env(safe-area-inset-right, 0px)) 0.55rem calc(0.7rem + env(safe-area-inset-left, 0px));
   border-bottom: 1px solid color-mix(in srgb, var(--header-border-color) 45%, transparent);
   background: var(--header-bg-color);
 }
@@ -169,6 +182,8 @@
   min-height: 0;
   display: flex;
   position: relative;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .menu-item-edit-modal__loading {
@@ -206,8 +221,10 @@
   flex: 1 1 auto;
   width: 100%;
   height: 100%;
+  min-height: 0;
   border: 0;
   background: var(--dash-bg);
+  overflow: hidden;
 }
 
 @media (min-width: 900px) {
@@ -217,6 +234,7 @@
 
   .menu-item-edit-modal__panel {
     height: calc(100dvh - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
     border-radius: 14px;
     border: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
   }

@@ -5789,8 +5789,145 @@ body.dashboard-edit-rearrange-only .dashboard-rearrange-panel h3 {
   font-family: inherit;
 }
 
+/* --dash-info is a dark gray in light mode and a near-white wash in dark mode,
+   so rearrange fills and labels use surface/ink tokens that flip with the theme. */
+body.dashboard-edit-rearrange-only .dashboard-edit-rearrange-intro {
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-ink) 6%, var(--dash-surface));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-edit-rearrange-intro strong {
+  color: var(--dash-ink);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-panel {
+  color: var(--dash-ink);
+  background: var(--dash-surface);
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-toolbar,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-loading {
+  background: color-mix(in srgb, var(--dash-ink) 6%, var(--dash-bg));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-status,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-status--success,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-loading-inner,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-submeta,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-meta,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-position-meta,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-pin-note {
+  color: var(--dash-ink-muted);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-status--loading .fa-spinner,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-loading-inner .fa-spinner {
+  color: var(--dash-accent);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-save-chip {
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-surface));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section {
+  background: color-mix(in srgb, var(--dash-ink) 5%, var(--dash-bg));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section:hover {
+  border-color: color-mix(in srgb, var(--dash-ink) 28%, var(--dash-border));
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-head,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section--pinned .dashboard-rearrange-section-head {
+  background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-surface));
+  border-bottom-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-head-toggle,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-title,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-item-label,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-move-btn {
+  color: var(--dash-ink);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-head-toggle:hover,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-head-toggle:focus-visible {
+  background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-toggle-chevron {
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-bg));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-body {
+  background: color-mix(in srgb, var(--dash-ink) 4%, var(--dash-bg));
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-position-meta,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-section-pin-note {
+  background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-item {
+  background: color-mix(in srgb, var(--dash-ink) 4%, var(--dash-surface));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-item:hover {
+  background: color-mix(in srgb, var(--dash-ink) 10%, var(--dash-surface));
+  border-color: color-mix(in srgb, var(--dash-ink) 22%, var(--dash-border));
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-move {
+  background: color-mix(in srgb, var(--dash-ink) 6%, var(--dash-bg));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-move .dashboard-rearrange-move-btn + .dashboard-rearrange-move-btn {
+  border-left-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-move-btn:hover:not(:disabled),
+body.dashboard-edit-rearrange-only .dashboard-rearrange-move-btn:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--dash-ink) 12%, transparent);
+  color: var(--dash-ink);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-bar,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-bar--section {
+  background: color-mix(in srgb, var(--dash-ink) 5%, var(--dash-bg));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-btn {
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-ink) 8%, var(--dash-surface));
+  border-color: var(--dash-border);
+}
+
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-btn:hover,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-btn:focus-visible,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-btn--section,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-btn--section:hover,
+body.dashboard-edit-rearrange-only .dashboard-rearrange-add-btn--section:focus-visible {
+  color: var(--dash-accent-ink);
+  background: var(--dash-accent);
+  border-color: transparent;
+}
+
+html.dashboard-edit-embed-panel,
 body.dashboard-edit-embed-panel {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   background: var(--dash-bg);
   color: var(--dash-ink);
@@ -5834,8 +5971,10 @@ body.dashboard-edit-embed-panel .dashboard-edit-form .dashboard-btn-primary {
 }
 
 body.dashboard-edit-embed-panel .dashboard-edit-page {
-  min-height: 100%;
+  min-height: 0;
   height: 100%;
+  max-height: 100%;
+  overflow: hidden;
   --dashboard-edit-header-height: 0px;
   background: var(--dash-bg);
   color: var(--dash-ink);
@@ -5873,15 +6012,26 @@ body.dashboard-edit-embed-panel .dashboard-edit-preview {
 }
 
 body.dashboard-edit-embed-panel .dashboard-edit-layout {
-  height: 100dvh;
+  height: 100%;
+  max-height: 100%;
   min-height: 0;
+  flex: 1 1 auto;
 }
 
 body.dashboard-edit-embed-panel .dashboard-edit-options {
+  position: relative;
+  top: auto;
+  right: auto;
   width: 100%;
   max-width: none;
+  height: 100%;
+  max-height: 100%;
   flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+  overflow: hidden;
   border-left: none;
+  box-shadow: none;
 }
 
 body.dashboard-edit-embed-panel .dashboard-edit-header-center,
@@ -5898,8 +6048,21 @@ body.dashboard-edit-embed-panel .dashboard-edit-options-header {
 }
 
 body.dashboard-edit-embed-panel .dashboard-edit-options-inner {
-  position: relative;
-  min-height: 14rem;
+  position: absolute;
+  inset: 0;
+  flex: none;
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+
+body.dashboard-edit-embed-panel .dashboard-edit-options-inner > * {
+  flex-shrink: 0;
 }
 
 body.dashboard-edit-embed-panel .dashboard-edit-form,
@@ -6281,8 +6444,8 @@ body.menu-item-edit-modal-open {
   width: -webkit-fill-available;
   max-width: 444PX;
   top: calc(var(--dashboard-edit-header-height, 3.5rem) + var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
-  height: calc(var(--ttms-overlay-height, 100dvh): var(--dashboard-edit-header-height, 3.5rem): var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
-  max-height: calc(var(--ttms-overlay-height, 100dvh): var(--dashboard-edit-header-height, 3.5rem): var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
+  height: calc(var(--ttms-overlay-height, 100dvh) - var(--dashboard-edit-header-height, 3.5rem) - var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
+  max-height: calc(var(--ttms-overlay-height, 100dvh) - var(--dashboard-edit-header-height, 3.5rem) - var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, color-mix(in srgb, var(--dash-bg) 94%, transparent) 0%, color-mix(in srgb, var(--dash-bg) 88%, transparent) 100%);
@@ -7034,8 +7197,8 @@ body.menu-item-edit-modal-open {
   left: 0;
   top: 0;
   z-index: 4;
-  width: 2.85rem;
-  height: 2.85rem;
+  width: 3.35rem;
+  height: 3.35rem;
   border: 2px solid var(--dash-info);
   border-radius: 50%;
   background: radial-gradient(circle, color-mix(in srgb, var(--dash-accent) 28%, transparent) 0%, transparent 68%);
@@ -7265,8 +7428,8 @@ body.menu-item-edit-modal-open {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.05rem;
-  height: 2.05rem;
+  width: 2.55rem;
+  height: 2.55rem;
   margin: 0;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--dash-accent) 38%, transparent);
@@ -7287,8 +7450,8 @@ body.menu-item-edit-modal-open {
 
 .dashboard-edit-color-ring-item--var,
 .dashboard-edit-color-ring-item--edit {
-  width: 1.95rem;
-  height: 1.95rem;
+  width: 2.45rem;
+  height: 2.45rem;
   background: var(--ring-swatch);
   border-color: color-mix(in srgb, var(--dash-ink) 50%, transparent);
   box-shadow:
@@ -7299,8 +7462,8 @@ body.menu-item-edit-modal-open {
 }
 
 .dashboard-edit-color-ring-item--edit {
-  width: 2.05rem;
-  height: 2.05rem;
+  width: 2.55rem;
+  height: 2.55rem;
 }
 
 .dashboard-edit-color-ring-swatch {
@@ -11904,7 +12067,7 @@ button.dashboard-settings-panel-toggle:focus-visible {
 
 .dashboard-ordering-channel-switch {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 100%;
   padding: 0.28rem;
   gap: 0.28rem;
@@ -11934,9 +12097,27 @@ button.dashboard-settings-panel-toggle:focus-visible {
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.dashboard-ordering-channel-btn .fa {
+.dashboard-ordering-channel-btn .fa,
+.dashboard-ordering-channel-btn img {
+  width: 1rem;
+  height: 1rem;
   font-size: 1rem;
   opacity: 0.92;
+  flex: 0 0 auto;
+}
+
+.dashboard-ordering-channel-btn:disabled,
+.dashboard-ordering-channel-btn.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dashboard-ordering-pos-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
 
 .dashboard-ordering-channel-btn:hover {
@@ -11968,6 +12149,15 @@ button.dashboard-settings-panel-toggle:focus-visible {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--dash-info) 40%, transparent) 0%, color-mix(in srgb, var(--dash-info) 28%, transparent) 100%);
   border-color: color-mix(in srgb, var(--dash-info) 45%, transparent);
+  box-shadow:
+    0 6px 16px color-mix(in srgb, var(--dash-black) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 8%, transparent);
+}
+
+#os-channel-loyverse.active {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #6c5ce7 42%, transparent) 0%, color-mix(in srgb, #6c5ce7 28%, transparent) 100%);
+  border-color: color-mix(in srgb, #6c5ce7 48%, transparent);
   box-shadow:
     0 6px 16px color-mix(in srgb, var(--dash-black) 18%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--dash-ink) 8%, transparent);
@@ -13487,7 +13677,7 @@ html.dashboard-edit-embed-panel label {
 }
 
 html.dashboard-edit-embed-panel .dashboard-edit-options-inner {
-  padding: 0.65rem 0.75rem 1.1rem;
+  padding: 0.65rem 0.75rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
   gap: 0.55rem;
 }
 
@@ -14409,5 +14599,169 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
   .dashboard-auth-panel .dashboard-settings-panel-head .btn-dash {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* ========== Control room sidebar (desktop) ========== */
+
+@media (max-width: 959px) {
+  #dashboardControlRoom .dashboard-side {
+    display: none;
+  }
+}
+
+@media (min-width: 960px) {
+  #dashboardControlRoom .dashboard-workspace {
+    display: grid;
+    grid-template-columns: 16.75rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0 1rem;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  #dashboardControlRoom .dashboard-header {
+    max-width: 1180px;
+  }
+
+  #dashboardControlRoom .dashboard-side {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+    margin: 0;
+    padding: 0.85rem 0.7rem;
+    border-radius: 16px;
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--dash-black) 14%, transparent);
+  }
+
+  #dashboardControlRoom .dashboard-side-kicker {
+    margin: 0.15rem 0.7rem 0.45rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dash-ink-muted);
+  }
+
+  #dashboardControlRoom .dashboard-side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  #dashboardControlRoom .dashboard-side-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    min-height: 2.75rem;
+    margin: 0;
+    padding: 0.45rem 0.7rem;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--dash-ink);
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  #dashboardControlRoom .dashboard-side-link .fa {
+    width: 1.25rem;
+    text-align: center;
+    color: var(--dash-ink-muted);
+    flex-shrink: 0;
+  }
+
+  #dashboardControlRoom .dashboard-side-label {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  #dashboardControlRoom .dashboard-side-link:hover,
+  #dashboardControlRoom .dashboard-side-link:focus-visible {
+    background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
+    outline: none;
+  }
+
+  #dashboardControlRoom .dashboard-side-link.is-active {
+    background: color-mix(in srgb, var(--dash-accent) 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dash-accent) 35%, transparent);
+  }
+
+  #dashboardControlRoom .dashboard-side-link.is-active .fa {
+    color: var(--dash-accent);
+  }
+
+  #dashboardControlRoom .dashboard-side-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    min-height: 1.35rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
+    color: var(--dash-ink-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  #dashboardControlRoom .dashboard-side-count[hidden] {
+    display: none;
+  }
+
+  #dashboardControlRoom .dashboard-side-count.is-hot {
+    background: color-mix(in srgb, var(--dash-accent) 22%, transparent);
+    color: var(--dash-accent);
+  }
+
+  #dashboardControlRoom .dashboard-side-count.is-zero {
+    opacity: 0.7;
+  }
+
+  #dashboardControlRoom .cards {
+    display: block;
+    max-width: none;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+  }
+
+  #dashboardControlRoom .cards > .card {
+    display: none !important;
+    grid-column: auto;
+    animation: none;
+    width: 100%;
+  }
+
+  #dashboardControlRoom .cards > .card.is-side-current {
+    display: block !important;
+  }
+
+  #dashboardControlRoom .cards > .card.is-side-current .dashboard-card-body {
+    display: block !important;
+  }
+
+  #dashboardControlRoom .cards > .card.is-side-current .dashboard-card-toggle {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  #dashboardControlRoom .cards > .card.is-side-current .dashboard-card-toggle-chevron {
+    display: none;
   }
 }

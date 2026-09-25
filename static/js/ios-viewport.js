@@ -10,6 +10,7 @@
     'modal-open',
     'table-modal-open',
     'menu-reels-item-modal-open',
+    'menu-item-edit-modal-open',
     'ads-reels-open',
   ];
 

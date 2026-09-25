@@ -3484,15 +3484,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function getColorPainterOpenSector() {
     var anchor = (colorAsideEl && colorAsideEl.getAttribute('data-anchor')) || 'br';
-    // Compact iOS-style wheel arc into free space (0=right, 90=down).
-    if (anchor === 'tl') return { start: 6, sweep: 118 };
-    if (anchor === 'tc') return { start: 28, sweep: 128 };
-    if (anchor === 'tr') return { start: 84, sweep: 118 };
-    if (anchor === 'ml') return { start: -52, sweep: 118 };
-    if (anchor === 'mr') return { start: 128, sweep: 118 };
-    if (anchor === 'bl') return { start: -98, sweep: 118 };
-    if (anchor === 'bc') return { start: 208, sweep: 128 };
-    return { start: 172, sweep: 118 }; // br
+    // Wider arc into free space (0=right, 90=down) so chips do not overlap.
+    var sweep = 188;
+    var mid = 231;
+    if (anchor === 'tl') mid = 65;
+    else if (anchor === 'tc') mid = 92;
+    else if (anchor === 'tr') mid = 143;
+    else if (anchor === 'ml') mid = 7;
+    else if (anchor === 'mr') mid = 187;
+    else if (anchor === 'bl') mid = -39;
+    else if (anchor === 'bc') mid = 272;
+    return { start: mid - sweep / 2, sweep: sweep };
   }
 
   function getActiveColorWheelRing() {
@@ -3526,25 +3528,42 @@ document.addEventListener('DOMContentLoaded', async function() {
     return Math.min(roomU, Math.min(roomL, roomR));
   }
 
+  function colorPainterRingRadii() {
+    var room = Math.max(120, getColorPainterRoom());
+    var gap = 76;
+    var inner = Math.min(120, Math.max(88, room * 0.3));
+    var mid = Math.min(210, Math.max(inner + gap, room * 0.54));
+    var outer = Math.min(292, Math.max(mid + gap, room * 0.78));
+    var limit = Math.max(inner + gap, room - 8);
+    if (outer > limit) {
+      outer = limit;
+      mid = inner + (outer - inner) * 0.52;
+    }
+    var sectionsOnly = Math.min(172, Math.max(116, room * 0.58));
+    if (sectionsOnly > limit) sectionsOnly = Math.max(96, limit);
+    return {
+      sections: inner,
+      sectionsOnly: sectionsOnly,
+      vars: outer,
+      varsMid: mid,
+      editor: outer
+    };
+  }
+
   function getColorPainterWheelRadius(layer) {
-    // sections (inner) → vars (mid/outer) → edit palette (outermost).
-    var room = getColorPainterRoom();
+    var radii = colorPainterRingRadii();
     var kind = layer;
     if (kind == null) {
       if (colorPainterLevel === 'editor') kind = 'editor';
       else if (colorPainterLevel === 'vars') kind = 'vars';
       else kind = 'sections';
     }
-    if (kind === 'editor') {
-      return Math.max(96, Math.min(118, room * 0.62));
+    if (kind === 'sections') {
+      return colorPainterLevel === 'sections' ? radii.sectionsOnly : radii.sections;
     }
-    if (kind === 'vars-mid') {
-      return Math.max(66, Math.min(78, room * 0.44));
-    }
-    if (kind === 'vars') {
-      return Math.max(70, Math.min(88, room * 0.52));
-    }
-    return Math.max(44, Math.min(58, room * 0.34));
+    if (kind === 'vars-mid') return radii.varsMid;
+    if (kind === 'editor') return radii.editor;
+    return radii.vars;
   }
 
   function placeColorWheelLabel(focusX, focusY, radius) {
@@ -3553,8 +3572,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     var len = Math.sqrt(focusX * focusX + focusY * focusY) || 1;
     var ux = focusX / len;
     var uy = focusY / len;
-    var chipOuter = 24;
-    var gap = 14;
+    var chipOuter = 34;
+    var gap = 18;
     var labelHalf = 52;
     var dist = (radius || len) + chipOuter + gap + labelHalf;
     return { x: ux * dist, y: uy * dist };
@@ -4836,6 +4855,15 @@ document.addEventListener('DOMContentLoaded', async function() {
       } else {
         style.textContent = ':root { ' + rules.join('; ') + ' }';
       }
+      var rootEl = doc.documentElement;
+      var owned = (rootEl.getAttribute('data-dashboard-color-vars') || '').split(',').filter(Boolean);
+      owned.forEach(function(name) {
+        if (!COLOR_OVERRIDE_VALUES[name]) rootEl.style.removeProperty(name);
+      });
+      Object.keys(COLOR_OVERRIDE_VALUES).forEach(function(varName) {
+        rootEl.style.setProperty(varName, COLOR_OVERRIDE_VALUES[varName]);
+      });
+      rootEl.setAttribute('data-dashboard-color-vars', Object.keys(COLOR_OVERRIDE_VALUES).join(','));
       if (themeColorSuppressPersist === 0) {
         schedulePersistThemeDraft();
       }

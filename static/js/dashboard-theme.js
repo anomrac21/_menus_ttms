@@ -40,6 +40,12 @@
       nightBtn.classList.toggle('hide', next === 'dark');
       lightBtn.classList.toggle('hide', next !== 'dark');
     }
+    var themeBtn = document.getElementById('dashboardHeaderTheme');
+    if (themeBtn) {
+      var toDark = next !== 'dark';
+      themeBtn.setAttribute('aria-label', toDark ? 'Use dark theme' : 'Use light theme');
+      themeBtn.setAttribute('title', toDark ? 'Dark mode' : 'Light mode');
+    }
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
       var ink = getComputedStyle(root).getPropertyValue('--dash-bg').trim();

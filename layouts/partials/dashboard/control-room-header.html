@@ -18,12 +18,20 @@
     <h1 class="dashboard-header-site" id="dashboardHeaderSiteName">{{ $siteName }}</h1>
   </div>
   <div class="dashboard-header-end">
-    <a href="/" class="dashboard-header-view-menu dashboard-header-view-menu--desktop" id="dashboardHeaderViewMenuDesktop">View live menu <i class="fa fa-external-link" aria-hidden="true"></i></a>
+    <a href="/" class="dashboard-header-view-menu dashboard-header-view-menu--desktop" id="dashboardHeaderViewMenuDesktop">
+      <i class="fa fa-external-link" aria-hidden="true"></i>
+      <span class="dashboard-header-action-label">View live menu</span>
+    </a>
     <a href="{{ $accountUrl }}" class="dashboard-header-account-wrap dashboard-header-account-wrap--desktop" id="dashboardHeaderAccountLink" aria-label="Open your TT Menus account" title="Open your TT Menus account">
       <span class="dashboard-header-account-icon" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <span class="dashboard-header-account" id="dashboardHeaderUserName"></span>
     </a>
     <div class="dashboard-header-actions dashboard-header-actions--desktop" role="group" aria-label="Account actions">
+      <button type="button" class="btn-dash btn-dash-secondary dashboard-header-theme" id="dashboardHeaderTheme" onclick="toggleTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); return false;" title="Dark mode" aria-label="Use dark theme">
+        <i class="fa fa-moon-o dashboard-header-theme-icon dashboard-header-theme-icon--dark" aria-hidden="true"></i>
+        <i class="fa fa-sun-o dashboard-header-theme-icon dashboard-header-theme-icon--light" aria-hidden="true"></i>
+        <span class="dashboard-header-action-label">Theme</span>
+      </button>
       <a href="/dashboard/deployments/" class="btn-dash btn-dash-secondary dashboard-header-deploy-history" id="dashboardDeployHistoryLink" data-auth="admin-site" style="display: none;" title="View cluster deploy history" aria-label="Deploy history">
         <i class="fa fa-history" aria-hidden="true"></i>
         <span class="dashboard-header-action-label">Deploy history</span>

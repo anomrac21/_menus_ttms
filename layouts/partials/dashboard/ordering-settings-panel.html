@@ -35,25 +35,7 @@
                   </label>
                 </div>
               </div>
-              <div class="dashboard-settings-row dashboard-ordering-switch-row" id="osLoyverseSwitchRow" data-os-requires-ordering{{ if not $orderingOn }} hidden{{ end }}>
-                <span class="dashboard-settings-label" id="os-loyverse-label">
-                  <span class="dashboard-card-title-icon dashboard-pos-loyverse-icon dashboard-pos-loyverse-icon--inline" aria-hidden="true">
-                    <img src="/icons/loyverse-mark.svg" alt="" width="16" height="16">
-                  </span>
-                  Loyverse POS
-                </span>
-                <div class="dashboard-settings-value">
-                  <label class="dashboard-switch{{ if not $loyverseConnect }} is-disabled{{ end }}" for="posEnabledCb">
-                    <input type="checkbox" id="posEnabledCb" class="dashboard-switch-input"{{ if $posOn }} checked{{ end }}{{ if not $loyverseConnect }} disabled{{ end }}>
-                    <span class="dashboard-switch-track" aria-hidden="true"></span>
-                    <span class="dashboard-switch-state" aria-hidden="true"></span>
-                  </label>
-                </div>
-              </div>
             </div>
-            {{- if not $loyverseConnect -}}
-            <p class="dashboard-ordering-group-hint" id="os-loyverse-upgrade-hint" data-os-requires-ordering{{ if not $orderingOn }} hidden{{ end }}>Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a>.</p>
-            {{- end -}}
             <div class="dashboard-settings-row dashboard-settings-row--full" id="osDisabledMsgRow" data-os-when-ordering="off"{{ if $orderingOn }} hidden{{ end }}>
               <label class="dashboard-settings-label" for="os-disabled-msg">Disabled message</label>
               <div class="dashboard-settings-value dashboard-settings-value--textarea">
@@ -61,9 +43,48 @@
                 <span id="os-disabled-msg-count" class="dashboard-settings-char-count" aria-live="polite"></span>
               </div>
             </div>
-            {{ partial "dashboard/pos-settings-panel.html" . }}
           </div>
         </fieldset>
+
+        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if not $orderingOn }} hidden{{ end }}>
+          <legend class="dashboard-ordering-group-title">Guest checkout</legend>
+          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.</p>
+          <div class="dashboard-ordering-channel">
+            <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="How guests send an order">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "phone") }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "phone") }}true{{ else }}false{{ end }}">
+                <i class="fa fa-phone" aria-hidden="true"></i><span>Phone</span>
+              </button>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "whatsapp") }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "whatsapp") }}true{{ else }}false{{ end }}">
+                <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
+              </button>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if $posOn }} active{{ end }}{{ if not $loyverseConnect }} is-disabled{{ end }}" id="os-channel-loyverse" data-channel="loyverse" aria-pressed="{{ if $posOn }}true{{ else }}false{{ end }}"{{ if not $loyverseConnect }} disabled{{ end }}>
+                <img src="/icons/loyverse-mark.svg" alt="" width="16" height="16">
+                <span>Loyverse</span>
+              </button>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "none") }} active{{ end }}" id="os-channel-none" data-channel="none" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "none") }}true{{ else }}false{{ end }}">
+                <i class="fa fa-ban" aria-hidden="true"></i><span>None</span>
+              </button>
+            </div>
+            <input type="hidden" id="os-checkout-channel" name="checkoutchannel" value="{{ if $posOn }}loyverse{{ else }}{{ $checkoutChannel }}{{ end }}">
+            <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
+            <div class="dashboard-ordering-contact" id="os-contact-wrap"{{ if or $posOn (eq $checkoutChannel "none") }} hidden{{ end }}>
+              <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if eq $checkoutChannel "phone" }}Phone number{{ else }}WhatsApp number{{ end }}</label>
+              <div class="dashboard-ordering-contact-field">
+                <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if eq $checkoutChannel "phone" }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
+                <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if eq $checkoutChannel "phone" }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
+              </div>
+              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if eq $checkoutChannel "phone" }}Opens the phone dialer only.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now.{{ end }}</p>
+            </div>
+            <input type="hidden" id="os-whatsapp" name="whatsapp" value="{{ default "" $os.whatsapp }}">
+            <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">
+            <input type="checkbox" id="posEnabledCb" class="dashboard-ordering-pos-input"{{ if $posOn }} checked{{ end }}{{ if not $loyverseConnect }} disabled{{ end }} hidden>
+            {{- if not $loyverseConnect -}}
+            <p class="dashboard-ordering-group-hint" id="os-loyverse-upgrade-hint" data-os-requires-ordering{{ if not $orderingOn }} hidden{{ end }}>Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a>.</p>
+            {{- end -}}
+          </div>
+        </fieldset>
+
+        {{ partial "dashboard/pos-settings-panel.html" . }}
 
         <fieldset class="dashboard-ordering-group" data-os-requires-ordering data-os-requires-no-loyverse{{ if or (not $orderingOn) $posOn }} hidden{{ end }}>
           <legend class="dashboard-ordering-group-title">Charges</legend>
@@ -80,36 +101,6 @@
                 <input type="number" id="os-service" name="servicecharge" class="dashboard-settings-input" min="0" step="0.01" data-os-key="servicecharge" value="{{ default 0 $os.servicecharge }}">
               </div>
             </div>
-          </div>
-        </fieldset>
-
-        <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if not $orderingOn }} hidden{{ end }}>
-          <legend class="dashboard-ordering-group-title">Guest checkout</legend>
-          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.</p>
-          <div class="dashboard-ordering-channel">
-            <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="How guests send an order">
-              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "phone" }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
-                <i class="fa fa-phone" aria-hidden="true"></i><span>Phone</span>
-              </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "whatsapp" }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if eq $checkoutChannel "whatsapp" }}true{{ else }}false{{ end }}">
-                <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
-              </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "none" }} active{{ end }}" id="os-channel-none" data-channel="none" aria-pressed="{{ if eq $checkoutChannel "none" }}true{{ else }}false{{ end }}">
-                <i class="fa fa-ban" aria-hidden="true"></i><span>None</span>
-              </button>
-            </div>
-            <input type="hidden" id="os-checkout-channel" name="checkoutchannel" value="{{ $checkoutChannel }}">
-            <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
-            <div class="dashboard-ordering-contact" id="os-contact-wrap"{{ if eq $checkoutChannel "none" }} hidden{{ end }}>
-              <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if eq $checkoutChannel "phone" }}Phone number{{ else }}WhatsApp number{{ end }}</label>
-              <div class="dashboard-ordering-contact-field">
-                <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if eq $checkoutChannel "phone" }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>
-                <input type="text" id="os-contact" class="dashboard-settings-input dashboard-ordering-contact-input" inputmode="numeric" autocomplete="tel" placeholder="Country code + number, digits only" value="{{ if eq $checkoutChannel "phone" }}{{ default "" $os.phone }}{{ else }}{{ default "" $os.whatsapp }}{{ end }}" data-whatsapp="{{ default "" $os.whatsapp }}" data-phone="{{ default "" $os.phone }}">
-              </div>
-              <p class="dashboard-ordering-contact-hint" id="os-contact-hint">{{ if eq $checkoutChannel "phone" }}Opens the phone dialer only.{{ else }}Opens WhatsApp with the order summary when guests tap Order Now.{{ end }}</p>
-            </div>
-            <input type="hidden" id="os-whatsapp" name="whatsapp" value="{{ default "" $os.whatsapp }}">
-            <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">
           </div>
         </fieldset>
       </div>

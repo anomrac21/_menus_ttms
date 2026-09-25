@@ -48,7 +48,8 @@
     '(max-width: 768px), ((max-width: 1024px) and (hover: none) and (pointer: coarse))'
   );
   function sync() {
-    doc.documentElement.classList.toggle('ttms-mobile-menublock', mq.matches);
+    var wide = (window.innerWidth || 0) >= 1100;
+    doc.documentElement.classList.toggle('ttms-mobile-menublock', !wide && mq.matches);
   }
   sync();
   if (typeof mq.addEventListener === 'function') {
@@ -56,6 +57,7 @@
   } else if (typeof mq.addListener === 'function') {
     mq.addListener(sync);
   }
+  window.addEventListener('resize', sync);
 {{- end }}
 })(document);
 </script>
@@ -187,6 +189,11 @@
     --ttms-safe-bottom: env(safe-area-inset-bottom, 0px);
     --ttms-header-bar: 5em;
     --ttms-header-height: calc(var(--ttms-header-bar) + var(--ttms-safe-top));
+    --ttms-reel-slide-height: calc(100dvh - var(--ttms-header-height, 5em));
+  }
+  html.ttms-ios {
+    /* 100dvh is short of the visible screen on iOS, so the next reel's title peeks under the dock. */
+    --ttms-reel-slide-height: calc(100lvh - var(--ttms-header-height, 5em) + env(safe-area-inset-bottom, 0px));
   }
   html,
   body {
@@ -997,17 +1004,17 @@ window.MENU_CONFIG = {
   body.menu-nav-smooth .main--home .menu-item-card.menu-reels-slide {
     flex-shrink: 0;
     width: 100%;
-    min-height: calc(100dvh - var(--ttms-header-height, 5em));
-    height: calc(100dvh - var(--ttms-header-height, 5em));
-    max-height: calc(100dvh - var(--ttms-header-height, 5em));
+    min-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
+    height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
+    max-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
     scroll-snap-align: none;
     scroll-snap-stop: normal;
     overflow: hidden;
   }
   html.menu-nav-smooth .main--home .menu-reels-slide--bottom-ads,
   body.menu-nav-smooth .main--home .menu-reels-slide--bottom-ads {
-    min-height: calc(100dvh - var(--ttms-header-height, 5em));
-    height: calc(100dvh - var(--ttms-header-height, 5em));
+    min-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
+    height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
   }
   .main--home .logo_container {
     min-height: 0;
@@ -1395,7 +1402,7 @@ window.MENU_IMAGE_CONFIG = {
 <script src="/js/share-buttons.js" defer></script>
 <script src="/js/single-page-init.js" defer></script>
 <script src="{{ partial "head/asset-url.html" "/js/menu-account-dashboard.js" }}" defer></script>
-<script src="/js/header-menublock-scroll.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/header-menublock-scroll.js" }}" defer></script>
 {{- end -}}
 
 {{- if default false site.Params.features.notifications -}}

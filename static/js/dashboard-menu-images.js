@@ -15,18 +15,24 @@
     return typeof window.MENU_IMAGE_CONFIG !== 'undefined' ? window.MENU_IMAGE_CONFIG : null;
   }
 
+  function plainConfigValue(value) {
+    return String(value || '')
+      .trim()
+      .replace(/^["']+|["']+$/g, '');
+  }
+
   function clientId() {
     return (
-      window.CLIENT_ID ||
-      window.SITE_CLIENT_ID ||
-      (cfg() && cfg().clientId) ||
+      plainConfigValue(window.CLIENT_ID) ||
+      plainConfigValue(window.SITE_CLIENT_ID) ||
+      plainConfigValue(cfg() && cfg().clientId) ||
       '_ttms_menu_demo'
     );
   }
 
   function apiBase() {
     var c = cfg();
-    return c && c.apiUrl ? String(c.apiUrl).replace(/\/+$/, '') : '';
+    return c && c.apiUrl ? plainConfigValue(c.apiUrl).replace(/\/+$/, '') : '';
   }
 
   function getToken() {

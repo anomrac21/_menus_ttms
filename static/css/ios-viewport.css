@@ -34,6 +34,7 @@ body.is-notify-opening,
 body.is-notify-closing,
 body.table-modal-open,
 body.menu-reels-item-modal-open,
+body.menu-item-edit-modal-open,
 body.ads-reels-open {
     overflow: hidden;
     overscroll-behavior: none;

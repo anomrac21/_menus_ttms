@@ -1,11 +1,15 @@
 /**
  * Header: larger screens (min-width: 769px)
- * Restores horizontal category chips; hides mobile dropdown chrome
+ * Category list is a left sidebar. Mobile dropdown chrome stays hidden
  * unless html.ttms-mobile-menublock (coarse pointer / touch tablet).
  */
 @media (min-width: 769px) {
     :root {
         --ttms-dashboard-btn-slot: 4.5em;
+    }
+
+    html:not(.ttms-mobile-menublock) {
+        --ttms-menu-side-width: 13.25rem;
     }
 
     html:not(.ttms-mobile-menublock) .header-menublock-toggle,
@@ -23,17 +27,36 @@
         margin-inline-start: 0;
     }
 
+    /* backdrop-filter on .main-header makes it the containing block for
+       position:fixed descendants, so the sidebar was stuck in the 5em bar
+       and collapsed to 0 height. Keep the blur on the bar only. */
+    html:not(.ttms-mobile-menublock) .main-header {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow: visible;
+    }
+
+    html:not(.ttms-mobile-menublock) .main-header .container {
+        background: var(--header-bg-color);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        overflow: visible;
+    }
+
     html:not(.ttms-mobile-menublock) .header-nav {
-        position: relative;
-        top: auto;
+        position: fixed;
+        top: var(--ttms-header-height, 5em) !important;
         right: auto;
-        left: auto;
-        width: auto;
+        left: 0;
+        bottom: 0 !important;
+        width: var(--ttms-menu-side-width);
         max-width: none;
-        z-index: auto;
-        flex: 1 1 auto;
-        max-height: none;
-        height: auto;
+        z-index: 1;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        max-height: none !important;
+        height: auto !important;
         overflow: hidden;
         opacity: 1;
         visibility: visible;
@@ -42,12 +65,33 @@
         -webkit-transform: none;
         transition: none;
         border-bottom: none;
+        border-right: 1px solid var(--header-border-color);
+        background: var(--header-bg-color);
         box-shadow: none;
     }
 
-    html:not(.ttms-mobile-menublock) .header-nav::before,
-    html:not(.ttms-mobile-menublock) .header-nav::after {
+    html:not(.ttms-mobile-menublock) .header-nav::before {
+        content: "Menu";
         display: block;
+        position: static;
+        inset: auto;
+        width: auto;
+        height: auto;
+        opacity: 0.7;
+        pointer-events: none;
+        background: none;
+        z-index: auto;
+        transition: none;
+        padding: 0.95rem 0.95rem 0.2rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--header-text-color);
+    }
+
+    html:not(.ttms-mobile-menublock) .header-nav::after {
+        display: none;
     }
 
     html:not(.ttms-mobile-menublock) .main-header.menublock-scrolled-right .dashboard-menu-btn-wrap {
@@ -72,42 +116,63 @@
     }
 
     html:not(.ttms-mobile-menublock) #menublock {
-        flex-direction: row;
-        align-items: center;
-        overflow-x: auto;
-        overflow-y: hidden;
-        overscroll-behavior-x: contain;
-        touch-action: pan-x pinch-zoom;
+        flex: 1 1 auto;
+        flex-direction: column;
+        align-items: stretch;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
         max-height: none;
-        padding: 0.45em 0.55em;
-        padding-inline-end: 0.85em;
-        gap: 0.4em;
+        height: auto;
+        min-height: 0;
+        padding: 0.45rem 0.55rem 0.85rem;
+        gap: 0.35rem;
         scroll-snap-type: none;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock::-webkit-scrollbar {
+        width: 4px;
+        height: auto;
     }
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-item,
     html:not(.ttms-mobile-menublock) #menublock li {
-        min-width: var(--menublock-chip-min-width);
+        min-width: 0;
         max-width: none;
-        width: auto;
+        width: 100%;
     }
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-link {
-        flex-direction: column;
-        justify-content: center;
+        flex-direction: row;
+        justify-content: flex-start;
         align-items: center;
-        min-height: var(--menublock-chip-height);
-        padding: 0.45em 0.35em 0.4em;
-        gap: 0.28em;
-        touch-action: auto;
+        min-height: 2.7rem;
+        padding: 0.4rem 0.7rem;
+        gap: 0.65rem;
+        border-radius: 0.75rem;
+        touch-action: manipulation;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link:hover,
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link:focus-visible,
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link:active {
+        transform: none;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link__icon {
+        width: 1.85rem;
+        height: 1.85rem;
     }
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-link__label,
     html:not(.ttms-mobile-menublock) #menublock span {
-        font-size: 0.58rem;
-        text-align: center;
-        -webkit-line-clamp: 2;
+        font-size: 0.84rem;
+        font-weight: 600;
+        text-align: left;
+        width: auto;
+        -webkit-line-clamp: 1;
     }
 
     html:not(.ttms-mobile-menublock) #dashboardBtn img {
@@ -129,10 +194,121 @@
         object-position: center;
     }
 
-    @media (min-width: 1025px) {
-        html:not(.ttms-mobile-menublock) #menublock .menublock-link__label,
-        html:not(.ttms-mobile-menublock) #menublock span {
-            font-size: 0.62rem;
-        }
+    html:not(.ttms-mobile-menublock) #main {
+        margin-left: var(--ttms-menu-side-width) !important;
+        margin-inline-start: var(--ttms-menu-side-width) !important;
+        box-sizing: border-box;
+    }
+
+    html:not(.ttms-mobile-menublock) #footer {
+        left: var(--ttms-menu-side-width);
+        right: 0;
+        width: auto;
+    }
+
+    html:not(.ttms-mobile-menublock) .menu-search-bar {
+        left: calc(var(--ttms-menu-side-width) + 0.75rem);
+        right: 0.75rem;
+        width: auto;
+        max-width: min(40rem, calc(100% - var(--ttms-menu-side-width) - 1.5rem));
+    }
+}
+
+/* Wide screens keep the sidebar even if a touch-emulation class is on.
+   Otherwise the phone dropdown and the sidebar swap on every resize tick. */
+@media (min-width: 1100px) {
+    html {
+        --ttms-menu-side-width: 13.25rem;
+    }
+
+    html.ttms-mobile-menublock .header-menublock-toggle,
+    html.ttms-mobile-menublock .header-menublock-backdrop {
+        display: none !important;
+    }
+
+    html.ttms-mobile-menublock .main-header {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow: visible;
+    }
+
+    html.ttms-mobile-menublock .main-header .header-nav {
+        position: fixed !important;
+        top: var(--ttms-header-height, 5em) !important;
+        right: auto !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: var(--ttms-menu-side-width) !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: none !important;
+        -webkit-transform: none !important;
+        overflow: hidden;
+        display: flex !important;
+        flex-direction: column;
+        border-radius: 0;
+        border-right: 1px solid var(--header-border-color);
+        background: var(--header-bg-color);
+        box-shadow: none;
+        z-index: 1;
+    }
+
+    html.ttms-mobile-menublock .header-nav::before {
+        content: "Menu";
+        display: block;
+        position: static;
+        padding: 0.95rem 0.95rem 0.2rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--header-text-color);
+        background: none;
+    }
+
+    html.ttms-mobile-menublock #menublock {
+        flex: 1 1 auto;
+        flex-direction: column;
+        align-items: stretch;
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: none;
+        height: auto;
+        min-height: 0;
+        padding: 0.45rem 0.55rem 0.85rem;
+        gap: 0.35rem;
+    }
+
+    html.ttms-mobile-menublock #menublock .menublock-link {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        min-height: 2.7rem;
+        padding: 0.4rem 0.7rem;
+        gap: 0.65rem;
+        border-radius: 0.75rem;
+    }
+
+    html.ttms-mobile-menublock #menublock .menublock-link__label,
+    html.ttms-mobile-menublock #menublock span {
+        font-size: 0.84rem;
+        font-weight: 600;
+        text-align: left;
+        width: auto;
+    }
+
+    html.ttms-mobile-menublock #main {
+        margin-left: var(--ttms-menu-side-width) !important;
+        margin-inline-start: var(--ttms-menu-side-width) !important;
+    }
+
+    html.ttms-mobile-menublock #footer {
+        left: var(--ttms-menu-side-width);
+        right: 0;
+        width: auto;
     }
 }

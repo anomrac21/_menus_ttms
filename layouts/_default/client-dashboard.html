@@ -14,10 +14,10 @@
   <script>
   window.MENU_IMAGE_CONFIG = {
     enabled: true,
-    apiUrl: {{ $menuImgApi | jsonify }},
-    clientId: {{ $dashClient | jsonify }}
+    apiUrl: "{{ $menuImgApi }}",
+    clientId: "{{ $dashClient }}"
   };
-  window.SITE_CLIENT_ID = window.CLIENT_ID || {{ $dashClient | jsonify }};
+  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
   </script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-images.js` }}" defer></script>
   {{- end }}
@@ -25,10 +25,10 @@
   <script src="/js/dashboard-menu-status.js" defer></script>
   <script>
   window.SITE_DISPLAY_NAME = {{ (site.Title | default `Menu Demo`) | jsonify }};
-  window.SITE_CLIENT_ID = window.CLIENT_ID || {{ $dashClient | jsonify }};
+  window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
   window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
   </script>
-  <script src="/js/dashboard-control-room.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-control-room.js` }}" defer></script>
   <script src="{{ $opsJs }}" defer></script>
   {{- $dsHead := site.Params.deliveryService | default dict -}}
   {{- $deliveryOnHead := and (default false site.Params.features.delivery) (default false $dsHead.enabled) -}}
@@ -54,6 +54,8 @@
     <div class="dashboard-header" role="banner">
       {{ partial "dashboard/control-room-header.html" . }}
     </div>
+    <div class="dashboard-workspace">
+    {{ partial "dashboard/control-room-sidebar.html" . }}
     <div class="cards">
       {{- $ds := site.Params.deliveryService | default dict -}}
       {{- $deliveryOn := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
@@ -61,7 +63,7 @@
       {{- if and $hubClientId (not (hasPrefix $hubClientId "ttms_")) -}}
         {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
       {{- end -}}
-      <div class="card card-menu-orders is-collapsed" data-dashboard-card="orders">
+      <div class="card card-menu-orders is-collapsed is-side-current" data-dashboard-card="orders">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="orders" aria-expanded="false" aria-controls="dashboardCardBody-orders">
           <h3 class="dashboard-card-title"><i class="fa fa-ticket" aria-hidden="true"></i> Orders</h3>
           <span class="dashboard-card-count is-loading" id="dashboardCardOrdersCount" aria-label="Open tickets" aria-busy="true"></span>
@@ -299,6 +301,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 

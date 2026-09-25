@@ -587,7 +587,7 @@
     } else if (linked) {
       setSetupRow('account', 'ready', 'Linked. Receipts can go to your tills.');
     } else if (setup.accountState === 'error') {
-      setSetupRow('account', 'error', 'Couldn’t check the link. Sign in and tap Refresh.');
+      setSetupRow('account', 'error', 'Couldn’t check the Loyverse link.');
     } else {
       setSetupRow('account', 'attention', 'Not linked yet. Tap Connect Loyverse.');
     }
@@ -643,7 +643,9 @@
     if (setup.accountState === 'checking') {
       nextText = 'Checking whether this menu is linked to Loyverse…';
     } else if (setup.accountState === 'error') {
-      nextText = 'Sign in, then tap Refresh so we can see your Loyverse account.';
+      nextText = /sign in/i.test((($('posConnectStatus') || {}).textContent) || '')
+        ? 'Sign in to see whether Loyverse is linked.'
+        : 'Couldn’t reach Loyverse. The link check retries on its own.';
       nextAction = 'account';
     } else if (!linked) {
       nextText = 'Tap Connect Loyverse and sign in. One login covers every location.';
@@ -1021,6 +1023,32 @@
   }
 
   var posStatusRefreshInFlight = false;
+  var posStatusPollTimer = null;
+  var posStatusPollCount = 0;
+
+  function clearPosStatusPoll() {
+    if (posStatusPollTimer) {
+      clearTimeout(posStatusPollTimer);
+      posStatusPollTimer = null;
+    }
+  }
+
+  function scheduleStatusPoll(delay) {
+    if (posStatusPollTimer || posStatusPollCount >= 6) return;
+    posStatusPollCount += 1;
+    posStatusPollTimer = setTimeout(function () {
+      posStatusPollTimer = null;
+      refreshStatusWhenReady();
+    }, delay || 2000);
+  }
+
+  function statusNeedsFollowUp(d) {
+    if (!d || posStatusPollCount >= 6) return false;
+    if (d.last_error) return false;
+    if (!d.last_checked_at && d.connected) return true;
+    var checked = Date.parse(d.last_checked_at || '');
+    return !!checked && Date.now() - checked > 3 * 60 * 1000;
+  }
 
   function needsPosStatusRetry() {
     var banner = $('posAccountBanner');
@@ -1047,14 +1075,18 @@
   }
 
   function refreshStatus() {
-    setAccountState('checking', 'Checking Loyverse connection…');
+    var banner = $('posAccountBanner');
+    var already = banner && banner.getAttribute('data-state');
+    if (already !== 'connected') {
+      setAccountState('checking', 'Checking Loyverse connection…');
+    }
     return ensureAuth()
       .then(function () {
         if (!pos() || !pos().getStatus) throw new Error('POS client not loaded (enable POS settings + redeploy)');
         return pos().getStatus();
       })
       .then(function (d) {
-        if (d.connected) {
+        if (d.connected && !d.last_error) {
           var statusNote =
             d.status && d.status !== 'active' ? ' Loyverse reports: ' + d.status + '.' : '';
           setAccountState(
@@ -1065,18 +1097,27 @@
           var loadItems = $('btnPosLoadItems');
           if (loadStores) loadStores.hidden = false;
           if (loadItems) loadItems.hidden = false;
+        } else if (d.last_error) {
+          setAccountState('error', d.last_error);
         } else {
           setAccountState('disconnected', 'Not linked yet. Tap Connect Loyverse and sign in.');
         }
+        if (statusNeedsFollowUp(d)) scheduleStatusPoll(2000);
+        else posStatusPollCount = 0;
         return d;
       })
       .catch(function (err) {
         var msg = String(err.message || err);
         if (/sign in required/i.test(msg)) {
           setAccountState('error', 'Sign in to see whether Loyverse is linked.');
-        } else {
-          setAccountState('error', msg);
+          return;
         }
+        if (posStatusPollCount < 4) {
+          setAccountState('checking', 'Checking Loyverse connection…');
+          scheduleStatusPoll(2000);
+          return;
+        }
+        setAccountState('error', msg);
       });
   }
 
@@ -1559,7 +1600,22 @@
     var saveItems = $('btnPosSaveItemMapping');
     var replaceBtn = $('btnPosReplaceCatalog');
     if (c) c.addEventListener('click', connect);
-    if (r) r.addEventListener('click', refreshStatus);
+    if (r) {
+      r.addEventListener('click', function () {
+        posStatusPollCount = 0;
+        clearPosStatusPoll();
+        refreshStatus();
+      });
+    }
+    var posToggle = $('posEnabledCb');
+    if (posToggle) {
+      posToggle.addEventListener('change', function () {
+        if (!posToggle.checked) return;
+        posStatusPollCount = 0;
+        clearPosStatusPoll();
+        refreshStatusWhenReady();
+      });
+    }
     if (s) s.addEventListener('click', loadStores);
     if (i) i.addEventListener('click', loadItems);
     if (saveSet) saveSet.addEventListener('click', savePosSettings);
