@@ -71,6 +71,7 @@
 }
 
 .ttms-delivery-panel__header {
+  color: var(--scheme-on-surface, var(--menu-text-color));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -129,7 +130,7 @@ body.ttms-delivery-open {
 .ttms-delivery-panel__sub {
   margin: 0.2rem 0 0;
   font-size: 0.82rem;
-  color: var(--ttms-del-muted);
+  color: var(--scheme-on-surface-muted, var(--menu-text-color));
 }
 
 .ttms-delivery-panel__close {

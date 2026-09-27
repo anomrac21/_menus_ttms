@@ -4,8 +4,8 @@
 
 .menu-search-bar {
     --menu-search-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--scheme-white));
-    --menu-search-ink: var(--scheme-ink);
-    --menu-search-ink-muted: color-mix(in srgb, var(--scheme-ink) 62%, transparent);
+    --menu-search-ink: var(--scheme-on-surface, var(--menu-text-color));
+    --menu-search-ink-muted: var(--scheme-on-surface-muted, var(--menu-text-color));
     position: fixed;
     top: calc(var(--ttms-header-height, 5em) + 0.35rem);
     inset-inline: 0.55rem;

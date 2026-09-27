@@ -26,7 +26,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background-color: #070b16;
+    background-color: var(--main-bg, #070b16);
     background-image:
         radial-gradient(120% 70% at 50% -5%, color-mix(in srgb, var(--scheme-surface, var(--menu-bg-color-1, #1c2a4a)) 50%, transparent), transparent 52%),
         linear-gradient(180deg, color-mix(in srgb, var(--main-bg, #070b16) 90%, #000) 0%, var(--main-bg, #070b16) 100%);
@@ -101,7 +101,8 @@
     padding-block: 0.65rem;
     padding-inline-end: 1em;
     margin: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 10%, transparent);
+    color: var(--scheme-on-surface, var(--menu-text-color));
     background: linear-gradient(
         180deg,
         color-mix(in srgb, var(--scheme-surface) 78%, color-mix(in srgb, var(--dash-ink) 8%, transparent)) 0%,
@@ -162,9 +163,9 @@
     margin: 0;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--dash-ink) 16%, transparent);
-    background: color-mix(in srgb, var(--dash-ink) 8%, transparent);
-    color: var(--dashboard-ink, var(--main-text-color, #f6f1e6));
+    border: 1px solid color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 16%, transparent);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 8%, transparent);
+    color: var(--scheme-on-surface, var(--menu-text-color, #f6f1e6));
     text-decoration: none;
     cursor: pointer;
     transition:
@@ -180,8 +181,8 @@
 #dashboard.dashboard-panel .ttms-icon-btn--on-dark:focus-visible,
 #dashboard.dashboard-panel .dashboard-header-admin-link:focus-visible,
 #dashboard.dashboard-panel .account-panel-btn:focus-visible {
-    background: color-mix(in srgb, var(--dash-ink) 14%, transparent);
-    border-color: color-mix(in srgb, var(--dash-ink) 28%, transparent);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 14%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 28%, transparent);
     outline: none;
     transform: translateY(-1px);
 }
@@ -220,7 +221,7 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     padding: 0.85rem 0.85rem 0.35rem;
-    background-color: #070b16;
+    background-color: var(--main-bg, #070b16);
     background-image: linear-gradient(var(--main-bg, #070b16), var(--main-bg, #070b16));
 }
 

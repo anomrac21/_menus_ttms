@@ -223,7 +223,7 @@ body.is-cart-closing .footer-dock__action--cart {
     min-width: 0;
     font-size: 0.98rem;
     font-weight: 700;
-    color: var(--cart-ink);
+    color: var(--scheme-on-surface, var(--menu-text-color));
     letter-spacing: 0.01em;
 }
 
@@ -257,8 +257,8 @@ body.is-cart-closing .footer-dock__action--cart {
     padding: 0;
     border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
     border-radius: 50%;
-    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
-    color: var(--cart-ink);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 8%, transparent);
+    color: var(--scheme-on-surface, var(--menu-text-color));
     cursor: pointer;
     transition:
         transform 0.2s ease,

@@ -123,13 +123,13 @@
     font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: 0.01em;
-    color: var(--table-modal-ink);
+    color: var(--scheme-on-surface, var(--menu-text-color));
 }
 
 #tableNumberModal.table-modal-panel .table-modal-subtitle {
     margin-top: 0.2rem;
     font-size: 0.82rem;
-    color: var(--table-modal-ink-muted);
+    color: var(--scheme-on-surface-muted, var(--menu-text-color));
 }
 
 #tableNumberModal.table-modal-panel .table-modal-close {
@@ -138,8 +138,8 @@
     padding: 0;
     border-radius: 50%;
     border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
-    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
-    color: var(--table-modal-ink);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 8%, transparent);
+    color: var(--scheme-on-surface, var(--menu-text-color));
     font-size: 1.15rem;
     transition:
         transform 0.2s ease,

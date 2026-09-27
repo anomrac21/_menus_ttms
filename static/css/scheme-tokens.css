@@ -26,6 +26,9 @@
   --scheme-surface: var(--menu-bg-color-1);
   --scheme-surface-2: var(--menu-bg-color-2);
   --scheme-menu-ink: var(--menu-text-color);
+  /* Ink for chrome painted with the menu surface, not the page background. */
+  --scheme-on-surface: var(--scheme-menu-ink);
+  --scheme-on-surface-muted: color-mix(in srgb, var(--scheme-menu-ink) 70%, transparent);
 
   /* Footer / overlay */
   --scheme-footer-bg: var(--footer-bg-color);

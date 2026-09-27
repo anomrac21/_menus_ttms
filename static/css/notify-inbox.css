@@ -111,6 +111,7 @@ body.is-notify-closing {
 }
 
 .notify-inbox-header {
+    color: var(--scheme-on-surface, var(--menu-text-color));
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -142,8 +143,8 @@ body.is-notify-closing {
     width: 2.15rem;
     height: 2.15rem;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
-    color: var(--notify-ink);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 10%, transparent);
+    color: var(--scheme-on-surface, var(--menu-text-color));
     flex-shrink: 0;
 }
 
@@ -157,12 +158,13 @@ body.is-notify-closing {
     font-size: 1rem;
     font-weight: 800;
     letter-spacing: -0.02em;
+    color: var(--scheme-on-surface, var(--menu-text-color));
 }
 
 .notify-inbox-subtitle {
     margin: 0.1rem 0 0;
     font-size: 0.78rem;
-    color: var(--notify-ink-muted);
+    color: var(--scheme-on-surface-muted, var(--menu-text-color));
 }
 
 .notify-inbox-header-trailing {
@@ -183,9 +185,9 @@ body.is-notify-closing {
     margin: 0;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
-    background: color-mix(in srgb, var(--scheme-white) 8%, transparent);
-    color: var(--notify-ink);
+    border: 1px solid color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 16%, transparent);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 8%, transparent);
+    color: var(--scheme-on-surface, var(--menu-text-color));
     text-decoration: none;
     cursor: pointer;
     transition:
@@ -199,8 +201,8 @@ body.is-notify-closing {
 .notify-inbox-header .account-panel-btn:focus-visible,
 .notify-inbox-close:hover,
 .notify-inbox-close:focus-visible {
-    background: color-mix(in srgb, var(--scheme-white) 14%, transparent);
-    border-color: color-mix(in srgb, var(--scheme-white) 24%, transparent);
+    background: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 14%, transparent);
+    border-color: color-mix(in srgb, var(--scheme-on-surface, var(--menu-text-color)) 24%, transparent);
     outline: none;
     transform: translateY(-1px);
 }
@@ -303,7 +305,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     border-radius: 1.2rem;
     background: color-mix(in srgb, var(--scheme-surface, #141820) 88%, var(--scheme-white));
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
-    color: inherit;
+    color: var(--scheme-on-surface, var(--menu-text-color));
     font: inherit;
     text-align: left;
     text-decoration: none;
@@ -367,7 +369,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--notify-ink-muted);
+    color: var(--scheme-on-surface-muted, var(--menu-text-color));
 }
 
 .notify-ios__role {
@@ -376,13 +378,13 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     padding: 0.08rem 0.38rem;
     border-radius: 999px;
     background: color-mix(in srgb, var(--notify-accent) 20%, transparent);
-    color: var(--notify-ink);
+    color: var(--scheme-on-surface, var(--menu-text-color));
 }
 
 .notify-ios__time {
     margin-left: auto;
     font-size: 0.68rem;
-    color: var(--notify-ink-muted);
+    color: var(--scheme-on-surface-muted, var(--menu-text-color));
 }
 
 .notify-ios__title {
