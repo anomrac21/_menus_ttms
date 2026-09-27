@@ -25,6 +25,17 @@ html.menu-nav-smooth {
     overflow-y: auto;
     /* Root smooth-scroll restarts every correction and the frame never settles. */
     scroll-behavior: auto !important;
+    /* Fling stays free (scroll-snap-stop: normal). The browser eases onto a dish only after scrolling stops. */
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: var(--ttms-header-height, 5em);
+    -webkit-overflow-scrolling: touch;
+}
+
+html.menu-nav-smooth:has(body.menu-reels-item-modal-open),
+html.menu-nav-smooth:has(body.cart-open),
+html.menu-nav-smooth:has(body.modal-open),
+html.menu-nav-smooth:has(body.ttms-scroll-locked) {
+    scroll-snap-type: none;
 }
 
 html.menu-nav-smooth body.menu-reels-mode {
@@ -84,7 +95,7 @@ html.menu-nav-smooth #menu-reels-track[data-ttms-reel-reveal="1"] .menu-reels-sl
     transition: none;
 }
 
-/* Smooth scroll: same slide heights as snap, without scroll-snap */
+/* Smooth scroll: slide height matches the area under the header. Snap is on the document, and a flick may pass slides. */
 html.menu-nav-smooth .menu-reels-track .menu-reels-slide,
 html.menu-nav-smooth .menu-reels-track .ads-reels-slide,
 html.menu-nav-smooth .menu-item-card.menu-reels-slide,
@@ -96,8 +107,9 @@ body.menu-nav-smooth .menu-item-card.menu-reels-slide {
     min-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
     height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
     max-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
-    scroll-snap-align: none;
+    scroll-snap-align: start;
     scroll-snap-stop: normal;
+    scroll-margin-top: 0;
     overflow: hidden;
 }
 
@@ -749,14 +761,20 @@ body.menu-search-active .menu-reels-track {
     padding-block-end: max(1.25rem, env(safe-area-inset-bottom));
 }
 
-.hero-content.menu-reels-slide.menu-reels-slide--intro {
-    height: 100%;
-    min-height: 100%;
-    max-height: 100%;
+html.menu-nav-smooth .hero-content.menu-reels-slide.menu-reels-slide--intro {
+    container-type: size;
+    container-name: introreel;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
+    min-height: 0;
+    max-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
     overflow: hidden;
-    justify-content: space-between;
-    gap: 0.25rem;
-    padding-block: 0.4rem calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    gap: 0.4rem;
+    padding: 0.65rem 1rem max(0.75rem, env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
     background: linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
 }
 
@@ -778,11 +796,15 @@ body.menu-search-active .menu-reels-track {
     text-align: center;
 }
 
-.hero-content.menu-reels-slide--intro .menu-smash-pass {
-    flex: 1 1 auto;
+html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass {
+    flex: 0 1 auto;
+    width: min(100%, 32rem);
     min-height: 0;
+    max-height: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .hero-content.menu-reels-slide--intro .menu-smash-pass--no-photos,

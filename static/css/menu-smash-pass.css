@@ -537,15 +537,47 @@ button.menu-smash-pass-card__dislikes:disabled {
 }
 
 /* Intro reel slide: stack + actions + share in one viewport */
-.hero-content.menu-reels-slide--intro .menu-smash-pass__reel:not(.hidden) {
-    flex: 1 1 auto;
+html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass__reel:not(.hidden) {
+    flex: 0 1 auto;
     min-height: 0;
+    max-height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
 }
 
-.hero-content.menu-reels-slide--intro .menu-smash-pass__progress {
+html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass__stack {
+    position: relative;
+    flex: 0 0 auto;
+    align-self: center;
+    width: min(92cqi, 26rem, max(7.5rem, calc((100cqb - 12.5rem) * 0.75)));
+    max-width: 26rem;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    max-height: max(10rem, calc(100cqb - 12.5rem));
+    margin: 0.35rem auto 0.15rem;
+}
+
+html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass-card {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    max-width: none;
+}
+
+@media (min-width: 1100px) {
+    html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass__stack {
+        width: min(70cqi, 28rem, max(7.5rem, calc((100cqb - 12.5rem) * 0.75)));
+        max-width: 28rem;
+    }
+}
+
+html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass__progress {
     flex-shrink: 0;
     margin: 0 0 0.25rem;
     font-size: 0.68rem !important;
@@ -554,17 +586,7 @@ button.menu-smash-pass-card__dislikes:disabled {
 .hero-content.menu-reels-slide--intro .menu-smash-pass__vote-hint {
     margin: 0 0 0.2rem;
     font-size: 0.66rem;
-}
-
-.hero-content.menu-reels-slide--intro .menu-smash-pass__stack {
-    flex: 1 1 auto;
-    align-self: center;
-    min-height: 0;
-    width: min(90vw, 20rem);
-    max-width: 20rem;
-    height: auto;
-    max-height: 100%;
-    aspect-ratio: auto;
+    flex-shrink: 0;
 }
 
 .hero-content.menu-reels-slide--intro .menu-smash-pass-card__title {
