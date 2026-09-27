@@ -5,9 +5,8 @@
 (function () {
   'use strict';
 
-  var THRESHOLD = 120;
-  var MAX_VISUAL = 144;
   var HORIZONTAL_CANCEL_RATIO = 1.2;
+  var CENTER_HOLD_MS = 640;
 
   var DASHBOARD_ROOT_SELECTORS = [
     '.dashboard-control-room',
@@ -42,6 +41,7 @@
   var startX = 0;
   var tracking = false;
   var reloading = false;
+  var holding = false;
   var lastPullPx = 0;
   var optsMove = { passive: false, capture: true };
   var optsEnd = { capture: true };
@@ -118,7 +118,7 @@
 
   function canUsePullToRefresh(target) {
     if (!isPullToRefreshEnabled()) return false;
-    if (reloading) return false;
+    if (reloading || holding) return false;
     if (document.body.classList.contains('menublock-dropdown-open')) return false;
     if (document.body.classList.contains('menu-reels-item-modal-open')) return false;
     if (!isAtPageTop()) return false;
@@ -135,6 +135,20 @@
     detachTouchListeners();
   }
 
+  function centerY() {
+    var h = window.innerHeight || document.documentElement.clientHeight || 0;
+    return Math.max(180, Math.round(h * 0.5));
+  }
+
+  function centerHoldMs() {
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 220;
+    } catch (e) {
+      /* ignore */
+    }
+    return CENTER_HOLD_MS;
+  }
+
   var indicator = null;
   function ensureIndicator() {
     if (indicator) return indicator;
@@ -144,7 +158,11 @@
     el.setAttribute('aria-live', 'polite');
     el.setAttribute('aria-hidden', 'true');
     el.innerHTML =
-      '<div class="ttms-ptr-inner"><span class="ttms-ptr-icon" aria-hidden="true">↓</span><span class="ttms-ptr-text">Pull to refresh</span></div>';
+      '<div class="ttms-ptr-scrim"></div>' +
+      '<div class="ttms-ptr-inner">' +
+      '<span class="ttms-ptr-orb" aria-hidden="true"><span class="ttms-ptr-icon">↓</span></span>' +
+      '<span class="ttms-ptr-text">Pull to refresh</span>' +
+      '</div>';
     document.body.appendChild(el);
     indicator = el;
     return el;
@@ -153,41 +171,69 @@
   function injectStyles() {
     if (document.getElementById('ttms-ptr-styles')) return;
     var css =
-      '#ttms-ptr-indicator{position:fixed;left:0;right:0;top:0;z-index:2147483000;' +
-      'display:flex;justify-content:center;pointer-events:none;' +
-      'padding-top:var(--ttms-safe-top,env(safe-area-inset-top,0px));' +
-      'transform:translateY(-100%);transition:opacity .15s ease;opacity:0;' +
-      'font-family:system-ui,-apple-system,sans-serif;font-size:13px;}' +
+      '#ttms-ptr-indicator{position:fixed;inset:0;z-index:2147483000;pointer-events:none;opacity:0;' +
+      'font-family:var(--ttms-font-sans,system-ui,-apple-system,sans-serif);}' +
       '#ttms-ptr-indicator.ttms-ptr-visible{opacity:1;}' +
-      '.ttms-ptr-inner{margin-top:8px;padding:8px 14px;border-radius:999px;' +
-      'background:color-mix(in srgb, var(--scheme-black) 78%, transparent);color:var(--scheme-white);box-shadow:0 2px 12px color-mix(in srgb, var(--scheme-black) 25%, transparent);' +
-      'display:flex;align-items:center;gap:8px;}' +
-      '.ttms-ptr-icon{display:inline-block;transition:transform .12s ease;}' +
+      '.ttms-ptr-scrim{position:absolute;inset:0;background:color-mix(in srgb, var(--dash-bg, var(--scheme-black, #090a13)) 72%, transparent);opacity:0;}' +
+      '.ttms-ptr-inner{position:absolute;left:50%;top:0;display:flex;flex-direction:column;align-items:center;gap:0.85rem;' +
+      'min-width:15.5rem;padding:1.55rem 1.7rem 1.35rem;border-radius:32px;' +
+      'background:color-mix(in srgb, var(--dash-surface, var(--scheme-surface, #16181f)) 94%, transparent);' +
+      'color:var(--dash-ink, var(--scheme-white, #fff));' +
+      'box-shadow:0 24px 70px color-mix(in srgb, #000 42%, transparent);' +
+      'transform:translate(-50%, -140%);will-change:transform;}' +
+      '.ttms-ptr-orb{width:7.25rem;height:7.25rem;border-radius:50%;display:grid;place-items:center;position:relative;' +
+      'background:color-mix(in srgb, var(--dash-accent, var(--scheme-accent, #e5ad36)) 22%, transparent);' +
+      'color:var(--dash-accent, var(--scheme-accent, #e5ad36));' +
+      'box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--dash-accent, var(--scheme-accent, #e5ad36)) 45%, transparent);}' +
+      '.ttms-ptr-icon{font-size:2.6rem;line-height:1;display:block;transition:transform .18s ease;}' +
+      '.ttms-ptr-text{font-size:1.28rem;font-weight:700;letter-spacing:-0.01em;text-align:center;}' +
       '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-icon{transform:rotate(-180deg);}' +
-      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-text::after{content:": release";}' +
-      '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-icon{animation:ttms-ptr-spin .8s linear infinite;}' +
-      '@keyframes ttms-ptr-spin{to{transform:rotate(360deg);}}';
+      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-orb{animation:ttms-ptr-pulse .7s ease-in-out infinite;}' +
+      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-orb::after{content:"";position:absolute;inset:-0.55rem;border-radius:50%;' +
+      'border:2px solid color-mix(in srgb, var(--dash-accent, var(--scheme-accent, #e5ad36)) 70%, transparent);' +
+      'animation:ttms-ptr-ring .9s ease-out infinite;}' +
+      '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-icon{animation:ttms-ptr-spin .7s linear infinite;}' +
+      '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-orb::after{content:"";position:absolute;inset:-0.35rem;border-radius:50%;' +
+      'border:3px solid transparent;border-top-color:var(--dash-accent, var(--scheme-accent, #e5ad36));' +
+      'animation:ttms-ptr-spin .7s linear infinite;}' +
+      '@keyframes ttms-ptr-spin{to{transform:rotate(360deg);}}' +
+      '@keyframes ttms-ptr-pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}' +
+      '@keyframes ttms-ptr-ring{0%{transform:scale(.86);opacity:.85;}100%{transform:scale(1.28);opacity:0;}}' +
+      '@media (prefers-reduced-motion: reduce){' +
+      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-orb,' +
+      '#ttms-ptr-indicator.ttms-ptr-ready .ttms-ptr-orb::after,' +
+      '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-icon,' +
+      '#ttms-ptr-indicator.ttms-ptr-refreshing .ttms-ptr-orb::after{animation:none;}}';
     var s = document.createElement('style');
     s.id = 'ttms-ptr-styles';
     s.textContent = css;
     document.head.appendChild(s);
   }
 
+  function placeMessage(el, shown, scale) {
+    var inner = el.querySelector('.ttms-ptr-inner');
+    if (!inner) return;
+    var h = inner.offsetHeight || 210;
+    var y = shown - h / 2;
+    inner.style.transform = 'translate(-50%, ' + y + 'px) scale(' + scale + ')';
+  }
+
   function setIndicatorPull(dy) {
-    lastPullPx = dy;
+    var center = centerY();
+    var shown = Math.min(Math.max(dy, 0), center);
+    lastPullPx = shown;
+    var t = shown / center;
     var el = ensureIndicator();
-    var t = Math.min(dy / THRESHOLD, 1);
-    var translate = -100 + t * 100;
-    el.style.transform = 'translateY(' + Math.min(translate, 0) + '%)';
     el.classList.add('ttms-ptr-visible');
     el.classList.remove('ttms-ptr-refreshing');
-    if (dy >= THRESHOLD) {
-      el.classList.add('ttms-ptr-ready');
-      el.setAttribute('aria-hidden', 'false');
-    } else {
-      el.classList.remove('ttms-ptr-ready');
-      el.setAttribute('aria-hidden', 'true');
-    }
+    var scrim = el.querySelector('.ttms-ptr-scrim');
+    if (scrim) scrim.style.opacity = String(Math.min(0.78, t * 0.78));
+    placeMessage(el, shown, 0.78 + t * 0.3);
+    var ready = shown >= center - 8;
+    el.classList.toggle('ttms-ptr-ready', ready);
+    var text = el.querySelector('.ttms-ptr-text');
+    if (text) text.textContent = ready ? 'Release to refresh' : 'Pull to refresh';
+    el.setAttribute('aria-hidden', ready ? 'false' : 'true');
   }
 
   function setIndicatorRefreshing(active) {
@@ -196,9 +242,11 @@
     if (active) {
       el.classList.add('ttms-ptr-visible', 'ttms-ptr-refreshing');
       el.classList.remove('ttms-ptr-ready');
-      el.style.transform = 'translateY(0%)';
+      var scrim = el.querySelector('.ttms-ptr-scrim');
+      if (scrim) scrim.style.opacity = '0.78';
+      placeMessage(el, centerY(), 1.08);
       el.setAttribute('aria-hidden', 'false');
-      if (text) text.textContent = 'Refreshing…';
+      if (text) text.textContent = 'Refreshing';
       return;
     }
     el.classList.remove('ttms-ptr-refreshing');
@@ -208,8 +256,11 @@
   function hideIndicator() {
     if (!indicator) return;
     indicator.classList.remove('ttms-ptr-visible', 'ttms-ptr-ready', 'ttms-ptr-refreshing');
-    indicator.style.transform = 'translateY(-100%)';
     indicator.setAttribute('aria-hidden', 'true');
+    var scrim = indicator.querySelector('.ttms-ptr-scrim');
+    if (scrim) scrim.style.opacity = '0';
+    var inner = indicator.querySelector('.ttms-ptr-inner');
+    if (inner) inner.style.transform = 'translate(-50%, -140%)';
     var text = indicator.querySelector('.ttms-ptr-text');
     if (text) text.textContent = 'Pull to refresh';
   }
@@ -293,7 +344,7 @@
       return;
     }
 
-    var clamped = Math.min(dy, MAX_VISUAL);
+    var clamped = Math.min(dy, centerY());
     if (clamped > 8) {
       window.TTMS_PTR_PULLING = true;
       try {
@@ -317,18 +368,21 @@
 
     tracking = false;
 
-    var shouldReload = lastPullPx >= THRESHOLD;
+    var reachedCenter = lastPullPx >= centerY() - 8;
     lastPullPx = 0;
 
-    if (shouldReload) {
-      if (isDashboardPage()) {
-        hideIndicator();
-        performDashboardSoftRefresh();
-        return;
-      }
-      reloading = true;
-      hideIndicator();
-      window.location.reload();
+    if (reachedCenter) {
+      holding = true;
+      setIndicatorRefreshing(true);
+      window.setTimeout(function () {
+        holding = false;
+        if (isDashboardPage()) {
+          performDashboardSoftRefresh();
+          return;
+        }
+        reloading = true;
+        window.location.reload();
+      }, centerHoldMs());
       return;
     }
 
@@ -336,7 +390,7 @@
   }
 
   function onTouchStart(e) {
-    if (reloading || tracking) return;
+    if (reloading || holding || tracking) return;
     if (!canUsePullToRefresh(e.target)) return;
 
     var t = e.touches[0];

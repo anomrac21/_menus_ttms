@@ -1,9 +1,19 @@
+{{- $paintChrome := or (hasPrefix .Layout "client-dashboard") (eq .Layout "login") (eq .Layout "signup") (eq .Layout "forgot-password") (eq .Layout "admin-users") (eq .Layout "update-ui") -}}
 <script>
 (function () {
+  var dark = false;
   try {
     var t = localStorage.getItem('theme');
-    if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    if (t === 'dark') dark = true;
+    else if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) dark = true;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
   } catch (e) {}
+  {{- if $paintChrome }}
+  var ink = dark ? '#090a13' : '#f4f4f4';
+  document.documentElement.style.backgroundColor = ink;
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', ink);
+  {{- end }}
 })();
 </script>
 {{- $themeCss := partial "head/asset-url.html" `/css/dashboard-theme.css` -}}

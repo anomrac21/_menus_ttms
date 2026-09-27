@@ -1261,10 +1261,8 @@ window.MENU_CONFIG = {
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/tap-particles.css") }}
 <script src="/js/tap-particles.js" defer></script>
 
-{{- if $menuPublicSite -}}
-<!-- Pull-to-refresh in PWA / standalone display mode (no browser chrome) -->
-<script src="/js/pull-to-refresh.js" defer></script>
-{{- end -}}
+<!-- Pull-to-refresh: installed PWA, and the dashboard -->
+<script src="{{ partial "head/asset-url.html" "/js/pull-to-refresh.js" }}" defer></script>
 
 {{- /* Load POS client whenever Loyverse is entitled or configured (enabled flag gates order posting). */ -}}
 {{- $loyverseFeature := false -}}

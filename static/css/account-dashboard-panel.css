@@ -408,7 +408,66 @@
 }
 
 #account-dashboard.account-dashboard-panel .account-dashboard-user-data {
-    padding: 1rem 0.95rem 1.1rem;
+    padding: 0.7rem 0.7rem 1.1rem;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin: 0 0 0.85rem;
+    padding: 0.3rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--account-ink) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--account-ink) 10%, transparent);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-tab {
+    appearance: none;
+    flex: 1 1 0;
+    margin: 0;
+    min-height: 2.45rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--account-ink-muted);
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-tab.is-active {
+    background: color-mix(in srgb, var(--account-ink) 12%, transparent);
+    color: var(--account-ink);
+    border-color: color-mix(in srgb, var(--account-accent) 42%, color-mix(in srgb, var(--account-ink) 12%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--account-ink) 10%, transparent);
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-tab:focus-visible {
+    outline: 2px solid var(--account-accent);
+    outline-offset: 2px;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-tab-panel[hidden] {
+    display: none !important;
+}
+
+#account-dashboard.account-dashboard-panel .account-dashboard-tab-panel > .user-data-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 #account-dashboard.account-dashboard-panel .user-data-title {

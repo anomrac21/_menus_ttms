@@ -67,12 +67,16 @@
 			</div>
 
 			<div id="account-dashboard-user-data" class="account-dashboard-user-data account-dashboard-card" style="display: none;">
-				<div class="user-data-section">
+				<div class="account-dashboard-tabs" role="tablist" aria-label="Orders and favorites">
+					<button type="button" class="account-dashboard-tab is-active" role="tab" id="account-dashboard-tab-orders" data-account-tab="orders" aria-selected="true" aria-controls="account-dashboard-panel-orders">Orders</button>
+					<button type="button" class="account-dashboard-tab" role="tab" id="account-dashboard-tab-favorites" data-account-tab="favorites" aria-selected="false" aria-controls="account-dashboard-panel-favorites" tabindex="-1">Favorites</button>
+				</div>
+				<div class="user-data-section account-dashboard-tab-panel" id="account-dashboard-panel-orders" data-account-panel="orders" role="tabpanel" aria-labelledby="account-dashboard-tab-orders">
 					<h3 class="user-data-title">My orders</h3>
 					<div id="account-dashboard-orders" class="account-dashboard-orders"></div>
 					<p id="account-dashboard-orders-empty" class="user-data-empty" style="display: none;">No orders yet. Sign in and tap Order Now on a menu.</p>
 				</div>
-				<div class="user-data-section">
+				<div class="user-data-section account-dashboard-tab-panel" id="account-dashboard-panel-favorites" data-account-panel="favorites" role="tabpanel" aria-labelledby="account-dashboard-tab-favorites" hidden>
 					<h3 class="user-data-title">My Favorites</h3>
 					<div id="account-dashboard-favorites" class="account-dashboard-favorites"></div>
 					<p id="account-dashboard-favorites-empty" class="user-data-empty" style="display: none;">No favorites yet. Tap ♡ on dishes while browsing menus.</p>

@@ -433,6 +433,36 @@
     closeAll();
   }
 
+  function openAccountTab(name) {
+    var root = document.getElementById('account-dashboard-user-data');
+    if (!root) return;
+    var next = name === 'favorites' ? 'favorites' : 'orders';
+    root.querySelectorAll('[data-account-tab]').forEach(function (tab) {
+      var on = tab.getAttribute('data-account-tab') === next;
+      tab.classList.toggle('is-active', on);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+    });
+    root.querySelectorAll('[data-account-panel]').forEach(function (panel) {
+      if (panel.getAttribute('data-account-panel') === next) {
+        panel.removeAttribute('hidden');
+      } else {
+        panel.setAttribute('hidden', '');
+      }
+    });
+  }
+
+  function bindAccountTabs() {
+    var root = document.getElementById('account-dashboard-user-data');
+    if (!root || root.getAttribute('data-account-tabs-bound') === '1') return;
+    root.setAttribute('data-account-tabs-bound', '1');
+    root.addEventListener('click', function (e) {
+      var tab = e.target.closest('[data-account-tab]');
+      if (!tab || !root.contains(tab)) return;
+      openAccountTab(tab.getAttribute('data-account-tab'));
+    });
+  }
+
   function bindAccountLogoutButton() {
     document.querySelectorAll('[data-account-logout]').forEach(function (btn) {
       if (btn._ttmsAccountLogoutBound) {
@@ -605,6 +635,7 @@
 
   function initAccountDashboardUi() {
     bindFavoriteRemoveHandlers();
+    bindAccountTabs();
     bindAccountLogoutButton();
     scheduleRefresh();
   }
