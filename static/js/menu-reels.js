@@ -637,8 +637,7 @@
       lastMenublockActiveId = targetId;
     }
 
-    // First paint alignment (layout may still be incomplete while lazy sections load).
-    realignToSection('smooth');
+    realignToSection('auto');
 
     var loadPromise = Promise.resolve();
     if (typeof window.loadHomeMenuForSectionId === 'function') {
@@ -654,16 +653,12 @@
         /* still realign with whatever is in the DOM */
       })
       .then(function () {
-        function settle() {
+        if (navToken !== pendingSectionNavToken) return;
+        realignToSection('auto');
+        window.setTimeout(function () {
           if (navToken !== pendingSectionNavToken) return;
           realignToSection('auto');
-        }
-        requestAnimationFrame(function () {
-          settle();
-          requestAnimationFrame(settle);
-        });
-        window.setTimeout(settle, 120);
-        window.setTimeout(settle, 360);
+        }, 180);
       });
   }
 
@@ -760,7 +755,7 @@
 
   var SMOOTH_REST_VELOCITY = 0.04;
   var SMOOTH_REST_IDLE_MS = 220;
-  var SMOOTH_ALIGN_PX = 10;
+  var SMOOTH_ALIGN_PX = 4;
   var SMOOTH_LOCK_PX = 28;
 
   function scrollingElement() {
@@ -831,6 +826,7 @@
     var settledY = readScrollY();
     /* True only while the user is driving the scroll. A correction must not re-arm itself. */
     var armed = false;
+    var lastFlush = 0;
 
     function lockGesture(y) {
       gestureLock = true;
@@ -854,6 +850,28 @@
         alignRaf = 0;
       }
     }
+
+    function flushIfIdle() {
+      if (aligning || pointers > 0 || !isSmoothNavMode()) return;
+      if (document.body.classList.contains('menu-reels-item-modal-open')) return;
+      var now = performance.now();
+      if (now - lastFlush < 450) return;
+      var target = nearestSmoothSlideTop(track, false);
+      if (target == null) return;
+      var dist = target - readScrollY();
+      var abs = Math.abs(dist);
+      if (abs <= SMOOTH_ALIGN_PX) {
+        lockGesture(readScrollY());
+        return;
+      }
+      if (abs > Math.max(160, (window.innerHeight || 0) * 0.42)) return;
+      lastFlush = now;
+      armed = false;
+      scrollWindowInstant(target);
+      lockGesture(target);
+    }
+
+    track._ttmsFlushReel = flushIfIdle;
 
     function alignIfVelocityZero() {
       if (!armed || !isSmoothNavMode() || pointers > 0 || aligning) return;
@@ -1003,10 +1021,21 @@
     }, { passive: true, signal: signal });
 
     window.addEventListener('scrollend', function () {
-      if (!armed || aligning || pointers > 0 || gestureLock) return;
+      if (aligning || pointers > 0) return;
       velocity = 0;
-      scheduleIdle(64);
+      if (armed && !gestureLock) {
+        scheduleIdle(64);
+        return;
+      }
+      window.setTimeout(flushIfIdle, 70);
     }, { passive: true, signal: signal });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function () {
+        if (pointers > 0 || aligning) return;
+        window.setTimeout(flushIfIdle, 90);
+      }, { passive: true, signal: signal });
+    }
 
     window.addEventListener('pointerdown', function () {
       pointers += 1;
@@ -1041,6 +1070,7 @@
       clearIdle();
       cancelAlign();
       window.clearTimeout(resizeTimer);
+      track._ttmsFlushReel = null;
       abort.abort();
     };
   }
