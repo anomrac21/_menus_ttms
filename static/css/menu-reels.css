@@ -992,7 +992,36 @@ body.menu-search-active .menu-reels-track {
     padding-block: .6em 5em;
     box-sizing: border-box;
     content-visibility: auto;
-    contain-intrinsic-size: auto 100dvh;
+    contain-intrinsic-size: auto var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
+}
+
+/* Hold the slide while the real card is still offstage. Same box as a menu item. */
+.menu-reel-slot.menu-reels-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    content-visibility: visible;
+    background: var(--main-bg, #070b16);
+    color: var(--main-text-color, #fff);
+}
+
+.menu-reel-slot__throbber {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--scheme-white, #fff) 22%, transparent);
+    border-top-color: var(--selected-button-color3, #e8b84a);
+    animation: menu-reel-slot-spin 0.7s linear infinite;
+}
+
+@keyframes menu-reel-slot-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .menu-item-card.menu-reels-slide {
+        content-visibility: visible;
+    }
 }
 
 .menu-item-card.menu-reels-slide.expanded,
@@ -1485,7 +1514,8 @@ body.menu-reels-cart-celebrating .footer-dock__action--cart {
 
     .menu-header__item-count.is-count-loading .menu-header__item-count__value,
     .menu-header.menu-reels-slide.is-section-loading .headerstyle::after,
-    .menu-reels-slide--section-title.is-section-loading::after {
+    .menu-reels-slide--section-title.is-section-loading::after,
+    .menu-reel-slot__throbber {
         animation: none;
     }
 

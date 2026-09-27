@@ -914,15 +914,14 @@ window.MENU_CONFIG = {
 {{- if $isMenuReelsPage -}}
 <script>
 (function () {
+  document.documentElement.classList.add('menu-nav-smooth');
   try {
-    var mode = 'smooth';
     var raw = localStorage.getItem('userPreferences');
-    if (raw) {
-      var prefs = JSON.parse(raw);
-      if (prefs && prefs.homeNavMode === 'snap') mode = 'snap';
-    }
-    if (mode === 'smooth') {
-      document.documentElement.classList.add('menu-nav-smooth');
+    if (!raw) return;
+    var prefs = JSON.parse(raw);
+    if (prefs && prefs.homeNavMode && prefs.homeNavMode !== 'smooth') {
+      prefs.homeNavMode = 'smooth';
+      localStorage.setItem('userPreferences', JSON.stringify(prefs));
     }
   } catch (e) { /* ignore */ }
 })();

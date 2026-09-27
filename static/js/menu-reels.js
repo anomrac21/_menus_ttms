@@ -316,7 +316,9 @@
 
   function getItemsForSection(track, slug) {
     if (!slug) return [];
-    return Array.from(track.querySelectorAll('.menu-item-card.menu-reels-slide')).filter(function (card) {
+    return Array.from(
+      track.querySelectorAll('.menu-item-card.menu-reels-slide, .menu-reel-slot.menu-reels-slide')
+    ).filter(function (card) {
       return sectionSlugFromItemCard(card) === slug;
     }).sort(compareDocumentOrder);
   }

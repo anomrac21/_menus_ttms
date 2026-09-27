@@ -134,85 +134,6 @@
     padding: 0.65rem;
 }
 
-.footer-settings-popover__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.65rem;
-    width: 100%;
-    min-height: 2.85rem;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
-    border-radius: 0.85rem;
-    background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--scheme-white) 12%, transparent) 0%,
-        color-mix(in srgb, var(--scheme-white) 5%, transparent) 100%
-    );
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 10%, transparent);
-    box-sizing: border-box;
-}
-
-.footer-settings-popover__nav-mode-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.65rem;
-    min-width: 0;
-    color: var(--footer-text-color);
-    font-size: 0.95rem;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-.footer-settings-popover__nav-mode-text {
-    white-space: nowrap;
-    font-size: 0.88rem;
-}
-
-.footer-settings-nav-toggle {
-    display: inline-flex;
-    flex-shrink: 0;
-    padding: 0.18rem;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
-    background: color-mix(in srgb, var(--scheme-black) 22%, transparent);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 8%, transparent);
-}
-
-.footer-settings-nav-toggle__btn {
-    min-width: 3.5rem;
-    padding: 0.42rem 0.55rem;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: color-mix(in srgb, var(--footer-text-color) 72%, transparent);
-    font: inherit;
-    font-size: 0.5rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.footer-settings-nav-toggle__btn.is-active {
-    background: linear-gradient(
-        160deg,
-        color-mix(in srgb, var(--footer-settings-accent) 72%, var(--scheme-white)) 0%,
-        color-mix(in srgb, var(--footer-settings-accent) 42%, color-mix(in srgb, var(--scheme-white) 20%, transparent)) 100%
-    );
-    color: var(--scheme-black);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--scheme-black) 22%, transparent);
-}
-
-.footer-settings-nav-toggle__btn:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--footer-settings-accent) 65%, var(--scheme-white));
-    outline-offset: 2px;
-}
-
 .footer-settings-popover__btn,
 #footerSettings .btn.settings-btn {
     display: inline-flex;
@@ -562,15 +483,6 @@ body.table-modal-open #footerSettings {
 
     .footer-dock__action {
         padding: 0.35rem 0.2rem 0.28rem;
-    }
-
-    .footer-settings-nav-toggle__btn {
-        min-width: 4.1rem;
-        padding: 0.42rem 0.72rem;
-    }
-
-    .footer-settings-popover__nav-mode-text {
-        font-size: inherit;
     }
 }
 

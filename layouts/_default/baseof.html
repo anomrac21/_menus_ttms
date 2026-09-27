@@ -78,7 +78,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@barba/core@2.9.7/dist/barba.umd.js" defer></script>
   <script src="/js/barba-lifecycle.js" defer></script>
   <script src="/js/menu-favorite-icons.js" defer></script>
-  <script src="/js/home-menu-loader.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/home-menu-loader.js" }}" defer></script>
 
   <!-- Loader script. High priority, loads after Barba + home menu bootstrap -->
   <script src="{{ partial "head/asset-url.html" "/js/loader.js" }}" defer></script>
@@ -96,7 +96,7 @@
   {{- if site.Params.menuImageService.enabled -}}
   <script src="/js/menu-smash-pass.js" defer></script>
   {{- end -}}
-  <script src="/js/menu-nav-mode.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/menu-nav-mode.js" }}" defer></script>
   <script src="{{ partial "head/asset-url.html" "/js/menu-reels.js" }}" defer></script>
   
   <!-- Core app functionality: deferred -->

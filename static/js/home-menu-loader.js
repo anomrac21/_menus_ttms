@@ -1,6 +1,7 @@
 /**
  * Homepage menu reels: lazy-load menu item cards from /api/menu-items.json.
- * Loads a section when its header slide is near the reels viewport (scroll or nav).
+ * Each dish reserves a full slide with a throbber first. Real cards replace that
+ * space only after scrolling slows and the slide is near the screen.
  */
 (function () {
   'use strict';
@@ -19,6 +20,12 @@
   var headerCountSeen = new WeakSet();
   var headerCountAnimated = new WeakSet();
   var sectionLoadPromises = Object.create(null);
+  var sectionItems = new WeakMap();
+  var prepareGeneration = 0;
+  var hydrationScheduled = false;
+  var cardInitTimer = 0;
+  var scrollMotion = { y: 0, t: 0, v: 0, fastUntil: 0, timer: 0 };
+  var SCROLL_FAST_PX_MS = 0.4;
 
   function isPromoSectionHeader(section) {
     if (!section) return false;
@@ -429,6 +436,299 @@
 
   function getProximityScrollRoot() {
     return isSmoothNavMode() ? null : getTrack();
+  }
+
+  function readScrollPos() {
+    if (isSmoothNavMode()) return window.scrollY || window.pageYOffset || 0;
+    var track = getTrack();
+    return track ? track.scrollTop : 0;
+  }
+
+  function noteScrollMotion() {
+    var y = readScrollPos();
+    var t = performance.now();
+    var dt = t - scrollMotion.t;
+    if (scrollMotion.t && dt > 0 && dt < 250) {
+      var instant = (y - scrollMotion.y) / dt;
+      scrollMotion.v = scrollMotion.v * 0.4 + instant * 0.6;
+    } else if (dt >= 250) {
+      scrollMotion.v = 0;
+    }
+    scrollMotion.y = y;
+    scrollMotion.t = t;
+    if (Math.abs(scrollMotion.v) > SCROLL_FAST_PX_MS) {
+      scrollMotion.fastUntil = t + 170;
+    }
+    if (scrollMotion.timer) window.clearTimeout(scrollMotion.timer);
+    scrollMotion.timer = window.setTimeout(function () {
+      scrollMotion.timer = 0;
+      scrollMotion.v = 0;
+      scrollMotion.fastUntil = 0;
+      scheduleHydrationPump();
+    }, 150);
+    scheduleHydrationPump();
+  }
+
+  function isFastScroll() {
+    return Math.abs(scrollMotion.v) > SCROLL_FAST_PX_MS || performance.now() < scrollMotion.fastUntil;
+  }
+
+  function viewportMetrics() {
+    if (isSmoothNavMode()) {
+      var top = getHeaderScrollOffset();
+      var bottom = window.innerHeight || 0;
+      return { top: top, bottom: bottom, height: Math.max(1, bottom - top) };
+    }
+    var track = getTrack();
+    if (!track) return { top: 0, bottom: 0, height: 1 };
+    var rect = track.getBoundingClientRect();
+    return { top: rect.top, bottom: rect.bottom, height: Math.max(1, rect.height) };
+  }
+
+  function slideBand(slide, metrics) {
+    var rect = slide.getBoundingClientRect();
+    return {
+      ahead: (rect.top - metrics.bottom) / metrics.height,
+      behind: (metrics.top - rect.bottom) / metrics.height,
+    };
+  }
+
+  function withStableScroll(fn) {
+    var track = getTrack();
+    var metrics = viewportMetrics();
+    var anchor = null;
+    var offset = 0;
+    if (track && readScrollPos() > 2) {
+      var slides = track.querySelectorAll('.menu-reels-slide');
+      var i;
+      for (i = 0; i < slides.length; i++) {
+        var rect = slides[i].getBoundingClientRect();
+        if (rect.bottom > metrics.top + 4) {
+          anchor = slides[i];
+          offset = rect.top - metrics.top;
+          break;
+        }
+      }
+    }
+    fn();
+    if (!anchor || !anchor.isConnected) return;
+    var next = anchor.getBoundingClientRect();
+    var delta = next.top - metrics.top - offset;
+    if (Math.abs(delta) < 1) return;
+    if (isSmoothNavMode()) {
+      window.scrollBy(0, delta);
+    } else if (track) {
+      track.scrollTop += delta;
+    }
+  }
+
+  function buildSlot(header, index) {
+    var slot = document.createElement('section');
+    slot.className = 'menu-reels-slide menu-reel-slot';
+    slot.setAttribute('data-reel-section', header.getAttribute('data-reel-section') || '');
+    slot.setAttribute('data-section-slug', header.getAttribute('data-section-slug') || '');
+    slot.setAttribute('data-reel-slot-index', String(index));
+    slot.setAttribute('aria-busy', 'true');
+    slot.setAttribute('aria-label', 'Loading menu item');
+    var throb = document.createElement('div');
+    throb.className = 'menu-reel-slot__throbber';
+    throb.setAttribute('aria-hidden', 'true');
+    slot.appendChild(throb);
+    return slot;
+  }
+
+  function sectionSlideNodes(header) {
+    var slug = header.getAttribute('data-section-slug') || '';
+    var nodes = [];
+    var el = header.nextElementSibling;
+    while (el) {
+      if (el.classList.contains('menu-header')) break;
+      if (
+        el.classList.contains('menu-reels-slide--bottom-ads') ||
+        el.classList.contains('menu-reels-slide--hero') ||
+        el.classList.contains('menu-reels-slide--intro') ||
+        el.classList.contains('menu-reels-slide--contact')
+      ) {
+        break;
+      }
+      var elSlug = el.getAttribute('data-section-slug') || '';
+      if (elSlug && slug && elSlug !== slug) break;
+      if (el.classList.contains('menu-item-card') || el.classList.contains('menu-reel-slot')) {
+        nodes.push(el);
+      } else if (el.classList.contains('menu-reels-slide')) {
+        break;
+      }
+      el = el.nextElementSibling;
+    }
+    return nodes;
+  }
+
+  function ensureSlotCount(header, count) {
+    var parent = header.parentElement;
+    if (!parent) return;
+    count = Math.max(0, count || 0);
+    var nodes = sectionSlideNodes(header);
+    var i;
+    if (nodes.length > count) {
+      for (i = nodes.length - 1; i >= count; i--) nodes[i].remove();
+      nodes.length = count;
+    }
+    if (nodes.length < count) {
+      var frag = document.createDocumentFragment();
+      for (i = nodes.length; i < count; i++) frag.appendChild(buildSlot(header, i));
+      var anchor = nodes.length ? nodes[nodes.length - 1].nextSibling : header.nextSibling;
+      parent.insertBefore(frag, anchor);
+    }
+    sectionSlideNodes(header).forEach(function (node, index) {
+      node.setAttribute('data-reel-slot-index', String(index));
+    });
+  }
+
+  function reserveSlotsFromMarkup() {
+    var track = getTrack();
+    if (!track) return;
+    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      if (isPromoSectionHeader(header)) return;
+      if (header.dataset.homeMenuReserved === '1') return;
+      ensureSlotCount(header, getTargetItemCount(header));
+      header.dataset.homeMenuReserved = '1';
+    });
+  }
+
+  function hydrateNode(header, node) {
+    if (!node || !node.classList.contains('menu-reel-slot') || !loaderConfig) return false;
+    var items = sectionItems.get(header);
+    if (!items) return false;
+    var index = parseInt(node.getAttribute('data-reel-slot-index'), 10);
+    if (!Number.isFinite(index) || !items[index]) return false;
+    var wrap = document.createElement('div');
+    wrap.innerHTML = buildCard(items[index], header.getAttribute('data-reel-section') || '', loaderConfig);
+    var card = wrap.firstElementChild;
+    if (!card) return false;
+    card.setAttribute('data-reel-slot-index', String(index));
+    node.replaceWith(card);
+    return true;
+  }
+
+  function dehydrateNode(node, header) {
+    if (!node || !node.classList.contains('menu-item-card')) return false;
+    if (node.getAttribute('aria-expanded') === 'true' || node.getAttribute('data-item-expanded') === 'true') {
+      return false;
+    }
+    if (document.body && document.body.classList.contains('menu-reels-item-modal-open')) return false;
+    var index = parseInt(node.getAttribute('data-reel-slot-index'), 10);
+    if (!Number.isFinite(index)) return false;
+    node.replaceWith(buildSlot(header, index));
+    return true;
+  }
+
+  function slideNeedsHydration(node, metrics) {
+    if (!node.classList.contains('menu-reel-slot')) return false;
+    var band = slideBand(node, metrics);
+    return band.ahead < 1.05 && band.behind < 0.45;
+  }
+
+  function scheduleHydrationPump() {
+    if (hydrationScheduled) return;
+    hydrationScheduled = true;
+    requestAnimationFrame(function () {
+      hydrationScheduled = false;
+      pumpHydration();
+    });
+  }
+
+  function pumpHydration() {
+    if (!loaderConfig || isFastScroll()) return;
+    var track = getTrack();
+    if (!track) return;
+    var metrics = viewportMetrics();
+    var hydrated = 0;
+    var dehydrated = 0;
+    var pending = false;
+    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      if (!sectionItems.has(header)) return;
+      sectionSlideNodes(header).forEach(function (node) {
+        var band = slideBand(node, metrics);
+        if (slideNeedsHydration(node, metrics)) {
+          if (hydrated < 2) {
+            if (hydrateNode(header, node)) hydrated += 1;
+          } else {
+            pending = true;
+          }
+        } else if (
+          node.classList.contains('menu-item-card') &&
+          (band.ahead > 2.5 || band.behind > 2.5) &&
+          dehydrated < 3
+        ) {
+          if (dehydrateNode(node, header)) dehydrated += 1;
+        }
+      });
+    });
+    if (hydrated) scheduleHydratedCardInit();
+    if (pending) scheduleHydrationPump();
+  }
+
+  function hydrateAroundHeader(header) {
+    if (!header || !loaderConfig || !sectionItems.has(header)) return;
+    var metrics = viewportMetrics();
+    var filled = 0;
+    sectionSlideNodes(header).forEach(function (node) {
+      if (filled >= 2 || !node.classList.contains('menu-reel-slot')) return;
+      var band = slideBand(node, metrics);
+      if (band.ahead > 1.35 || band.behind > 0.5) return;
+      if (hydrateNode(header, node)) filled += 1;
+    });
+    if (filled) scheduleHydratedCardInit();
+    scheduleHydrationPump();
+  }
+
+  function scheduleHydratedCardInit() {
+    if (cardInitTimer) window.clearTimeout(cardInitTimer);
+    cardInitTimer = window.setTimeout(function () {
+      cardInitTimer = 0;
+      if (isFastScroll()) {
+        scheduleHydratedCardInit();
+        return;
+      }
+      if (typeof window.initMenuSmashPass === 'function') window.initMenuSmashPass();
+      if (loaderConfig && loaderConfig.menuImages && typeof window.refreshLazyItemSmashPass === 'function') {
+        window.refreshLazyItemSmashPass();
+      }
+      var deferIdle =
+        typeof requestIdleCallback === 'function'
+          ? function (fn) { requestIdleCallback(fn, { timeout: 2500 }); }
+          : function (fn) { setTimeout(fn, 320); };
+      deferIdle(function () {
+        if (isFastScroll()) return;
+        if (typeof window.initMenuImageIntegration === 'function') window.initMenuImageIntegration();
+        if (typeof window.applyDayBasedPromos === 'function') window.applyDayBasedPromos();
+        if (window.TTMSMenuFavorites && typeof window.TTMSMenuFavorites.refresh === 'function') {
+          window.TTMSMenuFavorites.refresh();
+        }
+        refreshInjectedMenuAuth();
+      });
+    }, 180);
+  }
+
+  function prepareAllSections(grouped) {
+    var track = getTrack();
+    if (!track) return;
+    withStableScroll(function () {
+      track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+        if (isPromoSectionHeader(header)) return;
+        var slug = header.getAttribute('data-section-slug') || '';
+        var items = (grouped && grouped[slug]) || [];
+        sectionItems.set(header, items);
+        header.setAttribute('data-item-count', String(items.length));
+        ensureSlotCount(header, items.length);
+        header.dataset.homeMenuReserved = '1';
+        header.dataset.homeMenuLoaded = '1';
+        header.removeAttribute('aria-busy');
+        finalizeSectionItemCount(header, items.length);
+      });
+      syncSectionVisibilityForLocation(grouped || {});
+    });
+    scheduleHydrationPump();
   }
 
   function getConfigRoot() {
@@ -858,10 +1158,13 @@
   function clearRenderedLocationMenuCards() {
     var track = getTrack();
     if (!track) return;
-    track.querySelectorAll('.menu-item-card.menu-reels-slide').forEach(function (card) {
-      card.remove();
-    });
     track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      sectionSlideNodes(header).forEach(function (node) {
+        if (!node.classList.contains('menu-item-card')) return;
+        var index = parseInt(node.getAttribute('data-reel-slot-index'), 10);
+        node.replaceWith(buildSlot(header, Number.isFinite(index) ? index : 0));
+      });
+      sectionItems.delete(header);
       stopSectionCountAnimation(header);
       delete header.dataset.homeMenuLoaded;
       header.removeAttribute('data-home-menu-rendered-count');
@@ -921,12 +1224,7 @@
     }
 
     return fetchMenuItems(apiUrl).then(function (grouped) {
-      syncSectionVisibilityForLocation(grouped);
-      scheduleProximityCheck();
-      // Eager-load every visible section so the switch feels immediate
-      Object.keys(grouped || {}).forEach(function (sec) {
-        loadSectionBySlug(sec, loaderConfig);
-      });
+      prepareAllSections(grouped);
       scheduleReelsRefresh();
       try {
         window.dispatchEvent(
@@ -992,53 +1290,21 @@
     );
   }
 
-  function renderSectionAfterHeader(header, items, config) {
+  function renderSectionAfterHeader(header, items) {
     if (!header || header.dataset.homeMenuLoaded === '1') return;
-    var category = header.getAttribute('data-reel-section') || '';
-    var parent = header.parentElement;
-    if (!parent) return;
-
-    var track = getTrack();
-    var preserveScrollY = isSmoothNavMode()
-      ? window.scrollY
-      : track
-        ? track.scrollTop
-        : null;
-
-    var fragment = document.createDocumentFragment();
-    items.forEach(function (item) {
-      var wrap = document.createElement('div');
-      wrap.innerHTML = buildCard(item, category, config);
-      if (wrap.firstElementChild) {
-        fragment.appendChild(wrap.firstElementChild);
-      }
-    });
-
-    var anchor = header.nextSibling;
-    while (fragment.firstChild) {
-      parent.insertBefore(fragment.firstChild, anchor);
-    }
-
-    header.removeAttribute('aria-busy');
+    var list = items || [];
+    sectionItems.set(header, list);
+    header.setAttribute('data-item-count', String(list.length));
+    ensureSlotCount(header, list.length);
+    header.dataset.homeMenuReserved = '1';
     header.dataset.homeMenuLoaded = '1';
-    finalizeSectionItemCount(header, items.length);
-    if (preserveScrollY != null) {
-      if (isSmoothNavMode()) {
-        if (Math.abs(window.scrollY - preserveScrollY) > 1) {
-          try {
-            window.scrollTo({ top: preserveScrollY, left: 0, behavior: 'instant' });
-          } catch (e) {
-            window.scrollTo(0, preserveScrollY);
-          }
-        }
-      } else if (track) {
-        track.scrollTop = preserveScrollY;
-      }
-    }
-    scheduleReelsRefresh();
-    refreshInjectedMenuAuth();
-    if (config.menuImages && typeof window.refreshLazyItemSmashPass === 'function') {
-      window.refreshLazyItemSmashPass();
+    header.removeAttribute('aria-busy');
+    finalizeSectionItemCount(header, list.length);
+    if (header.dataset.homeMenuPriority === '1') {
+      delete header.dataset.homeMenuPriority;
+      hydrateAroundHeader(header);
+    } else {
+      scheduleHydrationPump();
     }
   }
 
@@ -1057,8 +1323,10 @@
     if (slug === 'promotions') return Promise.resolve();
     var header = getHeaderForSlug(slug);
     if (!header || header.dataset.homeMenuLoaded === '1') {
+      if (header) hydrateAroundHeader(header);
       return Promise.resolve();
     }
+    header.dataset.homeMenuPriority = '1';
     if (isPromoSectionHeader(header)) return Promise.resolve();
 
     if (sectionLoadPromises[slug]) {
@@ -1070,14 +1338,7 @@
     sectionLoadPromises[slug] = fetchMenuItems(config.apiUrl)
       .then(function (grouped) {
         var items = grouped[slug] || [];
-        header.setAttribute('data-item-count', String(items.length));
-        if (!items.length) {
-          header.removeAttribute('aria-busy');
-          header.dataset.homeMenuLoaded = '1';
-          finalizeSectionItemCount(header, 0);
-          return;
-        }
-        renderSectionAfterHeader(header, items, config);
+        renderSectionAfterHeader(header, items);
       })
       .finally(function () {
         delete sectionLoadPromises[slug];
@@ -1099,17 +1360,7 @@
   }
 
   function checkProximityLoads() {
-    if (!loaderConfig) return;
-    var track = getTrack();
-    if (!track) return;
-
-    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
-      var slug = header.getAttribute('data-section-slug');
-      if (!slug || header.dataset.homeMenuLoaded === '1') return;
-      if (isHeaderNearViewport(header, track)) {
-        loadSectionBySlug(slug, loaderConfig);
-      }
-    });
+    scheduleHydrationPump();
   }
 
   function scheduleProximityCheck() {
@@ -1117,7 +1368,7 @@
     proximityTick = true;
     requestAnimationFrame(function () {
       proximityTick = false;
-      checkProximityLoads();
+      noteScrollMotion();
       syncPendingSectionTitleCounts();
     });
   }
@@ -1138,6 +1389,10 @@
         entries.forEach(function (entry) {
           if (!entry.isIntersecting) return;
           var header = entry.target;
+          if (header.dataset.homeMenuLoaded === '1') {
+            scheduleHydrationPump();
+            return;
+          }
           var slug = header.getAttribute('data-section-slug');
           loadSectionBySlug(slug, config);
         });
@@ -1244,6 +1499,15 @@
     bindTrackProximity(config);
     bindMenublockPreload(config);
     scheduleProximityCheck();
+    beginCatalogPrepare(config);
+  }
+
+  function beginCatalogPrepare(config) {
+    var gen = prepareGeneration;
+    fetchMenuItems(config.apiUrl).then(function (grouped) {
+      if (gen !== prepareGeneration || !loaderConfig) return;
+      prepareAllSections(grouped);
+    }).catch(function () { /* fetchMenuItems already logs */ });
   }
 
   function initHomeMenuLoader() {
@@ -1274,6 +1538,13 @@
   }
 
   function resetHomeMenuLoader() {
+    prepareGeneration += 1;
+    if (scrollMotion.timer) window.clearTimeout(scrollMotion.timer);
+    scrollMotion.y = 0;
+    scrollMotion.t = 0;
+    scrollMotion.v = 0;
+    scrollMotion.fastUntil = 0;
+    scrollMotion.timer = 0;
     menuBySection = null;
     rawMenuItems = null;
     fetchPromise = null;
@@ -1297,6 +1568,9 @@
     if (track) {
       track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
         stopSectionCountAnimation(header);
+        sectionItems.delete(header);
+        delete header.dataset.homeMenuReserved;
+        delete header.dataset.homeMenuLoaded;
       });
       track.querySelectorAll('.menu-reels-slide--section-title[data-item-count]').forEach(function (section) {
         stopSectionCountAnimation(section);
@@ -1352,17 +1626,17 @@
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      deferHomeMenuLoaderStart(function () {
-        initHomeMenuLoader();
-        registerLifecycle();
-      });
-    });
-  } else {
+  function bootHomeMenuLoader() {
+    reserveSlotsFromMarkup();
     deferHomeMenuLoaderStart(function () {
       initHomeMenuLoader();
       registerLifecycle();
     });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootHomeMenuLoader);
+  } else {
+    bootHomeMenuLoader();
   }
 })();

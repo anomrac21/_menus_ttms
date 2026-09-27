@@ -32,6 +32,8 @@ body.is-notify-closing {
     box-sizing: border-box;
     border-left: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
     box-shadow: 0 18px 48px color-mix(in srgb, #000 42%, transparent);
+    padding-bottom: constant(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--ttms-safe-bottom, env(safe-area-inset-bottom, 0px));
 }
 
 #notify-inbox.notify-inbox-hidden {
@@ -116,6 +118,8 @@ body.is-notify-closing {
     gap: 0.75rem;
     min-height: 4.25rem;
     padding: 0.7rem 0.85rem 0.7rem 1rem;
+    padding-top: calc(0.7rem + constant(safe-area-inset-top, 0px));
+    padding-top: calc(0.7rem + var(--ttms-safe-top, env(safe-area-inset-top, 0px)));
     border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 10%, transparent);
     background: linear-gradient(
         180deg,
