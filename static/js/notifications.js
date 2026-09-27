@@ -81,7 +81,7 @@ const NotificationService = {
       document.title ||
       '';
     let name = String(raw)
-      .replace(/\s*\|\s*Digital Menu & Online Ordering/gi, '')
+      .replace(/\s*\|\s*Digital Menu\b.*/i, '')
       .replace(/^\|\s*/, '')
       .trim();
     if (!name || /^digital menu/i.test(name)) {
@@ -2160,7 +2160,7 @@ const NotificationService = {
   displayPlaceName(row) {
     row = row || {};
     let name = String(row.client_name || row.client_domain || 'TTMenus');
-    name = name.replace(/\s*\|\s*Digital Menu & Online Ordering/gi, '').replace(/^\|\s*/, '').trim();
+    name = name.replace(/\s*\|\s*Digital Menu\b.*/i, '').replace(/^\|\s*/, '').trim();
     if (!name) {
       name = row.is_hub ? 'TTMenus' : row.client_domain || 'TTMenus';
     }

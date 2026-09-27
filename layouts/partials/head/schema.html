@@ -4,7 +4,8 @@
 {{- if and $locations (reflect.IsSlice $locations) (gt (len $locations) 0) -}}
   {{- $loc = index $locations 0 -}}
 {{- end -}}
-{{- $desc := site.Params.description | default (printf "Digital menu for %s." $siteName) -}}
+{{- $featureMeta := partial "head/feature-meta.html" . -}}
+{{- $desc := $featureMeta.description -}}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
