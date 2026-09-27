@@ -542,6 +542,7 @@ button.menu-smash-pass-card__dislikes:disabled {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .hero-content.menu-reels-slide--intro .menu-smash-pass__progress {
@@ -557,12 +558,13 @@ button.menu-smash-pass-card__dislikes:disabled {
 
 .hero-content.menu-reels-slide--intro .menu-smash-pass__stack {
     flex: 1 1 auto;
+    align-self: center;
     min-height: 0;
     width: min(90vw, 20rem);
     max-width: 20rem;
-    height: 100%;
+    height: auto;
     max-height: 100%;
-    aspect-ratio: unset;
+    aspect-ratio: auto;
 }
 
 .hero-content.menu-reels-slide--intro .menu-smash-pass-card__title {

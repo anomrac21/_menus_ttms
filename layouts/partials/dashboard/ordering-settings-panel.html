@@ -11,13 +11,6 @@
 {{- if and $hubClientId (not (hasPrefix $hubClientId "ttms_")) -}}
   {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
 {{- end -}}
-<div class="card card-ordering is-collapsed" data-dashboard-card="ordering" id="orderingSystemPanel">
-  <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="ordering" aria-expanded="false" aria-controls="dashboardCardBody-ordering">
-    <h3 class="dashboard-card-title"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Ordering system</h3>
-    <span class="dashboard-card-count is-loading" id="dashboardCardOrderingCount" aria-label="Locations" aria-busy="true"></span>
-    <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-  </button>
-  <div class="dashboard-card-body" id="dashboardCardBody-ordering">
     <p class="dashboard-card-desc">{{ if $posOn }}Cart, checkout, and how guest orders reach your Loyverse till.{{ else }}Cart, checkout, and how guests place an order.{{ end }}</p>
     <form id="orderingSystemForm" class="dashboard-settings-form dashboard-ordering-form" autocomplete="off" data-os-hastables="{{ if default true $os.hastables }}true{{ else }}false{{ end }}">
       <div class="dashboard-ordering-layout">
@@ -109,6 +102,4 @@
         <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
       </div>
     </form>
-  </div>
-</div>
 <script src="/js/ordering-settings.js" defer></script>

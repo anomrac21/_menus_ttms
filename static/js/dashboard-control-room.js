@@ -295,10 +295,70 @@
     return 'orders';
   }
 
+  function ordersHubStorageKey() {
+    var id = global.SITE_CLIENT_ID || global.CLIENT_ID || 'site';
+    return 'ttms.dashboard.ordersHub.' + String(id);
+  }
+
+  function savedOrdersHubTab() {
+    try {
+      var saved = localStorage.getItem(ordersHubStorageKey());
+      if (saved === 'delivery' || saved === 'settings' || saved === 'inbox') return saved;
+    } catch (e) {
+      /* ignore */
+    }
+    return 'inbox';
+  }
+
+  function openOrdersHubTab(name) {
+    var root = document.getElementById('dashboardOrdersHub');
+    if (!root) return;
+    if (name !== 'delivery' && name !== 'settings') name = 'inbox';
+    var tabs = root.querySelectorAll('[data-orders-hub]');
+    var panels = root.querySelectorAll('[data-orders-hub-panel]');
+    var i;
+    for (i = 0; i < tabs.length; i++) {
+      var on = tabs[i].getAttribute('data-orders-hub') === name;
+      tabs[i].classList.toggle('is-active', on);
+      tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    for (i = 0; i < panels.length; i++) {
+      var show = panels[i].getAttribute('data-orders-hub-panel') === name;
+      if (show) panels[i].removeAttribute('hidden');
+      else panels[i].setAttribute('hidden', '');
+    }
+    try {
+      localStorage.setItem(ordersHubStorageKey(), name);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  function initOrdersHub() {
+    var root = document.getElementById('dashboardOrdersHub');
+    if (!root || root.getAttribute('data-hub-bound')) return;
+    root.setAttribute('data-hub-bound', '1');
+    root.addEventListener('click', function (ev) {
+      var tab = ev.target.closest('[data-orders-hub]');
+      if (!tab || !root.contains(tab)) return;
+      openOrdersHubTab(tab.getAttribute('data-orders-hub'));
+    });
+    var params = new URLSearchParams(global.location.search);
+    if (params.get('loyverse') === 'connected' || params.get('loyverse_error')) {
+      openOrdersHubTab('settings');
+      return;
+    }
+    openOrdersHubTab(savedOrdersHubTab());
+  }
+
   function applySideSelection(key) {
     var room = document.getElementById('dashboardControlRoom');
     var nav = document.getElementById('dashboardSideNav');
     if (!room) return;
+    if (key === 'delivery' || key === 'ordering') {
+      openOrdersHubTab(key === 'ordering' ? 'settings' : 'delivery');
+      key = 'orders';
+    }
     var cards = room.querySelectorAll('.cards > .card[data-dashboard-card]');
     var available = {};
     for (var i = 0; i < cards.length; i++) {
@@ -336,6 +396,7 @@
 
   function mirrorSideCount(el) {
     if (!el || !el.closest) return;
+    if (!el.closest('.dashboard-card-toggle')) return;
     var card = el.closest('[data-dashboard-card]');
     var nav = document.getElementById('dashboardSideNav');
     if (!card || !nav) return;
@@ -382,6 +443,7 @@
         });
       }
     }
+    initOrdersHub();
     applySideSelection(preferredSideKey());
   }
 

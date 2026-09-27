@@ -935,8 +935,15 @@ window.MENU_CONFIG = {
   }
   html.menu-nav-smooth,
   body.menu-nav-smooth {
-    scroll-behavior: auto;
+    scroll-behavior: auto !important;
     background: var(--main-bg);
+  }
+  html.menu-nav-smooth {
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+  html.menu-nav-smooth body.menu-reels-mode {
+    overflow: visible;
   }
   html:not(.menu-nav-smooth) body.menu-reels-mode main.main--home,
   html:not(.menu-nav-smooth) body.main--home main.main--home {

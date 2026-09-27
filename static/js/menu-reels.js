@@ -28,6 +28,11 @@
   }
 
   function getHeaderScrollOffset() {
+    var header = document.querySelector('.site-header, .main-header');
+    if (header) {
+      var measured = header.getBoundingClientRect().height;
+      if (measured > 0) return measured;
+    }
     var raw = (getComputedStyle(document.documentElement).getPropertyValue('--ttms-header-height') || '5em').trim();
     var rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     var emMatch = raw.match(/^([\d.]+)em$/);
@@ -756,13 +761,17 @@
   var SMOOTH_ALIGN_PX = 10;
   var SMOOTH_LOCK_PX = 28;
 
+  function scrollingElement() {
+    return document.scrollingElement || document.documentElement;
+  }
+
+  function readScrollY() {
+    return scrollingElement().scrollTop || window.scrollY || 0;
+  }
+
   function scrollWindowInstant(top) {
     var y = Math.max(0, top);
-    try {
-      window.scrollTo({ top: y, left: 0, behavior: 'instant' });
-    } catch (e) {
-      window.scrollTo(0, y);
-    }
+    scrollingElement().scrollTop = y;
   }
 
   function easeInOutCubic(t) {
@@ -771,7 +780,7 @@
 
   function nearestSmoothSlideTop(track, leavingAds) {
     var slides = getSlides(track);
-    var y = window.scrollY;
+    var y = readScrollY();
     var best = null;
     var bestDist = Infinity;
     var bestSlide = null;
@@ -808,7 +817,7 @@
   function bindSmoothRestSnap(track) {
     var abort = new AbortController();
     var signal = abort.signal;
-    var lastY = window.scrollY;
+    var lastY = readScrollY();
     var lastT = performance.now();
     var velocity = 0;
     var scrollDir = 0;
@@ -817,7 +826,9 @@
     var alignRaf = 0;
     var aligning = false;
     var gestureLock = false;
-    var settledY = window.scrollY;
+    var settledY = readScrollY();
+    /* True only while the user is driving the scroll. A correction must not re-arm itself. */
+    var armed = false;
 
     function lockGesture(y) {
       gestureLock = true;
@@ -843,7 +854,7 @@
     }
 
     function alignIfVelocityZero() {
-      if (!isSmoothNavMode() || pointers > 0 || aligning) return;
+      if (!armed || !isSmoothNavMode() || pointers > 0 || aligning) return;
       if (document.body.classList.contains('menu-reels-item-modal-open')) return;
       if (Math.abs(velocity) > SMOOTH_REST_VELOCITY) return;
       var target = nearestSmoothSlideTop(track, false);
@@ -857,7 +868,9 @@
         }
       }
       if (target == null) return;
-      var start = window.scrollY;
+      /* One correction per gesture. Scroll events from this move must not start another. */
+      armed = false;
+      var start = readScrollY();
       var dist = target - start;
       var abs = Math.abs(dist);
       if (abs <= SMOOTH_ALIGN_PX) {
@@ -865,13 +878,13 @@
         return;
       }
 
-      if (prefersReducedMotion() || abs < 36) {
+      if (prefersReducedMotion() || abs < 48) {
         scrollWindowInstant(target);
-        lockGesture(window.scrollY);
+        lockGesture(readScrollY());
         return;
       }
 
-      var duration = Math.min(780, Math.max(420, 260 + abs * 0.7));
+      var duration = Math.min(280, Math.max(160, 120 + abs * 0.35));
       var t0 = performance.now();
       aligning = true;
       velocity = 0;
@@ -886,7 +899,7 @@
         } else {
           aligning = false;
           alignRaf = 0;
-          lockGesture(window.scrollY);
+          lockGesture(readScrollY());
         }
       }
       alignRaf = requestAnimationFrame(frame);
@@ -902,6 +915,7 @@
     }
 
     function noteUserInput() {
+      armed = true;
       gestureLock = false;
       cancelAlign();
       clearIdle();
@@ -933,6 +947,7 @@
       }
       if (!pinnedSlide) return;
       var pinTop = Math.max(0, slideScrollTop(track, pinnedSlide));
+      armed = false;
       gestureLock = true;
       settledY = pinTop;
       lastY = pinTop;
@@ -952,10 +967,13 @@
     }, { passive: true, signal: signal });
 
     window.addEventListener('scroll', function () {
-      if (resizing) return;
-      if (aligning) return;
+      if (resizing || aligning || !armed) {
+        lastY = readScrollY();
+        lastT = performance.now();
+        return;
+      }
       var now = performance.now();
-      var y = window.scrollY;
+      var y = readScrollY();
       var dt = now - lastT;
       var instant = dt > 0 && dt < 240 ? (y - lastY) / dt : 0;
       if (gestureLock && Math.abs(y - settledY) <= SMOOTH_LOCK_PX) {
@@ -983,7 +1001,7 @@
     }, { passive: true, signal: signal });
 
     window.addEventListener('scrollend', function () {
-      if (aligning || pointers > 0 || gestureLock) return;
+      if (!armed || aligning || pointers > 0 || gestureLock) return;
       velocity = 0;
       scheduleIdle(64);
     }, { passive: true, signal: signal });
@@ -1005,9 +1023,13 @@
     window.addEventListener('pointerup', onPointerEnd, { passive: true, signal: signal });
     window.addEventListener('pointercancel', onPointerEnd, { passive: true, signal: signal });
     window.addEventListener('wheel', function (e) {
-      if (!aligning) return;
-      if (Math.abs(e.deltaY) < 12 && Math.abs(e.deltaX) < 12) return;
+      if (Math.abs(e.deltaY) < 1 && Math.abs(e.deltaX) < 1) return;
       noteUserInput();
+    }, { passive: true, signal: signal });
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'PageDown' || e.key === 'PageUp' || e.key === ' ' || e.key === 'Home' || e.key === 'End') {
+        noteUserInput();
+      }
     }, { passive: true, signal: signal });
     window.addEventListener('touchmove', function () {
       if (pointers > 0) noteUserInput();

@@ -80,7 +80,7 @@
     el.classList.toggle('is-hot', n > 0);
     el.classList.toggle('is-zero', n === 0);
     var card = el.closest('.card');
-    if (card) card.classList.toggle('has-hot-count', n > 0);
+    if (card) card.classList.toggle('has-hot-count', !!card.querySelector('.dashboard-card-count.is-hot'));
     playReveal(el, firstPaint);
     animateCount(el, firstPaint ? 0 : from, n);
   }

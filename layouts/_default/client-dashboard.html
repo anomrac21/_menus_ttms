@@ -63,46 +63,62 @@
       {{- if and $hubClientId (not (hasPrefix $hubClientId "ttms_")) -}}
         {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
       {{- end -}}
-      <div class="card card-menu-orders is-collapsed is-side-current" data-dashboard-card="orders">
+      <div class="card card-menu-orders card-ordering card-orders-hub is-collapsed is-side-current" data-dashboard-card="orders" id="orderingSystemPanel">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="orders" aria-expanded="false" aria-controls="dashboardCardBody-orders">
           <h3 class="dashboard-card-title"><i class="fa fa-ticket" aria-hidden="true"></i> Orders</h3>
           <span class="dashboard-card-count is-loading" id="dashboardCardOrdersCount" aria-label="Open tickets" aria-busy="true"></span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-orders">
-          <p class="dashboard-card-desc">Open tickets from the menu: kitchen, charge, and Loyverse receipts.</p>
-          <div class="dashboard-card-actions">
-            <a href="/dashboard/orders/" class="btn-dash btn-dash-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Open inbox</a>
-            <a href="/dashboard/kitchen/" class="btn-dash btn-dash-secondary"><i class="fa fa-print" aria-hidden="true"></i> Kitchen station</a>
-          </div>
-        </div>
-      </div>
-      <div class="card card-delivery-orders is-collapsed" data-dashboard-card="delivery">
-        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="delivery" aria-expanded="false" aria-controls="dashboardCardBody-delivery">
-          <h3 class="dashboard-card-title"><i class="fa fa-truck" aria-hidden="true"></i> Delivery</h3>
-          <span class="dashboard-card-count is-loading" id="dashboardCardDeliveryCount" aria-label="Open delivery jobs" aria-busy="true"></span>
-          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-        </button>
-        <div class="dashboard-card-body" id="dashboardCardBody-delivery">
-          <p class="dashboard-card-desc">Platform fleet inbox: accept jobs, mark ready, scan pickup QR, and track your driver.</p>
-          <div class="dashboard-card-notify-snapshot" id="dashboardCardDeliverySnapshot" aria-label="Delivery status">
-            <div class="dashboard-card-notify-snapshot-grid">
-              <div class="dashboard-card-notify-snapshot-cell">
-                <span class="dashboard-card-notify-snapshot-label">Status</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardDeliveryStatus">{{ if $deliveryOn }}Active{{ else }}Off{{ end }}</span>
+          <div class="dashboard-orders-hub" id="dashboardOrdersHub">
+            <div class="dashboard-orders-hub-tabs" role="tablist" aria-label="Orders, delivery, and ordering settings">
+              <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" id="dashboardOrdersHubTab-inbox" data-orders-hub="inbox" aria-selected="true" aria-controls="dashboardOrdersHubPanel-inbox">
+                <i class="fa fa-ticket" aria-hidden="true"></i>
+                <span>Orders</span>
+              </button>
+              <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardOrdersHubTab-delivery" data-orders-hub="delivery" aria-selected="false" aria-controls="dashboardOrdersHubPanel-delivery">
+                <i class="fa fa-truck" aria-hidden="true"></i>
+                <span>Delivery</span>
+                <span class="dashboard-card-count is-loading" id="dashboardCardDeliveryCount" aria-label="Open delivery jobs" aria-busy="true"></span>
+              </button>
+              <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardOrdersHubTab-settings" data-orders-hub="settings" aria-selected="false" aria-controls="dashboardOrdersHubPanel-settings">
+                <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                <span>Settings</span>
+                <span class="dashboard-card-count is-loading" id="dashboardCardOrderingCount" aria-label="Locations" aria-busy="true"></span>
+              </button>
+            </div>
+            <div class="dashboard-orders-hub-panel" id="dashboardOrdersHubPanel-inbox" role="tabpanel" data-orders-hub-panel="inbox" aria-labelledby="dashboardOrdersHubTab-inbox">
+              <p class="dashboard-card-desc">Open tickets from the menu: kitchen, charge, and Loyverse receipts.</p>
+              <div class="dashboard-card-actions">
+                <a href="/dashboard/orders/" class="btn-dash btn-dash-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Open inbox</a>
+                <a href="/dashboard/kitchen/" class="btn-dash btn-dash-secondary"><i class="fa fa-print" aria-hidden="true"></i> Kitchen station</a>
               </div>
             </div>
-          </div>
-          {{- if not $deliveryOn }}
-          <p class="dashboard-card-analytics-hint" role="status">Delivery is a platform add-on. Enable it on Account to open the fleet inbox.</p>
-          {{- end }}
-          <div class="dashboard-card-actions">
-            {{- if $deliveryOn }}
-            <a href="/delivery-orders/" class="btn-dash btn-dash-primary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
-            {{- else }}
-            <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade on Account</a>
-            <a href="/delivery-orders/" class="btn-dash btn-dash-secondary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
-            {{- end }}
+            <div class="dashboard-orders-hub-panel" id="dashboardOrdersHubPanel-delivery" role="tabpanel" data-orders-hub-panel="delivery" aria-labelledby="dashboardOrdersHubTab-delivery" hidden>
+              <p class="dashboard-card-desc">Platform fleet inbox: accept jobs, mark ready, scan pickup QR, and track your driver.</p>
+              <div class="dashboard-card-notify-snapshot" id="dashboardCardDeliverySnapshot" aria-label="Delivery status">
+                <div class="dashboard-card-notify-snapshot-grid">
+                  <div class="dashboard-card-notify-snapshot-cell">
+                    <span class="dashboard-card-notify-snapshot-label">Status</span>
+                    <span class="dashboard-card-notify-snapshot-value" id="dashboardCardDeliveryStatus">{{ if $deliveryOn }}Active{{ else }}Off{{ end }}</span>
+                  </div>
+                </div>
+              </div>
+              {{- if not $deliveryOn }}
+              <p class="dashboard-card-analytics-hint" role="status">Delivery is a platform add-on. Enable it on Account to open the fleet inbox.</p>
+              {{- end }}
+              <div class="dashboard-card-actions">
+                {{- if $deliveryOn }}
+                <a href="/delivery-orders/" class="btn-dash btn-dash-primary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
+                {{- else }}
+                <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-arrow-up" aria-hidden="true"></i> Upgrade on Account</a>
+                <a href="/delivery-orders/" class="btn-dash btn-dash-secondary"><i class="fa fa-truck" aria-hidden="true"></i> Open inbox</a>
+                {{- end }}
+              </div>
+            </div>
+            <div class="dashboard-orders-hub-panel" id="dashboardOrdersHubPanel-settings" role="tabpanel" data-orders-hub-panel="settings" aria-labelledby="dashboardOrdersHubTab-settings" hidden>
+              {{ partial "dashboard/ordering-settings-panel.html" . }}
+            </div>
           </div>
         </div>
       </div>
@@ -187,7 +203,6 @@
           </div>
         </div>
       </div>
-      {{ partial "dashboard/ordering-settings-panel.html" . }}
       {{- if site.Params.menuImageService.enabled }}
       <div class="card card-dashboard-menu-images is-collapsed" id="dashboardCardMenuImages" data-dashboard-card="menu-images">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="menu-images" aria-expanded="false" aria-controls="dashboardCardBody-menu-images">

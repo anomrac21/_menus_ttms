@@ -20,11 +20,16 @@ body.menu-reels-mode {
     background: var(--main-bg);
 }
 
-html.menu-nav-smooth,
+html.menu-nav-smooth {
+    overflow-x: clip;
+    overflow-y: auto;
+    /* Root smooth-scroll restarts every correction and the frame never settles. */
+    scroll-behavior: auto !important;
+}
+
 html.menu-nav-smooth body.menu-reels-mode {
-    overflow: auto;
-    /* Native scrolling stays 1:1. End-of-gesture alignment is animated in JS. */
-    scroll-behavior: auto;
+    overflow: visible;
+    scroll-behavior: auto !important;
 }
 
 html.menu-nav-smooth body.menu-reels-mode {
@@ -751,7 +756,7 @@ body.menu-search-active .menu-reels-track {
     overflow: hidden;
     justify-content: space-between;
     gap: 0.25rem;
-    padding-block: 0.4rem max(0.45rem, env(safe-area-inset-bottom));
+    padding-block: 0.4rem calc(6.5rem + env(safe-area-inset-bottom, 0px));
     background: linear-gradient(165deg, var(--hero-bg-color-1), var(--hero-bg-color-2));
 }
 
@@ -790,7 +795,8 @@ body.menu-search-active .menu-reels-track {
 .hero-content.menu-reels-slide--intro .menu-smash-pass__empty-state--community:not(.hidden) {
     width: min(100%, 22rem);
     max-width: 22rem;
-    min-height: min(28rem, 72%);
+    min-height: 0;
+    max-height: 100%;
 }
 
 .hero-content.menu-reels-slide--intro .social-share-btn-container {

@@ -1630,6 +1630,56 @@ html:has(.dashboard-control-room) body {
   }
 }
 
+.dashboard-orders-hub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.35rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dash-black) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 8%, transparent);
+}
+
+.dashboard-orders-hub-tab {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: color-mix(in srgb, var(--dash-info) 82%, transparent);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.dashboard-orders-hub-tab.is-active {
+  background: var(--dash-surface);
+  color: var(--dash-ink);
+  border-color: color-mix(in srgb, var(--dash-ink) 10%, transparent);
+}
+
+.dashboard-orders-hub-tab:focus-visible {
+  outline: 2px solid var(--dash-accent);
+  outline-offset: 2px;
+}
+
+.dashboard-orders-hub-tab .dashboard-card-count {
+  min-width: 1.35rem;
+  min-height: 1.2rem;
+  font-size: 0.72rem;
+}
+
+.dashboard-orders-hub-panel[hidden] {
+  display: none !important;
+}
+
 .dashboard-control-room .card-edit-menu,
 .dashboard-control-room .card-dashboard-menu-images,
 .dashboard-control-room .card-ordering,
