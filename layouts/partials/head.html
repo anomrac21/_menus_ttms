@@ -947,6 +947,14 @@ window.MENU_CONFIG = {
     scroll-snap-type: y mandatory;
     scroll-padding-top: var(--ttms-header-height, 5em);
   }
+  @media (pointer: coarse) {
+    html.menu-nav-smooth {
+      scroll-snap-type: none;
+    }
+  }
+  html.menu-nav-smooth.ttms-reel-nav {
+    scroll-snap-type: none !important;
+  }
   html.menu-nav-smooth:has(body.menu-reels-item-modal-open),
   html.menu-nav-smooth:has(body.cart-open),
   html.menu-nav-smooth:has(body.modal-open) {

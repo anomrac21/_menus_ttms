@@ -280,11 +280,12 @@
     var track = getTrack();
     if (!track || !slide) return;
     if (isSmoothNavMode()) {
-      window.scrollTo({
-        top: Math.max(0, slideScrollTop(track, slide)),
-        left: 0,
-        behavior: behavior || 'smooth'
-      });
+      var top = Math.max(0, slideScrollTop(track, slide));
+      if (isCoarsePointer()) {
+        scrollWindowInstant(top);
+      } else {
+        window.scrollTo({ top: top, left: 0, behavior: behavior || 'smooth' });
+      }
     } else {
       track.scrollTo({
         top: slideScrollTop(track, slide),
@@ -673,29 +674,63 @@
     setMenublockActive(null);
   }
 
+  function activateMenublockLink(link) {
+    var hash = link.getAttribute('href');
+    if (!hash || hash === '#') return false;
+    var id = normalizeMenublockSectionId(hash.slice(1));
+    if (!findSlideForSectionId(id)) return false;
+    if (typeof closeCart === 'function') closeCart();
+    if (typeof window.closeMenublockDropdown === 'function') {
+      window.closeMenublockDropdown();
+    }
+    scrollToSectionId(id);
+    history.replaceState(null, '', window.location.pathname + window.location.search + '#' + id);
+    return true;
+  }
+
   function bindMenublockReelsNav() {
     if (document.documentElement._ttmsReelsNavBound) {
       return;
     }
     document.documentElement._ttmsReelsNavBound = true;
 
+    var tapStart = null;
+
+    document.addEventListener('touchstart', function (e) {
+      var link = e.target && e.target.closest && e.target.closest('#menublock .menublock-link[href^="#"]');
+      if (!link || !e.touches || !e.touches[0]) {
+        tapStart = null;
+        return;
+      }
+      tapStart = {
+        link: link,
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        t: Date.now()
+      };
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+      if (!tapStart || !e.changedTouches || !e.changedTouches[0]) return;
+      var link = tapStart.link;
+      var dx = e.changedTouches[0].clientX - tapStart.x;
+      var dy = e.changedTouches[0].clientY - tapStart.y;
+      var elapsed = Date.now() - tapStart.t;
+      tapStart = null;
+      if (elapsed > 700 || Math.hypot(dx, dy) > 12) return;
+      if (!e.target || !e.target.closest || e.target.closest('#menublock .menublock-link[href^="#"]') !== link) return;
+      if (!activateMenublockLink(link)) return;
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
     document.addEventListener('click', function (e) {
       var link = e.target.closest('#menublock .menublock-link[href^="#"]');
       if (!link) return;
-      var hash = link.getAttribute('href');
-      if (!hash || hash === '#') return;
-      var id = decodeURIComponent(hash.slice(1));
-      if (!findSlideForSectionId(id)) return;
+      if (!activateMenublockLink(link)) return;
       if (e.cancelable) {
         e.preventDefault();
       }
       e.stopPropagation();
-      if (typeof closeCart === 'function') closeCart();
-      if (typeof window.closeMenublockDropdown === 'function') {
-        window.closeMenublockDropdown();
-      }
-      scrollToSectionId(id);
-      history.replaceState(null, '', window.location.pathname + window.location.search + '#' + id);
     });
   }
 
@@ -757,13 +792,41 @@
     return document.scrollingElement || document.documentElement;
   }
 
+  var sectionNavPin = 0;
+
+  function isCoarsePointer() {
+    return !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  }
+
   function scrollWindowInstant(top) {
-    var y = Math.max(0, top);
-    scrollingElement().scrollTop = y;
+    var y = Math.max(0, Math.round(top));
+    var token = ++sectionNavPin;
+    var root = document.documentElement;
+    root.classList.add('ttms-reel-nav');
+    var scroller = scrollingElement();
+    function pin() {
+      scroller.scrollTop = y;
+      root.scrollTop = y;
+      if (document.body) document.body.scrollTop = y;
+      window.scrollTo(0, y);
+    }
+    pin();
+    window.requestAnimationFrame(function () {
+      if (token !== sectionNavPin) return;
+      pin();
+      window.requestAnimationFrame(function () {
+        if (token !== sectionNavPin) return;
+        pin();
+        window.setTimeout(function () {
+          if (token !== sectionNavPin) return;
+          root.classList.remove('ttms-reel-nav');
+        }, 180);
+      });
+    });
   }
 
   function bindSmoothRestSnap() {
-    /* End alignment is native document scroll-snap. Do not write scrollTop while the page is moving. */
+    /* Native touch scrolling. Intercepting touchmove cancels iOS flicks and category taps. */
   }
 
   function bindTrackScroll() {

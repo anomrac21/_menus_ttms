@@ -399,6 +399,7 @@
     document.addEventListener(
       'touchstart',
       function (e) {
+        if (isMobileMenublockMode()) return;
         if (!e.touches || e.touches.length !== 1) {
           return;
         }
