@@ -438,3 +438,28 @@
     height: 0.7rem;
     background: var(--contact-cta-accent-b);
 }
+
+@media (min-width: 900px) {
+    .menu-reels-item-modal__data .expanded-item-media > .expanded-image-carousel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        margin-bottom: 0;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-media .expanded-image-carousel-view,
+    .menu-reels-item-modal__data .expanded-item-media .menu-item-slideshow-track,
+    .menu-reels-item-modal__data .expanded-item-media .expanded-image-carousel-container {
+        flex: 1 1 auto;
+        height: 100% !important;
+        min-height: 0;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-media .expanded-image-slide,
+    .menu-reels-item-modal__data .expanded-item-media .expanded-image-carousel-img,
+    .menu-reels-item-modal__data .expanded-item-media .single-page-image-carousel-img {
+        height: 100%;
+        object-fit: contain;
+    }
+}

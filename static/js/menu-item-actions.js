@@ -71,7 +71,7 @@
       '</button>' +
       '<div class="menu-item-actions__menu" role="menu" hidden>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem" disabled aria-disabled="true">Comment</button>' +
-      '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site" hidden>Edit</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
       '</div></div>'
     );
   }
@@ -265,6 +265,29 @@
     );
   }
 
+  function promptForMenuAccess() {
+    var loggedIn = !!(window.AuthClient && AuthClient.isAuthenticated && AuthClient.isAuthenticated());
+    if (!loggedIn) {
+      var goLogin = window.confirm(
+        'Access is required to edit this menu.\n\nWould you like to go to the login page?'
+      );
+      if (!goLogin) return;
+      try {
+        sessionStorage.setItem(
+          'ttmenus_redirect_after_login',
+          window.location.pathname + window.location.search
+        );
+      } catch (err) {
+        /* ignore */
+      }
+      window.location.href = '/login/';
+      return;
+    }
+    window.alert(
+      'Access is required to edit this menu. Your account does not have access to this site.'
+    );
+  }
+
   function refreshAuthVisibility() {
     if (window.AuthMiddleware && typeof AuthMiddleware.toggleAuthElements === 'function') {
       AuthMiddleware.toggleAuthElements();
@@ -274,21 +297,23 @@
 
   function syncActionsMenuVisibility() {
     document.querySelectorAll('[data-menu-item-actions]').forEach(function (menu) {
-      var editBtn = menu.querySelector('.menu-item-actions__option--edit');
       var trigger = menu.querySelector('.menu-item-actions__trigger');
-      if (!trigger) return;
-      var editVisible =
-        editBtn &&
-        hasAdminSiteAccess() &&
-        !editBtn.hidden &&
-        editBtn.classList.contains('is-auth-visible');
-      menu.style.display = editVisible ? '' : 'none';
-      trigger.style.display = editVisible ? '' : 'none';
+      var editBtn = menu.querySelector('.menu-item-actions__option--edit');
+      menu.style.display = '';
+      if (trigger) trigger.style.display = '';
+      if (!editBtn) return;
+      editBtn.hidden = false;
+      editBtn.style.display = '';
+      editBtn.classList.add('is-auth-visible');
     });
   }
 
   function onEditClick(menuRoot) {
-    if (!hasAdminSiteAccess()) return;
+    if (!hasAdminSiteAccess()) {
+      closeMenu(menuRoot);
+      promptForMenuAccess();
+      return;
+    }
     closeMenu(menuRoot);
     if (
       window.TTMSMenuItemEditModal &&

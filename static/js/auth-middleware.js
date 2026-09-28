@@ -100,15 +100,10 @@ const AuthMiddleware = {
           el.style.display = isAdmin ? '' : 'none';
           break;
         case 'admin-site':
-          if (authType === 'admin-site' && el.classList.contains('menu-item-actions__option--edit')) {
-            var showAdminSite =
-              isAdmin &&
-              window.AuthClientAccess &&
-              typeof window.AuthClientAccess.hasClientAccess === 'function' &&
-              window.AuthClientAccess.hasClientAccess();
+          if (el.classList.contains('menu-item-actions__option--edit')) {
             el.style.display = '';
-            el.classList.toggle('is-auth-visible', showAdminSite);
-            el.hidden = !showAdminSite;
+            el.hidden = false;
+            el.classList.add('is-auth-visible');
             break;
           }
           el.style.display =

@@ -1325,6 +1325,98 @@ body.menu-reels-item-modal-open .menu-reels-track,
     box-sizing: border-box;
 }
 
+/* Wrappers exist so a wide item modal can split media and copy.
+   display:contents keeps phones and in-card expands in the old stack. */
+.expanded-item-media,
+.expanded-item-copy {
+    display: contents;
+}
+
+@media (min-width: 900px) {
+    .menu-reels-item-modal__body {
+        overflow: hidden;
+    }
+
+    .menu-reels-item-modal__data {
+        height: 100%;
+        min-height: 0;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-details:not(:has(.expanded-item-media)) {
+        grid-template-columns: minmax(0, 32rem);
+        justify-content: center;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-details {
+        display: grid;
+        grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.05fr);
+        align-items: stretch;
+        gap: 1.25rem 1.75rem;
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+        padding: 0.5rem 1.5rem 1.25rem;
+        box-sizing: border-box;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-media,
+    .menu-reels-item-modal__data .expanded-item-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-media {
+        order: 1;
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-copy {
+        order: 2;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        justify-content: flex-start;
+        align-items: stretch;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-media > .expanded-image-carousel,
+    .menu-reels-item-modal__data .expanded-item-media > .menu-smash-pass--modal,
+    .menu-reels-item-modal__data .expanded-item-media > .expanded-media-placeholder {
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-description,
+    .menu-reels-item-modal__data .menu-item-options,
+    .menu-reels-item-modal__data .expanded-side-categories,
+    .menu-reels-item-modal__data .expanded-additions-section {
+        text-align: left;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-taxonomies {
+        max-width: none;
+        margin-inline: 0;
+    }
+
+    .menu-reels-item-modal__data .expanded-item-controls {
+        position: sticky;
+        bottom: 0;
+        margin-top: auto;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+    }
+}
+
 .menu-reels-item-modal .expanded-add-cart.is-cart-pop {
     background: linear-gradient(135deg, var(--scheme-accent), var(--scheme-accent));
     box-shadow: 0 0 0 6px color-mix(in srgb, var(--scheme-accent) 35%, transparent),

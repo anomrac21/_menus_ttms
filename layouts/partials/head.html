@@ -1392,7 +1392,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/auth-client.js?v=google-signup-fix" defer></script>
 <script src="/js/auth-google-oauth.js?v=google-signup-fix" defer></script>
 <script src="{{ partial "head/asset-url.html" `/js/auth-client-access.js` }}" defer></script>
-<script src="/js/auth-middleware.js" defer></script>
+<script src="{{ partial "head/asset-url.html" `/js/auth-middleware.js` }}" defer></script>
 <script src="/js/admin-users.js" defer></script>
 {{- if $menuPublicSite -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-favorites.css") }}
@@ -1402,7 +1402,7 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 {{- end -}}
 <script src="/js/menu-favorite-icons.js" defer></script>
 <script src="/js/menu-favorites.js" defer></script>
-<script src="/js/menu-item-actions.js" defer></script>
+<script src="{{ partial "head/asset-url.html" `/js/menu-item-actions.js` }}" defer></script>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-edit-modal.css") }}
 <script src="/js/menu-item-edit-modal.js" defer></script>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-live-menu-hint.css") }}

@@ -167,11 +167,6 @@
 
 .menu-item-actions__option--edit {
   color: var(--button-text-color1);
-  display: none;
-}
-
-.menu-item-actions__option--edit.is-auth-visible {
-  display: block;
 }
 
 .menu-item-actions__option--edit:hover:not(:disabled),

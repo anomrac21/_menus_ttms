@@ -105,7 +105,8 @@
   position: relative;
 }
 
-.expanded-item-details[data-menu-item-path] > .menu-image-actions {
+.expanded-item-details[data-menu-item-path] > .menu-image-actions,
+.expanded-item-media > .menu-image-actions {
   position: absolute;
   top: 0.5em;
   left: 0.5em;
@@ -115,7 +116,8 @@
   pointer-events: none;
 }
 
-.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn {
+.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn,
+.expanded-item-media > .menu-image-actions .menu-image-add-btn {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -134,17 +136,20 @@
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn:hover {
+.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn:hover,
+.expanded-item-media > .menu-image-actions .menu-image-add-btn:hover {
   color: color-mix(in srgb, var(--scheme-white) 75%, transparent);
   transform: scale(1.08);
   background: transparent;
 }
 
-.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn .fa {
+.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn .fa,
+.expanded-item-media > .menu-image-actions .menu-image-add-btn .fa {
   font-size: x-large;
 }
 
-.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn__label {
+.expanded-item-details[data-menu-item-path] > .menu-image-actions .menu-image-add-btn__label,
+.expanded-item-media > .menu-image-actions .menu-image-add-btn__label {
   position: absolute;
   width: 1px;
   height: 1px;

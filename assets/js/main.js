@@ -2249,11 +2249,11 @@
                         </div>`;
                     }
                 }
+                const expandedMediaHTML = `${smashPassHTML}${imageCarouselHTML}${menuImageActionsHTML}`;
                 dataDiv.innerHTML = `
                     <div class="expanded-item-details${menuImageNoCarouselClass}"${menuImageDataAttrs}>
-                        ${smashPassHTML}
-                        ${imageCarouselHTML}
-                        ${menuImageActionsHTML}
+                        ${expandedMediaHTML ? `<div class="expanded-item-media">${expandedMediaHTML}</div>` : ''}
+                        <div class="expanded-item-copy">
                         ${itemDesc ? `
                         <div class="expanded-item-description">
                             <a href="${descLinkHref}"${descLinkClass}${descLinkOnclick} style="color: inherit; text-decoration: none;">
@@ -2299,6 +2299,7 @@
                                 <span class="cart-button-text">Add to Cart</span>
                                 <span class="cart-button-price">$${initialTotal.toFixed(2).replace(/\.00$/, '')}</span>
                             </button>
+                        </div>
                         </div>
                     </div>
                 `;
