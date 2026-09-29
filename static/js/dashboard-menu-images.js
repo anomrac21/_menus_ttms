@@ -464,30 +464,34 @@
     }
   }
 
-  function ensureToast() {
-    if (document.getElementById('dashboard-menu-images-toast')) return;
-    var node = document.createElement('div');
-    node.id = 'dashboard-menu-images-toast';
-    node.className = 'dashboard-menu-images-toast';
-    node.setAttribute('role', 'status');
-    node.setAttribute('aria-live', 'polite');
-    document.body.appendChild(node);
-    window.showDashboardMenuImagesToast = function (msg) {
-      node.textContent = msg;
-      node.classList.add('is-visible');
-      clearTimeout(window.showDashboardMenuImagesToast._t);
-      window.showDashboardMenuImagesToast._t = setTimeout(function () {
-        node.classList.remove('is-visible');
-      }, 2800);
-    };
-  }
+  window.showDashboardMenuImagesToast = function (msg) {
+    var text = String(msg || '').trim();
+    var node = document.getElementById('dashboard-menu-images-toast');
+    clearTimeout(window.showDashboardMenuImagesToast._t);
+    if (!text) {
+      if (node) node.remove();
+      return;
+    }
+    if (!node) {
+      node = document.createElement('div');
+      node.id = 'dashboard-menu-images-toast';
+      node.className = 'dashboard-menu-images-toast';
+      node.setAttribute('role', 'status');
+      node.setAttribute('aria-live', 'polite');
+      document.body.appendChild(node);
+    }
+    node.textContent = text;
+    node.classList.add('is-visible');
+    window.showDashboardMenuImagesToast._t = setTimeout(function () {
+      if (node.parentNode) node.remove();
+    }, 2800);
+  };
 
   function init() {
     var card = el('dashboardCardMenuImages');
     if (!card || !cfg() || !cfg().enabled) return;
     if (typeof AuthClient === 'undefined') return;
 
-    ensureToast();
     bindReelActions();
 
     var refreshBtn = el('dashboardMenuImagesRefresh');

@@ -4242,10 +4242,11 @@ html.ttms-ios .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
 }
 
 .dashboard-menu-images-toast {
+  display: none;
   position: fixed;
   bottom: 1.25rem;
   left: 50%;
-  transform: translateX(-50%) translateY(120%);
+  transform: translateX(-50%);
   z-index: var(--ttms-z-modal, 10050);
   padding: 0.65rem 1rem;
   border-radius: 8px;
@@ -4258,7 +4259,7 @@ html.ttms-ios .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
 }
 
 .dashboard-menu-images-toast.is-visible {
-  transform: translateX(-50%) translateY(0);
+  display: block;
 }
 
 /* Edit menu card (featured, full width) */
