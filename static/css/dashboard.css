@@ -2,8 +2,9 @@
  * Dashboard (control room) and Edit menu page styles
  */
  html,body {
-  overflow-x: clip!important;
-  width: -webkit-fill-available!important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
   margin: 0!important;
   padding: 0!important;
   background: var(--dash-bg) !important;
@@ -13,7 +14,15 @@ html:has(.dashboard-control-room),
 html:has(.dashboard-control-room) body {
   min-height: 100lvh;
   height: auto;
+  overflow-x: hidden !important;
+  scrollbar-width: none;
   background-color: var(--dash-bg) !important;
+}
+
+html:has(.dashboard-control-room)::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 html:has(.dashboard-control-room)::after {
@@ -588,6 +597,9 @@ html:has(.dashboard-control-room)::after {
   min-height: 100svh;
   min-height: 100dvh;
   min-height: 100lvh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   background: var(--dash-bg);
   display: flex;
   flex-direction: column;
@@ -626,14 +638,17 @@ html:has(.dashboard-control-room)::after {
 
 .dashboard-control-room .dashboard-header {
   max-width: 1000px;
-  width: -webkit-fill-available;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto 1.35rem;
   color: var(--dash-ink);
 }
 
 .dashboard-control-room .dashboard-header-bar {
   position: relative;
-  width: -webkit-fill-available;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
