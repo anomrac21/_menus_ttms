@@ -1,0 +1,210 @@
+.menu-review-chip,
+.header-venue-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.15rem 0.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
+  color: var(--scheme-accent-2, var(--scheme-white));
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.header-venue-rating {
+  display: none;
+}
+
+.header-venue-rating.is-ready {
+  display: inline-flex;
+}
+
+.menu-review-chip__star,
+.header-venue-rating__star,
+.menu-review-sheet__item-stars,
+.menu-review-stars__star.is-on {
+  color: var(--scheme-accent-2, #f5c451);
+}
+
+.menu-review-chip__label,
+.header-venue-rating__label {
+  color: color-mix(in srgb, var(--scheme-white) 88%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-review-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.menu-review-sheet[hidden] {
+  display: none;
+}
+
+.menu-review-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--scheme-black, #000) 55%, transparent);
+}
+
+.menu-review-sheet__panel {
+  position: relative;
+  width: min(32rem, 100%);
+  max-height: min(85vh, 40rem);
+  overflow: auto;
+  margin: 0;
+  padding: 1rem 1rem 1.25rem;
+  box-sizing: border-box;
+  border-radius: 1rem 1rem 0 0;
+  background: var(--scheme-button-bg, #1c1c1c);
+  color: var(--scheme-white, #fff);
+  box-shadow: 0 -0.5rem 1.5rem color-mix(in srgb, var(--scheme-black, #000) 35%, transparent);
+}
+
+.menu-review-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.menu-review-sheet__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.menu-review-sheet__close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.menu-review-sheet__score {
+  margin: 0.35rem 0 0.75rem;
+  color: color-mix(in srgb, var(--scheme-white) 75%, transparent);
+}
+
+.menu-review-stars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.menu-review-stars__star {
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--scheme-white) 35%, transparent);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.menu-review-sheet__comment-label {
+  display: block;
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.85rem;
+}
+
+.menu-review-sheet__body {
+  width: 100%;
+  min-height: 4.5rem;
+  box-sizing: border-box;
+  resize: vertical;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+  background: color-mix(in srgb, var(--scheme-black, #000) 25%, transparent);
+  color: inherit;
+  font: inherit;
+  padding: 0.6rem 0.7rem;
+}
+
+.menu-review-sheet__error {
+  margin: 0.5rem 0 0;
+  color: #ffb4b4;
+}
+
+.menu-review-sheet__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.menu-review-sheet__save,
+.menu-review-sheet__delete,
+.menu-review-sheet__remove {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.menu-review-sheet__save {
+  background: var(--scheme-accent-2, #f5c451);
+  color: var(--scheme-black, #111);
+}
+
+.menu-review-sheet__delete,
+.menu-review-sheet__remove {
+  background: transparent;
+  color: color-mix(in srgb, var(--scheme-white) 80%, transparent);
+}
+
+.menu-review-sheet__list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.menu-review-sheet__item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.menu-review-sheet__author {
+  font-weight: 600;
+}
+
+.menu-review-sheet__item-body {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+}
+
+.menu-review-sheet__when,
+.menu-review-sheet__empty {
+  color: color-mix(in srgb, var(--scheme-white) 62%, transparent);
+  font-size: 0.8rem;
+}
+
+body.menu-review-sheet-open {
+  overflow: hidden;
+}
+
+@media (min-width: 720px) {
+  .menu-review-sheet {
+    align-items: center;
+  }
+
+  .menu-review-sheet__panel {
+    border-radius: 1rem;
+    margin: 1rem;
+  }
+}

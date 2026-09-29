@@ -26,6 +26,10 @@
 					</span>
 				</a>
 			{{ end }}
+			<button type="button" class="header-venue-rating" data-review-kind="venue" data-review-title="{{ $siteName }}" aria-label="Rate {{ $siteName }}">
+				<span class="header-venue-rating__star" aria-hidden="true">★</span>
+				<span class="header-venue-rating__label">Rate</span>
+			</button>
 			{{- if default false site.Params.features.notifications -}}
 			<span class="header-notify-btn-wrap">
 				{{ partial "components/notification-subscribe-btn.html" (dict "id" "subBtnHeader" "class" "header-notify-subscribe" "iconOnly" true "opensInbox" true) }}

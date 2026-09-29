@@ -1403,6 +1403,23 @@ window.SiteConfig.menuImagesUseThumbor = window.MENU_IMAGES_USE_THUMBOR;
 <script src="/js/menu-favorite-icons.js" defer></script>
 <script src="/js/menu-favorites.js" defer></script>
 <script src="{{ partial "head/asset-url.html" `/js/menu-item-actions.js` }}" defer></script>
+{{- $reviewsOn := true -}}
+{{- with site.Params.reviews -}}
+  {{- if isset . "enabled" -}}
+    {{- $reviewsOn = .enabled -}}
+  {{- end -}}
+{{- end -}}
+{{- if $reviewsOn -}}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-reviews.css") }}
+<script>
+window.REVIEWS_CONFIG = {
+  enabled: true,
+  apiUrl: "{{ site.Params.reviews.apiUrl | default "https://reviews.ttmenus.com/api/v1" }}",
+  clientId: "{{ site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" }}"
+};
+</script>
+<script src="{{ partial "head/asset-url.html" `/js/menu-reviews.js` }}" defer></script>
+{{- end -}}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/menu-item-edit-modal.css") }}
 <script src="/js/menu-item-edit-modal.js" defer></script>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-live-menu-hint.css") }}

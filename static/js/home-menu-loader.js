@@ -937,7 +937,7 @@
       '<i class="fa fa-ellipsis-v" aria-hidden="true"></i>' +
       '</button>' +
       '<div class="menu-item-actions__menu" role="menu" hidden>' +
-      '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem" disabled aria-disabled="true">Comment</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem">Comment</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
       '</div></div>'
     );

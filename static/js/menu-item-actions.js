@@ -1,5 +1,5 @@
 /**
- * Menu item / promotion title-row actions (three-dot menu): Comment (inactive), Edit (admin-site).
+ * Menu item / promotion title-row actions (three-dot menu): Comment, Edit (admin-site).
  */
 (function () {
   'use strict';
@@ -53,6 +53,8 @@
           '"'
         : '';
 
+    var commentAttrs =
+      kind === 'section-header' ? ' disabled aria-disabled="true"' : '';
     return (
       '<div class="menu-item-actions" data-menu-item-actions data-actions-kind="' +
       escapeHtml(kind) +
@@ -70,7 +72,9 @@
       '<i class="fa fa-ellipsis-v" aria-hidden="true"></i>' +
       '</button>' +
       '<div class="menu-item-actions__menu" role="menu" hidden>' +
-      '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem" disabled aria-disabled="true">Comment</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem"' +
+      commentAttrs +
+      '>Comment</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
       '</div></div>'
     );
@@ -388,9 +392,14 @@
     }
 
     var commentBtn = e.target.closest('.menu-item-actions__option--comment');
-    if (commentBtn) {
+    if (commentBtn && !commentBtn.disabled) {
       e.preventDefault();
       e.stopPropagation();
+      var actionsRoot = commentBtn.closest('.menu-item-actions');
+      closeAllMenus();
+      if (window.TTMSMenuReviews && typeof window.TTMSMenuReviews.openFromActions === 'function') {
+        window.TTMSMenuReviews.openFromActions(actionsRoot);
+      }
       return;
     }
 

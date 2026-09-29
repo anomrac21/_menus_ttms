@@ -26,6 +26,10 @@ weight = 30
 [params.auth]
   enabled = true
   apiUrl = "https://auth.ttmenus.com/api/v1"
+
+[params.reviews]
+  enabled = true
+  apiUrl = "https://reviews.ttmenus.com/api/v1"
   # For local development, use:
   # apiUrl = "http://localhost:8080/api/v1"
 
