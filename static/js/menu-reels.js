@@ -940,7 +940,7 @@
 
     if (
       e.target.closest(
-        '.menu-favorite-btn, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, [data-smash-action], .menu-smash-pass-card__counts, .menu-smash-pass-card__title-link'
+        '.menu-favorite-btn, .menu-review-chip, .menu-item-rating-bar, .menu-add-photo-btn, .menu-image-add-btn, .menu-image-actions, [data-smash-action], .menu-smash-pass-card__counts, .menu-smash-pass-card__title-link'
       )
     ) {
       return false;

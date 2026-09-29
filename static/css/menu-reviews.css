@@ -1,38 +1,71 @@
-.menu-review-chip,
-.header-venue-rating {
+.menu-review-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.35rem;
   flex-shrink: 0;
   margin: 0;
-  padding: 0.15rem 0.4rem;
+  padding: 0.35rem 0.7rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: 0.55rem;
   background: color-mix(in srgb, var(--scheme-white) 10%, transparent);
   color: var(--scheme-accent-2, var(--scheme-white));
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   line-height: 1.2;
   cursor: pointer;
 }
 
-.header-venue-rating {
+.menu-item-rating-bar {
+  display: flex;
+  width: 100%;
+  margin: 0.2rem 0 0.35rem;
+  box-sizing: border-box;
+}
+
+.menu-item-rating-bar .menu-review-chip {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.menu-item-card.menu-reels-slide > .menu-item-rating-bar,
+.single-page-item-card .menu-item-rating-bar {
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: var(--ttms-z-reel-title-row, 5);
+  pointer-events: none;
+}
+
+.menu-item-card.menu-reels-slide > .menu-item-rating-bar .menu-review-chip,
+.single-page-item-card .menu-item-rating-bar .menu-review-chip {
+  width: auto;
+  pointer-events: auto;
+}
+
+.location-picker-card__rating {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 0.7rem 0.55rem;
+}
+
+.location-picker-card__rating:not(:has(.is-ready)),
+.location-rating:not(.is-ready) {
   display: none;
 }
 
-.header-venue-rating.is-ready {
-  display: inline-flex;
+.location-picker-card__rating .menu-review-chip {
+  width: 100%;
+  justify-content: center;
 }
 
 .menu-review-chip__star,
-.header-venue-rating__star,
 .menu-review-sheet__item-stars,
 .menu-review-stars__star.is-on {
   color: var(--scheme-accent-2, #f5c451);
 }
 
-.menu-review-chip__label,
-.header-venue-rating__label {
+.menu-review-chip__label {
   color: color-mix(in srgb, var(--scheme-white) 88%, transparent);
   font-variant-numeric: tabular-nums;
 }
@@ -40,7 +73,7 @@
 .menu-review-sheet {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--ttms-z-review-sheet, 10095);
   display: flex;
   align-items: flex-end;
   justify-content: center;

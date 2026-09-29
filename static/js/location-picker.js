@@ -988,7 +988,7 @@
 
   function isInteractivePickerTarget(target) {
     return !!target.closest(
-      '.location-picker-card__action, .location-status-badge, .delivery-toggle-btn, .delivery-options, .location-picker-card__select'
+      '.location-picker-card__action, .location-status-badge, .delivery-toggle-btn, .delivery-options, .location-picker-card__select, .location-rating, .menu-review-chip'
     );
   }
 

@@ -56,6 +56,12 @@
     </span>
   </button>
   {{- end -}}
+  <div class="location-picker-card__rating">
+    <button type="button" class="menu-review-chip location-rating" data-review-kind="venue" data-review-title="{{ $location.address }}" aria-label="Rate {{ $location.address }}">
+      <span class="menu-review-chip__star" aria-hidden="true">★</span>
+      <span class="menu-review-chip__label">Rate</span>
+    </button>
+  </div>
   {{ if $hasCoords }}
   <div class="location-picker-card__footer">
     <div class="location-picker-card__actions location-info">

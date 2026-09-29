@@ -97,13 +97,13 @@
     var key = el.getAttribute('data-review-key') || '';
     var title = el.getAttribute('data-review-title') || '';
     var summary = summaryFor(kind, key);
-    var label = el.querySelector('.menu-review-chip__label, .header-venue-rating__label');
+    var label = el.querySelector('.menu-review-chip__label');
     if (!label) return;
     var count = summary && Number(summary.count) > 0 ? Number(summary.count) : 0;
     var avg = count ? formatAvg(summary.average) : '';
     if (count && avg) {
-      label.textContent = avg + ' (' + count + ')';
-      el.setAttribute('aria-label', 'Rated ' + avg + ' from ' + count + ' reviews');
+      label.textContent = avg + ' · ' + count + (count === 1 ? ' rating' : ' ratings');
+      el.setAttribute('aria-label', 'Rated ' + avg + ' from ' + count + (count === 1 ? ' rating' : ' ratings'));
     } else {
       label.textContent = 'Rate';
       el.setAttribute('aria-label', 'Rate ' + (title || 'this'));
@@ -111,7 +111,7 @@
   }
 
   function paintAll() {
-    document.querySelectorAll('.menu-review-chip, .header-venue-rating').forEach(paintChip);
+    document.querySelectorAll('.menu-review-chip').forEach(paintChip);
   }
 
   function rememberSummary(summary) {
@@ -161,9 +161,29 @@
       });
   }
 
+  function locationKey(card) {
+    var id = clientId();
+    if (!id || !card) return '';
+    var slug = String(card.getAttribute('data-slug') || '').trim();
+    if (!slug) slug = String(card.getAttribute('data-address') || '').trim();
+    if (!slug || slug.indexOf('|') !== -1) return '';
+    return id + '|loc:' + slug;
+  }
+
   function ensureChip(row, spec) {
     if (!row || !spec || !spec.key) return;
-    var chip = row.querySelector('.menu-review-chip');
+    row.querySelectorAll('.menu-review-chip').forEach(function (old) {
+      old.remove();
+    });
+    var bar = row.nextElementSibling;
+    if (!bar || !bar.classList.contains('menu-item-rating-bar')) {
+      bar = document.createElement('div');
+      bar.className = 'menu-item-rating-bar';
+      row.insertAdjacentElement('afterend', bar);
+    }
+    var chips = bar.querySelectorAll('.menu-review-chip');
+    var chip = chips[0] || null;
+    for (var i = 1; i < chips.length; i++) chips[i].remove();
     if (!chip) {
       chip = document.createElement('button');
       chip.type = 'button';
@@ -177,9 +197,7 @@
       label.textContent = 'Rate';
       chip.appendChild(star);
       chip.appendChild(label);
-      var actions = row.querySelector('.menu-item-actions');
-      if (actions) row.insertBefore(chip, actions);
-      else row.appendChild(chip);
+      bar.appendChild(chip);
     }
     chip.setAttribute('data-review-kind', spec.kind);
     chip.setAttribute('data-review-key', spec.key);
@@ -214,18 +232,19 @@
         title: actions.getAttribute('data-item-title') || 'Promotion',
       });
     });
-    var venue = document.querySelector('.header-venue-rating');
-    if (venue && clientId()) {
+    document.querySelectorAll('.location-picker-card').forEach(function (card) {
+      var venue = card.querySelector('.location-rating');
+      var key = locationKey(card);
+      if (!venue || !key) return;
       venue.classList.add('is-ready');
       venue.setAttribute('data-review-kind', 'venue');
-      venue.setAttribute('data-review-key', clientId());
+      venue.setAttribute('data-review-key', key);
       if (!venue.getAttribute('data-review-title')) {
-        var logo = document.querySelector('.header-logo .logo');
-        venue.setAttribute('data-review-title', (logo && logo.getAttribute('alt')) || 'This restaurant');
+        venue.setAttribute('data-review-title', card.getAttribute('data-address') || 'This location');
       }
       paintChip(venue);
-      queueSummary('venue', clientId());
-    }
+      queueSummary('venue', key);
+    });
   }
 
   function scheduleScan() {
@@ -560,9 +579,9 @@
   }
 
   function onChipClick(e) {
-    var chip = e.target.closest('.menu-review-chip, .header-venue-rating');
+    var chip = e.target.closest('.menu-review-chip');
     if (!chip) return;
-    if (chip.classList.contains('header-venue-rating') && !chip.classList.contains('is-ready')) return;
+    if (chip.classList.contains('location-rating') && !chip.classList.contains('is-ready')) return;
     e.preventDefault();
     e.stopPropagation();
     open({
