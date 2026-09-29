@@ -7,6 +7,7 @@
   var POLL_MS = 20000;
   var COUNT_IDS = [
     'dashboardCardOrdersCount',
+    'dashboardOrdersHubInboxCount',
     'dashboardCardDeliveryCount',
     'dashboardCardEditMenuCount',
     'dashboardCardMenuImagesCount',
@@ -133,17 +134,23 @@
     return !/^(delivered|completed|cancelled|canceled|expired|rejected)$/.test(s);
   }
 
+  function setOrdersCount(n) {
+    setCount('dashboardCardOrdersCount', n);
+    setCount('dashboardOrdersHubInboxCount', n);
+  }
+
   async function loadOrders() {
     if (!global.OrderClient || typeof global.OrderClient.listClient !== 'function') {
-      setCount('dashboardCardOrdersCount', 0);
+      setOrdersCount(0);
       return;
     }
     try {
       var res = await global.OrderClient.listClient({});
       var orders = (res && res.orders) || [];
-      setCount('dashboardCardOrdersCount', orders.length);
+      setOrdersCount(orders.length);
     } catch (_) {
       setUnavailable('dashboardCardOrdersCount');
+      setUnavailable('dashboardOrdersHubInboxCount');
     }
   }
 
