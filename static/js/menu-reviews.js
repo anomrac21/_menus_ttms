@@ -383,22 +383,58 @@
     if (summary && summary.kind) rememberSummary(summary);
   }
 
+  function reviewsRequest(url, options, retried) {
+    options = options || {};
+    var method = options.method || 'GET';
+    var headers = Object.assign({ Accept: 'application/json' }, options.headers || {});
+    var tokenReady = Promise.resolve('');
+    if (isLoggedIn() && window.AuthClient && typeof AuthClient.ensureAccessToken === 'function') {
+      tokenReady = AuthClient.ensureAccessToken()
+        .then(function (result) {
+          if (result && result.accessToken) return result.accessToken;
+          return (AuthClient.getAccessToken && AuthClient.getAccessToken()) || '';
+        })
+        .catch(function () {
+          return (AuthClient.getAccessToken && AuthClient.getAccessToken()) || '';
+        });
+    }
+    return tokenReady.then(function (token) {
+      if (options.auth && !token) throw new Error('Not authenticated');
+      if (token) headers.Authorization = 'Bearer ' + token;
+      return fetch(url, {
+        method: method,
+        headers: headers,
+        body: options.body,
+        credentials: 'omit',
+      }).then(function (response) {
+        return response.text().then(function (text) {
+          var data = {};
+          try {
+            data = text ? JSON.parse(text) : {};
+          } catch (parseErr) {
+            data = {};
+          }
+          if (response.status === 401 && !retried && token && window.AuthClient && typeof AuthClient.refreshToken === 'function') {
+            return AuthClient.refreshToken().then(function (refreshResult) {
+              if (refreshResult && refreshResult.success) return reviewsRequest(url, options, true);
+              throw new Error((data && data.error) || 'Not authenticated');
+            });
+          }
+          if (!response.ok) {
+            throw new Error((data && (data.error || data.message)) || 'Request failed');
+          }
+          return data;
+        });
+      });
+    });
+  }
+
   function loadDetail(spec) {
     var params = new URLSearchParams();
     params.set('client_id', clientId());
     params.set('kind', spec.kind);
     params.set('target_key', spec.key);
-    var url = apiBase() + '/reviews?' + params.toString();
-    if (isLoggedIn() && window.AuthClient && typeof AuthClient.authenticatedRequest === 'function') {
-      return AuthClient.authenticatedRequest(url, { method: 'GET' }).then(function (res) {
-        if (!res.success) throw new Error(res.error || 'Could not load reviews');
-        return res.data;
-      });
-    }
-    return fetch(url, { credentials: 'omit' }).then(function (response) {
-      if (!response.ok) throw new Error('Could not load reviews');
-      return response.json();
-    });
+    return reviewsRequest(apiBase() + '/reviews?' + params.toString(), { method: 'GET' });
   }
 
   function open(spec) {
@@ -452,8 +488,9 @@
     var body = sheet.querySelector('.menu-review-sheet__body').value || '';
     var saveBtn = sheet.querySelector('.menu-review-sheet__save');
     saveBtn.disabled = true;
-    AuthClient.authenticatedRequest(apiBase() + '/reviews', {
+    reviewsRequest(apiBase() + '/reviews', {
       method: 'PUT',
+      auth: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         client_id: clientId(),
@@ -463,8 +500,7 @@
         body: body,
       }),
     })
-      .then(function (res) {
-        if (!res.success) throw new Error(res.error || 'Could not save review');
+      .then(function () {
         invalidateCurrent();
         return loadDetail(current);
       })
@@ -492,9 +528,8 @@
       params.set('target_key', current.key);
       url += '?' + params.toString();
     }
-    AuthClient.authenticatedRequest(url, { method: 'DELETE' })
-      .then(function (res) {
-        if (!res.success) throw new Error(res.error || 'Could not delete review');
+    reviewsRequest(url, { method: 'DELETE', auth: true })
+      .then(function () {
         selectedRating = 0;
         invalidateCurrent();
         return loadDetail(current);
