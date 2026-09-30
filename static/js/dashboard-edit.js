@@ -5707,9 +5707,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     return out;
   }
 
+  var draftAssetObjectUrls = {};
+
+  function rememberDraftAssetFile(path, file) {
+    var p = (path || '').trim();
+    if (!p || !file) return;
+    if (draftAssetObjectUrls[p]) {
+      try { URL.revokeObjectURL(draftAssetObjectUrls[p]); } catch (e) {}
+    }
+    draftAssetObjectUrls[p] = URL.createObjectURL(file);
+  }
+
+  function draftAssetPreviewUrl(path) {
+    var name = String(path || '').trim().replace(/^draft-assets\//, '');
+    if (!name) return '';
+    return CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/preview/draft-assets/' + encodeURIComponent(name);
+  }
+
   function resolveMenuItemImageSrcForPreview(path) {
     var p = (path || '').trim();
     if (!p) return '';
+    if (p.indexOf('draft-assets/') === 0) return draftAssetPreviewUrl(p);
     if (window.TtmsThumbor && typeof window.TtmsThumbor.menuImageSrc === 'function') {
       return window.TtmsThumbor.menuImageSrc(p, 'card');
     }
@@ -5720,11 +5738,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         width: 320,
         height: 320,
       });
-    }
-    if (p.indexOf('draft-assets/') === 0) {
-      var base = CMS_SERVICE_URL.replace(/\/+$/, '');
-      var name = p.replace(/^draft-assets\//, '');
-      return base + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/preview/draft-assets/' + encodeURIComponent(name);
     }
     if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) return p;
     return p.indexOf('/') === 0 ? p : '/' + p;
@@ -6118,6 +6131,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var path = data.path != null ? data.path : data.Path;
         if (!path) throw new Error('No path in upload response');
         rememberDraftAssetPath(path);
+        rememberDraftAssetFile(path, file);
         if (inp) inp.value = path;
         if (typeof updateThumbFn === 'function') updateThumbFn(path, file);
         if (inp && inp !== inputHomeHeroImage) {
@@ -10697,8 +10711,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (p.indexOf('draft-assets/') !== 0) return;
     var seq = (img._ttmsDraftSeq || 0) + 1;
     img._ttmsDraftSeq = seq;
+    img.loading = 'eager';
     img.onerror = function () {};
-    var fetchUrl = resolveMenuItemImageSrcForPreview(p);
+    if (draftAssetObjectUrls[p]) {
+      img.src = draftAssetObjectUrls[p];
+      var cachedWrap = img.parentElement;
+      if (cachedWrap && cachedWrap.classList) cachedWrap.classList.remove('dashboard-site-image-pick-thumb--broken');
+      if (opts.labelEl) {
+        opts.labelEl.textContent = p.replace(/^draft-assets\//, '') || 'Uploaded image';
+      }
+      return;
+    }
+    var fetchUrl = draftAssetPreviewUrl(p);
     fetch(fetchUrl, { credentials: 'include', headers: cmsAuthHeadersForImageThumb() })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);

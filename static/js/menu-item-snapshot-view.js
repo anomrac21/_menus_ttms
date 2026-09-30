@@ -178,8 +178,10 @@
     if (!snap.length) return false;
     var live = [];
     if (card.classList && card.classList.contains('menu-header')) {
+      var icon = normImage(card.getAttribute('data-icon') || '');
       var primary = normImage(card.getAttribute('data-images-primary') || '');
-      if (primary) live.push(primary);
+      if (icon) live.push(icon);
+      if (primary && primary !== icon) live.push(primary);
     } else {
       try {
         var parsed = JSON.parse(card.getAttribute('data-images-array') || '[]');
@@ -301,12 +303,21 @@
     return null;
   }
 
+  function pushImagePath(out, value) {
+    if (typeof value === 'string' && value.trim()) out.push(value.trim());
+  }
+
   function imagePaths(source) {
     var out = [];
     if (!source) return out;
-    var single = source.image || source.Image;
-    if (typeof single === 'string' && single) out.push(single);
+    pushImagePath(out, source.icon || source.Icon);
+    pushImagePath(out, source.image || source.Image);
     var raw = source.images || source.Images;
+    if (raw && !Array.isArray(raw) && typeof raw === 'object') {
+      pushImagePath(out, raw.primary || raw.Primary);
+      pushImagePath(out, raw.secondary || raw.Secondary);
+      return out;
+    }
     if (!raw || !raw.length) return out;
     raw.forEach(function (img) {
       if (!img) return;
@@ -572,6 +583,91 @@
     return node;
   }
 
+  function menublockLinkForHeader(header) {
+    var slug = (header.getAttribute('data-section-slug') || '').trim().toLowerCase();
+    var label = plainText(header.getAttribute('data-reel-section') || '').toLowerCase();
+    if (!label && header._ttmsLiveSnapshotView) {
+      label = plainText(header._ttmsLiveSnapshotView.headingText).toLowerCase();
+    }
+    var links = document.querySelectorAll('#menublock a.menublock-link');
+    var i;
+    for (i = 0; i < links.length; i++) {
+      var link = links[i];
+      var textEl = link.querySelector('.menublock-link__label');
+      var text = plainText(textEl && textEl.textContent).toLowerCase();
+      var href = (link.getAttribute('href') || '').toLowerCase();
+      if (label && text === label) return link;
+      if (slug && href.indexOf('/' + slug) !== -1) return link;
+    }
+    return null;
+  }
+
+  function paintMenublockIcon(link, path, liveBag) {
+    if (!link || !path) return;
+    var wrap = link.querySelector('.menublock-link__icon');
+    if (!wrap) {
+      wrap = document.createElement('span');
+      wrap.className = 'menublock-link__icon';
+      wrap.setAttribute('aria-hidden', 'true');
+      wrap.setAttribute('data-snapshot-created', '1');
+      link.insertBefore(wrap, link.firstChild);
+    }
+    var img = wrap.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'icon center menublock-link__photo';
+      img.alt = '';
+      img.width = 32;
+      img.height = 32;
+      img.setAttribute('data-snapshot-created', '1');
+      wrap.appendChild(img);
+    }
+    if (liveBag && !liveBag.menublock) {
+      liveBag.menublock = {
+        link: link,
+        src: img.getAttribute('src') || '',
+        path: img.getAttribute('data-src-path') || '',
+        photo: img.classList.contains('menublock-link__photo'),
+        createdImg: img.getAttribute('data-snapshot-created') === '1',
+        createdWrap: wrap.getAttribute('data-snapshot-created') === '1',
+      };
+    }
+    img.setAttribute('data-src-path', path);
+    if (/\.(jpe?g|png|webp|gif|avif|bmp)(\?|$)/i.test(path)) {
+      img.classList.add('menublock-link__photo');
+      img.style.removeProperty('--menublock-icon');
+      wrap.style.removeProperty('--menublock-icon');
+    }
+    var src = resolveImageSrc(path);
+    if (src) img.setAttribute('src', src);
+    if (String(path).indexOf('draft-assets/') === 0 && typeof global.hydrateAuthenticatedDraftAssetImg === 'function') {
+      delete img.dataset.draftAssetHydrated;
+      global.hydrateAuthenticatedDraftAssetImg(img);
+    }
+  }
+
+  function restoreMenublockIcon(live) {
+    var saved = live && live.menublock;
+    if (!saved || !saved.link) return;
+    if (saved.createdWrap) {
+      var createdWrap = saved.link.querySelector('.menublock-link__icon');
+      if (createdWrap) createdWrap.remove();
+      return;
+    }
+    var img = saved.link.querySelector('.menublock-link__icon img');
+    if (!img) return;
+    if (saved.createdImg) {
+      img.remove();
+      return;
+    }
+    if (saved.src) img.setAttribute('src', saved.src);
+    else img.removeAttribute('src');
+    if (saved.path) img.setAttribute('data-src-path', saved.path);
+    else img.removeAttribute('data-src-path');
+    img.classList.toggle('menublock-link__photo', !!saved.photo);
+    delete img.dataset.draftAssetHydrated;
+  }
+
   function applySectionImage(header, item) {
     var paths = item.images || [];
     if (!paths.length) return;
@@ -592,6 +688,7 @@
     header.setAttribute('data-images-primary', path);
     if (created) img.setAttribute('data-snapshot-created', '1');
     if (String(path).indexOf('draft-assets/') === 0 && typeof global.hydrateAuthenticatedDraftAssetImg === 'function') {
+      delete img.dataset.draftAssetHydrated;
       global.hydrateAuthenticatedDraftAssetImg(img);
     }
   }
@@ -610,6 +707,7 @@
         photoPath: img ? img.getAttribute('data-src-path') || '' : '',
         hadImage: !!img,
         primary: header.getAttribute('data-images-primary') || '',
+        icon: header.getAttribute('data-icon') || '',
       };
     }
     var snapTitle = plainText(item.title || item.Title);
@@ -624,6 +722,11 @@
         link.appendChild(summary);
       }
       summary.textContent = summaryText;
+    }
+    var iconPath = imagePaths(item)[0] || '';
+    if (iconPath) {
+      header.setAttribute('data-icon', iconPath);
+      paintMenublockIcon(menublockLinkForHeader(header), iconPath, header._ttmsLiveSnapshotView);
     }
     applySectionImage(header, item);
     var actions = header.querySelector('[data-menu-item-actions]');
@@ -652,6 +755,9 @@
     }
     if (live.primary) header.setAttribute('data-images-primary', live.primary);
     else header.removeAttribute('data-images-primary');
+    if (live.icon) header.setAttribute('data-icon', live.icon);
+    else header.removeAttribute('data-icon');
+    restoreMenublockIcon(live);
     header.classList.remove('is-viewing-snapshot');
     setViewLabel(header, false);
   }
