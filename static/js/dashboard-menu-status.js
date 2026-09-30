@@ -1886,7 +1886,7 @@
       status.className = 'dashboard-menu-status-muted';
       if (!version) {
         status.textContent =
-          'No snapshot yet. Save from Edit theme, or leave the menu editor and one is saved automatically.';
+          'No snapshot yet. A dish, section, theme, or settings change creates one. Later changes update that same snapshot.';
       } else if (selectedSnapshotId) {
         var counts = snapshotCountLine(version);
         var when = snapshotDisplayParts(version).when;
