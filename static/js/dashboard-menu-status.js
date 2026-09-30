@@ -1073,6 +1073,74 @@
     return /^content\/[^/]+\/.+\.md$/i.test(String(path));
   }
 
+  function slugifyMenuTitle(str) {
+    var s = String(str || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    return s;
+  }
+
+  function titleRenameForDraft(path, payload) {
+    if (!isMenuItemDraftPath(path)) return null;
+    var fm = (payload && payload.frontMatter) || {};
+    var title = fm.title != null ? String(fm.title).trim() : '';
+    var newSlug = slugifyMenuTitle(title);
+    var file = String(path).split('/').pop() || '';
+    var oldSlug = file.replace(/\.md$/i, '');
+    if (!newSlug || !oldSlug || newSlug === oldSlug) return null;
+    var slash = String(path).lastIndexOf('/');
+    var dir = slash >= 0 ? String(path).slice(0, slash + 1) : '';
+    return {
+      deletePath: path,
+      createPath: dir + newSlug + '.md',
+    };
+  }
+
+  function appendDraftPathLines(chip, path, analysis) {
+    var rename = analysis && analysis.rename;
+    if (!rename && path) {
+      var payload = null;
+      var preview = findPreviewForPath(path);
+      if (preview) payload = previewPayloadFromPreview(preview);
+      rename = titleRenameForDraft(path, payload);
+    }
+    if (rename) {
+      appendLabeledDraftPath(chip, 'Delete', rename.deletePath, 'delete');
+      appendLabeledDraftPath(chip, 'Create', rename.createPath, 'create');
+      return;
+    }
+    if (!path) return;
+    var pathSpan = document.createElement('span');
+    pathSpan.className = 'dashboard-menu-status-draft-chip-path';
+    pathSpan.textContent = path;
+    chip.appendChild(pathSpan);
+  }
+
+  function appendLabeledDraftPath(chip, label, path, kind) {
+    var pathSpan = document.createElement('span');
+    pathSpan.className =
+      'dashboard-menu-status-draft-chip-path dashboard-menu-status-draft-chip-path--' + kind;
+    var labelSpan = document.createElement('span');
+    labelSpan.className = 'dashboard-menu-status-draft-chip-path-label';
+    labelSpan.textContent = label;
+    pathSpan.appendChild(labelSpan);
+    pathSpan.appendChild(document.createTextNode(path));
+    chip.appendChild(pathSpan);
+  }
+
+  function storeDraftAnalysis(path, payload, live, provisional) {
+    var built = buildDraftAnalysis(payload, live);
+    draftAnalyses[path] = {
+      category: built.category,
+      diff: built.diff,
+      changes: built.changes,
+      provisional: provisional != null ? provisional : !live,
+      rename: titleRenameForDraft(path, payload),
+    };
+  }
+
   function draftWeightFromPreview(p) {
     var payload = previewPayloadFromPreview(p);
     var fm = payload.frontMatter || {};
@@ -1349,13 +1417,7 @@
       if (!path) return;
       var payload = previewPayloadFromPreview(p);
       payload.contentPath = path;
-      var built = buildDraftAnalysis(payload, null);
-      draftAnalyses[path] = {
-        category: built.category,
-        diff: built.diff,
-        changes: built.changes,
-        provisional: true,
-      };
+      storeDraftAnalysis(path, payload, null);
     });
   }
 
@@ -1366,14 +1428,7 @@
       if (!path) return;
       var payload = previewPayloadFromPreview(p);
       payload.contentPath = path;
-      var live = liveByPath[path];
-      var built = buildDraftAnalysis(payload, live);
-      draftAnalyses[path] = {
-        category: built.category,
-        diff: built.diff,
-        changes: built.changes,
-        provisional: false,
-      };
+      storeDraftAnalysis(path, payload, liveByPath[path], false);
     });
   }
 
@@ -1428,13 +1483,7 @@
       if (!p) return;
       var payload = previewPayloadFromPreview(p);
       payload.contentPath = path;
-      var built = buildDraftAnalysis(payload, null);
-      draftAnalyses[path] = {
-        category: built.category,
-        diff: built.diff,
-        changes: built.changes,
-        provisional: true,
-      };
+      storeDraftAnalysis(path, payload, null);
     });
     return ensureAccessTokenForCms().then(function () {
       return fetchLiveContentFilesBatch(paths).then(function (liveByPath) {
@@ -1443,14 +1492,7 @@
           if (!p) return;
           var payload = previewPayloadFromPreview(p);
           payload.contentPath = path;
-          var live = liveByPath[path];
-          var built = buildDraftAnalysis(payload, live);
-          draftAnalyses[path] = {
-            category: built.category,
-            diff: built.diff,
-            changes: built.changes,
-            provisional: !live,
-          };
+          storeDraftAnalysis(path, payload, liveByPath[path]);
         });
       });
     }).catch(function (err) {
@@ -1599,10 +1641,7 @@
       });
     }
 
-    var SNAPSHOT_MAX = 3;
-    var SNAPSHOT_LIST_CAP = 3;
     var selectedSnapshotId = null;
-    var snapshotListExpanded = false;
 
     function snapshotSelectionStorageKey() {
       return 'ttmenus_active_snapshot_' + CMS_CLIENT_ID;
@@ -1637,19 +1676,23 @@
       return null;
     }
 
-    function getSnapshotSlotIndex(versionId) {
-      for (var si = 0; si < cachedVersions.length; si++) {
-        if (versionIdFromRecord(cachedVersions[si]) === versionId) return si + 1;
-      }
-      return 0;
+    function currentSnapshotVersion() {
+      return cachedVersions.length ? cachedVersions[0] : null;
     }
 
-    function activeSnapshotSlotLabel() {
-      if (!selectedSnapshotId) return 'Live menu';
-      var idx = getSnapshotSlotIndex(selectedSnapshotId);
-      var ver = getSelectedSnapshotVersion();
-      var parts = ver ? snapshotDisplayParts(ver) : { title: 'Snapshot' };
-      return 'Slot ' + idx + ' · ' + parts.title;
+    function snapshotCountLine(version) {
+      if (!version) return '';
+      var summary = versionSummaryFromRecord(version);
+      var cats = summary.categoryCount != null ? summary.categoryCount : summary.CategoryCount;
+      var items = summary.menuItemCount != null ? summary.menuItemCount : summary.MenuItemCount;
+      var parts = [];
+      if (typeof cats === 'number') {
+        parts.push(cats + (cats === 1 ? ' category' : ' categories'));
+      }
+      if (typeof items === 'number') {
+        parts.push(items + (items === 1 ? ' item' : ' items'));
+      }
+      return parts.join(' · ');
     }
 
     function syncEditorLinks() {
@@ -1671,7 +1714,7 @@
         editLink.setAttribute(
           'title',
           selectedSnapshotId
-            ? 'Open theme editor with ' + activeSnapshotSlotLabel()
+            ? 'Open theme editor with the saved snapshot'
             : 'Open live menu in theme editor'
         );
       }
@@ -1683,7 +1726,7 @@
         rearrangeLink.setAttribute(
           'title',
           selectedSnapshotId
-            ? 'Rearrange menu from ' + activeSnapshotSlotLabel()
+            ? 'Rearrange the saved snapshot'
             : 'Rearrange live menu order'
         );
       }
@@ -1729,7 +1772,7 @@
         setStatusBlockSummary('snapshots', 'Loading…');
         var pLoad = document.createElement('p');
         pLoad.className = 'dashboard-menu-status-muted dashboard-menu-status-loading';
-        pLoad.textContent = 'Loading menu snapshots…';
+        pLoad.textContent = 'Loading menu snapshot…';
         snapshotStatusEl.appendChild(pLoad);
         return;
       }
@@ -1757,172 +1800,106 @@
         snapshotStatusEl.appendChild(pErr);
         return;
       }
-      var n = cachedVersions.length;
-      if (n === 0) {
-        setStatusBlockSummary('snapshots', 'No snapshots saved');
-        var p0 = document.createElement('p');
-        p0.className = 'dashboard-menu-status-muted';
-        p0.textContent =
-          'No saved menu snapshots on the CMS. In the theme editor, use Save → Save snapshot (CMS only), or leave the editor to auto-save one (up to ' +
-          SNAPSHOT_MAX +
-          ' kept).';
-        snapshotStatusEl.appendChild(p0);
-        selectedSnapshotId = null;
-        return;
-      }
-      setStatusBlockSummary(
-        'snapshots',
-        selectedSnapshotId
-          ? activeSnapshotSlotLabel() + ' active'
-          : n + ' snapshot' + (n === 1 ? '' : 's') + ' saved (max ' + SNAPSHOT_MAX + ')'
-      );
-      if (
+      var version = currentSnapshotVersion();
+      if (!version) {
+        if (selectedSnapshotId) {
+          selectedSnapshotId = null;
+          persistSnapshotSelection();
+          syncEditorLinks();
+        }
+        setStatusBlockSummary('snapshots', 'No snapshot');
+      } else if (
         selectedSnapshotId &&
-        !cachedVersions.some(function (v) {
-          return versionIdFromRecord(v) === selectedSnapshotId;
-        })
+        versionIdFromRecord(version) !== selectedSnapshotId
       ) {
         selectedSnapshotId = null;
+        persistSnapshotSelection();
+        syncEditorLinks();
       }
-      var intro = document.createElement('p');
-      intro.className = 'dashboard-menu-status-intro';
-      intro.appendChild(createStatusStatPill(n, 'snapshot', 'snapshots'));
-      intro.appendChild(
-        document.createTextNode(
-          ' saved on the CMS (max ' +
-            SNAPSHOT_MAX +
-            ') - menu layout in data/menu.json and theme colors.'
-        )
-      );
-      snapshotStatusEl.appendChild(intro);
-      var hint = document.createElement('p');
-      hint.className = 'dashboard-menu-status-muted';
-      hint.textContent =
-        'Pick a save slot to load that snapshot on the dashboard. Edit theme, rearrange, and draft comparisons use the active slot until you switch back to Live.';
-      snapshotStatusEl.appendChild(hint);
-      if (n >= SNAPSHOT_MAX) {
-        var capNote = document.createElement('p');
-        capNote.className = 'dashboard-menu-status-muted';
-        capNote.textContent =
-          'Oldest snapshots are removed automatically when a new one is saved.';
-        snapshotStatusEl.appendChild(capNote);
+
+      if (version && selectedSnapshotId) {
+        var selectedWhen = snapshotDisplayParts(version).when;
+        setStatusBlockSummary(
+          'snapshots',
+          selectedWhen ? 'Snapshot · ' + selectedWhen : 'Snapshot'
+        );
+      } else if (version) {
+        setStatusBlockSummary('snapshots', 'Live · snapshot saved');
       }
 
       var slotGrid = document.createElement('div');
-      slotGrid.className = 'dashboard-menu-status-slot-grid';
-      slotGrid.setAttribute('role', 'listbox');
-      slotGrid.setAttribute('aria-label', 'Menu save slots');
+      slotGrid.className = 'dashboard-menu-status-slot-grid dashboard-menu-status-view-switch';
+      slotGrid.setAttribute('role', 'radiogroup');
+      slotGrid.setAttribute('aria-label', 'Menu version');
 
       var liveBtn = document.createElement('button');
       liveBtn.type = 'button';
       liveBtn.className = 'dashboard-menu-status-slot dashboard-menu-status-slot--live';
-      liveBtn.setAttribute('role', 'option');
+      liveBtn.setAttribute('role', 'radio');
       if (!selectedSnapshotId) {
         liveBtn.classList.add('dashboard-menu-status-slot--active');
-        liveBtn.setAttribute('aria-selected', 'true');
+        liveBtn.setAttribute('aria-checked', 'true');
       } else {
-        liveBtn.setAttribute('aria-selected', 'false');
+        liveBtn.setAttribute('aria-checked', 'false');
       }
       liveBtn.innerHTML =
         '<span class="dashboard-menu-status-slot-label">Live</span>' +
-        '<span class="dashboard-menu-status-slot-title">Published menu</span>' +
-        '<span class="dashboard-menu-status-slot-when">Git + live site</span>';
+        '<span class="dashboard-menu-status-slot-title">Published menu</span>';
       liveBtn.addEventListener('click', function () {
         applySnapshotSelection(null);
       });
       slotGrid.appendChild(liveBtn);
 
-      for (var slotNum = 1; slotNum <= SNAPSHOT_MAX; slotNum++) {
-        var version = cachedVersions[slotNum - 1];
-        var slotBtn = document.createElement('button');
-        slotBtn.type = 'button';
-        slotBtn.className = 'dashboard-menu-status-slot';
-        slotBtn.setAttribute('role', 'option');
-        if (!version) {
-          slotBtn.classList.add('dashboard-menu-status-slot--empty');
-          slotBtn.disabled = true;
-          slotBtn.setAttribute('aria-selected', 'false');
-          slotBtn.innerHTML =
-            '<span class="dashboard-menu-status-slot-label">Slot ' +
-            slotNum +
-            '</span>' +
-            '<span class="dashboard-menu-status-slot-title">Empty</span>' +
-            '<span class="dashboard-menu-status-slot-when">No snapshot saved</span>';
+      var snapBtn = document.createElement('button');
+      snapBtn.type = 'button';
+      snapBtn.className = 'dashboard-menu-status-slot';
+      snapBtn.setAttribute('role', 'radio');
+      if (!version) {
+        snapBtn.classList.add('dashboard-menu-status-slot--empty');
+        snapBtn.disabled = true;
+        snapBtn.setAttribute('aria-checked', 'false');
+        snapBtn.innerHTML =
+          '<span class="dashboard-menu-status-slot-label">Snapshot</span>' +
+          '<span class="dashboard-menu-status-slot-title">None saved</span>';
+      } else {
+        var parts = snapshotDisplayParts(version);
+        var vid = versionIdFromRecord(version);
+        if (vid && vid === selectedSnapshotId) {
+          snapBtn.classList.add('dashboard-menu-status-slot--active');
+          snapBtn.setAttribute('aria-checked', 'true');
         } else {
-          var parts = snapshotDisplayParts(version);
-          var vid = versionIdFromRecord(version);
-          if (vid && vid === selectedSnapshotId) {
-            slotBtn.classList.add('dashboard-menu-status-slot--active');
-            slotBtn.setAttribute('aria-selected', 'true');
-          } else {
-            slotBtn.setAttribute('aria-selected', 'false');
-          }
-          slotBtn.innerHTML =
-            '<span class="dashboard-menu-status-slot-label">Slot ' +
-            slotNum +
-            '</span>' +
-            '<span class="dashboard-menu-status-slot-title">' +
-            truncateMiddle(parts.title, 42) +
-            '</span>' +
-            (parts.when
-              ? '<span class="dashboard-menu-status-slot-when">' + parts.when + '</span>'
-              : '');
-          slotBtn.addEventListener('click', function (id) {
-            return function () {
-              applySnapshotSelection(id);
-            };
-          }(vid));
+          snapBtn.setAttribute('aria-checked', 'false');
         }
-        slotGrid.appendChild(slotBtn);
+        snapBtn.innerHTML =
+          '<span class="dashboard-menu-status-slot-label">Snapshot</span>' +
+          '<span class="dashboard-menu-status-slot-title">' +
+          (parts.when || 'Saved version') +
+          '</span>';
+        snapBtn.addEventListener('click', function () {
+          applySnapshotSelection(vid);
+        });
       }
+      slotGrid.appendChild(snapBtn);
       snapshotStatusEl.appendChild(slotGrid);
 
-      if (selectedSnapshotId) {
-        var selectedVersion = null;
-        for (var sv = 0; sv < cachedVersions.length; sv++) {
-          if (versionIdFromRecord(cachedVersions[sv]) === selectedSnapshotId) {
-            selectedVersion = cachedVersions[sv];
-            break;
-          }
-        }
-        if (selectedVersion) {
-          var summary = versionSummaryFromRecord(selectedVersion);
-          var labels = summary.fileLabels || [];
-          var detail = document.createElement('div');
-          detail.className = 'dashboard-menu-status-snapshot-detail';
-          var detailTitle = document.createElement('p');
-          detailTitle.className = 'dashboard-menu-status-snapshot-detail-title';
-          detailTitle.textContent = 'Repo files in this snapshot';
-          detail.appendChild(detailTitle);
-          if (labels.length) {
-            var filesUl = document.createElement('ul');
-            filesUl.className = 'dashboard-menu-status-snapshot-files';
-            labels.forEach(function (label) {
-              var fileLi = document.createElement('li');
-              fileLi.className = 'dashboard-menu-status-snapshot-file';
-              fileLi.textContent = label;
-              filesUl.appendChild(fileLi);
-            });
-            detail.appendChild(filesUl);
-          } else {
-            var noFiles = document.createElement('p');
-            noFiles.className = 'dashboard-menu-status-muted';
-            noFiles.textContent = 'No file summary available for this snapshot.';
-            detail.appendChild(noFiles);
-          }
-          var restoreBtn = document.createElement('button');
-          restoreBtn.type = 'button';
-          restoreBtn.className =
-            'btn-dash btn-dash-secondary dashboard-menu-status-snapshot-restore';
-          restoreBtn.innerHTML =
-            '<i class="fa fa-paint-brush" aria-hidden="true"></i> Open in theme editor';
-          restoreBtn.addEventListener('click', function () {
-            navigateEditDraftsWithVersion(selectedSnapshotId);
-          });
-          detail.appendChild(restoreBtn);
-          snapshotStatusEl.appendChild(detail);
-        }
+      var status = document.createElement('p');
+      status.className = 'dashboard-menu-status-muted';
+      if (!version) {
+        status.textContent =
+          'No snapshot yet. Save from Edit theme, or leave the menu editor and one is saved automatically.';
+      } else if (selectedSnapshotId) {
+        var counts = snapshotCountLine(version);
+        var when = snapshotDisplayParts(version).when;
+        status.textContent =
+          'Viewing the snapshot' +
+          (when ? ' from ' + when : '') +
+          (counts ? ' · ' + counts : '') +
+          '. Edit theme, rearrange, and content open this version.';
+      } else {
+        status.textContent =
+          'Viewing the live menu. Switch to Snapshot to open the saved version in the editors.';
       }
+      snapshotStatusEl.appendChild(status);
     }
 
     function draftBlockSummaryText(n, publishableCount) {
@@ -2008,16 +1985,8 @@
         var snapBanner = document.createElement('p');
         snapBanner.className = 'dashboard-menu-status-snapshot-active-banner';
         snapBanner.textContent =
-          'Drafts compared against ' +
-          activeSnapshotSlotLabel() +
-          '. Publish still updates live Git.';
+          'Drafts compared against the snapshot. Publish still updates the live menu.';
         draftStatusEl.appendChild(snapBanner);
-      } else {
-        var liveBanner = document.createElement('p');
-        liveBanner.className = 'dashboard-menu-status-muted';
-        liveBanner.textContent =
-          'Drafts compared against the live published menu. Select a snapshot slot to compare against a saved layout instead.';
-        draftStatusEl.appendChild(liveBanner);
       }
       var hintD = document.createElement('p');
       hintD.className = 'dashboard-menu-status-muted';
@@ -2047,12 +2016,7 @@
         titleSpan.className = 'dashboard-menu-status-draft-chip-title';
         titleSpan.textContent = truncateMiddle(previewDisplayTitle(preview), 96);
         chip.appendChild(titleSpan);
-        if (path) {
-          var pathSpan = document.createElement('span');
-          pathSpan.className = 'dashboard-menu-status-draft-chip-path';
-          pathSpan.textContent = path;
-          chip.appendChild(pathSpan);
-        }
+        appendDraftPathLines(chip, path, analysis);
         if (analysis && analysis.changes && analysis.changes.length) {
           var changesSpan = document.createElement('span');
           changesSpan.className = 'dashboard-menu-status-draft-chip-changes';
@@ -2328,8 +2292,12 @@
             return [];
           }
           var raw = normalizeVersionsPayload(res.data);
-          cachedVersions = raw.slice().sort(function (a, b) {
-            return versionSortKey(b) - versionSortKey(a);          });
+          cachedVersions = raw
+            .slice()
+            .sort(function (a, b) {
+              return versionSortKey(b) - versionSortKey(a);
+            })
+            .slice(0, 1);
           snapshotLoadState = 'ok';
           snapshotLoadError = '';
           var persisted = loadPersistedSnapshotSelection();
@@ -2519,7 +2487,10 @@
               var meta = document.createElement('span');
               meta.className = 'dashboard-publish-summary-meta';
               var metaParts = [];
-              if (path) metaParts.push(path);
+              if (analysis.rename) {
+                metaParts.push('Delete ' + analysis.rename.deletePath);
+                metaParts.push('Create ' + analysis.rename.createPath);
+              } else if (path) metaParts.push(path);
               if (analysis.changes && analysis.changes.length) {
                 metaParts.push(analysis.changes.join(' · '));
               }

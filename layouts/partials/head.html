@@ -1426,6 +1426,7 @@ window.REVIEWS_CONFIG = {
 <script src="/js/dashboard-live-menu-hint.js" defer></script>
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-content-draft-indicators.css") }}
 <script src="/js/dashboard-content-draft-indicators.js" defer></script>
+<script src="{{ partial "head/asset-url.html" `/js/menu-item-snapshot-view.js` }}" defer></script>
 {{- end -}}
 {{- end -}}
 {{- if and site.Params.menuImageService.enabled $menuPublicSite -}}

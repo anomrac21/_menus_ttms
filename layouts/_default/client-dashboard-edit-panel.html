@@ -37,7 +37,7 @@
           </div>
         </div>
         <div class="dashboard-edit-header-end">
-          <button type="button" class="btn-dash btn-dash-primary dashboard-edit-header-save" id="btnSave" title="Save snapshot or publish" aria-label="Save menu snapshot or publish changes to Git"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="dashboard-edit-header-save-label">Save</span><span class="dashboard-edit-header-save-count hidden" id="btnSaveChangeCount" aria-hidden="true"></span></button>
+          <button type="button" class="btn-dash btn-dash-primary dashboard-edit-header-save" id="btnSave" title="Save snapshot" aria-label="Save menu snapshot"><i class="fa fa-database" aria-hidden="true"></i><span class="dashboard-edit-header-save-label">Save</span><span class="dashboard-edit-header-save-count hidden" id="btnSaveChangeCount" aria-hidden="true"></span></button>
         </div>
       </div>
     </header>
@@ -206,7 +206,7 @@
                       </div>
                     </div>
                     <div class="dashboard-menu-item-wizard-panel dashboard-section-wizard-panel dashboard-embed-save-panel hidden" data-section-wizard-index="2" role="tabpanel" id="dashboardSectionWizardPanelSave" aria-hidden="true">
-                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save a CMS menu snapshot (merges with your latest snapshot and current edits).</p>
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save the CMS menu snapshot. This replaces the previous snapshot.</p>
                       <div class="dashboard-edit-save-tab-host" data-embed-save-host="section"></div>
                     </div>
                   </div>
@@ -343,7 +343,7 @@
                       </div>
                     </div>
                     <div class="dashboard-menu-item-wizard-panel dashboard-embed-save-panel hidden" data-wizard-index="6" role="tabpanel" id="dashboardWizardPanelSave" aria-hidden="true">
-                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save a CMS menu snapshot (merges with your latest snapshot and current edits).</p>
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save the CMS menu snapshot. This replaces the previous snapshot.</p>
                       <div class="dashboard-edit-save-tab-host" data-embed-save-host="menu-item"></div>
                     </div>
                   </div>
@@ -526,7 +526,7 @@
                       </div>
                     </div>
                     <div class="dashboard-menu-item-wizard-panel dashboard-promotion-wizard-panel dashboard-embed-save-panel hidden" data-promo-wizard-index="3" role="tabpanel" id="dashboardPromoWizardPanelSave" aria-hidden="true">
-                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save a CMS menu snapshot (merges with your latest snapshot and current edits).</p>
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Review pending changes, then save the CMS menu snapshot. This replaces the previous snapshot.</p>
                       <div class="dashboard-edit-save-tab-host" data-embed-save-host="promotion"></div>
                     </div>
                   </div>
@@ -637,37 +637,21 @@
     <div class="dashboard-draft-modal-backdrop" id="dashboardSaveOptionsModalBackdrop"></div>
     <div class="dashboard-draft-modal-dialog dashboard-save-options-dialog">
       <div class="dashboard-save-options-head">
-        <span class="dashboard-save-options-head-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
+        <span class="dashboard-save-options-head-icon" aria-hidden="true"><i class="fa fa-database"></i></span>
         <div class="dashboard-save-options-head-text">
-          <h2 id="dashboardSaveOptionsTitle" class="dashboard-save-options-title">Save or publish</h2>
+          <h2 id="dashboardSaveOptionsTitle" class="dashboard-save-options-title">Save snapshot</h2>
           <p id="dashboardSaveOptionsCount" class="dashboard-save-options-count">No pending content changes</p>
         </div>
       </div>
 
       <section class="dashboard-save-options-changes" aria-labelledby="dashboardSaveOptionsChangesHeading">
         <h3 id="dashboardSaveOptionsChangesHeading" class="dashboard-save-options-changes-heading">Changes summary</h3>
-        <p id="dashboardSaveOptionsChangesSynced" class="dashboard-save-options-changes-synced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live: you can still save a snapshot.</p>
+        <p id="dashboardSaveOptionsChangesSynced" class="dashboard-save-options-changes-synced"><i class="fa fa-check-circle" aria-hidden="true"></i> Menu matches live. You can still replace the snapshot.</p>
         <ul id="dashboardSaveOptionsChangesList" class="dashboard-save-options-changes-list hidden" role="list" aria-label="Pending changes"></ul>
       </section>
 
-      <div class="dashboard-save-options-cards" role="group" aria-label="Save actions">
-        <div class="dashboard-save-options-card">
-          <h4 class="dashboard-save-options-card-title"><i class="fa fa-database" aria-hidden="true"></i> Save snapshot (CMS only)</h4>
-          <p class="dashboard-save-options-card-text">Stores menu JSON under saved versions on the CMS. Does not update the live preview copy or publish to Git.</p>
-        </div>
-        <div class="dashboard-save-options-card dashboard-save-options-card--primary">
-          <h4 class="dashboard-save-options-card-title"><i class="fa fa-github" aria-hidden="true"></i> Save &amp; publish</h4>
-          <p class="dashboard-save-options-card-text">Updates the live menu on the CMS, saves a snapshot, then opens your content drafts to commit to Git.</p>
-        </div>
-        <div class="dashboard-save-options-card dashboard-save-options-card--danger">
-          <h4 class="dashboard-save-options-card-title"><i class="fa fa-trash" aria-hidden="true"></i> Discard snapshot</h4>
-          <p class="dashboard-save-options-card-text">Permanently deletes the saved menu version you are editing. Content drafts are not removed.</p>
-        </div>
-      </div>
-
       <div class="dashboard-draft-modal-actions dashboard-save-options-actions">
-        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardSaveSnapshotOnly"><i class="fa fa-database" aria-hidden="true"></i> Save snapshot (CMS only)</button>
-        <button type="button" class="btn-dash btn-dash-primary dashboard-save-options-publish-btn" id="dashboardSaveAndPublish"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Save &amp; publish to Git</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="dashboardSaveSnapshotOnly"><i class="fa fa-database" aria-hidden="true"></i> Save snapshot</button>
         <button type="button" class="btn-dash btn-dash-danger" id="dashboardSaveOptionsDiscard" disabled>Discard snapshot</button>
         <button type="button" class="btn-dash btn-dash-secondary dashboard-save-options-cancel-btn" id="dashboardSaveOptionsCancel">Cancel</button>
       </div>

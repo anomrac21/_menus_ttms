@@ -124,17 +124,22 @@
     if (!host || !path) return;
     var row = host.closest('.menu-item-title-row, .ads-reels-slide__title-row, .menu-header__title-row');
     if (!row) return;
+    var actions = row.querySelector('.menu-item-actions');
+    var trigger = actions && actions.querySelector('.menu-item-actions__trigger');
     var badge = row.querySelector('.menu-content-draft-badge--title-row');
     if (!badge) {
-      var actions = row.querySelector('.menu-item-actions');
       var tmp = document.createElement('span');
       tmp.innerHTML = badgeMarkup('menu-content-draft-badge--title-row');
       badge = tmp.firstChild;
-      if (actions && actions.parentNode === row) {
-        row.insertBefore(badge, actions);
-      } else {
-        row.appendChild(badge);
+    }
+    if (actions && trigger) {
+      if (badge.parentNode !== actions || badge.nextElementSibling !== trigger) {
+        actions.insertBefore(badge, trigger);
       }
+    } else if (actions && badge.parentNode !== actions) {
+      actions.appendChild(badge);
+    } else if (!actions && badge.parentNode !== row) {
+      row.appendChild(badge);
     }
     badge.hidden = !draftPaths.has(path);
     badge.setAttribute('data-content-path', path);
@@ -151,7 +156,9 @@
       var wrap = document.createElement('span');
       wrap.innerHTML = badgeMarkup('menu-content-draft-badge--inline');
       inline = wrap.firstChild;
-      editBtn.appendChild(inline);
+      editBtn.insertBefore(inline, editBtn.firstChild);
+    } else if (inline.parentNode === editBtn && editBtn.firstChild !== inline) {
+      editBtn.insertBefore(inline, editBtn.firstChild);
     }
     inline.hidden = !hasDraft;
     if (path) editBtn.setAttribute('data-content-path', path);

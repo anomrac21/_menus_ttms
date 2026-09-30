@@ -75,6 +75,7 @@
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem"' +
       commentAttrs +
       '>Comment</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--view" role="menuitem" data-auth="admin-site" hidden>View snapshot</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
       '</div></div>'
     );
@@ -380,6 +381,22 @@
       e.preventDefault();
       e.stopPropagation();
       toggleMenu(trigger.closest('.menu-item-actions'));
+      return;
+    }
+
+    var viewBtn = e.target.closest('.menu-item-actions__option--view');
+    if (viewBtn && !viewBtn.disabled && !viewBtn.hidden) {
+      e.preventDefault();
+      e.stopPropagation();
+      var viewRoot = viewBtn.closest('.menu-item-actions');
+      closeMenu(viewRoot);
+      if (!hasAdminSiteAccess()) {
+        promptForMenuAccess();
+        return;
+      }
+      if (window.TTMSMenuSnapshotView && typeof window.TTMSMenuSnapshotView.toggle === 'function') {
+        window.TTMSMenuSnapshotView.toggle(viewRoot);
+      }
       return;
     }
 

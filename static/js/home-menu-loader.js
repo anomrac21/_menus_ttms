@@ -595,6 +595,53 @@
     });
   }
 
+  function normMenuUrl(url) {
+    var trimmed = String(url || '').trim();
+    if (!trimmed) return '';
+    if (trimmed.charAt(0) !== '/') trimmed = '/' + trimmed;
+    return trimmed.replace(/\/+$/, '') + '/';
+  }
+
+  function urlInSnapshotSet(url, set) {
+    var key = normMenuUrl(url);
+    if (!key || !set) return false;
+    if (set[key]) return true;
+    var keySeg = key.split('/').filter(Boolean);
+    var hits = [];
+    Object.keys(set).forEach(function (candidate) {
+      var seg = candidate.split('/').filter(Boolean);
+      if (seg.length < 2 || keySeg.length < 2) return;
+      var shorter = seg.length <= keySeg.length ? seg : keySeg;
+      var longer = seg.length > keySeg.length ? seg : keySeg;
+      if (longer.slice(longer.length - shorter.length).join('/') === shorter.join('/')) hits.push(candidate);
+    });
+    return hits.length === 1;
+  }
+
+  function hydrateHomeMenuForUrls(urls) {
+    var set = {};
+    (urls || []).forEach(function (url) {
+      var key = normMenuUrl(url);
+      if (key) set[key] = true;
+    });
+    if (!Object.keys(set).length) return 0;
+    var hydrated = 0;
+    document.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      var items = sectionItems.get(header);
+      if (!items || !items.length) return;
+      var nodes = sectionSlideNodes(header);
+      items.forEach(function (item, index) {
+        if (!item || !urlInSnapshotSet(item.url || item.permalink, set)) return;
+        var node = nodes[index];
+        if (node && node.classList.contains('menu-reel-slot') && hydrateNode(header, node)) {
+          hydrated += 1;
+        }
+      });
+    });
+    if (hydrated) scheduleHydratedCardInit();
+    return hydrated;
+  }
+
   function hydrateNode(header, node) {
     if (!node || !node.classList.contains('menu-reel-slot') || !loaderConfig) return false;
     var items = sectionItems.get(header);
@@ -704,6 +751,12 @@
         if (typeof window.applyDayBasedPromos === 'function') window.applyDayBasedPromos();
         if (window.TTMSMenuFavorites && typeof window.TTMSMenuFavorites.refresh === 'function') {
           window.TTMSMenuFavorites.refresh();
+        }
+        if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.applyIndicators === 'function') {
+          window.TTMSContentDrafts.applyIndicators();
+        }
+        if (window.TTMSMenuSnapshotView && typeof window.TTMSMenuSnapshotView.applyMarkers === 'function') {
+          window.TTMSMenuSnapshotView.applyMarkers();
         }
         refreshInjectedMenuAuth();
       });
@@ -938,6 +991,7 @@
       '</button>' +
       '<div class="menu-item-actions__menu" role="menu" hidden>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem">Comment</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--view" role="menuitem" data-auth="admin-site" hidden>View snapshot</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
       '</div></div>'
     );
@@ -1590,6 +1644,7 @@
     });
   }
 
+  window.hydrateHomeMenuForUrls = hydrateHomeMenuForUrls;
   window.initHomeMenuLoader = initHomeMenuLoader;
   window.loadHomeMenuForSectionId = loadHomeMenuForSectionId;
   window.waitForHomeMenuBootstrap = waitForHomeMenuBootstrap;

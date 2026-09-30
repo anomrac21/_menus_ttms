@@ -283,6 +283,10 @@
     z-index: 2;
 }
 
+.menu-smash-pass.is-showing-snapshot .menu-smash-pass-card:not(.menu-smash-pass-card--snapshot) {
+    display: none;
+}
+
 .menu-smash-pass-card.is-dragging {
     cursor: grabbing;
     transition: none;

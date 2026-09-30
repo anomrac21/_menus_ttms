@@ -6,6 +6,7 @@
     <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-home"></i></span>
     <div class="dashboard-settings-panel-head-text">
       <h2 id="settings-hero-heading" class="dashboard-analytics-heading">Home hero</h2>
+      <span class="dashboard-settings-panel-summary">Background and intro</span>
     </div>
     <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
   </button>
@@ -66,11 +67,11 @@
         </div>
       </div>
       <div class="dashboard-settings-hero-fields">
-        <p class="dashboard-settings-hint dashboard-settings-hero-logo-hint">Logo uses <code>favicon512.webp</code> from <a href="#settings-branding-heading">Branding images</a> below.</p>
+        <p class="dashboard-settings-hint dashboard-settings-hero-logo-hint">Logo comes from <a href="#settings-branding-heading">Branding images</a>.</p>
         <div class="dashboard-settings-row dashboard-settings-row--full">
           <label class="dashboard-settings-label" for="settingsHeroImagePath">Background image <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
           <div class="dashboard-settings-value">
-            <p class="dashboard-settings-hint">Front matter <code>image</code>: shown behind the logo on the home reel.</p>
+            <p class="dashboard-settings-hint">Shown behind the logo on the home page.</p>
             <input type="hidden" id="settingsHeroImagePath" name="image" value="{{ $heroImage }}">
             <div class="dashboard-settings-hero-image-row">
               <div class="dashboard-settings-hero-thumb-wrap" id="settingsHeroThumbWrap">
@@ -98,7 +99,7 @@
       </div>
     </div>
     <div class="dashboard-settings-form-actions">
-      <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveHeroSettings">Save home hero</button>
+      <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveHeroSettings">Save to snapshot</button>
       <span id="heroSettingsSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
     </div>
   </form>

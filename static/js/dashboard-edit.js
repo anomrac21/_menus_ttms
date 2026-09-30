@@ -1009,13 +1009,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if (pending) {
       btnSave.title = count === 1
-        ? 'Save or publish 1 pending change'
-        : 'Save or publish ' + count + ' pending changes';
+        ? 'Save 1 pending change to the snapshot'
+        : 'Save ' + count + ' pending changes to the snapshot';
       btnSave.setAttribute('aria-label', count === 1
         ? 'Save 1 pending menu change'
         : 'Save ' + count + ' pending menu changes');
     } else {
-      btnSave.title = 'Menu matches live: save snapshot or publish';
+      btnSave.title = 'Menu matches live. Save still replaces the snapshot.';
       btnSave.setAttribute('aria-label', 'Save menu: in sync with live');
     }
     syncPendingChangesPanel();
@@ -3237,7 +3237,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
-  /** Saves current server menu.json as a new version (POST /menu-versions). Used when leaving the editor. */
+  /** Replaces the single CMS menu snapshot (POST /menu-versions). Used when leaving the editor. */
   function saveMenuSnapshotOnLeave() {
     var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
     return buildMenuDataForSnapshot({}).then(function(menuData) {
@@ -11126,7 +11126,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     var backdrop = document.getElementById('dashboardSaveOptionsModalBackdrop');
     var cancel = document.getElementById('dashboardSaveOptionsCancel');
     var saveOnly = document.getElementById('dashboardSaveSnapshotOnly');
-    var savePub = document.getElementById('dashboardSaveAndPublish');
     var discard = document.getElementById('dashboardSaveOptionsDiscard');
     if (backdrop) backdrop.addEventListener('click', closeSaveOptionsModal);
     if (cancel) cancel.addEventListener('click', closeSaveOptionsModal);
@@ -11137,32 +11136,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         saveMenuSnapshotToCMS({ updateLiveMenu: false }).then(function(resp) {
           if (resp && resp.version_id) editorSnapshotVersionId = resp.version_id;
           saveOptionsModalSyncDiscardState();
-          setEditStatus('Snapshot saved (CMS only, not published to Git)');
+          setEditStatus('Snapshot saved');
         }).catch(function(err) {
           alert('Save failed: ' + (err.message || err));
         }).then(function() {
-          if (btnSave) btnSave.disabled = false;
-      });
-    });
-  }
-    if (savePub) {
-      savePub.addEventListener('click', function() {
-        closeSaveOptionsModal();
-        if (btnSave) btnSave.disabled = true;
-        saveMenuSnapshotToCMS({ updateLiveMenu: true }).then(function() {
-          return persistThemeDraftToCMS();
-        }).then(function() {
-          return fetchPreviewsForPublish();
-        }).then(function(previews) {
-          if (btnSave) btnSave.disabled = false;
-          if (!previews || previews.length === 0) {
-            setEditStatus('Menu snapshot saved. No content drafts to publish to Git.');
-            alert('Menu snapshot saved on the CMS. There are no content drafts to publish to Git.');
-            return;
-          }
-          openPublishSummaryModal(previews);
-        }).catch(function(err) {
-          alert('Save failed: ' + (err.message || err));
           if (btnSave) btnSave.disabled = false;
         });
       });

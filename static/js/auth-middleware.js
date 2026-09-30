@@ -106,6 +106,20 @@ const AuthMiddleware = {
             el.classList.add('is-auth-visible');
             break;
           }
+          if (el.classList.contains('menu-item-actions__option--view')) {
+            const superadmin =
+              typeof AuthClient.isSuperadmin === 'function' && AuthClient.isSuperadmin();
+            const showView =
+              (superadmin ||
+                (isAdmin &&
+                  window.AuthClientAccess &&
+                  typeof window.AuthClientAccess.hasClientAccess === 'function' &&
+                  window.AuthClientAccess.hasClientAccess())) &&
+              el.classList.contains('is-snapshot-available');
+            el.hidden = !showView;
+            el.style.display = showView ? '' : 'none';
+            break;
+          }
           el.style.display =
             isAdmin &&
             window.AuthClientAccess &&
