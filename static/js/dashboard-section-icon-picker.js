@@ -197,6 +197,8 @@
     var eventsBound = false;
     var updatingSelectedUi = false;
     var syncingFromInput = false;
+    var previewBlobUrl = '';
+    var previewLoadSeq = 0;
 
     var inputUrl;
     var inputSearch;
@@ -327,6 +329,83 @@
       }
     }
 
+    function isDraftAssetPath(url) {
+      return normalizeUrl(url).indexOf('draft-assets/') === 0;
+    }
+
+    function revokePreviewBlob() {
+      if (!previewBlobUrl) return;
+      try {
+        URL.revokeObjectURL(previewBlobUrl);
+      } catch (err) {}
+      previewBlobUrl = '';
+    }
+
+    function previewAuthHeaders() {
+      var headers = {};
+      var token = null;
+      if (global.AuthClient && typeof global.AuthClient.getAccessToken === 'function') {
+        token = global.AuthClient.getAccessToken();
+      }
+      if (!token && typeof localStorage !== 'undefined') {
+        token = localStorage.getItem('ttmenus_access_token');
+      }
+      if (token) headers.Authorization = 'Bearer ' + token;
+      return headers;
+    }
+
+    function previewLabelFor(url) {
+      var match = findIconByUrl(url);
+      if (match) return match.name + ' (' + match.category + ')';
+      if (isDraftAssetPath(url)) {
+        var name = normalizeUrl(url).replace(/^draft-assets\//, '');
+        return name || 'Uploaded image';
+      }
+      return url;
+    }
+
+    function markPreviewUnavailable() {
+      if (!previewImg) return;
+      previewImg.removeAttribute('src');
+      if (selectedLabel) selectedLabel.textContent = 'Image preview unavailable';
+    }
+
+    function showUploadedPreview(url, displayUrl) {
+      revokePreviewBlob();
+      previewLoadSeq += 1;
+      var seq = previewLoadSeq;
+      if (selectedLabel) selectedLabel.textContent = previewLabelFor(url);
+      previewImg.alt = '';
+      previewImg.onload = function () {
+        if (seq !== previewLoadSeq) return;
+        previewImg.style.opacity = '1';
+      };
+      previewImg.onerror = function () {
+        if (seq !== previewLoadSeq) return;
+        markPreviewUnavailable();
+      };
+      if (!isDraftAssetPath(url)) {
+        previewImg.style.opacity = '1';
+        previewImg.src = displayUrl;
+        return;
+      }
+      fetch(displayUrl, { credentials: 'include', headers: previewAuthHeaders() })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.blob();
+        })
+        .then(function (blob) {
+          if (seq !== previewLoadSeq) return;
+          revokePreviewBlob();
+          previewBlobUrl = URL.createObjectURL(blob);
+          previewImg.src = previewBlobUrl;
+        })
+        .catch(function () {
+          if (seq !== previewLoadSeq) return;
+          markPreviewUnavailable();
+        });
+    }
+
     function resolveDisplayUrl(url) {
       var match = findIconByUrl(url);
       if (match) return match.url;
@@ -362,6 +441,8 @@
           if (has && displayUrl) {
             previewImg.alt = '';
             if (isCdnIconLibraryUrl(url)) {
+              revokePreviewBlob();
+              previewLoadSeq += 1;
               wireIconImage(previewImg, displayUrl, iconFilename(url), function (resolved) {
                 if (!resolved) {
                   previewImg.removeAttribute('src');
@@ -369,27 +450,20 @@
                 }
               });
             } else {
-              previewImg.src = displayUrl;
-              previewImg.onerror = function () {
-                previewImg.removeAttribute('src');
-                if (selectedLabel) selectedLabel.textContent = 'Image preview unavailable';
-              };
+              showUploadedPreview(url, displayUrl);
             }
           } else {
+            revokePreviewBlob();
+            previewLoadSeq += 1;
             previewImg.removeAttribute('src');
             previewImg.alt = '';
           }
         }
-        if (selectedLabel) {
-          if (!has) {
-            selectedLabel.textContent = 'Select an icon below or add your own image';
-          } else if (
-            selectedLabel.textContent !== 'Icon unavailable on CDN' &&
-            selectedLabel.textContent !== 'Image preview unavailable'
-          ) {
-            var match = findIconByUrl(url);
-            selectedLabel.textContent = match ? match.name + ' (' + match.category + ')' : url;
-          }
+        if (selectedLabel && !has) {
+          selectedLabel.textContent = 'Select an icon below or add your own image';
+        } else if (selectedLabel && has && isCdnIconLibraryUrl(url)) {
+          var match = findIconByUrl(url);
+          if (match) selectedLabel.textContent = match.name + ' (' + match.category + ')';
         }
         if (gridEl && shared.iconsAll.length) {
           var buttons = gridEl.querySelectorAll('.dashboard-section-icon-option');

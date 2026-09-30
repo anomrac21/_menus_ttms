@@ -1,14 +1,14 @@
-{{- /* Dev (hugo server): local script. Production: CDN first, then /js/ fallback. Icons always from CDN API. */ -}}
+{{- /* Site copy first so theme updates apply. CDN script is the fallback. Icons still come from the CDN API. */ -}}
+{{- $pickerSrc := partial "head/asset-url.html" "/js/dashboard-section-icon-picker.js" -}}
 {{- if eq hugo.Environment "development" -}}
-<script src="/js/dashboard-section-icon-picker.js"></script>
+<script src="{{ $pickerSrc }}"></script>
 {{- else -}}
 <script>
 (function (global) {
-  var host = global.location && global.location.hostname ? global.location.hostname : '';
-  var isLocal = host === 'localhost' || host === '127.0.0.1';
-  var sources = isLocal
-    ? ['/js/dashboard-section-icon-picker.js', 'https://cdn.ttmenus.com/js/dashboard-section-icon-picker.js']
-    : ['https://cdn.ttmenus.com/js/dashboard-section-icon-picker.js', '/js/dashboard-section-icon-picker.js'];
+  var sources = [
+    {{ $pickerSrc | jsonify | safeJS }},
+    'https://cdn.ttmenus.com/js/dashboard-section-icon-picker.js'
+  ];
   var idx = 0;
   function startPicker() {
     if (global.DashboardSectionIconPicker) return;

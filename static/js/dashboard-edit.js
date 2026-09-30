@@ -7734,6 +7734,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           if (typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
             window.DashboardSectionIconPicker.syncFromInput();
           }
+          paintSectionDraftPreview(inputSectionIcon, 'dashboardSectionIconPreviewImg', 'dashboardSectionIconSelectedLabel');
         });
       }
       var attrPrimary = normalizeStoredImagePath(headerEl.getAttribute('data-images-primary') || '');
@@ -7920,6 +7921,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else if (inputSectionImageTop) {
       inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    paintSectionDraftPreview(inputSectionImageTop, 'dashboardSectionSecondaryImagePreviewImg', 'dashboardSectionSecondaryImageSelectedLabel');
   }
 
   function syncSectionPrimaryImageThumbFromInput() {
@@ -8004,6 +8006,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
           window.DashboardSectionIconPicker.syncFromInput();
         }
+        paintSectionDraftPreview(inputSectionIcon, 'dashboardSectionIconPreviewImg', 'dashboardSectionIconSelectedLabel');
         if (sectionFrontMatterHasImageFields(fm)) {
           var sectionPaths = sectionImagePathsFromFrontMatter(fm);
           if (sectionPaths.secondary) {
@@ -10475,6 +10478,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       inputSectionIcon.dispatchEvent(new Event('input', { bubbles: true }));
       inputSectionIcon.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    paintSectionDraftPreview(inputSectionIcon, 'dashboardSectionIconPreviewImg', 'dashboardSectionIconSelectedLabel');
     editFormDirty = true;
     setEditStatus('Unsaved changes (not yet published)');
   }
@@ -10505,6 +10509,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       inputSectionImageTop.dispatchEvent(new Event('input', { bubbles: true }));
       inputSectionImageTop.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    paintSectionDraftPreview(inputSectionImageTop, 'dashboardSectionSecondaryImagePreviewImg', 'dashboardSectionSecondaryImageSelectedLabel');
     editFormDirty = true;
     setEditStatus('Unsaved changes (not yet published)');
   }
@@ -10685,6 +10690,65 @@ document.addEventListener('DOMContentLoaded', async function() {
       appendHeroSiteImagePickButtons(sitePaths);
     }
   }
+  function paintDraftAssetImage(img, path, opts) {
+    opts = opts || {};
+    if (!img) return;
+    var p = String(path || '').trim();
+    if (p.indexOf('draft-assets/') !== 0) return;
+    var seq = (img._ttmsDraftSeq || 0) + 1;
+    img._ttmsDraftSeq = seq;
+    img.onerror = function () {};
+    var fetchUrl = resolveMenuItemImageSrcForPreview(p);
+    fetch(fetchUrl, { credentials: 'include', headers: cmsAuthHeadersForImageThumb() })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.blob();
+      })
+      .then(function (blob) {
+        if (img._ttmsDraftSeq !== seq) return;
+        if (img._ttmsDraftBlob) {
+          try { URL.revokeObjectURL(img._ttmsDraftBlob); } catch (e) {}
+        }
+        var blobUrl = URL.createObjectURL(blob);
+        img._ttmsDraftBlob = blobUrl;
+        img.onload = function () {
+          img.style.opacity = '1';
+          var wrap = img.parentElement;
+          if (wrap && wrap.classList) wrap.classList.remove('dashboard-site-image-pick-thumb--broken');
+        };
+        img.onerror = function () {
+          if (img._ttmsDraftSeq !== seq) return;
+          if (opts.onFail) opts.onFail();
+        };
+        img.src = blobUrl;
+        if (opts.labelEl) {
+          var name = p.replace(/^draft-assets\//, '');
+          opts.labelEl.textContent = name || 'Uploaded image';
+        }
+        var selected = img.closest('.dashboard-section-icon-selected-preview');
+        if (selected) {
+          selected.classList.remove('dashboard-section-icon-selected-preview--empty');
+          selected.setAttribute('aria-hidden', 'false');
+        }
+      })
+      .catch(function () {
+        if (img._ttmsDraftSeq !== seq) return;
+        if (opts.onFail) opts.onFail();
+      });
+  }
+
+  function paintSectionDraftPreview(input, imgId, labelId) {
+    if (!input) return;
+    var img = document.getElementById(imgId);
+    var label = labelId ? document.getElementById(labelId) : null;
+    paintDraftAssetImage(img, input.value, {
+      labelEl: label,
+      onFail: function () {
+        if (label) label.textContent = 'Image preview unavailable';
+      }
+    });
+  }
+
   function appendHeroSiteImagePickButtons(paths) {
     if (!heroSiteImageGrid || !paths || !paths.length) return;
     paths.forEach(function(rel) {
@@ -10696,8 +10760,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       var img = document.createElement('img');
       img.alt = '';
       img.loading = 'lazy';
-      img.src = resolveMenuItemImageSrcForPreview(rel);
-      img.onerror = function() { thumb.classList.add('dashboard-site-image-pick-thumb--broken'); };
+      if (String(rel).indexOf('draft-assets/') === 0) {
+        paintDraftAssetImage(img, rel, {
+          onFail: function () { thumb.classList.add('dashboard-site-image-pick-thumb--broken'); }
+        });
+      } else {
+        img.src = resolveMenuItemImageSrcForPreview(rel);
+        img.onerror = function () { thumb.classList.add('dashboard-site-image-pick-thumb--broken'); };
+      }
       thumb.appendChild(img);
       var cap = document.createElement('span');
       cap.className = 'dashboard-site-image-pick-label';
