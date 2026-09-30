@@ -5,5 +5,7 @@
 {{- $path := strings.TrimSpace (.path | default "") -}}
 {{- if $path -}}
 {{- $src := partial "ttms/menu-img-src.html" (dict "path" $path "size" "thumb") -}}
-<img class="icon center" src="{{ $src }}" alt="" loading="eager" decoding="async" width="32" height="32" data-src-path="{{ $path }}" style="--menublock-icon: url('{{ $src }}')" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+{{- $ext := lower (path.Ext $path) -}}
+{{- $svg := eq $ext ".svg" -}}
+<img class="icon center{{ if not $svg }} menublock-link__photo{{ end }}" src="{{ $src }}" alt="" loading="eager" decoding="async" width="32" height="32" data-src-path="{{ $path }}"{{ if $svg }} style="--menublock-icon: url('{{ $src }}')"{{ end }} onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
 {{- end -}}

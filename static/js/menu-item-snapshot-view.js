@@ -7,6 +7,7 @@
 
   var byUrl = {};
   var bySlug = {};
+  var itemKeys = {};
   var loadPromise = null;
   var applying = false;
 
@@ -150,6 +151,7 @@
     return (
       card.querySelector('.menu-item-title-text') ||
       card.querySelector('.menu-item-title a') ||
+      card.querySelector('h1.center.title, h2.center.title') ||
       card.querySelector('.menu-item-title')
     );
   }
@@ -157,12 +159,54 @@
   function itemDiffers(card, item) {
     var title = plainText(titleNode(card) && titleNode(card).textContent);
     var snapTitle = plainText(item.title || item.Title);
-    if (title !== snapTitle) return true;
-    var desc = card.querySelector('.menu-item-description');
+    if (snapTitle && title !== snapTitle) return true;
+    var desc = card.querySelector('.menu-item-description, .menu-summary');
     var liveDesc = plainText(desc && desc.textContent);
     var snapDesc = plainText(item.summary || item.Summary);
-    if (liveDesc !== snapDesc) return true;
-    return pricesSignature(livePrices(card)) !== pricesSignature(snapshotPrices(item));
+    if (snapDesc && liveDesc !== snapDesc && snapDesc.indexOf(liveDesc) !== 0) return true;
+    var snapPrices = snapshotPrices(item);
+    if (snapPrices.length && pricesSignature(livePrices(card)) !== pricesSignature(snapPrices)) return true;
+    return imagesDiffer(card, item);
+  }
+
+  function normImage(path) {
+    return String(path || '').trim().replace(/^\//, '').split('?')[0];
+  }
+
+  function imagesDiffer(card, model) {
+    var snap = imagePaths(model).map(normImage).filter(Boolean);
+    if (!snap.length) return false;
+    var live = [];
+    if (card.classList && card.classList.contains('menu-header')) {
+      var primary = normImage(card.getAttribute('data-images-primary') || '');
+      if (primary) live.push(primary);
+    } else {
+      try {
+        var parsed = JSON.parse(card.getAttribute('data-images-array') || '[]');
+        if (Array.isArray(parsed)) live = parsed.map(normImage).filter(Boolean);
+      } catch (err) {}
+    }
+    if (live.length !== snap.length) return true;
+    for (var i = 0; i < live.length; i++) if (live[i] !== snap[i]) return true;
+    return false;
+  }
+
+  function pageLocationSlug() {
+    var root = document.getElementById('menu-reels-viewport') || document.getElementById('packery-container');
+    return (root && root.getAttribute('data-location-slug')) || '';
+  }
+
+  function sameMenuUrl(a, b) {
+    var ak = normalizeUrl(a);
+    var bk = normalizeUrl(b);
+    if (!ak || !bk) return false;
+    if (ak === bk) return true;
+    var as = segments(ak);
+    var bs = segments(bk);
+    if (as.length < 2 || bs.length < 2) return false;
+    var shorter = as.length <= bs.length ? as : bs;
+    var longer = as.length > bs.length ? as : bs;
+    return longer.slice(longer.length - shorter.length).join('/') === shorter.join('/');
   }
 
   function contentPathForCard(card) {
@@ -245,6 +289,15 @@
       if (tail === shorter.join('/')) hits.push(candidate);
     });
     if (hits.length === 1) return byUrl[hits[0]];
+    if (hits.length > 1) {
+      var loc = pageLocationSlug();
+      var locHits = loc
+        ? hits.filter(function (candidate) {
+            return segments(candidate)[0] === loc;
+          })
+        : [];
+      if (locHits.length === 1) return byUrl[locHits[0]];
+    }
     return null;
   }
 
@@ -296,6 +349,7 @@
   function indexItems(menuData) {
     byUrl = {};
     bySlug = {};
+    itemKeys = {};
     var items = menuData && (menuData.menuItems || menuData.MenuItems);
     if (items && items.length) {
       items.forEach(function (item) {
@@ -303,6 +357,7 @@
         var key = normalizeUrl(item.url || item.URL);
         if (!key) return;
         byUrl[key] = item;
+        itemKeys[key] = true;
       });
     }
     var cats = menuData && (menuData.categories || menuData.Categories);
@@ -787,7 +842,7 @@
     try {
       var model = viewModel(host);
       var viewing = host.classList.contains('is-viewing-snapshot');
-      var show = viewing || !!model;
+      var show = viewing || (!!model && (itemDiffers(host, model) || !!draftPreview(host)));
       if (viewing && model && !(host.classList && host.classList.contains('menu-header'))) {
         applySnapshotImage(host, model);
       }
@@ -803,9 +858,90 @@
     } catch (err) {}
   }
 
+  function catalogPrices(item) {
+    var prices = (item && item.prices) || [];
+    if (!prices.length) return [];
+    if (Array.isArray(prices[0])) {
+      return prices.map(function (row) {
+        return {
+          size: blankOption(row[0]),
+          flavour: blankOption(row[1]),
+          price: Number(row[2]) || 0,
+        };
+      });
+    }
+    if (typeof prices[0] === 'object') return snapshotPrices({ prices: prices });
+    var out = [];
+    for (var i = 0; i + 2 < prices.length; i += 3) {
+      out.push({
+        size: blankOption(prices[i]),
+        flavour: blankOption(prices[i + 1]),
+        price: Number(prices[i + 2]) || 0,
+      });
+    }
+    return out;
+  }
+
+  function catalogDiffers(snap, live) {
+    if (!snap || !live) return false;
+    var liveTitle = plainText(live.linkTitle || live.name || live.title);
+    var snapTitle = plainText(snap.title || snap.Title);
+    if (snapTitle && liveTitle && snapTitle !== liveTitle) return true;
+    var snapPrices = snapshotPrices(snap);
+    if (snapPrices.length && pricesSignature(snapPrices) !== pricesSignature(catalogPrices(live))) return true;
+    var snapImgs = imagePaths(snap).map(normImage).filter(Boolean);
+    if (snapImgs.length) {
+      var liveImgs = (live.images || []).map(normImage).filter(Boolean);
+      if (liveImgs.join('\n') !== snapImgs.join('\n')) return true;
+    }
+    var snapSummary = plainText(snap.summary || snap.Summary);
+    var liveSummary = plainText(live.summary);
+    if (snapSummary && liveSummary && snapSummary !== liveSummary && snapSummary.indexOf(liveSummary) !== 0) return true;
+    return false;
+  }
+
+  function catalogMatches(url) {
+    var list = global.menuItemsCache || [];
+    var hits = [];
+    list.forEach(function (item) {
+      if (!item) return;
+      if (sameMenuUrl(url, item.url || item.permalink || '')) hits.push(item);
+    });
+    if (hits.length <= 1) return hits;
+    var loc = pageLocationSlug();
+    if (!loc) return [];
+    return hits.filter(function (item) {
+      var slug = item.location_slug || segments(normalizeUrl(item.url || item.permalink || ''))[0];
+      return slug === loc;
+    });
+  }
+
+  function changedMenuUrls() {
+    var urls = [];
+    var seen = {};
+    function add(url) {
+      var key = normalizeUrl(url);
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      urls.push(key);
+    }
+    Object.keys(itemKeys).forEach(function (key) {
+      var snap = byUrl[key];
+      catalogMatches(key).forEach(function (live) {
+        if (!catalogDiffers(snap, live)) return;
+        add(live.url || live.permalink);
+        add(key);
+      });
+    });
+    if (global.TTMSContentDrafts && typeof global.TTMSContentDrafts.itemUrls === 'function') {
+      global.TTMSContentDrafts.itemUrls().forEach(add);
+    }
+    return urls;
+  }
+
   function loadSnapshotItems() {
     if (typeof global.hydrateHomeMenuForUrls !== 'function') return;
-    global.hydrateHomeMenuForUrls(Object.keys(byUrl));
+    global.hydrateHomeMenuForUrls(changedMenuUrls(), { replace: true });
   }
 
   function applyMarkers() {
@@ -844,6 +980,7 @@
     if (!hasAdminSiteAccess()) {
       byUrl = {};
       bySlug = {};
+      itemKeys = {};
       applyMarkers();
       return Promise.resolve(null);
     }
@@ -887,6 +1024,7 @@
       .catch(function () {
         byUrl = {};
         bySlug = {};
+        itemKeys = {};
         applyMarkers();
         return null;
       })

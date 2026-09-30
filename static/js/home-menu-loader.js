@@ -8,6 +8,7 @@
 
   var menuBySection = null;
   var rawMenuItems = null;
+  var pinnedMenuUrls = {};
   var fetchPromise = null;
   var headerObserver = null;
   var reelsRefreshTimer = null;
@@ -602,6 +603,11 @@
     return trimmed.replace(/\/+$/, '') + '/';
   }
 
+  function pageLocationSlug() {
+    var root = getConfigRoot();
+    return (root && root.getAttribute('data-location-slug')) || '';
+  }
+
   function urlInSnapshotSet(url, set) {
     var key = normMenuUrl(url);
     if (!key || !set) return false;
@@ -615,15 +621,27 @@
       var longer = seg.length > keySeg.length ? seg : keySeg;
       if (longer.slice(longer.length - shorter.length).join('/') === shorter.join('/')) hits.push(candidate);
     });
-    return hits.length === 1;
+    if (hits.length === 1) return true;
+    if (hits.length > 1) {
+      var loc = pageLocationSlug();
+      var locHits = loc
+        ? hits.filter(function (candidate) {
+            return candidate.split('/').filter(Boolean)[0] === loc;
+          })
+        : [];
+      if (locHits.length === 1) return true;
+      if (hits.indexOf(key) !== -1) return true;
+    }
+    return false;
   }
 
-  function hydrateHomeMenuForUrls(urls) {
-    var set = {};
+  function hydrateHomeMenuForUrls(urls, options) {
+    if (options && options.replace) pinnedMenuUrls = {};
     (urls || []).forEach(function (url) {
       var key = normMenuUrl(url);
-      if (key) set[key] = true;
+      if (key) pinnedMenuUrls[key] = true;
     });
+    var set = pinnedMenuUrls;
     if (!Object.keys(set).length) return 0;
     var hydrated = 0;
     document.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
@@ -663,6 +681,11 @@
       return false;
     }
     if (document.body && document.body.classList.contains('menu-reels-item-modal-open')) return false;
+    if (node.classList.contains('is-viewing-snapshot')) return false;
+    if (urlInSnapshotSet(node.getAttribute('data-item-url'), pinnedMenuUrls)) return false;
+    if (node.querySelector('.menu-item-snapshot-badge:not([hidden]), .menu-content-draft-badge--title-row:not([hidden])')) {
+      return false;
+    }
     var index = parseInt(node.getAttribute('data-reel-slot-index'), 10);
     if (!Number.isFinite(index)) return false;
     node.replaceWith(buildSlot(header, index));
@@ -745,20 +768,23 @@
         typeof requestIdleCallback === 'function'
           ? function (fn) { requestIdleCallback(fn, { timeout: 2500 }); }
           : function (fn) { setTimeout(fn, 320); };
+      if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.applyIndicators === 'function') {
+        window.TTMSContentDrafts.applyIndicators();
+      }
+      if (window.TTMSMenuSnapshotView && typeof window.TTMSMenuSnapshotView.applyMarkers === 'function') {
+        window.TTMSMenuSnapshotView.applyMarkers();
+      }
+      refreshInjectedMenuAuth();
       deferIdle(function () {
-        if (isFastScroll()) return;
+        if (isFastScroll()) {
+          scheduleHydratedCardInit();
+          return;
+        }
         if (typeof window.initMenuImageIntegration === 'function') window.initMenuImageIntegration();
         if (typeof window.applyDayBasedPromos === 'function') window.applyDayBasedPromos();
         if (window.TTMSMenuFavorites && typeof window.TTMSMenuFavorites.refresh === 'function') {
           window.TTMSMenuFavorites.refresh();
         }
-        if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.applyIndicators === 'function') {
-          window.TTMSContentDrafts.applyIndicators();
-        }
-        if (window.TTMSMenuSnapshotView && typeof window.TTMSMenuSnapshotView.applyMarkers === 'function') {
-          window.TTMSMenuSnapshotView.applyMarkers();
-        }
-        refreshInjectedMenuAuth();
       });
     }, 180);
   }
@@ -782,6 +808,7 @@
       syncSectionVisibilityForLocation(grouped || {});
     });
     scheduleHydrationPump();
+    if (Object.keys(pinnedMenuUrls).length) hydrateHomeMenuForUrls(Object.keys(pinnedMenuUrls));
   }
 
   function getConfigRoot() {
@@ -1601,6 +1628,7 @@
     scrollMotion.timer = 0;
     menuBySection = null;
     rawMenuItems = null;
+    pinnedMenuUrls = {};
     fetchPromise = null;
     loaderStarted = false;
     loaderConfig = null;

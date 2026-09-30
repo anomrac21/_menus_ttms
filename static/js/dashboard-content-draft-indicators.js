@@ -9,15 +9,111 @@
   var previewsByPath = {};
   var refreshPromise = null;
 
+  function tokenRoles() {
+    if (!global.AuthClient || typeof global.AuthClient.getAccessToken !== 'function') return [];
+    var token = global.AuthClient.getAccessToken();
+    if (!token || typeof global.AuthClient.parseJWT !== 'function') return [];
+    var claims = global.AuthClient.parseJWT(token);
+    if (!claims) return [];
+    var roles = claims.roles || claims.Roles || [];
+    if (typeof roles === 'string') roles = roles.split(',');
+    if (!roles || !roles.length) return [];
+    return roles.map(function (role) {
+      return String(role || '').trim().toLowerCase();
+    });
+  }
+
+  function isMenuAdmin() {
+    if (!global.AuthClient || !global.AuthClient.isAuthenticated()) return false;
+    if (typeof global.AuthClient.isSuperadmin === 'function' && global.AuthClient.isSuperadmin()) return true;
+    if (typeof global.AuthClient.isAdmin === 'function' && global.AuthClient.isAdmin()) return true;
+    var roles = tokenRoles();
+    return roles.indexOf('superadmin') !== -1 || roles.indexOf('admin') !== -1;
+  }
+
   function hasAdminSiteAccess() {
-    if (!global.AuthClient || !global.AuthClient.isAuthenticated() || !global.AuthClient.isAdmin()) {
-      return false;
-    }
+    if (!isMenuAdmin()) return false;
+    if (typeof global.AuthClient.isSuperadmin === 'function' && global.AuthClient.isSuperadmin()) return true;
+    if (tokenRoles().indexOf('superadmin') !== -1) return true;
     return (
       global.AuthClientAccess &&
       typeof global.AuthClientAccess.hasClientAccess === 'function' &&
       global.AuthClientAccess.hasClientAccess()
     );
+  }
+
+  function normDraftPath(path) {
+    return String(path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  }
+
+  function pageLocationSlug() {
+    var root = document.getElementById('menu-reels-viewport') || document.getElementById('packery-container');
+    return (root && root.getAttribute('data-location-slug')) || '';
+  }
+
+  function resolveDraftPath(path) {
+    var key = normDraftPath(path);
+    if (!key) return '';
+    if (previewsByPath[key]) return key;
+    var loc = pageLocationSlug();
+    var rel = key.replace(/^content\//, '');
+    var parts = rel.split('/').filter(Boolean);
+    var candidates = [];
+    if (loc && parts[0] === loc && parts.length > 1) {
+      candidates.push('content/' + parts.slice(1).join('/'));
+    }
+    if (loc && parts[0] !== loc) {
+      candidates.push('content/' + loc + '/' + rel);
+    }
+    var i;
+    for (i = 0; i < candidates.length; i++) {
+      if (previewsByPath[candidates[i]]) return candidates[i];
+    }
+    var hits = [];
+    Object.keys(previewsByPath).forEach(function (stored) {
+      var storedParts = normDraftPath(stored).split('/').filter(Boolean);
+      var keyParts = key.split('/').filter(Boolean);
+      if (storedParts.length < 2 || keyParts.length < 2) return;
+      var shorter = storedParts.length <= keyParts.length ? storedParts : keyParts;
+      var longer = storedParts.length > keyParts.length ? storedParts : keyParts;
+      if (longer.slice(longer.length - shorter.length).join('/') === shorter.join('/')) hits.push(stored);
+    });
+    if (hits.length === 1) return hits[0];
+    if (hits.length > 1 && loc) {
+      var locHits = hits.filter(function (stored) {
+        return normDraftPath(stored).split('/').indexOf(loc) !== -1;
+      });
+      if (locHits.length === 1) return locHits[0];
+    }
+    return '';
+  }
+
+  function urlsForDraftPath(path) {
+    var norm = normDraftPath(path);
+    if (!/\.md$/i.test(norm) || /_index\.md$/i.test(norm)) return [];
+    var rel = norm.replace(/^content\//, '').replace(/\.md$/i, '');
+    var parts = rel.split('/').filter(Boolean);
+    if (parts.length < 2) return [];
+    var urls = ['/' + parts.join('/') + '/'];
+    var loc = pageLocationSlug();
+    if (loc && parts[0] !== loc) urls.push('/' + loc + '/' + parts.join('/') + '/');
+    return urls;
+  }
+
+  function itemUrls() {
+    var urls = [];
+    Object.keys(previewsByPath).forEach(function (path) {
+      urlsForDraftPath(path).forEach(function (url) {
+        urls.push(url);
+      });
+    });
+    return urls;
+  }
+
+  function pinDraftItems() {
+    if (typeof global.hydrateHomeMenuForUrls !== 'function') return;
+    var urls = itemUrls();
+    if (urls.length) global.hydrateHomeMenuForUrls(urls);
   }
 
   function cmsApiBase() {
@@ -132,7 +228,8 @@
       tmp.innerHTML = badgeMarkup('menu-content-draft-badge--title-row');
       badge = tmp.firstChild;
     }
-    if (actions && trigger) {
+    var stored = resolveDraftPath(path);
+    if (actions && trigger && trigger.parentNode === actions) {
       if (badge.parentNode !== actions || badge.nextElementSibling !== trigger) {
         actions.insertBefore(badge, trigger);
       }
@@ -141,15 +238,16 @@
     } else if (!actions && badge.parentNode !== row) {
       row.appendChild(badge);
     }
-    badge.hidden = !draftPaths.has(path);
-    badge.setAttribute('data-content-path', path);
+    badge.hidden = !stored;
+    badge.setAttribute('data-content-path', stored || path);
   }
 
   function syncActionsMenuDraftState(actionsRoot, path) {
     if (!actionsRoot) return;
     var editBtn = actionsRoot.querySelector('.menu-item-actions__option--edit');
     if (!editBtn) return;
-    var hasDraft = path && draftPaths.has(path);
+    var stored = path ? resolveDraftPath(path) : '';
+    var hasDraft = !!stored;
     editBtn.classList.toggle('has-cms-draft', hasDraft);
     var inline = editBtn.querySelector('.menu-content-draft-badge--inline');
     if (!inline) {
@@ -161,7 +259,7 @@
       editBtn.insertBefore(inline, editBtn.firstChild);
     }
     inline.hidden = !hasDraft;
-    if (path) editBtn.setAttribute('data-content-path', path);
+    if (stored || path) editBtn.setAttribute('data-content-path', stored || path);
   }
 
   function applyIndicators(root) {
@@ -199,7 +297,7 @@
     previewsByPath = {};
     list.forEach(function (p) {
       var payload = p.payload || p.Payload || {};
-      var path = p.content_path || payload.contentPath || payload.content_path || '';
+      var path = normDraftPath(p.content_path || payload.contentPath || payload.content_path || '');
       if (!path || isThemePath(path)) return;
       draftPaths.add(path);
       previewsByPath[path] = p;
@@ -225,6 +323,7 @@
         var list = dedupePreviews(data && data.previews ? data.previews : []);
         ingestPreviews(list);
         applyIndicators(document);
+        pinDraftItems();
         try {
           global.dispatchEvent(
             new CustomEvent('ttms:content-drafts-ready', { detail: { previews: list } })
@@ -263,7 +362,14 @@
   global.addEventListener('menuReelsFlattened', function () {
     setTimeout(function () {
       applyIndicators(document);
+      pinDraftItems();
     }, 120);
+  });
+  global.addEventListener('homeMenuItemsLoaded', function () {
+    setTimeout(function () {
+      applyIndicators(document);
+      pinDraftItems();
+    }, 40);
   });
 
   if (document.readyState === 'loading') {
@@ -275,11 +381,13 @@
   global.TTMSContentDrafts = {
     refresh: refresh,
     has: function (path) {
-      return path && draftPaths.has(path);
+      return !!resolveDraftPath(path);
     },
     getPreview: function (path) {
-      return path ? previewsByPath[path] || null : null;
+      var stored = resolveDraftPath(path);
+      return stored ? previewsByPath[stored] || null : null;
     },
+    itemUrls: itemUrls,
     contentPathForElement: contentPathForElement,
     promotionSlugFromElement: promotionSlugFromElement,
     applyIndicators: applyIndicators,

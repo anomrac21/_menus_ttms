@@ -842,15 +842,29 @@
     ensureBarbaMenublockRegistration();
   }
 
+  function isRasterIcon(img) {
+    var raw = (img.getAttribute('data-src-path') || '') + ' ' + (img.getAttribute('src') || '');
+    try {
+      raw = decodeURIComponent(raw);
+    } catch (err) {}
+    return /\.(jpe?g|png|webp|gif|avif|bmp)(?:$|[?#\s])/i.test(raw);
+  }
+
   function paintMenublockIcons(root) {
     var scope = root && root.querySelectorAll ? root : document;
     var icons = scope.querySelectorAll('#menublock .menublock-link__icon .icon[src]');
     icons.forEach(function (img) {
+      var wrap = img.closest('.menublock-link__icon');
+      if (isRasterIcon(img)) {
+        img.classList.add('menublock-link__photo');
+        img.style.removeProperty('--menublock-icon');
+        if (wrap) wrap.style.removeProperty('--menublock-icon');
+        return;
+      }
       var url = img.currentSrc || img.getAttribute('src');
       if (!url) return;
       var value = 'url("' + String(url).replace(/"/g, '') + '")';
       img.style.setProperty('--menublock-icon', value);
-      var wrap = img.closest('.menublock-link__icon');
       if (wrap) wrap.style.setProperty('--menublock-icon', value);
     });
   }
