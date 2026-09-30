@@ -75,7 +75,7 @@
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--comment" role="menuitem"' +
       commentAttrs +
       '>Comment</button>' +
-      '<button type="button" class="menu-item-actions__option menu-item-actions__option--view" role="menuitem" data-auth="admin-site" hidden>View snapshot</button>' +
+      '<button type="button" class="menu-item-actions__option menu-item-actions__option--view" role="menuitem" data-auth="admin-site" hidden><i class="fa fa-exclamation" aria-hidden="true"></i> View snapshot</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
       '</div></div>'
     );

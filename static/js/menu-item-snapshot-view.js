@@ -489,10 +489,16 @@
     return card.querySelector('.menu-item-actions__option--view');
   }
 
+  function viewOptionMarkup(viewing) {
+    var icon = viewing ? 'fa-eye' : 'fa-exclamation';
+    var label = viewing ? 'View live' : 'View snapshot';
+    return '<i class="fa ' + icon + '" aria-hidden="true"></i> ' + label;
+  }
+
   function setViewLabel(card, viewing) {
     var button = viewButton(card);
     if (!button) return;
-    button.textContent = viewing ? 'View live' : 'View snapshot';
+    button.innerHTML = viewOptionMarkup(viewing);
   }
 
   function sectionHeading(header) {
@@ -678,7 +684,7 @@
     button.setAttribute('role', 'menuitem');
     button.setAttribute('data-auth', 'admin-site');
     button.hidden = true;
-    button.textContent = 'View snapshot';
+    button.innerHTML = viewOptionMarkup(false);
     var edit = menu.querySelector('.menu-item-actions__option--edit');
     if (edit && edit.parentNode) {
       edit.parentNode.insertBefore(button, edit);
@@ -714,7 +720,9 @@
       badge.className = 'menu-item-snapshot-badge';
       badge.title = 'Saved menu snapshot';
       badge.setAttribute('aria-label', 'Snapshot available');
-      badge.innerHTML = '<i class="fa fa-database" aria-hidden="true"></i>';
+      badge.innerHTML = '<i class="fa fa-exclamation" aria-hidden="true"></i>';
+    } else if (!badge.querySelector('.fa-exclamation')) {
+      badge.innerHTML = '<i class="fa fa-exclamation" aria-hidden="true"></i>';
     }
     var anchor = directChild(actions, trigger) ? trigger : null;
     for (i = 0; i < actions.children.length; i++) {
@@ -741,7 +749,7 @@
       button.classList.remove('is-snapshot-available');
       button.hidden = true;
       button.style.display = 'none';
-      if (!button.closest('.is-viewing-snapshot')) button.textContent = 'View snapshot';
+      if (!button.closest('.is-viewing-snapshot')) button.innerHTML = viewOptionMarkup(false);
     });
   }
 
@@ -790,7 +798,7 @@
       ensureBadge(trigger, show);
       if (button) {
         button.classList.toggle('is-snapshot-available', show);
-        if (!viewing) button.textContent = 'View snapshot';
+        if (!viewing) button.innerHTML = viewOptionMarkup(false);
       }
     } catch (err) {}
   }

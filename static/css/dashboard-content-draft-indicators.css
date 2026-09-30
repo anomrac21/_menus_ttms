@@ -8,10 +8,7 @@
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 999px;
-  background: var(--primary-red, #cd2e57);
   color: #fff;
-  border: 1px solid color-mix(in srgb, #fff 28%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-red, #cd2e57) 55%, transparent);
   vertical-align: middle;
   line-height: 1;
 }
@@ -41,7 +38,7 @@
 }
 
 .menu-content-draft-badge--inline .fa {
-  font-size: 0.62rem;
+  font-size: 1.25rem;
 }
 
 .menu-content-draft-badge.hidden,

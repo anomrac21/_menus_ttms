@@ -185,8 +185,22 @@
 }
 
 .menu-item-snapshot-badge .fa {
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   line-height: 1;
+}
+
+.menu-item-actions__option--view {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.menu-item-actions__option--view .fa {
+  width: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .menu-item-card.is-viewing-snapshot,
