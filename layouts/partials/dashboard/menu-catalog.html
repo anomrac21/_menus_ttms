@@ -1,0 +1,337 @@
+{{- $kind := .Params.catalog | default "sections" -}}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
+{{- $locs := partial "menu/visible-locations.html" . -}}
+{{- $showTabs := and $multi (gt (len $locs) 1) -}}
+{{- $firstSlug := "" -}}
+{{- if $showTabs -}}
+  {{- with index $locs 0 -}}{{- $firstSlug = .slug -}}{{- end -}}
+{{- end -}}
+{{- $heading := "Sections" -}}
+{{- $hint := "Groups on the menu. Edit one, or add a new section." -}}
+{{- $addLabel := "Add section" -}}
+{{- $addParam := "section" -}}
+{{- $noun := "section" -}}
+{{- $empty := "No sections yet. Add the first group below." -}}
+{{- if eq $kind "items" -}}
+  {{- $heading = "Menu items" -}}
+  {{- $hint = "Dishes and prices. Edit one, or add a new item." -}}
+  {{- $addLabel = "Add menu item" -}}
+  {{- $addParam = "item" -}}
+  {{- $noun = "menu item" -}}
+  {{- $empty = "No menu items yet. Add the first dish below." -}}
+{{- else if eq $kind "promotions" -}}
+  {{- $heading = "Promotions" -}}
+  {{- $hint = "Offers shown to customers. Edit one, or add a new promotion." -}}
+  {{- $addLabel = "Add promotion" -}}
+  {{- $addParam = "promotion" -}}
+  {{- $noun = "promotion" -}}
+  {{- $empty = "No promotions yet. Add the first offer below." -}}
+{{- end -}}
+{{- $rows := slice -}}
+{{- $newSectionParent := "" -}}
+{{- $newSectionLabel := "" -}}
+{{- $newItemPrefix := "/menu-items/" -}}
+{{- $newItemSection := "menu-items" -}}
+{{- if $multi -}}
+  {{- with index $locs 0 -}}
+    {{- $newSectionParent = .slug -}}
+    {{- $newSectionLabel = .city | default .slug -}}
+  {{- end -}}
+{{- end -}}
+{{- if eq $kind "sections" -}}
+  {{- if $multi -}}
+    {{- range $locs -}}
+      {{- $loc := . -}}
+      {{- with site.GetPage (printf "/%s" $loc.slug) -}}
+        {{- range .Sections -}}
+          {{- $secSlug := partial "menu/section-slug.html" . -}}
+          {{- if and (ne $secSlug "promotions") .RegularPages (not (partial "menu/is-excluded-section.html" .RelPermalink)) -}}
+            {{- $secPath := strings.TrimSuffix "/" (strings.TrimPrefix "/" .RelPermalink) -}}
+            {{- $itemCount := len .RegularPages -}}
+            {{- $countLabel := printf "%d item" $itemCount -}}
+            {{- if ne $itemCount 1 -}}{{- $countLabel = printf "%ss" $countLabel -}}{{- end -}}
+            {{- $meta := slice $countLabel -}}
+            {{- if not $showTabs -}}{{- $meta = slice ($loc.city | default $loc.slug) $countLabel -}}{{- end -}}
+            {{- $authoring := lower (printf "%s" (.Params.ttms_authoring | default "")) -}}
+            {{- $editPath := $secPath -}}
+            {{- if eq $authoring "shared" -}}
+              {{- $editPath = printf "_shared/%s" $secSlug -}}
+            {{- else if $authoring -}}
+              {{- $editPath = printf "locations/%s/%s" $loc.slug $secSlug -}}
+            {{- end -}}
+            {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $meta "kind" "section-header" "sectionSlug" $editPath "locationSlug" $loc.slug) -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else -}}
+    {{- range partial "menu/category-sections.html" site.Home -}}
+      {{- $secSlug := partial "menu/section-slug.html" . -}}
+      {{- if ne $secSlug "promotions" -}}
+        {{- $secPath := strings.TrimSuffix "/" (strings.TrimPrefix "/" .RelPermalink) -}}
+        {{- $itemCount := len .RegularPages -}}
+        {{- $countLabel := printf "%d item" $itemCount -}}
+        {{- if ne $itemCount 1 -}}{{- $countLabel = printf "%ss" $countLabel -}}{{- end -}}
+        {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" (slice $countLabel) "kind" "section-header" "sectionSlug" $secPath) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- else if eq $kind "items" -}}
+  {{- if $multi -}}
+    {{- range $locs -}}
+      {{- $loc := . -}}
+      {{- with site.GetPage (printf "/%s" $loc.slug) -}}
+        {{- range .Sections -}}
+          {{- $sec := . -}}
+          {{- $secSlug := partial "menu/section-slug.html" $sec -}}
+          {{- if and (ne $secSlug "promotions") $sec.RegularPages (not (partial "menu/is-excluded-section.html" $sec.RelPermalink)) -}}
+            {{- $secPath := strings.TrimSuffix "/" (strings.TrimPrefix "/" $sec.RelPermalink) -}}
+            {{- range $sec.RegularPages -}}
+              {{- $priceLabel := "" -}}
+              {{- with .Params.prices -}}
+                {{- with index . 0 -}}
+                  {{- with .price -}}{{- $priceLabel = printf "%v" . -}}{{- end -}}
+                {{- end -}}
+              {{- end -}}
+              {{- $meta := slice -}}
+              {{- if not $showTabs -}}{{- $meta = $meta | append ($loc.city | default $loc.slug) -}}{{- end -}}
+              {{- if $priceLabel -}}{{- $meta = $meta | append $priceLabel -}}{{- end -}}
+              {{- $fileSlug := "" -}}
+              {{- with .File -}}{{- $fileSlug = .ContentBaseName -}}{{- end -}}
+              {{- if not $fileSlug -}}
+                {{- $fileSlug = index (last 1 (split (strings.TrimSuffix "/" .RelPermalink) "/")) 0 -}}
+              {{- end -}}
+              {{- $authoring := lower (printf "%s" (.Params.ttms_authoring | default "")) -}}
+              {{- $itemUrl := .RelPermalink -}}
+              {{- $editSection := $secPath -}}
+              {{- if eq $authoring "shared" -}}
+                {{- $itemUrl = printf "/_shared/%s/%s/" $secSlug $fileSlug -}}
+                {{- $editSection = printf "_shared/%s" $secSlug -}}
+              {{- else if $authoring -}}
+                {{- $itemUrl = printf "/locations/%s/%s/%s/" $loc.slug $secSlug $fileSlug -}}
+                {{- $editSection = printf "locations/%s/%s" $loc.slug $secSlug -}}
+              {{- end -}}
+              {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $meta "kind" "menu-item" "itemUrl" $itemUrl "sectionSlug" $editSection "locationSlug" $loc.slug "sectionKey" $secSlug "sectionLabel" ($sec.LinkTitle | default $sec.Title) "sectionWeight" ($sec.Params.weight | default 0) "shared" (eq $authoring "shared")) -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else -}}
+    {{- range partial "menu/category-sections.html" site.Home -}}
+      {{- $sec := . -}}
+      {{- $secSlug := partial "menu/section-slug.html" $sec -}}
+      {{- if ne $secSlug "promotions" -}}
+        {{- $secPath := strings.TrimSuffix "/" (strings.TrimPrefix "/" $sec.RelPermalink) -}}
+        {{- range $sec.RegularPages -}}
+          {{- $priceLabel := "" -}}
+          {{- with .Params.prices -}}
+            {{- with index . 0 -}}
+              {{- with .price -}}{{- $priceLabel = printf "%v" . -}}{{- end -}}
+            {{- end -}}
+          {{- end -}}
+          {{- $meta := slice -}}
+          {{- if $priceLabel -}}{{- $meta = $meta | append $priceLabel -}}{{- end -}}
+          {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $meta "kind" "menu-item" "itemUrl" .RelPermalink "sectionSlug" $secPath "sectionKey" $secSlug "sectionLabel" ($sec.LinkTitle | default $sec.Title) "sectionWeight" ($sec.Params.weight | default 0)) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- else if eq $kind "promotions" -}}
+  {{- $seen := dict -}}
+  {{- $promoIndex := 0 -}}
+  {{- $collect := slice -}}
+  {{- if $multi -}}
+    {{- range $locs -}}
+      {{- with site.GetPage (printf "/%s/promotions" .slug) -}}
+        {{- range .RegularPages -}}{{- $collect = $collect | append . -}}{{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- with site.GetPage "/promotions" -}}
+      {{- range .RegularPages -}}{{- $collect = $collect | append . -}}{{- end -}}
+    {{- end -}}
+  {{- else -}}
+    {{- with partial "menu/promotions-page.html" site.Home -}}
+      {{- $collect = .RegularPages -}}
+    {{- end -}}
+  {{- end -}}
+  {{- range $collect -}}
+    {{- if not (index $seen .RelPermalink) -}}
+      {{- $seen = merge $seen (dict .RelPermalink true) -}}
+      {{- $adSlug := .LinkTitle | default .Title | lower | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" -}}
+      {{- $locLabel := "" -}}
+      {{- $locSlug := "" -}}
+      {{- $first := index (split (strings.TrimPrefix "/" .RelPermalink) "/") 0 -}}
+      {{- range $locs -}}
+        {{- if eq .slug $first -}}
+          {{- $locLabel = .city | default .slug -}}
+          {{- $locSlug = .slug -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if and (not $locLabel) (not $showTabs) -}}{{- $locLabel = "Menu" -}}{{- end -}}
+      {{- $promoMeta := slice -}}
+      {{- if $locLabel -}}{{- $promoMeta = slice $locLabel -}}{{- end -}}
+      {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $promoMeta "kind" "promotion" "catalogIndex" (printf "%d" $promoIndex) "adId" (printf "menu-ad-%s" $adSlug) "adUrl" .RelPermalink "locationSlug" $locSlug) -}}
+      {{- $promoIndex = add $promoIndex 1 -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if and $showTabs (or (eq $kind "sections") (eq $kind "items")) -}}
+  {{- range partial "dashboard/menu-catalog-shared-rows.html" (dict "kind" $kind) -}}
+    {{- $rows = $rows | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- $tabPick := newScratch -}}
+{{- $tabPick.Set "active" $firstSlug -}}
+{{- range $rows -}}
+  {{- if eq .locationSlug "_shared" -}}{{- $tabPick.Set "active" "_shared" -}}{{- end -}}
+{{- end -}}
+{{- $activeTab := $tabPick.Get "active" -}}
+{{- $secPick := newScratch -}}
+{{- $secPick.Set "key" "" -}}
+{{- $secPick.Set "label" "" -}}
+{{- $secPick.Set "weight" 999999 -}}
+{{- range $rows -}}
+  {{- $locOk := or (not $showTabs) (not .locationSlug) (eq .locationSlug $activeTab) -}}
+  {{- if and $locOk .sectionKey -}}
+    {{- $w := .sectionWeight | default 0 -}}
+    {{- if or (not ($secPick.Get "key")) (lt $w ($secPick.Get "weight")) -}}
+      {{- $secPick.Set "key" .sectionKey -}}
+      {{- $secPick.Set "label" (.sectionLabel | default .sectionKey) -}}
+      {{- $secPick.Set "weight" $w -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $activeSection := $secPick.Get "key" -}}
+{{- $activeSectionLabel := $secPick.Get "label" -}}
+{{- if gt (len $rows) 0 -}}
+  {{- $first := index $rows 0 -}}
+  {{- with $first.sectionSlug -}}
+    {{- $newItemSection = . -}}
+    {{- $newItemPrefix = printf "/%s/" . -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (eq $kind "items") $activeSection -}}
+  {{- if eq $activeTab "_shared" -}}
+    {{- $newItemSection = printf "_shared/%s" $activeSection -}}
+  {{- else if and $showTabs $activeTab -}}
+    {{- $newItemSection = printf "locations/%s/%s" $activeTab $activeSection -}}
+  {{- else -}}
+    {{- $itemPick := newScratch -}}
+    {{- $itemPick.Set "path" "" -}}
+    {{- range $rows -}}
+      {{- if and (not ($itemPick.Get "path")) (eq .sectionKey $activeSection) .sectionSlug -}}
+        {{- $itemPick.Set "path" .sectionSlug -}}
+      {{- end -}}
+    {{- end -}}
+    {{- with $itemPick.Get "path" -}}
+      {{- $newItemSection = . -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $newItemPrefix = printf "/%s/" $newItemSection -}}
+{{- end -}}
+{{- $count := 0 -}}
+{{- range $rows -}}
+  {{- $locOk := or (not $showTabs) (not .locationSlug) (eq .locationSlug $activeTab) -}}
+  {{- $secOk := or (ne $kind "items") (not .sectionKey) (not $activeSection) (eq .sectionKey $activeSection) -}}
+  {{- if and $locOk $secOk -}}
+    {{- $count = add $count 1 -}}
+  {{- end -}}
+{{- end -}}
+{{- $scopeLabel := "" -}}
+{{- if $showTabs -}}
+  {{- if eq $activeTab "_shared" -}}
+    {{- $scopeLabel = "Shared" -}}
+  {{- else -}}
+    {{- range $locs -}}
+      {{- if eq .slug $activeTab -}}
+        {{- $scopeLabel = .city | default .slug -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (eq $kind "items") $activeSectionLabel -}}
+  {{- if $scopeLabel -}}
+    {{- $scopeLabel = printf "%s · %s" $scopeLabel $activeSectionLabel -}}
+  {{- else -}}
+    {{- $scopeLabel = $activeSectionLabel -}}
+  {{- end -}}
+{{- end -}}
+{{- $summary := printf "No %ss" $noun -}}
+{{- if $scopeLabel -}}
+  {{- $summary = printf "No %ss in %s" $noun $scopeLabel -}}
+{{- end -}}
+{{- if eq $count 1 -}}
+  {{- $summary = printf "1 %s" $noun -}}
+  {{- if $scopeLabel -}}{{- $summary = printf "1 %s in %s" $noun $scopeLabel -}}{{- end -}}
+{{- else if gt $count 1 -}}
+  {{- $summary = printf "%d %ss" $count $noun -}}
+  {{- if $scopeLabel -}}{{- $summary = printf "%d %ss in %s" $count $noun $scopeLabel -}}{{- end -}}
+{{- end -}}
+<section class="dashboard-settings-section dashboard-settings-panel dashboard-locations-page-panel" aria-labelledby="menu-catalog-heading">
+  <div class="dashboard-locations-page-head">
+    <h2 id="menu-catalog-heading" class="dashboard-analytics-heading">{{ $heading }}</h2>
+    <span class="dashboard-settings-panel-summary" id="menuCatalogSummary" data-noun="{{ $noun }}">{{ $summary }}</span>
+  </div>
+  <div class="dashboard-settings-locations-wrap">
+    <p class="dashboard-settings-hint">{{ $hint }} Save in the editor. Publish from the dashboard when the menu is ready.</p>
+    {{- if $showTabs -}}
+    <div class="dashboard-orders-hub-tabs" id="menuCatalogLocationTabs" role="tablist" aria-label="Locations">
+      {{- if eq $activeTab "_shared" -}}
+        {{- $sharedSection := "_shared/menu-items" -}}
+        {{- if $activeSection -}}{{- $sharedSection = printf "_shared/%s" $activeSection -}}{{- end -}}
+        <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" id="menuCatalogLocationTab-shared" data-location-slug="_shared" data-location-label="Shared" data-section-parent="_shared" data-item-section="{{ $sharedSection }}" data-item-prefix="/{{ $sharedSection }}/" aria-selected="true" aria-controls="menuCatalogList">Shared</button>
+      {{- end -}}
+      {{- range $locs -}}
+        {{- $loc := . -}}
+        {{- $sectionPick := newScratch -}}
+        {{- $sectionPick.Set "key" "" -}}
+        {{- $sectionPick.Set "weight" 999999 -}}
+        {{- range $rows -}}
+          {{- if and (eq .locationSlug $loc.slug) .sectionKey -}}
+            {{- $w := .sectionWeight | default 0 -}}
+            {{- if or (not ($sectionPick.Get "key")) (lt $w ($sectionPick.Get "weight")) -}}
+              {{- $sectionPick.Set "key" .sectionKey -}}
+              {{- $sectionPick.Set "weight" $w -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+        {{- $itemKey := $sectionPick.Get "key" -}}
+        {{- $itemSection := printf "locations/%s/menu-items" $loc.slug -}}
+        {{- if $itemKey -}}{{- $itemSection = printf "locations/%s/%s" $loc.slug $itemKey -}}{{- end -}}
+        <button type="button" class="dashboard-orders-hub-tab{{ if eq $loc.slug $activeTab }} is-active{{ end }}" role="tab" id="menuCatalogLocationTab-{{ $loc.slug }}" data-location-slug="{{ $loc.slug }}" data-location-label="{{ $loc.city | default $loc.slug }}" data-section-parent="locations/{{ $loc.slug }}" data-item-section="{{ $itemSection }}" data-item-prefix="/{{ $itemSection }}/" aria-selected="{{ if eq $loc.slug $activeTab }}true{{ else }}false{{ end }}" aria-controls="menuCatalogList">{{ $loc.city | default $loc.slug }}</button>
+      {{- end -}}
+    </div>
+    {{- end -}}
+    {{- if and (eq $kind "items") $activeSection -}}
+    <div class="dashboard-orders-hub-tabs dashboard-menu-catalog-section-tabs" id="menuCatalogSectionTabs" role="tablist" aria-label="Sections">
+      {{- $seenSections := newScratch -}}
+      {{- $sectionTabs := slice -}}
+      {{- range $rows -}}
+        {{- $locOk := or (not $showTabs) (not .locationSlug) (eq .locationSlug $activeTab) -}}
+        {{- if and $locOk .sectionKey (not ($seenSections.Get .sectionKey)) -}}
+          {{- $seenSections.Set .sectionKey true -}}
+          {{- $sectionTabs = $sectionTabs | append (dict "key" .sectionKey "label" (.sectionLabel | default .sectionKey) "weight" (.sectionWeight | default 0)) -}}
+        {{- end -}}
+      {{- end -}}
+      {{- range sort $sectionTabs "weight" -}}
+        <button type="button" class="dashboard-orders-hub-tab{{ if eq .key $activeSection }} is-active{{ end }}" role="tab" data-section-key="{{ .key }}" aria-selected="{{ if eq .key $activeSection }}true{{ else }}false{{ end }}" aria-controls="menuCatalogList">{{ .label }}</button>
+      {{- end -}}
+    </div>
+    {{- end -}}
+    <div id="menuCatalogList" class="dashboard-settings-locations-list" aria-live="polite" data-catalog-kind="{{ $kind }}" data-catalog-add="{{ $addParam }}" data-new-section-parent="{{ $newSectionParent }}" data-new-section-label="{{ $newSectionLabel }}" data-new-item-prefix="{{ $newItemPrefix }}" data-new-item-section="{{ $newItemSection }}">
+      {{- range $rows -}}
+        {{- $hide := false -}}
+        {{- if and $showTabs .locationSlug (ne .locationSlug $activeTab) -}}{{- $hide = true -}}{{- end -}}
+        {{- if and (eq $kind "items") .sectionKey $activeSection (ne .sectionKey $activeSection) -}}{{- $hide = true -}}{{- end -}}
+        {{ partial "dashboard/menu-catalog-card.html" (merge . (dict "hidden" $hide)) }}
+      {{- end -}}
+    </div>
+    <p id="menuCatalogEmpty" class="dashboard-settings-locations-empty{{ if gt $count 0 }} hidden{{ end }}">{{ $empty }}</p>
+    <div class="dashboard-settings-locations-actions">
+      <button type="button" class="btn-dash btn-dash-secondary" id="btnMenuCatalogAdd">
+        <i class="fa fa-plus" aria-hidden="true"></i> {{ $addLabel }}
+      </button>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,28 @@
+{{ define "main" }}
+<div class="dashboard-analytics-page dashboard-settings-page dashboard-control-room" id="dashboardMenuCatalogPage">
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" .Title
+    "toolbarLabel" (printf "%s toolbar" .Title)
+    "closeTitle" (printf "Close %s" .Title)
+  ) }}
+  <main class="dashboard-analytics-main dashboard-settings-main">
+    {{ partial "dashboard/menu-catalog.html" . }}
+  </main>
+</div>
+{{ partial "modals/menu_item_edit_modal.html" . }}
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/menu-item-edit-modal.css" }}">
+<script src="/js/dashboard-content-draft-indicators.js" defer></script>
+<script src="/js/menu-item-edit-modal.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/dashboard-menu-catalog.js" }}" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+  if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+    await AuthClient.whenReady();
+  }
+  if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
+    return;
+  }
+  initMenuCatalog();
+});
+</script>
+{{ end }}

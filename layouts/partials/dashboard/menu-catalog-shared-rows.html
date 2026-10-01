@@ -1,0 +1,86 @@
+{{- $kind := .kind | default "sections" -}}
+{{- $rows := slice -}}
+{{- $root := "content/_shared" -}}
+{{- $dirs := slice -}}
+{{- with os.ReadDir $root -}}
+  {{- range . -}}
+    {{- if and .IsDir (ne .Name "promotions") -}}
+      {{- $dirs = $dirs | append .Name -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- range $dirs -}}
+  {{- $slug := . -}}
+  {{- $info := newScratch -}}
+  {{- $info.Set "title" (humanize $slug) -}}
+  {{- $info.Set "weight" 0 -}}
+  {{- $info.Set "items" 0 -}}
+  {{- with os.ReadFile (printf "%s/%s/_index.md" $root $slug) -}}
+    {{- range split . "\n" -}}
+      {{- $line := strings.TrimSpace . -}}
+      {{- if hasPrefix $line "title:" -}}
+        {{- $title := strings.TrimSpace (strings.TrimPrefix "title:" $line) -}}
+        {{- $info.Set "title" (replaceRE "^[\"']+|[\"']+$" "" $title) -}}
+      {{- else if hasPrefix $line "weight:" -}}
+        {{- $info.Set "weight" (int (strings.TrimSpace (strings.TrimPrefix "weight:" $line))) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- with os.ReadDir (printf "%s/%s" $root $slug) -}}
+    {{- range . -}}
+      {{- if and (not .IsDir) (hasSuffix .Name ".md") (ne .Name "_index.md") -}}
+        {{- $info.Add "items" 1 -}}
+        {{- if eq $kind "items" -}}
+          {{- $fileBase := strings.TrimSuffix ".md" .Name -}}
+          {{- $itemInfo := newScratch -}}
+          {{- $itemInfo.Set "title" (humanize $fileBase) -}}
+          {{- $itemInfo.Set "price" "" -}}
+          {{- with os.ReadFile (printf "%s/%s/%s" $root $slug .Name) -}}
+            {{- range split . "\n" -}}
+              {{- $line := strings.TrimSpace . -}}
+              {{- if hasPrefix $line "title:" -}}
+                {{- $title := strings.TrimSpace (strings.TrimPrefix "title:" $line) -}}
+                {{- $itemInfo.Set "title" (replaceRE "^[\"']+|[\"']+$" "" $title) -}}
+              {{- else if and (hasPrefix $line "price:") (not ($itemInfo.Get "price")) -}}
+                {{- $itemInfo.Set "price" (strings.TrimSpace (strings.TrimPrefix "price:" $line)) -}}
+              {{- end -}}
+            {{- end -}}
+          {{- end -}}
+          {{- $meta := slice -}}
+          {{- with $itemInfo.Get "price" -}}{{- if ne . "0" -}}{{- $meta = $meta | append . -}}{{- end -}}{{- end -}}
+          {{- $rows = $rows | append (dict
+            "title" ($itemInfo.Get "title")
+            "meta" $meta
+            "kind" "menu-item"
+            "itemUrl" (printf "/_shared/%s/%s/" $slug $fileBase)
+            "sectionSlug" (printf "_shared/%s" $slug)
+            "locationSlug" "_shared"
+            "weight" ($info.Get "weight")
+            "sectionKey" $slug
+            "sectionLabel" ($info.Get "title")
+            "sectionWeight" ($info.Get "weight")
+          ) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if eq $kind "sections" -}}
+    {{- $itemCount := $info.Get "items" -}}
+    {{- $countLabel := printf "%d item" $itemCount -}}
+    {{- if ne $itemCount 1 -}}{{- $countLabel = printf "%ss" $countLabel -}}{{- end -}}
+    {{- $rows = $rows | append (dict
+      "title" ($info.Get "title")
+      "meta" (slice "All locations" $countLabel)
+      "kind" "section-header"
+      "sectionSlug" (printf "_shared/%s" $slug)
+      "locationSlug" "_shared"
+      "weight" ($info.Get "weight")
+    ) -}}
+  {{- end -}}
+{{- end -}}
+{{- if eq $kind "sections" -}}
+  {{- $rows = sort $rows "weight" -}}
+{{- else -}}
+  {{- $rows = sort $rows "title" -}}
+{{- end -}}
+{{- return $rows -}}

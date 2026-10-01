@@ -8151,6 +8151,20 @@ document.addEventListener('DOMContentLoaded', async function() {
           '.dashboard-edit-add-item-bar[data-section-slug="' + esc + '"] .dashboard-edit-add-item-btn'
         );
         if (itemBtn) itemBtn.click();
+        return;
+      }
+
+      if (sessionStorage.getItem('editMenuPendingAddItem') === '1') {
+        sessionStorage.removeItem('editMenuPendingAddItem');
+        var anyItemBtn = doc.querySelector('.dashboard-edit-add-item-btn');
+        if (anyItemBtn) anyItemBtn.click();
+        return;
+      }
+
+      if (sessionStorage.getItem('editMenuPendingAddPromotion') === '1') {
+        sessionStorage.removeItem('editMenuPendingAddPromotion');
+        var promoBtn = doc.querySelector('.dashboard-edit-add-promotion-btn');
+        if (promoBtn) promoBtn.click();
       }
     } catch (err) {
       /* ignore */
@@ -11137,6 +11151,9 @@ document.addEventListener('DOMContentLoaded', async function() {
           publishSummaryConfirm.onclick = function() {
             if (pending.length === 0) return;
             publishSummaryConfirm.disabled = true;
+            publishSummaryConfirm.setAttribute('aria-busy', 'true');
+            publishSummaryConfirm.innerHTML =
+              '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Publishing…';
             var changes = pending.map(function(p) {
               var payload = p.payload || p.Payload || {};
               var item = { payload: payload };
@@ -11168,15 +11185,21 @@ document.addEventListener('DOMContentLoaded', async function() {
               applyEditHighlights();
               closePublishSummaryModal();
               publishSummaryConfirm.disabled = false;
+              publishSummaryConfirm.removeAttribute('aria-busy');
               publishSummaryConfirm.innerHTML =
                 '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish';
               editFormDirty = false;
               savedDraftPreviewId = null;
-              setEditStatus('Published');
+              var publishWarnings = resp && Array.isArray(resp.warnings) ? resp.warnings.filter(Boolean) : [];
+              setEditStatus(publishWarnings.length ? 'Published with a warning' : 'Published');
+              if (publishWarnings.length) alert(publishWarnings.join('\n\n'));
             }).catch(function(err) {
               console.error('Publish error:', err);
               alert('Publish failed: ' + (err.message || err));
               publishSummaryConfirm.disabled = false;
+              publishSummaryConfirm.removeAttribute('aria-busy');
+              publishSummaryConfirm.innerHTML =
+                '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish';
             });
           };
         }

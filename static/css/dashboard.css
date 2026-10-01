@@ -3728,6 +3728,135 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
 }
 
 /* Edit menu: primary task + secondary tools */
+.dashboard-menu-hub .dashboard-edit-menu-nav {
+  margin-bottom: 0;
+}
+
+.dashboard-menu-catalog-section-tabs {
+  margin-top: -0.35rem;
+}
+
+.dashboard-locations-page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.85rem;
+}
+
+.dashboard-locations-page-head .dashboard-analytics-heading {
+  margin: 0;
+}
+
+.dashboard-locations-page-panel > .dashboard-settings-panel-body {
+  display: block;
+}
+
+.dashboard-menu-inventory {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 12px;
+  background: var(--dash-surface-inset);
+  border: 1px solid var(--dash-border);
+}
+
+.dashboard-menu-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem 0.75rem;
+}
+
+.dashboard-menu-inventory-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.dashboard-menu-inventory-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.dashboard-menu-inventory-title .dashboard-card-notify-snapshot-label {
+  display: inline;
+  margin-bottom: 0;
+}
+
+.dashboard-menu-inventory-cell .dashboard-card-notify-snapshot-value {
+  display: block;
+  width: 100%;
+  margin-top: 0.28rem;
+  text-align: center;
+}
+
+.dashboard-control-room .card a.dashboard-menu-inventory-open,
+.dashboard-control-room .card a.dashboard-menu-inventory-open:hover {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.dashboard-control-room .card a.dashboard-menu-inventory-open.dashboard-card-notify-snapshot-value,
+.dashboard-control-room .card a.dashboard-menu-inventory-open.dashboard-card-notify-snapshot-value:hover {
+  font-weight: 700;
+  color: var(--dash-ink);
+}
+
+.dashboard-control-room .card a.dashboard-menu-inventory-open:hover {
+  text-decoration: underline;
+}
+
+.dashboard-menu-inventory-open:focus-visible {
+  outline: 2px solid var(--dash-accent);
+  outline-offset: 2px;
+}
+
+.dashboard-menu-inventory-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--dash-accent) 14%, transparent);
+  color: var(--dash-accent);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.dashboard-control-room .card a.dashboard-menu-inventory-add,
+.dashboard-control-room .card a.dashboard-menu-inventory-add:hover {
+  color: var(--dash-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dashboard-menu-inventory-add:hover {
+  background: color-mix(in srgb, var(--dash-accent) 26%, transparent);
+}
+
+.dashboard-menu-inventory-add:focus-visible {
+  outline: 2px solid var(--dash-accent);
+  outline-offset: 2px;
+}
+
+.dashboard-menu-inventory-add .fa {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 640px) {
+  .dashboard-menu-inventory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .dashboard-edit-menu-nav {
   display: flex;
   flex-direction: column;
@@ -4515,6 +4644,31 @@ html.ttms-ios .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
   opacity: 0.85;
 }
 
+.dashboard-menu-status-throbber.dashboard-orders-throbber {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 0.2rem 0 0.15rem;
+}
+
+.dashboard-menu-status-throbber .dashboard-orders-throbber-spin {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-width: 2px;
+  flex-shrink: 0;
+}
+
+.dashboard-menu-status-throbber .dashboard-orders-throbber-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.btn-dash.is-loading {
+  cursor: progress;
+}
+
 .dashboard-menu-status-rows,
 .dashboard-menu-status-file-list {
   margin: 0.45rem 0 0;
@@ -4585,6 +4739,10 @@ html.ttms-ios .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
   margin: 0 0 0.55rem;
 }
 
+.dashboard-menu-status-slot-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .dashboard-menu-status-slot {
   display: flex;
   flex-direction: column;
@@ -4605,6 +4763,18 @@ html.ttms-ios .dashboard-edit-menu-action-grid .dashboard-edit-menu-action {
 .dashboard-menu-status-slot:hover:not(:disabled) {
   background: color-mix(in srgb, var(--dash-info) 20%, transparent);
   border-color: color-mix(in srgb, var(--dash-info) 55%, transparent);
+}
+
+.dashboard-menu-status-slot--static,
+.dashboard-menu-status-slot--static:hover {
+  cursor: default;
+  background: color-mix(in srgb, var(--dash-bg) 55%, transparent);
+  border-color: color-mix(in srgb, var(--dash-accent) 28%, transparent);
+}
+
+.dashboard-menu-status-block--snapshots .dashboard-menu-status-block-foot .btn-dash {
+  width: 100%;
+  justify-content: center;
 }
 
 .dashboard-menu-status-slot--active {
@@ -12472,9 +12642,18 @@ button.dashboard-settings-panel-toggle:focus-visible {
   margin: 0.35rem 0 0;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.35rem 0.65rem;
   font-size: 0.72rem;
   color: color-mix(in srgb, var(--dash-info) 95%, transparent);
+}
+
+.dashboard-menu-catalog-shared {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dash-ink);
 }
 
 .dashboard-settings-location-card-main {

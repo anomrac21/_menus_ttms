@@ -1,0 +1,159 @@
+{{ define "main" }}
+<div class="dashboard-analytics-page dashboard-settings-page dashboard-control-room" id="dashboardLocationsPage">
+  {{ partial "dashboard/subpage-header.html" (dict
+    "kicker" "Locations"
+    "toolbarLabel" "Locations toolbar"
+    "closeTitle" "Close locations"
+  ) }}
+
+  <main class="dashboard-analytics-main dashboard-settings-main">
+    <div class="dashboard-settings-snapshot-bar" id="settingsSnapshotBar">
+      <div class="dashboard-menu-status-slot-grid dashboard-menu-status-view-switch" role="radiogroup" aria-label="Menu version">
+        <button type="button" class="dashboard-menu-status-slot dashboard-menu-status-slot--live dashboard-menu-status-slot--active" id="settingsViewLive" role="radio" aria-checked="true">
+          <span class="dashboard-menu-status-slot-label">Live</span>
+          <span class="dashboard-menu-status-slot-title">Published locations</span>
+        </button>
+        <button type="button" class="dashboard-menu-status-slot" id="settingsViewSnapshot" role="radio" aria-checked="false">
+          <span class="dashboard-menu-status-slot-label">Snapshot</span>
+          <span class="dashboard-menu-status-slot-title">Saved version</span>
+        </button>
+      </div>
+      <p class="dashboard-menu-status-muted" id="settingsSnapshotNote">Saves stay on the snapshot until you publish from the dashboard.</p>
+    </div>
+    {{ partial "dashboard/locations-settings-panel.html" (dict "standalone" true) }}
+  </main>
+</div>
+<script src="/js/dashboard-settings-locations.js"></script>
+<script>
+  {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
+  {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
+  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+  window.CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || "{{ $dashClient }}";
+  window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
+  window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
+  function cmsApiBase() {
+    var a = (window.CMS_API_URL || '').replace(/\/+$/, '');
+    if (a) return a;
+    var s = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+    if (/\/api$/i.test(s)) return s;
+    return s + '/api';
+  }
+  function parseCmsApiResponse(res) {
+    var ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (ct.indexOf('application/json') !== -1) {
+      return res.json().then(function(data) {
+        if (!res.ok) {
+          throw new Error((data && (data.error || data.message)) || res.statusText || String(res.status));
+        }
+        return data;
+      });
+    }
+    return res.text().then(function(text) {
+      if (!res.ok) {
+        var t = (text || '').replace(/\s+/g, ' ').trim();
+        throw new Error((res.status ? res.status + ' ' : '') + (t.slice(0, 160) || res.statusText));
+      }
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('Expected JSON from CMS; got: ' + (text || '').slice(0, 100));
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', async function() {
+    if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
+      await AuthClient.whenReady();
+    }
+    if (!window.AuthClientAccess || !(await AuthClientAccess.protectClientPage({ redirectUrl: '/login/', noAccessRedirect: '/' }))) {
+      return;
+    }
+
+    function settingsClientId() {
+      return window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+    }
+    function snapshotStorageKey() {
+      return 'ttmenus_active_snapshot_' + settingsClientId();
+    }
+    function readSnapshotSelection() {
+      try {
+        var v = localStorage.getItem(snapshotStorageKey());
+        if (!v || v === 'live') return '';
+        return String(v).trim();
+      } catch (e) {
+        return '';
+      }
+    }
+    function rememberSnapshot(versionId) {
+      try {
+        localStorage.setItem(snapshotStorageKey(), versionId || 'live');
+      } catch (e) {}
+      syncSnapshotSwitch(!!versionId);
+    }
+    function syncSnapshotSwitch(snapshotOn) {
+      var liveBtn = document.getElementById('settingsViewLive');
+      var snapBtn = document.getElementById('settingsViewSnapshot');
+      if (liveBtn) {
+        liveBtn.classList.toggle('dashboard-menu-status-slot--active', !snapshotOn);
+        liveBtn.setAttribute('aria-checked', snapshotOn ? 'false' : 'true');
+      }
+      if (snapBtn) {
+        snapBtn.classList.toggle('dashboard-menu-status-slot--active', !!snapshotOn);
+        snapBtn.setAttribute('aria-checked', snapshotOn ? 'true' : 'false');
+      }
+    }
+    function snapshotSavedStatus(data, fallback) {
+      if (data && data.version_id) rememberSnapshot(data.version_id);
+      if (data && data.status === 'draft') return 'Saved to snapshot.';
+      if (data && data.message) return data.message;
+      return fallback || 'Saved to snapshot.';
+    }
+    function fetchSnapshotSite() {
+      var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+      if (!token) return Promise.resolve(null);
+      var url = cmsApiBase() + '/clients/' + encodeURIComponent(settingsClientId()) + '/menu-versions/site';
+      return fetch(url, {
+        credentials: 'include',
+        headers: { Accept: 'application/json', Authorization: 'Bearer ' + token }
+      }).then(parseCmsApiResponse).catch(function() { return null; });
+    }
+    function applySnapshotSite(site) {
+      if (!site) return;
+      var locs = site.locations;
+      if (locs && !Array.isArray(locs) && Array.isArray(locs.locations)) locs = locs.locations;
+      if (Array.isArray(locs) && window.__ttmsSettingsLocations && window.__ttmsSettingsLocations.apply) {
+        window.__ttmsSettingsLocations.apply(locs);
+      }
+    }
+    function showLiveSettings() {
+      rememberSnapshot('');
+      if (window.__ttmsSettingsLocations && window.__ttmsSettingsLocations.reloadLive) {
+        window.__ttmsSettingsLocations.reloadLive();
+      }
+    }
+    function showSnapshotSettings() {
+      return fetchSnapshotSite().then(function(data) {
+        if (!data || !data.version_id || !data.site) {
+          var note = document.getElementById('settingsSnapshotNote');
+          if (note) note.textContent = 'No snapshot yet. Save locations to create one.';
+          syncSnapshotSwitch(false);
+          return;
+        }
+        rememberSnapshot(data.version_id);
+        applySnapshotSite(data.site);
+      });
+    }
+
+    window.cmsApiBase = cmsApiBase;
+    window.parseCmsApiResponse = parseCmsApiResponse;
+    window.snapshotSavedStatus = snapshotSavedStatus;
+    initLocationsSettings();
+
+    var settingsViewLive = document.getElementById('settingsViewLive');
+    var settingsViewSnapshot = document.getElementById('settingsViewSnapshot');
+    if (settingsViewLive) settingsViewLive.addEventListener('click', showLiveSettings);
+    if (settingsViewSnapshot) settingsViewSnapshot.addEventListener('click', function() { showSnapshotSettings(); });
+    if (readSnapshotSelection()) showSnapshotSettings();
+    else syncSnapshotSwitch(false);
+  });
+</script>
+{{ end }}

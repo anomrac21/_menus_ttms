@@ -1,0 +1,39 @@
+{{- $title := .title | default "Untitled" -}}
+{{- $kind := .kind | default "menu-item" -}}
+{{- $sectionKey := .sectionKey -}}
+{{- $sectionLabel := .sectionLabel -}}
+{{- $sectionWeight := .sectionWeight | default 0 -}}
+<div class="dashboard-settings-location-card{{ if .hidden }} hidden{{ end }}"{{ with .locationSlug }} data-location-slug="{{ . }}"{{ end }}{{ with $sectionKey }} data-section-key="{{ . }}" data-section-label="{{ $sectionLabel }}" data-section-weight="{{ $sectionWeight }}"{{ end }}{{ if .shared }} data-shared="1"{{ end }}>
+  <div class="dashboard-settings-location-card-main">
+    <h3 class="dashboard-settings-location-card-title">{{ $title }}</h3>
+    {{- $meta := .meta | default slice -}}
+    {{- if or .shared (gt (len $meta) 0) -}}
+    <p class="dashboard-settings-location-card-meta">
+      {{- if .shared -}}<span class="dashboard-menu-catalog-shared">Shared</span>{{- end -}}
+      {{- range $meta -}}
+        {{- if . -}}<span>{{ . }}</span>{{- end -}}
+      {{- end -}}
+    </p>
+    {{- end -}}
+  </div>
+  <div class="dashboard-settings-location-card-actions">
+    <button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>
+  </div>
+  {{- if eq $kind "section-header" -}}
+  <div class="menu-header" hidden data-section-slug="{{ .sectionSlug }}">
+    <h2><a href="/{{ .sectionSlug }}/">{{ $title }}</a></h2>
+    <div class="menu-summary"></div>
+    <div class="menu-item-actions" data-actions-kind="section-header" data-section-slug="{{ .sectionSlug }}" data-item-title="{{ $title }}"></div>
+  </div>
+  {{- else if eq $kind "promotion" -}}
+  <article class="ads-reels-slide" hidden data-catalog-index="{{ .catalogIndex }}" data-ad-id="{{ .adId }}" data-ad-title="{{ $title }}" data-ad-url="{{ .adUrl }}">
+    <div class="menu-item-actions" data-actions-kind="promotion" data-promotion-catalog-index="{{ .catalogIndex }}" data-ad-id="{{ .adId }}" data-item-title="{{ $title }}" data-item-url="{{ .adUrl }}"></div>
+  </article>
+  {{- else -}}
+  <div class="menu-item-card" hidden data-item-url="{{ .itemUrl }}" data-section-slug="{{ .sectionSlug }}">
+    <span class="menu-item-title">{{ $title }}</span>
+    <p class="menu-item-description"></p>
+    <div class="menu-item-actions" data-actions-kind="menu-item" data-item-url="{{ .itemUrl }}" data-item-title="{{ $title }}" data-section-slug="{{ .sectionSlug }}"></div>
+  </div>
+  {{- end -}}
+</div>

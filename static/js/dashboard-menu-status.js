@@ -196,6 +196,37 @@
     saveOmittedDraftIds();
   }
 
+  function statusThrobber(label) {
+    var box = document.createElement('div');
+    box.className = 'dashboard-orders-throbber dashboard-menu-status-throbber';
+    box.setAttribute('role', 'status');
+    box.setAttribute('aria-live', 'polite');
+    box.setAttribute('aria-busy', 'true');
+    var spin = document.createElement('span');
+    spin.className = 'dashboard-orders-throbber-spin';
+    spin.setAttribute('aria-hidden', 'true');
+    var text = document.createElement('p');
+    text.className = 'dashboard-orders-throbber-label';
+    text.textContent = label;
+    box.appendChild(spin);
+    box.appendChild(text);
+    return box;
+  }
+
+  function setDashButtonBusy(btn, busy, busyLabel, idleHtml) {
+    if (!btn) return;
+    btn.disabled = !!busy;
+    btn.classList.toggle('is-loading', !!busy);
+    btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (busy) {
+      btn.innerHTML = busyLabel
+        ? '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> ' + busyLabel
+        : '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
+    } else if (idleHtml) {
+      btn.innerHTML = idleHtml;
+    }
+  }
+
   function deleteDraftFromCms(previewId) {
     if (!previewId) return Promise.reject(new Error('Missing draft id'));
     var delUrl = cmsClientPath('/content/previews/' + encodeURIComponent(previewId));
@@ -250,7 +281,8 @@
       ) {
         return;
       }
-      btn.disabled = true;
+      var idleHtml = btn.innerHTML;
+      setDashButtonBusy(btn, true, '');
       deleteDraftFromCms(previewId)
         .then(function () {
           clearOmitKeysForPreview(preview);
@@ -260,7 +292,7 @@
         .catch(function (err) {
           console.error('Delete draft failed', err);
           alert('Could not delete saved change: ' + (err.message || err));
-          btn.disabled = false;
+          setDashButtonBusy(btn, false, '', idleHtml);
         });
     });
 
@@ -1617,10 +1649,14 @@
     function syncStatusBlockUI(blockKey) {
       var block = document.querySelector('[data-menu-status-block="' + blockKey + '"]');
       if (!block) return;
+      var toggle = block.querySelector('[data-menu-status-block-toggle="' + blockKey + '"]');
+      if (!toggle) {
+        block.classList.remove('is-collapsed');
+        return;
+      }
       var collapsed = isStatusBlockCollapsed(blockKey);
       block.classList.toggle('is-collapsed', collapsed);
-      var toggle = block.querySelector('[data-menu-status-block-toggle="' + blockKey + '"]');
-      if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     }
 
     function syncAllStatusBlockUI() {
@@ -1770,10 +1806,7 @@
       snapshotStatusEl.textContent = '';
       if (snapshotLoadState === 'loading' || snapshotLoadState === 'idle') {
         setStatusBlockSummary('snapshots', 'Loading…');
-        var pLoad = document.createElement('p');
-        pLoad.className = 'dashboard-menu-status-muted dashboard-menu-status-loading';
-        pLoad.textContent = 'Loading menu snapshot…';
-        snapshotStatusEl.appendChild(pLoad);
+        snapshotStatusEl.appendChild(statusThrobber('Loading menu snapshot…'));
         return;
       }
       if (snapshotLoadState === 'auth') {
@@ -1801,85 +1834,45 @@
         return;
       }
       var version = currentSnapshotVersion();
-      if (!version) {
-        if (selectedSnapshotId) {
-          selectedSnapshotId = null;
-          persistSnapshotSelection();
-          syncEditorLinks();
-        }
-        setStatusBlockSummary('snapshots', 'No snapshot');
-      } else if (
-        selectedSnapshotId &&
-        versionIdFromRecord(version) !== selectedSnapshotId
-      ) {
+      var versionId = version ? versionIdFromRecord(version) : '';
+      if (versionId && selectedSnapshotId !== versionId) {
+        selectedSnapshotId = versionId;
+        persistSnapshotSelection();
+        syncEditorLinks();
+      } else if (!versionId && selectedSnapshotId) {
         selectedSnapshotId = null;
         persistSnapshotSelection();
         syncEditorLinks();
       }
 
-      if (version && selectedSnapshotId) {
+      if (!version) {
+        setStatusBlockSummary('snapshots', 'No snapshot');
+      } else {
         var selectedWhen = snapshotDisplayParts(version).when;
-        setStatusBlockSummary(
-          'snapshots',
-          selectedWhen ? 'Snapshot · ' + selectedWhen : 'Snapshot'
-        );
-      } else if (version) {
-        setStatusBlockSummary('snapshots', 'Live · snapshot saved');
+        setStatusBlockSummary('snapshots', selectedWhen || 'Snapshot saved');
       }
 
       var slotGrid = document.createElement('div');
-      slotGrid.className = 'dashboard-menu-status-slot-grid dashboard-menu-status-view-switch';
-      slotGrid.setAttribute('role', 'radiogroup');
-      slotGrid.setAttribute('aria-label', 'Menu version');
+      slotGrid.className =
+        'dashboard-menu-status-slot-grid dashboard-menu-status-view-switch dashboard-menu-status-slot-grid--single';
 
-      var liveBtn = document.createElement('button');
-      liveBtn.type = 'button';
-      liveBtn.className = 'dashboard-menu-status-slot dashboard-menu-status-slot--live';
-      liveBtn.setAttribute('role', 'radio');
-      if (!selectedSnapshotId) {
-        liveBtn.classList.add('dashboard-menu-status-slot--active');
-        liveBtn.setAttribute('aria-checked', 'true');
-      } else {
-        liveBtn.setAttribute('aria-checked', 'false');
-      }
-      liveBtn.innerHTML =
-        '<span class="dashboard-menu-status-slot-label">Live</span>' +
-        '<span class="dashboard-menu-status-slot-title">Published menu</span>';
-      liveBtn.addEventListener('click', function () {
-        applySnapshotSelection(null);
-      });
-      slotGrid.appendChild(liveBtn);
-
-      var snapBtn = document.createElement('button');
-      snapBtn.type = 'button';
-      snapBtn.className = 'dashboard-menu-status-slot';
-      snapBtn.setAttribute('role', 'radio');
+      var snapSlot = document.createElement('div');
+      snapSlot.className = 'dashboard-menu-status-slot dashboard-menu-status-slot--static';
       if (!version) {
-        snapBtn.classList.add('dashboard-menu-status-slot--empty');
-        snapBtn.disabled = true;
-        snapBtn.setAttribute('aria-checked', 'false');
-        snapBtn.innerHTML =
+        snapSlot.classList.add('dashboard-menu-status-slot--empty');
+        snapSlot.innerHTML =
           '<span class="dashboard-menu-status-slot-label">Snapshot</span>' +
           '<span class="dashboard-menu-status-slot-title">None saved</span>';
       } else {
         var parts = snapshotDisplayParts(version);
-        var vid = versionIdFromRecord(version);
-        if (vid && vid === selectedSnapshotId) {
-          snapBtn.classList.add('dashboard-menu-status-slot--active');
-          snapBtn.setAttribute('aria-checked', 'true');
-        } else {
-          snapBtn.setAttribute('aria-checked', 'false');
-        }
-        snapBtn.innerHTML =
+        snapSlot.classList.add('dashboard-menu-status-slot--active');
+        snapSlot.innerHTML =
           '<span class="dashboard-menu-status-slot-label">Snapshot</span>' +
           '<span class="dashboard-menu-status-slot-title">' +
           (parts.when || 'Saved version') +
           '</span>';
-        snapBtn.addEventListener('click', function () {
-          applySnapshotSelection(vid);
-        });
       }
-      slotGrid.appendChild(snapBtn);
+      slotGrid.appendChild(snapSlot);
       snapshotStatusEl.appendChild(slotGrid);
 
       var status = document.createElement('p');
@@ -1887,19 +1880,70 @@
       if (!version) {
         status.textContent =
           'No snapshot yet. A dish, section, theme, or settings change creates one. Later changes update that same snapshot.';
-      } else if (selectedSnapshotId) {
-        var counts = snapshotCountLine(version);
-        var when = snapshotDisplayParts(version).when;
-        status.textContent =
-          'Viewing the snapshot' +
-          (when ? ' from ' + when : '') +
-          (counts ? ' · ' + counts : '') +
-          '. Edit theme, rearrange, and content open this version.';
       } else {
+        var counts = snapshotCountLine(version);
         status.textContent =
-          'Viewing the live menu. Switch to Snapshot to open the saved version in the editors.';
+          'Edit menu, Edit theme, Rearrange, and Settings update this snapshot' +
+          (counts ? ' (' + counts + ')' : '') +
+          '.';
       }
       snapshotStatusEl.appendChild(status);
+
+      if (versionId) {
+        var foot = document.createElement('div');
+        foot.className = 'dashboard-menu-status-block-foot';
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-dash btn-dash-danger';
+        deleteBtn.innerHTML =
+          '<i class="fa fa-trash" aria-hidden="true"></i> Delete snapshot';
+        deleteBtn.addEventListener('click', function () {
+          deleteCurrentSnapshot(versionId, deleteBtn);
+        });
+        foot.appendChild(deleteBtn);
+        snapshotStatusEl.appendChild(foot);
+      }
+    }
+
+    function deleteCurrentSnapshot(versionId, button) {
+      if (!versionId) return;
+      if (!confirm('Permanently delete this menu snapshot? This cannot be undone.')) return;
+      setDashButtonBusy(button, true, 'Deleting…');
+      ensureAccessTokenForCms()
+        .then(function (token) {
+          if (!token) throw new Error('CMS session expired. Sign out and sign in again.');
+          return fetch(cmsClientPath('/menu-versions/' + encodeURIComponent(versionId)), {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: getAuthHeaders(),
+          });
+        })
+        .then(function (res) {
+          if (!res.ok && res.status !== 204) {
+            return res.text().then(function (text) {
+              throw new Error(text || 'Could not delete snapshot');
+            });
+          }
+          selectedSnapshotId = null;
+          persistSnapshotSelection();
+          try {
+            if (sessionStorage.getItem('editMenuVersionId') === versionId) {
+              sessionStorage.removeItem('editMenuVersionId');
+            }
+            sessionStorage.setItem('editPreviewMode', 'live');
+          } catch (e) {}
+          syncEditorLinks();
+          return fetchMenuVersions();
+        })
+        .catch(function (err) {
+          setDashButtonBusy(
+            button,
+            false,
+            '',
+            '<i class="fa fa-trash" aria-hidden="true"></i> Delete snapshot'
+          );
+          alert('Could not delete snapshot: ' + ((err && err.message) || err));
+        });
     }
 
     function draftBlockSummaryText(n, publishableCount) {
@@ -1924,10 +1968,7 @@
       draftStatusEl.textContent = '';
       if (draftLoadState === 'loading' || draftLoadState === 'idle') {
         setStatusBlockSummary('drafts', 'Loading…');
-        var pLoadD = document.createElement('p');
-        pLoadD.className = 'dashboard-menu-status-muted dashboard-menu-status-loading';
-        pLoadD.textContent = 'Loading content drafts…';
-        draftStatusEl.appendChild(pLoadD);
+        draftStatusEl.appendChild(statusThrobber('Loading content changes…'));
         return;
       }
       if (draftLoadState === 'auth') {
@@ -2300,17 +2341,9 @@
             .slice(0, 1);
           snapshotLoadState = 'ok';
           snapshotLoadError = '';
-          var persisted = loadPersistedSnapshotSelection();
-          if (
-            persisted &&
-            cachedVersions.some(function (v) {
-              return versionIdFromRecord(v) === persisted;
-            })
-          ) {
-            selectedSnapshotId = persisted;
-          } else {
-            selectedSnapshotId = null;
-          }
+          selectedSnapshotId = cachedVersions.length
+            ? versionIdFromRecord(cachedVersions[0]) || null
+            : null;
           syncEditorLinks();
           renderSnapshotStatusSummary();
           return cachedVersions;
@@ -2535,11 +2568,16 @@
         if (publishSummaryConfirm) {
           publishSummaryConfirm.onclick = function () {
             if (pending.length === 0) return;
-            publishSummaryConfirm.disabled = true;
+            setDashButtonBusy(publishSummaryConfirm, true, 'Publishing…');
             ensureAccessTokenForCms().then(function (token) {
               if (!token) {
                 alert('CMS session expired. Sign out and sign in again.');
-                publishSummaryConfirm.disabled = false;
+                setDashButtonBusy(
+                  publishSummaryConfirm,
+                  false,
+                  '',
+                  '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
+                );
                 return;
               }
             var changes = pending.map(function (p) {
@@ -2589,17 +2627,30 @@
                   (pending.length === 1 ? '' : 's') +
                   ' published to your live site.';
                 if (hash) flashMsg += ' Git commit ' + hash.slice(0, 7) + '.';
+                var publishWarnings = resp && Array.isArray(resp.warnings) ? resp.warnings.filter(Boolean) : [];
+                if (publishWarnings.length) {
+                  flashMsg += ' ' + publishWarnings.join(' ');
+                  alert(publishWarnings.join('\n\n'));
+                }
                 showPublishFlashMessage(flashMsg);
                 closePublishSummaryModal();
-                publishSummaryConfirm.disabled = false;
-                publishSummaryConfirm.innerHTML =
-                  '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish';
+                setDashButtonBusy(
+                  publishSummaryConfirm,
+                  false,
+                  '',
+                  '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
+                );
                 return refreshMenuCard();
               })
               .catch(function (err) {
                 console.error('Publish failed', err);
                 alert('Publish failed: ' + (err.message || err));
-                publishSummaryConfirm.disabled = false;
+                setDashButtonBusy(
+                  publishSummaryConfirm,
+                  false,
+                  '',
+                  '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
+                );
               });
             });
           };
@@ -2628,6 +2679,32 @@
     });
 
     global.addEventListener('ttms:auth-ready', scheduleRefreshMenuCard);
+
+    var inventory = document.querySelector('.dashboard-menu-inventory');
+    if (inventory && !inventory.getAttribute('data-add-bound')) {
+      inventory.setAttribute('data-add-bound', '1');
+      inventory.addEventListener('click', function (ev) {
+        var link = ev.target.closest('[data-menu-add]');
+        if (!link || !inventory.contains(link)) return;
+        var kind = link.getAttribute('data-menu-add');
+        try {
+          sessionStorage.removeItem('editMenuPendingAddSection');
+          sessionStorage.removeItem('editMenuPendingAddItem');
+          sessionStorage.removeItem('editMenuPendingAddPromotion');
+          if (kind === 'section') sessionStorage.setItem('editMenuPendingAddSection', '1');
+          if (kind === 'item') sessionStorage.setItem('editMenuPendingAddItem', '1');
+          if (kind === 'promotion') sessionStorage.setItem('editMenuPendingAddPromotion', '1');
+          sessionStorage.setItem('editMenuLiveMode', 'content');
+          if (selectedSnapshotId) {
+            sessionStorage.setItem('editPreviewMode', 'drafts');
+            sessionStorage.setItem('editMenuVersionId', selectedSnapshotId);
+          } else {
+            sessionStorage.setItem('editPreviewMode', 'live');
+            sessionStorage.removeItem('editMenuVersionId');
+          }
+        } catch (e) {}
+      });
+    }
 
     if (contentLink) {
       contentLink.addEventListener('click', function () {

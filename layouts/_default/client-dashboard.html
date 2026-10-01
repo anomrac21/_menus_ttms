@@ -22,7 +22,7 @@
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-images.js` }}" defer></script>
   {{- end }}
   <script src="/js/dashboard-analytics-snapshot.js" defer></script>
-  <script src="/js/dashboard-menu-status.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-status.js` }}" defer></script>
   <script>
   window.SITE_DISPLAY_NAME = {{ (site.Title | default `Menu Demo`) | jsonify }};
   window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
@@ -125,81 +125,128 @@
       </div>
       <div class="card card-edit-menu is-collapsed" data-dashboard-card="edit-menu">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="edit-menu" aria-expanded="false" aria-controls="dashboardCardBody-edit-menu">
-          <h3 class="dashboard-card-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Edit menu</h3>
+          <h3 class="dashboard-card-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Menu</h3>
           <span class="dashboard-card-count is-loading" id="dashboardCardEditMenuCount" aria-label="Unpublished drafts" aria-busy="true"></span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-edit-menu">
-          <nav class="dashboard-edit-menu-nav" aria-label="Menu editing tools">
-            <a href="/?edit=content" class="dashboard-edit-menu-action dashboard-edit-menu-action--primary" id="cardEditMenuContent">
-              <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-pencil"></i></span>
-              <span class="dashboard-edit-menu-action-copy">
-                <span class="dashboard-edit-menu-action-title">Edit menu content</span>
-                <span class="dashboard-edit-menu-action-desc">Update dishes, prices, descriptions, and sections on the live menu</span>
-              </span>
-              <span class="dashboard-edit-menu-action-go" aria-hidden="true"><i class="fa fa-arrow-right"></i></span>
-            </a>
-            <div class="dashboard-edit-menu-action-grid">
-              <a href="/edit-menu-colors/" class="dashboard-edit-menu-action dashboard-menu-status-open-editor" id="cardEditMenu" title="Open live menu in theme editor">
-                <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
-                <span class="dashboard-edit-menu-action-copy">
-                  <span class="dashboard-edit-menu-action-title">Edit theme</span>
-                  <span class="dashboard-edit-menu-action-desc">Colors and look</span>
-                </span>
-              </a>
-              <a href="/edit-menu-rearrange/" class="dashboard-edit-menu-action" id="cardRearrangeMenu" title="Rearrange live menu order">
-                <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-arrows"></i></span>
-                <span class="dashboard-edit-menu-action-copy">
-                  <span class="dashboard-edit-menu-action-title">Rearrange</span>
-                  <span class="dashboard-edit-menu-action-desc">Reorder sections &amp; items</span>
-                </span>
-              </a>
-              <a href="/menu-settings/" class="dashboard-edit-menu-action">
-                <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-cog"></i></span>
-                <span class="dashboard-edit-menu-action-copy">
-                  <span class="dashboard-edit-menu-action-title">Settings</span>
-                  <span class="dashboard-edit-menu-action-desc">Hero, locations, branding</span>
-                </span>
-              </a>
-            </div>
-          </nav>
-          <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
-          <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshot, content drafts, and publish status">
-            <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots is-collapsed" data-menu-status-block="snapshots">
-              <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="snapshots" aria-expanded="false">
-                <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
-                <span class="dashboard-menu-status-heading-main">
-                  <span class="dashboard-menu-status-heading-text">Menu snapshot</span>
-                  <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary"></span>
-                </span>
-                <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+          <div class="dashboard-menu-hub" id="dashboardMenuHub">
+            <div class="dashboard-orders-hub-tabs" role="tablist" aria-label="Update and publish the menu">
+              <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" id="dashboardMenuHubTab-update" data-menu-hub="update" aria-selected="true" aria-controls="dashboardMenuHubPanel-update">
+                <i class="fa fa-pencil" aria-hidden="true"></i>
+                <span>Update menu</span>
               </button>
-              <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
-            </div>
-            <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts is-collapsed" data-menu-status-block="drafts">
-              <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="drafts" aria-expanded="false">
-                <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
-                <span class="dashboard-menu-status-heading-main">
-                  <span class="dashboard-menu-status-heading-text">Content drafts</span>
-                  <span class="dashboard-menu-status-heading-summary" id="dashboardDraftBlockSummary"></span>
-                </span>
-                <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+              <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardMenuHubTab-publish" data-menu-hub="publish" aria-selected="false" aria-controls="dashboardMenuHubPanel-publish">
+                <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+                <span>Publish menu</span>
+                <span class="dashboard-card-count is-loading" id="dashboardMenuHubPublishCount" aria-label="Unpublished changes" aria-busy="true"></span>
               </button>
-              <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
-              <div class="dashboard-menu-status-block-foot dashboard-menu-status-block-foot--publish dashboard-menu-status-block-detail">
-                <button type="button" class="btn-dash btn-dash-publish hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">Publish</span></button>
+            </div>
+            <div class="dashboard-orders-hub-panel" id="dashboardMenuHubPanel-update" role="tabpanel" data-menu-hub-panel="update" aria-labelledby="dashboardMenuHubTab-update">
+              {{- $menuCounts := partial "menu/inventory-counts.html" . -}}
+              <div class="dashboard-menu-inventory" aria-label="Published menu contents">
+                <div class="dashboard-menu-inventory-grid">
+                  <div class="dashboard-menu-inventory-cell">
+                    <div class="dashboard-menu-inventory-title">
+                      <a href="/location-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-label">Locations</a>
+                      <a href="/location-settings/?add=location" class="dashboard-menu-inventory-add" aria-label="Add location"><i class="fa fa-plus" aria-hidden="true"></i></a>
+                    </div>
+                    <a href="/location-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-value">{{ $menuCounts.locations }}</a>
+                  </div>
+                  <div class="dashboard-menu-inventory-cell">
+                    <div class="dashboard-menu-inventory-title">
+                      <a href="/section-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-label">Sections</a>
+                      <a href="/section-settings/?add=section" class="dashboard-menu-inventory-add" aria-label="Add section"><i class="fa fa-plus" aria-hidden="true"></i></a>
+                    </div>
+                    <a href="/section-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-value">{{ $menuCounts.sections }}</a>
+                  </div>
+                  <div class="dashboard-menu-inventory-cell">
+                    <div class="dashboard-menu-inventory-title">
+                      <a href="/menu-item-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-label">Menu items</a>
+                      <a href="/menu-item-settings/?add=item" class="dashboard-menu-inventory-add" aria-label="Add menu item"><i class="fa fa-plus" aria-hidden="true"></i></a>
+                    </div>
+                    <a href="/menu-item-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-value">{{ $menuCounts.items }}</a>
+                  </div>
+                  <div class="dashboard-menu-inventory-cell">
+                    <div class="dashboard-menu-inventory-title">
+                      <a href="/promotion-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-label">Promotions</a>
+                      <a href="/promotion-settings/?add=promotion" class="dashboard-menu-inventory-add" aria-label="Add promotion"><i class="fa fa-plus" aria-hidden="true"></i></a>
+                    </div>
+                    <a href="/promotion-settings/" class="dashboard-menu-inventory-open dashboard-card-notify-snapshot-value">{{ $menuCounts.promotions }}</a>
+                  </div>
+                </div>
               </div>
+              <nav class="dashboard-edit-menu-nav" aria-label="Menu editing tools">
+                <a href="/?edit=content" class="dashboard-edit-menu-action dashboard-edit-menu-action--primary" id="cardEditMenuContent">
+                  <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-pencil"></i></span>
+                  <span class="dashboard-edit-menu-action-copy">
+                    <span class="dashboard-edit-menu-action-title">Edit menu</span>
+                    <span class="dashboard-edit-menu-action-desc">Update dishes, prices, descriptions, and sections on the live menu</span>
+                  </span>
+                  <span class="dashboard-edit-menu-action-go" aria-hidden="true"><i class="fa fa-arrow-right"></i></span>
+                </a>
+                <div class="dashboard-edit-menu-action-grid">
+                  <a href="/edit-menu-colors/" class="dashboard-edit-menu-action dashboard-menu-status-open-editor" id="cardEditMenu" title="Open live menu in theme editor">
+                    <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
+                    <span class="dashboard-edit-menu-action-copy">
+                      <span class="dashboard-edit-menu-action-title">Edit theme</span>
+                      <span class="dashboard-edit-menu-action-desc">Colors and look</span>
+                    </span>
+                  </a>
+                  <a href="/edit-menu-rearrange/" class="dashboard-edit-menu-action" id="cardRearrangeMenu" title="Rearrange live menu order">
+                    <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-arrows"></i></span>
+                    <span class="dashboard-edit-menu-action-copy">
+                      <span class="dashboard-edit-menu-action-title">Rearrange</span>
+                      <span class="dashboard-edit-menu-action-desc">Reorder sections &amp; items</span>
+                    </span>
+                  </a>
+                  <a href="/menu-settings/" class="dashboard-edit-menu-action">
+                    <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-cog"></i></span>
+                    <span class="dashboard-edit-menu-action-copy">
+                      <span class="dashboard-edit-menu-action-title">Settings</span>
+                      <span class="dashboard-edit-menu-action-desc">Hero, social, branding</span>
+                    </span>
+                  </a>
+                </div>
+              </nav>
             </div>
-            <div class="dashboard-menu-status-block dashboard-menu-status-block--publish is-collapsed" data-menu-status-block="publish">
-              <button type="button" class="dashboard-menu-status-heading dashboard-menu-status-heading-toggle" data-menu-status-block-toggle="publish" aria-expanded="false">
-                <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
-                <span class="dashboard-menu-status-heading-main">
-                  <span class="dashboard-menu-status-heading-text">Last publish</span>
-                  <span class="dashboard-menu-status-heading-summary" id="dashboardLastPublishBlockSummary"></span>
-                </span>
-                <span class="dashboard-menu-status-heading-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
-              </button>
-              <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+            <div class="dashboard-orders-hub-panel" id="dashboardMenuHubPanel-publish" role="tabpanel" data-menu-hub-panel="publish" aria-labelledby="dashboardMenuHubTab-publish" hidden>
+              <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
+              <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshot, content change report, and last published">
+                <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots" data-menu-status-block="snapshots">
+                  <div class="dashboard-menu-status-heading">
+                    <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
+                    <span class="dashboard-menu-status-heading-main">
+                      <span class="dashboard-menu-status-heading-text">Menu snapshot</span>
+                      <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary"></span>
+                    </span>
+                  </div>
+                  <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+                </div>
+                <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts" data-menu-status-block="drafts">
+                  <div class="dashboard-menu-status-heading">
+                    <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
+                    <span class="dashboard-menu-status-heading-main">
+                      <span class="dashboard-menu-status-heading-text">Content change report</span>
+                      <span class="dashboard-menu-status-heading-summary" id="dashboardDraftBlockSummary"></span>
+                    </span>
+                  </div>
+                  <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+                  <div class="dashboard-menu-status-block-foot dashboard-menu-status-block-foot--publish dashboard-menu-status-block-detail">
+                    <button type="button" class="btn-dash btn-dash-publish hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">Publish</span></button>
+                  </div>
+                </div>
+                <div class="dashboard-menu-status-block dashboard-menu-status-block--publish" data-menu-status-block="publish">
+                  <div class="dashboard-menu-status-heading">
+                    <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-cloud-upload"></i></span>
+                    <span class="dashboard-menu-status-heading-main">
+                      <span class="dashboard-menu-status-heading-text">Last published</span>
+                      <span class="dashboard-menu-status-heading-summary" id="dashboardLastPublishBlockSummary"></span>
+                    </span>
+                  </div>
+                  <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@
     'dashboardOrdersHubInboxCount',
     'dashboardCardDeliveryCount',
     'dashboardCardEditMenuCount',
+    'dashboardMenuHubPublishCount',
     'dashboardCardMenuImagesCount',
     'dashboardCardAnalyticsCount',
     'dashboardCardNotifyCount',
@@ -178,6 +179,7 @@
     mirror('dashboardCardAnalyticsVisits', 'dashboardCardAnalyticsCount', false);
     mirror('dashboardCardNotifySubs', 'dashboardCardNotifyCount', false);
     mirror('dashboardDraftBlockSummary', 'dashboardCardEditMenuCount', true);
+    mirror('dashboardDraftBlockSummary', 'dashboardMenuHubPublishCount', true);
   }
 
   async function refresh() {

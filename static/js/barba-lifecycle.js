@@ -18,6 +18,10 @@
     '/analytics',
     '/notifications',
     '/menu-settings',
+    '/location-settings',
+    '/section-settings',
+    '/menu-item-settings',
+    '/promotion-settings',
     '/admin',
   ];
 

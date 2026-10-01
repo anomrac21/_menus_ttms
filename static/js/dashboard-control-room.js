@@ -334,6 +334,57 @@
     }
   }
 
+  function menuHubStorageKey() {
+    var id = global.SITE_CLIENT_ID || global.CLIENT_ID || 'site';
+    return 'ttms.dashboard.menuHub.' + String(id);
+  }
+
+  function savedMenuHubTab() {
+    try {
+      var saved = localStorage.getItem(menuHubStorageKey());
+      if (saved === 'publish' || saved === 'update') return saved;
+    } catch (e) {
+      /* ignore */
+    }
+    return 'update';
+  }
+
+  function openMenuHubTab(name) {
+    var root = document.getElementById('dashboardMenuHub');
+    if (!root) return;
+    if (name !== 'publish') name = 'update';
+    var tabs = root.querySelectorAll('[data-menu-hub]');
+    var panels = root.querySelectorAll('[data-menu-hub-panel]');
+    var i;
+    for (i = 0; i < tabs.length; i++) {
+      var on = tabs[i].getAttribute('data-menu-hub') === name;
+      tabs[i].classList.toggle('is-active', on);
+      tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    for (i = 0; i < panels.length; i++) {
+      var show = panels[i].getAttribute('data-menu-hub-panel') === name;
+      if (show) panels[i].removeAttribute('hidden');
+      else panels[i].setAttribute('hidden', '');
+    }
+    try {
+      localStorage.setItem(menuHubStorageKey(), name);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  function initMenuHub() {
+    var root = document.getElementById('dashboardMenuHub');
+    if (!root || root.getAttribute('data-hub-bound')) return;
+    root.setAttribute('data-hub-bound', '1');
+    root.addEventListener('click', function (ev) {
+      var tab = ev.target.closest('[data-menu-hub]');
+      if (!tab || !root.contains(tab)) return;
+      openMenuHubTab(tab.getAttribute('data-menu-hub'));
+    });
+    openMenuHubTab(savedMenuHubTab());
+  }
+
   function initOrdersHub() {
     var root = document.getElementById('dashboardOrdersHub');
     if (!root || root.getAttribute('data-hub-bound')) return;
@@ -444,6 +495,7 @@
       }
     }
     initOrdersHub();
+    initMenuHub();
     applySideSelection(preferredSideKey());
   }
 

@@ -1,0 +1,51 @@
+{{- /*
+  Published menu totals for the dashboard.
+  Locations: visible location entries.
+  Sections and menu items: category pages on those locations (promotions excluded).
+  Promotions: promotion pages, including a top-level /promotions/ section.
+*/ -}}
+{{- $c := newScratch -}}
+{{- $c.Set "sections" 0 -}}
+{{- $c.Set "items" 0 -}}
+{{- $c.Set "promos" 0 -}}
+{{- $locs := partial "menu/visible-locations.html" . -}}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
+{{- if $multi -}}
+  {{- range $locs -}}
+    {{- with site.GetPage (printf "/%s" .slug) -}}
+      {{- range .Sections -}}
+        {{- $secSlug := partial "menu/section-slug.html" . -}}
+        {{- if eq $secSlug "promotions" -}}
+          {{- $c.Add "promos" (len .RegularPages) -}}
+        {{- else if and .RegularPages (not (partial "menu/is-excluded-section.html" .RelPermalink)) -}}
+          {{- $c.Add "sections" 1 -}}
+          {{- $c.Add "items" (len .RegularPages) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- with site.GetPage "/promotions" -}}
+    {{- $c.Add "promos" (len .RegularPages) -}}
+  {{- end -}}
+{{- else -}}
+  {{- range partial "menu/category-sections.html" . -}}
+    {{- $secSlug := partial "menu/section-slug.html" . -}}
+    {{- if eq $secSlug "promotions" -}}
+      {{- $c.Add "promos" (len .RegularPages) -}}
+    {{- else -}}
+      {{- $c.Add "sections" 1 -}}
+      {{- $c.Add "items" (len .RegularPages) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if eq ($c.Get "promos") 0 -}}
+    {{- with partial "menu/promotions-page.html" . -}}
+      {{- $c.Add "promos" (len .RegularPages) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return dict
+  "locations" (len $locs)
+  "sections" ($c.Get "sections")
+  "items" ($c.Get "items")
+  "promotions" ($c.Get "promos")
+-}}
