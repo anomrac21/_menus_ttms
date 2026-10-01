@@ -62,7 +62,7 @@
 .menu-review-chip__star,
 .menu-review-sheet__item-stars,
 .menu-review-stars__star.is-on {
-  color: var(--scheme-accent-2, #f5c451);
+  color: #f5c451;
 }
 
 .menu-review-chip__label {
