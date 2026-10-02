@@ -37,7 +37,7 @@
   --scheme-overlay: var(--modal-bg-container-color);
 
   /* Actions */
-  --scheme-button-bg: var(--button-color1);
+  --scheme-button-bg: var(--accent-color);
   --scheme-button-bg-2: var(--button-color2);
   --scheme-button-ink: var(--button-text-color1);
   --scheme-button-ink-2: var(--button-text-color2);
@@ -48,7 +48,6 @@
   --scheme-on-accent: var(--accent-text-color);
   --scheme-accent-ink: var(--selected-text-color3);
   --scheme-accent-glow: var(--accent-glow-color);
-
   --scheme-ink-muted: color-mix(in srgb, var(--scheme-ink) 72%, transparent);
   --scheme-ink-soft: color-mix(in srgb, var(--scheme-ink) 62%, transparent);
   --scheme-ink-faint: color-mix(in srgb, var(--scheme-ink) 42%, transparent);
