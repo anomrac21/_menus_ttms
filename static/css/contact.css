@@ -2346,8 +2346,6 @@ button.location-picker-card__select:focus-visible {
 }
 
 .location-picker .socialmedia .contact-cta--social .contact-cta__icon {
-    width: 1.7rem;
-    height: 1.7rem;
     margin: 0;
     border-radius: 50%;
     background:
@@ -2358,8 +2356,8 @@ button.location-picker-card__select:focus-visible {
 }
 
 .location-picker .socialmedia .contact-cta--social svg {
-    width: 0.95rem;
-    height: 0.95rem;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .location-picker .socialmedia .contact-cta--social[title="Facebook"] {
