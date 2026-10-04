@@ -200,7 +200,6 @@
 }
 
 .footer-settings-popover__btn--logout .footer-settings-popover__btn-icon {
-    color: color-mix(in srgb, var(--scheme-accent-2) 88%, var(--footer-settings-accent));
 }
 
 .footer-settings-popover__btn--logout:hover {

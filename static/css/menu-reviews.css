@@ -98,7 +98,7 @@
   padding: 1rem 1rem 1.25rem;
   box-sizing: border-box;
   border-radius: 1rem 1rem 0 0;
-  background: var(--scheme-button-bg, #1c1c1c);
+  background: var(--main-bg);
   color: var(--scheme-white, #fff);
   box-shadow: 0 -0.5rem 1.5rem color-mix(in srgb, var(--scheme-black, #000) 35%, transparent);
 }
@@ -186,8 +186,8 @@
 }
 
 .menu-review-sheet__save {
-  background: var(--scheme-accent-2, #f5c451);
-  color: var(--scheme-black, #111);
+  background: var(--accent-color);
+  color: var(--main-text-color);
 }
 
 .menu-review-sheet__delete,

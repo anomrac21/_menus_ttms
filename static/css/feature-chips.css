@@ -16,7 +16,6 @@
   --chip-ink: var(--scheme-black);
   --chip-soft: var(--scheme-white-muted);
   --chip-glow: color-mix(in srgb, var(--scheme-accent-glow) 35%, transparent);
-
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -29,7 +28,7 @@
   padding: 0.38rem 0.85rem 0.38rem 0.38rem;
   border-radius: 999px;
   border: 1.5px solid color-mix(in srgb, var(--scheme-accent) 55%, transparent);
-  background: linear-gradient(145deg, var(--scheme-white-muted) 0%, var(--scheme-accent) 100%);
+  background: linear-gradient(145deg, var(--scheme-accent) 0%, var(--scheme-accent) 100%);
   color: var(--chip-ink);
   box-shadow:
     0 1px 0 color-mix(in srgb, var(--scheme-white) 55%, transparent) inset,
@@ -341,6 +340,7 @@
 .loader-feature-label {
   line-height: 1;
   white-space: nowrap;
+  color: var(--main-text-color);
 }
 
 /* Collapsed: keep detail out of flow so chip width matches old badges */
