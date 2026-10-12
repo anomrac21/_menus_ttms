@@ -4,6 +4,9 @@
 {{- $sectionLabel := .sectionLabel -}}
 {{- $sectionWeight := .sectionWeight | default 0 -}}
 <div class="dashboard-settings-location-card{{ if .hidden }} hidden{{ end }}"{{ with .locationSlug }} data-location-slug="{{ . }}"{{ end }}{{ with $sectionKey }} data-section-key="{{ . }}" data-section-label="{{ $sectionLabel }}" data-section-weight="{{ $sectionWeight }}"{{ end }}{{ if .shared }} data-shared="1"{{ end }}>
+  {{- if or (eq $kind "section-header") (eq $kind "menu-item") (eq $kind "promotion") -}}
+  <button type="button" class="dashboard-catalog-drag" aria-label="Drag to reorder {{ $title }}"><i class="fa fa-bars" aria-hidden="true"></i></button>
+  {{- end -}}
   <div class="dashboard-settings-location-card-main">
     <h3 class="dashboard-settings-location-card-title">{{ $title }}</h3>
     {{- $meta := .meta | default slice -}}
@@ -26,7 +29,7 @@
     <div class="menu-item-actions" data-actions-kind="section-header" data-section-slug="{{ .sectionSlug }}" data-item-title="{{ $title }}"></div>
   </div>
   {{- else if eq $kind "promotion" -}}
-  <article class="ads-reels-slide" hidden data-catalog-index="{{ .catalogIndex }}" data-ad-id="{{ .adId }}" data-ad-title="{{ $title }}" data-ad-url="{{ .adUrl }}">
+  <article class="ads-reels-slide" hidden data-catalog-index="{{ .catalogIndex }}" data-ad-id="{{ .adId }}" data-ad-title="{{ $title }}" data-ad-url="{{ .adUrl }}"{{ with .contentPath }} data-content-path="{{ . }}"{{ end }}>
     <div class="menu-item-actions" data-actions-kind="promotion" data-promotion-catalog-index="{{ .catalogIndex }}" data-ad-id="{{ .adId }}" data-item-title="{{ $title }}" data-item-url="{{ .adUrl }}"></div>
   </article>
   {{- else -}}

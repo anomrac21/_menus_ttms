@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     } catch (e) { /* ignore */ }
   }
-  /** Theme and rearrange shell pages use an iframe preview; content edits use ?embed=panel from the live menu. */
+  /** Theme shell pages use an iframe preview; content edits use ?embed=panel from the live menu. */
   var editorShellPath = (function () {
     try {
       return window.location.pathname.replace(/\/+$/, '');
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   })();
   var themeOnlyMode = !embedPanelMode && editorShellPath.endsWith('/edit-menu-colors');
-  var rearrangeOnlyMode = !embedPanelMode && editorShellPath.endsWith('/edit-menu-rearrange');
   var parentMenuWindow =
     embedPanelMode && window.parent && window.parent !== window ? window.parent : null;
 
@@ -412,7 +411,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // CMS / content-management service configuration
   var CMS_SERVICE_URL = window.CMS_SERVICE_URL || 'https://cms.ttmenus.com';
-  var CMS_CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+  var CMS_CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
   window.CMS_SERVICE_URL = CMS_SERVICE_URL;
   window.CMS_CLIENT_ID = CMS_CLIENT_ID;
 
@@ -805,12 +804,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.body.classList.add('dashboard-edit-theme-only');
     var themeHeader = document.querySelector('.dashboard-edit-header--theme');
     if (themeHeader) themeHeader.setAttribute('aria-label', 'Theme editor toolbar');
-  }
-
-  if (rearrangeOnlyMode) {
-    document.body.classList.add('dashboard-edit-rearrange-only');
-    var rearrangeHeader = document.querySelector('.dashboard-edit-header--rearrange');
-    if (rearrangeHeader) rearrangeHeader.setAttribute('aria-label', 'Rearrange menu toolbar');
   }
 
   function expandColorAsidePanel() {
@@ -1371,6 +1364,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function promotionContentPathFromElement(el, win, doc) {
+    if (el) {
+      var stored = el.getAttribute('data-content-path') || '';
+      if (stored) return stored;
+    }
     if (win && doc) syncPromotionDataset(el, win, doc);
     var slug = promotionSlugFromElement(el);
     return slug ? 'content/promotions/' + slug + '.md' : null;
@@ -1466,11 +1463,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     }
     if (!slug) slug = 'promotion';
+    var existingPath = el.getAttribute('data-content-path') || '';
 
     return {
       kind: 'promotion',
       clientId: CMS_CLIENT_ID,
-      contentPath: 'content/promotions/' + slug + '.md',
+      contentPath: existingPath || ('content/promotions/' + slug + '.md'),
       siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
       frontMatter: {
         title: title,
@@ -2528,10 +2526,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     var daysArr = parseJsonAttr(slide, 'data-ad-daysofweek');
     var weightNum = typeof weight === 'number' ? weight : parseInt(slide.getAttribute('data-ad-weight') || '0', 10);
     if (isNaN(weightNum)) weightNum = 0;
+    var existingPath = slide.getAttribute('data-content-path') || '';
     return {
       kind: 'promotion',
       clientId: CMS_CLIENT_ID,
-      contentPath: 'content/promotions/' + slug + '.md',
+      contentPath: existingPath || ('content/promotions/' + slug + '.md'),
       siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
       frontMatter: {
         title: title || 'Promotion',
@@ -3334,14 +3333,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   fetchEditorSnapshotBootstrap();
 
   function setEditSubmode(mode) {
-    /* Inline move mode retired: dedicated /edit-menu-rearrange/ page handles order. */
-    if (mode === 'move' && !rearrangeOnlyMode) {
-      window.location.href = '/edit-menu-rearrange/';
-      return;
-    }
-    if (mode === 'move' && rearrangeOnlyMode) {
-      mode = 'content';
-    }
+    if (mode === 'move') mode = 'content';
     editSubmode = mode;
     page.setAttribute('data-edit-submode', mode);
     if (btnSubmodeContent) {
@@ -3381,9 +3373,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     initColorPainterCanvas();
   }
 
-  if (rearrangeOnlyMode) {
-    setEditMode(true);
-    setEditSubmode('content');
+  function colorPainterPhone() {
+    return window.innerWidth < 640;
+  }
+
+  function colorPainterDragThreshold() {
+    return colorPainterPhone() ? 22 : COLOR_PAINTER_DRAG_THRESHOLD;
+  }
+
+  function colorPainterFooterClearance() {
+    if (!colorPainterPhone()) return 0;
+    var footer = document.getElementById('footer');
+    if (!footer) return 72;
+    var rect = footer.getBoundingClientRect();
+    if (rect.height < 8 || rect.top >= window.innerHeight - 4) return 0;
+    return Math.max(0, Math.min(rect.height, window.innerHeight - rect.top));
   }
 
   function getColorPainterInsets() {
@@ -3403,7 +3407,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     return {
       top: Math.max(headerH, 48) + 12 + safeTop,
       right: 16 + safeRight,
-      bottom: 16 + safeBottom,
+      bottom: 16 + safeBottom + colorPainterFooterClearance(),
       left: 16 + safeLeft
     };
   }
@@ -3529,18 +3533,27 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function colorPainterRingRadii() {
-    var room = Math.max(120, getColorPainterRoom());
-    var gap = 76;
-    var inner = Math.min(120, Math.max(88, room * 0.3));
-    var mid = Math.min(210, Math.max(inner + gap, room * 0.54));
-    var outer = Math.min(292, Math.max(mid + gap, room * 0.78));
+    var phone = colorPainterPhone();
+    var measured = getColorPainterRoom();
+    var room = phone ? measured : Math.max(120, measured);
+    var gap = phone ? 56 : 76;
+    var inner = Math.min(phone ? 84 : 120, Math.max(phone ? 62 : 88, room * (phone ? 0.32 : 0.3)));
+    var mid = Math.min(phone ? 140 : 210, Math.max(inner + gap, room * (phone ? 0.5 : 0.54)));
+    var outer = Math.min(phone ? 164 : 292, Math.max(mid + (phone ? 36 : gap), room * (phone ? 0.62 : 0.78)));
     var limit = Math.max(inner + gap, room - 8);
+    if (phone) {
+      var cap = Math.max(76, measured - 6);
+      inner = Math.min(inner, Math.max(58, cap * 0.5));
+      mid = Math.min(mid, Math.max(inner + 28, cap * 0.72));
+      outer = Math.min(outer, cap);
+      limit = Math.min(limit, cap);
+    }
     if (outer > limit) {
       outer = limit;
       mid = inner + (outer - inner) * 0.52;
     }
-    var sectionsOnly = Math.min(172, Math.max(116, room * 0.58));
-    if (sectionsOnly > limit) sectionsOnly = Math.max(96, limit);
+    var sectionsOnly = Math.min(phone ? 112 : 172, Math.max(phone ? 84 : 116, room * (phone ? 0.42 : 0.58)));
+    if (sectionsOnly > limit) sectionsOnly = Math.max(phone ? 72 : 96, limit);
     return {
       sections: inner,
       sectionsOnly: sectionsOnly,
@@ -3572,9 +3585,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     var len = Math.sqrt(focusX * focusX + focusY * focusY) || 1;
     var ux = focusX / len;
     var uy = focusY / len;
-    var chipOuter = 34;
-    var gap = 18;
-    var labelHalf = 52;
+    var chipOuter = colorPainterPhone() ? 28 : 34;
+    var gap = colorPainterPhone() ? 8 : 18;
+    var labelHalf = colorPainterPhone() ? 34 : 52;
     var dist = (radius || len) + chipOuter + gap + labelHalf;
     return { x: ux * dist, y: uy * dist };
   }
@@ -3585,6 +3598,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!colorWheelFieldsEl || colorWheelFieldsEl.classList.contains('hidden') || !colorAsideEl) {
       return;
     }
+    if (colorPainterPhone()) {
+      var phoneInset = getColorPainterInsets();
+      var phoneOrb = getColorPainterOrbSize();
+      colorWheelFieldsEl.classList.add('is-phone-sheet');
+      colorWheelFieldsEl.style.left = '0.75rem';
+      colorWheelFieldsEl.style.right = '0.75rem';
+      colorWheelFieldsEl.style.top = 'auto';
+      colorWheelFieldsEl.style.width = 'auto';
+      colorWheelFieldsEl.style.bottom = Math.round(phoneInset.bottom + phoneOrb + 10) + 'px';
+      colorWheelFieldsEl.style.transform = 'none';
+      colorWheelFieldsEl.style.removeProperty('--wheel-field-x');
+      colorWheelFieldsEl.style.removeProperty('--wheel-field-y');
+      return;
+    }
+    colorWheelFieldsEl.classList.remove('is-phone-sheet');
     var orb = getColorPainterOrbSize();
     var rect = colorAsideEl.getBoundingClientRect();
     var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
@@ -3712,14 +3740,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         rad = (deg * Math.PI) / 180;
         visible = true;
       } else if (abs < 0.5) {
-        scale = 1.1;
+        scale = colorPainterPhone() ? 1.05 : 1.1;
         opacity = 1;
       } else if (abs < 1.5) {
-        scale = 0.88;
-        opacity = 0.78;
+        scale = colorPainterPhone() ? 0.98 : 0.88;
+        opacity = colorPainterPhone() ? 0.95 : 0.78;
       } else if (abs < 2.5) {
-        scale = 0.7;
-        opacity = 0.4;
+        scale = colorPainterPhone() ? 0.9 : 0.7;
+        opacity = colorPainterPhone() ? 0.82 : 0.4;
       } else {
         scale = 0.5;
         opacity = 0;
@@ -3737,7 +3765,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       item.style.setProperty('--ring-i', String(i));
       var selected = compact ? active : i === focusIdx;
       item.style.zIndex = selected ? '90' : String(Math.max(2, (compact ? 8 : 24) - Math.round(abs * 4)));
-      item.style.pointerEvents = interactive && visible && (compact || abs < 1.2) ? 'auto' : 'none';
+      item.style.pointerEvents = interactive && visible && (compact || colorPainterPhone() || abs < 1.2) ? 'auto' : 'none';
       item.tabIndex = !compact && i === focusIdx ? 0 : -1;
       item.setAttribute('aria-hidden', visible ? 'false' : 'true');
     });
@@ -3923,8 +3951,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     var anchor = colorAsideEl.getAttribute('data-anchor') || 'br';
     if (window.innerWidth < 640) {
       colorAsideEl.classList.add('dashboard-edit-color-painter--editor-sheet');
+      var sheetInset = getColorPainterInsets();
+      colorAsideEl.style.setProperty('--painter-sheet-bottom', Math.round(Math.max(12, sheetInset.bottom)) + 'px');
       return;
     }
+    colorAsideEl.style.removeProperty('--painter-sheet-bottom');
     if (anchor.indexOf('b') === 0 || anchor === 'bl' || anchor === 'br' || anchor === 'bc') {
       colorAsideEl.classList.add('dashboard-edit-color-painter--editor-above');
     }
@@ -4540,7 +4571,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     function onPointerMove(ev) {
       if (!colorPainterDrag) return;
       var p = pointerPos(ev);
-      var dx = p.x - colorPainterDrag.startX;      var dy = p.y - colorPainterDrag.startY;      if (!colorPainterDrag.moved && (Math.abs(dx) > COLOR_PAINTER_DRAG_THRESHOLD || Math.abs(dy) > COLOR_PAINTER_DRAG_THRESHOLD)) {
+      var dx = p.x - colorPainterDrag.startX;
+      var dy = p.y - colorPainterDrag.startY;
+      if (!colorPainterDrag.moved && (Math.abs(dx) > colorPainterDragThreshold() || Math.abs(dy) > colorPainterDragThreshold())) {
         colorPainterDrag.moved = true;
         closeColorRings({ keepOrb: true });
       }
@@ -8621,7 +8654,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   function kindLabelFromContentPath(path) {
     if (!path || path === '__unsaved__') return 'Edit';
     if (path === THEME_COLORS_CONTENT_PATH || path === THEME_OVERRIDES_LEGACY_PATH) return 'Theme';
-    if (path.indexOf('content/promotions/') === 0) return 'Promotion';
+    if (path.indexOf('/promotions/') !== -1) return 'Promotion';
     if (/\/_index\.md$/i.test(path)) return 'Section';
     if (path.indexOf('content/') === 0) return 'Menu item';
     if (path.indexOf('data/locations') === 0) return 'Location';
@@ -9977,7 +10010,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             card.setAttribute('data-promotions', '[]');
             card.setAttribute('onclick', 'toggleItemExpansion(this, ' + JSON.stringify(itemPath) + ', event);');
             var expandedBlock = isMenuReelsPreview(doc)
-              ? '<div class="menu-smash-pass menu-item-smash-pass menu-smash-pass--no-photos" data-client-id="_ttms_menu_demo" data-menu-item-path="' + itemPath + '">' +
+              ? '<div class="menu-smash-pass menu-item-smash-pass menu-smash-pass--no-photos" data-client-id="' + String(CMS_CLIENT_ID || '') + '" data-menu-item-path="' + itemPath + '">' +
                 '<p class="menu-smash-pass__error hidden" role="alert"></p>' +
                 '<p class="menu-smash-pass__empty hidden"></p>' +
                 '<div class="menu-smash-pass__empty-state hidden" role="region" aria-label="Item photo">' +
@@ -10360,7 +10393,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (btnSubmodeContent) btnSubmodeContent.addEventListener('click', function() { setEditSubmode('content'); });
   if (btnSubmodeMove) {
     btnSubmodeMove.addEventListener('click', function() {
-      window.location.href = '/edit-menu-rearrange/';
+      setEditSubmode('content');
     });
   }
   if (btnSubmodeColor) btnSubmodeColor.addEventListener('click', function() { setEditSubmode('color'); });
@@ -11689,20 +11722,6 @@ document.addEventListener('DOMContentLoaded', async function() {
           closeEmbedPanelEditor();
         }).catch(function() {
           closeEmbedPanelEditor();
-        });
-        return;
-      }
-      if (rearrangeOnlyMode) {
-        if (!hasPendingMenuChanges() && !editFormDirty) {
-          goDashboard();
-          return;
-        }
-        btnDashboardBack.classList.add('dashboard-edit-header-back--saving');
-        btnDashboardBack.setAttribute('aria-busy', 'true');
-        saveMenuSnapshotOnLeave().then(function () {
-          goDashboard();
-        }).catch(function () {
-          goDashboard();
         });
         return;
       }

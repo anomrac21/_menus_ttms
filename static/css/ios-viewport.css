@@ -46,18 +46,22 @@ body.modal-open #footerBtns,
 body.modal-open #footerSettings,
 body.table-modal-open #footerBtns,
 body.table-modal-open #footerSettings,
-body.menu-reels-item-modal-open #footerBtns,
+body.menu-reels-item-modal-open:not(.menu-reels-cart-celebrating) #footerBtns,
 body.menu-reels-item-modal-open #footerSettings,
 body.ads-reels-open #footerBtns,
 body.ads-reels-open #footerSettings {
     opacity: 0 !important;
-    visibility: hidden !important;
+    transform: translateY(110%) !important;
     pointer-events: none !important;
+    transition:
+        opacity 0.34s ease,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body.cart-open.is-cart-opening #footerBtns,
 body.cart-open.is-cart-closing #footerBtns {
     opacity: 1 !important;
     visibility: visible !important;
+    transform: translateY(0) !important;
     pointer-events: none !important;
 }

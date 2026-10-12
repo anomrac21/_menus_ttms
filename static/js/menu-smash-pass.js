@@ -221,7 +221,7 @@
       (root && root.getAttribute('data-client-id')) ||
       window.CLIENT_ID ||
       (cfg() && cfg().clientId) ||
-      '_ttms_menu_demo'
+      ''
     );
   }
 
@@ -442,7 +442,7 @@
   }
 
   function buildCommunityEmptyStateHtml(clientId) {
-    var client = escapeHtml(clientId || clientIdForRoot(null) || '_ttms_menu_demo');
+    var client = escapeHtml(clientId || clientIdForRoot(null) || '');
     return (
       '<div class="menu-smash-pass__empty-state menu-smash-pass__empty-state--community hidden" role="region" aria-label="Add community photos" data-menu-item-path="/">' +
       '<div class="menu-smash-pass__empty-visual" aria-hidden="true">' +
@@ -633,7 +633,7 @@
     if (!AuthClient.isAdmin || !AuthClient.isAdmin()) return false;
     var c = cfg();
     var siteClient =
-      (c && c.clientId) || window.SITE_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+      (c && c.clientId) || window.SITE_CLIENT_ID || window.CLIENT_ID || '';
     var user = AuthClient.getCurrentUser && AuthClient.getCurrentUser();
     if (!user || !siteClient) return false;
     var assigned = String(user.client_id || '')
@@ -661,7 +661,7 @@
 
   function siteClientId() {
     var c = cfg();
-    return (c && c.clientId) || window.SITE_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+    return (c && c.clientId) || window.SITE_CLIENT_ID || window.CLIENT_ID || '';
   }
 
   function getAuthToken() {
@@ -1538,7 +1538,7 @@
 
   function buildMenuSmashPassMarkup(options) {
     options = options || {};
-    var client = options.clientId || clientIdForRoot(null) || '_ttms_menu_demo';
+    var client = options.clientId || clientIdForRoot(null) || '';
     var path = options.menuItemPath || '';
     var extra = '';
     if (options.modal) {

@@ -27,7 +27,7 @@
 <script>
   {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
   {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
-  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
   window.CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || "{{ $dashClient }}";
   window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
   window.CMS_API_URL = (window.CMS_API_URL || "{{ $apiUrl }}").replace(/\/+$/, '');
@@ -69,7 +69,7 @@
     }
 
     function settingsClientId() {
-      return window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+      return window.CLIENT_ID || window.SITE_CLIENT_ID || '';
     }
     function snapshotStorageKey() {
       return 'ttmenus_active_snapshot_' + settingsClientId();

@@ -13,7 +13,6 @@
     '/dashboard',
     '/login',
     '/edit-menu-colors',
-    '/edit-menu-rearrange',
     '/edit-menu',
     '/analytics',
     '/notifications',

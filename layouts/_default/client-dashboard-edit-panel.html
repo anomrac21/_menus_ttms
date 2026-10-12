@@ -6,9 +6,8 @@
   <style>
     html.dashboard-edit-embed-panel,
     html.dashboard-edit-embed-panel body {
-      background: var(--gray-light, #f4f4f4);
-      color: var(--primary-blue-dark, #090a13);
-      color-scheme: light;
+      background: var(--dash-bg, var(--gray-light, #f4f4f4));
+      color: var(--dash-ink, var(--primary-blue-dark, #090a13));
       font-family: var(--ttms-font-sans, "Montserrat", system-ui, sans-serif);
     }
   </style>
@@ -147,7 +146,7 @@
                       </div>
                     </div>
                     <div class="dashboard-menu-item-wizard-panel dashboard-section-wizard-panel hidden" data-section-wizard-index="1" role="tabpanel" id="dashboardSectionWizardPanel1" aria-hidden="true">
-                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>images</code>, <code>title</code>, and summary in the section <code>_index.md</code>. Section order (<code>weight</code>) is set on the rearrange page.</p>
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Maps to <code>images</code>, <code>title</code>, and summary in the section <code>_index.md</code>. Drag a section on the Sections page to change its order.</p>
                       <div class="dashboard-edit-field" id="dashboardEditSectionImageBottomWrap" data-dashboard-composite="section-image-bottom">
                         <label>Image (primary)</label>
                         <p class="dashboard-edit-field-note">Use <strong>Add image</strong> to upload, <strong>Browse images</strong> for drafts and repo <code>static/images</code>.</p>

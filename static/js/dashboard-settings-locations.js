@@ -301,7 +301,7 @@ function initLocationsSettings() {
       function loadLocationsFromCms(replaceAlways) {
         var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
         if (!token) return Promise.resolve();
-        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var url = window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/data-locations';
         return fetch(url, {
           credentials: 'include',
@@ -325,7 +325,7 @@ function initLocationsSettings() {
           alert('Sign in required.');
           return;
         }
-        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var url = window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/data-locations';
         if (saveAllBtn) saveAllBtn.disabled = true;
         if (saveAllStatus) saveAllStatus.textContent = 'Saving…';

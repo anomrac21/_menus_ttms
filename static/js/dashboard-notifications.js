@@ -190,6 +190,8 @@
     stopMetricAnimation(id);
     var el = document.getElementById(id);
     if (!el) return;
+    el.classList.remove('is-loading');
+    el.removeAttribute('aria-busy');
     el.classList.add('dashboard-analytics-card-value--counting');
     var phase = Math.random() * Math.PI * 2;
     var state = { loading: true, started: performance.now() };
@@ -466,35 +468,87 @@
 
   var overviewBundleCache = null;
   var overviewBundlePromise = null;
+  var overviewBundleDays = 0;
+  var notifyPeriodRequest = 0;
 
   function invalidateOverviewBundle() {
     overviewBundleCache = null;
     overviewBundlePromise = null;
   }
 
+  function selectedNotifyDays() {
+    var active = document.querySelector('#dashboardNotifyPeriodTabs [data-notify-days][aria-selected="true"]');
+    var days = active ? parseInt(active.getAttribute('data-notify-days'), 10) : 30;
+    return days > 0 ? days : 30;
+  }
+
+  function applyNotifyPeriod(days) {
+    var heading = document.getElementById('notify-trends-heading');
+    if (heading) heading.textContent = 'Last ' + days + ' days';
+    document.querySelectorAll('.dashboard-notify-period-label').forEach(function (el) {
+      var base = el.getAttribute('data-label') || 'Metric';
+      el.textContent = base + ' (' + days + 'd)';
+    });
+    document.querySelectorAll('#dashboardNotifyPeriodTabs [data-notify-days]').forEach(function (tab) {
+      var on = String(tab.getAttribute('data-notify-days')) === String(days);
+      tab.classList.toggle('is-active', on);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    var chart = document.getElementById('dashboardNotifyTrendChart');
+    if (chart && !chart.querySelector('svg')) {
+      chart.setAttribute(
+        'aria-label',
+        'Notification activity chart for the last ' + days + ' days'
+      );
+    }
+  }
+
+  function bindNotifyPeriodTabs() {
+    var list = document.getElementById('dashboardNotifyPeriodTabs');
+    if (!list || list.getAttribute('data-bound') === '1') return;
+    list.setAttribute('data-bound', '1');
+    list.addEventListener('click', function (event) {
+      var btn = event.target.closest('[data-notify-days]');
+      if (!btn || !list.contains(btn)) return;
+      var days = parseInt(btn.getAttribute('data-notify-days'), 10);
+      if (!days || btn.getAttribute('aria-selected') === 'true') return;
+      applyNotifyPeriod(days);
+      var requestId = ++notifyPeriodRequest;
+      invalidateOverviewBundle();
+      loadMetrics(requestId).catch(function () {});
+      loadEngagementTrends(requestId).catch(function () {
+        renderNotifyTrendChart([]);
+      });
+    });
+  }
+
   /** Overview metrics first; trends load separately so the spinner cannot block cards. */
   function fetchOverviewBundle(options) {
     options = options || {};
-    if (options.force) invalidateOverviewBundle();
-    if (overviewBundleCache) return Promise.resolve(overviewBundleCache);
-    if (overviewBundlePromise) return overviewBundlePromise;
+    var days = options.days || selectedNotifyDays();
+    if (options.force || overviewBundleDays !== days) invalidateOverviewBundle();
+    if (overviewBundleCache && overviewBundleDays === days) return Promise.resolve(overviewBundleCache);
+    if (overviewBundlePromise && overviewBundleDays === days) return overviewBundlePromise;
 
     var domain = getClientDomain();
-    var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
+    var q = '?client_domain=' + encodeURIComponent(domain) + '&days=' + encodeURIComponent(String(days));
     var headers = authHeaders();
     var emptyTrends = { data: [] };
+    var requestDays = days;
+    overviewBundleDays = days;
 
     overviewBundlePromise = notifyFetch('/analytics/overview' + q, { headers: headers, timeoutMs: 20000 })
       .then(function (overview) {
-        overviewBundleCache = {
+        var bundle = {
           overview: overview,
           subTrends: emptyTrends,
           engagement: emptyTrends,
         };
-        return overviewBundleCache;
+        if (overviewBundleDays === requestDays) overviewBundleCache = bundle;
+        return bundle;
       })
       .finally(function () {
-        overviewBundlePromise = null;
+        if (overviewBundleDays === requestDays) overviewBundlePromise = null;
       });
 
     return overviewBundlePromise;
@@ -507,6 +561,12 @@
     var trendRows = (bundle.subTrends && bundle.subTrends.data) || [];
     var newSubscribers = sumTrendField(trendRows, 'new_subscribed');
     var unsubscribes = sumTrendField(trendRows, 'new_unsubscribed');
+
+    paintNotifyCardCount(sub.active);
+    var cardSubs = document.getElementById('dashboardCardNotifySubs');
+    var cardSent = document.getElementById('dashboardCardNotifySent');
+    if (cardSubs) cardSubs.textContent = formatCount(sub.active);
+    if (cardSent) cardSent.textContent = formatCount(notif.in_period);
 
     var attempts = Number(notif.delivery_attempts) || 0;
     var delivered = Number(notif.delivered) || 0;
@@ -561,13 +621,17 @@
     });
   }
 
-  async function loadMetrics() {
+  async function loadMetrics(requestId) {
+    if (requestId == null) requestId = notifyPeriodRequest;
+    var days = selectedNotifyDays();
     setMetricsLoading(true);
     try {
-      var bundle = await fetchOverviewBundle();
+      var bundle = await fetchOverviewBundle({ days: days });
+      if (requestId !== notifyPeriodRequest) return;
       setMetricsLoading(false);
       applyOverviewMetrics(bundle).catch(function () {});
     } catch (err) {
+      if (requestId !== notifyPeriodRequest) return;
       stopAllOverviewMetricAnimations();
       setMetricsLoading(false);
       throw err;
@@ -623,6 +687,23 @@
       });
   }
 
+  var notifyChartRows = [];
+  var notifyChartWatch = false;
+
+  function ensureNotifyChartWatch(chart) {
+    if (notifyChartWatch || typeof ResizeObserver !== 'function') return;
+    notifyChartWatch = true;
+    var timer = 0;
+    new ResizeObserver(function () {
+      var w = chart.clientWidth;
+      if (!w || Math.abs(w - (chart._ttmsChartW || 0)) < 24) return;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (notifyChartRows.length) renderNotifyTrendChart(notifyChartRows);
+      }, 60);
+    }).observe(chart);
+  }
+
   function renderNotifyTrendChart(rows) {
     var chart = document.getElementById('dashboardNotifyTrendChart');
     var empty = document.getElementById('dashboardNotifyTrendEmpty');
@@ -648,10 +729,13 @@
     }
     if (empty) empty.hidden = true;
 
-    var width = 960;
+    notifyChartRows = rows;
+    ensureNotifyChartWatch(chart);
+
     var height = 260;
-    var pad = { top: 16, right: 12, bottom: 36, left: 40 };
-    var innerW = width - pad.left - pad.right;    var innerH = height - pad.top - pad.bottom;    var maxVal = 1;
+    var pad = { top: 16, right: 32, bottom: 36, left: 44 };
+    var innerH = height - pad.top - pad.bottom;
+    var maxVal = 1;
 
     rows.forEach(function (r) {
       maxVal = Math.max(
@@ -674,11 +758,23 @@
       { key: 'unsubscribed', label: 'Unsubscribed', className: 'dashboard-notify-trends-bar--unsubscribed' },
     ];
     var seriesCount = series.length;
-    var barGroupW = innerW / rows.length;
-    var barW = Math.max(2, Math.min(5, (barGroupW - 8) / seriesCount));
+    var barGap = 3;
+    var groupGap = 18;
+    var minBar = 7;
+    var maxBar = 14;
+    var host = chart.clientWidth || 320;
+    chart._ttmsChartW = chart.clientWidth || 0;
+    var minGroup = seriesCount * minBar + (seriesCount - 1) * barGap + groupGap;
+    var innerForHost = Math.max(0, host - pad.left - pad.right);
+    var barGroupW = Math.max(minGroup, innerForHost / rows.length);
+    var barRoom = barGroupW - groupGap - (seriesCount - 1) * barGap;
+    var barW = Math.max(minBar, Math.min(maxBar, barRoom / seriesCount));
+    var width = Math.ceil(pad.left + pad.right + barGroupW * rows.length);
 
     var svg =
-      '<svg class="dashboard-notify-trends-svg" viewBox="0 0 ' +
+      '<svg class="dashboard-notify-trends-svg" width="' +
+      width +
+      '" viewBox="0 0 ' +
       width +
       ' ' +
       height +
@@ -712,7 +808,7 @@
       series.forEach(function (s, seriesIndex) {
         var value = Number(row[s.key]) || 0;
         var barH = maxVal ? (value / maxVal) * innerH : 0;
-        var x = groupX - (barW * seriesCount + (seriesCount - 1) * 2) / 2 + seriesIndex * (barW + 2);
+        var x = groupX - (barW * seriesCount + (seriesCount - 1) * barGap) / 2 + seriesIndex * (barW + barGap);
         var y = pad.top + innerH - barH;        svg +=
           '<rect class="dashboard-notify-trends-bar ' +
           s.className +
@@ -733,31 +829,48 @@
           '</title></rect>';
       });
 
-      if (index % 5 === 0 || index === rows.length - 1) {
-        svg +=
-          '<text class="dashboard-notify-trends-axis-x" x="' +
-          groupX +
-          '" y="' +
-          (height - 10) +
-          '" text-anchor="middle">' +
-          escapeHtml(formatShortDate(row.date)) +
-          '</text>';
+    });
+
+    var labelGap = 72;
+    var marks = [];
+    rows.forEach(function (row, index) {
+      var groupX = pad.left + index * barGroupW + barGroupW / 2;
+      var prev = marks[marks.length - 1];
+      if (index === rows.length - 1) {
+        while (marks.length && groupX - marks[marks.length - 1].x < labelGap) marks.pop();
+        marks.push({ x: groupX, date: row.date });
+        return;
       }
+      if (!prev || groupX - prev.x >= labelGap) marks.push({ x: groupX, date: row.date });
+    });
+    marks.forEach(function (mark) {
+      svg +=
+        '<text class="dashboard-notify-trends-axis-x" x="' +
+        mark.x +
+        '" y="' +
+        (height - 8) +
+        '" text-anchor="middle">' +
+        escapeHtml(formatShortDate(mark.date)) +
+        '</text>';
     });
 
     svg += '</svg>';
     chart.innerHTML = svg;
     chart.setAttribute(
       'aria-label',
-      'Notification activity chart for the last 30 days with daily sends, delivery outcomes, and subscriber changes'
+      'Notification activity chart for the last ' +
+        selectedNotifyDays() +
+        ' days with daily sends, delivery outcomes, and subscriber changes'
     );
   }
 
-  async function loadEngagementTrends() {
+  async function loadEngagementTrends(requestId) {
+    if (requestId == null) requestId = notifyPeriodRequest;
+    var days = selectedNotifyDays();
     setTrendsLoading(true);
     try {
       var domain = getClientDomain();
-      var q = '?client_domain=' + encodeURIComponent(domain) + '&days=30';
+      var q = '?client_domain=' + encodeURIComponent(domain) + '&days=' + encodeURIComponent(String(days));
       var headers = authHeaders();
       var results = await Promise.all([
         notifyFetch('/analytics/engagement-trends' + q, { headers: headers, timeoutMs: 20000 }).catch(
@@ -771,7 +884,8 @@
           }
         ),
       ]);
-      if (overviewBundleCache) {
+      if (requestId !== notifyPeriodRequest) return;
+      if (overviewBundleCache && overviewBundleDays === days) {
         overviewBundleCache.engagement = results[0];
         overviewBundleCache.subTrends = results[1];
         applyOverviewMetrics(overviewBundleCache).catch(function () {});
@@ -780,7 +894,7 @@
         mergeNotifyTrendRows((results[0] && results[0].data) || [], (results[1] && results[1].data) || [])
       );
     } finally {
-      setTrendsLoading(false);
+      if (requestId === notifyPeriodRequest) setTrendsLoading(false);
     }
   }
 
@@ -1383,27 +1497,37 @@
   }
 
   function init() {
-    if (!document.getElementById('dashboardNotificationsPage')) return;
+    var onPage = !!document.getElementById('dashboardNotificationsPage');
+    var onOverview = !!document.getElementById('metricNotifySent30d');
+    if (!onPage && !onOverview) return;
 
-    initNotifyTabs();
-    initHistorySubTabs();
-    initBroadcastOption();
-    initNotifyImageUploads();
-    initNotifyMediaTabs();
-    initNotifyPlatformPreviews();
-    setNotifyImageField('notifyDefaultIcon', getNotifyFieldValue('notifyDefaultIcon'));
+    if (onPage) {
+      initNotifyTabs();
+      initHistorySubTabs();
+      initBroadcastOption();
+      initNotifyImageUploads();
+      initNotifyMediaTabs();
+      initNotifyPlatformPreviews();
+      setNotifyImageField('notifyDefaultIcon', getNotifyFieldValue('notifyDefaultIcon'));
+    }
 
     var errBanner = document.getElementById('dashboardNotifyConfigError');
     var hasApi = !!getApiBase();
     if (!hasApi) {
       if (errBanner) errBanner.removeAttribute('hidden');
-      setFormsApiDisabled(true);
+      if (onPage) setFormsApiDisabled(true);
       return;
     }
     if (errBanner) errBanner.setAttribute('hidden', '');
-    setFormsApiDisabled(false);
+    if (onPage) setFormsApiDisabled(false);
 
-    loadMetrics().catch(function (err) {
+    if (!onOverview) return;
+
+    bindNotifyPeriodTabs();
+    applyNotifyPeriod(selectedNotifyDays());
+    var requestId = ++notifyPeriodRequest;
+
+    loadMetrics(requestId).catch(function (err) {
       stopAllOverviewMetricAnimations();
       OVERVIEW_METRIC_IDS.forEach(function (id) {
         setText(id, '');
@@ -1427,7 +1551,8 @@
       }
     });
 
-    loadEngagementTrends().catch(function () {
+    loadEngagementTrends(requestId).catch(function () {
+      if (requestId !== notifyPeriodRequest) return;
       renderNotifyTrendChart([]);
     });
 
@@ -1439,6 +1564,10 @@
           'Could not load subscribers. ' + (err && err.message ? err.message : 'Try again later.');
       }
     });
+
+    initAdminPhotoReviewAlerts();
+
+    if (!onPage) return;
 
     loadRecent().catch(function () {
       var note = document.getElementById('dashboardNotifyLoadError');
@@ -1458,7 +1587,6 @@
     if (form) form.addEventListener('submit', sendNotification);
 
     initWelcomeForm();
-    initAdminPhotoReviewAlerts();
   }
 
   async function refreshOverview() {
@@ -1468,11 +1596,12 @@
       loadErr.textContent = '';
     }
 
+    var requestId = ++notifyPeriodRequest;
     invalidateOverviewBundle();
 
     await Promise.allSettled([
-      loadMetrics(),
-      loadEngagementTrends(),
+      loadMetrics(requestId),
+      loadEngagementTrends(requestId),
       loadSubscribers(),
       loadRecent(),
       loadWelcomeHistory(),

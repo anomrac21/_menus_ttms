@@ -1,7 +1,7 @@
 {{ define "main" }}
 {{- $siteName := site.Title | default "Menu Demo" -}}
 {{- $siteName = $siteName | strings.TrimSpace | replaceRE `^["']+|["']+$` "" -}}
-{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 {{- $hubClientId := $dashClient -}}
 {{- if not (hasPrefix $hubClientId "ttms_") -}}
   {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}

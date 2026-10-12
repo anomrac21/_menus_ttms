@@ -64,7 +64,6 @@
     if (!document.body) return false;
     if (document.documentElement.classList.contains('dashboard-edit-embed-panel')) return true;
     if (document.body.classList.contains('dashboard-edit-theme-only')) return true;
-    if (document.body.classList.contains('dashboard-edit-rearrange-only')) return true;
     return !!document.querySelector(
       '.dashboard-control-room, .dashboard-analytics-page, .dashboard-notify-page, .dashboard-edit-page, .dashboard-settings-page, .dashboard-edit-options, .auth-container'
     );

@@ -655,7 +655,46 @@
     changeRole(select.getAttribute('data-user-id'), select.value);
   }
 
+  function initAuthTabs() {
+    var root = $('dashboardAuthTabs');
+    if (!root || root.getAttribute('data-auth-tabs-bound') === 'true') return;
+    root.setAttribute('data-auth-tabs-bound', 'true');
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('.dashboard-notify-tablist [role="tab"]'));
+    if (!tabs.length) return;
+    var panels = tabs.map(function (tab) {
+      var id = tab.getAttribute('aria-controls');
+      return id ? document.getElementById(id) : null;
+    });
+    function selectTab(index) {
+      if (index < 0 || index >= tabs.length) return;
+      tabs.forEach(function (tab, i) {
+        var selected = i === index;
+        tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        tab.classList.toggle('dashboard-notify-tab--active', selected);
+        tab.tabIndex = selected ? 0 : -1;
+        var panel = panels[i];
+        if (!panel) return;
+        if (selected) panel.removeAttribute('hidden');
+        else panel.setAttribute('hidden', '');
+      });
+    }
+    var initial = tabs.findIndex(function (tab) {
+      return tab.getAttribute('aria-selected') === 'true';
+    });
+    var hash = String(window.location.hash || '').replace(/^#/, '');
+    var hashIndex = { people: 0, invites: 1, roles: 2 }[hash];
+    if (hashIndex != null) initial = hashIndex;
+    if (initial < 0) initial = 0;
+    selectTab(initial);
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener('click', function () {
+        selectTab(index);
+      });
+    });
+  }
+
   async function init() {
+    initAuthTabs();
     state.deliveryOn = deliveryEnabled();
     renderInviteRoles();
     renderRoleGuide();

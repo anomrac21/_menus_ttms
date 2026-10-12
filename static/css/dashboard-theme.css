@@ -91,6 +91,12 @@
   --dash-warning: var(--warning);
   --dash-error: var(--error);
   --dash-info: var(--info);
+  --dash-series-pageviews: var(--primary-cyan-dark);
+  --dash-series-visits: var(--primary-green-dark);
+  --dash-series-menu: var(--primary-orange-dark);
+  --dash-series-cart: color-mix(in srgb, var(--primary-purple-dark) 42%, var(--primary-blue-dark));
+  --dash-series-orders: var(--primary-red-dark);
+  --dash-series-search: var(--primary-blue);
   --dash-overlay: var(--hub-panel-backdrop);
   --dash-white: var(--white);
   --dash-black: var(--black);
@@ -142,61 +148,44 @@
   --dash-overlay: var(--hub-panel-backdrop);
   --dash-on-accent: var(--white-off);
   --dash-info: var(--info);
+  --dash-series-pageviews: var(--primary-cyan-light);
+  --dash-series-visits: var(--primary-green-light);
+  --dash-series-menu: var(--primary-orange-light);
+  --dash-series-cart: var(--primary-purple-light);
+  --dash-series-orders: var(--primary-red-light);
+  --dash-series-search: var(--white-off);
 }
 
-/* Live-menu iframe editor: keep the light hub palette so fields stay readable
-   even when the site theme is dark or restaurant tokens leak in. */
+/* Item editor iframe follows the dashboard theme toggle. */
 html.dashboard-edit-embed-panel,
-html.dashboard-edit-embed-panel[data-theme="dark"],
-html[data-theme="dark"] body.dashboard-edit-embed-panel,
 body.dashboard-edit-embed-panel {
-  --text-primary: var(--primary-blue-dark);
-  --text-secondary: var(--primary-blue);
-  --text-muted: var(--gray-medium);
-  --dash-bg: var(--gray-light);
-  --dash-bg-2: var(--white-off);
-  --dash-surface: var(--white);
-  --dash-surface-raised: var(--white-off);
-  --dash-surface-inset: var(--hub-panel-surface-inset);
-  --dash-ink: var(--primary-blue-dark);
-  --dash-ink-muted: var(--gray-medium);
-  --dash-accent: var(--primary-orange);
-  --dash-accent-2: var(--primary-red);
-  --dash-accent-ink: var(--primary-blue-dark);
-  --dash-border: var(--border-medium);
-  --dash-border-strong: var(--border-dark);
-  --dash-success: var(--primary-green-dark);
-  --dash-warning: var(--primary-orange-dark);
-  --dash-error: var(--primary-red-dark);
-  --dash-info: var(--primary-blue);
-  --dash-black: var(--black);
-  --dash-white: var(--white);
-  --dash-on-accent: var(--white-off);
+  background: var(--dash-bg);
+  color: var(--dash-ink);
   color-scheme: light;
-  background: var(--gray-light);
-  color: var(--primary-blue-dark);
+}
+
+html.dashboard-edit-embed-panel[data-theme="dark"],
+html[data-theme="dark"] body.dashboard-edit-embed-panel {
+  color-scheme: dark;
 }
 
 html:has(.dashboard-control-room),
 html:has(.dashboard-control-room) body,
 body.dashboard-control-room,
-body.dashboard-edit-theme-only,
-body.dashboard-edit-rearrange-only {
+body.dashboard-edit-theme-only {
   background: var(--dash-bg) !important;
   color: var(--dash-ink);
 }
 
 html:has(.dashboard-control-room),
 html:has(.dashboard-control-room) body,
-body.dashboard-edit-theme-only,
-body.dashboard-edit-rearrange-only {
+body.dashboard-edit-theme-only {
   color-scheme: light;
 }
 
 html:has(.dashboard-control-room)[data-theme="dark"],
 html:has(.dashboard-control-room)[data-theme="dark"] body,
-html[data-theme="dark"] body.dashboard-edit-theme-only,
-html[data-theme="dark"] body.dashboard-edit-rearrange-only {
+html[data-theme="dark"] body.dashboard-edit-theme-only {
   color-scheme: dark;
 }
 

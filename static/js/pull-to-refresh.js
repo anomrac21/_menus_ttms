@@ -289,15 +289,15 @@
     }
 
     if (window.DashboardAnalyticsSnapshot) {
-      if (document.getElementById('dashboardAnalyticsPage') && window.DashboardAnalyticsSnapshot.loadAnalyticsPage) {
-        tasks.push(Promise.resolve(window.DashboardAnalyticsSnapshot.loadAnalyticsPage({ days: 30 })));
+      if (document.getElementById('metricPageViews') && window.DashboardAnalyticsSnapshot.loadAnalyticsPage) {
+        tasks.push(Promise.resolve(window.DashboardAnalyticsSnapshot.loadAnalyticsPage()));
       } else if (window.DashboardAnalyticsSnapshot.loadDashboardCard) {
         tasks.push(Promise.resolve(window.DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 })));
       }
     }
 
     if (window.DashboardNotifications) {
-      if (document.getElementById('dashboardNotificationsPage') && window.DashboardNotifications.refreshOverview) {
+      if (document.getElementById('metricNotifySent30d') && window.DashboardNotifications.refreshOverview) {
         tasks.push(Promise.resolve(window.DashboardNotifications.refreshOverview()));
       } else if (window.DashboardNotifications.loadDashboardCard) {
         tasks.push(Promise.resolve(window.DashboardNotifications.loadDashboardCard({ days: 30 })));

@@ -5,7 +5,7 @@
 (function () {
   const CONFIG = typeof window.MENU_IMAGE_CONFIG !== 'undefined' ? window.MENU_IMAGE_CONFIG : {
     apiUrl: 'https://menu-images.ttmenus.com/api/v1',
-    clientId: '_ttms_menu_demo',
+    clientId: '',
     enabled: true
   };
 

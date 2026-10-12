@@ -32,7 +32,7 @@
 
   function clientId() {
 
-    return CMS_CLIENT_ID || global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+    return CMS_CLIENT_ID || global.SITE_CLIENT_ID || global.CLIENT_ID || '';
 
   }
 
@@ -172,7 +172,7 @@
 
     if (!isAdmin() || !global.AuthClient || typeof global.AuthClient.authenticatedRequest !== 'function') {
 
-      return Promise.resolve([]);
+      return Promise.reject(new Error('Sign in as an admin to load deploy history.'));
 
     }
 
@@ -190,13 +190,13 @@
 
     return global.AuthClient.authenticatedRequest(url, { method: 'GET' }).then(function (result) {
 
-      if (result && result.success && result.data && Array.isArray(result.data.events)) {
+      if (result && result.success && result.data) {
 
-        return result.data.events;
+        return Array.isArray(result.data.events) ? result.data.events : [];
 
       }
 
-      return [];
+      return Promise.reject(new Error((result && result.error) || 'Could not load deploy history.'));
 
     });
 
@@ -210,7 +210,11 @@
 
     try {
 
-      return new Date(ts).toLocaleString();
+      var d = new Date(ts);
+
+      if (isNaN(d.getTime())) return String(ts);
+
+      return d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
 
     } catch (e) {
 
@@ -660,6 +664,8 @@
 
     if (!page) return;
 
+    CMS_CLIENT_ID = String(global.SITE_CLIENT_ID || global.CLIENT_ID || '').trim();
+
     var statusEl = document.getElementById('dashboardDeployHistoryStatus');
 
     if (statusEl) statusEl.textContent = 'Loading deploy history…';
@@ -698,9 +704,15 @@
 
             cachedEvents.length > 0
 
-              ? cachedEvents.length + ' event(s) · live updates enabled'
+              ? cachedEvents.length + ' event(s) from this site on CMS · live updates enabled'
 
-              : 'No deploy events yet: they appear when a git push rebuilds this site on the cluster.';
+              : 'No deploy events for this site yet.' +
+
+                (parts[2] && parts[2].commit
+
+                  ? ' Live build ' + shortSha(parts[2].commit) + ' is from build-info.json.'
+
+                  : ' Events are stored on CMS when a git push rebuilds this site.');
 
         }
 
@@ -708,9 +720,9 @@
 
       })
 
-      .catch(function () {
+      .catch(function (err) {
 
-        if (statusEl) statusEl.textContent = 'Could not load deploy history.';
+        if (statusEl) statusEl.textContent = (err && err.message) || 'Could not load deploy history.';
 
       });
 
@@ -784,13 +796,17 @@
 
   global.addEventListener('beforeunload', stopDeployStream);
 
-  if (document.readyState === 'loading') {
+  if (!document.getElementById('dashboardDeploymentsPage')) {
 
-    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'loading') {
 
-  } else {
+      document.addEventListener('DOMContentLoaded', init);
 
-    init();
+    } else {
+
+      init();
+
+    }
 
   }
 

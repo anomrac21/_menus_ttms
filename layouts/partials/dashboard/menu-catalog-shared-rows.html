@@ -2,8 +2,13 @@
 {{- $rows := slice -}}
 {{- $root := "content/_shared" -}}
 {{- $dirs := slice -}}
+{{- $flags := newScratch -}}
+{{- $flags.Set "promotions" false -}}
 {{- with os.ReadDir $root -}}
   {{- range . -}}
+    {{- if and .IsDir (eq .Name "promotions") -}}
+      {{- $flags.Set "promotions" true -}}
+    {{- end -}}
     {{- if and .IsDir (ne .Name "promotions") -}}
       {{- $dirs = $dirs | append .Name -}}
     {{- end -}}
@@ -78,7 +83,46 @@
     ) -}}
   {{- end -}}
 {{- end -}}
-{{- if eq $kind "sections" -}}
+{{- if and (eq $kind "promotions") ($flags.Get "promotions") -}}
+  {{- $promoDir := printf "%s/promotions" $root -}}
+  {{- $promoIndex := 0 -}}
+  {{- range os.ReadDir $promoDir -}}
+      {{- if and (not .IsDir) (hasSuffix .Name ".md") (ne .Name "_index.md") -}}
+        {{- $fileBase := strings.TrimSuffix ".md" .Name -}}
+        {{- $promoInfo := newScratch -}}
+        {{- $promoInfo.Set "title" (humanize $fileBase) -}}
+        {{- $promoInfo.Set "weight" $promoIndex -}}
+        {{- $promoInfo.Set "link" (printf "/promotions/%s/" $fileBase) -}}
+        {{- with os.ReadFile (printf "%s/%s" $promoDir .Name) -}}
+          {{- range split . "\n" -}}
+            {{- $line := strings.TrimSpace . -}}
+            {{- if hasPrefix $line "title:" -}}
+              {{- $title := strings.TrimSpace (strings.TrimPrefix "title:" $line) -}}
+              {{- $promoInfo.Set "title" (replaceRE "^[\"']+|[\"']+$" "" $title) -}}
+            {{- else if hasPrefix $line "weight:" -}}
+              {{- $promoInfo.Set "weight" (int (strings.TrimSpace (strings.TrimPrefix "weight:" $line))) -}}
+            {{- else if hasPrefix $line "link:" -}}
+              {{- $link := strings.TrimSpace (strings.TrimPrefix "link:" $line) -}}
+              {{- $promoInfo.Set "link" (replaceRE "^[\"']+|[\"']+$" "" $link) -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+        {{- $rows = $rows | append (dict
+          "title" ($promoInfo.Get "title")
+          "meta" (slice)
+          "kind" "promotion"
+          "catalogIndex" (printf "%d" $promoIndex)
+          "adId" (printf "menu-ad-%s" $fileBase)
+          "adUrl" ($promoInfo.Get "link")
+          "locationSlug" "_shared"
+          "contentPath" (printf "content/_shared/promotions/%s.md" $fileBase)
+          "weight" ($promoInfo.Get "weight")
+        ) -}}
+        {{- $promoIndex = add $promoIndex 1 -}}
+      {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if or (eq $kind "sections") (eq $kind "promotions") -}}
   {{- $rows = sort $rows "weight" -}}
 {{- else -}}
   {{- $rows = sort $rows "title" -}}

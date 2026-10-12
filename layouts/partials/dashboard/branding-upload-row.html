@@ -1,17 +1,26 @@
 {{- $fn := .filename -}}
 {{- $title := .title -}}
 {{- $usage := .usage -}}
-{{- $imgW := .imgW | default 48 -}}
-{{- $imgH := .imgH | default 48 -}}
-<div class="dashboard-settings-branding-card">
+{{- $frame := "app" -}}
+{{- if eq $fn "favicon192.webp" -}}{{- $frame = "header" -}}
+{{- else if eq $fn "favicon512.webp" -}}{{- $frame = "hero" -}}
+{{- else if eq $fn "favicon152.webp" -}}{{- $frame = "share" -}}
+{{- else if eq $fn "favicon16.webp" -}}{{- $frame = "tab" -}}
+{{- else if eq $fn "favicon196.webp" -}}{{- $frame = "mask" -}}
+{{- else if eq $fn "richscreenshot1.webp" -}}{{- $frame = "wide" -}}
+{{- else if eq $fn "richscreenshot2.webp" -}}{{- $frame = "tall" -}}
+{{- end -}}
+<div class="dashboard-settings-branding-card dashboard-settings-branding-card--{{ $frame }}">
   <div class="dashboard-settings-branding-card-text">
     <h3 class="dashboard-settings-branding-card-title">{{ $title }}</h3>
     <p class="dashboard-settings-branding-card-usage">{{ $usage }}</p>
-    <p class="dashboard-settings-branding-card-file"><code>{{ $fn }}</code></p>
   </div>
   <div class="dashboard-settings-branding-card-upload dashboard-settings-branding-upload">
-    <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $title }}" class="dashboard-settings-thumb dashboard-branding-preview{{ if findRE `(?i)400x200` $fn }} dashboard-branding-preview--wide{{ end }}" data-branding-preview="{{ $fn }}" width="{{ $imgW }}" height="{{ $imgH }}">
-    <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose file</label>
+    <span class="dashboard-branding-frame dashboard-branding-frame--{{ $frame }}">
+      <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $title }}" class="dashboard-settings-thumb dashboard-branding-preview dashboard-branding-preview--{{ $frame }}" data-branding-preview="{{ $fn }}">
+      {{- if eq $frame "tab" -}}<span class="dashboard-branding-frame-label" aria-hidden="true">Menu</span>{{- end -}}
+    </span>
+    <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Replace</label>
     <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
   </div>
 </div>

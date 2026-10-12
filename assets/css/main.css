@@ -3324,13 +3324,14 @@ body.table-modal-open {
 
 body.table-modal-open #footerBtns {
     opacity: 0!important;
-    visibility: hidden!important;
-    pointer-events: none!important
+    transform: translateY(110%)!important;
+    pointer-events: none!important;
+    transition: opacity .34s ease, transform .42s cubic-bezier(.22, 1, .36, 1)
 }
 
 body.table-modal-open #footerSettings {
     opacity: 0!important;
-    visibility: hidden!important;
+    transform: translateY(.75rem) scale(.98)!important;
     pointer-events: none!important
 }
 

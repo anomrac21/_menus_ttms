@@ -1,0 +1,90 @@
+<section class="dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--overview dashboard-notify-tab-section" aria-labelledby="notifications-heading">
+  <div class="dashboard-settings-panel-head">
+    <span class="dashboard-settings-panel-icon dashboard-notify-panel-icon" aria-hidden="true"><i class="fa fa-bell"></i></span>
+    <div class="dashboard-settings-panel-head-text">
+      <h2 id="notifications-heading" class="dashboard-analytics-heading">Push notifications &amp; alerts</h2>
+      <p class="dashboard-analytics-subtitle">Send updates, offers, and reminders to subscribers. Message counts are unique sends; delivery stats count each subscriber separately.</p>
+    </div>
+    {{- if .showManageLink }}
+    <div class="dashboard-card-actions dashboard-settings-panel-head-actions">
+      <a href="/notifications/" class="btn-dash btn-dash-secondary"><i class="fa fa-paper-plane" aria-hidden="true"></i> Open Notifications</a>
+    </div>
+    {{- end }}
+  </div>
+  <div class="dashboard-orders-hub-tabs dashboard-analytics-period-tabs" id="dashboardNotifyPeriodTabs" role="tablist" aria-label="Notification period">
+    <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardNotifyPeriod-7" data-notify-days="7" aria-selected="false">7 days</button>
+    <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" id="dashboardNotifyPeriod-30" data-notify-days="30" aria-selected="true">30 days</button>
+    <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardNotifyPeriod-90" data-notify-days="90" aria-selected="false">90 days</button>
+  </div>
+  <p id="dashboardNotifyOverviewLoading" class="dashboard-notify-overview-loading" hidden role="status" aria-live="polite">
+    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+    <span>Loading notification stats…</span>
+  </p>
+  <div class="dashboard-analytics-metrics dashboard-notify-metrics" id="dashboardNotificationsMetrics">
+    <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--primary">
+      <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-send"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Messages sent">Messages sent (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifySent30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifySent30dMeta"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--primary">
+      <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-users"></i></span>
+      <span class="dashboard-analytics-card-label">Active subscribers</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifySubscribers"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card">
+      <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-check-circle"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Recipients reached">Recipients reached (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifyArrived30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifyArrived30dMeta"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card">
+      <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-eye"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Opened">Opened (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifyOpened30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifyOpened30dMeta"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card">
+      <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-times-circle"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Not arrived">Not arrived (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifyNotArrived30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifyNotArrived30dMeta"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card">
+      <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-mouse-pointer"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Clicked">Clicked (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifyClicked30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifyClicked30dMeta"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--growth">
+      <span class="dashboard-notify-metric-icon dashboard-notify-metric-icon--growth" aria-hidden="true"><i class="fa fa-user-plus"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="New subscribers">New subscribers (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifyNewSubscribers30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifyNewSubscribers30dMeta"></span>
+    </div>
+    <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--loss">
+      <span class="dashboard-notify-metric-icon dashboard-notify-metric-icon--loss" aria-hidden="true"><i class="fa fa-user-times"></i></span>
+      <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Unsubscribes">Unsubscribes (30d)</span>
+      <span class="dashboard-analytics-card-value" id="metricNotifyUnsubscribes30d"></span>
+      <span class="dashboard-analytics-card-meta" id="metricNotifyUnsubscribes30dMeta"></span>
+    </div>
+  </div>
+  <div class="dashboard-notify-subsection dashboard-notify-trends" id="dashboardNotifyTrendsSection" aria-labelledby="notify-trends-heading">
+    <div class="dashboard-notify-trends-head">
+      <h3 id="notify-trends-heading" class="dashboard-notify-subsection-title">Last 30 days</h3>
+      <div class="dashboard-notify-trends-legend" id="dashboardNotifyTrendLegend" aria-hidden="true">
+        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--sent"><i class="fa fa-square" aria-hidden="true"></i> Sent</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--delivered"><i class="fa fa-square" aria-hidden="true"></i> Arrived</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--confirmed"><i class="fa fa-square" aria-hidden="true"></i> Opened</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--clicked"><i class="fa fa-square" aria-hidden="true"></i> Clicked</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--subscribed"><i class="fa fa-square" aria-hidden="true"></i> Subscribers</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--unsubscribed"><i class="fa fa-square" aria-hidden="true"></i> Unsubscribed</span>
+      </div>
+    </div>
+    <p class="dashboard-analytics-subtitle dashboard-notify-subsection-lead">Daily sends, delivery outcomes, and subscriber changes.</p>
+    <div class="dashboard-notify-trends-chart-wrap">
+      <div class="dashboard-notify-trends-chart" id="dashboardNotifyTrendChart" role="img" aria-label="Notification activity chart for the last 30 days"></div>
+      <p id="dashboardNotifyTrendEmpty" class="dashboard-notify-empty" hidden>No activity in this period yet.</p>
+    </div>
+  </div>
+</section>

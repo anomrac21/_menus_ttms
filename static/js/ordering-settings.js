@@ -280,7 +280,7 @@
         whatsapp: digitsOnly(document.getElementById('os-whatsapp').value),
         phone: digitsOnly(document.getElementById('os-phone').value),
       };
-      var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+      var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
       var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/hugo-orderingsystem';
       if (btn) btn.disabled = true;
       if (statusEl) statusEl.textContent = 'Saving…';

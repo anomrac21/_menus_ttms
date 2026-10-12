@@ -1,0 +1,313 @@
+		{{- $sales := site.Params.salespricing | default dict -}}
+		{{- $leadEmail := $sales.contactemail | default "ttmenus868@gmail.com" -}}
+		{{- $leadTel := $sales.demotel | default "tel:+1-868-364-5662" -}}
+		<section class="dashboard-lead" id="dashboard-dine" aria-labelledby="dashboard-dine-title">
+			<button
+				type="button"
+				class="dashboard-lead__toggle"
+				id="dashboard-dine-toggle"
+				aria-expanded="false"
+				aria-controls="dashboard-dine-panel"
+			>
+				<span class="dashboard-lead__icon" aria-hidden="true">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3v6a2 2 0 0 0 2 2v10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M7 3v4.5M9 3v4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M17 3c-.2 2.4-2 3.6-2 6.2V21" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+				</span>
+				<span class="dashboard-lead__toggle-copy">
+					<span class="dashboard-lead__eyebrow">Diners</span>
+					<span id="dashboard-dine-title" class="dashboard-lead__title">Dine with TT Menus</span>
+				</span>
+				<span class="dashboard-lead__chevron" aria-hidden="true">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</span>
+			</button>
+			<div class="dashboard-lead__panel" id="dashboard-dine-panel" hidden>
+				<div class="dashboard-lead__reveal">
+				<p class="dashboard-lead__lede">Start with what you like to eat. We’ll add it to your current tastes, then take your details.</p>
+				<form
+					class="dashboard-lead__form"
+					id="ttms-dashboard-dine-form"
+					novalidate
+					data-lead-email="{{ $leadEmail }}"
+					data-lead-subject="Dine with TT Menus"
+					data-lead-step="1"
+				>
+					<div class="dashboard-lead__steps" role="tablist" aria-label="Diner signup steps">
+						<button type="button" class="dashboard-lead__step is-active" role="tab" id="dashboard-dine-tab-1" aria-controls="dashboard-dine-step-1" aria-selected="true" data-lead-step="1">
+							<span class="dashboard-lead__step-num">1</span>
+							<span class="dashboard-lead__step-label">Taste</span>
+						</button>
+						<button type="button" class="dashboard-lead__step" role="tab" id="dashboard-dine-tab-2" aria-controls="dashboard-dine-step-2" aria-selected="false" tabindex="-1" data-lead-step="2">
+							<span class="dashboard-lead__step-num">2</span>
+							<span class="dashboard-lead__step-label">You</span>
+						</button>
+						<button type="button" class="dashboard-lead__step" role="tab" id="dashboard-dine-tab-3" aria-controls="dashboard-dine-step-3" aria-selected="false" tabindex="-1" data-lead-step="3">
+							<span class="dashboard-lead__step-num">3</span>
+							<span class="dashboard-lead__step-label">Contact</span>
+						</button>
+					</div>
+					<p class="dashboard-lead__status" id="ttms-dashboard-dine-status" role="status" aria-live="polite"></p>
+
+					<div class="dashboard-lead__pane" id="dashboard-dine-step-1" role="tabpanel" aria-labelledby="dashboard-dine-tab-1" data-lead-pane="1">
+						<div class="dashboard-lead__field">
+							<span>What do you like to eat? <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<div class="dashboard-lead__tastes" data-dine-tastes>
+								<div class="dashboard-lead__taste-list" data-dine-taste-list role="list" aria-label="Your tastes"></div>
+								<input type="text" data-dine-taste-input maxlength="48" placeholder="Type a taste, then Enter" autocomplete="off" enterkeyhint="done">
+							</div>
+							<input type="hidden" name="notes" value="">
+							<span class="dashboard-lead__hint">Press Enter to add. New tastes join the ones you already have.</span>
+						</div>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__next" data-lead-next>Continue</button>
+						</div>
+					</div>
+
+					<div class="dashboard-lead__pane" id="dashboard-dine-step-2" role="tabpanel" aria-labelledby="dashboard-dine-tab-2" data-lead-pane="2" hidden>
+						<label class="dashboard-lead__field">
+							<span>Your name <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="dinerName" type="text" required autocomplete="name" placeholder="First and last">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Town or area <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="dineArea" type="text" required autocomplete="address-level2" placeholder="e.g. San Fernando">
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
+							<button type="button" class="dashboard-lead__next" data-lead-next>Continue</button>
+						</div>
+					</div>
+
+					<div class="dashboard-lead__pane" id="dashboard-dine-step-3" role="tabpanel" aria-labelledby="dashboard-dine-tab-3" data-lead-pane="3" hidden>
+						<label class="dashboard-lead__field">
+							<span>Email <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactEmail" type="email" required autocomplete="email" placeholder="you@email.com">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Phone / WhatsApp <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactPhone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="e.g. 18683645662">
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
+							<button type="submit" class="dashboard-lead__submit">Count me in</button>
+						</div>
+					</div>
+				</form>
+				<div class="dashboard-lead__thanks" id="dashboard-dine-thanks" hidden>
+					<p class="dashboard-lead__thanks-title">Got it — we’ll be in touch</p>
+					<p class="dashboard-lead__thanks-copy">We’ll follow up with places and menus near you.</p>
+				</div>
+				<div class="dashboard-lead__alt">
+					<a class="dashboard-lead__onboard" href="https://ttmenus.com/" onclick="if (typeof closeAll === 'function') closeAll();">Browse places to eat</a>
+					<a class="dashboard-lead__call" href="{{ $leadTel | safeURL }}">Or call us</a>
+				</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="dashboard-lead" id="dashboard-lead" aria-labelledby="dashboard-lead-title">
+			<button
+				type="button"
+				class="dashboard-lead__toggle"
+				id="dashboard-lead-toggle"
+				aria-expanded="false"
+				aria-controls="dashboard-lead-panel"
+			>
+				<span class="dashboard-lead__icon" aria-hidden="true">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10.5V20h16v-9.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11.5 12 4l9 7.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 20v-6h5v6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</span>
+				<span class="dashboard-lead__toggle-copy">
+					<span class="dashboard-lead__eyebrow">Restaurant owners</span>
+					<span id="dashboard-lead-title" class="dashboard-lead__title">Add my business</span>
+				</span>
+				<span class="dashboard-lead__chevron" aria-hidden="true">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</span>
+			</button>
+			<div class="dashboard-lead__panel" id="dashboard-lead-panel" hidden>
+				<div class="dashboard-lead__reveal">
+				<p class="dashboard-lead__lede">Get your menu in front of diners searching Trinidad &amp; Tobago. Leave a few details and we’ll follow up to list you.</p>
+				<form
+					class="dashboard-lead__form"
+					id="ttms-dashboard-lead-form"
+					novalidate
+					data-lead-email="{{ $leadEmail }}"
+					data-lead-subject="Add my business to TTMenus"
+					data-lead-step="1"
+				>
+					<div class="dashboard-lead__steps" role="tablist" aria-label="Listing request steps">
+						<button type="button" class="dashboard-lead__step is-active" role="tab" id="dashboard-lead-tab-1" aria-controls="dashboard-lead-step-1" aria-selected="true" data-lead-step="1">
+							<span class="dashboard-lead__step-num">1</span>
+							<span class="dashboard-lead__step-label">Business</span>
+						</button>
+						<button type="button" class="dashboard-lead__step" role="tab" id="dashboard-lead-tab-2" aria-controls="dashboard-lead-step-2" aria-selected="false" tabindex="-1" data-lead-step="2">
+							<span class="dashboard-lead__step-num">2</span>
+							<span class="dashboard-lead__step-label">Contact</span>
+						</button>
+						<button type="button" class="dashboard-lead__step" role="tab" id="dashboard-lead-tab-3" aria-controls="dashboard-lead-step-3" aria-selected="false" tabindex="-1" data-lead-step="3">
+							<span class="dashboard-lead__step-num">3</span>
+							<span class="dashboard-lead__step-label">Details</span>
+						</button>
+					</div>
+					<p class="dashboard-lead__status" id="ttms-dashboard-lead-status" role="status" aria-live="polite"></p>
+
+					<div class="dashboard-lead__pane" id="dashboard-lead-step-1" role="tabpanel" aria-labelledby="dashboard-lead-tab-1" data-lead-pane="1">
+						<label class="dashboard-lead__field">
+							<span>Business name <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="venueName" type="text" required autocomplete="organization" placeholder="e.g. Doubles Hut">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Town or area <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="addressArea" type="text" required autocomplete="address-level2" placeholder="e.g. San Fernando">
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__next" data-lead-next>Continue</button>
+						</div>
+					</div>
+
+					<div class="dashboard-lead__pane" id="dashboard-lead-step-2" role="tabpanel" aria-labelledby="dashboard-lead-tab-2" data-lead-pane="2" hidden>
+						<label class="dashboard-lead__field">
+							<span>Your name <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactName" type="text" required autocomplete="name" placeholder="First and last">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Email <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactEmail" type="email" required autocomplete="email" placeholder="you@venue.com">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Phone / WhatsApp <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactPhone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="e.g. 18683645662">
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
+							<button type="button" class="dashboard-lead__next" data-lead-next>Continue</button>
+						</div>
+					</div>
+
+					<div class="dashboard-lead__pane" id="dashboard-lead-step-3" role="tabpanel" aria-labelledby="dashboard-lead-tab-3" data-lead-pane="3" hidden>
+						<label class="dashboard-lead__field">
+							<span>Anything else?</span>
+							<textarea name="notes" rows="3" placeholder="Cuisine, hours, or a link to your menu"></textarea>
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
+							<button type="submit" class="dashboard-lead__submit">Request a listing</button>
+						</div>
+					</div>
+				</form>
+				<div class="dashboard-lead__thanks" id="dashboard-lead-thanks" hidden>
+					<p class="dashboard-lead__thanks-title">Got it — we’ll be in touch</p>
+					<p class="dashboard-lead__thanks-copy">We’ll follow up on the details you shared. If an email draft opened, send that too.</p>
+				</div>
+				<div class="dashboard-lead__alt">
+					<a class="dashboard-lead__onboard" href="https://ttmenus.com/onboarding/" onclick="if (typeof closeAll === 'function') closeAll();">Have a logo and menu ready? Start onboarding</a>
+					<a class="dashboard-lead__call" href="{{ $leadTel | safeURL }}">Or call us</a>
+				</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="dashboard-lead" id="dashboard-driver" aria-labelledby="dashboard-driver-title">
+			<button
+				type="button"
+				class="dashboard-lead__toggle"
+				id="dashboard-driver-toggle"
+				aria-expanded="false"
+				aria-controls="dashboard-driver-panel"
+			>
+				<span class="dashboard-lead__icon" aria-hidden="true">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 15.5 6.1 9.7A2 2 0 0 1 8 8.4h8a2 2 0 0 1 1.9 1.3L20 15.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 15.5h17V18a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-2.5Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><circle cx="7.5" cy="16.6" r="1.15" fill="currentColor"/><circle cx="16.5" cy="16.6" r="1.15" fill="currentColor"/></svg>
+				</span>
+				<span class="dashboard-lead__toggle-copy">
+					<span class="dashboard-lead__eyebrow">Drivers</span>
+					<span id="dashboard-driver-title" class="dashboard-lead__title">Drive with TT Menus</span>
+				</span>
+				<span class="dashboard-lead__chevron" aria-hidden="true">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</span>
+			</button>
+			<div class="dashboard-lead__panel" id="dashboard-driver-panel" hidden>
+				<div class="dashboard-lead__reveal">
+				<p class="dashboard-lead__lede">Deliver around Trinidad &amp; Tobago. Leave your details and we’ll follow up so you can go online.</p>
+				<form
+					class="dashboard-lead__form"
+					id="ttms-dashboard-driver-form"
+					novalidate
+					data-lead-email="{{ $leadEmail }}"
+					data-lead-subject="Drive with TT Menus"
+					data-lead-step="1"
+				>
+					<div class="dashboard-lead__steps" role="tablist" aria-label="Driver signup steps">
+						<button type="button" class="dashboard-lead__step is-active" role="tab" id="dashboard-driver-tab-1" aria-controls="dashboard-driver-step-1" aria-selected="true" data-lead-step="1">
+							<span class="dashboard-lead__step-num">1</span>
+							<span class="dashboard-lead__step-label">You</span>
+						</button>
+						<button type="button" class="dashboard-lead__step" role="tab" id="dashboard-driver-tab-2" aria-controls="dashboard-driver-step-2" aria-selected="false" tabindex="-1" data-lead-step="2">
+							<span class="dashboard-lead__step-num">2</span>
+							<span class="dashboard-lead__step-label">Contact</span>
+						</button>
+						<button type="button" class="dashboard-lead__step" role="tab" id="dashboard-driver-tab-3" aria-controls="dashboard-driver-step-3" aria-selected="false" tabindex="-1" data-lead-step="3">
+							<span class="dashboard-lead__step-num">3</span>
+							<span class="dashboard-lead__step-label">Vehicle</span>
+						</button>
+					</div>
+					<p class="dashboard-lead__status" id="ttms-dashboard-driver-status" role="status" aria-live="polite"></p>
+
+					<div class="dashboard-lead__pane" id="dashboard-driver-step-1" role="tabpanel" aria-labelledby="dashboard-driver-tab-1" data-lead-pane="1">
+						<label class="dashboard-lead__field">
+							<span>Your name <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="driverName" type="text" required autocomplete="name" placeholder="First and last">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Town or area you drive <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="driveArea" type="text" required autocomplete="address-level2" placeholder="e.g. San Fernando">
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__next" data-lead-next>Continue</button>
+						</div>
+					</div>
+
+					<div class="dashboard-lead__pane" id="dashboard-driver-step-2" role="tabpanel" aria-labelledby="dashboard-driver-tab-2" data-lead-pane="2" hidden>
+						<label class="dashboard-lead__field">
+							<span>Email <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactEmail" type="email" required autocomplete="email" placeholder="you@email.com">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Phone / WhatsApp <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="contactPhone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="e.g. 18683645662">
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
+							<button type="button" class="dashboard-lead__next" data-lead-next>Continue</button>
+						</div>
+					</div>
+
+					<div class="dashboard-lead__pane" id="dashboard-driver-step-3" role="tabpanel" aria-labelledby="dashboard-driver-tab-3" data-lead-pane="3" hidden>
+						<label class="dashboard-lead__field">
+							<span>Vehicle <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
+							<input name="vehicleType" type="text" required autocomplete="off" placeholder="car / bike">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Plate</span>
+							<input name="vehiclePlate" type="text" autocomplete="off" placeholder="Optional">
+						</label>
+						<label class="dashboard-lead__field">
+							<span>Anything else?</span>
+							<textarea name="notes" rows="3" placeholder="Hours you can drive, or areas you cover"></textarea>
+						</label>
+						<div class="dashboard-lead__nav">
+							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
+							<button type="submit" class="dashboard-lead__submit">Apply to drive</button>
+						</div>
+					</div>
+				</form>
+				<div class="dashboard-lead__thanks" id="dashboard-driver-thanks" hidden>
+					<p class="dashboard-lead__thanks-title">Got it — we’ll be in touch</p>
+					<p class="dashboard-lead__thanks-copy">We’ll follow up on your driver request. You can add photos anytime on Drive.</p>
+				</div>
+				<div class="dashboard-lead__alt">
+					<a class="dashboard-lead__onboard" href="https://ttmenus.com/drive/" onclick="if (typeof closeAll === 'function') closeAll();">Add photos and bank details on Drive</a>
+					<a class="dashboard-lead__call" href="{{ $leadTel | safeURL }}">Or call us</a>
+				</div>
+				</div>
+			</div>
+		</section>

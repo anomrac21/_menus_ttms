@@ -6,6 +6,15 @@
     --dashboard-accent: color-mix(in srgb, var(--selected-button-color3) 55%, var(--dash-ink));
     --dashboard-ink: var(--main-text-color);
     --dashboard-ink-muted: color-mix(in srgb, var(--main-text-color) 62%, transparent);
+    --hub-panel-border: color-mix(in srgb, var(--dash-ink, #e8eef8) 16%, transparent);
+    --hub-panel-surface: color-mix(in srgb, var(--main-bg, #070b16) 78%, var(--scheme-white, #fff));
+    --hub-panel-surface-raised: color-mix(in srgb, var(--scheme-surface, #1c2a4a) 72%, var(--main-bg, #070b16));
+    --hub-panel-surface-inset: color-mix(in srgb, var(--scheme-white, #fff) 8%, transparent);
+    --hub-panel-icon-border: color-mix(in srgb, var(--dash-ink, #e8eef8) 18%, transparent);
+    --hub-panel-icon-bg: color-mix(in srgb, var(--scheme-white, #fff) 8%, transparent);
+    --hub-panel-icon-hover-bg: color-mix(in srgb, var(--dashboard-accent) 16%, transparent);
+    --hub-panel-ink: var(--dashboard-ink);
+    --hub-panel-accent-ink: #1a1208;
     left: 0;
     right: auto;
     width: 100%;
@@ -565,8 +574,21 @@ html.ttms-ios body.ttms-scroll-locked #dashboard.dashboard-panel {
     #dashboard.dashboard-panel .body.dashboard-panel-list li,
     #dashboard.dashboard-panel .dashboard-panel-footer__row a,
     #dashboard.dashboard-panel .ttms-icon-btn--on-dark,
-    #dashboard.dashboard-panel .account-panel-btn {
+    #dashboard.dashboard-panel .account-panel-btn,
+    #dashboard.dashboard-panel .dashboard-lead__submit,
+    #dashboard.dashboard-panel .dashboard-lead,
+    #dashboard.dashboard-panel .dashboard-lead__panel,
+    #dashboard.dashboard-panel .dashboard-lead__icon,
+    #dashboard.dashboard-panel .dashboard-lead__step,
+    #dashboard.dashboard-panel .dashboard-lead__step-num,
+    #dashboard.dashboard-panel .dashboard-lead__chevron {
         transition: none;
+    }
+
+    #dashboard.dashboard-panel .dashboard-lead__pane.is-entering,
+    #dashboard.dashboard-panel .dashboard-lead__pane.is-entering-back,
+    #dashboard.dashboard-panel.is-dashboard-opening .dashboard-lead {
+        animation: none;
     }
 
     #dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-motion,
@@ -590,4 +612,581 @@ html.ttms-ios body.ttms-scroll-locked #dashboard.dashboard-panel {
         background 0.18s ease,
         border-color 0.18s ease,
         box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Dine / listing / driver lead cards */
+
+#dashboard.dashboard-panel .dashboard-lead {
+    margin: 0.15rem 0 0.65rem;
+    padding: 0.35rem 0.45rem;
+    border-radius: 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--dashboard-accent) 28%, var(--hub-panel-border));
+    background: linear-gradient(
+        165deg,
+        var(--hub-panel-surface-raised) 0%,
+        var(--hub-panel-surface) 100%
+    );
+    box-shadow:
+        inset 0 1px 0 var(--hub-panel-surface-inset),
+        0 10px 28px color-mix(in srgb, var(--dashboard-accent) 12%, transparent);
+    transition:
+        padding 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.48s ease;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-open {
+    padding: 0.45rem 0.55rem 0.85rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.5rem 0.55rem 0.45rem;
+    border: 0;
+    border-radius: 0.9rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__toggle:hover,
+#dashboard.dashboard-panel .dashboard-lead__toggle:focus-visible {
+    background: color-mix(in srgb, var(--hub-panel-icon-hover-bg) 72%, transparent);
+    outline: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__toggle-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    color: var(--dashboard-ink-muted);
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-open .dashboard-lead__chevron {
+    transform: rotate(180deg);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__panel[hidden] {
+    display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    padding: 0;
+    transition:
+        grid-template-rows 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.34s ease;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-open .dashboard-lead__panel {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__reveal {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0.15rem 0.45rem 0.15rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.55rem;
+    height: 2.55rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--hub-panel-icon-border);
+    background: var(--hub-panel-icon-bg);
+    color: var(--dashboard-ink);
+    transition:
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-open .dashboard-lead__icon {
+    transform: scale(1.05);
+    border-color: color-mix(in srgb, var(--dashboard-accent) 46%, var(--hub-panel-icon-border));
+    background: color-mix(in srgb, var(--dashboard-accent) 16%, var(--hub-panel-icon-bg));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__eyebrow {
+    display: block;
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--dashboard-accent) 82%, var(--dashboard-ink));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__title {
+    display: block;
+    margin: 0.12rem 0 0;
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dashboard-ink);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__lede {
+    margin: 0 0 0.9rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: var(--dashboard-ink-muted);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin: 0 0 0.15rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.28rem;
+    margin: 0;
+    padding: 0.45rem 0.2rem 0.5rem;
+    border: 0;
+    border-bottom: 2px solid color-mix(in srgb, var(--hub-panel-border) 80%, transparent);
+    background: transparent;
+    color: var(--dashboard-ink-muted);
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        color 0.28s ease,
+        border-color 0.28s ease;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step:hover,
+#dashboard.dashboard-panel .dashboard-lead__step:focus-visible {
+    color: var(--dashboard-ink);
+    outline: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step.is-active {
+    color: var(--dashboard-ink);
+    border-bottom-color: color-mix(in srgb, var(--dashboard-accent) 82%, var(--hub-panel-border));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step.is-done .dashboard-lead__step-num {
+    background: color-mix(in srgb, var(--dashboard-accent) 78%, var(--hub-panel-ink));
+    border-color: transparent;
+    color: var(--hub-panel-accent-ink, #1a1208);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    border-radius: 50%;
+    border: 1px solid var(--hub-panel-border);
+    background: var(--hub-panel-surface-inset);
+    font-size: 0.72rem;
+    font-weight: 800;
+    transition:
+        background 0.28s ease,
+        color 0.28s ease,
+        border-color 0.28s ease,
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step.is-active .dashboard-lead__step-num {
+    transform: scale(1.08);
+    border-color: color-mix(in srgb, var(--dashboard-accent) 70%, var(--hub-panel-border));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__step-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__pane[hidden] {
+    display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__pane {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__pane.is-entering {
+    animation: dash-lead-pane-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__pane.is-entering-back {
+    animation: dash-lead-pane-back 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__back,
+#dashboard.dashboard-panel .dashboard-lead__next {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.55rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__back {
+    flex: 0 0 auto;
+    border: 1px solid var(--hub-panel-border);
+    background: var(--hub-panel-surface-inset);
+    color: var(--dashboard-ink);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__next {
+    flex: 1 1 auto;
+    border: 1px solid color-mix(in srgb, var(--dashboard-accent) 45%, var(--hub-panel-border));
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--dashboard-accent) 88%, #fff) 0%,
+        color-mix(in srgb, var(--dashboard-accent) 72%, var(--hub-panel-ink)) 100%
+    );
+    color: var(--hub-panel-accent-ink, #1a1208);
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--dashboard-accent) 22%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__back:hover,
+#dashboard.dashboard-panel .dashboard-lead__back:focus-visible,
+#dashboard.dashboard-panel .dashboard-lead__next:hover,
+#dashboard.dashboard-panel .dashboard-lead__next:focus-visible {
+    outline: none;
+    transform: translateY(-1px);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    min-width: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--dashboard-ink-muted);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__req {
+    color: color-mix(in srgb, var(--dashboard-accent) 88%, #b45309);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__field input,
+#dashboard.dashboard-panel .dashboard-lead__field textarea {
+    width: 100%;
+    margin: 0;
+    padding: 0.62rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--hub-panel-border);
+    background: var(--hub-panel-surface-inset);
+    color: var(--dashboard-ink);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.35;
+    box-sizing: border-box;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__field textarea {
+    resize: vertical;
+    min-height: 3.1rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__field input:focus-visible,
+#dashboard.dashboard-panel .dashboard-lead__field textarea:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dashboard-accent) 65%, transparent);
+    outline-offset: 1px;
+    border-color: color-mix(in srgb, var(--dashboard-accent) 42%, var(--hub-panel-border));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__tastes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.75rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--hub-panel-border);
+    background: var(--hub-panel-surface-inset);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__taste-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__taste-list:empty {
+    display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__taste {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    max-width: 100%;
+    padding: 0.18rem 0.28rem 0.18rem 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
+    color: var(--dashboard-ink);
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__taste-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--dashboard-ink-muted);
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__tastes input {
+    flex: 1 1 8rem;
+    width: auto;
+    min-width: 7.5rem;
+    margin: 0;
+    padding: 0.35rem 0.35rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__tastes input:focus-visible {
+    outline: none;
+    border-color: transparent;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__tastes:focus-within {
+    outline: 2px solid color-mix(in srgb, var(--dashboard-accent) 65%, transparent);
+    outline-offset: 1px;
+    border-color: color-mix(in srgb, var(--dashboard-accent) 42%, var(--hub-panel-border));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__hint {
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--dashboard-ink-muted);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__status {
+    margin: 0;
+    min-height: 1.1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--dashboard-ink-muted);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__status.is-error {
+    color: color-mix(in srgb, #b91c1c 78%, var(--dashboard-ink));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__nav .dashboard-lead__submit {
+    flex: 1 1 auto;
+    width: auto;
+    margin: 0;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2.75rem;
+    margin: 0.1rem 0 0;
+    padding: 0.65rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--dashboard-accent) 45%, var(--hub-panel-border));
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--dashboard-accent) 88%, #fff) 0%,
+        color-mix(in srgb, var(--dashboard-accent) 72%, var(--hub-panel-ink)) 100%
+    );
+    color: var(--hub-panel-accent-ink, #1a1208);
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--dashboard-accent) 28%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__submit:hover,
+#dashboard.dashboard-panel .dashboard-lead__submit:focus-visible {
+    transform: translateY(-1px);
+    outline: none;
+    box-shadow:
+        0 6px 20px color-mix(in srgb, var(--dashboard-accent) 35%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-sent .dashboard-lead__form {
+    display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__thanks {
+    margin: 0 0 0.85rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--hub-panel-success, #28a745) 35%, var(--hub-panel-border));
+    background: color-mix(in srgb, var(--hub-panel-success, #28a745) 10%, var(--hub-panel-surface));
+}
+
+#dashboard.dashboard-panel .dashboard-lead__thanks[hidden] {
+    display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__thanks-title {
+    margin: 0 0 0.3rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--dashboard-ink);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__thanks-copy {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--dashboard-ink-muted);
+}
+
+#dashboard.dashboard-panel .dashboard-lead__alt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    text-align: center;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__onboard,
+#dashboard.dashboard-panel .dashboard-lead__call {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dashboard-ink);
+    text-decoration: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__onboard:hover,
+#dashboard.dashboard-panel .dashboard-lead__call:hover,
+#dashboard.dashboard-panel .dashboard-lead__onboard:focus-visible,
+#dashboard.dashboard-panel .dashboard-lead__call:focus-visible {
+    color: color-mix(in srgb, var(--dashboard-accent) 78%, var(--dashboard-ink));
+    text-decoration: underline;
+    outline: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__call {
+    color: var(--dashboard-ink-muted);
+    font-weight: 600;
+}
+
+    #dashboard.dashboard-panel .dashboard-lead__row {
+        grid-template-columns: 1fr;
+    }
+}
+
+#dashboard.dashboard-panel.is-dashboard-opening .dashboard-lead,
+#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer {
+    animation: dash-lead-rise 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#dashboard.dashboard-panel.is-dashboard-opening #dashboard-lead {
+    animation-delay: 0.07s;
+}
+
+#dashboard.dashboard-panel.is-dashboard-opening #dashboard-driver {
+    animation-delay: 0.14s;
+}
+
+#dashboard.dashboard-panel.is-dashboard-opening .dashboard-panel-footer {
+    animation-delay: 0.2s;
+}
+
+@keyframes dash-lead-rise {
+    from { opacity: 0; transform: translate3d(0, 12px, 0); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes dash-lead-pane-in {
+    from { opacity: 0; transform: translate3d(14px, 0, 0); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes dash-lead-pane-back {
+    from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+    to { opacity: 1; transform: none; }
 }

@@ -1,89 +1,86 @@
 {{ define "main" }}
-{{- $authServiceUrl := site.Params.authServiceUrl | default "https://auth.ttmenus.com" -}}
 {{- $ds := site.Params.deliveryService | default dict -}}
 {{- $deliveryOn := and (default false site.Params.features.delivery) (default false $ds.enabled) -}}
-<div class="dashboard-analytics-page dashboard-auth-page dashboard-control-room" id="dashboardAuthPage" data-delivery-enabled="{{ $deliveryOn }}">
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+<div class="dashboard-auth-page dashboard-control-room" id="dashboardAuthPage" data-delivery-enabled="{{ $deliveryOn }}">
   {{ partial "dashboard/subpage-header.html" (dict
     "kicker" "Auth"
     "toolbarLabel" "Auth toolbar"
     "closeTitle" "Close auth"
-    "buttons" (slice (dict "href" $authServiceUrl "label" "Auth service" "class" "btn-dash btn-dash-secondary" "icon" "fa-external-link" "target" "_blank" "rel" "noopener"))
   ) }}
+  <div class="dashboard-workspace" id="dashboardAuthTabs">
+    <div class="dashboard-notify-tablist" role="tablist" aria-label="Auth sections">
+      <button type="button" class="dashboard-notify-tab dashboard-notify-tab--active" role="tab" id="authTabPeople" aria-controls="authPanelPeople" aria-selected="true" tabindex="0"><i class="fa fa-users" aria-hidden="true"></i> People with access</button>
+      <button type="button" class="dashboard-notify-tab" role="tab" id="authTabInvite" aria-controls="authPanelInvite" aria-selected="false" tabindex="-1"><i class="fa fa-user-plus" aria-hidden="true"></i> Invites</button>
+      <button type="button" class="dashboard-notify-tab" role="tab" id="authTabRoles" aria-controls="authPanelRoles" aria-selected="false" tabindex="-1"><i class="fa fa-key" aria-hidden="true"></i> Roles</button>
+    </div>
+    <div class="cards">
+      <p id="dashboardAuthBanner" class="dashboard-auth-banner" hidden role="alert"></p>
 
-  <main class="dashboard-analytics-main dashboard-auth-main" id="main">
-    <p id="dashboardAuthBanner" class="dashboard-auth-banner" hidden role="alert"></p>
-
-    <section class="dashboard-settings-panel dashboard-auth-panel" aria-labelledby="auth-people-heading">
-      <div class="dashboard-settings-panel-head">
-        <span class="dashboard-settings-panel-icon dashboard-auth-panel-icon" aria-hidden="true"><i class="fa fa-lock"></i></span>
-        <div class="dashboard-settings-panel-head-text">
-          <h2 id="auth-people-heading" class="dashboard-analytics-heading">People with access</h2>
-          <p class="dashboard-analytics-subtitle">Roles control what each person can do on this menu. Changes take effect the next time they sign in.</p>
-        </div>
-        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardAuthRefresh" title="Reload people">
-          <i class="fa fa-refresh" aria-hidden="true"></i> Refresh
-        </button>
-      </div>
-      <p id="dashboardAuthPeopleStatus" class="dashboard-auth-status" role="status">Loading people with access…</p>
-      <div id="dashboardAuthPeople" class="dashboard-auth-people" aria-live="polite"></div>
-    </section>
-
-    <section class="dashboard-settings-panel dashboard-auth-panel dashboard-auth-panel--invite" aria-labelledby="auth-invite-heading">
-      <div class="dashboard-settings-panel-head">
-        <span class="dashboard-settings-panel-icon dashboard-auth-panel-icon" aria-hidden="true"><i class="fa fa-user-plus"></i></span>
-        <div class="dashboard-settings-panel-head-text">
-          <h2 id="auth-invite-heading" class="dashboard-analytics-heading">Invite someone</h2>
-          <p class="dashboard-analytics-subtitle">They get an email to set a password, then can sign in to this menu with the role you pick.</p>
-        </div>
-      </div>
-      <form id="dashboardAuthInviteForm" class="dashboard-settings-form dashboard-auth-invite-form" autocomplete="off">
-        <div class="dashboard-settings-form-grid">
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="authInviteFirstName">First name</label>
-            <div class="dashboard-settings-value">
-              <input type="text" id="authInviteFirstName" name="first_name" class="dashboard-settings-input" required maxlength="80" autocomplete="given-name">
-            </div>
-          </div>
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="authInviteLastName">Last name</label>
-            <div class="dashboard-settings-value">
-              <input type="text" id="authInviteLastName" name="last_name" class="dashboard-settings-input" required maxlength="80" autocomplete="family-name">
-            </div>
-          </div>
-          <div class="dashboard-settings-row dashboard-settings-row--full">
-            <label class="dashboard-settings-label" for="authInviteEmail">Email</label>
-            <div class="dashboard-settings-value">
-              <input type="email" id="authInviteEmail" name="email" class="dashboard-settings-input" required maxlength="254" autocomplete="off">
-            </div>
-          </div>
-          <div class="dashboard-settings-row dashboard-settings-row--full">
-            <label class="dashboard-settings-label" for="authInviteRole">Role</label>
-            <div class="dashboard-settings-value">
-              <select id="authInviteRole" name="role" class="dashboard-settings-input"></select>
-            </div>
-          </div>
-        </div>
-        <p id="dashboardAuthInviteHint" class="dashboard-auth-role-hint"></p>
-        <div class="dashboard-settings-form-actions">
-          <button type="submit" class="btn-dash btn-dash-primary" id="dashboardAuthInviteSubmit">
-            <i class="fa fa-paper-plane" aria-hidden="true"></i> Send invite
+      <section class="card dashboard-auth-panel" id="authPanelPeople" role="tabpanel" aria-labelledby="authTabPeople">
+        <div class="dashboard-auth-card-head">
+          <h2 id="auth-people-heading" class="dashboard-card-title"><i class="fa fa-lock" aria-hidden="true"></i> People with access</h2>
+          <button type="button" class="btn-dash btn-dash-secondary" id="dashboardAuthRefresh" title="Reload people">
+            <i class="fa fa-refresh" aria-hidden="true"></i> Refresh
           </button>
-          <span id="dashboardAuthInviteStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
         </div>
-      </form>
-    </section>
+        <p class="dashboard-card-desc">Roles control what each person can do on this menu. Changes take effect the next time they sign in.</p>
+        <p id="dashboardAuthPeopleStatus" class="dashboard-auth-status" role="status">Loading people with access…</p>
+        <div id="dashboardAuthPeople" class="dashboard-auth-people" aria-live="polite"></div>
+      </section>
 
-    <section class="dashboard-settings-panel dashboard-auth-panel dashboard-auth-panel--roles" aria-labelledby="auth-roles-heading">
-      <div class="dashboard-settings-panel-head">
-        <span class="dashboard-settings-panel-icon dashboard-auth-panel-icon" aria-hidden="true"><i class="fa fa-key"></i></span>
-        <div class="dashboard-settings-panel-head-text">
-          <h2 id="auth-roles-heading" class="dashboard-analytics-heading">What each role can do</h2>
-          <p class="dashboard-analytics-subtitle">Permissions are bundled into roles. Pick the least access someone needs.</p>
-        </div>
-      </div>
-      <div id="dashboardAuthRoleGuide" class="dashboard-auth-role-guide"></div>
-    </section>
-  </main>
+      <section class="card dashboard-auth-panel dashboard-auth-panel--invite" id="authPanelInvite" role="tabpanel" aria-labelledby="authTabInvite" hidden>
+        <h2 id="auth-invite-heading" class="dashboard-card-title"><i class="fa fa-user-plus" aria-hidden="true"></i> Invite someone</h2>
+        <p class="dashboard-card-desc">They get an email to set a password, then can sign in to this menu with the role you pick.</p>
+        <form id="dashboardAuthInviteForm" class="dashboard-settings-form dashboard-auth-invite-form" autocomplete="off">
+          <div class="dashboard-settings-form-grid">
+            <div class="dashboard-settings-row">
+              <label class="dashboard-settings-label" for="authInviteFirstName">First name</label>
+              <div class="dashboard-settings-value">
+                <input type="text" id="authInviteFirstName" name="first_name" class="dashboard-settings-input" required maxlength="80" autocomplete="given-name">
+              </div>
+            </div>
+            <div class="dashboard-settings-row">
+              <label class="dashboard-settings-label" for="authInviteLastName">Last name</label>
+              <div class="dashboard-settings-value">
+                <input type="text" id="authInviteLastName" name="last_name" class="dashboard-settings-input" required maxlength="80" autocomplete="family-name">
+              </div>
+            </div>
+            <div class="dashboard-settings-row dashboard-settings-row--full">
+              <label class="dashboard-settings-label" for="authInviteEmail">Email</label>
+              <div class="dashboard-settings-value">
+                <input type="email" id="authInviteEmail" name="email" class="dashboard-settings-input" required maxlength="254" autocomplete="off">
+              </div>
+            </div>
+            <div class="dashboard-settings-row dashboard-settings-row--full">
+              <label class="dashboard-settings-label" for="authInviteRole">Role</label>
+              <div class="dashboard-settings-value">
+                <select id="authInviteRole" name="role" class="dashboard-settings-input"></select>
+              </div>
+            </div>
+          </div>
+          <p id="dashboardAuthInviteHint" class="dashboard-auth-role-hint"></p>
+          <div class="dashboard-settings-form-actions">
+            <button type="submit" class="btn-dash btn-dash-primary" id="dashboardAuthInviteSubmit">
+              <i class="fa fa-paper-plane" aria-hidden="true"></i> Send invite
+            </button>
+            <span id="dashboardAuthInviteStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="card dashboard-auth-panel dashboard-auth-panel--roles" id="authPanelRoles" role="tabpanel" aria-labelledby="authTabRoles" hidden>
+        <h2 id="auth-roles-heading" class="dashboard-card-title"><i class="fa fa-key" aria-hidden="true"></i> What each role can do</h2>
+        <p class="dashboard-card-desc">Permissions are bundled into roles. Pick the least access someone needs.</p>
+        <div id="dashboardAuthRoleGuide" class="dashboard-auth-role-guide"></div>
+      </section>
+    </div>
+  </div>
 </div>
+<script>
+window.SITE_DISPLAY_NAME = {{ (site.Title | default `Menu Demo`) | jsonify }};
+window.SITE_CLIENT_ID = window.CLIENT_ID || "{{ $dashClient }}";
+window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
+</script>
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-auth.js" }}" defer></script>
 {{ end }}

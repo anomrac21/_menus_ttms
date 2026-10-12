@@ -180,7 +180,7 @@
           if (domainParts.length >= 2 && domainParts[1] === 'ttmenus' && domainParts[2] === 'com') {
             clientId = domainParts[0];
           } else {
-            clientId = window.SITE_CLIENT_ID || '_ttms_menu_demo';
+            clientId = window.SITE_CLIENT_ID || '';
           }
         }
         return clientId;

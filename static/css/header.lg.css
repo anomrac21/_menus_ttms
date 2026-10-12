@@ -183,8 +183,6 @@
     }
 
     html:not(.ttms-mobile-menublock) #main {
-        margin-left: 0 !important;
-        margin-inline-start: 0 !important;
         box-sizing: border-box;
     }
 
@@ -291,10 +289,7 @@
         width: 100%;
     }
 
-    html.ttms-mobile-menublock #main {
-        margin-left: 0 !important;
-        margin-inline-start: 0 !important;
-    }
+    
 
     html.ttms-mobile-menublock #footer {
         left: 0;

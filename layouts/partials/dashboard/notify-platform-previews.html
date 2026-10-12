@@ -230,4 +230,16 @@
 
   </div>
 
+  {{- if eq $kind "welcome" -}}
+  <div class="dashboard-settings-form-actions dashboard-notify-form-actions">
+    <button type="submit" class="btn-dash btn-dash-primary" id="btnNotifyWelcomeSave"><i class="fa fa-save" aria-hidden="true"></i> Save welcome &amp; branding</button>
+    <span id="notifyWelcomeSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+  </div>
+  {{- else if eq $kind "send" -}}
+  <div class="dashboard-settings-form-actions dashboard-notify-form-actions">
+    <button type="submit" class="btn-dash btn-dash-primary dashboard-notify-send-btn" id="dashboardNotifySendSubmit"><i class="fa fa-paper-plane" aria-hidden="true"></i> Send notification</button>
+    <span id="dashboardNotifySendStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+  </div>
+  {{- end -}}
+
 </aside>

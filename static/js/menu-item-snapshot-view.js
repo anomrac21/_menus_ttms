@@ -51,7 +51,7 @@
   }
 
   function clientId() {
-    return global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+    return global.CLIENT_ID || global.SITE_CLIENT_ID || '';
   }
 
   function authHeaders() {

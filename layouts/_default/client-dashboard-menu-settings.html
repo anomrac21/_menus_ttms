@@ -35,32 +35,32 @@
       <div class="dashboard-settings-panel-body" id="settings-social-body">
       <form id="socialForm" class="dashboard-settings-form" autocomplete="off" data-social-phone="{{ with $soc.phone }}{{ printf "%v" . }}{{ end }}">
         <div class="dashboard-settings-grid dashboard-settings-form-grid">
-          <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="social-email">Email</label>
+          <div class="dashboard-settings-row dashboard-settings-row--full">
+            <label class="dashboard-settings-label" for="social-email"><span class="dashboard-settings-social-icon" aria-hidden="true"><i class="fa fa-envelope"></i></span>Email</label>
             <div class="dashboard-settings-value">
               <input type="email" id="social-email" name="email" class="dashboard-settings-input" autocomplete="email" placeholder="contact@example.com" value="{{ default "" $soc.email }}">
             </div>
           </div>
           <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="social-facebook">Facebook</label>
+            <label class="dashboard-settings-label" for="social-facebook"><span class="dashboard-settings-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/></svg></span>Facebook</label>
             <div class="dashboard-settings-value">
               <input type="text" id="social-facebook" name="facebook" class="dashboard-settings-input" inputmode="url" placeholder="https://…" value="{{ default "" $soc.facebook }}">
             </div>
           </div>
           <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="social-instagram">Instagram</label>
+            <label class="dashboard-settings-label" for="social-instagram"><span class="dashboard-settings-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="currentColor"/></svg></span>Instagram</label>
             <div class="dashboard-settings-value">
               <input type="text" id="social-instagram" name="instagram" class="dashboard-settings-input" placeholder="URL or @handle" value="{{ default "" $soc.instagram }}">
             </div>
           </div>
           <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="social-youtube">YouTube</label>
+            <label class="dashboard-settings-label" for="social-youtube"><span class="dashboard-settings-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="currentColor"/></svg></span>YouTube</label>
             <div class="dashboard-settings-value">
               <input type="text" id="social-youtube" name="youtube" class="dashboard-settings-input" inputmode="url" placeholder="https://…" value="{{ default "" $soc.youtube }}">
             </div>
           </div>
           <div class="dashboard-settings-row">
-            <label class="dashboard-settings-label" for="social-tiktok">TikTok</label>
+            <label class="dashboard-settings-label" for="social-tiktok"><span class="dashboard-settings-social-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.65 2.93 2.93 0 0 1 .88.13V9.4a6.27 6.27 0 0 0-1-.05A6.34 6.34 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" fill="currentColor"/></svg></span>TikTok</label>
             <div class="dashboard-settings-value">
               <input type="text" id="social-tiktok" name="tiktok" class="dashboard-settings-input" placeholder="URL or @handle" value="{{ default "" $soc.tiktok }}">
             </div>
@@ -75,90 +75,58 @@
     </section>
 
     {{- $brandingDir := "static/branding" -}}
+    {{- $brandingDirExists := fileExists $brandingDir -}}
     {{- $brandingHidden := slice "favicon-400x200.webp" -}}
     {{- $brandingMeta := dict
-      "favicon.png" (dict "title" "PWA icon (PNG)" "usage" "Web app manifest: install icon for browsers that prefer PNG (512×512).")
-      "favicon16.webp" (dict "title" "Browser tab icon" "usage" "Tiny favicon in browser tabs and bookmarks (16×16).")
-      "favicon144.webp" (dict "title" "PWA icon (144)" "usage" "manifest.json. Android / Chrome install icon (144×144).")
-      "favicon152.webp" (dict "title" "Social share image" "usage" "Default Open Graph and Twitter preview when a page has no item image; also Apple touch icon (152×152).")
-      "favicon192.webp" (dict "title" "Logo / app icon" "usage" "Main logo: site header, loader, client dashboard, cart/table modals, and PWA 192 icon.")
-      "favicon196.webp" (dict "title" "Maskable PWA icon" "usage" "manifest.json maskable icon and Android shortcut favicon (196×196).")
-      "favicon512.webp" (dict "title" "Large logo" "usage" "High-resolution PWA icon and large logo references (512×512).")
-      "mappin.webp" (dict "title" "Map pin" "usage" "Marker image on the TTMenus locations map (256×256). Pin fill, border, and width come from data/mappin.yaml and export in /index.json.")
-      "richscreenshot1.webp" (dict "title" "PWA screenshot (wide)" "usage" "manifest.json - wide promotional screenshot in the install app dialog (640×320).")
-      "richscreenshot2.webp" (dict "title" "PWA screenshot (mobile)" "usage" "manifest.json - tall mobile screenshot in the install app dialog (320×640).")
+      "favicon.png" (dict "title" "Install icon" "usage" "Used when a browser prefers a PNG icon.")
+      "favicon16.webp" (dict "title" "Browser tab" "usage" "The tiny icon in the browser tab.")
+      "favicon144.webp" (dict "title" "Android icon" "usage" "Install icon on Android.")
+      "favicon152.webp" (dict "title" "Share image" "usage" "Shown when someone shares a link.")
+      "favicon192.webp" (dict "title" "Logo" "usage" "Header, loader, and the app icon.")
+      "favicon196.webp" (dict "title" "Home screen icon" "usage" "Icon when the menu is installed.")
+      "favicon512.webp" (dict "title" "Large logo" "usage" "The logo on the home page.")
+      "mappin.webp" (dict "title" "Map pin" "usage" "The marker guests see on the locations map.")
+      "richscreenshot1.webp" (dict "title" "Install image, wide" "usage" "Wide picture in the install dialog.")
+      "richscreenshot2.webp" (dict "title" "Install image, tall" "usage" "Tall picture in the install dialog.")
     -}}
     {{- $mappinData := site.Data.mappin | default dict -}}
-    {{- $brandingOrder := slice "favicon192.webp" "favicon512.webp" "favicon152.webp" "favicon.png" "favicon144.webp" "favicon196.webp" "favicon16.webp" "richscreenshot1.webp" "richscreenshot2.webp" "mappin.webp" -}}
-    {{- $brandingScratch := newScratch -}}
-    {{- $brandingScratch.Set "shown" slice -}}
-    {{- $brandingScratch.Set "n" 0 -}}
+    {{- $brandingLogo := slice "favicon192.webp" "favicon512.webp" "favicon152.webp" -}}
+    {{- $brandingMore := slice "favicon.png" "favicon144.webp" "favicon196.webp" "favicon16.webp" "richscreenshot1.webp" "richscreenshot2.webp" -}}
+    {{- $brandingKnown := union (union $brandingLogo $brandingMore) (slice "mappin.webp") -}}
     <section class="dashboard-settings-section dashboard-settings-panel dashboard-settings-panel--branding is-collapsed" data-settings-panel="branding" aria-labelledby="settings-branding-heading">
       <button type="button" class="dashboard-settings-panel-head dashboard-settings-panel-toggle" data-settings-panel-toggle aria-expanded="false" aria-controls="settings-branding-body">
         <span class="dashboard-settings-panel-icon" aria-hidden="true"><i class="fa fa-picture-o"></i></span>
         <div class="dashboard-settings-panel-head-text">
           <h2 id="settings-branding-heading" class="dashboard-analytics-heading">Branding images</h2>
-          <span class="dashboard-settings-panel-summary">Logos, icons, and map pin</span>
-          <p class="dashboard-analytics-subtitle">Choose files and pin colors, then save.</p>
+          <span class="dashboard-settings-panel-summary">Logo, share image, and map pin</span>
         </div>
         <span class="dashboard-settings-panel-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
       </button>
       <div class="dashboard-settings-panel-body" id="settings-branding-body">
-      <div class="dashboard-settings-branding dashboard-settings-branding-grid">
-        {{- if fileExists $brandingDir -}}
-          {{- range $brandingOrder -}}
-            {{- $fn := . -}}
-            {{- if fileExists (printf "%s/%s" $brandingDir $fn) -}}
-              {{- $meta := index $brandingMeta $fn | default dict -}}
-              {{- $title := default $fn $meta.title -}}
-              {{- $usage := default "Custom branding asset served from /branding/." $meta.usage -}}
-              {{- $imgW := 48 -}}{{- $imgH := 48 -}}
-              {{- if findRE `(?i)400x200` $fn -}}{{- $imgW = 96 -}}{{- $imgH = 48 -}}{{- end -}}
-              {{- $brandingScratch.Set "n" (add ($brandingScratch.Get "n") 1) -}}
-              {{- $brandingScratch.Set "shown" ($brandingScratch.Get "shown" | append $fn) -}}
-              {{- if eq $fn "mappin.webp" -}}
-              {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappinData) }}
-              {{- else -}}
-              {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage "imgW" $imgW "imgH" $imgH) }}
-              {{- end -}}
-            {{- end -}}
-          {{- end -}}
-          {{- range sort (readDir $brandingDir) "Name" -}}
-            {{- if and (not .IsDir) (findRE `(?i)\.(webp|png|jpe?g|gif)$` .Name) (ne (lower .Name) "ttmenus.gif") -}}
-              {{- $fn := .Name -}}
-              {{- if and (not (in ($brandingScratch.Get "shown") $fn)) (not (in $brandingHidden $fn)) -}}
-                {{- $meta := index $brandingMeta $fn | default dict -}}
-                {{- $title := default $fn $meta.title -}}
-                {{- $usage := default "Custom branding asset served from /branding/." $meta.usage -}}
-                {{- $imgW := 48 -}}{{- $imgH := 48 -}}
-                {{- if findRE `(?i)400x200` $fn -}}{{- $imgW = 96 -}}{{- $imgH = 48 -}}{{- end -}}
-                {{- $brandingScratch.Set "n" (add ($brandingScratch.Get "n") 1) -}}
-                {{- if eq $fn "mappin.webp" -}}
-                {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappinData) }}
-                {{- else -}}
-                {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage "imgW" $imgW "imgH" $imgH) }}
+      <p class="dashboard-settings-hint">Replace a picture, then save. The home page uses the large logo.</p>
+      <div class="dashboard-settings-branding">
+        <div class="dashboard-settings-branding-grid">
+          {{ partial "dashboard/branding-card-group.html" (dict "dir" $brandingDir "requireExists" $brandingDirExists "files" $brandingLogo "meta" $brandingMeta "mappin" $mappinData) }}
+        </div>
+        <details class="dashboard-settings-branding-advanced">
+          <summary>More app icons</summary>
+          <div class="dashboard-settings-branding-grid">
+            {{ partial "dashboard/branding-card-group.html" (dict "dir" $brandingDir "requireExists" $brandingDirExists "files" $brandingMore "meta" $brandingMeta "mappin" $mappinData) }}
+            {{- if $brandingDirExists -}}
+              {{- range sort (readDir $brandingDir) "Name" -}}
+                {{- if and (not .IsDir) (findRE `(?i)\.(webp|png|jpe?g|gif)$` .Name) (ne (lower .Name) "ttmenus.gif") -}}
+                  {{- $fn := .Name -}}
+                  {{- if and (not (in $brandingKnown $fn)) (not (in $brandingHidden $fn)) -}}
+                    {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $fn "usage" "Extra image used on the menu.") }}
+                  {{- end -}}
                 {{- end -}}
               {{- end -}}
             {{- end -}}
-          {{- end -}}
-        {{- end -}}
-        {{- if eq ($brandingScratch.Get "n") 0 -}}
-          {{- range $brandingOrder -}}
-            {{- $fn := . -}}
-            {{- if not (in $brandingHidden $fn) -}}
-            {{- $meta := index $brandingMeta $fn | default dict -}}
-            {{- $title := default $fn $meta.title -}}
-            {{- $usage := default "Custom branding asset served from /branding/." $meta.usage -}}
-            {{- $imgW := 48 -}}{{- $imgH := 48 -}}
-            {{- if findRE `(?i)400x200` $fn -}}{{- $imgW = 96 -}}{{- $imgH = 48 -}}{{- end -}}
-            {{- if eq $fn "mappin.webp" -}}
-            {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappinData) }}
-            {{- else -}}
-            {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage "imgW" $imgW "imgH" $imgH) }}
-            {{- end -}}
-            {{- end -}}
-          {{- end -}}
-        {{- end -}}
+          </div>
+        </details>
+        <div class="dashboard-settings-branding-grid dashboard-settings-branding-grid--pin">
+          {{ partial "dashboard/branding-card-group.html" (dict "dir" $brandingDir "requireExists" $brandingDirExists "files" (slice "mappin.webp") "meta" $brandingMeta "mappin" $mappinData) }}
+        </div>
       </div>
       <div class="dashboard-settings-form-actions dashboard-settings-branding-save-row">
         <button type="button" class="btn-dash btn-dash-primary" id="btnSaveBranding">Save to snapshot</button>
@@ -173,8 +141,8 @@
 <script>
   {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
   {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
-  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
-  // Do not use jsonify here: inside <script> it is escaped and breaks strings (e.g. \"_ttms_menu_demo\").
+  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
+  // Do not use jsonify here: inside <script> it is escaped and can break quoted strings.
   // Prefer values from head (auth): SITE_CLIENT_ID, CLIENT_ID, CMS_SERVICE_URL, CMS_API_URL; reinforce from hugo.toml.
   window.CLIENT_ID = window.CLIENT_ID || window.SITE_CLIENT_ID || "{{ $dashClient }}";
   window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
@@ -234,7 +202,7 @@
     }
 
     function settingsClientId() {
-      return window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+      return window.CLIENT_ID || window.SITE_CLIENT_ID || '';
     }
     function snapshotStorageKey() {
       return 'ttmenus_active_snapshot_' + settingsClientId();
@@ -413,7 +381,7 @@
           instagram: String(document.getElementById('social-instagram').value || '').trim(),
           tiktok: String(document.getElementById('social-tiktok').value || '').trim()
         };
-        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/hugo-social';
         if (socialBtn) socialBtn.disabled = true;
         if (socialStatusEl) socialStatusEl.textContent = 'Saving…';
@@ -548,7 +516,7 @@
           alert('Sign in required.');
           return;
         }
-        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var pendingNames = Object.keys(brandingPendingUploads);
         var hasMappin = document.getElementById('mappin-fill');
         if (!pendingNames.length && !hasMappin) {
@@ -632,7 +600,7 @@
       path = String(path || '').trim();
       if (!path) return '/main/bg.webp';
       if (path.indexOf('draft-assets/') === 0) {
-        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var name = path.replace(/^draft-assets\//, '');
         return cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/preview/draft-assets/' + encodeURIComponent(name);
       }
@@ -683,7 +651,7 @@
         alert('Sign in required.');
         return Promise.reject(new Error('Sign in required'));
       }
-      var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+      var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
       var url = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/content/draft-assets';
       var fd = new FormData();
       fd.append('file', file);
@@ -740,7 +708,7 @@
     function loadHeroSettingsFromCms() {
       var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
       if (!token || !heroImagePathEl) return;
-      var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+      var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
       var url =
         cmsApiBase() +
         '/clients/' +
@@ -798,13 +766,13 @@
         var body = heroIntroEl ? String(heroIntroEl.value || '') : heroIndexCache.body || '';
         var payload = {
           kind: 'home',
-          clientId: window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo',
+          clientId: window.CLIENT_ID || window.SITE_CLIENT_ID || '',
           contentPath: HERO_CONTENT_PATH,
-          siteConfigPath: (window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo') + '/hugo.toml',
+          siteConfigPath: (window.CLIENT_ID || window.SITE_CLIENT_ID || '') + '/hugo.toml',
           frontMatter: fm,
           body: body
         };
-        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '_ttms_menu_demo';
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var previewUrl = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/content/previews';
         var siteUrl = cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/menu-versions/site';
         var saveHeaders = {

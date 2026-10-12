@@ -91,20 +91,24 @@ body.cart-open {
 
 body.cart-open #footerBtns {
     opacity: 0 !important;
-    visibility: hidden !important;
+    transform: translateY(110%) !important;
     pointer-events: none !important;
+    transition:
+        opacity 0.34s ease,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body.cart-open.is-cart-opening #footerBtns,
 body.cart-open.is-cart-closing #footerBtns {
     opacity: 1 !important;
     visibility: visible !important;
+    transform: translateY(0) !important;
     pointer-events: none !important;
 }
 
 body.cart-open #footerSettings {
     opacity: 0 !important;
-    visibility: hidden !important;
+    transform: translateY(0.75rem) scale(0.98) !important;
     pointer-events: none !important;
 }
 

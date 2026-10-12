@@ -6,7 +6,7 @@
   {{- $authCss := partial "head/asset-url.html" `/css/auth.css` -}}
   {{- $dashCss := partial "head/asset-url.html" `/css/dashboard.css` -}}
   {{- $opsJs := partial "head/asset-url.html" `/js/dashboard-ops-snapshot.js` -}}
-  {{- $dashClient := site.Params.contentManagement.clientId | default `_ttms_menu_demo` -}}
+  {{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
   {{- $menuImgApi := site.Params.menuImageService.apiUrl | default `https://menu-images.ttmenus.com/api/v1` -}}
   <link rel="stylesheet" href="{{ $authCss }}">
   <link rel="stylesheet" href="{{ $dashCss }}">
@@ -21,7 +21,7 @@
   </script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-images.js` }}" defer></script>
   {{- end }}
-  <script src="/js/dashboard-analytics-snapshot.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-analytics-snapshot.js` }}" defer></script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-status.js` }}" defer></script>
   <script>
   window.SITE_DISPLAY_NAME = {{ (site.Title | default `Menu Demo`) | jsonify }};
@@ -90,9 +90,21 @@
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardOrdersHubPanel-inbox" role="tabpanel" data-orders-hub-panel="inbox" aria-labelledby="dashboardOrdersHubTab-inbox">
               <p class="dashboard-card-desc">Open tickets from the menu: kitchen, charge, and Loyverse receipts.</p>
-              <div class="dashboard-card-actions">
-                <a href="/dashboard/orders/" class="btn-dash btn-dash-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Open inbox</a>
-                <a href="/dashboard/kitchen/" class="btn-dash btn-dash-secondary"><i class="fa fa-print" aria-hidden="true"></i> Kitchen station</a>
+              <div class="dashboard-auth-card-links">
+                <a href="/dashboard/orders/" class="dashboard-auth-card-link">
+                  <i class="fa fa-ticket dashboard-auth-card-link-icon" aria-hidden="true"></i>
+                  <span class="dashboard-auth-card-link-text">
+                    <span class="dashboard-auth-card-link-title">Open inbox</span>
+                    <span class="dashboard-auth-card-link-desc">Charge tickets and Loyverse receipts</span>
+                  </span>
+                </a>
+                <a href="/dashboard/kitchen/" class="dashboard-auth-card-link">
+                  <i class="fa fa-print dashboard-auth-card-link-icon" aria-hidden="true"></i>
+                  <span class="dashboard-auth-card-link-text">
+                    <span class="dashboard-auth-card-link-title">Kitchen station</span>
+                    <span class="dashboard-auth-card-link-desc">Print tickets and mark them ready</span>
+                  </span>
+                </a>
               </div>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardOrdersHubPanel-delivery" role="tabpanel" data-orders-hub-panel="delivery" aria-labelledby="dashboardOrdersHubTab-delivery" hidden>
@@ -181,57 +193,62 @@
                   <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-pencil"></i></span>
                   <span class="dashboard-edit-menu-action-copy">
                     <span class="dashboard-edit-menu-action-title">Edit menu</span>
-                    <span class="dashboard-edit-menu-action-desc">Update dishes, prices, descriptions, and sections on the live menu</span>
+                    <span class="dashboard-edit-menu-action-desc">Dishes, prices, and sections</span>
                   </span>
                   <span class="dashboard-edit-menu-action-go" aria-hidden="true"><i class="fa fa-arrow-right"></i></span>
                 </a>
-                <div class="dashboard-edit-menu-action-grid">
-                  <a href="/edit-menu-colors/" class="dashboard-edit-menu-action dashboard-menu-status-open-editor" id="cardEditMenu" title="Open live menu in theme editor">
-                    <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
-                    <span class="dashboard-edit-menu-action-copy">
-                      <span class="dashboard-edit-menu-action-title">Edit theme</span>
-                      <span class="dashboard-edit-menu-action-desc">Colors and look</span>
-                    </span>
-                  </a>
-                  <a href="/edit-menu-rearrange/" class="dashboard-edit-menu-action" id="cardRearrangeMenu" title="Rearrange live menu order">
-                    <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-arrows"></i></span>
-                    <span class="dashboard-edit-menu-action-copy">
-                      <span class="dashboard-edit-menu-action-title">Rearrange</span>
-                      <span class="dashboard-edit-menu-action-desc">Reorder sections &amp; items</span>
-                    </span>
-                  </a>
-                  <a href="/menu-settings/" class="dashboard-edit-menu-action">
-                    <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-cog"></i></span>
-                    <span class="dashboard-edit-menu-action-copy">
-                      <span class="dashboard-edit-menu-action-title">Settings</span>
-                      <span class="dashboard-edit-menu-action-desc">Hero, social, branding</span>
-                    </span>
-                  </a>
-                </div>
+                <a href="/edit-menu-colors/" class="dashboard-edit-menu-action dashboard-menu-status-open-editor" id="cardEditMenu" title="Open live menu in theme editor">
+                  <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-paint-brush"></i></span>
+                  <span class="dashboard-edit-menu-action-copy">
+                    <span class="dashboard-edit-menu-action-title">Edit theme</span>
+                    <span class="dashboard-edit-menu-action-desc">Colors and look</span>
+                  </span>
+                  <span class="dashboard-edit-menu-action-go" aria-hidden="true"><i class="fa fa-arrow-right"></i></span>
+                </a>
+                <a href="/menu-settings/" class="dashboard-edit-menu-action">
+                  <span class="dashboard-edit-menu-action-icon" aria-hidden="true"><i class="fa fa-cog"></i></span>
+                  <span class="dashboard-edit-menu-action-copy">
+                    <span class="dashboard-edit-menu-action-title">Settings</span>
+                    <span class="dashboard-edit-menu-action-desc">Hero, social, branding</span>
+                  </span>
+                  <span class="dashboard-edit-menu-action-go" aria-hidden="true"><i class="fa fa-arrow-right"></i></span>
+                </a>
               </nav>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardMenuHubPanel-publish" role="tabpanel" data-menu-hub-panel="publish" aria-labelledby="dashboardMenuHubTab-publish" hidden>
               <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
               <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshot, content change report, and last published">
-                <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots" data-menu-status-block="snapshots">
+                <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots is-status-loading" data-menu-status-block="snapshots">
                   <div class="dashboard-menu-status-heading">
                     <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
                     <span class="dashboard-menu-status-heading-main">
                       <span class="dashboard-menu-status-heading-text">Menu snapshot</span>
-                      <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary"></span>
+                      <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary">Loading…</span>
                     </span>
+                    <span class="dashboard-menu-status-heading-spin" aria-hidden="true"></span>
                   </div>
-                  <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+                  <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite" aria-busy="true">
+                    <div class="dashboard-orders-throbber dashboard-menu-status-throbber" role="status">
+                      <span class="dashboard-orders-throbber-spin" aria-hidden="true"></span>
+                      <p class="dashboard-orders-throbber-label">Loading menu snapshot…</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts" data-menu-status-block="drafts">
+                <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts is-status-loading" data-menu-status-block="drafts">
                   <div class="dashboard-menu-status-heading">
                     <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
                     <span class="dashboard-menu-status-heading-main">
                       <span class="dashboard-menu-status-heading-text">Content change report</span>
-                      <span class="dashboard-menu-status-heading-summary" id="dashboardDraftBlockSummary"></span>
+                      <span class="dashboard-menu-status-heading-summary" id="dashboardDraftBlockSummary">Loading…</span>
                     </span>
+                    <span class="dashboard-menu-status-heading-spin" aria-hidden="true"></span>
                   </div>
-                  <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+                  <div id="dashboardDraftStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite" aria-busy="true">
+                    <div class="dashboard-orders-throbber dashboard-menu-status-throbber" role="status">
+                      <span class="dashboard-orders-throbber-spin" aria-hidden="true"></span>
+                      <p class="dashboard-orders-throbber-label">Loading content changes…</p>
+                    </div>
+                  </div>
                   <div class="dashboard-menu-status-block-foot dashboard-menu-status-block-foot--publish dashboard-menu-status-block-detail">
                     <button type="button" class="btn-dash btn-dash-publish hidden" id="cardPublishDrafts" aria-label="Publish all saved drafts to live menu"><i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">Publish</span></button>
                   </div>
@@ -259,9 +276,24 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-menu-images">
-          <p class="dashboard-card-desc">Swipe or tap to approve or decline customer photos.</p>
+          <p class="dashboard-card-desc">Swipe or tap to approve or decline. You can change that vote from any tab. Declined photos stay for 24 hours.</p>
+          <div class="dashboard-orders-hub-tabs dashboard-menu-images-tabs" role="tablist" aria-label="Photo review">
+            <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardMenuImagesTab-approved" data-menu-images-tab="approved" aria-selected="false">
+              <span>Approved</span>
+              <span class="dashboard-menu-images-tab-count" id="dashboardMenuImagesTabCount-approved">0</span>
+            </button>
+            <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardMenuImagesTab-declined" data-menu-images-tab="declined" aria-selected="false">
+              <span>Declined</span>
+              <span class="dashboard-menu-images-tab-count" id="dashboardMenuImagesTabCount-declined">0</span>
+            </button>
+            <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" id="dashboardMenuImagesTab-pending" data-menu-images-tab="pending" aria-selected="true">
+              <span>Queue</span>
+              <span class="dashboard-menu-images-tab-count" id="dashboardMenuImagesTabCount-pending">0</span>
+            </button>
+          </div>
           <div class="dashboard-menu-images-reel-stats" aria-live="polite">
-            <span class="dashboard-menu-images-reel-stat"><span id="dashboardCardMenuImagesPending"></span> in queue</span>
+            <span id="dashboardCardMenuImagesPending" hidden></span>
+            <span class="dashboard-menu-images-reel-stat" id="dashboardMenuImagesReelSummary"></span>
             <span class="dashboard-menu-images-reel-stat dashboard-menu-images-reel-stat--muted" id="dashboardMenuImagesReelProgress"></span>
           </div>
           <p id="dashboardMenuImagesLoading" class="dashboard-menu-images-loading">Loading reel…</p>
@@ -281,7 +313,27 @@
             </div>
           </div>
           <div class="dashboard-card-menu-images-actions dashboard-card-actions">
-            <button type="button" class="btn-dash btn-dash-secondary" id="dashboardMenuImagesRefresh">Reload queue</button>
+            <button type="button" class="btn-dash btn-dash-secondary" id="dashboardMenuImagesRefresh">Reload</button>
+          </div>
+          <div class="dashboard-notify-subsection dashboard-notify-admin-alerts" id="dashboardAdminPhotoAlertsSection" hidden aria-labelledby="dashboard-admin-photo-alerts-heading">
+            <div class="dashboard-notify-admin-alerts-head">
+              <span class="dashboard-notify-admin-alerts-icon" aria-hidden="true"><i class="fa fa-bell"></i></span>
+              <div class="dashboard-notify-admin-alerts-copy">
+                <h3 id="dashboard-admin-photo-alerts-heading" class="dashboard-notify-subsection-title">Your admin alerts</h3>
+                <p class="dashboard-notify-subsection-lead">Photo approval pushes go only to admins and superadmins who have push enabled on this device.</p>
+              </div>
+            </div>
+            <label class="dashboard-notify-toggle" for="dashboardPhotoReviewAlertsToggle">
+              <input type="checkbox" id="dashboardPhotoReviewAlertsToggle" checked>
+              <span class="dashboard-notify-toggle-switch" aria-hidden="true"></span>
+              <span class="dashboard-notify-toggle-label">Photo approval alerts</span>
+              <span class="dashboard-notify-admin-alert-hint" id="dashboardPhotoReviewAlertsHint">Notify me when a customer uploads a menu photo for review.</span>
+            </label>
+            <div class="dashboard-notify-banner dashboard-notify-banner-warn" id="dashboardPhotoReviewSubscribeHint" hidden role="status">
+              <i class="fa fa-info-circle" aria-hidden="true"></i>
+              <span>Enable push alerts on this device while signed in as an admin to receive photo approval notifications.</span>
+              <button type="button" class="btn-dash btn-dash-secondary dashboard-notify-relink-btn" id="dashboardPhotoReviewRelinkBtn">Link this device</button>
+            </div>
           </div>
         </div>
       </div>
@@ -305,23 +357,10 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-analytics">
-          <p class="dashboard-card-desc">View traffic, engagement, and menu performance.</p>
-          <div class="dashboard-card-notify-snapshot" id="dashboardCardAnalyticsSnapshot" aria-label="Analytics snapshot, last 30 days">
-            <div class="dashboard-card-notify-snapshot-grid">
-              <div class="dashboard-card-notify-snapshot-cell">
-                <span class="dashboard-card-notify-snapshot-label">Page views (30d)</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsPageViews"></span>
-              </div>
-              <div class="dashboard-card-notify-snapshot-cell">
-                <span class="dashboard-card-notify-snapshot-label">Visits (30d)</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardAnalyticsVisits"></span>
-              </div>
-            </div>
-          </div>
+          <span id="dashboardCardAnalyticsPageViews" hidden></span>
+          <span id="dashboardCardAnalyticsVisits" hidden></span>
           <p id="dashboardCardAnalyticsHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
-          <div class="dashboard-card-actions">
-            <a href="/analytics/" class="btn-dash btn-dash-secondary"><i class="fa fa-line-chart" aria-hidden="true"></i> Analytics</a>
-          </div>
+          {{ partial "dashboard/analytics-last-month.html" (dict "showOpenAnalytics" true) }}
         </div>
       </div>
       <div class="card card-dashboard-notify is-collapsed" data-dashboard-card="notifications">
@@ -331,25 +370,17 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-notifications">
-          <p class="dashboard-card-desc">Manage push notifications and alerts for your menu.</p>
           {{- if default false site.Params.features.notifications }}
-          <div class="dashboard-card-notify-snapshot" id="dashboardCardNotifySnapshot" aria-label="Notification snapshot, last 30 days">
-            <div class="dashboard-card-notify-snapshot-grid">
-              <div class="dashboard-card-notify-snapshot-cell">
-                <span class="dashboard-card-notify-snapshot-label">Subscribers</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySubs"></span>
-              </div>
-              <div class="dashboard-card-notify-snapshot-cell">
-                <span class="dashboard-card-notify-snapshot-label">Sent (30d)</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardCardNotifySent"></span>
-              </div>
-            </div>
-          </div>
+          <span id="dashboardCardNotifySubs" hidden></span>
+          <span id="dashboardCardNotifySent" hidden></span>
           <p id="dashboardCardNotifyHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
-          {{- end }}
+          {{ partial "dashboard/notify-overview.html" (dict "showSubscribers" false "showManageLink" true) }}
+          {{- else }}
+          <p class="dashboard-card-desc">Manage push notifications and alerts for your menu.</p>
           <div class="dashboard-card-actions">
             <a href="/notifications/" class="btn-dash btn-dash-secondary"><i class="fa fa-bell-o" aria-hidden="true"></i> Notifications</a>
           </div>
+          {{- end }}
         </div>
       </div>
       <div class="card card-dashboard-auth is-collapsed" data-dashboard-card="auth">
@@ -358,9 +389,29 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-auth">
-          <p class="dashboard-card-desc">Manage login, users, and access for this client.</p>
-          <div class="dashboard-card-actions">
-            <a href="/dashboard/auth/" class="btn-dash btn-dash-primary"><i class="fa fa-lock" aria-hidden="true"></i> Manage access</a>
+          <p class="dashboard-card-desc">Who can sign in, who to invite, and what each role can do.</p>
+          <div class="dashboard-auth-card-links">
+            <a href="/dashboard/auth/#people" class="dashboard-auth-card-link">
+              <i class="fa fa-users dashboard-auth-card-link-icon" aria-hidden="true"></i>
+              <span class="dashboard-auth-card-link-text">
+                <span class="dashboard-auth-card-link-title">People with access</span>
+                <span class="dashboard-auth-card-link-desc">Roles for people already on this menu</span>
+              </span>
+            </a>
+            <a href="/dashboard/auth/#invites" class="dashboard-auth-card-link">
+              <i class="fa fa-user-plus dashboard-auth-card-link-icon" aria-hidden="true"></i>
+              <span class="dashboard-auth-card-link-text">
+                <span class="dashboard-auth-card-link-title">Invites</span>
+                <span class="dashboard-auth-card-link-desc">Send a sign-in invite and pick a role</span>
+              </span>
+            </a>
+            <a href="/dashboard/auth/#roles" class="dashboard-auth-card-link">
+              <i class="fa fa-key dashboard-auth-card-link-icon" aria-hidden="true"></i>
+              <span class="dashboard-auth-card-link-text">
+                <span class="dashboard-auth-card-link-title">Roles</span>
+                <span class="dashboard-auth-card-link-desc">What each role is allowed to do</span>
+              </span>
+            </a>
           </div>
         </div>
       </div>
@@ -418,7 +469,9 @@
         });
       }
 
-      if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadDashboardCard) {
+      if (window.DashboardAnalyticsSnapshot && document.getElementById('metricPageViews') && DashboardAnalyticsSnapshot.loadAnalyticsPage) {
+        DashboardAnalyticsSnapshot.loadAnalyticsPage({ days: 30 });
+      } else if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadDashboardCard) {
         DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 });
       }
 
@@ -427,7 +480,9 @@
       }
 
       {{- if default false site.Params.features.notifications }}
-      if (window.DashboardNotifications && DashboardNotifications.loadDashboardCard) {
+      if (window.DashboardNotifications && document.getElementById('metricNotifySent30d') && DashboardNotifications.init) {
+        DashboardNotifications.init();
+      } else if (window.DashboardNotifications && DashboardNotifications.loadDashboardCard) {
         DashboardNotifications.loadDashboardCard({ days: 30 });
       }
       {{- end }}

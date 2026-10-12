@@ -1,42 +1,37 @@
+{{- $hrefs := false -}}
+{{- $current := "orders" -}}
+{{- if reflect.IsMap . -}}
+  {{- $hrefs = default false .hrefs -}}
+  {{- $current = .current | default "orders" -}}
+{{- end -}}
+{{- $items := slice (dict "key" "orders" "icon" "fa-ticket" "label" "Orders") (dict "key" "edit-menu" "icon" "fa-cutlery" "label" "Menu") -}}
+{{- if site.Params.menuImageService.enabled -}}
+  {{- $items = $items | append (dict "key" "menu-images" "icon" "fa-picture-o" "label" "Photo reel") -}}
+{{- end -}}
+{{- $items = $items | append (dict "key" "ads" "icon" "fa-bullhorn" "label" "Ads") (dict "key" "analytics" "icon" "fa-bar-chart" "label" "Analytics") (dict "key" "notifications" "icon" "fa-bell-o" "label" "Notifications") (dict "key" "auth" "icon" "fa-lock" "label" "Auth") -}}
 <nav class="dashboard-side" id="dashboardSide" aria-label="Control room sections">
   <p class="dashboard-side-kicker">Sections</p>
   <div class="dashboard-side-nav" id="dashboardSideNav">
-    <button type="button" class="dashboard-side-link is-active" data-dashboard-nav="orders" aria-current="page">
-      <i class="fa fa-ticket" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Orders</span>
-      <span class="dashboard-side-count" data-side-count="orders" hidden></span>
+    {{- range $items -}}
+      {{- $on := eq $current .key -}}
+      {{- $href := printf "/dashboard/?section=%s" .key -}}
+      {{- if eq .key "auth" -}}
+        {{- $href = "/dashboard/auth/" -}}
+      {{- else if eq .key "notifications" -}}
+        {{- $href = "/notifications/" -}}
+      {{- end -}}
+      {{- if $hrefs -}}
+    <a href="{{ $href }}" class="dashboard-side-link{{ if $on }} is-active{{ end }}"{{ if $on }} aria-current="page"{{ end }}>
+      <i class="fa {{ .icon }}" aria-hidden="true"></i>
+      <span class="dashboard-side-label">{{ .label }}</span>
+    </a>
+      {{- else -}}
+    <button type="button" class="dashboard-side-link{{ if $on }} is-active{{ end }}" data-dashboard-nav="{{ .key }}" aria-current="{{ if $on }}page{{ else }}false{{ end }}">
+      <i class="fa {{ .icon }}" aria-hidden="true"></i>
+      <span class="dashboard-side-label">{{ .label }}</span>
+      <span class="dashboard-side-count" data-side-count="{{ .key }}" hidden></span>
     </button>
-    <button type="button" class="dashboard-side-link" data-dashboard-nav="edit-menu" aria-current="false">
-      <i class="fa fa-cutlery" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Menu</span>
-      <span class="dashboard-side-count" data-side-count="edit-menu" hidden></span>
-    </button>
-    {{- if site.Params.menuImageService.enabled }}
-    <button type="button" class="dashboard-side-link" data-dashboard-nav="menu-images" aria-current="false">
-      <i class="fa fa-picture-o" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Photo reel</span>
-      <span class="dashboard-side-count" data-side-count="menu-images" hidden></span>
-    </button>
-    {{- end }}
-    <button type="button" class="dashboard-side-link" data-dashboard-nav="ads" aria-current="false">
-      <i class="fa fa-bullhorn" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Ads</span>
-      <span class="dashboard-side-count" data-side-count="ads" hidden></span>
-    </button>
-    <button type="button" class="dashboard-side-link" data-dashboard-nav="analytics" aria-current="false">
-      <i class="fa fa-bar-chart" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Analytics</span>
-      <span class="dashboard-side-count" data-side-count="analytics" hidden></span>
-    </button>
-    <button type="button" class="dashboard-side-link" data-dashboard-nav="notifications" aria-current="false">
-      <i class="fa fa-bell-o" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Notifications</span>
-      <span class="dashboard-side-count" data-side-count="notifications" hidden></span>
-    </button>
-    <button type="button" class="dashboard-side-link" data-dashboard-nav="auth" aria-current="false">
-      <i class="fa fa-lock" aria-hidden="true"></i>
-      <span class="dashboard-side-label">Auth</span>
-      <span class="dashboard-side-count" data-side-count="auth" hidden></span>
-    </button>
+      {{- end -}}
+    {{- end -}}
   </div>
 </nav>

@@ -14,6 +14,15 @@
     padding: 0 max(0.5rem, env(safe-area-inset-right, 0)) max(0.65rem, env(safe-area-inset-bottom, 0)) max(0.5rem, env(safe-area-inset-left, 0));
     pointer-events: none;
     box-sizing: border-box;
+    transition:
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.34s ease;
+}
+
+#footer.is-dock-hidden {
+    transform: translateY(calc(100% + 0.65rem));
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Settings popover above dock */
@@ -218,13 +227,16 @@
     background-image: none !important;
     opacity: 0;
     pointer-events: none;
-    transform: none;
-    transition: opacity 0.45s ease;
+    transform: translateY(110%);
+    transition:
+        opacity 0.34s ease,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 #footerBtns.footer-dock.visible {
     opacity: 1 !important;
     pointer-events: auto !important;
+    transform: translateY(0);
 }
 
 #footerBtns.footer-dock.grad2::before {
@@ -486,8 +498,22 @@ body.table-modal-open #footerSettings {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    #footer,
+    #footer.is-dock-hidden,
     #footerSettings,
     #footerBtns.footer-dock,
+    body.cart-open #footerBtns,
+    body.cart-open #footerSettings,
+    body.modal-open #footerBtns,
+    body.modal-open #footerSettings,
+    body.table-modal-open #footerBtns,
+    body.table-modal-open #footerSettings,
+    body.menu-reels-item-modal-open #footerBtns,
+    body.menu-reels-item-modal-open #footerSettings,
+    body.menu-reels-intro-active #footerBtns,
+    body.menu-reels-contact-active #footerBtns,
+    body.ads-reels-open #footerBtns,
+    body.ads-reels-open #footerSettings,
     .footer-dock__action,
     .footer-dock__icon-wrap,
     .footer-settings-popover__btn {

@@ -287,6 +287,9 @@
 
   function preferredSideKey() {
     try {
+      var params = new URLSearchParams(global.location.search);
+      var section = params.get('section');
+      if (section) return section;
       var saved = localStorage.getItem(sideStorageKey());
       if (saved) return saved;
     } catch (e) {

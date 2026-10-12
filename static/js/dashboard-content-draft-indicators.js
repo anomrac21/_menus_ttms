@@ -123,7 +123,7 @@
   }
 
   function clientId() {
-    return global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+    return global.CLIENT_ID || global.SITE_CLIENT_ID || '';
   }
 
   function authHeaders() {
@@ -193,6 +193,8 @@
       return sectionSlug ? 'content/' + sectionSlug + '/_index.md' : null;
     }
     if (el.classList && el.classList.contains('ads-reels-slide')) {
+      var storedPath = el.getAttribute('data-content-path') || '';
+      if (storedPath) return storedPath;
       var slug = promotionSlugFromElement(el);
       return slug ? 'content/promotions/' + slug + '.md' : null;
     }

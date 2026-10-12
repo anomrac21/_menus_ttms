@@ -1053,9 +1053,15 @@
 
         function syncFooterDisplay() {
             const hideFooter = visibleAdCount > 0;
-            footer.style.display = hideFooter ? 'none' : '';
-            if (hideFooter && typeof window.closeFooterSettings === 'function') {
-                window.closeFooterSettings();
+            footer.classList.toggle('is-dock-hidden', hideFooter);
+            footer.style.display = '';
+            if (hideFooter) {
+                footer.setAttribute('aria-hidden', 'true');
+                if (typeof window.closeFooterSettings === 'function') {
+                    window.closeFooterSettings();
+                }
+            } else {
+                footer.removeAttribute('aria-hidden');
             }
         }
 
@@ -1247,7 +1253,7 @@
         const p = (path || '').trim().replace(/^\/+/, '');
         if (!p || p.indexOf('draft-assets/') !== 0) return '';
         const base = (window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
-        const cid = window.CMS_CLIENT_ID || window.CLIENT_ID || '_ttms_menu_demo';
+        const cid = window.CMS_CLIENT_ID || window.CLIENT_ID || '';
         const name = p.replace(/^draft-assets\//, '');
         return base + '/api/clients/' + encodeURIComponent(cid) + '/preview/draft-assets/' + encodeURIComponent(name);
     }
@@ -2153,7 +2159,7 @@
                 const menuImageEnabled = menuImageCfg && menuImageCfg.enabled;
                 const menuImageClientId = (menuImageCfg && menuImageCfg.clientId) ||
                     (typeof window.SITE_CLIENT_ID !== 'undefined' && window.SITE_CLIENT_ID) ||
-                    '_ttms_menu_demo';
+                    '';
                 const useSmashPassMedia = !!menuImageEnabled;
                 
                 // Build smash-or-pass (menu images) or legacy promo carousel HTML

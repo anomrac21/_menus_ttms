@@ -4,12 +4,16 @@
 (function () {
   'use strict';
 
+  var lists = { pending: [], approved: [], declined: [] };
+  var tab = 'pending';
   var queue = [];
   var busy = false;
   var dragState = null;
+  var listsUnavailable = false;
 
   var SWIPE_THRESHOLD = 72;
   var ROTATION_MAX = 14;
+  var DECLINE_HOLD_MS = 24 * 60 * 60 * 1000;
 
   function cfg() {
     return typeof window.MENU_IMAGE_CONFIG !== 'undefined' ? window.MENU_IMAGE_CONFIG : null;
@@ -26,7 +30,7 @@
       plainConfigValue(window.CLIENT_ID) ||
       plainConfigValue(window.SITE_CLIENT_ID) ||
       plainConfigValue(cfg() && cfg().clientId) ||
-      '_ttms_menu_demo'
+      ''
     );
   }
 
@@ -107,14 +111,34 @@
     return document.getElementById(id);
   }
 
-  function setSnapshotCount(n) {
+  function setQueueBadge() {
     var pending = el('dashboardCardMenuImagesPending');
-    if (pending) pending.textContent = n > 0 ? String(n) : '0';
-    var progress = el('dashboardMenuImagesReelProgress');
-    if (progress) {
-      progress.textContent =
-        n > 0 ? 'Card 1 of ' + n : '';
-    }
+    if (pending) pending.textContent = String(lists.pending.length);
+    ['pending', 'approved', 'declined'].forEach(function (key) {
+      var count = el('dashboardMenuImagesTabCount-' + key);
+      if (count) count.textContent = String((lists[key] || []).length);
+    });
+  }
+
+  function summaryText() {
+    var n = queue.length;
+    if (tab === 'approved') return n + ' approved';
+    if (tab === 'declined') return n + ' declined · kept 24 hours';
+    return n + ' in queue';
+  }
+
+  function emptyMessage() {
+    if (tab === 'approved') return 'No approved photos yet.';
+    if (tab === 'declined') return 'No declined photos. They stay here for 24 hours, then they are removed.';
+    return "You're all caught up: no photos waiting for review.";
+  }
+
+  function syncTabs() {
+    document.querySelectorAll('[data-menu-images-tab]').forEach(function (btn) {
+      var on = btn.getAttribute('data-menu-images-tab') === tab;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
   }
 
   function showError(msg) {
@@ -137,9 +161,14 @@
     if (reel) reel.classList.add('hidden');
     if (empty) {
       empty.classList.remove('hidden');
-      empty.textContent = "You're all caught up: no photos waiting for review.";
+      empty.textContent = emptyMessage();
     }
-    setSnapshotCount(0);
+    setQueueBadge();
+    var summary = el('dashboardMenuImagesReelSummary');
+    if (summary) summary.textContent = summaryText();
+    var progress = el('dashboardMenuImagesReelProgress');
+    if (progress) progress.textContent = '';
+    paintServiceNote();
   }
 
   function showReel() {
@@ -151,7 +180,39 @@
     if (reel) reel.classList.remove('hidden');
   }
 
-  async function fetchPending() {
+  function belongsToClient(sub) {
+    var id = String(sub.client_id || '');
+    if (window.AuthClientAccess && typeof AuthClientAccess.clientIdsMatch === 'function') {
+      if (typeof AuthClientAccess.getSiteClientIdCandidates === 'function') {
+        return AuthClientAccess.getSiteClientIdCandidates().some(function (candidate) {
+          return AuthClientAccess.clientIdsMatch(id, candidate);
+        });
+      }
+      return AuthClientAccess.clientIdsMatch(id, clientId());
+    }
+    return id === clientId();
+  }
+
+  function declineStillHeld(sub) {
+    var stamp = sub.reviewed_at || sub.created_at;
+    if (!stamp) return true;
+    var at = new Date(stamp).getTime();
+    if (isNaN(at)) return true;
+    return Date.now() - at < DECLINE_HOLD_MS;
+  }
+
+  function removedInLabel(sub) {
+    var stamp = sub.reviewed_at || sub.created_at;
+    if (!stamp) return 'Removed after 24 hours';
+    var left = new Date(stamp).getTime() + DECLINE_HOLD_MS - Date.now();
+    if (isNaN(left) || left <= 0) return 'Removing soon';
+    var hours = Math.floor(left / 3600000);
+    var mins = Math.floor((left % 3600000) / 60000);
+    if (hours >= 1) return 'Removed in ' + hours + 'h ' + mins + 'm';
+    return 'Removed in ' + Math.max(1, mins) + 'm';
+  }
+
+  async function fetchStatus(status) {
     var base = apiBase();
     var token = await ensureToken();
     if (!base || !token) {
@@ -160,31 +221,39 @@
     if (typeof AuthClient !== 'undefined' && !AuthClient.isAdmin()) {
       throw new Error('Admin access required.');
     }
-    var res = await fetch(base + '/admin/menu-images/pending', {
+    var res = await fetch(base + '/admin/menu-images/' + status, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer ' + token,
       },
     });
+    if (res.status === 404) {
+      var missing = new Error('Photo lists are not available on this service yet.');
+      missing.code = 404;
+      throw missing;
+    }
     var json = await res.json().catch(function () {
       return {};
     });
     if (!res.ok) {
-      throw new Error(json.error || json.details || 'Could not load pending photos (HTTP ' + res.status + ').');
+      throw new Error(json.error || json.details || 'Could not load photos (HTTP ' + res.status + ').');
     }
-    return (json.data || []).filter(function (sub) {
-      var id = String(sub.client_id || '');
-      if (window.AuthClientAccess && typeof AuthClientAccess.clientIdsMatch === 'function') {
-        if (typeof AuthClientAccess.getSiteClientIdCandidates === 'function') {
-          return AuthClientAccess.getSiteClientIdCandidates().some(function (candidate) {
-            return AuthClientAccess.clientIdsMatch(id, candidate);
-          });
-        }
-        return AuthClientAccess.clientIdsMatch(id, clientId());
-      }
-      return id === clientId();
+    return (json.data || []).filter(belongsToClient).filter(function (sub) {
+      return status !== 'declined' || declineStillHeld(sub);
     });
+  }
+
+  async function fetchStatusOptional(status) {
+    try {
+      return await fetchStatus(status);
+    } catch (err) {
+      if (err && err.code === 404) {
+        listsUnavailable = true;
+        return [];
+      }
+      throw err;
+    }
   }
 
   async function postAction(id, action) {
@@ -246,6 +315,7 @@
       '</a>' +
       '<span class="dashboard-menu-images-card__meta">' +
       escapeHtml(when) +
+      (tab === 'declined' ? ' · ' + escapeHtml(removedInLabel(sub)) : '') +
       '</span>' +
       '</div>' +
       '</article>'
@@ -253,10 +323,12 @@
   }
 
   function updateProgress() {
-    setSnapshotCount(queue.length);
+    setQueueBadge();
+    var summary = el('dashboardMenuImagesReelSummary');
+    if (summary) summary.textContent = summaryText();
     var progress = el('dashboardMenuImagesReelProgress');
-    if (progress && queue.length) {
-      progress.textContent = 'Reviewing 1 of ' + queue.length;
+    if (progress) {
+      progress.textContent = queue.length ? 'Reviewing 1 of ' + queue.length : '';
     }
   }
 
@@ -284,6 +356,15 @@
 
     var top = stack.querySelector('.dashboard-menu-images-card.is-top');
     if (top) bindCardDrag(top);
+    paintServiceNote();
+  }
+
+  function paintServiceNote() {
+    if (!listsUnavailable) return;
+    var err = el('dashboardMenuImagesError');
+    if (!err) return;
+    err.textContent = 'Approved and Declined need the updated photo service before those tabs can load.';
+    err.classList.remove('hidden');
   }
 
   function setReelButtonsDisabled(disabled) {
@@ -377,6 +458,13 @@
     if (busy || !queue.length) return;
     var sub = queue[0];
     if (!sub) return;
+    var nextStatus = action === 'approve' ? 'approved' : 'declined';
+    if (String(sub.status || 'pending') === nextStatus) {
+      if (typeof window.showDashboardMenuImagesToast === 'function') {
+        window.showDashboardMenuImagesToast(nextStatus === 'approved' ? 'Already approved.' : 'Already declined.');
+      }
+      return;
+    }
 
     var stack = el('dashboardMenuImagesReelStack');
     var card = stack && stack.querySelector('.dashboard-menu-images-card.is-top');
@@ -392,11 +480,17 @@
       postAction(sub.id, action)
         .then(function () {
           queue.shift();
+          sub.status = nextStatus;
+          sub.reviewed_at = new Date().toISOString();
+          lists[nextStatus] = (lists[nextStatus] || []).filter(function (item) {
+            return item.id !== sub.id;
+          });
+          lists[nextStatus].unshift(sub);
           if (typeof window.showDashboardMenuImagesToast === 'function') {
             window.showDashboardMenuImagesToast(
               action === 'approve'
-                ? 'Smash! Photo is live on the menu.'
-                : 'Passed: photo declined.'
+                ? 'Vote saved. Photo is live on the menu.'
+                : 'Vote saved. Photo stays declined for 24 hours.'
             );
           }
           renderStack();
@@ -448,17 +542,40 @@
     }
   }
 
+  function selectTab(next) {
+    if (busy || next === tab || !lists[next]) return;
+    tab = next;
+    queue = lists[tab];
+    syncTabs();
+    renderStack();
+  }
+
+  function bindTabs() {
+    document.querySelectorAll('[data-menu-images-tab]').forEach(function (btn) {
+      if (btn._ttmsTabBound) return;
+      btn._ttmsTabBound = true;
+      btn.addEventListener('click', function () {
+        selectTab(btn.getAttribute('data-menu-images-tab'));
+      });
+    });
+  }
+
   async function refresh() {
     var loading = el('dashboardMenuImagesLoading');
     if (loading) loading.classList.remove('hidden');
     try {
-      queue = await fetchPending();
+      lists.pending = await fetchStatus('pending');
+      listsUnavailable = false;
+      lists.approved = await fetchStatusOptional('approved');
+      lists.declined = await fetchStatusOptional('declined');
+      queue = lists[tab] || [];
+      syncTabs();
       renderStack();
     } catch (e) {
       console.warn('[dashboard-menu-images]', e);
-      showError(e.message || 'Unable to load pending photos.');
+      showError(e.message || 'Unable to load photos.');
       queue = [];
-      setSnapshotCount(0);
+      setQueueBadge();
     } finally {
       if (loading) loading.classList.add('hidden');
     }
@@ -493,6 +610,7 @@
     if (typeof AuthClient === 'undefined') return;
 
     bindReelActions();
+    bindTabs();
 
     var refreshBtn = el('dashboardMenuImagesRefresh');
     if (refreshBtn) {

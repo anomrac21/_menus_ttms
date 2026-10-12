@@ -129,6 +129,23 @@ const AuthClientAccess = {
   },
 
   /**
+   * This menu's client id only. Never invent another restaurant (including the demo).
+   */
+  siteClientId() {
+    const configured = [
+      typeof window.CLIENT_ID !== 'undefined' ? window.CLIENT_ID : '',
+      typeof window.SITE_CLIENT_ID !== 'undefined' ? window.SITE_CLIENT_ID : '',
+      window.POS_CONFIG && window.POS_CONFIG.clientId,
+      window.MENU_IMAGE_CONFIG && window.MENU_IMAGE_CONFIG.clientId,
+      window.SiteConfig && window.SiteConfig.clientId,
+    ]
+      .map((value) => String(value || '').trim())
+      .find(Boolean);
+    if (configured) return configured;
+    return this.getCurrentClientID() || '';
+  },
+
+  /**
    * Merge JWT claim client_id when profile assignments are empty/stale.
    */
   getAssignedClientsWithJwtFallback(user) {

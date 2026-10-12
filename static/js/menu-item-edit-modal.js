@@ -148,6 +148,8 @@
       return sectionSlug ? 'content/' + sectionSlug + '/_index.md' : '';
     }
     if (el.classList && el.classList.contains('ads-reels-slide')) {
+      var storedPath = el.getAttribute('data-content-path') || '';
+      if (storedPath) return storedPath;
       var promoSlug =
         window.TTMSContentDrafts && typeof window.TTMSContentDrafts.promotionSlugFromElement === 'function'
           ? window.TTMSContentDrafts.promotionSlugFromElement(el)

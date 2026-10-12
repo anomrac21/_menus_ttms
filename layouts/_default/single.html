@@ -49,7 +49,7 @@
 
         <div class="menu-item-expanded-content" style="display: block;">
           {{ $hasSinglePageCarousel := $imgData.hasImage }}
-          <div class="expanded-item-details single-page-content{{ if and (not $hasSinglePageCarousel) .Site.Params.menuImageService.enabled }} expanded-item-details--no-carousel{{ end }}" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}" data-menu-item-path="{{ .RelPermalink }}">
+          <div class="expanded-item-details single-page-content{{ if and (not $hasSinglePageCarousel) .Site.Params.menuImageService.enabled }} expanded-item-details--no-carousel{{ end }}" data-menu-image-client-id="{{ .Site.Params.contentManagement.clientId | default "" }}" data-menu-item-path="{{ .RelPermalink }}">
             {{- if .Site.Params.menuImageService.enabled -}}
             {{ partial "components/menu-smash-pass.html" (dict "menuItemPath" .RelPermalink "extraClass" "menu-smash-pass--single-page") }}
             {{- else -}}

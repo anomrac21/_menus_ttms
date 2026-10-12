@@ -110,7 +110,7 @@
     function sync() {
       var raw = (src.textContent || '').trim();
       if (!sourceReady(raw)) return;
-      if (/^no\b/i.test(raw)) {
+      if (/^no\b/i.test(raw) || /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(raw)) {
         setCount(destId, 0);
         return;
       }

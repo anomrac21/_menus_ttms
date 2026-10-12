@@ -75,7 +75,7 @@
   }
 
   function clientId() {
-    return global.CLIENT_ID || global.SITE_CLIENT_ID || global.CMS_CLIENT_ID || '_ttms_menu_demo';
+    return global.CLIENT_ID || global.SITE_CLIENT_ID || global.CMS_CLIENT_ID || '';
   }
 
   function normalizeHubClientId(raw) {
@@ -345,7 +345,7 @@
       });
   }
 
-  function renderAnalyticsTrendChart(rows) {
+  function renderAnalyticsTrendChart(rows, days) {
     var chart = document.getElementById('dashboardAnalyticsTrendChart');
     var empty = document.getElementById('dashboardAnalyticsTrendEmpty');
     if (!chart) return;
@@ -361,11 +361,14 @@
       return;
     }
     if (empty) empty.hidden = true;
+    analyticsChartRows = rows;
+    analyticsChartDays = days || 30;
+    ensureAnalyticsChartWatch(chart);
 
-    var width = 960;
     var height = 260;
-    var pad = { top: 16, right: 12, bottom: 36, left: 40 };
-    var innerW = width - pad.left - pad.right;    var innerH = height - pad.top - pad.bottom;    var maxVal = 1;
+    var pad = { top: 16, right: 32, bottom: 36, left: 44 };
+    var innerH = height - pad.top - pad.bottom;
+    var maxVal = 1;
 
     rows.forEach(function (r) {
       maxVal = Math.max(maxVal, r.pageViews, r.visits, r.menuItemViews, r.addToCart, r.orderSubmissions, r.searches);
@@ -380,11 +383,23 @@
       { key: 'searches', label: 'Searches', className: 'dashboard-analytics-trends-bar--search' },
     ];
     var seriesCount = series.length;
-    var barGroupW = innerW / rows.length;
-    var barW = Math.max(2, Math.min(6, (barGroupW - 8) / seriesCount));
+    var barGap = 3;
+    var groupGap = 18;
+    var minBar = 7;
+    var maxBar = 14;
+    var host = chart.clientWidth || 320;
+    chart._ttmsChartW = chart.clientWidth || 0;
+    var minGroup = seriesCount * minBar + (seriesCount - 1) * barGap + groupGap;
+    var innerForHost = Math.max(0, host - pad.left - pad.right);
+    var barGroupW = Math.max(minGroup, innerForHost / rows.length);
+    var barRoom = barGroupW - groupGap - (seriesCount - 1) * barGap;
+    var barW = Math.max(minBar, Math.min(maxBar, barRoom / seriesCount));
+    var width = Math.ceil(pad.left + pad.right + barGroupW * rows.length);
 
     var svg =
-      '<svg class="dashboard-notify-trends-svg" viewBox="0 0 ' +
+      '<svg class="dashboard-notify-trends-svg" width="' +
+      width +
+      '" viewBox="0 0 ' +
       width +
       ' ' +
       height +
@@ -418,7 +433,7 @@
       series.forEach(function (s, seriesIndex) {
         var value = Number(row[s.key]) || 0;
         var barH = maxVal ? (value / maxVal) * innerH : 0;
-        var x = groupX - (barW * seriesCount + (seriesCount - 1) * 2) / 2 + seriesIndex * (barW + 2);
+        var x = groupX - (barW * seriesCount + (seriesCount - 1) * barGap) / 2 + seriesIndex * (barW + barGap);
         var yBar = pad.top + innerH - barH;        svg +=
           '<rect class="dashboard-notify-trends-bar ' +
           s.className +
@@ -439,34 +454,198 @@
           '</title></rect>';
       });
 
-      if (index % 5 === 0 || index === rows.length - 1) {
-        svg +=
-          '<text class="dashboard-notify-trends-axis-x" x="' +
-          groupX +
-          '" y="' +
-          (height - 10) +
-          '" text-anchor="middle">' +
-          escapeHtml(formatShortDate(row.date)) +
-          '</text>';
+    });
+
+    var labelGap = 72;
+    var marks = [];
+    rows.forEach(function (row, index) {
+      var groupX = pad.left + index * barGroupW + barGroupW / 2;
+      var prev = marks[marks.length - 1];
+      if (index === rows.length - 1) {
+        while (marks.length && groupX - marks[marks.length - 1].x < labelGap) marks.pop();
+        marks.push({ x: groupX, date: row.date });
+        return;
       }
+      if (!prev || groupX - prev.x >= labelGap) marks.push({ x: groupX, date: row.date });
+    });
+    marks.forEach(function (mark) {
+      svg +=
+        '<text class="dashboard-notify-trends-axis-x" x="' +
+        mark.x +
+        '" y="' +
+        (height - 8) +
+        '" text-anchor="middle">' +
+        escapeHtml(formatShortDate(mark.date)) +
+        '</text>';
     });
 
     svg += '</svg>';
     chart.innerHTML = svg;
     chart.setAttribute(
       'aria-label',
-      'Analytics activity chart for the last 30 days with daily page views, visits, menu item views, add to cart, orders, and searches'
+      'Analytics activity chart for the last ' +
+        (days || 30) +
+        ' days with daily page views, visits, menu item views, add to cart, orders, and searches'
     );
+  }
+
+  var analyticsRequest = 0;
+  var analyticsChartRows = [];
+  var analyticsChartDays = 30;
+  var analyticsChartWatch = false;
+  var analyticsMetricAnimations = {};
+
+  function stopAnalyticsMetricAnimation(id) {
+    var state = analyticsMetricAnimations[id];
+    if (!state) return;
+    if (state.rafId) cancelAnimationFrame(state.rafId);
+    delete analyticsMetricAnimations[id];
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('dashboard-analytics-card-value--counting');
+  }
+
+  var ANALYTICS_METRIC_IDS = [
+    'metricPageViews',
+    'metricVisits',
+    'metricUniqueVisitors',
+    'metricMenuItemViews',
+    'metricAddToCart',
+    'metricOrderSubmissions',
+    'metricSearches',
+  ];
+
+  function startAnalyticsLoadingCount(id) {
+    stopAnalyticsMetricAnimation(id);
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('is-loading');
+    el.removeAttribute('aria-busy');
+    el.classList.add('dashboard-analytics-card-value--counting');
+    el.setAttribute('aria-label', 'Loading');
+    var phase = Math.random() * Math.PI * 2;
+    var requestAtStart = analyticsRequest;
+    var state = { loading: true, started: performance.now() };
+    analyticsMetricAnimations[id] = state;
+
+    function tick(now) {
+      if (analyticsMetricAnimations[id] !== state || !state.loading || requestAtStart !== analyticsRequest) return;
+      var t = (now - state.started) / 1000;
+      var wave = (Math.sin(t * 4.2 + phase) + Math.sin(t * 2.1 + phase * 0.7)) * 0.5;
+      var pseudo = Math.max(0, Math.floor((wave * 0.5 + 0.5) * 99));
+      el.textContent = formatCount(pseudo);
+      state.rafId = requestAnimationFrame(tick);
+    }
+
+    state.rafId = requestAnimationFrame(tick);
+  }
+
+  function stopAnalyticsLoadingCounts() {
+    ANALYTICS_METRIC_IDS.forEach(function (id) {
+      stopAnalyticsMetricAnimation(id);
+      var el = document.getElementById(id);
+      if (el) el.textContent = '';
+    });
+  }
+
+  function animateAnalyticsMetric(id, target, name) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    stopAnalyticsMetricAnimation(id);
+    if (target == null || target === '' || isNaN(Number(target))) {
+      el.textContent = '';
+      el.setAttribute('aria-label', name + ', data not available');
+      return;
+    }
+    var endValue = Math.floor(Number(target));
+    el.setAttribute('aria-label', name + ': ' + formatCount(endValue));
+    if (global.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = formatCount(endValue);
+      return;
+    }
+    var requestAtStart = analyticsRequest;
+    var state = { started: performance.now() };
+    analyticsMetricAnimations[id] = state;
+    el.classList.add('dashboard-analytics-card-value--counting');
+    function tick(now) {
+      if (analyticsMetricAnimations[id] !== state || requestAtStart !== analyticsRequest) {
+        if (analyticsMetricAnimations[id] === state) stopAnalyticsMetricAnimation(id);
+        return;
+      }
+      var progress = Math.min(1, (now - state.started) / 480);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = formatCount(Math.round(eased * endValue));
+      if (progress < 1) {
+        state.rafId = requestAnimationFrame(tick);
+        return;
+      }
+      el.textContent = formatCount(endValue);
+      el.classList.remove('dashboard-analytics-card-value--counting');
+      delete analyticsMetricAnimations[id];
+    }
+    state.rafId = requestAnimationFrame(tick);
+  }
+
+  function ensureAnalyticsChartWatch(chart) {
+    if (analyticsChartWatch || typeof global.ResizeObserver !== 'function') return;
+    analyticsChartWatch = true;
+    var timer = 0;
+    new ResizeObserver(function () {
+      var w = chart.clientWidth;
+      if (!w || Math.abs(w - (chart._ttmsChartW || 0)) < 24) return;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (analyticsChartRows.length) renderAnalyticsTrendChart(analyticsChartRows, analyticsChartDays);
+      }, 60);
+    }).observe(chart);
+  }
+
+  function selectedAnalyticsDays() {
+    var active = document.querySelector('#dashboardAnalyticsPeriodTabs [data-analytics-days][aria-selected="true"]');
+    var days = active ? parseInt(active.getAttribute('data-analytics-days'), 10) : 30;
+    return days > 0 ? days : 30;
+  }
+
+  function applyAnalyticsPeriod(days) {
+    var heading = document.getElementById('analytics-last-month-heading');
+    if (heading) heading.textContent = 'Last ' + days + ' days';
+    var count = document.getElementById('dashboardCardAnalyticsCount');
+    if (count) count.setAttribute('aria-label', 'Visits last ' + days + ' days');
+    document.querySelectorAll('#dashboardAnalyticsPeriodTabs [data-analytics-days]').forEach(function (tab) {
+      var on = String(tab.getAttribute('data-analytics-days')) === String(days);
+      tab.classList.toggle('is-active', on);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function bindAnalyticsPeriodTabs() {
+    var list = document.getElementById('dashboardAnalyticsPeriodTabs');
+    if (!list || list.getAttribute('data-bound') === '1') return;
+    list.setAttribute('data-bound', '1');
+    list.addEventListener('click', function (event) {
+      var btn = event.target.closest('[data-analytics-days]');
+      if (!btn || !list.contains(btn)) return;
+      var days = parseInt(btn.getAttribute('data-analytics-days'), 10);
+      if (!days || btn.getAttribute('aria-selected') === 'true') return;
+      applyAnalyticsPeriod(days);
+      loadAnalyticsPage({ days: days });
+    });
   }
 
   function loadAnalyticsPage(options) {
     options = options || {};
-    var days = options.days || 30;
+    bindAnalyticsPeriodTabs();
+    var days = options.days || selectedAnalyticsDays();
+    applyAnalyticsPeriod(days);
+    var requestId = ++analyticsRequest;
     var noteEl = document.getElementById('dashboardAnalyticsNote');
 
     function setMetric(id, value, name) {
       var el = document.getElementById(id);
       if (!el) return;
+      if (id.indexOf('metric') === 0) {
+        animateAnalyticsMetric(id, value, name);
+        return;
+      }
       if (value == null || value === '') {
         el.textContent = '';
         el.setAttribute('aria-label', name + ', data not available');
@@ -483,18 +662,23 @@
 
     setAnalyticsNoteState(noteEl, 'loading', 'Loading analytics…');
     setAnalyticsTrendsLoading(true);
+    ANALYTICS_METRIC_IDS.forEach(startAnalyticsLoadingCount);
 
     return Promise.all([fetchSummary(days), fetchTrends(days)])
       .then(function (results) {
+        if (requestId !== analyticsRequest) return;
         var summaryResult = results[0];
         var trendsResult = results[1];
 
         if (!summaryResult.ok) {
+          stopAnalyticsLoadingCounts();
           setAnalyticsNoteState(noteEl, 'warn', errorMessage(summaryResult.status, summaryResult.data));
         } else {
           var d = summaryResult.data || {};
           setMetric('metricPageViews', d.pageViews, 'Page views');
           setMetric('metricVisits', d.visits, 'Visits');
+          setMetric('dashboardCardAnalyticsPageViews', d.pageViews, 'Page views');
+          setMetric('dashboardCardAnalyticsVisits', d.visits, 'Visits');
           setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
           setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
           setMetric('metricAddToCart', d.addToCart, 'Add to cart');
@@ -508,18 +692,88 @@
         }
 
         if (trendsResult.ok) {
-          renderAnalyticsTrendChart((trendsResult.data && trendsResult.data.rows) || []);
+          renderAnalyticsTrendChart((trendsResult.data && trendsResult.data.rows) || [], days);
         } else {
-          renderAnalyticsTrendChart([]);
+          renderAnalyticsTrendChart([], days);
         }
       })
       .catch(function () {
+        if (requestId !== analyticsRequest) return;
+        stopAnalyticsLoadingCounts();
         setAnalyticsNoteState(noteEl, 'warn', 'Could not load analytics. Try again later.');
-        renderAnalyticsTrendChart([]);
+        renderAnalyticsTrendChart([], days);
       })
       .finally(function () {
+        if (requestId !== analyticsRequest) return;
         setAnalyticsTrendsLoading(false);
       });
+  }
+
+  function bindSmoothMetricGrids() {
+    var reduce = global.matchMedia('(prefers-reduced-motion: reduce)');
+    ['dashboardNotificationsMetrics', 'dashboardAnalyticsMetrics'].forEach(function (id) {
+      var grid = document.getElementById(id);
+      if (!grid || grid.getAttribute('data-smooth-size') === '1') return;
+      grid.setAttribute('data-smooth-size', '1');
+      var prev = new WeakMap();
+      var ready = false;
+
+      function cards() {
+        return Array.prototype.filter.call(grid.children, function (el) {
+          return el.classList && el.classList.contains('dashboard-analytics-card');
+        });
+      }
+
+      function box(el) {
+        return { w: el.offsetWidth, h: el.offsetHeight };
+      }
+
+      function remember() {
+        cards().forEach(function (el) {
+          prev.set(el, box(el));
+        });
+      }
+
+      remember();
+      global.requestAnimationFrame(function () {
+        ready = true;
+        remember();
+      });
+
+      var observer = new ResizeObserver(function () {
+        if (!ready || reduce.matches) {
+          remember();
+          return;
+        }
+        cards().forEach(function (el) {
+          if (el._ttmsSizing) return;
+          var next = box(el);
+          var first = prev.get(el);
+          prev.set(el, next);
+          if (!first || first.h < 1 || next.h < 1 || Math.abs(first.h - next.h) < 1) return;
+          el._ttmsSizing = true;
+          var animation = el.animate([{ height: first.h + 'px' }, { height: next.h + 'px' }], {
+            duration: 320,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          });
+          function settle() {
+            el._ttmsSizing = false;
+            prev.set(el, box(el));
+          }
+          animation.addEventListener('finish', settle);
+          animation.addEventListener('cancel', settle);
+        });
+      });
+      cards().forEach(function (el) {
+        observer.observe(el);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindSmoothMetricGrids);
+  } else {
+    bindSmoothMetricGrids();
   }
 
   global.DashboardAnalyticsSnapshot = {

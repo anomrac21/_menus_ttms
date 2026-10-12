@@ -6,13 +6,12 @@
 <div class="dashboard-settings-branding-card dashboard-settings-branding-card--mappin">
   <div class="dashboard-settings-branding-card-text">
     <h3 class="dashboard-settings-branding-card-title">Map pin</h3>
-    <p class="dashboard-settings-branding-card-usage">Marker image on the TTMenus locations map (<code>static/branding/{{ $fn }}</code>, 256×256) plus pin colors exported in <code>/index.json</code> from <code>data/mappin.yaml</code>.</p>
-    <p class="dashboard-settings-branding-card-file"><code>{{ $fn }}</code> · <code>data/mappin.yaml</code></p>
+    <p class="dashboard-settings-branding-card-usage">The marker guests see on the locations map.</p>
   </div>
   <div class="dashboard-settings-branding-mappin-body">
     <div class="dashboard-settings-branding-card-upload dashboard-settings-branding-upload">
       <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="Map pin image" class="dashboard-settings-thumb dashboard-branding-preview" data-branding-preview="{{ $fn }}" width="48" height="48">
-      <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Choose pin image</label>
+      <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Replace</label>
       <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
     </div>
     <div id="mappinStyleForm" class="dashboard-mappin-style-form">

@@ -17,11 +17,14 @@
   }
 
   function clientId() {
+    if (window.AuthClientAccess && typeof AuthClientAccess.siteClientId === 'function') {
+      return AuthClientAccess.siteClientId() || '';
+    }
     return (
       window.CLIENT_ID ||
       window.SITE_CLIENT_ID ||
       (window.POS_CONFIG && window.POS_CONFIG.clientId) ||
-      '_ttms_menu_demo'
+      ''
     );
   }
 
@@ -1125,6 +1128,9 @@
     setStatus('Starting OAuth…');
     return ensureAuth()
       .then(function () {
+        if (!clientId()) {
+          throw new Error('This menu has no client ID. Set contentManagement.clientId in hugo.toml.');
+        }
         if (!pos() || !pos().connect) throw new Error('POS client not loaded (enable POS + redeploy)');
         var returnTo = window.location.origin + '/dashboard/?loyverse=connected';
         return pos().connect(returnTo);
@@ -1561,6 +1567,11 @@
 
   function init() {
     if (!$('posIntegrationPanel')) return;
+    if (!clientId()) {
+      setAccountState('error', 'This menu has no client ID. Set contentManagement.clientId in hugo.toml.');
+      initPosEmbedCollapse();
+      return;
+    }
     initPosEmbedCollapse();
     var panel = $('posIntegrationPanel');
     if (panel) {

@@ -945,7 +945,7 @@
     return (
       (window.MENU_IMAGE_CONFIG && window.MENU_IMAGE_CONFIG.clientId) ||
       window.SITE_CLIENT_ID ||
-      '_ttms_menu_demo'
+      ''
     );
   }
 

@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-rearrange") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-locations") (eq .Layout "client-dashboard-catalog") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") (eq .Layout "client-dashboard-auth") -}}
+{{- $dashboardLayout := or (eq .Layout "client-dashboard") (eq .Layout "client-dashboard-deployments") (eq .Layout "client-dashboard-edit") (eq .Layout "client-dashboard-edit-panel") (eq .Layout "client-dashboard-analytics") (eq .Layout "client-dashboard-notifications") (eq .Layout "client-dashboard-menu-settings") (eq .Layout "client-dashboard-locations") (eq .Layout "client-dashboard-catalog") (eq .Layout "client-dashboard-delivery") (eq .Layout "client-dashboard-orders") (eq .Layout "client-dashboard-kitchen") (eq .Layout "client-dashboard-auth") -}}
 {{- $menuPublicSite := not $dashboardLayout -}}
 {{- $siteName := partial "site-name.html" . -}}
 {{- $featureMeta := partial "head/feature-meta.html" . -}}
@@ -824,6 +824,7 @@
 {{ partialCached "head/js.html" . }}
 {{- if $menuPublicSite -}}
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-panel.js" }}" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/dashboard-leads.js" }}" defer></script>
 {{- end -}}
 
 <!--APPLE SUPPORT-->
@@ -1064,7 +1065,6 @@ window.MENU_CONFIG = {
 {{- if $menuPublicSite -}}
 <style id="ttms-perf-critical">
   #footer { min-height: 4.5rem; }
-  #footerBtns.footer-dock { transform: none; }
   .single-page-item-card .single-page-content { min-height: 12rem; }
   .single-page-item-card .single-page-description { min-height: 1.5em; }
   .single-page-item-card .menu-item-availability { min-height: 2.25rem; box-sizing: border-box; }
@@ -1321,7 +1321,7 @@ window.POS_CONFIG = {
     itemMapping: {{ $posMap | jsonify | safeJS }}
 };
 </script>
-<script src="/js/pos-integration.js?v=catalog-3" defer></script>
+<script src="/js/pos-integration.js?v=catalog-4" defer></script>
 {{- end -}}
 
 {{- $osvc := site.Params.orderService | default dict -}}
@@ -1366,7 +1366,7 @@ window.AUTH_SERVICE_URL = window.AUTH_SERVICE_URL || "{{ site.Params.auth.apiUrl
 window.SITE_CLIENT_ID = "{{ .Site.Params.contentManagement.clientId | default .Site.Params.ads.clientId | default "" }}";
 {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
 {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}
-{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 // CMS base URL + client id for dashboard editor, menu settings, and other API calls (same as payload flows)
 window.CMS_SERVICE_URL = (window.CMS_SERVICE_URL || "{{ $cmsSvc }}").replace(/\/+$/, '');
 // API root must end with /api (use apiUrl from hugo.toml - avoids double /api when building paths)
@@ -1434,7 +1434,7 @@ window.REVIEWS_CONFIG = {
 window.MENU_IMAGE_CONFIG = {
   enabled: true,
   apiUrl: "{{ site.Params.menuImageService.apiUrl | default "https://menu-images.ttmenus.com/api/v1" }}",
-  clientId: "{{ site.Params.contentManagement.clientId | default "_ttms_menu_demo" }}"
+  clientId: "{{ site.Params.contentManagement.clientId | default "" }}"
 };
 </script>
 <script src="{{ partial "head/asset-url.html" "/js/menu-image-integration.js" }}" defer></script>
@@ -1469,7 +1469,7 @@ window.SiteConfig.notifyServiceUrl = window.NOTIFY_CONFIG.serviceUrl;
 
 {{- if and site.Params.features.payments site.Params.paymentService.enabled $menuPublicSite -}}
 {{- $payApiUrl := site.Params.paymentService.apiUrl | default "https://pay.ttmenus.com" -}}
-{{- $payClientId := site.Params.paymentService.clientId | default site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "_ttms_menu_demo" -}}
+{{- $payClientId := site.Params.paymentService.clientId | default site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 {{- $payCurrency := site.Params.paymentService.currency | default "TTD" -}}
 {{- $payProvider := site.Params.paymentService.provider | default "wipay" -}}
 {{- $paySuccessUrl := site.Params.paymentService.successUrl | default "" -}}

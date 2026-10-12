@@ -1,0 +1,21 @@
+{{- $dir := .dir -}}
+{{- $require := .requireExists -}}
+{{- $metaMap := .meta | default dict -}}
+{{- $mappin := .mappin | default dict -}}
+{{- range .files -}}
+  {{- $fn := . -}}
+  {{- $show := true -}}
+  {{- if and $require $dir -}}
+    {{- $show = fileExists (printf "%s/%s" $dir $fn) -}}
+  {{- end -}}
+  {{- if $show -}}
+    {{- $meta := index $metaMap $fn | default dict -}}
+    {{- $title := default $fn $meta.title -}}
+    {{- $usage := default "Image used on the menu." $meta.usage -}}
+    {{- if eq $fn "mappin.webp" -}}
+      {{ partial "dashboard/branding-mappin-card.html" (dict "filename" $fn "mappin" $mappin) }}
+    {{- else -}}
+      {{ partial "dashboard/branding-upload-row.html" (dict "filename" $fn "title" $title "usage" $usage) }}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

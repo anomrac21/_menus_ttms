@@ -46,7 +46,6 @@ weight = 30
 [params.paymentService]
   enabled = false
   apiUrl = "https://pay.ttmenus.com"
-  clientId = "_ttms_menu_demo"
   currency = "TTD"
   provider = "wipay"
   apiKey = ""

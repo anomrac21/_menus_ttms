@@ -202,6 +202,8 @@
     var headers = { Accept: 'application/json' };
     var token = getAuthToken();
     if (token) headers.Authorization = 'Bearer ' + token;
+    var id = clientId();
+    if (id) headers['X-TTMenus-Client-Id'] = id;
     return headers;
   }
 
@@ -323,6 +325,9 @@
     getStatus: function () {
       var token = getAuthToken();
       if (!token) return Promise.reject(new Error('not authenticated'));
+      if (!clientId()) {
+        return Promise.reject(new Error('This menu has no client ID. Set contentManagement.clientId in hugo.toml.'));
+      }
       return fetch(apiBase() + withClientQuery('/api/v1/loyverse/status'), {
         headers: authHeaders(),
       }).then(function (r) {
@@ -336,6 +341,9 @@
     connect: function (returnTo) {
       var token = getAuthToken();
       if (!token) return Promise.reject(new Error('not authenticated'));
+      if (!clientId()) {
+        return Promise.reject(new Error('This menu has no client ID. Set contentManagement.clientId in hugo.toml.'));
+      }
       var path = '/api/v1/loyverse/connect';
       if (returnTo) path += '?return_to=' + encodeURIComponent(returnTo);
       path = withClientQuery(path);

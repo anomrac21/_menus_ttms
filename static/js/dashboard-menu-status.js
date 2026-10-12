@@ -8,12 +8,15 @@
   var CMS_API_URL = '';
   var CMS_CLIENT_ID = '';
   var cachedPreviews = [];
+  var serverPreviews = [];
   var cachedVersions = [];
   var snapshotLoadState = 'idle';
   var draftLoadState = 'idle';
   var snapshotLoadError = '';
   var draftLoadError = '';
   var refreshInFlight = null;
+  var refreshQueued = false;
+  var snapshotFetchGen = 0;
   var omittedDraftIds = new Set();
   var draftAnalyses = {};
   var draftAnalysisInFlight = null;
@@ -257,9 +260,17 @@
       btn.classList.toggle('is-omitted', omitted);
       btn.setAttribute(
         'aria-label',
-        omitted ? 'Delete draft permanently (requires confirmation)' : 'Omit from publish'
+        preview._fromSnapshot
+          ? 'Omit from publish'
+          : omitted
+            ? 'Delete draft permanently (requires confirmation)'
+            : 'Omit from publish'
       );
-      btn.title = omitted ? 'Click again to delete this draft' : 'Omit from publish';
+      btn.title = preview._fromSnapshot
+        ? 'Omit from publish'
+        : omitted
+          ? 'Click again to delete this draft'
+          : 'Omit from publish';
     }
 
     syncBtnState();
@@ -273,6 +284,7 @@
         if (typeof opts.onOmit === 'function') opts.onOmit(preview);
         return;
       }
+      if (preview._fromSnapshot) return;
       var label = truncateMiddle(previewSummaryLabel(preview), 72);
       if (
         !confirm(
@@ -566,9 +578,17 @@
     if (!data) return [];
     if (Array.isArray(data)) return data;
     if (data.versions && Array.isArray(data.versions)) return data.versions;
+    if (data.Versions && Array.isArray(data.Versions)) return data.Versions;
     if (data.data && Array.isArray(data.data)) return data.data;
+    if (data.data && data.data.versions && Array.isArray(data.data.versions)) return data.data.versions;
     if (data.menu_versions && Array.isArray(data.menu_versions)) return data.menu_versions;
     if (data.MenuVersions && Array.isArray(data.MenuVersions)) return data.MenuVersions;
+    if (data.version && typeof data.version === 'object') return [data.version];
+    if (data.menu_version && typeof data.menu_version === 'object') return [data.menu_version];
+    var loneId = data.id || data.ID || data.version_id || data.versionId;
+    if (loneId && (data.created_at || data.updated_at || data.name || data.summary || data.Summary)) {
+      return [data];
+    }
     return [];
   }
 
@@ -666,12 +686,34 @@
     };
   }
 
+  function versionMenuData(v) {
+    if (!v) return null;
+    return v.menu_data || v.menuData || v.MenuData || null;
+  }
+
   function versionSummaryFromRecord(v) {
+    var md = versionMenuData(v);
+    if (md) {
+      var fromData = computeClientSnapshotSummaryFromMenuData(md);
+      var hasRows =
+        (md.categories || md.Categories || []).length ||
+        (md.menuItems || md.menu_items || md.MenuItems || []).length ||
+        (md.locations || md.Locations || []).length ||
+        fromData.themeVarCount;
+      if (hasRows) return fromData;
+    }
     var s = v.summary || v.Summary;
     if (s && s.fileLabels && s.fileLabels.length) return s;
-    var md = v.menu_data || v.menuData || v.MenuData;
     if (md) return computeClientSnapshotSummaryFromMenuData(md);
     return { fileLabels: ['data/menu.json - layout (details unavailable)'] };
+  }
+
+  function slugifyMenuTitle(title) {
+    return String(title || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   function normalizeMenuUrl(url) {
@@ -724,7 +766,7 @@
     }
     var cats = md.categories || md.Categories || [];
     cats.forEach(function (cat) {
-      var slug = slugFromMenuUrl(cat.url || cat.URL);
+      var slug = slugFromMenuUrl(cat.url || cat.URL) || slugifyMenuTitle(cat.title || cat.Title);
       if (!slug) return;
       var fm = { title: cat.title || cat.Title || slug };
       var w = cat.weight != null ? cat.weight : cat.Weight;
@@ -738,7 +780,15 @@
     var items = md.menuItems || md.menu_items || md.MenuItems || [];
     items.forEach(function (item) {
       var path = menuItemUrlToContentPath(item.url || item.URL);
-      if (!path) return;
+      if (!path) {
+        var catSlug =
+          slugFromMenuUrl(item.categoryUrl || item.CategoryURL) ||
+          slugifyMenuTitle(item.category || item.Category) ||
+          'menu';
+        var itemSlug = slugifyMenuTitle(item.title || item.Title || item.id || item.ID);
+        if (!itemSlug) return;
+        path = 'content/' + catSlug + '/' + itemSlug + '.md';
+      }
       var fm = { title: item.title || item.Title || 'Item' };
       var iw = item.weight != null ? item.weight : item.Weight;
       if (iw != null) fm.weight = iw;
@@ -749,6 +799,29 @@
       };
     });
     return map;
+  }
+
+  function previewsFromSnapshotVersion(version) {
+    var map = buildSnapshotLiveMapFromMenuData(versionMenuData(version));
+    return Object.keys(map).map(function (path) {
+      var entry = map[path];
+      var kind = 'menu-item';
+      if (path === 'static/css/colors.css') kind = 'theme-css';
+      else if (/\/_index\.md$/.test(path)) kind = 'section-header';
+      return {
+        id: 'snapshot:' + path,
+        kind: kind,
+        content_path: path,
+        status: 'draft',
+        _fromSnapshot: true,
+        payload: {
+          kind: kind,
+          contentPath: entry.contentPath || path,
+          frontMatter: entry.frontMatter || {},
+          body: entry.body || '',
+        },
+      };
+    });
   }
 
   function draftContentPathFromPreview(p) {
@@ -791,7 +864,7 @@
   }
 
   function analysisClientId() {
-    return CMS_CLIENT_ID || global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+    return CMS_CLIENT_ID || global.CLIENT_ID || global.SITE_CLIENT_ID || '';
   }
 
   function overlayValueIsEmpty(v) {
@@ -1595,7 +1668,7 @@
       ''
     );
     CMS_API_URL = (cfg.cmsApiUrl || global.CMS_API_URL || '').replace(/\/+$/, '');
-    CMS_CLIENT_ID = cfg.clientId || global.CLIENT_ID || global.SITE_CLIENT_ID || '_ttms_menu_demo';
+    CMS_CLIENT_ID = cfg.clientId || global.CLIENT_ID || global.SITE_CLIENT_ID || '';
     loadOmittedDraftIds();
     loadDraftGroupCollapsed();
     loadStatusBlockCollapsed();
@@ -1702,6 +1775,51 @@
       } catch (e) {}
     }
 
+    function snapshotCacheStorageKey() {
+      return 'ttmenus_menu_snapshot_record_' + CMS_CLIENT_ID;
+    }
+
+    function persistSnapshotCache(version) {
+      try {
+        if (!version || !versionIdFromRecord(version)) {
+          sessionStorage.removeItem(snapshotCacheStorageKey());
+          return;
+        }
+        sessionStorage.setItem(
+          snapshotCacheStorageKey(),
+          JSON.stringify({
+            id: versionIdFromRecord(version),
+            name: version.name || version.Name || 'Menu snapshot',
+            created_at: version.created_at || version.createdAt || version.CreatedAt || '',
+            updated_at: version.updated_at || version.updatedAt || version.UpdatedAt || '',
+            summary: version.summary || version.Summary || null,
+          })
+        );
+      } catch (e) {}
+    }
+
+    function loadPersistedSnapshotCache() {
+      try {
+        var raw = sessionStorage.getItem(snapshotCacheStorageKey());
+        if (!raw) return null;
+        var version = JSON.parse(raw);
+        if (!version || !versionIdFromRecord(version)) return null;
+        return version;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function restoreSnapshotCache() {
+      if (cachedVersions.length) return;
+      var persisted = loadPersistedSnapshotCache();
+      if (!persisted) return;
+      cachedVersions = [persisted];
+      selectedSnapshotId = versionIdFromRecord(persisted);
+      snapshotLoadState = 'ok';
+      snapshotLoadError = '';
+    }
+
     function getSelectedSnapshotVersion() {
       if (!selectedSnapshotId) return null;
       for (var i = 0; i < cachedVersions.length; i++) {
@@ -1732,7 +1850,6 @@
     }
 
     function syncEditorLinks() {
-      var rearrangeLink = document.getElementById('cardRearrangeMenu');
       try {
         if (selectedSnapshotId) {
           sessionStorage.setItem('editPreviewMode', 'drafts');
@@ -1752,18 +1869,6 @@
           selectedSnapshotId
             ? 'Open theme editor with the saved snapshot'
             : 'Open live menu in theme editor'
-        );
-      }
-      if (rearrangeLink) {
-        rearrangeLink.classList.toggle(
-          'dashboard-menu-status-editor-linked',
-          !!selectedSnapshotId
-        );
-        rearrangeLink.setAttribute(
-          'title',
-          selectedSnapshotId
-            ? 'Rearrange the saved snapshot'
-            : 'Rearrange live menu order'
         );
       }
       if (contentLink) {
@@ -1801,14 +1906,25 @@
       }, 9000);
     }
 
+    function setSnapshotLoadingChrome(on) {
+      var block = document.querySelector('[data-menu-status-block="snapshots"]');
+      if (block) block.classList.toggle('is-status-loading', !!on);
+      if (snapshotStatusEl) snapshotStatusEl.setAttribute('aria-busy', on ? 'true' : 'false');
+    }
+
     function renderSnapshotStatusSummary() {
       if (!snapshotStatusEl) return;
-      snapshotStatusEl.textContent = '';
       if (snapshotLoadState === 'loading' || snapshotLoadState === 'idle') {
-        setStatusBlockSummary('snapshots', 'Loading…');
-        snapshotStatusEl.appendChild(statusThrobber('Loading menu snapshot…'));
+        setSnapshotLoadingChrome(true);
+        setStatusBlockSummary('snapshots', cachedVersions.length ? 'Updating…' : 'Loading…');
+        if (!cachedVersions.length) {
+          snapshotStatusEl.textContent = '';
+          snapshotStatusEl.appendChild(statusThrobber('Loading menu snapshot…'));
+        }
         return;
       }
+      setSnapshotLoadingChrome(false);
+      snapshotStatusEl.textContent = '';
       if (snapshotLoadState === 'auth') {
         setStatusBlockSummary(
           'snapshots',
@@ -1821,7 +1937,7 @@
         snapshotStatusEl.appendChild(pAuth);
         return;
       }
-      if (snapshotLoadState === 'error') {
+      if (snapshotLoadState === 'error' && !cachedVersions.length) {
         setStatusBlockSummary(
           'snapshots',
           snapshotLoadError ? truncateMiddle(snapshotLoadError, 72) : 'Could not load snapshots'
@@ -1883,11 +1999,40 @@
       } else {
         var counts = snapshotCountLine(version);
         status.textContent =
-          'Edit menu, Edit theme, Rearrange, and Settings update this snapshot' +
+          'Edit menu, Edit theme, and Settings update this snapshot' +
           (counts ? ' (' + counts + ')' : '') +
           '.';
       }
       snapshotStatusEl.appendChild(status);
+
+      if (snapshotLoadState === 'error' && snapshotLoadError) {
+        var keepErr = document.createElement('p');
+        keepErr.className = 'dashboard-menu-status-error';
+        keepErr.textContent = snapshotLoadError;
+        snapshotStatusEl.appendChild(keepErr);
+      }
+
+      var summaryRecord = version ? versionSummaryFromRecord(version) : null;
+      var summaryLabels = summaryRecord ? summaryRecord.fileLabels || summaryRecord.FileLabels : null;
+      if (summaryLabels && summaryLabels.length) {
+        summaryLabels = summaryLabels.filter(function (label) {
+          return !/details unavailable/i.test(String(label || ''));
+        });
+      }
+      if (summaryLabels && summaryLabels.length) {
+        var labelRows = [];
+        var labelCap = Math.min(4, summaryLabels.length);
+        for (var li = 0; li < labelCap; li++) {
+          var labelItem = document.createElement('li');
+          labelItem.className = 'dashboard-menu-status-row';
+          var labelChip = document.createElement('span');
+          labelChip.className = 'dashboard-menu-status-publish-chip';
+          labelChip.textContent = truncateMiddle(normalizeStoredFileLabel(summaryLabels[li]), 96);
+          labelItem.appendChild(labelChip);
+          labelRows.push(labelItem);
+        }
+        appendStatusRows(snapshotStatusEl, labelRows, labelCap);
+      }
 
       if (versionId) {
         var foot = document.createElement('div');
@@ -1907,7 +2052,13 @@
 
     function deleteCurrentSnapshot(versionId, button) {
       if (!versionId) return;
-      if (!confirm('Permanently delete this menu snapshot? This cannot be undone.')) return;
+      if (
+        !confirm(
+          'Permanently delete this menu snapshot and its unpublished content changes? This cannot be undone.'
+        )
+      ) {
+        return;
+      }
       setDashButtonBusy(button, true, 'Deleting…');
       ensureAccessTokenForCms()
         .then(function (token) {
@@ -1933,7 +2084,12 @@
             sessionStorage.setItem('editPreviewMode', 'live');
           } catch (e) {}
           syncEditorLinks();
-          return fetchMenuVersions();
+          cachedVersions = [];
+          persistSnapshotCache(null);
+          snapshotLoadState = 'ok';
+          return clearDraftsWithoutSnapshot().then(function () {
+            return fetchMenuVersions({ forceEmpty: true });
+          });
         })
         .catch(function (err) {
           setDashButtonBusy(
@@ -1962,15 +2118,32 @@
       );
     }
 
+    function setDraftLoadingChrome(on) {
+      var block = document.querySelector('[data-menu-status-block="drafts"]');
+      if (block) block.classList.toggle('is-status-loading', !!on);
+      if (draftStatusEl) draftStatusEl.setAttribute('aria-busy', on ? 'true' : 'false');
+    }
+
     function renderDraftStatusSummary() {
       if (!draftStatusEl) return;
       bindDraftStatusClick();
-      draftStatusEl.textContent = '';
-      if (draftLoadState === 'loading' || draftLoadState === 'idle') {
-        setStatusBlockSummary('drafts', 'Loading…');
-        draftStatusEl.appendChild(statusThrobber('Loading content changes…'));
+      var waiting =
+        draftLoadState === 'loading' ||
+        draftLoadState === 'idle' ||
+        (!serverPreviews.length &&
+          draftLoadState === 'ok' &&
+          (snapshotLoadState === 'loading' || snapshotLoadState === 'idle'));
+      if (waiting) {
+        setDraftLoadingChrome(true);
+        setStatusBlockSummary('drafts', cachedPreviews.length ? 'Updating…' : 'Loading…');
+        if (!cachedPreviews.length) {
+          draftStatusEl.textContent = '';
+          draftStatusEl.appendChild(statusThrobber('Loading content changes…'));
+        }
         return;
       }
+      setDraftLoadingChrome(!!draftAnalysisInFlight);
+      draftStatusEl.textContent = '';
       if (draftLoadState === 'auth') {
         setStatusBlockSummary(
           'drafts',
@@ -2007,6 +2180,9 @@
         draftStatusEl.appendChild(p0);
         return;
       }
+      if (draftAnalysisInFlight) {
+        draftStatusEl.appendChild(statusThrobber('Loading change details…'));
+      }
       var introD = document.createElement('p');
       introD.className = 'dashboard-menu-status-intro';
       if (publishableCount === n) {
@@ -2022,7 +2198,12 @@
         introD.appendChild(document.createTextNode(' ready to publish.'));
       }
       draftStatusEl.appendChild(introD);
-      if (selectedSnapshotId) {
+      if (cachedPreviews.length && cachedPreviews[0]._fromSnapshot) {
+        var loadedBanner = document.createElement('p');
+        loadedBanner.className = 'dashboard-menu-status-snapshot-active-banner';
+        loadedBanner.textContent = 'Loaded from the menu snapshot.';
+        draftStatusEl.appendChild(loadedBanner);
+      } else if (selectedSnapshotId) {
         var snapBanner = document.createElement('p');
         snapBanner.className = 'dashboard-menu-status-snapshot-active-banner';
         snapBanner.textContent =
@@ -2169,13 +2350,16 @@
         seen[path] = true;
         paths.push(path);
       });
-      if (!paths.length) return Promise.resolve();
+      if (!paths.length) {
+        draftAnalysisInFlight = null;
+        if (draftLoadState === 'ok') renderDraftStatusSummary();
+        return Promise.resolve();
+      }
       var snapVer = getSelectedSnapshotVersion();
       var md =
         snapVer && (snapVer.menu_data || snapVer.menuData || snapVer.MenuData);
       var snapshotMap = buildSnapshotLiveMapFromMenuData(md);
       applyProvisionalDraftAnalyses();
-      renderDraftStatusSummary();
       draftAnalysisInFlight = fetchLiveContentFilesBatch(paths)
         .then(function (liveByPath) {
           var merged = {};
@@ -2195,6 +2379,7 @@
           draftAnalysisInFlight = null;
           renderDraftStatusSummary();
         });
+      renderDraftStatusSummary();
       return draftAnalysisInFlight;
     }
 
@@ -2318,42 +2503,208 @@
       }
     }
 
-    function fetchMenuVersions() {
+    function mergeSnapshotRecord(prev, next) {
+      if (!prev) return next;
+      if (!next) return prev;
+      var out = {};
+      Object.keys(prev).forEach(function (key) {
+        out[key] = prev[key];
+      });
+      Object.keys(next).forEach(function (key) {
+        var value = next[key];
+        if (value == null || value === '') return;
+        if ((key === 'name' || key === 'Name') && String(value) === 'Menu snapshot' && versionNameFromRecord(prev)) {
+          return;
+        }
+        out[key] = value;
+      });
+      if (!versionMenuData(out) && versionMenuData(prev)) out.menu_data = versionMenuData(prev);
+      if (!(out.summary || out.Summary) && (prev.summary || prev.Summary)) {
+        out.summary = prev.summary || prev.Summary;
+      }
+      return out;
+    }
+
+    function heldSnapshotWithMenuData(versionId) {
+      for (var i = 0; i < cachedVersions.length; i++) {
+        if (versionIdFromRecord(cachedVersions[i]) === versionId && versionMenuData(cachedVersions[i])) {
+          return cachedVersions[i];
+        }
+      }
+      return null;
+    }
+
+    function clearDraftsWithoutSnapshot() {
+      if (currentSnapshotVersion() || snapshotLoadState !== 'ok') return Promise.resolve();
+      var ids = [];
+      serverPreviews.concat(cachedPreviews).forEach(function (preview) {
+        if (!preview || preview._fromSnapshot) return;
+        var id = previewIdFromPreview(preview);
+        if (!id || id.indexOf('snapshot:') === 0 || ids.indexOf(id) !== -1) return;
+        ids.push(id);
+      });
+      serverPreviews = [];
+      cachedPreviews = [];
+      draftAnalyses = {};
+      draftAnalysisInFlight = null;
+      syncPublishButton();
+      renderDraftStatusSummary();
+      if (!ids.length) return Promise.resolve();
+      return Promise.all(
+        ids.map(function (id) {
+          return deleteDraftFromCms(id).catch(function () {
+            return null;
+          });
+        })
+      );
+    }
+
+    function reconcileChangeReport() {
+      if (draftLoadState !== 'ok') return;
+      if (snapshotLoadState === 'loading' || snapshotLoadState === 'idle') {
+        if (!serverPreviews.length) renderDraftStatusSummary();
+        return;
+      }
+      if (!currentSnapshotVersion()) {
+        clearDraftsWithoutSnapshot();
+        return;
+      }
+      var version = currentSnapshotVersion();
+      var fromSnapshot =
+        !serverPreviews.length && version ? previewsFromSnapshotVersion(version) : [];
+      cachedPreviews = serverPreviews.length ? serverPreviews.slice() : fromSnapshot;
+      pruneOmittedDraftIds();
+      syncPublishButton();
+      renderDraftStatusSummary();
+    }
+
+    function applyLoadedVersions(raw, opts) {
+      opts = opts || {};
+      var next = (raw || [])
+        .slice()
+        .sort(function (a, b) {
+          return versionSortKey(b) - versionSortKey(a);
+        })
+        .slice(0, 1);
+      if (next.length && cachedVersions.length && !opts.forceEmpty) {
+        var prevId = versionIdFromRecord(cachedVersions[0]);
+        var nextId = versionIdFromRecord(next[0]);
+        if (!prevId || !nextId || prevId === nextId) {
+          next = [mergeSnapshotRecord(cachedVersions[0], next[0])];
+        }
+      }
+      if (!next.length && cachedVersions.length && !opts.forceEmpty) {
+        snapshotLoadState = 'ok';
+        snapshotLoadError = '';
+        renderSnapshotStatusSummary();
+        reconcileChangeReport();
+        return cachedVersions;
+      }
+      cachedVersions = next;
+      snapshotLoadState = 'ok';
+      snapshotLoadError = '';
+      selectedSnapshotId = cachedVersions.length
+        ? versionIdFromRecord(cachedVersions[0]) || null
+        : null;
+      if (cachedVersions.length) persistSnapshotCache(cachedVersions[0]);
+      else if (opts.forceEmpty) persistSnapshotCache(null);
+      syncEditorLinks();
+      renderSnapshotStatusSummary();
+      reconcileChangeReport();
+      if (draftLoadState === 'ok' || draftLoadState === 'error' || draftLoadState === 'auth') {
+        renderDraftStatusSummary();
+      }
+      return cachedVersions;
+    }
+
+    function versionRecordFromPayload(data) {
+      if (!data || typeof data !== 'object') return null;
+      var nested = data.version || data.menu_version || data.MenuVersion;
+      if (nested && typeof nested === 'object') return nested;
+      if (versionIdFromRecord(data) || data.version_id || data.versionId) return data;
+      return null;
+    }
+
+    function fetchSnapshotById(versionId, gen, opts) {
+      return cmsGetJsonWithAuth(cmsClientPath('/menu-versions/' + encodeURIComponent(versionId))).then(
+        function (res) {
+          if (gen !== snapshotFetchGen) return cachedVersions;
+          if (!res.ok || !versionRecordFromPayload(res.data)) {
+            if (cachedVersions.length && !opts.forceEmpty) {
+              snapshotLoadState = 'ok';
+              snapshotLoadError = '';
+              renderSnapshotStatusSummary();
+              reconcileChangeReport();
+              return cachedVersions;
+            }
+            return applyLoadedVersions([{ id: versionId, name: 'Menu snapshot' }], opts);
+          }
+          var rec = versionRecordFromPayload(res.data);
+          if (!rec) return applyLoadedVersions([{ id: versionId, name: 'Menu snapshot' }], opts);
+          if (!versionIdFromRecord(rec)) rec.id = versionId;
+          return applyLoadedVersions([rec], opts);
+        }
+      );
+    }
+
+    function fetchSnapshotSiteFallback(gen, opts) {
+      return cmsGetJsonWithAuth(cmsClientPath('/menu-versions/site')).then(function (res) {
+        if (gen !== snapshotFetchGen) return cachedVersions;
+        var id = '';
+        if (res.ok && res.data) {
+          id = String(res.data.version_id || res.data.versionId || res.data.id || '').trim();
+        }
+        if (!id) return applyLoadedVersions([], opts);
+        return fetchSnapshotById(id, gen, opts);
+      });
+    }
+
+    function fetchMenuVersions(opts) {
+      opts = opts || {};
+      var gen = ++snapshotFetchGen;
       snapshotLoadState = 'loading';
       snapshotLoadError = '';
       renderSnapshotStatusSummary();
       return cmsGetJsonWithAuth(cmsClientPath('/menu-versions'))
         .then(function (res) {
+          if (gen !== snapshotFetchGen) return cachedVersions;
           if (!res.ok) {
+            if (cachedVersions.length && !opts.forceEmpty) {
+              snapshotLoadState = 'ok';
+              snapshotLoadError = '';
+              renderSnapshotStatusSummary();
+              reconcileChangeReport();
+              return cachedVersions;
+            }
             snapshotLoadState = res.status === 401 || res.status === 403 ? 'auth' : 'error';
             snapshotLoadError = cmsAuthFailureMessage(res);
-            if (snapshotLoadError === '') return [];
-            cachedVersions = [];
+            if (snapshotLoadError === '') return cachedVersions;
             renderSnapshotStatusSummary();
-            return [];
+            return cachedVersions;
           }
           var raw = normalizeVersionsPayload(res.data);
-          cachedVersions = raw
-            .slice()
-            .sort(function (a, b) {
-              return versionSortKey(b) - versionSortKey(a);
-            })
-            .slice(0, 1);
-          snapshotLoadState = 'ok';
-          snapshotLoadError = '';
-          selectedSnapshotId = cachedVersions.length
-            ? versionIdFromRecord(cachedVersions[0]) || null
-            : null;
-          syncEditorLinks();
-          renderSnapshotStatusSummary();
-          return cachedVersions;
+          if (!raw.length) return fetchSnapshotSiteFallback(gen, opts);
+          var listedId = versionIdFromRecord(raw[0]);
+          if (listedId && !versionMenuData(raw[0])) {
+            var held = heldSnapshotWithMenuData(listedId);
+            if (held) return applyLoadedVersions([mergeSnapshotRecord(held, raw[0])], opts);
+            return fetchSnapshotById(listedId, gen, opts);
+          }
+          return applyLoadedVersions(raw, opts);
         })
         .catch(function (err) {
+          if (gen !== snapshotFetchGen) return cachedVersions;
+          if (cachedVersions.length && !opts.forceEmpty) {
+            snapshotLoadState = 'ok';
+            snapshotLoadError = '';
+            renderSnapshotStatusSummary();
+            reconcileChangeReport();
+            return cachedVersions;
+          }
           snapshotLoadState = 'error';
           snapshotLoadError = (err && err.message) || 'Network error loading snapshots';
-          cachedVersions = [];
           renderSnapshotStatusSummary();
-          return [];
+          return cachedVersions;
         });
     }
 
@@ -2367,23 +2718,23 @@
             draftLoadState = res.status === 401 || res.status === 403 ? 'auth' : 'error';
             draftLoadError = cmsAuthFailureMessage(res);
             if (draftLoadError === '') return [];
+            serverPreviews = [];
             cachedPreviews = [];
             syncPublishButton();
             renderDraftStatusSummary();
             return [];
           }
           var raw = normalizePreviewsPayload(res.data);
-          cachedPreviews = dedupePreviewsByContentPath(raw);
-          pruneOmittedDraftIds();
+          serverPreviews = dedupePreviewsByContentPath(raw);
           draftLoadState = 'ok';
           draftLoadError = '';
-          syncPublishButton();
-          renderDraftStatusSummary();
+          reconcileChangeReport();
           return cachedPreviews;
         })
         .catch(function (err) {
           draftLoadState = 'error';
           draftLoadError = (err && err.message) || 'Network error loading drafts';
+          serverPreviews = [];
           cachedPreviews = [];
           syncPublishButton();
           renderDraftStatusSummary();
@@ -2392,7 +2743,10 @@
     }
 
     function refreshMenuCard() {
-      if (refreshInFlight) return refreshInFlight;
+      if (refreshInFlight) {
+        refreshQueued = true;
+        return refreshInFlight;
+      }
       if (redirectToLoginIfUnauthenticated()) {
         return Promise.resolve();
       }
@@ -2409,6 +2763,10 @@
         })
         .finally(function () {
           refreshInFlight = null;
+          if (refreshQueued) {
+            refreshQueued = false;
+            refreshMenuCard();
+          }
         });
       return refreshInFlight;
     }
@@ -2418,20 +2776,6 @@
         ev.preventDefault();
         if (selectedSnapshotId) navigateEditDraftsWithVersion(selectedSnapshotId);
         else navigateEditLive();
-      });
-    }
-
-    var rearrangeLink = document.getElementById('cardRearrangeMenu');
-    if (rearrangeLink) {
-      rearrangeLink.addEventListener('click', function (ev) {
-        if (selectedSnapshotId) {
-          ev.preventDefault();
-          try {
-            sessionStorage.setItem('editPreviewMode', 'drafts');
-            sessionStorage.setItem('editMenuVersionId', selectedSnapshotId);
-          } catch (e) {}
-          global.location.href = '/edit-menu-rearrange/';
-        }
       });
     }
 
@@ -2582,7 +2926,7 @@
               }
             var changes = pending.map(function (p) {
               var o = { payload: p.payload || p.Payload || {} };
-              if (p.id) o.previewId = p.id;
+              if (p.id && !p._fromSnapshot) o.previewId = p.id;
               return o;
             });
             var body = {
@@ -2669,6 +3013,8 @@
 
     bindStatusBlockToggles();
     syncAllStatusBlockUI();
+    restoreSnapshotCache();
+    renderSnapshotStatusSummary();
     renderLastPublishSummary();
     refreshMenuCard();
 

@@ -324,8 +324,12 @@ body.menu-reels-contact-active #footerBtns,
 body.menu-reels-intro-active #footerSettings,
 body.menu-reels-contact-active #footerSettings {
     opacity: 0 !important;
+    transform: translateY(110%) !important;
     pointer-events: none !important;
-    visibility: hidden;
+    transition:
+        opacity 0.34s ease,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0.42s;
 }
 
 .menu-reels-viewport {
