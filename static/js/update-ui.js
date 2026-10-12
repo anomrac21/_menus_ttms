@@ -3,6 +3,20 @@
  * Version - 2025-01-20-v1
  */
 
+function sizeNamesCheapestFirst(prices) {
+  const best = new Map();
+  (prices || []).forEach(function(p) {
+    const name = p && p.variable1 != null ? p.variable1 : (Array.isArray(p) ? p[0] : (p && p.size));
+    const raw = p && p.price != null ? p.price : (Array.isArray(p) ? p[2] : null);
+    const label = name != null ? String(name).trim() : '';
+    if (!label || label === '-' || label === 'None') return;
+    const amount = parseFloat(raw);
+    const n = isNaN(amount) ? Infinity : amount;
+    if (!best.has(label) || n < best.get(label)) best.set(label, n);
+  });
+  return Array.from(best.keys()).sort(function(a, b) { return best.get(a) - best.get(b); });
+}
+
 const MenuEditor = {
   // State
   state: {
@@ -1227,7 +1241,7 @@ const MenuEditor = {
    * Render a menu item card (editable version)
    */
   renderMenuItemCard(item, editable = false) {
-    const variable1Values = [...new Set(item.prices.map(p => (p.variable1 != null ? p.variable1 : (Array.isArray(p) ? p[0] : p.size))).filter(s => s && s !== '-' && s !== 'None'))];
+    const variable1Values = sizeNamesCheapestFirst(item.prices);
     const variable2Values = [...new Set(item.prices.map(p => (p.variable2 != null ? p.variable2 : (Array.isArray(p) ? p[1] : p.flavour))).filter(f => f && f !== '-' && f !== 'None'))];
     
     // Calculate price display
@@ -1901,7 +1915,7 @@ const MenuEditor = {
       
       categoryItems.forEach(item => {
         // Extract variable1 and variable2 values from prices
-        const variable1Values = [...new Set(item.prices.map(p => (p.variable1 != null ? p.variable1 : (Array.isArray(p) ? p[0] : p.size))).filter(s => s && s !== '-' && s !== 'None'))];
+        const variable1Values = sizeNamesCheapestFirst(item.prices);
         const variable2Values = [...new Set(item.prices.map(p => (p.variable2 != null ? p.variable2 : (Array.isArray(p) ? p[1] : p.flavour))).filter(f => f && f !== '-' && f !== 'None'))];
         
         // Calculate price display

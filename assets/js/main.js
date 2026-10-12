@@ -1961,8 +1961,25 @@
                 const initialQuantity = 1;
                 const initialTotal = displayUnitPrice * initialQuantity;
                 
-                // Determine default selected variable1 and variable2
-                const defaultVariable1 = variable1Values.length > 0 ? variable1Values[0] : '-';
+                if (variable1Values.length > 1 && pricesArray.length >= 3) {
+                    const sizePrice = {};
+                    variable1Values.forEach(function(name) { sizePrice[name] = Infinity; });
+                    for (let pi = 0; pi + 2 < pricesArray.length; pi += 3) {
+                        const label = pricesArray[pi] != null ? String(pricesArray[pi]).trim() : '';
+                        if (!Object.prototype.hasOwnProperty.call(sizePrice, label)) continue;
+                        const amount = parseFloat(pricesArray[pi + 2]);
+                        if (!isNaN(amount) && amount < sizePrice[label]) sizePrice[label] = amount;
+                    }
+                    variable1Values = variable1Values.slice().sort(function(a, b) {
+                        return sizePrice[a] - sizePrice[b];
+                    });
+                }
+
+                // Keep the size already chosen on the card. Otherwise start at the cheapest.
+                const keptVariable1 = (element.getAttribute('data-selected-variable1') || '').trim();
+                const defaultVariable1 = (keptVariable1 && variable1Values.indexOf(keptVariable1) !== -1)
+                    ? keptVariable1
+                    : (variable1Values.length > 0 ? variable1Values[0] : '-');
                 const defaultVariable2 = variable2Values.length > 0 ? variable2Values[0] : '-';
                 
                 // Build variable1 and variable2 option HTML with click handlers
@@ -1972,8 +1989,8 @@
                 if (variable1Values.length > 0) {
                     sizesHTML = `
                         <ul class="sizes">
-                            ${variable1Values.map((v, index) => `
-                                <li class="expanded-option ${index === 0 ? 'selected' : ''}" 
+                            ${variable1Values.map((v) => `
+                                <li class="expanded-option ${v === defaultVariable1 ? 'selected' : ''}" 
                                     data-option-type="variable1" 
                                     data-option-value="${v}"
                                     onclick="selectExpandedOption(this, '${url}', event)">${v}</li>

@@ -5263,6 +5263,25 @@ document.addEventListener('DOMContentLoaded', async function() {
   function escapeAttr(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
+  function sizeNamesCheapestFirst(flat) {
+    var best = {};
+    var names = [];
+    if (!Array.isArray(flat)) return names;
+    for (var i = 0; i + 2 < flat.length; i += 3) {
+      var label = flat[i] != null ? String(flat[i]).trim() : '';
+      if (!label || label === '-' || label === 'None') continue;
+      var amount = parseFloat(flat[i + 2]);
+      if (isNaN(amount)) amount = Infinity;
+      if (!Object.prototype.hasOwnProperty.call(best, label)) {
+        best[label] = amount;
+        names.push(label);
+      } else if (amount < best[label]) {
+        best[label] = amount;
+      }
+    }
+    names.sort(function(a, b) { return best[a] - best[b]; });
+    return names;
+  }
   function createPriceRow(variable1, variable2, price) {
     var row = document.createElement('div');
     row.className = 'dashboard-price-row';
@@ -9552,11 +9571,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (expPrice) { expPrice.textContent = priceText; expPrice.setAttribute('data-unit-price', nums[0] || 0); }
                 var addCart = card.querySelector('.expanded-add-cart');
                 if (addCart) { addCart.setAttribute('data-unit-price', nums[0] || 0); var cartPrice = addCart.querySelector('.cart-button-price'); if (cartPrice) cartPrice.textContent = priceText; }
-                var variable1Vals = [], variable2Vals = [];
+                var variable1Vals = sizeNamesCheapestFirst(opts.pricesArray);
+                var variable2Vals = [];
                 for (var si = 0; si < opts.pricesArray.length; si += 3) {
-                  var sval = String(opts.pricesArray[si] ).trim();
                   var fval = String(opts.pricesArray[si + 1] != null ? opts.pricesArray[si + 1] : '-').trim();
-                  if (sval && sval !== '-' && sval !== 'None' && variable1Vals.indexOf(sval) === -1) variable1Vals.push(sval);
                   if (fval && fval !== '-' && fval !== 'None' && variable2Vals.indexOf(fval) === -1) variable2Vals.push(fval);
                 }
                 if (opts.pricesArray.length >= 3) {
@@ -11595,18 +11613,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
           var optsWrap = selectedElement.querySelector('.menu-item-options');
           if (optsWrap && pricesArr.length >= 3) {
-            var v1seen = {};
             var v2seen = {};
             for (var pi = 0; pi + 2 < pricesArr.length; pi += 3) {
-              var pv1 = String(pricesArr[pi] != null ? pricesArr[pi] : '').trim();
               var pv2 = String(pricesArr[pi + 1] != null ? pricesArr[pi + 1] : '').trim();
-              if (pv1 && pv1 !== '-') v1seen[pv1] = true;
               if (pv2 && pv2 !== '-') v2seen[pv2] = true;
             }
+            var sizeNames = sizeNamesCheapestFirst(pricesArr);
             var sizesUl = optsWrap.querySelector('ul.sizes');
             var flavUl = optsWrap.querySelector('ul.flavours');
-            if (sizesUl && Object.keys(v1seen).length) {
-              sizesUl.innerHTML = Object.keys(v1seen).map(function(v) { return '<li>' + v + '</li>'; }).join('');
+            if (sizesUl && sizeNames.length) {
+              sizesUl.innerHTML = sizeNames.map(function(v) { return '<li>' + v + '</li>'; }).join('');
             }
             if (flavUl && Object.keys(v2seen).length) {
               flavUl.innerHTML = Object.keys(v2seen).map(function(v) { return '<li>' + v + '</li>'; }).join('');

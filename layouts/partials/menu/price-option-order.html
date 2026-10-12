@@ -1,0 +1,18 @@
+{{- /* Unique values of one price field, cheapest first. Context: dict "prices" "field". */ -}}
+{{- $field := .field -}}
+{{- $prices := .prices | default slice -}}
+{{- $rows := slice -}}
+{{- range $prices -}}
+  {{- $name := index . $field -}}
+  {{- if $name -}}
+    {{- $rows = $rows | append (dict "name" (string $name) "price" (float .price)) -}}
+  {{- end -}}
+{{- end -}}
+{{- $rows = sort $rows "price" "asc" -}}
+{{- $out := slice -}}
+{{- range $rows -}}
+  {{- if not (in $out .name) -}}
+    {{- $out = $out | append .name -}}
+  {{- end -}}
+{{- end -}}
+{{- return $out -}}

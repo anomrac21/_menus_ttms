@@ -5,7 +5,7 @@
       <h2 id="analytics-last-month-heading" class="dashboard-analytics-heading">Last 30 days</h2>
       <p class="dashboard-analytics-subtitle">Traffic, engagement, and menu performance for this site.</p>
     </div>
-    {{- if .showOpenAnalytics }}
+    {{- if and (reflect.IsMap .) .showOpenAnalytics }}
     <div class="dashboard-card-actions dashboard-settings-panel-head-actions">
       <a href="https://analytics.ttmenus.com" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Open analytics</a>
     </div>

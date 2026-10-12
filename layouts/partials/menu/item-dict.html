@@ -3,12 +3,7 @@
 {{- $locSlug := .locationSlug | default "" -}}
 {{- $cat := .category -}}
 
-{{- $variable1Values := slice -}}
-{{- range $p.Params.prices -}}
-  {{- if not (in $variable1Values .variable1) -}}
-    {{- $variable1Values = $variable1Values | append .variable1 -}}
-  {{- end -}}
-{{- end -}}
+{{- $variable1Values := partial "menu/price-option-order.html" (dict "prices" $p.Params.prices "field" "variable1") -}}
 
 {{- $variable2Values := slice -}}
 {{- range $p.Params.prices -}}
