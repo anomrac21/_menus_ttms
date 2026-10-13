@@ -194,21 +194,9 @@
     if (titleCountObserver) titleCountObserver.unobserve(section);
 
     var target = getTargetItemCount(section);
-    if (target <= 0) {
-      updateSectionCountDisplay(section, 0, false);
-      section.dataset.sectionCountDone = '1';
-      return;
-    }
-
-    animateSectionItemCount(section, {
-      from: 0,
-      target: target,
-      duration: 900,
-      clearLoadingOnComplete: true,
-      onComplete: function () {
-        section.dataset.sectionCountDone = '1';
-      },
-    });
+    updateSectionCountDisplay(section, target, false);
+    section.classList.remove('is-section-loading');
+    section.dataset.sectionCountDone = '1';
   }
 
   function syncPendingSectionTitleCounts() {
@@ -237,43 +225,33 @@
   function getAccurateItemCount(header, grouped) {
     if (!header) return 0;
 
+    var markup = getTargetItemCount(header);
     var stored = parseInt(header.getAttribute('data-home-menu-rendered-count'), 10);
-    if (Number.isFinite(stored) && stored >= 0) return stored;
-
-    if (header.dataset.homeMenuLoaded === '1') {
-      return countRenderedCardsAfterHeader(header);
-    }
+    if (Number.isFinite(stored) && stored > 0) return stored;
 
     if (grouped) {
       var slug = header.getAttribute('data-section-slug');
-      return slug ? (grouped[slug] || []).length : 0;
+      var groupedCount = slug && grouped[slug] ? grouped[slug].length : 0;
+      if (groupedCount > 0) return groupedCount;
     }
 
-    return getTargetItemCount(header);
+    var rendered = countRenderedCardsAfterHeader(header);
+    if (rendered > 0) return rendered;
+    return markup;
   }
 
   function playHeaderCountAnimation(header, grouped, options) {
-    if (!header || !headerCountSeen.has(header)) return;
+    if (!header) return;
 
     options = options || {};
     var target = options.target != null ? options.target : getAccurateItemCount(header, grouped);
-    var from = options.from != null ? options.from : getCurrentCount(header);
-    var duration = options.duration != null ? options.duration : 1100;
-    var force = !!options.force;
-
-    if (headerCountAnimated.has(header) && !force) {
-      updateSectionCountDisplay(header, target, false);
-      header.classList.remove('is-section-loading');
-      return;
+    if (!(target > 0)) {
+      var markup = getTargetItemCount(header);
+      if (markup > 0) target = markup;
     }
-
     headerCountAnimated.add(header);
-    animateSectionItemCount(header, {
-      from: from,
-      target: target,
-      duration: duration,
-      clearLoadingOnComplete: true,
-    });
+    updateSectionCountDisplay(header, target, false);
+    header.classList.remove('is-section-loading');
   }
 
   function onHeaderEnteredView(header) {
@@ -399,7 +377,7 @@
         return;
       }
       section.removeAttribute('data-section-count-done');
-      updateSectionCountDisplay(section, 0, true);
+      updateSectionCountDisplay(section, getTargetItemCount(section), false);
       titleCountObserver.observe(section);
     });
 
@@ -1320,7 +1298,7 @@
       header.removeAttribute('data-home-menu-rendered-count');
       header.removeAttribute('aria-busy');
       header.setAttribute('aria-busy', 'true');
-      updateSectionCountDisplay(header, 0, true);
+      updateSectionCountDisplay(header, getTargetItemCount(header), true);
     });
     sectionLoadPromises = Object.create(null);
   }

@@ -234,7 +234,7 @@
     var targetId = normalizeMenublockSectionId(id);
     var targetNorm = String(targetId).trim().toLowerCase();
 
-    // Always prefer the section title slide: never a dish card with the same data-reel-section.
+    // A menu section opens on its first dish. Promotions stay on the cover.
     var headers = track.querySelectorAll('.menu-header.menu-reels-slide');
     var i;
     var header;
@@ -242,16 +242,24 @@
     var slug;
     for (i = 0; i < headers.length; i++) {
       header = headers[i];
-      headerId = normalizeMenublockSectionId(header.getAttribute('data-reel-section') || '');
-      if (headerId && String(headerId).trim().toLowerCase() === targetNorm) {
-        return header;
-      }
       slug = String(header.getAttribute('data-section-slug') || '')
         .trim()
         .toLowerCase();
-      if (slug && (slug === targetNorm || slug.replace(/-/g, '_') === targetNorm.replace(/-/g, '_'))) {
-        return header;
+      headerId = normalizeMenublockSectionId(header.getAttribute('data-reel-section') || '');
+      var headerMatches =
+        (headerId && String(headerId).trim().toLowerCase() === targetNorm) ||
+        (slug && (slug === targetNorm || slug.replace(/-/g, '_') === targetNorm.replace(/-/g, '_')));
+      if (!headerMatches) continue;
+      if (header.hasAttribute('data-home-menu-lazy')) {
+        var dish = header.nextElementSibling;
+        while (dish && !dish.classList.contains('menu-header')) {
+          if (dish.classList.contains('menu-item-card') || dish.classList.contains('menu-reel-slot')) {
+            return dish;
+          }
+          dish = dish.nextElementSibling;
+        }
       }
+      return header;
     }
 
     var anchor = document.getElementById(targetId);
