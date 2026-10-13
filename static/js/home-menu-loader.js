@@ -771,7 +771,21 @@
     var track = getTrack();
     if (!track) return;
     var opened = headerForLocationHash();
-    if (opened && sectionItems.has(opened)) hydrateSectionNow(opened);
+    if (opened && sectionItems.has(opened)) {
+      hydrateSectionNow(opened);
+      var dishes = sectionSlideNodes(opened);
+      var firstDish = null;
+      var n;
+      for (n = 0; n < dishes.length; n++) {
+        if (dishes[n].classList.contains('menu-item-card') || dishes[n].classList.contains('menu-reel-slot')) {
+          firstDish = dishes[n];
+          break;
+        }
+      }
+      if (firstDish && typeof window.scrollToMenuReelsCard === 'function') {
+        window.scrollToMenuReelsCard(firstDish, 'auto');
+      }
+    }
     var sawNear = false;
     track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
       if (!sectionItems.has(header) || !sectionIsNearView(header)) return;
@@ -842,14 +856,19 @@
       track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
         if (isPromoSectionHeader(header)) return;
         var slug = header.getAttribute('data-section-slug') || '';
+        var markupCount = getTargetItemCount(header);
         var items = (grouped && grouped[slug]) || [];
+        if (!items.length && markupCount > 0) {
+          items = itemsForSectionLoose(slug);
+        }
+        var count = items.length || markupCount;
         sectionItems.set(header, items);
-        header.setAttribute('data-item-count', String(items.length));
+        header.setAttribute('data-item-count', String(count));
         ensureSlotCount(header, items.length);
         header.dataset.homeMenuReserved = '1';
         header.dataset.homeMenuLoaded = '1';
         header.removeAttribute('aria-busy');
-        finalizeSectionItemCount(header, items.length);
+        finalizeSectionItemCount(header, count);
       });
       syncSectionVisibilityForLocation(grouped || {});
     });
@@ -1226,17 +1245,31 @@
     return !!(window.MENU_CONFIG && window.MENU_CONFIG.multiLocationMenus);
   }
 
+  function itemsForSectionLoose(slug) {
+    var found = [];
+    (rawMenuItems || []).forEach(function (item) {
+      if (!item || !slug || item.section !== slug || item.section === 'promotions') return;
+      found.push(item);
+    });
+    return found;
+  }
+
   function groupMenuItems(items) {
     var grouped = {};
     var locFilter = activeLocationSlug();
     var multi = multiLocationMenusEnabled();
-    (items || []).forEach(function (item) {
+    var list = items || [];
+    var anyLocated = false;
+    list.forEach(function (item) {
+      if (item && item.location_slug) anyLocated = true;
+    });
+    list.forEach(function (item) {
       if (!item || !item.section || item.section === 'promotions') return;
       // Single-location catalogs are already flattened: never hide dishes by slug.
-      // Multi-location: only show items for the selected location.
-      if (multi) {
+      // Multi-location: only show items for the selected location when the feed has slugs.
+      if (multi && anyLocated) {
         if (!locFilter) return;
-        if (!item.location_slug || item.location_slug !== locFilter) return;
+        if (item.location_slug !== locFilter) return;
       }
       if (!grouped[item.section]) grouped[item.section] = [];
       grouped[item.section].push(item);
@@ -1310,7 +1343,9 @@
       var header = bg.querySelector('.menu-header.menu-reels-slide[data-home-menu-lazy]');
       if (!header) return;
       var slug = header.getAttribute('data-section-slug') || '';
-      var count = (grouped && grouped[slug] ? grouped[slug].length : 0) || 0;
+      var listed = sectionItems.get(header);
+      var count = listed ? listed.length : ((grouped && grouped[slug] ? grouped[slug].length : 0) || 0);
+      if (!count) count = getTargetItemCount(header);
       header.setAttribute('data-item-count', String(count));
       bg.hidden = count === 0;
       bg.style.display = count === 0 ? 'none' : '';
