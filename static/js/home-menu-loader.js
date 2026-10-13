@@ -285,7 +285,7 @@
       return;
     }
 
-    updateSectionCountDisplay(header, 0, true);
+    updateSectionCountDisplay(header, getTargetItemCount(header), true);
 
     if (loaderConfig) {
       var slug = header.getAttribute('data-section-slug');
@@ -320,7 +320,8 @@
       if (header.dataset.homeMenuLoaded === '1' && headerCountSeen.has(header)) {
         playHeaderCountAnimation(header, menuBySection);
       } else if (!headerCountSeen.has(header)) {
-        updateSectionCountDisplay(header, 0, true);
+        var knownCount = getTargetItemCount(header);
+        updateSectionCountDisplay(header, knownCount, knownCount === 0);
       }
       headerCountObserver.observe(header);
     });
@@ -337,14 +338,10 @@
     section.setAttribute('data-home-menu-rendered-count', String(count));
     section.setAttribute('data-item-count', String(count));
 
-    if (headerCountSeen.has(section)) {
-      if (headerCountAnimated.has(section)) {
-        updateSectionCountDisplay(section, count, false);
-      } else {
-        playHeaderCountAnimation(section, menuBySection, { target: count, from: 0 });
-      }
+    if (headerCountSeen.has(section) && !headerCountAnimated.has(section)) {
+      playHeaderCountAnimation(section, menuBySection, { target: count, from: getCurrentCount(section) });
     } else {
-      updateSectionCountDisplay(section, 0, true);
+      updateSectionCountDisplay(section, count, false);
     }
 
     section.classList.remove('is-section-loading');
@@ -355,7 +352,8 @@
     if (!track) return;
     track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
       if (header.dataset.homeMenuLoaded === '1') return;
-      updateSectionCountDisplay(header, 0, true);
+      var known = getTargetItemCount(header);
+      updateSectionCountDisplay(header, known, known === 0);
     });
   }
 
@@ -411,7 +409,7 @@
   function beginSectionLoadFeedback(header) {
     if (!header || header.dataset.homeMenuLoaded === '1') return;
     if (!headerCountSeen.has(header)) {
-      updateSectionCountDisplay(header, 0, true);
+      updateSectionCountDisplay(header, getTargetItemCount(header), true);
     }
   }
 
@@ -736,6 +734,18 @@
     });
     if (hydrated) scheduleHydratedCardInit();
     if (pending) scheduleHydrationPump();
+  }
+
+  function hydrateSectionNow(header, limit) {
+    if (!header || !loaderConfig || !sectionItems.has(header)) return;
+    var nodes = sectionSlideNodes(header);
+    var max = limit == null ? nodes.length : limit;
+    var filled = 0;
+    for (var i = 0; i < nodes.length && filled < max; i++) {
+      if (nodes[i].classList.contains('menu-reel-slot') && hydrateNode(header, nodes[i])) filled += 1;
+    }
+    if (filled) scheduleHydratedCardInit();
+    scheduleHydrationPump();
   }
 
   function hydrateAroundHeader(header) {
@@ -1383,7 +1393,7 @@
     finalizeSectionItemCount(header, list.length);
     if (header.dataset.homeMenuPriority === '1') {
       delete header.dataset.homeMenuPriority;
-      hydrateAroundHeader(header);
+      hydrateSectionNow(header, list.length);
     } else {
       scheduleHydrationPump();
     }
@@ -1711,10 +1721,14 @@
 
   function bootHomeMenuLoader() {
     reserveSlotsFromMarkup();
-    deferHomeMenuLoaderStart(function () {
-      initHomeMenuLoader();
-      registerLifecycle();
-    });
+    initHomeMenuLoader();
+    registerLifecycle();
+    var hash = String(window.location.hash || '').replace(/^#/, '');
+    if (hash) {
+      try {
+        loadHomeMenuForSectionId(decodeURIComponent(hash));
+      } catch (_) { /* ignore */ }
+    }
   }
 
   if (document.readyState === 'loading') {
