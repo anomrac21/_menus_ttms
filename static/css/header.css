@@ -185,12 +185,12 @@
     max-width: none;
     padding: 0;
     border-radius: var(--contact-cta-radius);
-    border: 2px solid var(--contact-cta-accent-border);
+    border: 1px solid var(--contact-cta-accent-border);
     background: linear-gradient(135deg, var(--contact-cta-accent-a) 0%, var(--contact-cta-accent-b) 100%);
     color: var(--scheme-ink-muted);
     text-decoration: none;
     font-weight: 600;
-    box-shadow: 0 3px 12px color-mix(in srgb, var(--scheme-black) 22%, transparent), 0 0 0 1px color-mix(in srgb, var(--scheme-white) 12%, transparent) inset;
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--scheme-black) 22%, transparent);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -208,7 +208,7 @@
 .header-leading .header-notify-subscribe:focus-visible {
     transform: translateY(-1px) scale(1.02);
     border-color: var(--header-border-color);
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--scheme-black) 28%, transparent), 0 0 0 1px color-mix(in srgb, var(--scheme-white) 20%, transparent) inset;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--scheme-black) 28%, transparent);
     outline: none;
 }
 
@@ -307,7 +307,7 @@
     height: var(--ttms-header-bar, 5em);
     max-height: 100%;
     margin: 0;
-    border: 2px solid color-mix(in srgb, var(--header-border-color) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--header-border-color) 55%, transparent);
     text-decoration: none;
     cursor: pointer;
     position: relative;
@@ -514,7 +514,7 @@
     min-height: var(--menublock-chip-height);
     padding: 0.45em 0.35em 0.4em;
     border-radius: var(--menublock-chip-radius);
-    border: 2px solid color-mix(in srgb, var(--header-border-color) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--header-border-color) 45%, transparent);
     background: linear-gradient(
         160deg,
         color-mix(in srgb, var(--scheme-white) 10%, transparent) 0%,
@@ -929,7 +929,7 @@
     margin-inline-start: auto;
     margin-inline-end: 0.45rem;
     padding: 0;
-    border: 2px solid color-mix(in srgb, var(--header-border-color) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--header-border-color) 55%, transparent);
     border-radius: var(--menublock-chip-radius);
     background: linear-gradient(
         160deg,
@@ -968,14 +968,15 @@
 .header-menublock-toggle__icon span {
     display: block;
     width: 100%;
-    height: 8px;
+    height: 2px;
+    border-radius: 1px;
     background: currentColor;
     transition: transform 0.22s ease, opacity 0.22s ease;
     transform-origin: center;
 }
 
 .main-header.menublock-dropdown-open .header-menublock-toggle__icon span:nth-child(1) {
-    transform: translateY(0.7rem) translatex(0rem) rotate(45deg);
+    transform: translateY(calc(2px + 0.28rem)) translatex(0rem) rotate(45deg);
 }
 
 .main-header.menublock-dropdown-open .header-menublock-toggle__icon span:nth-child(2) {
@@ -984,7 +985,7 @@
 }
 
 .main-header.menublock-dropdown-open .header-menublock-toggle__icon span:nth-child(3) {
-    transform: translateY(-0.5rem) translatex(0rem) rotate(-45deg);
+    transform: translateY(calc(-1 * (2px + 0.28rem))) translatex(0rem) rotate(-45deg);
 }
 
 .header-leading {

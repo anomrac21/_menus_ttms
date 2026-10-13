@@ -648,6 +648,10 @@ body.ads-reels-open {
     display: none !important;
 }
 
+.ads-reels-overlay.ads-reels-overlay--on-loader {
+    z-index: calc(var(--ttms-z-loader, 99999) + 1);
+}
+
 .ads-reels-close {
     position: absolute;
     top: max(0.75rem, env(safe-area-inset-top));

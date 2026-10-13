@@ -561,6 +561,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let isHidingLoader = false;
     let randomAnim = '';
+    var LOADER_REELS_STEP_KEY = 'ttmenus_loader_reels_step';
+    var loaderReelsHolding = false;
+
+    function clientIsPaidPlan() {
+        if (loader.getAttribute('data-paid') === 'true') return true;
+        var tier = 'free';
+        if (window.SiteConfig && window.SiteConfig.tier) tier = window.SiteConfig.tier;
+        else if (window.SITE_TIER) tier = window.SITE_TIER;
+        tier = String(tier).toLowerCase();
+        return tier === 'tier1' || tier === 'tier1_4mo' || tier === 'tier2';
+    }
+
+    function loaderReelsTurn(kind) {
+        if (kind === 'enter') {
+            try {
+                sessionStorage.setItem(LOADER_REELS_STEP_KEY, '0');
+            } catch (err) { /* ignore */ }
+            return true;
+        }
+        var step = 0;
+        try {
+            var raw = sessionStorage.getItem(LOADER_REELS_STEP_KEY);
+            if (raw != null && raw !== '') step = parseInt(raw, 10);
+            if (isNaN(step) || step < 0) step = 0;
+        } catch (err) {
+            step = 0;
+        }
+        try {
+            sessionStorage.setItem(LOADER_REELS_STEP_KEY, String(step + 1));
+        } catch (err) { /* ignore */ }
+        return step % 2 === 1;
+    }
+
+    document.addEventListener('ttms:loader-reels-closed', function () {
+        if (!loaderReelsHolding) return;
+        loaderReelsHolding = false;
+        hideLoader();
+    });
+
+    async function maybeHoldLoaderForReels(kind) {
+        if (clientIsPaidPlan()) return false;
+        if (!loaderReelsTurn(kind)) return false;
+        if (!window.AdsClient || typeof window.AdsClient.showReelsOnLoader !== 'function') return false;
+        loaderReelsHolding = true;
+        var shown = false;
+        try {
+            shown = await window.AdsClient.showReelsOnLoader();
+        } catch (err) {
+            shown = false;
+        }
+        if (!shown || !document.body.classList.contains('ads-reels-open')) {
+            loaderReelsHolding = false;
+            return false;
+        }
+        if (maxLoaderTimeout) {
+            clearTimeout(maxLoaderTimeout);
+            maxLoaderTimeout = null;
+        }
+        if (globalLoaderKillTimeout) {
+            clearTimeout(globalLoaderKillTimeout);
+            globalLoaderKillTimeout = null;
+        }
+        return true;
+    }
 
     function isIosLoader() {
         return document.documentElement.classList.contains('ttms-ios');
@@ -671,6 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function hideLoader() {
         if (!loader) return;
+        if (loaderReelsHolding) return;
         var alreadyGone = loader.classList.contains('loader-force-hidden');
         if (alreadyGone && !isHidingLoader) return;
         if (isHidingLoader) return;
@@ -922,8 +987,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
                     window.ensureMenuReelsItemModalClosed();
                 }
-                await waitMs(msUntilMinVisible());
-                hideLoader();
+                var holdingReels = await maybeHoldLoaderForReels('nav');
+                if (!holdingReels) {
+                    await waitMs(msUntilMinVisible());
+                    hideLoader();
+                }
                 
                 // Ensure main element padding is correct (reset any inherited styles)
                 requestAnimationFrame(() => {
@@ -1025,7 +1093,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 await waitForInitialPageReady(isReelsHome);
-                hideLoader();
+                var holdingEnterReels = await maybeHoldLoaderForReels('enter');
+                if (!holdingEnterReels) hideLoader();
                 
                 setTimeout(() => {
                     if (!document.getElementById('pageadscontainer')) {

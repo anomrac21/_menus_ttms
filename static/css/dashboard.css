@@ -9358,7 +9358,7 @@ body.menu-item-edit-modal-open {
 .card-dashboard-analytics .dashboard-settings-panel-head,
 .card-dashboard-notify .dashboard-settings-panel-head {
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .card-dashboard-notify .dashboard-settings-panel-head-actions,
@@ -9373,6 +9373,26 @@ body.menu-item-edit-modal-open {
   flex: 0 0 auto;
   width: auto;
   white-space: normal;
+}
+
+@media (max-width: 720px) {
+  .card-dashboard-notify .dashboard-settings-panel-head-text,
+  .card-dashboard-analytics .dashboard-settings-panel-head-text {
+    flex: 1 1 calc(100% - 3.2rem);
+  }
+
+  .card-dashboard-notify .dashboard-settings-panel-head-actions,
+  .card-dashboard-analytics .dashboard-settings-panel-head-actions {
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 0.15rem 0 0;
+  }
+
+  .card-dashboard-notify .dashboard-settings-panel-head-actions .btn-dash,
+  .card-dashboard-analytics .dashboard-settings-panel-head-actions .btn-dash {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .card-dashboard-notify,
@@ -12549,6 +12569,7 @@ button.dashboard-settings-panel-toggle:focus-visible {
 #os-channel-whatsapp.active,
 #os-channel-phone.active,
 #os-channel-loyverse.active,
+#os-channel-loyverse.is-upgrade-open,
 #os-channel-none.active {
   color: var(--dash-ink);
   background: color-mix(in srgb, var(--dash-ink) 9%, var(--dash-surface));
@@ -12567,7 +12588,15 @@ button.dashboard-settings-panel-toggle:focus-visible {
   outline-offset: 2px;
 }
 
-.dashboard-ordering-contact {
+.dashboard-ordering-upgrade {
+  margin: 0.15rem 0 0;
+  color: var(--dash-ink);
+}
+
+.dashboard-ordering-upgrade a {
+  color: var(--dash-accent);
+  font-weight: 700;
+}
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -14329,20 +14358,7 @@ select.dashboard-settings-input {
   }
 
   .dashboard-settings-panel--hero {
-    margin-inline: -0.65rem;
-    padding-inline: 0;
-    border-inline: none;
-    border-radius: 0;
-  }
-
-  .dashboard-settings-panel--hero > .dashboard-settings-panel-toggle,
-  .dashboard-settings-panel--hero .dashboard-settings-hero-fields,
-  .dashboard-settings-panel--hero .dashboard-settings-form-actions {
-    padding-inline: 0.85rem;
-  }
-
-  .dashboard-settings-panel--hero .dashboard-settings-hero-preview-label {
-    padding-inline: 0.85rem;
+    overflow: hidden;
   }
 
   .dashboard-settings-page .dashboard-settings-input,
@@ -14371,61 +14387,66 @@ select.dashboard-settings-input {
 
   .dashboard-settings-hero-preview-col {
     width: 100%;
+    min-width: 0;
   }
 
   .dashboard-settings-hero-preview-scaler {
-    width: 100%;
+    width: min(100%, 16rem);
     max-width: 100%;
-    height: 100dvh;
-    max-height: none;
-    aspect-ratio: auto;
-    margin-inline: 0;
-    border-radius: 0;
-    border-inline: none;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    max-height: 22rem;
+    margin-inline: auto;
+    border-radius: 16px;
+    border: 1px solid var(--dash-border);
   }
 
   .dashboard-settings-page .dashboard-settings-hero-preview.hero_logo_container {
-    gap: 0.75rem;
-    padding-block-end: max(3.25rem, env(safe-area-inset-bottom, 0px));
+    min-height: 0;
+    max-height: 100%;
+    height: 100%;
+    gap: 0.45rem;
+    padding-block-start: 0;
+    padding-block-end: 0.45rem;
   }
 
   .dashboard-settings-hero-preview-scaler #settingsHeroPreviewLogo {
-    max-width: min(56vw, 16rem);
-    max-height: min(38dvh, 16rem);
-    min-width: 7rem;
-    min-height: 7rem;
+    max-width: min(48%, 7.5rem);
+    max-height: 7.5rem;
+    min-width: 4.5rem;
+    min-height: 4.5rem;
   }
 
   .dashboard-settings-hero-preview .hero-cta-list {
     max-width: 100%;
     box-sizing: border-box;
-    padding: 0 0.85rem;
-    gap: 0.55rem;
+    padding: 0 0.45rem;
+    gap: 0.35rem;
   }
 
   .dashboard-settings-hero-preview .subscribe .subbtn--notify.contact-cta,
   .dashboard-settings-hero-preview .contact-cta--install {
     max-width: 100%;
     box-sizing: border-box;
-    padding: 0.5rem 0.85rem 0.5rem 0.45rem;
-    font-size: 1rem;
+    padding: 0.28rem 0.55rem 0.28rem 0.28rem;
+    font-size: 0.72rem;
   }
 
   .dashboard-settings-hero-preview .contact-cta__icon {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 1.35rem;
+    height: 1.35rem;
   }
 
   .dashboard-settings-hero-preview .contact-cta__title {
-    font-size: 0.95rem;
+    font-size: 0.72rem;
   }
 
   .dashboard-settings-hero-preview .contact-cta__hint {
-    font-size: 0.75rem;
+    font-size: 0.58rem;
   }
 
   .dashboard-settings-hero-preview .hero-intro p {
-    font-size: 0.95rem;
+    font-size: 0.72rem;
   }
 
   .dashboard-settings-hero-image-row {
@@ -14502,6 +14523,181 @@ select.dashboard-settings-input {
     height: 2.75rem;
     flex: 0 0 2.75rem;
   }
+
+  .dashboard-settings-page .dashboard-settings-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-settings-branding-card,
+  .dashboard-settings-branding-grid,
+  .dashboard-branding-frame--wide,
+  .dashboard-branding-frame--hero,
+  .dashboard-branding-frame--share {
+    max-width: 100%;
+  }
+}
+
+.dashboard-settings-page {
+  color: var(--dash-ink);
+  overflow-x: clip;
+}
+
+.dashboard-settings-page .dashboard-settings-main {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-settings-page .dashboard-settings-panel,
+.dashboard-settings-page .dashboard-settings-panel--branding {
+  background: var(--dash-surface);
+  border: 1px solid var(--dash-border);
+  color: var(--dash-ink);
+  box-shadow: 0 4px 16px color-mix(in srgb, black 12%, transparent);
+}
+
+.dashboard-settings-page .dashboard-settings-panel-icon,
+.dashboard-settings-page .dashboard-settings-social-icon {
+  background: color-mix(in srgb, var(--dash-accent) 18%, var(--dash-surface));
+  color: var(--dash-accent);
+}
+
+.dashboard-settings-page .dashboard-settings-panel-chevron {
+  border-color: color-mix(in srgb, var(--dash-ink) 16%, transparent);
+  background: color-mix(in srgb, var(--dash-ink) 6%, var(--dash-surface));
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-settings-page .dashboard-settings-panel-summary,
+.dashboard-settings-page .dashboard-settings-hint,
+.dashboard-settings-page .dashboard-menu-status-muted,
+.dashboard-settings-page .dashboard-settings-branding-card-usage {
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-settings-page .dashboard-settings-label,
+.dashboard-settings-page .dashboard-settings-branding-card-title,
+.dashboard-settings-page .dashboard-analytics-heading {
+  color: var(--dash-ink);
+}
+
+.dashboard-settings-page .dashboard-settings-row,
+.dashboard-settings-page .dashboard-settings-branding-card,
+.dashboard-settings-page .dashboard-settings-branding-advanced,
+.dashboard-settings-page .dashboard-mappin-style-form {
+  background: color-mix(in srgb, var(--dash-ink) 5%, var(--dash-surface));
+  border-color: var(--dash-border);
+}
+
+.dashboard-settings-page .dashboard-settings-input,
+.dashboard-settings-page .dashboard-settings-input.dashboard-settings-textarea,
+.dashboard-settings-page .dashboard-mappin-color-text {
+  background: var(--dash-surface);
+  border-color: var(--dash-border);
+  color: var(--dash-ink);
+  color-scheme: light;
+}
+
+[data-theme="dark"] .dashboard-settings-page .dashboard-settings-input,
+[data-theme="dark"] .dashboard-settings-page .dashboard-settings-input.dashboard-settings-textarea,
+[data-theme="dark"] .dashboard-settings-page .dashboard-mappin-color-text {
+  color-scheme: dark;
+}
+
+.dashboard-settings-page .dashboard-settings-input::placeholder {
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-settings-page .dashboard-menu-status-slot {
+  background: var(--dash-surface);
+  border-color: var(--dash-border);
+  color: var(--dash-ink);
+}
+
+.dashboard-settings-page .dashboard-menu-status-slot-label {
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-settings-page .dashboard-menu-status-slot-title {
+  color: var(--dash-ink);
+}
+
+.dashboard-settings-page .dashboard-menu-status-slot--live.dashboard-menu-status-slot--active {
+  background: color-mix(in srgb, var(--dash-success) 14%, var(--dash-surface));
+  border-color: color-mix(in srgb, var(--dash-success) 55%, var(--dash-border));
+  color: var(--dash-ink);
+}
+
+.dashboard-settings-page .dashboard-menu-status-slot--active:not(.dashboard-menu-status-slot--live) {
+  background: color-mix(in srgb, var(--dash-accent) 12%, var(--dash-surface));
+  border-color: color-mix(in srgb, var(--dash-accent) 45%, var(--dash-border));
+  color: var(--dash-ink);
+}
+
+.dashboard-settings-page .dashboard-settings-hint a {
+  color: var(--dash-accent);
+}
+
+.dashboard-settings-page .dashboard-settings-hero-preview-label,
+.dashboard-settings-page .dashboard-settings-char-count,
+.dashboard-settings-page .dashboard-mappin-style-title {
+  color: var(--dash-ink-muted);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.dashboard-settings-page .dashboard-edit-required {
+  color: var(--dash-error);
+}
+
+.dashboard-settings-page .dashboard-settings-hero-preview-scaler,
+.dashboard-settings-page .dashboard-settings-hero-thumb-wrap,
+.dashboard-settings-page .dashboard-settings-panel-head,
+.dashboard-settings-page button.dashboard-settings-panel-toggle,
+.dashboard-settings-page .dashboard-settings-form-actions,
+.dashboard-settings-page .dashboard-settings-branding-save-row {
+  border-color: var(--dash-border);
+}
+
+.dashboard-settings-page button.dashboard-settings-panel-toggle:hover,
+.dashboard-settings-page button.dashboard-settings-panel-toggle:focus-visible {
+  background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
+}
+
+.dashboard-settings-page .btn-dash,
+.dashboard-settings-page .dashboard-branding-file-label {
+  font-size: 0.88rem;
+  line-height: 1.2;
+  border-radius: 999px;
+  min-height: 2.5rem;
+}
+
+.dashboard-settings-page .btn-dash-primary,
+.dashboard-settings-page .dashboard-settings-form-actions .btn-dash-primary {
+  background: var(--dash-accent);
+  color: var(--dash-on-accent);
+  border: 0;
+  box-shadow: none;
+}
+
+.dashboard-settings-page .btn-dash-primary:hover,
+.dashboard-settings-page .dashboard-settings-form-actions .btn-dash-primary:hover {
+  background: var(--dash-accent);
+  box-shadow: none;
+}
+
+.dashboard-settings-page .btn-dash-secondary,
+.dashboard-settings-page .dashboard-branding-file-label.btn-dash-secondary {
+  background: var(--dash-surface);
+  color: var(--dash-ink);
+  border: 1px solid var(--dash-border);
+  box-shadow: none;
+}
+
+.dashboard-settings-page .btn-dash-secondary:hover,
+.dashboard-settings-page .dashboard-branding-file-label.btn-dash-secondary:hover {
+  background: color-mix(in srgb, var(--dash-accent) 12%, var(--dash-surface));
+  border-color: color-mix(in srgb, var(--dash-accent) 40%, var(--dash-border));
+  color: var(--dash-ink);
 }
 
 .dashboard-settings-branding-grid .dashboard-settings-branding-row {

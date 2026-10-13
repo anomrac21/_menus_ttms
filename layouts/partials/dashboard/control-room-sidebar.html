@@ -6,7 +6,7 @@
 {{- end -}}
 {{- $items := slice (dict "key" "orders" "icon" "fa-ticket" "label" "Orders") (dict "key" "edit-menu" "icon" "fa-cutlery" "label" "Menu") -}}
 {{- if site.Params.menuImageService.enabled -}}
-  {{- $items = $items | append (dict "key" "menu-images" "icon" "fa-picture-o" "label" "Photo reel") -}}
+  {{- $items = $items | append (dict "key" "menu-images" "icon" "fa-picture-o" "label" "Community Photos") -}}
 {{- end -}}
 {{- $items = $items | append (dict "key" "ads" "icon" "fa-bullhorn" "label" "Ads") (dict "key" "analytics" "icon" "fa-bar-chart" "label" "Analytics") (dict "key" "notifications" "icon" "fa-bell-o" "label" "Notifications") (dict "key" "auth" "icon" "fa-lock" "label" "Auth") -}}
 <nav class="dashboard-side" id="dashboardSide" aria-label="Control room sections">

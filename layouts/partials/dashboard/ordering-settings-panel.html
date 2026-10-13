@@ -50,7 +50,7 @@
               <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "whatsapp") }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "whatsapp") }}true{{ else }}false{{ end }}">
                 <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
               </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if $posOn }} active{{ end }}{{ if not $loyverseConnect }} is-disabled{{ end }}" id="os-channel-loyverse" data-channel="loyverse" aria-pressed="{{ if $posOn }}true{{ else }}false{{ end }}"{{ if not $loyverseConnect }} disabled{{ end }}>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if $posOn }} active{{ end }}" id="os-channel-loyverse" data-channel="loyverse" aria-pressed="{{ if $posOn }}true{{ else }}false{{ end }}"{{ if not $loyverseConnect }} aria-controls="os-loyverse-upgrade-hint"{{ end }}>
                 <img src="/icons/loyverse-mark.svg" alt="" width="16" height="16">
                 <span>Loyverse</span>
               </button>
@@ -72,7 +72,7 @@
             <input type="hidden" id="os-phone" name="phone" value="{{ default "" $os.phone }}">
             <input type="checkbox" id="posEnabledCb" class="dashboard-ordering-pos-input"{{ if $posOn }} checked{{ end }}{{ if not $loyverseConnect }} disabled{{ end }} hidden>
             {{- if not $loyverseConnect -}}
-            <p class="dashboard-ordering-group-hint" id="os-loyverse-upgrade-hint" data-os-requires-ordering{{ if not $orderingOn }} hidden{{ end }}>Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a>.</p>
+            <p class="dashboard-ordering-group-hint dashboard-ordering-upgrade" id="os-loyverse-upgrade-hint" hidden>Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a>.</p>
             {{- end -}}
           </div>
         </fieldset>
@@ -102,4 +102,4 @@
         <span id="orderingSystemSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
       </div>
     </form>
-<script src="/js/ordering-settings.js" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/ordering-settings.js" }}" defer></script>

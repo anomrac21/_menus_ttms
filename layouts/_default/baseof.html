@@ -88,7 +88,7 @@
   
   {{- if site.Params.ads.enabled -}}
   <!-- Ads client (Instagram-style reels) + homepage ad manager -->
-  <script src="/js/ads-client.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/ads-client.js" }}" defer></script>
   <script src="/js/client-ad-manager.js" defer></script>
   {{- end -}}
   <script src="{{ partial "head/asset-url.html" "/js/location-picker.js" }}" defer></script>

@@ -1166,6 +1166,7 @@
     });
 
     overlay.removeAttribute('hidden');
+    overlay.classList.toggle('ads-reels-overlay--on-loader', !!options.onLoader);
     document.body.classList.add('ads-reels-open');
 
     if (this._reelsScrollHandler) {
@@ -1219,8 +1220,21 @@
       document.removeEventListener('keydown', this._reelsKeyHandler);
       this._reelsKeyHandler = null;
     }
+    var wasLoaderReel = !!(overlay && overlay.classList.contains('ads-reels-overlay--on-loader'));
+    if (overlay) overlay.classList.remove('ads-reels-overlay--on-loader');
     overlay?.setAttribute('hidden', '');
     document.body.classList.remove('ads-reels-open');
+    if (wasLoaderReel) {
+      this._loaderReelsOpen = false;
+      if (this._loaderReelsRestore) {
+        this._reelsCatalog = this._loaderReelsRestore.catalog;
+        this._reelsConfig = this._loaderReelsRestore.config;
+        this._loaderReelsRestore = null;
+      }
+      try {
+        document.dispatchEvent(new CustomEvent('ttms:loader-reels-closed'));
+      } catch (err) { /* ignore */ }
+    }
     this._reelsFullscreenOpenTriggered = true;
 
     if (this.isHomeSmoothNavMode()) {
@@ -1773,6 +1787,60 @@
     } catch (error) {
       console.error('Error loading ads:', error);
     }
+  },
+
+  clientIsPaid() {
+    var loader = document.getElementById('loader');
+    if (loader && loader.getAttribute('data-paid') === 'true') return true;
+    var tier = 'free';
+    if (window.SiteConfig && window.SiteConfig.tier) tier = window.SiteConfig.tier;
+    else if (window.SITE_TIER) tier = window.SITE_TIER;
+    tier = String(tier).toLowerCase();
+    return tier === 'tier1' || tier === 'tier1_4mo' || tier === 'tier2';
+  },
+
+  /**
+   * Free plans: open the promotions reel over the loader.
+   * Paid plans return false and leave the loader alone.
+   */
+  async showReelsOnLoader() {
+    if (this.clientIsPaid()) return false;
+    if (this._loaderReelsOpen && document.body.classList.contains('ads-reels-open')) return true;
+    var config = this.getConfig();
+    var serviceUrl = (config && config.adsServiceUrl) || this.config.adsServiceUrl || 'https://ads.ttmenus.com';
+    var raw = [];
+    try {
+      raw = await this.fetchServiceAds(serviceUrl, {});
+    } catch (err) {
+      return false;
+    }
+    var items = this.prepareAdsForDisplay(this.normalizeServiceAds(raw, serviceUrl));
+    if (!items.length) return false;
+    this._loaderReelsRestore = {
+      catalog: this._reelsCatalog,
+      config: this._reelsConfig
+    };
+    this._reelsCatalog = items;
+    if (!config) {
+      config = {
+        adsServiceUrl: serviceUrl,
+        clientId: window.SITE_CLIENT_ID || '',
+        menuUrl: (window.location && window.location.origin ? window.location.origin : '') + '/',
+        noCompetitorAds: false
+      };
+    }
+    this._reelsConfig = config;
+    this._loaderReelsOpen = true;
+    this.openReelsViewer(0, { onLoader: true });
+    var overlay = document.getElementById('ads-reels-overlay');
+    var open = !!(overlay && !overlay.hasAttribute('hidden'));
+    if (!open) {
+      this._reelsCatalog = this._loaderReelsRestore.catalog;
+      this._reelsConfig = this._loaderReelsRestore.config;
+      this._loaderReelsRestore = null;
+      this._loaderReelsOpen = false;
+    }
+    return open;
   },
 };
 

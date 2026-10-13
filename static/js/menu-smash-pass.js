@@ -826,9 +826,10 @@
     if (layered) {
       var baseClass = 'menu-smash-pass-card__img';
       return (
-        '<div class="menu-smash-pass-card__img-stage">' +
+        '<div class="menu-smash-pass-card__img-stage is-loading">' +
         buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--backdrop', true) +
         buildImageTag(preview, srcPath, isDraft, baseClass + ' menu-smash-pass-card__img--front', false) +
+        '<span class="menu-smash-pass-card__throbber" role="status" aria-label="Loading photo"></span>' +
         '</div>'
       );
     }
@@ -1272,6 +1273,21 @@
     updateVoteActions(inst);
   }
 
+  function settleImageStage(img) {
+    var stage = img && img.closest('.menu-smash-pass-card__img-stage');
+    if (!stage) return;
+    function done() {
+      stage.classList.remove('is-loading');
+    }
+    var src = img.getAttribute('src') || '';
+    if (src && img.complete) {
+      done();
+      return;
+    }
+    img.addEventListener('load', done, { once: true });
+    img.addEventListener('error', done, { once: true });
+  }
+
   function hydrateStackImages(stack) {
     if (!stack) return;
     var imgs = stack.querySelectorAll(
@@ -1279,17 +1295,20 @@
     );
     imgs.forEach(function (img) {
       var path = img.getAttribute('data-src-path') || '';
-      if (path.indexOf('draft-assets/') !== 0) return;
-      if (typeof window.hydrateAuthenticatedDraftAssetImg === 'function') {
-        window.hydrateAuthenticatedDraftAssetImg(img);
+      if (path.indexOf('draft-assets/') === 0) {
+        if (typeof window.hydrateAuthenticatedDraftAssetImg === 'function') {
+          window.hydrateAuthenticatedDraftAssetImg(img);
+        }
+        var stage = img.closest('.menu-smash-pass-card__img-stage');
+        if (stage) {
+          var backdrop = stage.querySelector('.menu-smash-pass-card__img--backdrop');
+          if (backdrop && img.src && backdrop.src !== img.src) {
+            backdrop.src = img.src;
+            backdrop.removeAttribute('data-draft-pending');
+          }
+        }
       }
-      var stage = img.closest('.menu-smash-pass-card__img-stage');
-      if (!stage) return;
-      var backdrop = stage.querySelector('.menu-smash-pass-card__img--backdrop');
-      if (backdrop && img.src && backdrop.src !== img.src) {
-        backdrop.src = img.src;
-        backdrop.removeAttribute('data-draft-pending');
-      }
+      settleImageStage(img);
     });
   }
 

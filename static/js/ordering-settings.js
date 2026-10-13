@@ -56,6 +56,13 @@
     return !!(el && el.checked);
   }
 
+  var loyverseUpgradeOpen = false;
+
+  function loyverseUpgradeLocked() {
+    var el = document.getElementById('posEnabledCb');
+    return !el || el.disabled;
+  }
+
   function loyverseIsOn() {
     var el = document.getElementById('posEnabledCb');
     return orderingIsOn() && !!(el && !el.disabled && el.checked);
@@ -112,18 +119,23 @@
     ['phone', 'whatsapp', 'none', 'loyverse'].forEach(function (name) {
       var btn = document.getElementById('os-channel-' + name);
       if (!btn) return;
-      var on = name === channel;
+      var on = !loyverseUpgradeOpen && name === channel;
       btn.classList.toggle('active', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.classList.toggle('is-upgrade-open', name === 'loyverse' && loyverseUpgradeOpen);
+      btn.setAttribute('aria-pressed', (on || (name === 'loyverse' && loyverseUpgradeOpen)) ? 'true' : 'false');
     });
+    var upgradeHint = document.getElementById('os-loyverse-upgrade-hint');
+    setHidden(upgradeHint, !loyverseUpgradeOpen);
     var channelHint = document.getElementById('os-channel-group-hint');
     if (channelHint) {
-      channelHint.textContent = channel === 'loyverse'
+      channelHint.textContent = loyverseUpgradeOpen
+        ? 'Loyverse checkout needs a Tier 1 plan.'
+        : channel === 'loyverse'
         ? 'Orders go to the Loyverse till. Phone and WhatsApp stay closed.'
         : 'Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.';
     }
     var contactWrap = document.getElementById('os-contact-wrap');
-    setHidden(contactWrap, channel === 'none' || channel === 'loyverse');
+    setHidden(contactWrap, loyverseUpgradeOpen || channel === 'none' || channel === 'loyverse');
     var contactHint = document.getElementById('os-contact-hint');
     if (contactHint) {
       contactHint.textContent = channel === 'phone'
@@ -190,7 +202,12 @@
         channel = 'whatsapp';
       }
       var loyverseCb = document.getElementById('posEnabledCb');
-      if (channel === 'loyverse' && (!loyverseCb || loyverseCb.disabled)) return;
+      if (channel === 'loyverse' && loyverseUpgradeLocked()) {
+        loyverseUpgradeOpen = true;
+        syncOrderingDashboardVisibility();
+        return;
+      }
+      loyverseUpgradeOpen = false;
       var channelEl = document.getElementById('os-checkout-channel');
       var phonecallEl = document.getElementById('os-phonecall');
       var contactEl = document.getElementById('os-contact');
