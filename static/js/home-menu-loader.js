@@ -706,24 +706,30 @@
   }
 
   function pumpHydration() {
-    if (!loaderConfig || isFastScroll()) return;
+    if (!loaderConfig) return;
     var track = getTrack();
     if (!track) return;
+    var fast = isFastScroll();
     var metrics = viewportMetrics();
     var hydrated = 0;
     var dehydrated = 0;
-    var pending = false;
     track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
       if (!sectionItems.has(header)) return;
+      if (sectionIsNearView(header)) {
+        if (fast) {
+          sectionSlideNodes(header).forEach(function (node) {
+            if (hydrated >= 2 || !slideNeedsHydration(node, metrics)) return;
+            if (hydrateNode(header, node)) hydrated += 1;
+          });
+        } else {
+          hydrateSectionNow(header);
+        }
+        return;
+      }
+      if (fast) return;
       sectionSlideNodes(header).forEach(function (node) {
         var band = slideBand(node, metrics);
-        if (slideNeedsHydration(node, metrics)) {
-          if (hydrated < 2) {
-            if (hydrateNode(header, node)) hydrated += 1;
-          } else {
-            pending = true;
-          }
-        } else if (
+        if (
           node.classList.contains('menu-item-card') &&
           (band.ahead > 2.5 || band.behind > 2.5) &&
           dehydrated < 3
@@ -733,7 +739,6 @@
       });
     });
     if (hydrated) scheduleHydratedCardInit();
-    if (pending) scheduleHydrationPump();
   }
 
   function hydrateSectionNow(header, limit) {
@@ -745,7 +750,60 @@
       if (nodes[i].classList.contains('menu-reel-slot') && hydrateNode(header, nodes[i])) filled += 1;
     }
     if (filled) scheduleHydratedCardInit();
-    scheduleHydrationPump();
+  }
+
+  function headerForLocationHash() {
+    var hash = String(window.location.hash || '').replace(/^#/, '');
+    if (!hash) return null;
+    var track = getTrack();
+    if (!track) return null;
+    var targetNorm = hash;
+    try {
+      targetNorm = decodeURIComponent(hash.replace(/\+/g, ' '));
+    } catch (_) { /* keep the raw hash */ }
+    targetNorm = String(targetNorm).trim().toLowerCase();
+    if (!targetNorm || targetNorm === 'promotions') return null;
+    var headers = track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]');
+    var i;
+    for (i = 0; i < headers.length; i++) {
+      var candidate = headers[i];
+      var reelSection = String(candidate.getAttribute('data-reel-section') || '').trim().toLowerCase();
+      var slugAttr = String(candidate.getAttribute('data-section-slug') || '').trim().toLowerCase();
+      if (reelSection === targetNorm || slugAttr === targetNorm) return candidate;
+    }
+    return null;
+  }
+
+  function sectionIsNearView(header) {
+    var metrics = viewportMetrics();
+    var headerBand = slideBand(header, metrics);
+    if (headerBand.ahead < 1.15 && headerBand.behind < 0.5) return true;
+    var nodes = sectionSlideNodes(header);
+    var i;
+    for (i = 0; i < nodes.length; i++) {
+      var band = slideBand(nodes[i], metrics);
+      if (band.ahead < 1.15 && band.behind < 0.5) return true;
+      if (band.ahead >= 1.15) break;
+    }
+    return false;
+  }
+
+  function hydrateOpeningSections() {
+    if (!loaderConfig) return;
+    var track = getTrack();
+    if (!track) return;
+    var opened = headerForLocationHash();
+    if (opened && sectionItems.has(opened)) hydrateSectionNow(opened);
+    var sawNear = false;
+    track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+      if (!sectionItems.has(header) || !sectionIsNearView(header)) return;
+      sawNear = true;
+      hydrateSectionNow(header);
+    });
+    if (!opened && !sawNear) {
+      var first = track.querySelector('.menu-header.menu-reels-slide[data-home-menu-lazy]');
+      if (first && sectionItems.has(first)) hydrateSectionNow(first);
+    }
   }
 
   function hydrateAroundHeader(header) {
@@ -817,6 +875,7 @@
       });
       syncSectionVisibilityForLocation(grouped || {});
     });
+    hydrateOpeningSections();
     scheduleHydrationPump();
     if (Object.keys(pinnedMenuUrls).length) hydrateHomeMenuForUrls(Object.keys(pinnedMenuUrls));
   }
@@ -1394,9 +1453,8 @@
     if (header.dataset.homeMenuPriority === '1') {
       delete header.dataset.homeMenuPriority;
       hydrateSectionNow(header, list.length);
-    } else {
-      scheduleHydrationPump();
     }
+    scheduleHydrationPump();
   }
 
   function refreshInjectedMenuAuth() {
@@ -1414,7 +1472,7 @@
     if (slug === 'promotions') return Promise.resolve();
     var header = getHeaderForSlug(slug);
     if (!header || header.dataset.homeMenuLoaded === '1') {
-      if (header) hydrateAroundHeader(header);
+      if (header) hydrateSectionNow(header);
       return Promise.resolve();
     }
     header.dataset.homeMenuPriority = '1';
@@ -1730,6 +1788,10 @@
       } catch (_) { /* ignore */ }
     }
   }
+
+  window.addEventListener('load', function () {
+    hydrateOpeningSections();
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bootHomeMenuLoader);
