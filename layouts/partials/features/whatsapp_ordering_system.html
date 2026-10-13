@@ -1992,6 +1992,34 @@ function toggleCart(){
     orderEntry.sideAndAddTotal = promoData.sideAndAddTotal;
     if (promoData.availability) orderEntry.availability = promoData.availability;
   }
+  if (!orderEntry.url || !orderEntry.image) {
+    var catalogItem = null;
+    try {
+      if (orderEntry.url && menuItemsCache) {
+        catalogItem = menuItemsCache.find(function(it) { return it && it.url === orderEntry.url; });
+      }
+      if (!catalogItem && typeof findMenuItemByTitle === 'function') catalogItem = findMenuItemByTitle(item);
+    } catch (catalogErr) {}
+    if (catalogItem) {
+      if (!orderEntry.url && catalogItem.url) orderEntry.url = catalogItem.url;
+      if (!orderEntry.image) orderEntry.image = firstMenuImagePath(catalogItem.images);
+    }
+    if (!orderEntry.image && typeof currentoptions === 'object' && currentoptions && currentoptions.images) {
+      orderEntry.image = firstMenuImagePath(currentoptions.images);
+    }
+  }
+  try {
+    if (!orderEntry.description) {
+      var descText = '';
+      if (typeof currentoptions === 'object' && currentoptions && currentoptions.desc) descText = currentoptions.desc;
+      if (!descText) {
+        var descItem = cartCatalogItem(orderEntry);
+        if (descItem) descText = descItem.summary || descItem.desc || '';
+      }
+      descText = cartPlainText(descText);
+      if (descText) orderEntry.description = descText;
+    }
+  } catch (descErr) {}
   order.push(orderEntry);
   if (!window.__ttmsDeferCartBadge) {
     additemtocart();
@@ -2260,6 +2288,65 @@ function buildOrderTextSync(){
 	constructWAMessage();
 }
 
+function cartEscapeHtml(value) {
+	return String(value == null ? '' : value)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/"/g, '&quot;');
+}
+
+function firstMenuImagePath(images) {
+	if (!images) return '';
+	var entry = Array.isArray(images) ? images[0] : images;
+	if (!entry) return '';
+	if (typeof entry === 'object') return entry.image ? String(entry.image).trim() : '';
+	return String(entry).trim();
+}
+
+function cartCatalogItem(line) {
+	if (!menuItemsCache || !line) return null;
+	if (line.url) {
+		var wanted = String(line.url);
+		var byUrl = menuItemsCache.find(function(it) { return it && it.url === wanted; });
+		if (byUrl) return byUrl;
+	}
+	if (line.item && typeof findMenuItemByTitle === 'function') return findMenuItemByTitle(line.item);
+	return null;
+}
+
+function cartLineImagePath(line) {
+	var raw = line && line.image ? line.image : '';
+	if (!raw) {
+		var catalog = cartCatalogItem(line);
+		if (catalog) raw = firstMenuImagePath(catalog.images);
+	}
+	return firstMenuImagePath(raw);
+}
+
+function cartLineUrl(line) {
+	if (line && line.url) return String(line.url);
+	var catalog = cartCatalogItem(line);
+	return catalog && catalog.url ? String(catalog.url) : '';
+}
+
+function cartPlainText(value) {
+	var text = '';
+	if (value != null) text = String(value);
+	text = text.replace(/<[^>]+>/g, ' ');
+	var node = document.createElement('textarea');
+	node.innerHTML = text;
+	return String(node.value || ' ').replace(/\s+/g, ' ').replace(/\s+([.,;:!?])/g, '$1').trim();
+}
+
+function cartLineDescription(line) {
+	var text = line && line.description ? line.description : '';
+	if (!text) {
+		var catalog = cartCatalogItem(line);
+		if (catalog) text = catalog.summary || catalog.desc || '';
+	}
+	return cartPlainText(text);
+}
+
 function buildCartCards() {
 	const cartContainer = document.getElementById("cartItemsContainer");
 	const emptyState = document.getElementById("cartEmptyState");
@@ -2275,6 +2362,16 @@ function buildCartCards() {
 	}
 	
 	if (emptyState) emptyState.style.display = 'none';
+
+	if (!menuItemsCache && typeof fetchMenuItems === 'function' && !buildCartCards.waitingForMenu) {
+		buildCartCards.waitingForMenu = true;
+		fetchMenuItems().then(function() {
+			buildCartCards.waitingForMenu = false;
+			buildCartCards();
+		}).catch(function() {
+			buildCartCards.waitingForMenu = false;
+		});
+	}
 	
 	// Build card HTML for each item
 	let cardsHtml = '';
@@ -2329,44 +2426,83 @@ function buildCartCards() {
 			itemMods = `<div class="cart-item-category"><strong>Modifications:</strong> ${item.mods.join(', ')}</div>`;
 		}
 		
-		// Build the card with collapsible feature
+		const itemUrl = cartLineUrl(item);
+		const imagePath = cartLineImagePath(item);
+		const imageSrc = imagePath ? ttmsMenuImgSrc(imagePath, 'thumb') : '';
+		const largeSrc = imagePath ? ttmsMenuImgSrc(imagePath, 'carousel') : '';
+		const description = cartLineDescription(item);
+		const safeName = cartEscapeHtml(item.item);
+		const safeUrl = cartEscapeHtml(itemUrl);
+		const canExpand = !!(imageSrc || description || hasDetails);
+		const imageHtml = imageSrc
+			? `<img class="cart-item-thumb" src="${cartEscapeHtml(imageSrc)}" alt="" width="40" height="40" loading="lazy" decoding="async">`
+			: '';
+		const largeHtml = largeSrc
+			? (itemUrl
+				? `<a class="cart-item-photo" href="${safeUrl}" aria-label="${safeName}"><img src="${cartEscapeHtml(largeSrc)}" alt="" loading="lazy" decoding="async"></a>`
+				: `<div class="cart-item-photo"><img src="${cartEscapeHtml(largeSrc)}" alt="" loading="lazy" decoding="async"></div>`)
+			: '';
+		const sizeHtml = item.size && item.size !== '-' ? `<span class="cart-item-size">${cartEscapeHtml(item.size)}</span>` : '';
+		const promoHtml = promoLabel
+			? `<span class="cart-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">${cartEscapeHtml(promoLabel)}</span></span>`
+			: '';
+		const rowOpen = canExpand
+			? '<button type="button" class="cart-item-toggle" aria-expanded="false">'
+			: '<div class="cart-item-toggle">';
+		const rowClose = canExpand ? '</button>' : '</div>';
+
 		cardsHtml += `
-			<div class="cart-item-card collapsed" data-item-index="${i}">
-				<div class="cart-item-header">
-					<div class="cart-item-number">#${i + 1}</div>
-					<button class="cart-item-remove" onclick="event.stopPropagation(); removeItem(${i});" title="Remove item">
-						<i class="fa fa-times"></i>
+			<div class="cart-item-card collapsed" data-item-index="${i}"${canExpand ? ' data-expandable="1"' : ''}>
+				<div class="cart-item-summary">
+					${rowOpen}
+						${imageHtml}
+						<span class="cart-item-main-info">
+							<span class="cart-item-name-row">
+								<span class="cart-item-number">#${i + 1}</span>
+								<span class="cart-item-name">${safeName}</span>
+								${promoHtml}
+							</span>
+							${sizeHtml}
+						</span>
+						<span class="cart-item-footer">
+							<span class="cart-item-quantity">× ${item.amt}</span>
+							<span class="cart-item-price">$${item.cost.toFixed(2)}</span>
+						</span>
+						${canExpand ? '<i class="fa fa-chevron-down cart-expand-icon" aria-hidden="true"></i>' : ''}
+					${rowClose}
+					<button type="button" class="cart-item-remove" onclick="removeItem(${i});" title="Remove item" aria-label="Remove item">
+						<i class="fa fa-times" aria-hidden="true"></i>
 					</button>
 				</div>
-				<div class="cart-item-body" onclick="toggleCartItem(${i})">
-					<div class="cart-item-main-info">
-						<div class="cart-item-name-row">
-							<div class="cart-item-name">${item.item}</div>
-							${promoLabel ? `<span class="cart-item-promo-badge"><span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">${promoLabel}</span></span>` : ''}
-							${hasDetails ? '<i class="fa fa-chevron-down cart-expand-icon"></i>' : ''}
-						</div>
-						${item.size && item.size !== '-' ? `<div class="cart-item-size">${item.size}</div>` : '<div class="cart-item-size"></div>'}
+				${canExpand ? `
+					<div class="cart-item-details">
+						${largeHtml}
+						${description ? `<p class="cart-item-description">${cartEscapeHtml(description)}</p>` : ''}
+						${itemUrl ? `<a class="cart-item-open" href="${safeUrl}">View item</a>` : ''}
+						${itemSides}
+						${itemAdds}
+						${itemMods}
 					</div>
-					${hasDetails ? `
-						<div class="cart-item-details">
-							${itemSides}
-							${itemAdds}
-							${itemMods}
-						</div>
-					` : ''}
-				</div>
-				<div class="cart-item-footer">
-					<div class="cart-item-quantity">
-						<i class="fa fa-times" style="font-size: 0.8em; opacity: 0.7;"></i> ${item.amt}
-					</div>
-					<div class="cart-item-price">$${item.cost.toFixed(2)}</div>
-				</div>
+				` : ''}
 			</div>
 		`;
 	}
 	
 	cartContainer.innerHTML = cardsHtml;
+	bindCartItemToggle();
 	syncPlaceOrderButtonState();
+}
+
+function bindCartItemToggle() {
+	var root = document.getElementById('cartItemsContainer');
+	if (!root || root.getAttribute('data-cart-toggle') === '1') return;
+	root.setAttribute('data-cart-toggle', '1');
+	root.addEventListener('click', function (event) {
+		if (event.target.closest('a, .cart-item-remove')) return;
+		var card = event.target.closest('.cart-item-card[data-expandable="1"]');
+		if (!card) return;
+		toggleCartItem(card.getAttribute('data-item-index'));
+	});
 }
 
 function syncPlaceOrderButtonState() {
@@ -2381,10 +2517,12 @@ function syncPlaceOrderButtonState() {
 
 // Toggle individual cart item expansion
 function toggleCartItem(index) {
-	const card = document.querySelector(`.cart-item-card[data-item-index="${index}"]`);
-	if (card) {
-		card.classList.toggle('collapsed');
-	}
+	var card = document.querySelector('.cart-item-card[data-item-index="' + index + '"]');
+	if (!card) return;
+	var open = card.classList.contains('collapsed');
+	card.classList.toggle('collapsed', !open);
+	var btn = card.querySelector('.cart-item-toggle');
+	if (btn && btn.tagName === 'BUTTON') btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 function openSideMenu() {

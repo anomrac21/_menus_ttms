@@ -2886,6 +2886,24 @@
         var itemId = card.getAttribute('data-loyverse-item-id');
         if (itemId) line.loyverse_item_id = itemId;
         if (url) line.url = url;
+        if (!line.image) {
+            var imagePath = '';
+            try {
+                var imageList = JSON.parse(card.getAttribute('data-images-array') || '[]');
+                if (Array.isArray(imageList) && imageList.length) {
+                    var imageEntry = imageList[0];
+                    imagePath = imageEntry && typeof imageEntry === 'object' ? (imageEntry.image || '') : imageEntry;
+                }
+            } catch (imageErr) {
+                imagePath = '';
+            }
+            if (!imagePath) {
+                var cardImg = card.querySelector('img.menu-item-img, .menu-item-image img');
+                imagePath = cardImg ? (cardImg.getAttribute('data-src-path') || '') : '';
+            }
+            if (imagePath) line.image = String(imagePath).replace(/^\//, '');
+        }
+        if (typeof saveCart === 'function') saveCart();
         if (variant) {
             console.log('🧾 Cart line mapped to Loyverse variant', variant, itemName, size);
         }
