@@ -771,21 +771,7 @@
     var track = getTrack();
     if (!track) return;
     var opened = headerForLocationHash();
-    if (opened && sectionItems.has(opened)) {
-      hydrateSectionNow(opened);
-      var dishes = sectionSlideNodes(opened);
-      var firstDish = null;
-      var n;
-      for (n = 0; n < dishes.length; n++) {
-        if (dishes[n].classList.contains('menu-item-card') || dishes[n].classList.contains('menu-reel-slot')) {
-          firstDish = dishes[n];
-          break;
-        }
-      }
-      if (firstDish && typeof window.scrollToMenuReelsCard === 'function') {
-        window.scrollToMenuReelsCard(firstDish, 'auto');
-      }
-    }
+    if (opened && sectionItems.has(opened)) hydrateSectionNow(opened);
     var sawNear = false;
     track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
       if (!sectionItems.has(header) || !sectionIsNearView(header)) return;

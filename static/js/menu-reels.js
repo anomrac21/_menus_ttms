@@ -234,7 +234,7 @@
     var targetId = normalizeMenublockSectionId(id);
     var targetNorm = String(targetId).trim().toLowerCase();
 
-    // A menu section opens on its first dish. Promotions stay on the cover.
+    // Category links open the section header, never the first dish under it.
     var headers = track.querySelectorAll('.menu-header.menu-reels-slide');
     var i;
     var header;
@@ -246,20 +246,12 @@
         .trim()
         .toLowerCase();
       headerId = normalizeMenublockSectionId(header.getAttribute('data-reel-section') || '');
-      var headerMatches =
+      if (
         (headerId && String(headerId).trim().toLowerCase() === targetNorm) ||
-        (slug && (slug === targetNorm || slug.replace(/-/g, '_') === targetNorm.replace(/-/g, '_')));
-      if (!headerMatches) continue;
-      if (header.hasAttribute('data-home-menu-lazy')) {
-        var dish = header.nextElementSibling;
-        while (dish && !dish.classList.contains('menu-header')) {
-          if (dish.classList.contains('menu-item-card') || dish.classList.contains('menu-reel-slot')) {
-            return dish;
-          }
-          dish = dish.nextElementSibling;
-        }
+        (slug && (slug === targetNorm || slug.replace(/-/g, '_') === targetNorm.replace(/-/g, '_')))
+      ) {
+        return header;
       }
-      return header;
     }
 
     var anchor = document.getElementById(targetId);
