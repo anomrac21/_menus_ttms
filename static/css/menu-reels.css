@@ -240,7 +240,7 @@ main.main--offset ~ .bottomads {
     width: 100%;
     min-height: var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-    background: var(--main-bg);
+    background: #000;
 }
 
 html:has(main.main--offset):not(:has(#menu-reels-viewport)),
@@ -260,7 +260,7 @@ body.menu-reels-mode .bottomads.menu-reels-bottom-ads-in-track {
     width: 100%;
     height: 100%;
     min-height: 100%;
-    background: var(--main-bg);
+    background: #000;
 }
 
 .menu-reels-slide--bottom-ads {
@@ -428,7 +428,14 @@ body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
     align-items: center;
     box-sizing: border-box;
     overflow: hidden;
+}
+
+.menu-reels-track .menu-reels-slide {
     background: var(--main-bg);
+}
+
+.menu-reels-track .ads-reels-slide {
+    background: #000;
 }
 
 /* Snap-slide enter: opacity + transform only, replayed each time a reel is focused */
@@ -530,7 +537,7 @@ body.menu-reels-mode #menu-reels-track #client-ads-container.client-ads-reels {
 #menu-reels-track .ads-reels-slide {
     color: var(--scheme-white);
     text-align: center;
-    background: var(--scheme-black);
+    background: #000;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 

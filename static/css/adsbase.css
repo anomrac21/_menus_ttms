@@ -178,7 +178,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     color: var(--scheme-white);
     text-align: center;
     text-shadow: 1px 1px 1px var(--scheme-overlay);
-    background: var(--scheme-black);
+    background: #000;
     width: 100%;
     border: 1px solid var(--main-bg);
     margin-bottom: 0;
@@ -534,7 +534,7 @@ main.main--offset ~ .bottomads #pageadscontainer {
     inset: 0;
     border-radius: inherit;
     overflow: hidden;
-    background: var(--scheme-black);
+    background: #000;
 }
 
 #pageadscontainer.frontpageads section.menu-ad--reels-preview ul.inner.ads-list--preview li.ad-panel.ad-panel--preview .ad-preview-media video.ad-video {
@@ -632,7 +632,7 @@ body.ads-reels-open {
     position: fixed;
     inset: 0;
     z-index: var(--ttms-z-ads-reels-overlay, 10050);
-    background: var(--scheme-black);
+    background: #000;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -701,7 +701,7 @@ body.ads-reels-open {
     align-items: center;
     box-sizing: border-box;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
-    background: var(--scheme-black);
+    background: #000;
     overflow: hidden;
 }
 
