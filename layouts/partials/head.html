@@ -1305,13 +1305,22 @@ window.MENU_CONFIG = {
     {{- end -}}
   {{- end -}}
 {{- end -}}
+{{- $posDefaultHost := "https://loyverse-oauth.ttmenus.com" -}}
+{{- $posApiRaw := $pos.api_url | default "" -}}
+{{- $posOauthRaw := $pos.oauth_url | default "" -}}
+{{- $posApiOK := or (hasPrefix $posApiRaw "https://") (hasPrefix $posApiRaw "http://") -}}
+{{- $posOauthOK := or (hasPrefix $posOauthRaw "https://") (hasPrefix $posOauthRaw "http://") -}}
+{{- $posApi := $posDefaultHost -}}
+{{- if $posApiOK }}{{ $posApi = $posApiRaw }}{{ else if $posOauthOK }}{{ $posApi = $posOauthRaw }}{{ end -}}
+{{- $posOauth := $posDefaultHost -}}
+{{- if $posOauthOK }}{{ $posOauth = $posOauthRaw }}{{ else if $posApiOK }}{{ $posOauth = $posApiRaw }}{{ end -}}
 <script>
 // POS Integration Configuration (no Loyverse secrets: proxy uses stored OAuth tokens server-side)
 window.POS_CONFIG = {
     enabled: {{ default false $pos.enabled }},
     provider: "{{ $pos.provider | default "loyverse" }}",
-    apiUrl: "{{ $pos.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
-    oauthUrl: "{{ $pos.oauth_url | default $pos.api_url | default "https://loyverse-oauth.ttmenus.com" }}",
+    apiUrl: {{ $posApi | jsonify | safeJS }},
+    oauthUrl: {{ $posOauth | jsonify | safeJS }},
     clientId: "{{ $posClient }}",
     storeId: "{{ $pos.store_id | default "" }}",
     syncMenu: {{ default false $pos.sync_menu }},
@@ -1321,7 +1330,7 @@ window.POS_CONFIG = {
     itemMapping: {{ $posMap | jsonify | safeJS }}
 };
 </script>
-<script src="/js/pos-integration.js?v=catalog-4" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/pos-integration.js" }}" defer></script>
 {{- end -}}
 
 {{- $osvc := site.Params.orderService | default dict -}}

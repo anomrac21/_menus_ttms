@@ -28,6 +28,15 @@
     );
   }
 
+  function loyverseServiceUrl(c) {
+    if (window.posIntegration && typeof window.posIntegration.serviceBase === 'function') {
+      return window.posIntegration.serviceBase();
+    }
+    var raw = String((c && (c.oauthUrl || c.apiUrl)) || '').trim();
+    if (/^https?:\/\//i.test(raw) && raw.indexOf('{{') === -1) return raw.replace(/\/$/, '');
+    return 'https://loyverse-oauth.ttmenus.com';
+  }
+
   function cmsApiBase() {
     var base = (window.CMS_API_URL || '').replace(/\/+$/, '');
     if (base) return base;
@@ -949,8 +958,8 @@
         var body = {
           enabled: !!($('posEnabledCb') && $('posEnabledCb').checked),
           provider: 'loyverse',
-          api_url: c.apiUrl || c.oauthUrl || 'https://loyverse-oauth.ttmenus.com',
-          oauth_url: c.oauthUrl || c.apiUrl || 'https://loyverse-oauth.ttmenus.com',
+          api_url: loyverseServiceUrl(c),
+          oauth_url: loyverseServiceUrl(c),
           store_id: ($('posStoreSelect') && $('posStoreSelect').value) || c.storeId || '',
           sync_menu: !!c.syncMenu,
           auto_process_orders: mode === 'direct',

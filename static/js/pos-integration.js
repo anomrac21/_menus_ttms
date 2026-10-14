@@ -10,9 +10,38 @@
     return global.POS_CONFIG || {};
   }
 
+  function usableServiceUrl(value) {
+    var s = String(value || '').trim();
+    if (!s || s.indexOf('{{') !== -1 || s.indexOf('}}') !== -1) return '';
+    if (!/^https?:\/\//i.test(s)) return '';
+    return s.replace(/\/$/, '');
+  }
+
   function apiBase() {
     var c = cfg();
-    return String(c.apiUrl || c.oauthUrl || 'https://loyverse-oauth.ttmenus.com').replace(/\/$/, '');
+    return (
+      usableServiceUrl(c.apiUrl) ||
+      usableServiceUrl(c.oauthUrl) ||
+      'https://loyverse-oauth.ttmenus.com'
+    );
+  }
+
+  function readJson(res, label) {
+    return res.text().then(function (text) {
+      var raw = String(text || '').trim();
+      var data = null;
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          throw new Error(label + ' returned a page instead of data (' + res.status + ')');
+        }
+      }
+      if (!res.ok) {
+        throw new Error((data && (data.error || data.message)) || label + ' failed (' + res.status + ')');
+      }
+      return data || {};
+    });
   }
 
   function clientId() {
@@ -307,11 +336,7 @@
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify(body),
         }).then(function (res) {
-          return res.json().then(function (data) {
-            if (!res.ok) {
-              console.warn('[POS] order failed', res.status, data);
-              return { ok: false, status: res.status, data: data };
-            }
+          return readJson(res, 'Loyverse order').then(function (data) {
             console.log('[POS] receipt created', data);
             return { ok: true, data: data };
           });
@@ -331,10 +356,7 @@
       return fetch(apiBase() + withClientQuery('/api/v1/loyverse/status'), {
         headers: authHeaders(),
       }).then(function (r) {
-        return r.json().then(function (d) {
-          if (!r.ok) throw new Error((d && d.error) || 'status failed');
-          return d;
-        });
+        return readJson(r, 'Loyverse link check');
       });
     },
 
@@ -350,10 +372,7 @@
       return fetch(apiBase() + path, {
         headers: authHeaders(),
       }).then(function (r) {
-        return r.json().then(function (d) {
-          if (!r.ok) throw new Error((d && d.error) || 'connect failed');
-          return d;
-        });
+        return readJson(r, 'Loyverse connect');
       });
     },
 
@@ -363,10 +382,7 @@
       return fetch(apiBase() + withClientQuery('/api/v1/loyverse/stores'), {
         headers: authHeaders(),
       }).then(function (r) {
-        return r.json().then(function (d) {
-          if (!r.ok) throw new Error((d && d.error) || 'stores failed');
-          return d;
-        });
+        return readJson(r, 'Loyverse stores');
       });
     },
 
@@ -379,10 +395,7 @@
       return fetch(apiBase() + path, {
         headers: authHeaders(),
       }).then(function (r) {
-        return r.json().then(function (d) {
-          if (!r.ok) throw new Error((d && d.error) || 'items failed');
-          return d;
-        });
+        return readJson(r, 'Loyverse items');
       });
     },
 
@@ -395,13 +408,11 @@
       return fetch(apiBase() + path, {
         headers: authHeaders(),
       }).then(function (r) {
-        return r.json().then(function (d) {
-          if (!r.ok) throw new Error((d && d.error) || 'categories failed');
-          return d;
-        });
+        return readJson(r, 'Loyverse categories');
       });
     },
 
+    serviceBase: apiBase,
     resolveVariantId: resolveVariantId,
     buildLinesFromOrder: buildLinesFromOrder,
   };
