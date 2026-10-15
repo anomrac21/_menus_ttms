@@ -562,9 +562,9 @@
     var keepAdsPlaceholder =
       adsPlaceholder && !adsPlaceholder.querySelector('.ads-reels-slide');
 
-    while (track.firstChild) {
-      track.removeChild(track.firstChild);
-    }
+    Array.from(track.childNodes).forEach(function (child) {
+      if (child.parentNode === track) track.removeChild(child);
+    });
 
     var insertedAdsPlaceholder = false;
     slides.forEach(function (slide) {

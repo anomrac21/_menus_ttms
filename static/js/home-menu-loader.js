@@ -843,24 +843,48 @@
         if (isPromoSectionHeader(header)) return;
         var slug = header.getAttribute('data-section-slug') || '';
         var markupCount = getTargetItemCount(header);
-        var items = (grouped && grouped[slug]) || [];
+        var items = itemsForSection(slug, grouped);
         if (!items.length && markupCount > 0) {
-          items = itemsForSectionLoose(slug);
+          delete header.dataset.homeMenuLoaded;
+          header.setAttribute('aria-busy', 'true');
+          return;
         }
-        var count = items.length || markupCount;
-        sectionItems.set(header, items);
-        header.setAttribute('data-item-count', String(count));
-        ensureSlotCount(header, items.length);
-        header.dataset.homeMenuReserved = '1';
-        header.dataset.homeMenuLoaded = '1';
-        header.removeAttribute('aria-busy');
-        finalizeSectionItemCount(header, count);
+        bindSectionItems(header, items);
       });
       syncSectionVisibilityForLocation(grouped || {});
     });
     hydrateOpeningSections();
     scheduleHydrationPump();
     if (Object.keys(pinnedMenuUrls).length) hydrateHomeMenuForUrls(Object.keys(pinnedMenuUrls));
+  }
+
+  function bindSectionItems(header, items) {
+    var list = items || [];
+    sectionItems.set(header, list);
+    header.setAttribute('data-item-count', String(list.length));
+    ensureSlotCount(header, list.length);
+    header.dataset.homeMenuReserved = '1';
+    header.dataset.homeMenuLoaded = '1';
+    header.removeAttribute('aria-busy');
+    finalizeSectionItemCount(header, list.length);
+  }
+
+  function restoreSectionSlides() {
+    var track = getTrack();
+    if (!track || !rawMenuItems || !rawMenuItems.length) return;
+    withStableScroll(function () {
+      track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+        if (isPromoSectionHeader(header)) return;
+        var slug = header.getAttribute('data-section-slug') || '';
+        var items = sectionItems.get(header);
+        if (!items || !items.length) items = itemsForSection(slug, menuBySection);
+        if (!items.length) return;
+        var nodes = sectionSlideNodes(header);
+        if (nodes.length >= items.length && header.dataset.homeMenuLoaded === '1') return;
+        bindSectionItems(header, items);
+        hydrateSectionNow(header);
+      });
+    });
   }
 
   function getConfigRoot() {
@@ -1233,11 +1257,33 @@
 
   function itemsForSectionLoose(slug) {
     var found = [];
+    var located = [];
+    var loc = activeLocationSlug();
+    var multi = multiLocationMenusEnabled();
     (rawMenuItems || []).forEach(function (item) {
       if (!item || !slug || item.section !== slug || item.section === 'promotions') return;
       found.push(item);
+      if (!multi || !loc || !item.location_slug || item.location_slug === loc) located.push(item);
     });
-    return found;
+    return located.length ? located : found;
+  }
+
+  function itemsForSection(slug, grouped) {
+    var listed = grouped && slug && grouped[slug];
+    if (listed && listed.length) return listed.slice();
+    return itemsForSectionLoose(slug);
+  }
+
+  function headersExpectItems() {
+    var track = getTrack();
+    if (!track) return false;
+    var headers = track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]');
+    var i;
+    for (i = 0; i < headers.length; i++) {
+      if (isPromoSectionHeader(headers[i])) continue;
+      if (getTargetItemCount(headers[i]) > 0) return true;
+    }
+    return false;
   }
 
   function groupMenuItems(items) {
@@ -1275,26 +1321,31 @@
   }
 
   function fetchMenuItems(apiUrl) {
-    if (rawMenuItems) {
+    if (rawMenuItems && rawMenuItems.length) {
       menuBySection = groupMenuItems(rawMenuItems);
       return Promise.resolve(menuBySection);
     }
     if (fetchPromise) return fetchPromise;
 
     var fetchUrl = apiUrlWithoutLocationQuery(apiUrl);
-    fetchPromise = fetch(fetchUrl, { credentials: 'same-origin' })
+    fetchPromise = fetch(fetchUrl, { credentials: 'same-origin', cache: 'no-cache' })
       .then(function (response) {
         if (!response.ok) throw new Error('Menu items fetch failed: ' + response.status);
         return response.json();
       })
       .then(function (payload) {
-        rawMenuItems = payload.menu_items || [];
+        var list = payload.menu_items || [];
+        if (!list.length && headersExpectItems()) {
+          throw new Error('Menu catalog was empty');
+        }
+        rawMenuItems = list;
         window.menuItemsCache = rawMenuItems;
         menuBySection = groupMenuItems(rawMenuItems);
         return menuBySection;
       })
       .catch(function (error) {
         fetchPromise = null;
+        rawMenuItems = null;
         console.error('Home menu loader:', error);
         throw error;
       });
@@ -1441,14 +1492,14 @@
 
   function renderSectionAfterHeader(header, items) {
     if (!header || header.dataset.homeMenuLoaded === '1') return;
-    var list = items || [];
-    sectionItems.set(header, list);
-    header.setAttribute('data-item-count', String(list.length));
-    ensureSlotCount(header, list.length);
-    header.dataset.homeMenuReserved = '1';
-    header.dataset.homeMenuLoaded = '1';
-    header.removeAttribute('aria-busy');
-    finalizeSectionItemCount(header, list.length);
+    var slug = header.getAttribute('data-section-slug') || '';
+    var list = items && items.length ? items : itemsForSection(slug, menuBySection);
+    var markupCount = getTargetItemCount(header);
+    if (!list.length && markupCount > 0) {
+      header.setAttribute('aria-busy', 'true');
+      return;
+    }
+    bindSectionItems(header, list);
     if (header.dataset.homeMenuPriority === '1') {
       delete header.dataset.homeMenuPriority;
       hydrateSectionNow(header, list.length);
@@ -1650,12 +1701,31 @@
     beginCatalogPrepare(config);
   }
 
+  var catalogRetries = 0;
+
   function beginCatalogPrepare(config) {
     var gen = prepareGeneration;
     fetchMenuItems(config.apiUrl).then(function (grouped) {
       if (gen !== prepareGeneration || !loaderConfig) return;
+      catalogRetries = 0;
       prepareAllSections(grouped);
-    }).catch(function () { /* fetchMenuItems already logs */ });
+      restoreSectionSlides();
+    }).catch(function () {
+      if (gen !== prepareGeneration || !loaderConfig) return;
+      if (catalogRetries >= 2) {
+        var track = getTrack();
+        if (!track) return;
+        track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
+          header.removeAttribute('aria-busy');
+        });
+        return;
+      }
+      catalogRetries += 1;
+      window.setTimeout(function () {
+        if (gen !== prepareGeneration || !loaderConfig) return;
+        beginCatalogPrepare(config);
+      }, 700);
+    });
   }
 
   function initHomeMenuLoader() {
@@ -1695,6 +1765,7 @@
     scrollMotion.timer = 0;
     menuBySection = null;
     rawMenuItems = null;
+    catalogRetries = 0;
     pinnedMenuUrls = {};
     fetchPromise = null;
     loaderStarted = false;
@@ -1759,6 +1830,7 @@
     observeSectionTitleCounts();
     observeHeaderCounts();
     scheduleProximityCheck();
+    restoreSectionSlides();
   });
 
   window.addEventListener('menuReelsUpdated', function () {
