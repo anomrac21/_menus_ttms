@@ -1587,6 +1587,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function buildSectionPayloadFromState() {
     if (!selectedInfo || !selectedElement) return null;
+    var fromHeader = sectionContentPathFromHeader(selectedElement);
+    if (fromHeader) selectedInfo.contentPath = fromHeader;
     var contentPath = (selectedInfo.contentPath || '').trim();
     if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || contentPath.slice(-'_index.md'.length) !== '_index.md') return null;
     var title = sectionTitleForPayload(selectedElement);
@@ -1741,10 +1743,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
+  function sectionPermalinkFromHeader(header) {
+    if (!header || !header.querySelector) return '';
+    var link = header.querySelector(
+      'a.menu-header__link[href], a.menu-header__title-link[href], .headerstyle h2 a[href], h2 a[href], h1 a[href]'
+    );
+    var href = link ? String(link.getAttribute('href') || '') : '';
+    if (!href || href.charAt(0) === '#') return '';
+    try {
+      if (/^https?:/i.test(href)) href = new URL(href, window.location.origin).pathname || '';
+    } catch (e) {
+      href = href.replace(/^https?:\/\/[^/]+/i, '');
+    }
+    href = href.split('?')[0].split('#')[0].replace(/\\/g, '/');
+    if (!href) return '';
+    if (href.charAt(0) !== '/') href = '/' + href;
+    return href.replace(/\/+$/, '') + '/';
+  }
+
+  function sectionContentPathFromHeader(header) {
+    if (!header || !header.getAttribute) return '';
+    var stored = String(header.getAttribute('data-content-path') || '')
+      .trim()
+      .replace(/\\/g, '/');
+    if (
+      stored.indexOf('content/') === 0 &&
+      /\/_index\.md$/i.test(stored) &&
+      stored.indexOf('...') === -1
+    ) {
+      return stored;
+    }
+    var parts = sectionPermalinkFromHeader(header).split('/').filter(Boolean);
+    if (parts.length) return 'content/' + parts.join('/') + '/_index.md';
+    var slug = String(header.getAttribute('data-section-slug') || '').replace(/^\/+|\/+$/g, '');
+    if (!slug) return '';
+    return 'content/' + slug + '/_index.md';
+  }
+
   function buildSectionPayloadFromHeader(header) {
     if (!header) return null;
+    var contentPath = sectionContentPathFromHeader(header);
+    if (!contentPath) return null;
     var slug = (header.getAttribute('data-section-slug') || '').trim();
-    if (!slug) return null;
     var titleEl = header.querySelector('.headerstyle h2 a, h2.center.title a, h2 a, h1, h2');
     var title = titleEl ? (titleEl.textContent || '').trim() : slug;
     var weightVal = parseInt(header.getAttribute('data-weight') || '0', 10);
@@ -1752,7 +1792,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     return {
       kind: 'section',
       clientId: CMS_CLIENT_ID,
-      contentPath: 'content/' + slug + '/_index.md',
+      contentPath: contentPath,
       siteConfigPath: CMS_CLIENT_ID + '/hugo.toml',
       frontMatter: (function () {
         var fm = {
@@ -2899,8 +2939,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     var newSlug = uniqueMenuItemSlugInSection(doc, sectionSlug, baseSlug, selectedElement);
     var oldSlug = selectedElement.getAttribute('data-dashboard-new-item-id') || '';
     var oldPath = (selectedInfo.contentPath || '').trim();
-    var newPath = 'content/' + sectionSlug + '/' + newSlug + '.md';
-    var newItemUrl = '/' + sectionSlug + '/' + newSlug + '/';
+    var sectionDir = header && sectionContentPathFromHeader(header)
+      ? sectionContentPathFromHeader(header).replace(/\/_index\.md$/i, '')
+      : 'content/' + sectionSlug;
+    var newPath = sectionDir + '/' + newSlug + '.md';
+    var newItemUrl = '/' + sectionDir.replace(/^content\//, '') + '/' + newSlug + '/';
     if (oldPath === newPath && oldSlug === newSlug) return;
 
     if (oldPath && draftContentPaths.has(oldPath)) {
@@ -3034,7 +3077,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       seenSlugs[slug] = true;
       var h2a = header.querySelector('.headerstyle h2 a, h2.center.title a, h2 a');
       var catTitle = h2a ? (h2a.textContent || '').trim() : slug;
-      var catUrl = h2a ? (h2a.getAttribute('href') || '').trim() : '';
+      var catUrl = sectionPermalinkFromHeader(header);
       if (!catUrl && slug) catUrl = '/' + slug + '/';
       var w = parseInt(header.getAttribute('data-weight') || String(index), 10);
       if (isNaN(w)) w = index;
@@ -8377,7 +8420,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var sectionTitle = sectionTitleEl ? getTextContent(sectionTitleEl) : sectionHeader.getAttribute('data-reel-section') || '';
         var sectionDescEl = sectionHeader.querySelector('.menu-summary');
         var sectionDesc = sectionDescEl ? getTextContent(sectionDescEl) : '';
-        var sectionContentPath = 'content/' + sectionSlug + '/_index.md';
+        var sectionContentPath = sectionContentPathFromHeader(sectionHeader);
         showEditForm({
           element: sectionHeader,
           type: 'Section header',
@@ -8643,9 +8686,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       return 'content' + trimmed + '.md';
     }
     if (el.classList && el.classList.contains('menu-header')) {
-      var sectionSlug = el.getAttribute('data-section-slug') || '';
-      if (!sectionSlug) return null;
-      return 'content/' + sectionSlug + '/_index.md';
+      return sectionContentPathFromHeader(el);
     }
     if (isPromotionReelsSlide(el) || isPromotionPreviewPanel(el)) {
       var win = iframe && iframe.contentWindow;
@@ -8730,9 +8771,19 @@ document.addEventListener('DOMContentLoaded', async function() {
       var esc = itemUrl.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
       return doc.querySelector('.menu-item-card[data-item-url="' + esc + '"]');
     }
-    var secMatch = path.match(/^content\/([^/]+)\/_index\.md$/i);
+    var secMatch = path.match(/^content\/(.+)\/_index\.md$/i);
     if (secMatch) {
-      return doc.querySelector('.menu-header[data-section-slug="' + secMatch[1].replace(/"/g, '\\"') + '"]');
+      var escPath = path.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      var byPath = doc.querySelector('.menu-header[data-content-path="' + escPath + '"]');
+      if (byPath) return byPath;
+      var last = secMatch[1].split('/').filter(Boolean).pop();
+      if (!last) return null;
+      var headers = doc.querySelectorAll('.menu-header[data-section-slug="' + last.replace(/"/g, '\\"') + '"]');
+      for (var hi = 0; hi < headers.length; hi++) {
+        var storedPath = headers[hi].getAttribute('data-content-path') || '';
+        if (!storedPath || storedPath === path) return headers[hi];
+      }
+      return headers.length === 1 ? headers[0] : null;
     }
     var promoMatch = path.match(/^content\/promotions\/([^/]+)\.md$/i);
     if (promoMatch) {
@@ -8747,8 +8798,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function currentSectionSlugFromEdit() {
     if (selectedInfo && selectedInfo.contentPath) {
-      var m = String(selectedInfo.contentPath).match(/^content\/([^/]+)\/_index\.md$/i);
-      if (m) return m[1].toLowerCase();
+      var m = String(selectedInfo.contentPath).match(/^content\/(.+)\/_index\.md$/i);
+      if (m) {
+        var bits = m[1].split('/').filter(Boolean);
+        if (bits.length) return bits[bits.length - 1].toLowerCase();
+      }
     }
     if (selectedElement && selectedElement.classList && selectedElement.classList.contains('menu-header')) {
       return sectionSlugFromHeaderEl(selectedElement);
@@ -8759,10 +8813,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   function contentPathInSection(contentPath, sectionSlug) {
     if (!contentPath || !sectionSlug || contentPath === '__unsaved__') return false;
     var slug = String(sectionSlug).toLowerCase();
-    var p = String(contentPath).replace(/\\/g, '/');
-    if (p === 'content/' + slug + '/_index.md') return true;
-    if (p.indexOf('content/' + slug + '/') === 0 && p.endsWith('.md') && !p.endsWith('/_index.md')) return true;
-    return false;
+    var p = String(contentPath).replace(/\\/g, '/').toLowerCase();
+    if (p === 'content/' + slug + '/_index.md' || p.endsWith('/' + slug + '/_index.md')) return true;
+    var marker = '/' + slug + '/';
+    var idx = p.indexOf(marker);
+    if (idx < 0 || !p.endsWith('.md') || p.endsWith('/_index.md')) return false;
+    return p.slice(idx + marker.length).indexOf('/') === -1;
   }
 
   function sectionHeaderDescriptionText(headerEl) {
@@ -9147,7 +9203,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   function enrichSectionEmbedChanges(changes, sectionSlug) {
-    var sectionPath = 'content/' + sectionSlug + '/_index.md';
+    var sectionPath =
+      (selectedElement && sectionContentPathFromHeader(selectedElement)) ||
+      'content/' + sectionSlug + '/_index.md';
     return changes.map(function(change) {
       var copy = Object.assign({}, change);
       if (change.path === sectionPath || (change.path === '__unsaved__' && selectedInfo && selectedInfo.contentType === 'section-header')) {
@@ -9182,7 +9240,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (kind === 'section') {
       var slug = currentSectionSlugFromEdit();
       if (!slug) return [];
-      var sectionPath = 'content/' + slug + '/_index.md';
+      var sectionPath =
+        (selectedElement && sectionContentPathFromHeader(selectedElement)) ||
+        'content/' + slug + '/_index.md';
       var filtered = changes.filter(function(c) {
         if (c.path === '__unsaved__') {
           return editFormDirty && selectedInfo && selectedInfo.contentType === 'section-header';
@@ -10310,16 +10370,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 var title = titleEl ? getTextContent(titleEl) : '';
                 var descEl = header.querySelector('.menu-summary');
                 var desc = descEl ? getTextContent(descEl) : '';
-                var sectionSlug = header.getAttribute('data-section-slug') || '';
-                if (!sectionSlug) {
-                  var sectionLink = header.querySelector('h2 a[href], .menu-header a[href]');
-                  if (sectionLink) {
-                    var href = (sectionLink.getAttribute('href') || '').replace(/^#/, '');
-                    var segs = href.split('/').filter(Boolean);
-                    if (segs.length) sectionSlug = segs[0];
-                  }
-                }
-                var contentPath = sectionSlug ? 'content/' + sectionSlug + '/_index.md' : 'content/.../_index.md';
+                var contentPath = sectionContentPathFromHeader(header) || 'content/.../_index.md';
                 showEditForm({ element: header, type: 'Section header', contentType: 'section-header', contentPath: contentPath, title: title, description: desc });
                 return;
               }

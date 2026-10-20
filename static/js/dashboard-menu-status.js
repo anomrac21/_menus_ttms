@@ -688,7 +688,17 @@
 
   function versionMenuData(v) {
     if (!v) return null;
-    return v.menu_data || v.menuData || v.MenuData || null;
+    var md = v.menu_data || v.menuData || v.MenuData || null;
+    var guard = 0;
+    while (md && typeof md === 'object' && guard++ < 4) {
+      var cats = md.categories || md.Categories;
+      var items = md.menuItems || md.menu_items || md.MenuItems;
+      if ((Array.isArray(cats) && cats.length) || (Array.isArray(items) && items.length)) break;
+      var nested = md.menu_data || md.menuData || md.MenuData;
+      if (!nested || typeof nested !== 'object' || Array.isArray(nested)) break;
+      md = nested;
+    }
+    return md;
   }
 
   function versionSummaryFromRecord(v) {
@@ -718,6 +728,13 @@
 
   function normalizeMenuUrl(url) {
     var u = String(url || '').trim();
+    if (!u || u.charAt(0) === '#') return '';
+    try {
+      if (/^https?:/i.test(u)) u = new URL(u).pathname || '';
+    } catch (e) {
+      u = u.replace(/^https?:\/\/[^/]+/i, '');
+    }
+    u = u.split('?')[0].split('#')[0].replace(/\\/g, '/');
     if (!u) return '';
     if (u.charAt(0) !== '/') u = '/' + u;
     return u.replace(/\/+$/, '') + '/';
@@ -725,7 +742,13 @@
 
   function slugFromMenuUrl(url) {
     var parts = normalizeMenuUrl(url).split('/').filter(Boolean);
-    return parts[0] || '';
+    return parts.length ? parts[parts.length - 1] : '';
+  }
+
+  function sectionContentPathFromMenuUrl(url) {
+    var parts = normalizeMenuUrl(url).split('/').filter(Boolean);
+    if (!parts.length) return '';
+    return 'content/' + parts.join('/') + '/_index.md';
   }
 
   function menuItemUrlToContentPath(url) {
@@ -766,13 +789,17 @@
     }
     var cats = md.categories || md.Categories || [];
     cats.forEach(function (cat) {
-      var slug = slugFromMenuUrl(cat.url || cat.URL) || slugifyMenuTitle(cat.title || cat.Title);
-      if (!slug) return;
-      var fm = { title: cat.title || cat.Title || slug };
+      if (!cat || typeof cat !== 'object') return;
+      var slug = slugifyMenuTitle(cat.title || cat.Title);
+      var path =
+        sectionContentPathFromMenuUrl(cat.url || cat.URL) ||
+        (slug ? 'content/' + slug + '/_index.md' : '');
+      if (!path) return;
+      var fm = { title: cat.title || cat.Title || slug || 'Section' };
       var w = cat.weight != null ? cat.weight : cat.Weight;
       if (w != null) fm.weight = w;
-      map['content/' + slug + '/_index.md'] = {
-        contentPath: 'content/' + slug + '/_index.md',
+      map[path] = {
+        contentPath: path,
         frontMatter: fm,
         body: String(cat.summary || cat.Summary || '').trim(),
       };
@@ -781,8 +808,11 @@
     items.forEach(function (item) {
       var path = menuItemUrlToContentPath(item.url || item.URL);
       if (!path) {
+        var catParts = normalizeMenuUrl(item.categoryUrl || item.CategoryURL)
+          .split('/')
+          .filter(Boolean);
         var catSlug =
-          slugFromMenuUrl(item.categoryUrl || item.CategoryURL) ||
+          (catParts.length ? catParts.join('/') : '') ||
           slugifyMenuTitle(item.category || item.Category) ||
           'menu';
         var itemSlug = slugifyMenuTitle(item.title || item.Title || item.id || item.ID);
@@ -2355,21 +2385,10 @@
         if (draftLoadState === 'ok') renderDraftStatusSummary();
         return Promise.resolve();
       }
-      var snapVer = getSelectedSnapshotVersion();
-      var md =
-        snapVer && (snapVer.menu_data || snapVer.menuData || snapVer.MenuData);
-      var snapshotMap = buildSnapshotLiveMapFromMenuData(md);
       applyProvisionalDraftAnalyses();
       draftAnalysisInFlight = fetchLiveContentFilesBatch(paths)
         .then(function (liveByPath) {
-          var merged = {};
-          Object.keys(liveByPath || {}).forEach(function (p) {
-            merged[p] = liveByPath[p];
-          });
-          Object.keys(snapshotMap).forEach(function (p) {
-            merged[p] = snapshotMap[p];
-          });
-          applyDraftAnalysesFromLiveMap(merged);
+          applyDraftAnalysesFromLiveMap(liveByPath || {});
           renderDraftStatusSummary();
         })
         .catch(function (err) {
@@ -2566,7 +2585,10 @@
         return;
       }
       if (!currentSnapshotVersion()) {
-        clearDraftsWithoutSnapshot();
+        cachedPreviews = serverPreviews.slice();
+        pruneOmittedDraftIds();
+        syncPublishButton();
+        renderDraftStatusSummary();
         return;
       }
       var version = currentSnapshotVersion();

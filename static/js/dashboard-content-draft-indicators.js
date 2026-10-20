@@ -189,7 +189,16 @@
       return 'content' + itemUrl.replace(/\/$/, '') + '.md';
     }
     if (el.classList && el.classList.contains('menu-header')) {
-      var sectionSlug = el.getAttribute('data-section-slug') || '';
+      var stored = String(el.getAttribute('data-content-path') || '').trim().replace(/\\/g, '/');
+      if (stored.indexOf('content/') === 0 && /\/_index\.md$/i.test(stored)) return stored;
+      var link = el.querySelector(
+        'a.menu-header__link[href], .headerstyle h2 a[href], h2 a[href], h1 a[href]'
+      );
+      var href = link ? String(link.getAttribute('href') || '') : '';
+      href = href.split('?')[0].split('#')[0].replace(/^https?:\/\/[^/]+/i, '');
+      var parts = href.split('/').filter(Boolean);
+      if (parts.length) return 'content/' + parts.join('/') + '/_index.md';
+      var sectionSlug = String(el.getAttribute('data-section-slug') || '').replace(/^\/+|\/+$/g, '');
       return sectionSlug ? 'content/' + sectionSlug + '/_index.md' : null;
     }
     if (el.classList && el.classList.contains('ads-reels-slide')) {

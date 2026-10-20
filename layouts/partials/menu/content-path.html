@@ -1,0 +1,18 @@
+{{- /*
+  Repo path for this page, including a location prefix.
+  /san-fernando/starter/ → content/san-fernando/starter/_index.md
+*/ -}}
+{{- $path := "" -}}
+{{- with .File -}}
+  {{- $path = replace .Path "\\" "/" -}}
+{{- end -}}
+{{- if not $path -}}
+  {{- $raw := "" -}}
+  {{- with .RelPermalink -}}{{- $raw = . -}}{{- end -}}
+  {{- $path = $raw | replaceRE `^/+` "" | replaceRE `/+$` "" -}}
+  {{- if $path -}}{{- $path = printf "%s/_index.md" $path -}}{{- end -}}
+{{- end -}}
+{{- if and $path (not (strings.HasPrefix $path "content/")) -}}
+  {{- $path = printf "content/%s" $path -}}
+{{- end -}}
+{{- return $path -}}

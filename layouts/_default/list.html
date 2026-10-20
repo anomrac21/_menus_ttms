@@ -1,5 +1,6 @@
 {{ define "main" }}
 {{- $secSlug := partial "menu/section-slug.html" . -}}
+{{- $contentPath := partial "menu/content-path.html" . -}}
 {{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $itemCount := len .RegularPages -}}
 {{- $title := .LinkTitle | default .Title -}}
@@ -8,7 +9,7 @@
 <div id="menu-reels-track" class="menu-reels-track">
   <div class="main-menu-bg {{ $title }}">
     <div class="main-menu {{ $title }} item">
-      <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
+      <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}"{{ with $contentPath }} data-content-path="{{ . }}"{{ end }} data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
         <a class="menu-anchor" id="{{ $title }}"></a>
         {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" $title "sectionSlug" $secSlug "imagePrimary" (index .Params.images "primary")) }}
         <div class="menu-header__link">

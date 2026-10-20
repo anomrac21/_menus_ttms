@@ -53,11 +53,12 @@
   {{ $title:= default .LinkTitle .Params.title }}
   {{ $titleurl := .RelPermalink }}
   {{ $secSlug := partial "menu/section-slug.html" . }}
+  {{ $contentPath := partial "menu/content-path.html" . }}
   {{ if and (eq $title ("Promotions")) (not $advertisementsRendered) }}
     {{ $promoCount := len .RegularPages }}
     <div class="main-menu-bg {{ $title }}">
       <div class="main-menu {{ $title }} item">
-        <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}" data-promo-section="1" data-item-count="{{ $promoCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
+        <section class="menu-header menu-reels-slide menu-reels-slide--section-title" data-reel-section="{{ $title }}" data-section-slug="{{ $secSlug }}"{{ with $contentPath }} data-content-path="{{ . }}"{{ end }} data-promo-section="1" data-item-count="{{ $promoCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}">
           <a class="menu-anchor" id="{{ $title }}"></a>
           {{ partial "components/menu-header-actions-row.html" (dict "url" $titleurl "title" $title "sectionSlug" $secSlug "imagePrimary" (index .Params.images "primary")) }}
           <a class="menu-header__link" href="{{ $titleurl }}">
@@ -94,9 +95,10 @@
   {{ if ne $title ("Promotions") }}
     {{ $itemCount := len .RegularPages }}
     {{ $secSlug := partial "menu/section-slug.html" . }}
+    {{ $contentPath := partial "menu/content-path.html" . }}
     <div class="main-menu-bg {{ .LinkTitle }}">
       <div class="main-menu {{ .LinkTitle }} item">
-        <section class="menu-header menu-reels-slide" data-home-menu-lazy data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ $secSlug }}" data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}" aria-busy="true">
+        <section class="menu-header menu-reels-slide" data-home-menu-lazy data-reel-section="{{ .LinkTitle }}" data-section-slug="{{ $secSlug }}"{{ with $contentPath }} data-content-path="{{ . }}"{{ end }} data-item-count="{{ $itemCount }}" data-weight="{{ .Params.weight | default 0 }}" data-icon="{{ .Params.icon | default "" }}" data-images-secondary="{{ index .Params.images "secondary" | default "" }}" data-images-primary="{{ index .Params.images "primary" | default "" }}" aria-busy="true">
           <a class="menu-anchor" id="{{ .LinkTitle }}"></a>
           {{ partial "components/menu-header-actions-row.html" (dict "url" .RelPermalink "title" .LinkTitle "sectionSlug" $secSlug "imagePrimary" (index .Params.images "primary")) }}
           <a class="menu-header__link" href="{{ .RelPermalink }}">

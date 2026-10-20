@@ -23,7 +23,7 @@
     <button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>
   </div>
   {{- if eq $kind "section-header" -}}
-  <div class="menu-header" hidden data-section-slug="{{ .sectionSlug }}">
+  <div class="menu-header" hidden data-section-slug="{{ .sectionSlug }}"{{ with .sectionSlug }} data-content-path="content/{{ . }}/_index.md"{{ end }}>
     <h2><a href="/{{ .sectionSlug }}/">{{ $title }}</a></h2>
     <div class="menu-summary"></div>
     <div class="menu-item-actions" data-actions-kind="section-header" data-section-slug="{{ .sectionSlug }}" data-item-title="{{ $title }}"></div>
