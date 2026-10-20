@@ -1097,11 +1097,73 @@
     this._reelsImpressionObserver.observe(slide);
   },
 
+  _reelSlideShell(item, catalogIndex) {
+    const slide = document.createElement('article');
+    slide.className = 'ads-reels-slide';
+    slide.dataset.adId = item.ad.id;
+    slide.dataset.catalogIndex = String(catalogIndex);
+    slide.dataset.mediaState = 'empty';
+    return slide;
+  },
+
+  _mountReelSlideMedia(slide) {
+    if (!slide || slide.dataset.mediaState === 'ready') return;
+    const catalog = this._reelsCatalog;
+    const config = this._reelsConfig;
+    if (!catalog || !catalog.length || !config) return;
+    const i = parseInt(slide.dataset.catalogIndex || '', 10);
+    if (Number.isNaN(i)) return;
+    const item = catalog[((i % catalog.length) + catalog.length) % catalog.length];
+    if (!item) return;
+    this._reelsMediaSeq = (this._reelsMediaSeq || 0) + 1;
+    slide.innerHTML = '';
+    this.mountAdCreative(slide, item, config, {
+      mode: 'reel',
+      videoSuffix: `-reel-win-${i}-${this._reelsMediaSeq}`,
+      trackImpressionNow: false,
+    });
+    slide.dataset.mediaState = 'ready';
+    this.observeReelSlide(slide);
+  },
+
+  _unloadReelSlideMedia(slide) {
+    if (!slide || slide.dataset.mediaState !== 'ready') return;
+    slide.querySelectorAll('video').forEach((video) => {
+      video.pause();
+      video.removeAttribute('src');
+      video.querySelectorAll('source').forEach((source) => source.removeAttribute('src'));
+      try { video.load(); } catch (err) { /* ignore */ }
+    });
+    slide.innerHTML = '';
+    slide.dataset.mediaState = 'empty';
+  },
+
+  /**
+   * Keep network use on the slide in view and the next 3 slots.
+   * Shells stay in the track so scroll position does not jump.
+   */
+  _syncReelMediaWindow(track, forcedPos) {
+    if (!track) return;
+    const slides = Array.from(track.children);
+    if (!slides.length) return;
+    let domPos = Number.isInteger(forcedPos) ? forcedPos : -1;
+    if (domPos < 0) {
+      const dom = this._getDominantReelsSlide(track);
+      domPos = dom ? slides.indexOf(dom) : 0;
+    }
+    if (domPos < 0) domPos = 0;
+    const ahead = 3;
+    slides.forEach((slide, pos) => {
+      const delta = pos - domPos;
+      if (delta >= 0 && delta <= ahead) this._mountReelSlideMedia(slide);
+      else this._unloadReelSlideMedia(slide);
+    });
+  },
+
   appendMoreReelSlides(n) {
     const track = document.getElementById('ads-reels-track');
     const catalog = this._reelsCatalog;
-    const config = this._reelsConfig;
-    if (!track || !catalog || !catalog.length || !config) return;
+    if (!track || !catalog || !catalog.length) return;
     const maxDom = 80;
     if (track.children.length >= maxDom) return;
 
@@ -1109,19 +1171,10 @@
       if (track.children.length >= maxDom) break;
       const ci = this._reelsAppendBase % catalog.length;
       const item = catalog[ci];
-      const slide = document.createElement('article');
-      slide.className = 'ads-reels-slide';
-      slide.dataset.adId = item.ad.id;
-      slide.dataset.catalogIndex = String(ci);
-      this.mountAdCreative(slide, item, config, {
-        mode: 'reel',
-        videoSuffix: `-reel-more-${this._reelsAppendBase}-${i}`,
-        trackImpressionNow: false,
-      });
-      track.appendChild(slide);
-      this.observeReelSlide(slide);
+      track.appendChild(this._reelSlideShell(item, ci));
       this._reelsAppendBase++;
     }
+    this._syncReelMediaWindow(track);
     this._syncReelsDominantMedia(track);
   },
 
@@ -1151,19 +1204,10 @@
     this._reelsAppendBase = 0;
 
     catalog.forEach((item, i) => {
-      const slide = document.createElement('article');
-      slide.className = 'ads-reels-slide';
-      slide.dataset.adId = item.ad.id;
-      slide.dataset.catalogIndex = String(i);
-      this.mountAdCreative(slide, item, config, {
-        mode: 'reel',
-        videoSuffix: `-reel-init-${i}`,
-        trackImpressionNow: false,
-      });
-      track.appendChild(slide);
-      this.observeReelSlide(slide);
+      track.appendChild(this._reelSlideShell(item, i));
       this._reelsAppendBase++;
     });
+    this._syncReelMediaWindow(track, Math.max(0, Math.min(startIndex, catalog.length - 1)));
 
     overlay.removeAttribute('hidden');
     overlay.classList.toggle('ads-reels-overlay--on-loader', !!options.onLoader);
@@ -1174,10 +1218,12 @@
     }
     this._reelsScrollHandler = () => {
       if (!track || overlay.hasAttribute('hidden')) return;
+      this._syncReelMediaWindow(track);
       this._syncReelsDominantMedia(track);
-      const threshold = window.innerHeight * 2;
-      if (track.scrollHeight - track.scrollTop - track.clientHeight < threshold) {
-        this.appendMoreReelSlides(4);
+      const slideH = track.clientHeight || window.innerHeight;
+      const remaining = track.scrollHeight - track.scrollTop - track.clientHeight;
+      if (track.scrollHeight > track.clientHeight && remaining < slideH * 3) {
+        this.appendMoreReelSlides(3);
       }
     };
     track.addEventListener('scroll', this._reelsScrollHandler, { passive: true });
@@ -1195,8 +1241,10 @@
       if (target) {
         target.scrollIntoView({ block: 'start' });
       }
+      this._syncReelMediaWindow(track);
       this._reelsScrollHandler();
       requestAnimationFrame(() => {
+        this._syncReelMediaWindow(track);
         this._syncReelsDominantMedia(track);
       });
     });
@@ -1599,26 +1647,57 @@
     });
   },
 
+  _slugifyPlace(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  },
+
   /**
-   * Load promotions from menu site's promotions/index.json
+   * Load promotions from menu site's promotions/index.json.
+   * Multi-location menus publish /{slug}/promotions/index.json instead of /promotions/index.json.
    */
   async loadMenuAds(menuUrl) {
     try {
-      const urls = [];
       const origin = this.resolveSiteOrigin();
-      if (origin) {
-        urls.push(`${origin}/promotions/index.json`);
-      }
-      if (menuUrl) {
-        const baseUrl = this.resolveMenuBaseUrl(menuUrl);
-        const remoteUrl = `${baseUrl}promotions/index.json`;
-        if (!urls.includes(remoteUrl)) {
-          urls.push(remoteUrl);
-        }
+      const menuBase = menuUrl ? this.resolveMenuBaseUrl(menuUrl).replace(/\/+$/, '') : '';
+      const root = (origin || menuBase || '').replace(/\/+$/, '');
+      let slugs = [];
+      if (root) {
+        try {
+          const idxRes = await fetch(`${root}/index.json`, {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            mode: 'cors',
+            credentials: 'omit',
+          });
+          if (idxRes.ok) {
+            const idx = await idxRes.json();
+            const locs = Array.isArray(idx.locations) ? idx.locations : [];
+            const seenSlug = new Set();
+            locs.forEach((loc) => {
+              const slug = this._slugifyPlace(loc && (loc.slug || loc.city));
+              if (!slug || seenSlug.has(slug)) return;
+              seenSlug.add(slug);
+              slugs.push(slug);
+            });
+          }
+        } catch (err) { /* fall through to the site-wide feed */ }
       }
 
-      let adsData = null;
+      const urls = [];
+      if (slugs.length > 1 && root) {
+        slugs.forEach((slug) => urls.push(`${root}/${encodeURIComponent(slug)}/promotions/index.json`));
+      } else if (root) {
+        urls.push(`${root}/promotions/index.json`);
+      }
+
+      let allAds = [];
       let lastStatus = 0;
+      let anyOk = false;
       for (const url of urls) {
         try {
           const response = await fetch(url, {
@@ -1628,11 +1707,18 @@
             credentials: 'omit',
             cache: 'no-store',
           });
-          if (response.ok) {
-            adsData = await response.json();
-            break;
+          if (!response.ok) {
+            lastStatus = response.status;
+            continue;
           }
-          lastStatus = response.status;
+          anyOk = true;
+          const adsData = await response.json();
+          let items = [];
+          if (Array.isArray(adsData)) items = adsData;
+          else if (adsData && typeof adsData === 'object') {
+            items = adsData.items || adsData.promotions || adsData.ads || adsData.data || [];
+          }
+          allAds = allAds.concat(items);
         } catch (err) {
           if (!window.__ttmsPromotionsFetchWarned) {
             console.debug('Promotions JSON unavailable:', url, err);
@@ -1640,7 +1726,7 @@
         }
       }
 
-      if (!adsData) {
+      if (!anyOk) {
         if (!window.__ttmsPromotionsFetchWarned) {
           window.__ttmsPromotionsFetchWarned = true;
           if (lastStatus === 404) {
@@ -1652,14 +1738,22 @@
         return [];
       }
       
-      let allAds = [];
-      if (Array.isArray(adsData)) {
-        allAds = adsData;
-      } else if (adsData && typeof adsData === 'object') {
-        allAds = adsData.items || adsData.promotions || adsData.ads || adsData.data || [];
-      }
-      
-      console.log(`✅ Found ${allAds.length} ad(s) in menu JSON`);
+      const seenOffer = new Set();
+      allAds = allAds.filter((ad) => {
+        const imgs = ad && Array.isArray(ad.images) ? ad.images : [];
+        const hasImage = imgs.some((img) => {
+          if (!img) return false;
+          if (typeof img === 'string') return !!img.trim();
+          return !!(img.image || img.image_url || img.url || img.src);
+        });
+        if (!hasImage) return false;
+        const key = `${ad && ad.title ? ad.title : ''}|${typeof imgs[0] === 'string' ? imgs[0] : ((imgs[0] && (imgs[0].image || imgs[0].image_url)) || '')}`;
+        if (seenOffer.has(key)) return false;
+        seenOffer.add(key);
+        return true;
+      });
+
+      console.log(`✅ Found ${allAds.length} promotion(s) with images`);
 
       const transformedAds = this.transformMenuAds(allAds);
       
@@ -1678,7 +1772,7 @@
         });
       });
       
-      return transformedAds;
+      return transformedAds.filter((ad) => ad.images && ad.images.length);
     } catch (error) {
       console.error('Error loading menu ads:', error);
       return [];

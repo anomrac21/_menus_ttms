@@ -17,6 +17,7 @@
       {{- $locationData := dict
           "address"  .address
           "city"     .city
+          "slug"     (default "" .slug)
           "island"   .island
           "subcategories"  .subcategories
           "orderingtables" .orderingtables
