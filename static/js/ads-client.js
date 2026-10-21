@@ -263,20 +263,37 @@
     }).filter((ad) => ad.images.length > 0);
   },
 
-  /** Merge menu + service ads, dedupe by id, shuffle for reels rotation. */
+  /**
+   * Same order for the loader and the page ad section: a menu promotion, then an
+   * ads-service clip, repeating. Each side is shuffled on its own first.
+   */
+  _interleaveReelAds(serviceAds, promoAds) {
+    const promoFirst = this._shuffleArray([].concat(promoAds || []));
+    const serviceFirst = this._shuffleArray([].concat(serviceAds || []));
+    const raw = [];
+    const mixCount = Math.max(promoFirst.length, serviceFirst.length);
+    for (let i = 0; i < mixCount; i++) {
+      if (i < promoFirst.length) raw.push(promoFirst[i]);
+      if (i < serviceFirst.length) raw.push(serviceFirst[i]);
+    }
+    return raw;
+  },
+
+  /** Dedupe menu promotions and service clips, then interleave them. */
   mergeAdSources(menuAds, serviceAds, adsServiceUrl) {
     const seen = new Set();
-    const merged = [];
-    const push = (ad) => {
+    const promos = [];
+    const service = [];
+    const push = (list, ad) => {
       if (!ad || !ad.images || ad.images.length === 0) return;
       const key = ad.id || `${ad.title || ''}:${ad.link_url || ''}`;
       if (seen.has(key)) return;
       seen.add(key);
-      merged.push(ad);
+      list.push(ad);
     };
-    (menuAds || []).forEach(push);
-    this.normalizeServiceAds(serviceAds, adsServiceUrl).forEach(push);
-    return this._shuffleArray(merged);
+    (menuAds || []).forEach((ad) => push(promos, ad));
+    this.normalizeServiceAds(serviceAds, adsServiceUrl).forEach((ad) => push(service, ad));
+    return this._interleaveReelAds(service, promos);
   },
 
   /**
@@ -634,10 +651,11 @@
     });
   },
 
-  prepareAdsForDisplay(ads) {
+  prepareAdsForDisplay(ads, options) {
     // Randomize each load (Instagram/reels style). If you want weight bias later,
     // do a weighted shuffle here instead of a pure shuffle.
-    const sorted = this._shuffleArray([...ads]);
+    // keepOrder preserves a promo/service mix that was already arranged.
+    const sorted = options && options.keepOrder ? [...ads] : this._shuffleArray([...ads]);
     const items = [];
     for (const ad of sorted) {
       if (!ad.images || ad.images.length === 0) continue;
@@ -1103,6 +1121,8 @@
     slide.dataset.adId = item.ad.id;
     slide.dataset.catalogIndex = String(catalogIndex);
     slide.dataset.mediaState = 'empty';
+    if (item.ad.title) slide.dataset.adTitle = item.ad.title;
+    if (item.linkUrl && item.linkUrl !== '#') slide.dataset.adUrl = item.linkUrl;
     return slide;
   },
 
@@ -1291,7 +1311,8 @@
     }
 
     // After closing reels, update the homepage preview to show the last viewed ad.
-    if (this.shouldUseReelsMode()) {
+    // Loader reels keep the preview strip that loaded underneath.
+    if (!wasLoaderReel && this.shouldUseReelsMode()) {
       this.updateReelsPreviewToCatalogIndex(this._reelsLastCatalogIndex);
     }
 
@@ -1377,7 +1398,7 @@
     }
   },
 
-  displayAdsReelsMode(ads, config) {
+  displayAdsReelsMode(ads, config, options) {
     try {
       const adsList = document.getElementById('ads-list');
       if (!adsList) {
@@ -1399,14 +1420,19 @@
         }
       }
 
-      const items = this.prepareAdsForDisplay(ads);
+      const items = this.prepareAdsForDisplay(ads, options);
       if (items.length === 0) {
         console.log('ℹ️ No displayable ads for reels preview');
         return;
       }
 
-      this._reelsCatalog = items;
-      this._reelsConfig = config;
+      if (this._loaderReelsOpen && this._loaderReelsRestore) {
+        this._loaderReelsRestore.catalog = items;
+        this._loaderReelsRestore.config = config;
+      } else {
+        this._reelsCatalog = items;
+        this._reelsConfig = config;
+      }
 
       const start = Math.max(0, Math.min(this._reelsLastCatalogIndex, items.length - 1));
       const n = Math.min(this.REELS_PREVIEW_COUNT, items.length);
@@ -1467,7 +1493,7 @@
   /**
    * Display ads in the list
    */
-  displayAds(ads, config) {
+  displayAds(ads, config, options) {
     try {
       const adsList = document.getElementById('ads-list');
       if (!adsList) {
@@ -1478,7 +1504,7 @@
       this.clearReelsPreviewClasses();
 
       if (this.shouldUseReelsMode()) {
-        this.displayAdsReelsMode(ads, config);
+        this.displayAdsReelsMode(ads, config, options);
         return;
       }
 
@@ -1780,6 +1806,29 @@
   },
 
   /**
+   * Show the shared promo/service mix. If the page reel is already open, rebuild
+   * it in place and keep the slide the viewer is on. The loader reel is left alone.
+   */
+  _displayReelAds(ads, config) {
+    const items = this.prepareAdsForDisplay(ads, { keepOrder: true });
+    if (!items.length) return false;
+    const overlay = document.getElementById('ads-reels-overlay');
+    const viewerOpen = !!(overlay && !overlay.hasAttribute('hidden') && !overlay.classList.contains('ads-reels-overlay--on-loader'));
+    let keepId = '';
+    if (viewerOpen) {
+      const track = document.getElementById('ads-reels-track');
+      const dom = track && this._getDominantReelsSlide(track);
+      keepId = (dom && dom.dataset.adId) || '';
+    }
+    this.displayAds(ads, config, { keepOrder: true });
+    if (viewerOpen) {
+      const idx = items.findIndex((item) => item.ad && item.ad.id === keepId);
+      this.openReelsViewer(idx >= 0 ? idx : 0, { userActivatedSound: !!this._reelsUserWantsSound });
+    }
+    return true;
+  },
+
+  /**
    * Load client-specific ads (menu JSON + ads-service), mixed in reels catalog.
    */
   async loadClientAds(clientId) {
@@ -1820,7 +1869,7 @@
           config.container.style.display = '';
           config.container.style.visibility = 'visible';
         }
-        this.displayAds(this.mergeAdSources(menuAds, [], adsServiceUrl), config);
+        this._displayReelAds(this.mergeAdSources(menuAds, [], adsServiceUrl), config);
       }
 
       let serviceAds = await clientServicePromise;
@@ -1845,7 +1894,7 @@
           config.container.style.display = '';
           config.container.style.visibility = 'visible';
         }
-        this.displayAds(allAds, config);
+        this._displayReelAds(allAds, config);
         window.dispatchEvent(new CustomEvent('adsPopulated'));
       } else if (menuAds.length === 0) {
         console.log(`ℹ️ No ads found for client ${resolvedClientId}`);
@@ -1902,13 +1951,25 @@
     if (this._loaderReelsOpen && document.body.classList.contains('ads-reels-open')) return true;
     var config = this.getConfig();
     var serviceUrl = (config && config.adsServiceUrl) || this.config.adsServiceUrl || 'https://ads.ttmenus.com';
-    var raw = [];
-    try {
-      raw = await this.fetchServiceAds(serviceUrl, {});
-    } catch (err) {
-      return false;
-    }
-    var items = this.prepareAdsForDisplay(this.normalizeServiceAds(raw, serviceUrl));
+    var location = this.userLocation || '';
+    var clientId = (config && config.clientId) || window.SITE_CLIENT_ID || '';
+    var noCompetitor = !!(config && config.noCompetitorAds);
+    var menuPromise = this.loadMenuAds(config && config.menuUrl ? config.menuUrl : null).catch(() => []);
+    var servicePromise = (async () => {
+      var ads = [];
+      if (clientId) {
+        ads = await this.fetchServiceAds(serviceUrl, { clientId: clientId, location: location }).catch(() => []);
+      }
+      if ((!ads || !ads.length) && !noCompetitor) {
+        ads = await this.fetchServiceAds(serviceUrl, { location: location }).catch(() => []);
+      }
+      return ads || [];
+    })();
+    var menuAdsRaw = await menuPromise;
+    var serviceAds = await servicePromise;
+    var menuAds = this.filterAdsByDay(menuAdsRaw);
+    var raw = this.mergeAdSources(menuAds, serviceAds, serviceUrl);
+    var items = this.prepareAdsForDisplay(raw, { keepOrder: true });
     if (!items.length) return false;
     this._loaderReelsRestore = {
       catalog: this._reelsCatalog,
