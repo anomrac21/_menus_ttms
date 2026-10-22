@@ -1,7 +1,8 @@
 #dashboard.dashboard-panel .dashboard-lead.is-account [data-dine-guest],
 #dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__form,
 #dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__thanks,
-#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__alt {
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__alt,
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__lede {
   display: none !important;
 }
 
@@ -9,20 +10,55 @@
   display: none;
 }
 
+#dashboard.dashboard-panel .dashboard-lead.is-account.is-open {
+  padding: 0.2rem 0.35rem 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__toggle {
+  gap: 0.5rem;
+  padding: 0.28rem 0.28rem 0.2rem 0.2rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-account.is-open .dashboard-lead__icon {
+  transform: none;
+}
+
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__title {
+  margin-top: 0;
+  font-size: 0.98rem;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__account {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0 0.35rem 0.1rem;
+}
+
 #dashboard.dashboard-panel .dashboard-dine-account__note {
-  margin: 0 0 0.75rem;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.3;
   color: var(--dashboard-ink-muted, #374151);
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__block {
-  margin: 0 0 0.85rem;
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  align-items: start;
+  column-gap: 0.35rem;
+  margin: 0;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__block h3 {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
+  margin: 0.08rem 0 0;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -31,46 +67,54 @@
 
 #dashboard.dashboard-panel .dashboard-dine-account__block dl {
   margin: 0;
+  min-width: 0;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__block dl div {
-  display: grid;
-  grid-template-columns: 4.5rem 1fr;
-  gap: 0.4rem;
-  padding: 0.2rem 0;
-  font-size: 0.88rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0;
+  font-size: 0.78rem;
+  line-height: 1.25;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__block dt {
+  flex: 0 0 2.7rem;
   color: var(--dashboard-ink-muted, #6b7280);
+  font-size: 0.68rem;
   font-weight: 700;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__block dd {
   margin: 0;
+  min-width: 0;
   color: var(--dashboard-ink, #090a13);
+  overflow-wrap: anywhere;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.22rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__chips li {
-  padding: 0.28rem 0.65rem;
+  padding: 0.08rem 0.45rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dashboard-accent, #e5ad36) 22%, var(--hub-panel-surface, #fff));
   color: var(--dashboard-ink, #090a13);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__empty {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
   color: var(--dashboard-ink-muted, #6b7280);
 }
