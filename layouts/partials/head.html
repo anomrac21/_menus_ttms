@@ -825,6 +825,7 @@
 {{- if $menuPublicSite -}}
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-panel.js" }}" defer></script>
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-leads.js" }}" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/dine-account.js" }}" defer></script>
 {{- end -}}
 
 <!--APPLE SUPPORT-->
@@ -1131,6 +1132,7 @@ window.MENU_CONFIG = {
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/account-dashboard-panel.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/dashboard-panel.css") }}
+{{ partial "head/async-stylesheet.html" (dict "href" "/css/dine-account.css") }}
 {{ partial "head/async-stylesheet.html" (dict "href" "/css/customer-order.css") }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css" "sync" true) }}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero-cta.css" "sync" true) }}
@@ -1149,6 +1151,7 @@ window.MENU_CONFIG = {
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/account-dashboard.css" }}"/>
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/account-dashboard-panel.css" }}"/>
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard-panel.css" }}"/>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dine-account.css" }}"/>
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/customer-order.css" }}"/>
 {{- if eq .Layout "client-dashboard-menu-settings" -}}
 {{ partial "head/stylesheet-pair.html" (dict "href" "/css/hero.css") }}

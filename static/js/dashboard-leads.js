@@ -3,6 +3,19 @@
 
   var EMAIL = 'ttmenus868@gmail.com';
 
+  function getAuthApiBase() {
+    var raw = '';
+    if (typeof window !== 'undefined' && window.AUTH_SERVICE_URL) {
+      raw = String(window.AUTH_SERVICE_URL);
+    } else if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.authServiceUrl) {
+      raw = String(window.APP_CONFIG.authServiceUrl);
+    }
+    raw = raw.trim().replace(/\/+$/, '');
+    if (!raw) raw = 'https://auth.ttmenus.com/api/v1';
+    if (!/\/api\/v1$/i.test(raw)) raw += '/api/v1';
+    return raw;
+  }
+
   function getCpsBaseUrl() {
     var raw = (typeof window !== 'undefined' && window.CPS_SERVICE_URL) ? String(window.CPS_SERVICE_URL) : '';
     return raw.trim().replace(/\/+$/, '');
@@ -271,10 +284,23 @@
     });
   }
 
+    function savedNeedsPassword() {
+      try {
+        const raw = sessionStorage.getItem(cfg.sentKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.needsPassword === 'boolean') return parsed.needsPassword;
+      } catch (_) {
+        /* ignore */
+      }
+      return null;
+    }
+
     function showThanks(opts) {
       const section = document.getElementById(cfg.sectionId);
       const thanks = document.getElementById(cfg.thanksId);
     const copy = thanks && thanks.querySelector('.dashboard-lead__thanks-copy');
+    const title = thanks && thanks.querySelector('.dashboard-lead__thanks-title');
     if (section) section.classList.add('is-sent');
     if (thanks) thanks.hidden = false;
     if (copy) {
@@ -284,9 +310,14 @@
       } else if (opts && opts.mailtoFallback) {
           copy.textContent = texts.mailto;
       } else {
-          copy.textContent = texts.done;
+          const needs = opts && opts.account
+            ? !!opts.account.needs_password
+            : savedNeedsPassword();
+          if (needs === false && texts.existing) copy.textContent = texts.existing;
+          else copy.textContent = texts.done;
         }
       }
+      if (title && cfg.thanksTitle) title.textContent = cfg.thanksTitle;
       setOpen(true);
     }
 
@@ -302,9 +333,15 @@
     return true;
   }
 
-    function persist(form) {
+    function persist(form, extra) {
       try {
-        sessionStorage.setItem(cfg.sentKey, JSON.stringify(cfg.sentPayload(form)));
+        const payload = cfg.sentPayload(form);
+        if (extra && typeof extra === 'object') {
+          Object.keys(extra).forEach(function (key) {
+            payload[key] = extra[key];
+          });
+        }
+        sessionStorage.setItem(cfg.sentKey, JSON.stringify(payload));
     } catch (_) {
       /* ignore */
     }
@@ -348,6 +385,16 @@
     if (submitBtn) submitBtn.disabled = true;
       setStatus(messages.sending || 'Sending…');
       try {
+        if (typeof cfg.submitAccount === 'function') {
+          const result = await cfg.submitAccount(form);
+          if (!result || result.email_sent === false) {
+            throw new Error((result && result.message) || 'Account saved, but the email did not send. Submit again to resend it.');
+          }
+          persist(form, { needsPassword: !!result.needs_password });
+          showThanks({ account: result });
+          setStatus('');
+          return;
+        }
         if (cfg.skipCps) {
           persist(form);
           openMailto(form);
@@ -361,6 +408,10 @@
         showThanks({ duplicate: !!(result && result.duplicate) });
         setStatus(result && result.duplicate ? messages.duplicate : messages.thanks);
     } catch (err) {
+        if (typeof cfg.submitAccount === 'function' && !(err && err.offline)) {
+          setStatus((err && err.message) || 'Could not create the account. Try again.', true);
+          return;
+        }
         console.warn(cfg.warnLabel || 'TTMS dashboard inquiry did not reach Odoo', err);
         persist(form);
         openMailto(form);
@@ -745,11 +796,44 @@
     onBoot(form) {
       bindDineTasteField(form);
     },
-    messages: listingInquiryMessages,
+    messages: {
+      missing: 'Please fill in the required fields.',
+      badEmail: 'Enter a valid email so we can send the password link.',
+      sending: 'Creating your account…',
+      mailto: 'The account service did not respond. Send the email draft if it opened.',
+    },
+    thanksTitle: 'Check your email',
     thanks: {
-      done: 'We’ll follow up with places and menus near you.',
-      duplicate: 'We already have a diner request from you and will follow up.',
-      mailto: 'Added to your tastes. Send the email draft if it opened.',
+      done: 'We sent a link to set your password and verify this account.',
+      existing: 'Those tastes are on your account. Check your email, then log in.',
+      mailto: 'The account service did not respond. Send the email draft if it opened.',
+    },
+    async submitAccount(form) {
+      let res;
+      try {
+        res = await fetch(getAuthApiBase() + '/dine-signup', {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: getValue(form, 'contactEmail'),
+            name: getValue(form, 'dinerName'),
+            area: getValue(form, 'dineArea'),
+            phone: getValue(form, 'contactPhone'),
+            tastes: getValue(form, 'notes'),
+            accept_terms: true,
+            accept_privacy_policy: true,
+          }),
+        });
+      } catch (err) {
+        err.offline = true;
+        throw err;
+      }
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok && res.status !== 201) {
+        throw new Error(data.error || data.message || 'Could not create the account. Try again.');
+      }
+      return data;
     },
     sentPayload(form) {
       return {

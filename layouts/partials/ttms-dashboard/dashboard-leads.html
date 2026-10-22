@@ -22,7 +22,8 @@
 			</button>
 			<div class="dashboard-lead__panel" id="dashboard-dine-panel" hidden>
 				<div class="dashboard-lead__reveal">
-				<p class="dashboard-lead__lede">Start with what you like to eat. We’ll add it to your current tastes, then take your details.</p>
+				<div class="dashboard-lead__account" id="dashboard-dine-account" hidden></div>
+				<p class="dashboard-lead__lede" data-dine-guest>Start with what you like to eat. We’ll add it to your current tastes, then take your details.</p>
 				<form
 					class="dashboard-lead__form"
 					id="ttms-dashboard-dine-form"
@@ -86,6 +87,7 @@
 							<span>Phone / WhatsApp <span class="dashboard-lead__req" aria-hidden="true">*</span></span>
 							<input name="contactPhone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="e.g. 18683645662">
 						</label>
+						<p class="dashboard-lead__hint">We’ll email a link to set your password and verify this account. By continuing you agree to the TTMenus Terms and Privacy Policy.</p>
 						<div class="dashboard-lead__nav">
 							<button type="button" class="dashboard-lead__back" data-lead-back>Back</button>
 							<button type="submit" class="dashboard-lead__submit">Count me in</button>
@@ -93,8 +95,8 @@
 					</div>
 				</form>
 				<div class="dashboard-lead__thanks" id="dashboard-dine-thanks" hidden>
-					<p class="dashboard-lead__thanks-title">Got it — we’ll be in touch</p>
-					<p class="dashboard-lead__thanks-copy">We’ll follow up with places and menus near you.</p>
+					<p class="dashboard-lead__thanks-title">Check your email</p>
+					<p class="dashboard-lead__thanks-copy">We sent a link to set your password and verify this account.</p>
 				</div>
 				<div class="dashboard-lead__alt">
 					<a class="dashboard-lead__onboard" href="https://ttmenus.com/" onclick="if (typeof closeAll === 'function') closeAll();">Browse places to eat</a>

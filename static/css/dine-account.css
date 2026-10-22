@@ -1,0 +1,76 @@
+#dashboard.dashboard-panel .dashboard-lead.is-account [data-dine-guest],
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__form,
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__thanks,
+#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__alt {
+  display: none !important;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__account[hidden] {
+  display: none;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__note {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--dashboard-ink-muted, #374151);
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__block {
+  margin: 0 0 0.85rem;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__block h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dashboard-ink-muted, #6b7280);
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__block dl {
+  margin: 0;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__block dl div {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+  font-size: 0.88rem;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__block dt {
+  color: var(--dashboard-ink-muted, #6b7280);
+  font-weight: 700;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__block dd {
+  margin: 0;
+  color: var(--dashboard-ink, #090a13);
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__chips li {
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dashboard-accent, #e5ad36) 22%, var(--hub-panel-surface, #fff));
+  color: var(--dashboard-ink, #090a13);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#dashboard.dashboard-panel .dashboard-dine-account__empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--dashboard-ink-muted, #6b7280);
+}
