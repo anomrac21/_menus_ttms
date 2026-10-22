@@ -824,6 +824,10 @@
 {{ partialCached "head/js.html" . }}
 {{- if $menuPublicSite -}}
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-panel.js" }}" defer></script>
+<script>
+window.CPS_SERVICE_URL = window.CPS_SERVICE_URL || {{ (site.Params.cpsServiceUrl | default "https://cps.ttmenus.com") | jsonify }};
+window.TTMS_CPS_COLLECT_ONLY = {{ eq site.Params.cpsCollectOnly true }};
+</script>
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-leads.js" }}" defer></script>
 <script src="{{ partial "head/asset-url.html" "/js/dine-account.js" }}" defer></script>
 {{- end -}}

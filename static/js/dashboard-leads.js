@@ -490,12 +490,36 @@
     return wrote;
   }
 
+  function listingSource() {
+    var id = '';
+    try {
+      id = String(window.SITE_CLIENT_ID || window.CLIENT_ID || '').trim();
+    } catch (_) {
+      id = '';
+    }
+    return id || 'hub_dashboard';
+  }
+
+  function listingNotes(form) {
+    var notes = getValue(form, 'notes');
+    var page = '';
+    try {
+      page = String(window.location.href || '');
+    } catch (_) {
+      page = '';
+    }
+    var parts = [];
+    if (notes) parts.push(notes);
+    if (page) parts.push('Page: ' + page);
+    return parts.join('\n\n');
+  }
+
   const listingInquiryMessages = {
     missing: 'Please fill in the required fields.',
     badEmail: 'Enter a valid email so we can follow up.',
-    sending: 'Sending…',
-    thanks: 'Thanks — we’ll be in touch.',
-    duplicate: 'We already have a request from you. We’ll follow up.',
+    sending: 'Saving your request…',
+    thanks: 'Saved. We’ll WhatsApp you at that number.',
+    duplicate: 'We already have this request. We’ll WhatsApp that number.',
     mailto: 'Email draft opened. Send it so we receive your details.',
   };
 
@@ -520,9 +544,9 @@
     emailStep: 2,
     messages: listingInquiryMessages,
     thanks: {
-      done: 'We’ll follow up on the details you shared.',
-      duplicate: 'We already have a request from you and will follow up.',
-      mailto: 'Send the email draft if it opened, or wait for us to follow up on the details you shared.',
+      done: 'We’ll WhatsApp you at the number you gave to set up your menu.',
+      duplicate: 'We already have this request and will WhatsApp that number.',
+      mailto: 'Send the email draft if it opened. That is the backup when the request does not save.',
     },
     sentPayload(form) {
       return {
@@ -547,19 +571,19 @@
         'Notes:',
         getValue(form, 'notes') || '(none)',
         '',
-        'Source: hub dashboard — Add my business',
+        'Source: Add my business (' + listingSource() + ')',
       ].join('\n');
     },
     cpsPayload(form) {
       return {
         event: 'dashboard.listing_lead',
-        source: 'hub_dashboard',
+        source: listingSource(),
         venue_name: getValue(form, 'venueName'),
         address_area: getValue(form, 'addressArea'),
         contact_name: getValue(form, 'contactName'),
         email: getValue(form, 'contactEmail'),
         phone: getValue(form, 'contactPhone'),
-        notes: getValue(form, 'notes'),
+        notes: listingNotes(form),
       };
     },
     prefillUser(form) {
@@ -586,7 +610,14 @@
     },
     emailField: 'contactEmail',
     emailStep: 2,
-    messages: listingInquiryMessages,
+    messages: {
+      missing: 'Please fill in the required fields.',
+      badEmail: 'Enter a valid email so we can follow up.',
+      sending: 'Sending…',
+      thanks: 'Thanks — we’ll be in touch.',
+      duplicate: 'We already have a request from you. We’ll follow up.',
+      mailto: 'Email draft opened. Send it so we receive your details.',
+    },
     thanks: {
       done: 'We’ll follow up on your driver request. You can add photos anytime on Drive.',
       duplicate: 'We already have a driver request from you and will follow up.',

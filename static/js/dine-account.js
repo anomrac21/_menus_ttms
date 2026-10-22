@@ -107,7 +107,7 @@
   }
 
   function chips(labels) {
-    if (!labels.length) return '<p class="dashboard-dine-account__empty">None saved yet.</p>';
+    if (!labels.length) return '';
     return (
       '<ul class="dashboard-dine-account__chips">' +
       labels
@@ -119,10 +119,20 @@
     );
   }
 
-  function row(label, value) {
+  function line(className, value) {
     var text = String(value || '').trim();
     if (!text) return '';
-    return '<div><dt>' + esc(label) + '</dt><dd>' + esc(text) + '</dd></div>';
+    return '<p class="' + className + '">' + esc(text) + '</p>';
+  }
+
+  function detail(label, body) {
+    return (
+      '<div class="dashboard-dine-account__row"><span class="dashboard-dine-account__label">' +
+      esc(label) +
+      '</span>' +
+      body +
+      '</div>'
+    );
   }
 
   function render(user, prefs) {
@@ -139,25 +149,21 @@
     if (prefs.alert_frequency && FREQ_LABELS[prefs.alert_frequency]) {
       alerts.push(FREQ_LABELS[prefs.alert_frequency]);
     }
+    var tastes = tasteLabels(prefs);
     var verified =
       user.is_email_verified === false
         ? '<p class="dashboard-dine-account__note">Check your email to set a password and verify this account.</p>'
         : '';
     box.innerHTML =
-      '<p class="dashboard-lead__lede">Your TT Menus account</p>' +
       verified +
-      '<section class="dashboard-dine-account__block"><h3>Account</h3><dl>' +
-      row('Name', name) +
-      row('Email', user.email) +
-      row('Phone', prefs.delivery_phone) +
-      row('Area', prefs.dine_area) +
-      '</dl></section>' +
-      '<section class="dashboard-dine-account__block"><h3>Tastes</h3>' +
-      chips(tasteLabels(prefs)) +
-      '</section>' +
-      '<section class="dashboard-dine-account__block"><h3>Notifications</h3>' +
-      chips(alerts) +
-      '</section>';
+      '<div class="dashboard-dine-account__who">' +
+      line('dashboard-dine-account__name', name) +
+      line('dashboard-dine-account__meta', user.email) +
+      line('dashboard-dine-account__meta', prefs.delivery_phone) +
+      line('dashboard-dine-account__meta', prefs.dine_area) +
+      '</div>' +
+      detail('Tastes', chips(tastes) || '<p class="dashboard-dine-account__empty">None yet</p>') +
+      detail('Alerts', chips(alerts) || '<p class="dashboard-dine-account__empty">None yet</p>');
   }
 
   var inflight = 0;
