@@ -180,7 +180,7 @@
     "date" .Date
     "content" .Content
     "images" (.Params.images | default slice)
-    "link" (.Params.link | default "")
+    "link" (partial "menu/promo-destination.html" .)
     "locations" $adLocations
     "recurring" (.Params.recurring | default false)
     "daysofweek" (.Params.daysofweek | default slice)

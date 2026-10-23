@@ -1622,6 +1622,62 @@
   },
 
   /**
+   * Shared promo copy stores section links at the site root (`/alcoholic/`).
+   * Multi-location menus publish that section under the location
+   * (`/san-fernando/alcoholic/`). The promotion permalink carries the location.
+   */
+  scopePromoLink(link, promoUrl, locationSlug, menuBase) {
+    const raw = String(link || '').trim();
+    if (!raw || raw === '#') return raw;
+    let path = raw;
+    let origin = '';
+    let promoPath = String(promoUrl || '').trim();
+    let promoOrigin = '';
+    if (/^https?:\/\//i.test(promoPath)) {
+      try {
+        const parsedPromo = new URL(promoPath);
+        promoPath = parsedPromo.pathname || '';
+        promoOrigin = parsedPromo.origin;
+      } catch (err) {
+        promoPath = '';
+      }
+    }
+    let menuOrigin = '';
+    if (menuBase && /^https?:\/\//i.test(String(menuBase))) {
+      try { menuOrigin = new URL(menuBase).origin; } catch (err) { menuOrigin = ''; }
+    }
+    if (/^https?:\/\//i.test(raw)) {
+      try {
+        const parsed = new URL(raw);
+        const sameMenu = (promoOrigin && parsed.origin === promoOrigin)
+          || (menuOrigin && parsed.origin === menuOrigin)
+          || (!promoOrigin && !menuOrigin && typeof window !== 'undefined' && parsed.origin === window.location.origin);
+        if (!sameMenu) return raw;
+        path = parsed.pathname || '/';
+        origin = parsed.origin;
+      } catch (err) {
+        return raw;
+      }
+    } else if (raw.startsWith('//')) {
+      return raw;
+    }
+    if (!path.startsWith('/')) path = `/${path}`;
+    if (path.startsWith('/locations/')) return origin ? `${origin}${path}` : path;
+
+    let slug = String(locationSlug || '').trim();
+    if (!slug) {
+      const match = promoPath.match(/^\/([^/]+)\/promotions(?:\/|$)/i);
+      if (match && match[1] && match[1].toLowerCase() !== 'promotions') slug = match[1];
+    }
+    if (slug && path !== `/${slug}` && !path.startsWith(`/${slug}/`)) {
+      path = `/${slug}${path}`;
+    }
+    if (!path.endsWith('/')) path += '/';
+    const base = origin || promoOrigin || menuOrigin;
+    return base ? `${base}${path}` : path;
+  },
+
+  /**
    * Transform menu JSON ad format to ads-client format
    */
   transformMenuAds(menuAds, menuBaseUrl = '') {
@@ -1651,11 +1707,11 @@
       // Generate ID if not present
       const adId = ad.id || `menu-ad-${index}-${(ad.title || '').toLowerCase().replace(/\s+/g, '-')}`;
       
-      // Determine link URL - use ad.link, ad.url, or default to menu URL
-      let linkUrl = ad.link || ad.url || '';
+      // link is the menu section; url is the promotion page and carries the location.
+      let linkUrl = this.scopePromoLink(ad.link || '', ad.url || '', '', menuBaseUrl) || ad.url || '';
       if (!linkUrl || linkUrl === '#') {
         linkUrl = '#';
-      } else if (!linkUrl.startsWith('http')) {
+      } else if (!/^https?:\/\//i.test(linkUrl)) {
         linkUrl = this.absolutizeAssetUrl(linkUrl.startsWith('/') ? linkUrl : `/${linkUrl}`);
       }
       

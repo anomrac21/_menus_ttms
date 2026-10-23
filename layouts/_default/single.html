@@ -361,7 +361,7 @@
   {{ else }}
     <div class="singlepagemenu {{ .Section }}">
       {{ if gt (len .Params.images) 0 }}
-        <a href="{{ .Params.link }}" class="singlepageimages">
+        <a href="{{ partial "menu/promo-destination.html" . }}" class="singlepageimages">
           {{ range .Params.images }}
             <img src="{{ partial "ttms/menu-img-src.html" (dict "path" .image "size" "ad") }}" alt="{{ $.Title }}" loading="lazy">
           {{ end }}

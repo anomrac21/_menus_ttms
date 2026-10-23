@@ -1,0 +1,33 @@
+{{- /*
+  Public URL for a promotion's `link`.
+  Shared authoring stores site-root sections (`/alcoholic/`).
+  Multi-location menus publish that section at `/{slug}/alcoholic/`.
+  Empty link falls back to the promotion page itself.
+*/ -}}
+{{- $page := . -}}
+{{- $raw := strings.TrimSpace (printf "%s" ($page.Params.link | default "")) -}}
+{{- $loc := partial "menu/location-slug.html" $page -}}
+{{- $dest := $raw -}}
+{{- if or (not $raw) (eq $raw "#") -}}
+  {{- $dest = $page.RelPermalink -}}
+{{- else if or (hasPrefix $raw "http://") (hasPrefix $raw "https://") (hasPrefix $raw "//") -}}
+  {{- $dest = $raw -}}
+{{- else -}}
+  {{- $path := $raw -}}
+  {{- if not (hasPrefix $path "/") -}}
+    {{- $path = printf "/%s" $path -}}
+  {{- end -}}
+  {{- if and $loc (not (hasPrefix $path "/locations/")) (not (eq $path (printf "/%s" $loc))) (not (hasPrefix $path (printf "/%s/" $loc))) -}}
+    {{- $path = printf "/%s%s" $loc $path -}}
+  {{- end -}}
+  {{- if not (hasSuffix $path "/") -}}
+    {{- $path = printf "%s/" $path -}}
+  {{- end -}}
+  {{- $lookup := strings.TrimSuffix "/" $path -}}
+  {{- with site.GetPage $lookup -}}
+    {{- $dest = .RelPermalink -}}
+  {{- else -}}
+    {{- $dest = $path -}}
+  {{- end -}}
+{{- end -}}
+{{- return $dest -}}

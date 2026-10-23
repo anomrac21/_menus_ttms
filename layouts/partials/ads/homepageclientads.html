@@ -6,8 +6,9 @@
     {{- range $catalogIndex, $page := $advertisements.RegularPages.ByWeight -}}
       {{- $adstitle := .LinkTitle -}}
       {{- $adurl := .RelPermalink -}}
-      {{- $adlink := .Params.link -}}
-      {{- $finalurl := cond $adlink $adlink $adurl -}}
+      {{- $adlink := .Params.link | default "" -}}
+      {{- $finalurl := partial "menu/promo-destination.html" . -}}
+      {{- $locSlug := partial "menu/location-slug.html" . -}}
       {{- $adId := lower .LinkTitle | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" -}}
       {{- $slideIndex := 0 -}}
       {{- range .Params.images -}}
@@ -24,6 +25,8 @@
             data-ad-id="menu-ad-{{ $slideId }}"
             data-ad-title="{{ $adstitle }}"
             data-ad-url="{{ $finalurl }}"
+            data-ad-link="{{ $adlink }}"
+            data-location-slug="{{ $locSlug }}"
             data-catalog-index="{{ $catalogIndex }}"
             {{- with $page.Params.daysofweek -}}
             data-daysofweek="{{ . | jsonify }}"

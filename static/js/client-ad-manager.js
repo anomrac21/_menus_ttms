@@ -299,9 +299,30 @@ class ClientAdManager {
     return hasMedia ? li : null;
   }
 
+  scopePromoLink(link, promoUrl, locationSlug) {
+    const raw = String(link || '').trim();
+    if (!raw || raw === '#') return raw;
+    let path = raw;
+    if (/^https?:\/\//i.test(raw) || raw.startsWith('//')) return raw;
+    if (!path.startsWith('/')) path = `/${path}`;
+    if (path.startsWith('/locations/')) return path;
+    let slug = String(locationSlug || '').trim();
+    const promoPath = String(promoUrl || '').trim();
+    if (!slug) {
+      const match = promoPath.match(/^\/([^/]+)\/promotions(?:\/|$)/i);
+      if (match && match[1] && match[1].toLowerCase() !== 'promotions') slug = match[1];
+    }
+    if (slug && path !== `/${slug}` && !path.startsWith(`/${slug}/`)) path = `/${slug}${path}`;
+    if (!path.endsWith('/')) path += '/';
+    return path;
+  }
+
   generateHomepageAdHTML(ad, adIndex) {
     if (!this.hasValidImages(ad)) return '';
-    const finalUrl = ad.link || ad.url || `/promotions/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
+    const authored = ad.link || '';
+    const locMatch = String(ad.url || '').match(/^\/([^/]+)\/promotions(?:\/|$)/i);
+    const locSlug = locMatch && locMatch[1].toLowerCase() !== 'promotions' ? locMatch[1] : '';
+    const finalUrl = this.scopePromoLink(authored, ad.url || '', locSlug) || ad.url || `/promotions/${ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/`;
     const adId = ad.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const eager = adIndex < 2;
     const safeTitle = String(ad.title || '')
@@ -324,6 +345,8 @@ class ClientAdManager {
         data-ad-id="menu-ad-${slideId}"
         data-ad-title="${safeTitle}"
         data-ad-url="${finalUrl}"
+        data-ad-link="${authored}"
+        data-location-slug="${locSlug}"
         data-catalog-index="${adIndex}"
       >
         ${window.TTMSMenuItemActions && typeof window.TTMSMenuItemActions.buildPromotionHeaderMarkup === 'function'
@@ -497,7 +520,7 @@ class ClientAdManager {
   bindReelsSlideClicks(slides) {
     slides.forEach((slide, index) => {
       if (slide.dataset.catalogIndex == null) slide.dataset.catalogIndex = String(index);
-      const url = slide.dataset.adUrl;
+      const url = this.scopePromoLink(slide.dataset.adUrl || '', '', slide.dataset.locationSlug || '');
       if (!url || slide.dataset.reelsClickBound === '1') return;
       slide.dataset.reelsClickBound = '1';
       slide.addEventListener('click', (e) => {
@@ -591,7 +614,12 @@ function initClientAdsReelsSlides() {
   container.classList.add('client-ads-reels');
   container.querySelectorAll('.ads-reels-slide').forEach((slide, index) => {
     if (slide.dataset.catalogIndex == null) slide.dataset.catalogIndex = String(index);
-    const url = slide.dataset.adUrl;
+    let url = slide.dataset.adUrl || '';
+    const slug = slide.dataset.locationSlug || '';
+    if (slug && url.charAt(0) === '/' && url.indexOf('/' + slug + '/') !== 0 && url.indexOf('/locations/') !== 0) {
+      url = '/' + slug + url;
+      if (url.charAt(url.length - 1) !== '/') url += '/';
+    }
     if (!url || slide.dataset.reelsClickBound === '1') return;
     slide.dataset.reelsClickBound = '1';
     slide.addEventListener('click', (e) => {

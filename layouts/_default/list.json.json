@@ -42,7 +42,7 @@
 
     {{- $item = merge $item (dict
       "url"       $page.RelPermalink
-      "link"      ($page.Params.link | default "")
+      "link"      (partial "menu/promo-destination.html" $page)
       "locations" $adLocations
       "recurring" ($page.Params.recurring | default false)
       "daysofweek" ($page.Params.daysofweek | default slice)

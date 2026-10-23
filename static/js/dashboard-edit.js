@@ -2559,7 +2559,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var slug = promotionSlugFromElement(slide);
     if (!slug) return null;
     var title = slide.getAttribute('data-ad-title') || '';
-    var link = slide.getAttribute('data-ad-url') || slide.getAttribute('data-ad-link') || '';
+    var link = slide.getAttribute('data-ad-link') || slide.getAttribute('data-ad-url') || '';
     var desc = slide.getAttribute('data-ad-description') || '';
     var imagesArr = gatherPromotionImagesFromSlide(slide);
     var recurring = (slide.getAttribute('data-ad-recurring') || '') === 'true';
@@ -7917,7 +7917,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (inputPromoTitle) inputPromoTitle.value = (el.getAttribute('data-ad-title') || (adTitleEl ? getTextContent(adTitleEl) : '')) || '';
       if (inputPromoDescription) inputPromoDescription.value = el.getAttribute('data-ad-description') || '';
       if (inputPromoLink) {
-        inputPromoLink.value = (el.getAttribute('data-ad-url') || el.getAttribute('data-ad-link') || '') ||
+        inputPromoLink.value = (el.getAttribute('data-ad-link') || el.getAttribute('data-ad-url') || '') ||
           (adLinkEl ? (adLinkEl.getAttribute('href') || '') : '');
       }
       var imagesArr = [];
