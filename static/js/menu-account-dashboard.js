@@ -315,8 +315,9 @@
       var locations = grouped.locations || [];
       var dishes = grouped.dishes || [];
       var recipes = grouped.recipes || [];
+      var promotions = grouped.promotions || [];
       var total =
-        venues.length + locations.length + dishes.length + recipes.length;
+        venues.length + locations.length + dishes.length + recipes.length + promotions.length;
 
       if (total === 0) {
         var flat = (result.data && result.data.favorites) || [];
@@ -325,10 +326,11 @@
           if (kind === 'location') locations.push(fav);
           else if (kind === 'dish') dishes.push(fav);
           else if (kind === 'recipe') recipes.push(fav);
+          else if (kind === 'promotion') promotions.push(fav);
           else venues.push(fav);
         });
         total =
-          venues.length + locations.length + dishes.length + recipes.length;
+          venues.length + locations.length + dishes.length + recipes.length + promotions.length;
       }
 
       if (total === 0) {
@@ -346,7 +348,8 @@
         renderFavoriteGroup('Venues', venues) +
         renderFavoriteGroup('Locations', locations) +
         renderFavoriteGroup('Dishes', dishes) +
-        renderFavoriteGroup('Recipes', recipes);
+        renderFavoriteGroup('Recipes', recipes) +
+        renderFavoriteGroup('Promotions', promotions);
     } catch (err) {
       console.error('[ACCOUNT DASHBOARD] Error loading favorites:', err);
       if (emptyEl) {

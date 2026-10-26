@@ -245,8 +245,9 @@
       return;
     }
 
-    for (var i = 0; i < FAVORITE_KINDS.length; i++) {
-      var kind = FAVORITE_KINDS[i];
+    var kindsToLoad = FAVORITE_KINDS.concat([PROMOTION_FAVORITE_KIND]);
+    for (var i = 0; i < kindsToLoad.length; i++) {
+      var kind = kindsToLoad[i];
       var result = await AuthClient.getFavorites(kind);
       if (result.success && result.data && Array.isArray(result.data.favorites)) {
         result.data.favorites.forEach(function (f) {

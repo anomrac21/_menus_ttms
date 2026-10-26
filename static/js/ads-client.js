@@ -53,6 +53,7 @@
    */
   init() {
     console.log('Ads Client initialized');
+    this._watchAdsContainerEntrances();
     this.loadConfig();
     if (!document.getElementById('pageadscontainer')) return;
     if (document.getElementById('menu-reels-viewport')) {
@@ -847,6 +848,66 @@
         btn.classList.add('unmuted');
       }
     }
+    this._cueReelActionEntrance(dom);
+  },
+
+  /**
+   * Replay the chrome entrance once per ad that snaps into view.
+   */
+  _cueReelActionEntrance(slide) {
+    if (!slide || slide.classList.contains('menu-ad-scroll-end')) return;
+    const root = slide.closest('#ads-reels-track, #homepage-ads-container, #client-ads-container, #frontpage-ads-container, #pageadscontainer') || slide.parentElement;
+    if (!this._reelActionSlides) this._reelActionSlides = new WeakMap();
+    if (root && this._reelActionSlides.get(root) === slide && slide.classList.contains('is-in')) return;
+    if (root) this._reelActionSlides.set(root, slide);
+    slide.classList.remove('is-in');
+    void slide.offsetWidth;
+    slide.classList.add('is-in');
+  },
+
+  _dominantAdsChild(container) {
+    if (!container) return null;
+    const items = container.querySelectorAll('.ads-reels-slide:not(.menu-ad-scroll-end), .ad-panel');
+    if (!items.length) return null;
+    const scroller = container.closest('#menu-reels-track');
+    const bounds = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth };
+    const midY = (bounds.top + bounds.bottom) / 2;
+    const midX = (bounds.left + bounds.right) / 2;
+    let best = null;
+    let bestDist = Infinity;
+    items.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.bottom <= bounds.top + 8 || r.top >= bounds.bottom - 8) return;
+      if (r.right <= bounds.left + 8 || r.left >= bounds.right - 8) return;
+      const dist = Math.abs((r.top + r.bottom) / 2 - midY) + Math.abs((r.left + r.right) / 2 - midX) * 0.2;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = el;
+      }
+    });
+    return best;
+  },
+
+  _watchAdsContainerEntrances() {
+    if (this._adsEntranceWatch) return;
+    this._adsEntranceWatch = true;
+    const tick = () => {
+      this._adsEntranceScheduled = false;
+      const overlay = document.getElementById('ads-reels-overlay');
+      if (overlay && !overlay.hasAttribute('hidden')) return;
+      document.querySelectorAll('#homepage-ads-container, #client-ads-container, #frontpage-ads-container, #pageadscontainer').forEach((container) => {
+        const slide = this._dominantAdsChild(container);
+        if (slide) this._cueReelActionEntrance(slide);
+      });
+    };
+    const schedule = () => {
+      if (this._adsEntranceScheduled) return;
+      this._adsEntranceScheduled = true;
+      requestAnimationFrame(tick);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    document.addEventListener('scroll', schedule, { passive: true, capture: true });
+    schedule();
   },
 
   /**
@@ -900,6 +961,401 @@
         this._resetUnmuteButtonUi(btnForUi);
       }
     });
+  },
+
+  _reelHost(url) {
+    try {
+      return new URL(String(url || ''), window.location.origin).hostname.replace(/^www\./i, '').toLowerCase();
+    } catch (err) {
+      return '';
+    }
+  },
+
+  _reelFavoriteKey(ad) {
+    return 'reel:' + String((ad && ad.id) || '');
+  },
+
+  async _ensureMenuClientIds() {
+    if (this._menuClientIdsPromise) return this._menuClientIdsPromise;
+    this._menuClientIdsPromise = (async () => {
+      const map = {};
+      try {
+        const response = await fetch('/locations/index.json', { credentials: 'omit' });
+        if (!response.ok) return map;
+        const hub = await response.json();
+        const menus = hub && Array.isArray(hub.menus) ? hub.menus : [];
+        menus.forEach((menu) => {
+          const host = this._reelHost(menu && menu.menu);
+          const id = String((menu && (menu.client_id || menu.clientId)) || '').trim();
+          if (host && id) map[host] = id;
+        });
+      } catch (err) { /* hub list is optional */ }
+      return map;
+    })();
+    return this._menuClientIdsPromise;
+  },
+
+  async _reelClientId(linkUrl) {
+    const site = String(window.SITE_CLIENT_ID || window.CLIENT_ID || '').trim();
+    if (site) return site;
+    const host = this._reelHost(linkUrl);
+    const map = await this._ensureMenuClientIds();
+    if (host && map[host]) return map[host];
+    if (host.endsWith('.ttmenus.com')) {
+      const sub = host.slice(0, -'.ttmenus.com'.length).split('.')[0];
+      if (sub && sub !== 'www') return 'ttms_' + sub;
+    }
+    return '';
+  },
+
+  _reelReviewKey(clientId, ad) {
+    const id = String(clientId || '').trim();
+    const adId = String((ad && ad.id) || '').trim();
+    if (!id || !adId) return '';
+    return id + '|ad:' + adId;
+  },
+
+  _reviewsApiBase() {
+    const cfg = window.REVIEWS_CONFIG || {};
+    return String(cfg.apiUrl || 'https://reviews.ttmenus.com/api/v1').replace(/\/+$/, '');
+  },
+
+  _reelRailHtml(item) {
+    const ad = item.ad || {};
+    const title = ad.title || 'Promotion';
+    const key = this._reelFavoriteKey(ad);
+    const on = !!(this._reelFavoriteKeys && this._reelFavoriteKeys.has(key));
+    const safeTitle = this.escapeHtml(title);
+    return `
+      <p class="ads-reel-caption">${safeTitle}</p>
+      <div class="ads-reel-actions">
+        <button type="button" class="ads-reel-action ads-reel-action--favorite${on ? ' is-on' : ''}" data-favorite-key="${this.escapeHtml(key)}" aria-pressed="${on ? 'true' : 'false'}" aria-label="Favorite ${safeTitle}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.7-4.35-9.33-8.1C.8 10.4 1.2 6.7 4.1 5.2 6.2 4.1 8.4 4.7 12 8.2 15.6 4.7 17.8 4.1 19.9 5.2c2.9 1.5 3.3 5.2 1.43 7.7C18.7 16.65 12 21 12 21z"/></svg>
+        </button>
+        <button type="button" class="ads-reel-action ads-reel-action--comment" aria-label="Comments on ${safeTitle}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+          <span class="ads-reel-action__count" data-reel-comment-count></span>
+        </button>
+        <button type="button" class="ads-reel-action ads-reel-action--share" aria-label="Share ${safeTitle}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5l6 6-6 6v-4c-4.2 0-7 1.4-9 5 1.2-5.2 4.2-8 9-8V5z"/></svg>
+        </button>
+      </div>`;
+  },
+
+  _reelToast(message) {
+    let el = document.getElementById('ads-reel-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'ads-reel-toast';
+      el.className = 'ads-reel-toast';
+      el.setAttribute('role', 'status');
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.classList.add('is-visible');
+    clearTimeout(this._reelToastTimer);
+    this._reelToastTimer = setTimeout(() => el.classList.remove('is-visible'), 2200);
+  },
+
+  _promptReelLogin() {
+    this._reelToast('Log in to do that.');
+    if (typeof window.confirm === 'function' && window.confirm('Log in to save favorites and comment?')) {
+      try {
+        sessionStorage.setItem('ttmenus_redirect_after_login', window.location.pathname + window.location.search);
+      } catch (err) { /* ignore */ }
+      window.location.href = '/login/';
+    }
+  },
+
+  async _authToken() {
+    if (!window.AuthClient || typeof AuthClient.isAuthenticated !== 'function' || !AuthClient.isAuthenticated()) return '';
+    try {
+      if (typeof AuthClient.ensureAccessToken === 'function') {
+        const ready = await AuthClient.ensureAccessToken();
+        if (ready && ready.accessToken) return ready.accessToken;
+      }
+    } catch (err) { /* fall through */ }
+    return (typeof AuthClient.getAccessToken === 'function' && AuthClient.getAccessToken()) || '';
+  },
+
+  async _hydrateReelFavorites() {
+    if (this._reelFavoritesLoaded) return;
+    this._reelFavoritesLoaded = true;
+    this._reelFavoriteKeys = this._reelFavoriteKeys || new Set();
+    if (!window.AuthClient || typeof AuthClient.getFavorites !== 'function') return;
+    if (typeof AuthClient.isAuthenticated === 'function' && !AuthClient.isAuthenticated()) return;
+    try {
+      const result = await AuthClient.getFavorites('promotion');
+      const list = result && result.success && result.data && result.data.favorites;
+      if (Array.isArray(list)) {
+        list.forEach((row) => {
+          if (row && row.item_key) this._reelFavoriteKeys.add(String(row.item_key));
+        });
+      }
+    } catch (err) { /* ignore */ }
+    document.querySelectorAll('.ads-reel-action--favorite').forEach((btn) => {
+      const on = this._reelFavoriteKeys.has(btn.getAttribute('data-favorite-key') || '');
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  },
+
+  async _toggleReelFavorite(btn, item) {
+    const ad = item.ad || {};
+    const key = this._reelFavoriteKey(ad);
+    if (!key || key === 'reel:') return;
+    if (!window.AuthClient || typeof AuthClient.isAuthenticated !== 'function' || !AuthClient.isAuthenticated()) {
+      this._promptReelLogin();
+      return;
+    }
+    this._reelFavoriteKeys = this._reelFavoriteKeys || new Set();
+    const saved = this._reelFavoriteKeys.has(key);
+    btn.classList.toggle('is-on', !saved);
+    btn.setAttribute('aria-pressed', saved ? 'false' : 'true');
+    const image = item.mediaUrl && /^https?:\/\//i.test(item.mediaUrl) ? item.mediaUrl : '';
+    let result;
+    try {
+      if (saved) result = await AuthClient.removeFavorite('promotion', key);
+      else {
+        result = await AuthClient.addFavorite({
+          kind: 'promotion',
+          item_key: key,
+          title: ad.title || '',
+          url: item.linkUrl || '',
+          image_url: image,
+          meta: { client_id: await this._reelClientId(item.linkUrl) },
+        });
+      }
+    } catch (err) {
+      result = { success: false, error: 'Could not update favorite.' };
+    }
+    if (!result || !result.success) {
+      btn.classList.toggle('is-on', saved);
+      btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
+      this._reelToast((result && result.error) || 'Could not update favorite.');
+      return;
+    }
+    if (saved) this._reelFavoriteKeys.delete(key);
+    else this._reelFavoriteKeys.add(key);
+    document.querySelectorAll('.ads-reel-action--favorite').forEach((other) => {
+      if ((other.getAttribute('data-favorite-key') || '') !== key) return;
+      const on = this._reelFavoriteKeys.has(key);
+      other.classList.toggle('is-on', on);
+      other.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    this._reelToast(saved ? 'Removed from favorites.' : 'Saved to favorites.');
+  },
+
+  async _shareReel(item) {
+    const url = item.linkUrl && item.linkUrl !== '#' ? item.linkUrl : window.location.href;
+    const title = (item.ad && item.ad.title) || 'Promotion';
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      this._reelToast('Link copied.');
+    } catch (err) {
+      window.prompt('Copy this link', url);
+    }
+  },
+
+  async _paintReelCommentCount(rootEl, item) {
+    const countEl = rootEl.querySelector('[data-reel-comment-count]');
+    if (!countEl) return;
+    const clientId = await this._reelClientId(item.linkUrl);
+    const key = this._reelReviewKey(clientId, item.ad);
+    if (!key) return;
+    try {
+      const params = new URLSearchParams();
+      params.set('client_id', clientId);
+      params.set('targets', 'promotion:' + key);
+      const response = await fetch(this._reviewsApiBase() + '/reviews/summaries?' + params.toString(), { credentials: 'omit' });
+      if (!response.ok) return;
+      const data = await response.json();
+      const summary = (data.summaries || [])[0];
+      const count = summary && Number(summary.count) > 0 ? Number(summary.count) : 0;
+      countEl.textContent = count ? String(count) : '';
+    } catch (err) { /* count is optional */ }
+  },
+
+  _ensureReelCommentSheet() {
+    if (this._reelCommentSheet) return this._reelCommentSheet;
+    const sheet = document.createElement('div');
+    sheet.className = 'ads-reel-comments';
+    sheet.hidden = true;
+    sheet.innerHTML = `
+      <div class="ads-reel-comments__backdrop" data-reel-comment-close></div>
+      <div class="ads-reel-comments__panel" role="dialog" aria-modal="true" aria-labelledby="ads-reel-comments-title">
+        <header class="ads-reel-comments__header">
+          <h2 id="ads-reel-comments-title" class="ads-reel-comments__title">Comments</h2>
+          <button type="button" class="ads-reel-comments__close" data-reel-comment-close aria-label="Close comments">×</button>
+        </header>
+        <ul class="ads-reel-comments__list"></ul>
+        <form class="ads-reel-comments__form">
+          <div class="ads-reel-comments__stars" role="radiogroup" aria-label="Rating">
+            ${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-star="${n}" aria-label="${n} star${n === 1 ? '' : 's'}">★</button>`).join('')}
+          </div>
+          <textarea class="ads-reel-comments__body" maxlength="500" placeholder="Add a comment"></textarea>
+          <button type="submit" class="ads-reel-comments__send">Post</button>
+        </form>
+      </div>`;
+    sheet.addEventListener('click', (e) => {
+      if (e.target.closest('[data-reel-comment-close]')) {
+        e.preventDefault();
+        this._closeReelComments();
+        return;
+      }
+      const star = e.target.closest('[data-star]');
+      if (star) {
+        e.preventDefault();
+        this._setReelCommentStars(Number(star.getAttribute('data-star')) || 0);
+      }
+    });
+    sheet.querySelector('form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this._submitReelComment();
+    });
+    document.body.appendChild(sheet);
+    this._reelCommentSheet = sheet;
+    this._reelCommentStars = 5;
+    return sheet;
+  },
+
+  _setReelCommentStars(value) {
+    this._reelCommentStars = value;
+    const sheet = this._reelCommentSheet;
+    if (!sheet) return;
+    sheet.querySelectorAll('[data-star]').forEach((btn) => {
+      btn.classList.toggle('is-on', Number(btn.getAttribute('data-star')) <= value);
+    });
+  },
+
+  _closeReelComments() {
+    if (!this._reelCommentSheet) return;
+    this._reelCommentSheet.hidden = true;
+    this._reelCommentTarget = null;
+  },
+
+  async _openReelComments(rootEl, item) {
+    const siteId = String(window.SITE_CLIENT_ID || window.CLIENT_ID || '').trim();
+    if (siteId && window.TTMSMenuReviews && typeof window.TTMSMenuReviews.open === 'function') {
+      window.TTMSMenuReviews.open({
+        kind: 'promotion',
+        key: this._reelReviewKey(siteId, item.ad),
+        title: (item.ad && item.ad.title) || 'Promotion',
+      });
+      return;
+    }
+    const clientId = await this._reelClientId(item.linkUrl);
+    const key = this._reelReviewKey(clientId, item.ad);
+    if (!key) {
+      this._reelToast('Comments are not available for this post.');
+      return;
+    }
+    const sheet = this._ensureReelCommentSheet();
+    this._reelCommentTarget = { rootEl, item, clientId, key };
+    sheet.querySelector('.ads-reel-comments__title').textContent = (item.ad && item.ad.title) || 'Comments';
+    sheet.querySelector('.ads-reel-comments__body').value = '';
+    sheet.querySelector('.ads-reel-comments__list').innerHTML = '<li class="ads-reel-comments__empty">Loading…</li>';
+    this._setReelCommentStars(5);
+    sheet.hidden = false;
+    this._loadReelComments();
+  },
+
+  async _loadReelComments() {
+    const target = this._reelCommentTarget;
+    const sheet = this._reelCommentSheet;
+    if (!target || !sheet) return;
+    const params = new URLSearchParams();
+    params.set('client_id', target.clientId);
+    params.set('kind', 'promotion');
+    params.set('target_key', target.key);
+    const list = sheet.querySelector('.ads-reel-comments__list');
+    try {
+      const response = await fetch(this._reviewsApiBase() + '/reviews?' + params.toString(), { credentials: 'omit' });
+      const data = await response.json();
+      const reviews = (data && data.reviews) || [];
+      const comments = reviews.filter((row) => String(row.body || '').trim());
+      const countEl = target.rootEl && target.rootEl.querySelector('[data-reel-comment-count]');
+      const count = data && data.summary && Number(data.summary.count) > 0 ? Number(data.summary.count) : comments.length;
+      if (countEl) countEl.textContent = count ? String(count) : '';
+      if (!comments.length) {
+        list.innerHTML = '<li class="ads-reel-comments__empty">No comments yet.</li>';
+        return;
+      }
+      list.innerHTML = comments.map((row) => {
+        const who = this.escapeHtml(row.author || 'Guest');
+        const body = this.escapeHtml(row.body || '');
+        return `<li class="ads-reel-comments__item"><strong>${who}</strong><p>${body}</p></li>`;
+      }).join('');
+    } catch (err) {
+      list.innerHTML = '<li class="ads-reel-comments__empty">Could not load comments.</li>';
+    }
+  },
+
+  async _submitReelComment() {
+    const target = this._reelCommentTarget;
+    const sheet = this._reelCommentSheet;
+    if (!target || !sheet) return;
+    if (!window.AuthClient || typeof AuthClient.isAuthenticated !== 'function' || !AuthClient.isAuthenticated()) {
+      this._promptReelLogin();
+      return;
+    }
+    const body = sheet.querySelector('.ads-reel-comments__body').value || '';
+    if (!String(body).trim()) {
+      this._reelToast('Write a comment first.');
+      return;
+    }
+    const token = await this._authToken();
+    if (!token) {
+      this._promptReelLogin();
+      return;
+    }
+    const send = sheet.querySelector('.ads-reel-comments__send');
+    send.disabled = true;
+    try {
+      const response = await fetch(this._reviewsApiBase() + '/reviews', {
+        method: 'PUT',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({
+          client_id: target.clientId,
+          kind: 'promotion',
+          target_key: target.key,
+          rating: this._reelCommentStars || 5,
+          body: body,
+        }),
+      });
+      if (!response.ok) throw new Error('Could not post comment.');
+      sheet.querySelector('.ads-reel-comments__body').value = '';
+      await this._loadReelComments();
+    } catch (err) {
+      this._reelToast('Could not post comment.');
+    } finally {
+      send.disabled = false;
+    }
+  },
+
+  _bindReelRail(rootEl, item) {
+    const rail = rootEl.querySelector('.ads-reel-actions');
+    if (!rail || rail.dataset.bound === '1') return;
+    rail.dataset.bound = '1';
+    rail.addEventListener('click', (e) => {
+      const btn = e.target.closest('.ads-reel-action');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (btn.classList.contains('ads-reel-action--favorite')) this._toggleReelFavorite(btn, item);
+      else if (btn.classList.contains('ads-reel-action--comment')) this._openReelComments(rootEl, item);
+      else if (btn.classList.contains('ads-reel-action--share')) this._shareReel(item);
+    });
+    this._hydrateReelFavorites();
+    this._paintReelCommentCount(rootEl, item);
   },
 
   mountAdCreative(rootEl, item, config, opts) {
@@ -986,11 +1442,13 @@
       });
     }
 
-    rootEl.innerHTML = promoHeaderHTML + `<span>Sponsored</span>${mediaHTML}`;
+    const railHTML = mode === 'reel' ? this._reelRailHtml(item) : '';
+    rootEl.innerHTML = promoHeaderHTML + `<span>Sponsored</span>${mediaHTML}${railHTML}`;
+    if (mode === 'reel') this._bindReelRail(rootEl, item);
 
     if (mode === 'reel' && linkUrl && linkUrl !== '#') {
       rootEl.addEventListener('click', (e) => {
-        if (e.target.closest('.ad-unmute-btn, .menu-item-actions, .menu-favorite-btn, .ads-reels-slide__title-row')) return;
+        if (e.target.closest('.ad-unmute-btn, .menu-item-actions, .menu-favorite-btn, .ads-reels-slide__title-row, .ads-reel-actions, .ads-reel-comments')) return;
         const t = e.target;
         const onVideo = t.matches?.('video.ad-video');
         const onImg =
@@ -1304,6 +1762,7 @@
       } catch (err) { /* ignore */ }
     }
     this._reelsFullscreenOpenTriggered = true;
+    this._reelActionSlide = null;
 
     if (this.isHomeSmoothNavMode()) {
       this._reelsAutoOpenSuppressed = true;
