@@ -1123,6 +1123,30 @@ html.ttms-ios body.ttms-scroll-locked #dashboard.dashboard-panel {
     color: var(--dashboard-ink-muted);
 }
 
+#dashboard.dashboard-panel .dashboard-lead__another {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2.55rem;
+    margin-top: 0.75rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--hub-panel-border);
+    background: var(--hub-panel-surface-inset);
+    color: var(--dashboard-ink);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+#dashboard.dashboard-panel .dashboard-lead__another:hover,
+#dashboard.dashboard-panel .dashboard-lead__another:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--dashboard-accent) 45%, var(--hub-panel-border));
+}
+
 #dashboard.dashboard-panel .dashboard-lead__alt {
     display: flex;
     flex-direction: column;

@@ -321,6 +321,45 @@
       setOpen(true);
     }
 
+    function startAnother() {
+      const form = formEl();
+      const section = document.getElementById(cfg.sectionId);
+      const thanks = document.getElementById(cfg.thanksId);
+      let saved = null;
+      try {
+        const raw = sessionStorage.getItem(cfg.sentKey);
+        saved = raw ? JSON.parse(raw) : null;
+        sessionStorage.removeItem(cfg.sentKey);
+      } catch (_) {
+        /* ignore */
+      }
+      if (section) section.classList.remove('is-sent');
+      if (thanks) thanks.hidden = true;
+      setStatus('');
+      if (!form) return;
+      const keepNames = cfg.anotherKeep || [];
+      cfg.fields.forEach(function (name) {
+        const el = form.elements && form.elements.namedItem && form.elements.namedItem(name);
+        if (!el) return;
+        if (keepNames.indexOf(name) === -1) {
+          el.value = '';
+          return;
+        }
+        el.value = getValue(form, name) || (saved && saved[name]) || '';
+      });
+      setStep(form, 1, { save: true, focus: true });
+    }
+
+    function bindAnother() {
+      const thanks = document.getElementById(cfg.thanksId);
+      const btn = thanks && thanks.querySelector('[data-lead-another]');
+      if (!btn || btn.dataset.ttmsBound === '1') return;
+      btn.dataset.ttmsBound = '1';
+      btn.addEventListener('click', function () {
+        startAnother();
+      });
+    }
+
     function validateAll(form) {
       for (let step = 1; step <= maxStep; step += 1) {
         const names = (cfg.stepFields && cfg.stepFields[step]) || [];
@@ -451,6 +490,7 @@
       boot() {
         bindToggle();
         bindSteps();
+        bindAnother();
         prefill();
         if (typeof cfg.onBoot === 'function') cfg.onBoot(formEl());
       },
@@ -542,6 +582,7 @@
     },
     emailField: 'contactEmail',
     emailStep: 2,
+    anotherKeep: ['contactName', 'contactEmail', 'contactPhone'],
     messages: listingInquiryMessages,
     thanks: {
       done: 'We’ll WhatsApp you at the number you gave to set up your menu.',
