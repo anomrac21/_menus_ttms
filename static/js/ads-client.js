@@ -789,6 +789,99 @@
     });
   },
 
+  _reelCommentsOpen() {
+    const sheet = this._reelCommentSheet;
+    if (sheet && !sheet.hidden) return true;
+    return document.body.classList.contains('menu-review-sheet-open');
+  },
+
+  _clearReelAutoAdvance() {
+    if (this._reelAutoTimer) {
+      clearTimeout(this._reelAutoTimer);
+      this._reelAutoTimer = null;
+    }
+    if (this._reelAutoVideo && this._reelAutoEndedHandler) {
+      this._reelAutoVideo.removeEventListener('ended', this._reelAutoEndedHandler);
+    }
+    this._reelAutoVideo = null;
+    this._reelAutoEndedHandler = null;
+    this._reelAutoSlide = null;
+  },
+
+  _advanceReelSlide(track, fromSlide) {
+    if (this._reelCommentsOpen()) {
+      this._reelAutoTimer = setTimeout(() => this._advanceReelSlide(track, fromSlide), 400);
+      return;
+    }
+    const overlay = document.getElementById('ads-reels-overlay');
+    if (!overlay || overlay.hasAttribute('hidden') || !track || !fromSlide) return;
+    const current = this._getDominantReelsSlide(track);
+    if (current && current !== fromSlide) return;
+    const slides = Array.from(track.querySelectorAll('.ads-reels-slide'));
+    const pos = slides.indexOf(fromSlide);
+    if (pos < 0) return;
+    let next = slides[pos + 1];
+    if (!next) {
+      this.appendMoreReelSlides(1);
+      next = track.querySelectorAll('.ads-reels-slide')[pos + 1];
+    }
+    if (!next || next === fromSlide) return;
+    this._clearReelAutoAdvance();
+    let behavior = 'smooth';
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) behavior = 'auto';
+    } catch (err) { /* ignore */ }
+    track.scrollTo({ top: next.offsetTop, behavior });
+  },
+
+  /**
+   * Video ads advance when playback ends. Image ads advance after 10 seconds.
+   */
+  _armReelAutoAdvance(track, slide) {
+    if (!track || !slide) {
+      this._clearReelAutoAdvance();
+      return;
+    }
+    const video = slide.querySelector('video.ad-video');
+    const image = slide.querySelector('img.ad-portrait');
+    if (!video && !image) return;
+    if (this._reelAutoSlide === slide) return;
+    if (this._reelCommentsOpen()) {
+      if (!this._reelAutoTimer) {
+        this._reelAutoTimer = setTimeout(() => {
+          this._reelAutoTimer = null;
+          this._armReelAutoAdvance(track, slide);
+        }, 400);
+      }
+      return;
+    }
+    this._clearReelAutoAdvance();
+    this._reelAutoSlide = slide;
+    if (video) {
+      video.loop = false;
+      video.removeAttribute('loop');
+      const go = () => this._advanceReelSlide(track, slide);
+      if (video.ended) {
+        this._reelAutoTimer = setTimeout(go, 400);
+        return;
+      }
+      this._reelAutoVideo = video;
+      this._reelAutoEndedHandler = go;
+      video.addEventListener('ended', this._reelAutoEndedHandler);
+      return;
+    }
+    const startImage = () => {
+      if (this._reelAutoSlide !== slide) return;
+      this._reelAutoTimer = setTimeout(() => this._advanceReelSlide(track, slide), 10000);
+    };
+    if (image.complete) {
+      startImage();
+      return;
+    }
+    image.addEventListener('load', startImage, { once: true });
+    image.addEventListener('error', startImage, { once: true });
+  },
+
   /**
    * Play/pause + mute only the in-frame (dominant) reel; keep in sync with scroll-snap.
    * IntersectionObserver is unreliable here with nested scroll + full-viewport slides.
@@ -849,6 +942,7 @@
       }
     }
     this._cueReelActionEntrance(dom);
+    this._armReelAutoAdvance(track, dom);
   },
 
   /**
@@ -1240,6 +1334,8 @@
     if (!this._reelCommentSheet) return;
     this._reelCommentSheet.hidden = true;
     this._reelCommentTarget = null;
+    const track = document.getElementById('ads-reels-track');
+    if (track) this._syncReelsDominantMedia(track);
   },
 
   async _openReelComments(rootEl, item) {
@@ -1436,7 +1532,7 @@
     let mediaHTML = '';
     if (isVideo) {
       const videoInner = `
-        <video id="${videoId}" class="ad-portrait ad-video" autoplay muted loop playsinline webkit-playsinline preload="none">
+        <video id="${videoId}" class="ad-portrait ad-video" autoplay muted ${mode === 'reel' ? '' : 'loop '}playsinline webkit-playsinline preload="none">
           <source src="${this.escapeHtml(mediaUrl)}" type="video/${ext}">
           Your browser does not support the video tag.
         </video>`;
@@ -1789,6 +1885,7 @@
   },
 
   closeReelsViewer() {
+    this._clearReelAutoAdvance();
     const overlay = document.getElementById('ads-reels-overlay');
     const track = document.getElementById('ads-reels-track');
     if (this._reelsImpressionObserver) {
