@@ -705,6 +705,44 @@ body.ads-reels-open {
     overflow: hidden;
 }
 
+.ads-reels-slide.is-media-waiting .ad-portrait,
+.ads-reels-slide.is-media-waiting .ad-portrait-bg,
+.ads-reels-slide.is-media-waiting video.ad-video {
+    opacity: 0;
+}
+
+.ads-reels-slide .ad-preview-throbber {
+    position: absolute;
+    inset: 0;
+    z-index: var(--ttms-z-reel-inner-content, 2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.28s ease, visibility 0.28s ease;
+}
+
+.ads-reels-slide .ad-preview-throbber.is-slow {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ads-reels-slide .ad-preview-throbber.ad-preview-throbber--hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.ads-reels-slide .ad-preview-throbber__spin {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--scheme-white, #fff) 22%, transparent);
+    border-top-color: var(--selected-button-color3, #e8b84a);
+    animation: ad-preview-throbber-spin 0.75s linear infinite;
+}
+
 .ads-reels-slide > span {
     position: absolute;
     top: 1.2em;

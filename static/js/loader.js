@@ -601,7 +601,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     async function maybeHoldLoaderForReels(kind) {
-        if (clientIsPaidPlan()) return false;
         if (!loaderReelsTurn(kind)) return false;
         if (!window.AdsClient || typeof window.AdsClient.showReelsOnLoader !== 'function') return false;
         loaderReelsHolding = true;

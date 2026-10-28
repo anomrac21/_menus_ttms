@@ -1358,6 +1358,59 @@
     this._paintReelCommentCount(rootEl, item);
   },
 
+  _adThrobberHtml(label) {
+    const safe = this.escapeHtml(label || 'Loading promotion');
+    return `<div class="ad-preview-throbber" aria-busy="true" aria-label="${safe}"><span class="ad-preview-throbber__spin"></span></div>`;
+  },
+
+  _reelPendingThrobberHtml() {
+    return '<div class="ad-preview-throbber is-slow" aria-busy="true" aria-label="Loading promotion"><span class="ad-preview-throbber__spin"></span></div>';
+  },
+
+  /**
+   * Keep a spinner on the slide only when the image or video is still loading
+   * after a short beat, so a cached ad does not flash a throbber.
+   */
+  _armAdThrobber(rootEl) {
+    const throbber = rootEl && rootEl.querySelector('.ad-preview-throbber');
+    const media = rootEl && rootEl.querySelector('video.ad-video, img.ad-portrait');
+    if (!throbber) return;
+    const hide = () => {
+      throbber.classList.remove('is-slow');
+      throbber.classList.add('ad-preview-throbber--hidden');
+      throbber.setAttribute('aria-busy', 'false');
+      if (rootEl) rootEl.classList.remove('is-media-waiting');
+    };
+    if (!media) {
+      hide();
+      return;
+    }
+    const ready = media.tagName === 'IMG'
+      ? media.complete && media.naturalWidth > 0
+      : media.readyState >= 2;
+    if (ready) {
+      hide();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      if (!throbber.classList.contains('ad-preview-throbber--hidden')) throbber.classList.add('is-slow');
+    }, 320);
+    const done = () => {
+      window.clearTimeout(timer);
+      hide();
+    };
+    if (media.tagName === 'IMG') {
+      media.addEventListener('load', done, { once: true });
+      media.addEventListener('error', done, { once: true });
+    } else {
+      media.addEventListener('loadeddata', done, { once: true });
+      media.addEventListener('canplay', done, { once: true });
+      media.addEventListener('playing', done, { once: true });
+      media.addEventListener('error', done, { once: true });
+    }
+    window.setTimeout(done, 20000);
+  },
+
   mountAdCreative(rootEl, item, config, opts) {
     const { ad, firstMedia, mediaUrl, isVideo, linkUrl } = item;
     const displayMediaUrl =
@@ -1393,17 +1446,19 @@
             <path d="M16.5 12C16.5 10.23 15.48 8.71 14 7.97V10.18L16.45 12.63C16.48 12.43 16.5 12.22 16.5 12ZM19 12C19 12.94 18.8 13.82 18.46 14.64L19.97 16.15C20.62 14.91 21 13.5 21 12C21 7.72 18.01 4.14 14 3.23V5.29C16.89 6.15 19 8.83 19 12ZM4.27 3L3 4.27L7.73 9H3V15H7L12 20V13.27L16.25 17.53C15.58 18.04 14.83 18.46 14 18.7V20.76C15.38 20.45 16.63 19.82 17.68 18.96L19.73 21L21 19.73L12 10.73L4.27 3ZM12 4L9.91 6.09L12 8.18V4Z" fill="currentColor"/>
           </svg>
         </button>`;
-      if (previewStrip) {
+      if (previewStrip || mode === 'reel') {
         mediaHTML = `
         <div class="ad-preview-media">
-          <div class="ad-preview-throbber" aria-busy="true" aria-label="Loading video"></div>
+          ${this._adThrobberHtml(isVideo ? 'Loading video' : 'Loading promotion')}
           ${videoInner}
         </div>${unmuteBtn}`;
       } else {
         mediaHTML = `${videoInner}${unmuteBtn}`;
       }
     } else {
+      const throbber = mode === 'reel' ? this._adThrobberHtml('Loading promotion') : '';
       mediaHTML = `
+        ${throbber}
         <img src="${this.escapeHtml(displayMediaUrl)}" class="ad-portrait-bg" alt="${safeAlt}">
         <img src="${this.escapeHtml(displayMediaUrl)}" class="ad-portrait" alt="${safeAlt}">`;
     }
@@ -1444,7 +1499,11 @@
 
     const railHTML = mode === 'reel' ? this._reelRailHtml(item) : '';
     rootEl.innerHTML = promoHeaderHTML + `<span>Sponsored</span>${mediaHTML}${railHTML}`;
-    if (mode === 'reel') this._bindReelRail(rootEl, item);
+    if (mode === 'reel') {
+      rootEl.classList.add('is-media-waiting');
+      this._bindReelRail(rootEl, item);
+      this._armAdThrobber(rootEl);
+    }
 
     if (mode === 'reel' && linkUrl && linkUrl !== '#') {
       rootEl.addEventListener('click', (e) => {
@@ -1466,7 +1525,7 @@
       if (vidEl) {
         this.configureInlineVideoEl(vidEl);
       }
-      if (previewStrip && vidEl) {
+      if (previewStrip && mode !== 'reel' && vidEl) {
         const throbber = rootEl.querySelector('.ad-preview-throbber');
         const hideThrobber = () => {
           if (throbber) {
@@ -1581,6 +1640,7 @@
     slide.dataset.mediaState = 'empty';
     if (item.ad.title) slide.dataset.adTitle = item.ad.title;
     if (item.linkUrl && item.linkUrl !== '#') slide.dataset.adUrl = item.linkUrl;
+    slide.innerHTML = this._reelPendingThrobberHtml();
     return slide;
   },
 
@@ -1612,7 +1672,7 @@
       video.querySelectorAll('source').forEach((source) => source.removeAttribute('src'));
       try { video.load(); } catch (err) { /* ignore */ }
     });
-    slide.innerHTML = '';
+    slide.innerHTML = this._reelPendingThrobberHtml();
     slide.dataset.mediaState = 'empty';
   },
 
@@ -2458,52 +2518,33 @@
   },
 
   /**
-   * Free plans: open the promotions reel over the loader.
-   * Paid plans return false and leave the loader alone.
+   * Open the loader reel as soon as any ads exist, then append later arrivals
+   * without jumping the slide the viewer is on.
    */
-  async showReelsOnLoader() {
-    if (this.clientIsPaid()) return false;
-    if (this._loaderReelsOpen && document.body.classList.contains('ads-reels-open')) return true;
-    var config = this.getConfig();
-    var serviceUrl = (config && config.adsServiceUrl) || this.config.adsServiceUrl || 'https://ads.ttmenus.com';
-    var location = this.userLocation || '';
-    var clientId = (config && config.clientId) || window.SITE_CLIENT_ID || '';
-    var noCompetitor = !!(config && config.noCompetitorAds);
-    var menuPromise = this.loadMenuAds(config && config.menuUrl ? config.menuUrl : null).catch(() => []);
-    var servicePromise = (async () => {
-      var ads = [];
-      if (clientId) {
-        ads = await this.fetchServiceAds(serviceUrl, { clientId: clientId, location: location }).catch(() => []);
-      }
-      if ((!ads || !ads.length) && !noCompetitor) {
-        ads = await this.fetchServiceAds(serviceUrl, { location: location }).catch(() => []);
-      }
-      return ads || [];
-    })();
-    var menuAdsRaw = await menuPromise;
-    var serviceAds = await servicePromise;
-    var menuAds = this.filterAdsByDay(menuAdsRaw);
-    var raw = this.mergeAdSources(menuAds, serviceAds, serviceUrl);
+  _presentLoaderReel(raw, config) {
     var items = this.prepareAdsForDisplay(raw, { keepOrder: true });
     if (!items.length) return false;
+    var overlay = document.getElementById('ads-reels-overlay');
+    var already = !!(
+      this._loaderReelsOpen &&
+      overlay &&
+      !overlay.hasAttribute('hidden') &&
+      overlay.classList.contains('ads-reels-overlay--on-loader')
+    );
+    if (already) {
+      this._mergeLoaderReelItems(items);
+      return true;
+    }
     this._loaderReelsRestore = {
       catalog: this._reelsCatalog,
       config: this._reelsConfig
     };
     this._reelsCatalog = items;
-    if (!config) {
-      config = {
-        adsServiceUrl: serviceUrl,
-        clientId: window.SITE_CLIENT_ID || '',
-        menuUrl: (window.location && window.location.origin ? window.location.origin : '') + '/',
-        noCompetitorAds: false
-      };
-    }
     this._reelsConfig = config;
     this._loaderReelsOpen = true;
     this.openReelsViewer(0, { onLoader: true });
-    var overlay = document.getElementById('ads-reels-overlay');
-    var open = !!(overlay && !overlay.hasAttribute('hidden'));
+    var live = document.getElementById('ads-reels-overlay');
+    var open = !!(live && !live.hasAttribute('hidden'));
     if (!open) {
       this._reelsCatalog = this._loaderReelsRestore.catalog;
       this._reelsConfig = this._loaderReelsRestore.config;
@@ -2511,6 +2552,78 @@
       this._loaderReelsOpen = false;
     }
     return open;
+  },
+
+  _mergeLoaderReelItems(items) {
+    var track = document.getElementById('ads-reels-track');
+    var prev = this._reelsCatalog || [];
+    if (!track) return;
+    var seen = new Set(prev.map(function (item) { return item && item.ad && item.ad.id; }).filter(Boolean));
+    var self = this;
+    items.forEach(function (item) {
+      if (!item || !item.ad || !item.ad.id || seen.has(item.ad.id)) return;
+      seen.add(item.ad.id);
+      var ci = prev.length;
+      prev.push(item);
+      track.appendChild(self._reelSlideShell(item, ci));
+    });
+    this._reelsCatalog = prev;
+    this._reelsAppendBase = Math.max(this._reelsAppendBase || 0, track.children.length);
+    this._syncReelMediaWindow(track);
+  },
+
+  /**
+   * Open the promotions reel over the loader.
+   * Own menu promotions show as soon as they arrive. Paid menus do not pull
+   * other restaurants' network ads. Each slide keeps a throbber until its
+   * image or video is ready.
+   */
+  async showReelsOnLoader() {
+    if (this._loaderReelsOpen && document.body.classList.contains('ads-reels-open')) return true;
+    var paid = this.clientIsPaid();
+    var config = this.getConfig();
+    var serviceUrl = (config && config.adsServiceUrl) || this.config.adsServiceUrl || 'https://ads.ttmenus.com';
+    var location = this.userLocation || '';
+    var clientId = (config && config.clientId) || window.SITE_CLIENT_ID || '';
+    var noCompetitor = !!(config && config.noCompetitorAds) || paid;
+    if (!config) {
+      config = {
+        adsServiceUrl: serviceUrl,
+        clientId: window.SITE_CLIENT_ID || '',
+        menuUrl: (window.location && window.location.origin ? window.location.origin : '') + '/',
+        noCompetitorAds: noCompetitor
+      };
+    }
+    var menuAdsRaw = [];
+    var serviceAds = [];
+    var self = this;
+    var present = function () {
+      var menuAds = self.filterAdsByDay(menuAdsRaw);
+      var raw = self.mergeAdSources(menuAds, serviceAds, serviceUrl);
+      return self._presentLoaderReel(raw, config);
+    };
+    var menuPromise = this.loadMenuAds(config && config.menuUrl ? config.menuUrl : null).catch(function () { return []; }).then(function (raw) {
+      menuAdsRaw = raw || [];
+      present();
+      return menuAdsRaw;
+    });
+    var servicePromise = (async function () {
+      var ads = [];
+      if (clientId) {
+        ads = await self.fetchServiceAds(serviceUrl, { clientId: clientId, location: location }).catch(function () { return []; });
+      }
+      if ((!ads || !ads.length) && !noCompetitor) {
+        ads = await self.fetchServiceAds(serviceUrl, { location: location }).catch(function () { return []; });
+      }
+      return ads || [];
+    })().then(function (ads) {
+      serviceAds = ads || [];
+      present();
+      return serviceAds;
+    });
+    await Promise.all([menuPromise, servicePromise]);
+    var overlay = document.getElementById('ads-reels-overlay');
+    return !!(this._loaderReelsOpen && overlay && !overlay.hasAttribute('hidden'));
   },
 };
 
