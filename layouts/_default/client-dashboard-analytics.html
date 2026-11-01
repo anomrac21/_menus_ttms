@@ -27,6 +27,26 @@
 
   <main class="dashboard-analytics-main dashboard-analytics-main--full">
     {{ partial "dashboard/analytics-last-month.html" . }}
+    <section class="dashboard-settings-panel dashboard-analytics-insights" id="dashboardAnalyticsInsights" hidden>
+      <div class="dashboard-analytics-insights-grid">
+        <div>
+          <h3 class="dashboard-notify-subsection-title">Top dishes</h3>
+          <ol class="dashboard-analytics-rank" id="dashboardAnalyticsDishes"></ol>
+        </div>
+        <div>
+          <h3 class="dashboard-notify-subsection-title">Top searches</h3>
+          <ol class="dashboard-analytics-rank" id="dashboardAnalyticsSearches"></ol>
+        </div>
+        <div>
+          <h3 class="dashboard-notify-subsection-title">Contact actions</h3>
+          <ul class="dashboard-analytics-rank" id="dashboardAnalyticsContacts"></ul>
+        </div>
+      </div>
+      <div class="dashboard-analytics-action" id="dashboardAnalyticsAction" hidden>
+        <h3 class="dashboard-notify-subsection-title" id="dashboardAnalyticsActionTitle"></h3>
+        <p id="dashboardAnalyticsActionDetail"></p>
+      </div>
+    </section>
   </main>
 
 </div>

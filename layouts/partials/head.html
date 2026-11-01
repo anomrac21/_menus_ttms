@@ -1340,6 +1340,10 @@ window.POS_CONFIG = {
 <script src="{{ partial "head/asset-url.html" "/js/pos-integration.js" }}" defer></script>
 {{- end -}}
 
+{{- $analyticsSvc := site.Params.analyticsService | default dict -}}
+<script>
+window.ANALYTICS_API_URL = {{ ($analyticsSvc.apiUrl | default "https://insights.ttmenus.com/api/v1") | jsonify | safeJS }};
+</script>
 {{- $osvc := site.Params.orderService | default dict -}}
 {{- $osvcClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 <script>

@@ -16205,3 +16205,46 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
     display: none;
   }
 }
+
+.dashboard-analytics-card-delta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dashboard-muted, #6b7280);
+}
+
+.dashboard-analytics-card-delta.is-up {
+  color: #15803d;
+}
+
+.dashboard-analytics-card-delta.is-down {
+  color: #b91c1c;
+}
+
+.dashboard-analytics-insights {
+  margin-top: 1rem;
+}
+
+.dashboard-analytics-insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-analytics-rank {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.dashboard-analytics-rank li {
+  margin: 0.25rem 0;
+}
+
+.dashboard-analytics-action {
+  margin-top: 1rem;
+}
+
+.dashboard-analytics-action p {
+  margin: 0.35rem 0 0;
+}

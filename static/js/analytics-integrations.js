@@ -425,6 +425,9 @@
       else if (url.indexOf('twitter.com') !== -1 || url.indexOf('x.com') !== -1) network = 'Twitter';
       else if (url.indexOf('whatsapp.com') !== -1 || url.indexOf('wa.me') !== -1) network = 'WhatsApp';
       if (network) window.ttmsAnalytics.trackSocialInteraction(network, 'Click', link.href);
+      if (url.indexOf('tel:') === 0) window.ttmsAnalytics.trackEvent('Contact', 'Phone', link.href);
+      else if (url.indexOf('whatsapp.com') !== -1 || url.indexOf('wa.me') !== -1) window.ttmsAnalytics.trackEvent('Contact', 'WhatsApp', link.href);
+      else if (url.indexOf('maps') !== -1 || url.indexOf('waze.com') !== -1) window.ttmsAnalytics.trackEvent('Contact', 'Directions', link.href);
       if (link.hostname && link.hostname !== window.location.hostname) {
         window.ttmsAnalytics.trackOutboundLink(link.href, link.textContent.trim());
       }

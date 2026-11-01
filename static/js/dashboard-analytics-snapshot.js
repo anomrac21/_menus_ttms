@@ -160,6 +160,27 @@
     return svc + '/api';
   }
 
+  function analyticsApiBase() {
+    var api = String(global.ANALYTICS_API_URL || '').replace(/\/+$/, '');
+    if (!api) return '';
+    if (/\/api\/v1$/i.test(api)) return api;
+    if (/\/api$/i.test(api)) return api + '/v1';
+    return api + '/api/v1';
+  }
+
+  function insightsUrl(path, days) {
+    var base = analyticsApiBase();
+    if (!base || !clientId()) return '';
+    return (
+      base +
+      '/clients/' +
+      encodeURIComponent(clientId()) +
+      path +
+      '?days=' +
+      encodeURIComponent(String(days || 30))
+    );
+  }
+
   function fetchWithAuth(url) {
     function doFetch() {
       return fetch(url, {
@@ -185,15 +206,28 @@
     });
   }
 
-  function fetchSummary(days) {
-    days = days || 30;
+  function fetchCmsSummary(days) {
     var url =
       cmsApiBase() +
       '/clients/' +
       encodeURIComponent(clientId()) +
       '/analytics/summary?days=' +
-      encodeURIComponent(String(days));
+      encodeURIComponent(String(days || 30));
     return fetchWithAuth(url);
+  }
+
+  function fetchSummary(days) {
+    days = days || 30;
+    var primary = insightsUrl('/summary', days);
+    if (!primary) return fetchCmsSummary(days);
+    return fetchWithAuth(primary)
+      .then(function (result) {
+        if (result.ok) return result;
+        return fetchCmsSummary(days);
+      })
+      .catch(function () {
+        return fetchCmsSummary(days);
+      });
   }
 
   function fetchTrends(days) {
@@ -205,6 +239,14 @@
       '/analytics/trends?days=' +
       encodeURIComponent(String(days));
     return fetchWithAuth(url);
+  }
+
+  function fetchOverview(days) {
+    var url = insightsUrl('/overview', days || 30);
+    if (!url) return Promise.resolve({ ok: false, status: 0, data: {} });
+    return fetchWithAuth(url).catch(function () {
+      return { ok: false, status: 0, data: {} };
+    });
   }
 
   function errorMessage(status, data) {
@@ -631,6 +673,130 @@
     });
   }
 
+  function renderDelta(id, pct, current) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('is-up', 'is-down');
+    if (pct == null) {
+      if (current > 0) {
+        el.hidden = false;
+        el.textContent = 'New';
+        return;
+      }
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    var n = Number(pct);
+    if (!isFinite(n)) {
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+    var rounded = Math.round(n * 10) / 10;
+    el.textContent = (rounded > 0 ? '+' : '') + rounded + '% vs previous';
+    if (rounded > 0) el.classList.add('is-up');
+    if (rounded < 0) el.classList.add('is-down');
+  }
+
+  function renderRankList(id, rows, emptyText) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    rows = rows || [];
+    if (!rows.length) {
+      el.innerHTML = '<li>' + escapeHtml(emptyText) + '</li>';
+      return;
+    }
+    el.innerHTML = rows
+      .map(function (row) {
+        return '<li>' + escapeHtml(row.name || row.term || '') + ' <span>' + escapeHtml(formatCount(row.count)) + '</span></li>';
+      })
+      .join('');
+  }
+
+  function renderInsights(data) {
+    var panel = document.getElementById('dashboardAnalyticsInsights');
+    if (!panel) return;
+    panel.hidden = false;
+    renderRankList('dashboardAnalyticsDishes', data.dishes, 'No dish views in this period.');
+    renderRankList('dashboardAnalyticsSearches', data.searches, 'No searches in this period.');
+    var contacts = document.getElementById('dashboardAnalyticsContacts');
+    if (contacts) {
+      contacts.innerHTML =
+        '<li>WhatsApp ' + escapeHtml(formatCount(data.whatsappClicks || 0)) + '</li>' +
+        '<li>Phone ' + escapeHtml(formatCount(data.phoneClicks || 0)) + '</li>' +
+        '<li>Directions ' + escapeHtml(formatCount(data.directionClicks || 0)) + '</li>';
+    }
+    var action = data.action || {};
+    var box = document.getElementById('dashboardAnalyticsAction');
+    var title = document.getElementById('dashboardAnalyticsActionTitle');
+    var detail = document.getElementById('dashboardAnalyticsActionDetail');
+    if (box && title && detail && action.title) {
+      box.hidden = false;
+      title.textContent = action.title;
+      detail.textContent = action.detail || '';
+    }
+  }
+
+  function renderDeltas(changePct, data) {
+    changePct = changePct || {};
+    data = data || {};
+    renderDelta('deltaPageViews', changePct.pageViews, data.pageViews);
+    renderDelta('deltaVisits', changePct.visits, data.visits);
+    renderDelta('deltaUniqueVisitors', changePct.uniqueVisitors, data.uniqueVisitors);
+    renderDelta('deltaMenuItemViews', changePct.menuItemViews, data.menuItemViews);
+    renderDelta('deltaAddToCart', changePct.addToCart, data.addToCart);
+    renderDelta('deltaOrderSubmissions', changePct.orderSubmissions, data.orderSubmissions);
+    renderDelta('deltaSearches', changePct.searches, data.searches);
+  }
+
+  function clearInsights() {
+    var panel = document.getElementById('dashboardAnalyticsInsights');
+    if (panel) panel.hidden = true;
+    ['deltaPageViews', 'deltaVisits', 'deltaUniqueVisitors', 'deltaMenuItemViews', 'deltaAddToCart', 'deltaOrderSubmissions', 'deltaSearches'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.hidden = true;
+      el.textContent = '';
+    });
+  }
+
+  function fillSummaryMetrics(d, days, setMetric, noteEl) {
+    setMetric('metricPageViews', d.pageViews, 'Page views');
+    setMetric('metricVisits', d.visits, 'Visits');
+    setMetric('dashboardCardAnalyticsPageViews', d.pageViews, 'Page views');
+    setMetric('dashboardCardAnalyticsVisits', d.visits, 'Visits');
+    setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
+    setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
+    setMetric('metricAddToCart', d.addToCart, 'Add to cart');
+    setMetric('metricOrderSubmissions', d.orderSubmissions, 'Orders submitted');
+    setMetric('metricSearches', d.searches, 'Searches');
+    setAnalyticsNoteState(noteEl, 'ok', 'Showing analytics for the last ' + days + ' days. Order submissions are menu clicks, not confirmed sales.');
+  }
+
+  function applyAnalyticsOverview(data, days, setMetric, noteEl) {
+    fillSummaryMetrics(data, days, setMetric, noteEl);
+    renderAnalyticsTrendChart(data.rows || [], days);
+    if (data.changePct) renderDeltas(data.changePct, data);
+    else clearInsights();
+    renderInsights(data);
+  }
+
+  function applyLegacyAnalytics(summaryResult, trendsResult, days, setMetric, noteEl) {
+    clearInsights();
+    if (!summaryResult.ok) {
+      stopAnalyticsLoadingCounts();
+      setAnalyticsNoteState(noteEl, 'warn', errorMessage(summaryResult.status, summaryResult.data));
+    } else {
+      fillSummaryMetrics(summaryResult.data || {}, days, setMetric, noteEl);
+    }
+    if (trendsResult.ok) {
+      renderAnalyticsTrendChart((trendsResult.data && trendsResult.data.rows) || [], days);
+    } else {
+      renderAnalyticsTrendChart([], days);
+    }
+  }
+
   function loadAnalyticsPage(options) {
     options = options || {};
     bindAnalyticsPeriodTabs();
@@ -664,38 +830,17 @@
     setAnalyticsTrendsLoading(true);
     ANALYTICS_METRIC_IDS.forEach(startAnalyticsLoadingCount);
 
-    return Promise.all([fetchSummary(days), fetchTrends(days)])
-      .then(function (results) {
+    return fetchOverview(days)
+      .then(function (overview) {
         if (requestId !== analyticsRequest) return;
-        var summaryResult = results[0];
-        var trendsResult = results[1];
-
-        if (!summaryResult.ok) {
-          stopAnalyticsLoadingCounts();
-          setAnalyticsNoteState(noteEl, 'warn', errorMessage(summaryResult.status, summaryResult.data));
-        } else {
-          var d = summaryResult.data || {};
-          setMetric('metricPageViews', d.pageViews, 'Page views');
-          setMetric('metricVisits', d.visits, 'Visits');
-          setMetric('dashboardCardAnalyticsPageViews', d.pageViews, 'Page views');
-          setMetric('dashboardCardAnalyticsVisits', d.visits, 'Visits');
-          setMetric('metricUniqueVisitors', d.uniqueVisitors, 'Unique visitors');
-          setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
-          setMetric('metricAddToCart', d.addToCart, 'Add to cart');
-          setMetric('metricOrderSubmissions', d.orderSubmissions, 'Orders submitted');
-          setMetric('metricSearches', d.searches, 'Searches');
-          setAnalyticsNoteState(
-            noteEl,
-            'ok',
-            'Showing analytics for the last ' + days + ' days.'
-          );
+        if (overview && overview.ok) {
+          applyAnalyticsOverview(overview.data || {}, days, setMetric, noteEl);
+          return;
         }
-
-        if (trendsResult.ok) {
-          renderAnalyticsTrendChart((trendsResult.data && trendsResult.data.rows) || [], days);
-        } else {
-          renderAnalyticsTrendChart([], days);
-        }
+        return Promise.all([fetchSummary(days), fetchTrends(days)]).then(function (results) {
+          if (requestId !== analyticsRequest) return;
+          applyLegacyAnalytics(results[0], results[1], days, setMetric, noteEl);
+        });
       })
       .catch(function () {
         if (requestId !== analyticsRequest) return;
