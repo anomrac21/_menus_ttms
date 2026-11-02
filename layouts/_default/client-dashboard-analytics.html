@@ -12,13 +12,16 @@
   {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
 {{- end -}}
 
+{{- $orderingOn := false -}}
+{{- with site.Params.orderingsystem -}}{{- $orderingOn = default false .enabled -}}{{- end -}}
+{{- $loyverseOn := false -}}
+{{- with site.Params.features -}}{{- $loyverseOn = default false .loyverse_connect -}}{{- end -}}
 <div class="dashboard-analytics-page dashboard-analytics-page--full dashboard-control-room" id="dashboardAnalyticsPage" data-site-tier="{{ $tier }}">
   {{ partial "dashboard/subpage-header.html" (dict
-    "kicker" "Analytics"
-    "toolbarLabel" "Analytics toolbar"
-    "closeTitle" "Close analytics"
+    "kicker" "Insights"
+    "toolbarLabel" "Insights toolbar"
+    "closeTitle" "Close insights"
     "buttons" (slice
-      (dict "href" "https://analytics.ttmenus.com" "label" "Open analytics" "class" "btn-dash btn-dash-secondary dashboard-analytics-external-link" "icon" "fa-external-link" "target" "_blank" "rel" "noopener" "hidden" (not $isPaid))
       (dict "href" (printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery)) "label" "Upgrade" "class" "btn-dash btn-dash-primary dashboard-analytics-upgrade-link" "icon" "fa-arrow-up" "target" "_blank" "rel" "noopener" "hidden" $isPaid)
     )
   ) }}
@@ -26,33 +29,16 @@
 
 
   <main class="dashboard-analytics-main dashboard-analytics-main--full">
-    {{ partial "dashboard/analytics-last-month.html" . }}
-    <section class="dashboard-settings-panel dashboard-analytics-insights" id="dashboardAnalyticsInsights" hidden>
-      <div class="dashboard-analytics-insights-grid">
-        <div>
-          <h3 class="dashboard-notify-subsection-title">Top dishes</h3>
-          <ol class="dashboard-analytics-rank" id="dashboardAnalyticsDishes"></ol>
-        </div>
-        <div>
-          <h3 class="dashboard-notify-subsection-title">Top searches</h3>
-          <ol class="dashboard-analytics-rank" id="dashboardAnalyticsSearches"></ol>
-        </div>
-        <div>
-          <h3 class="dashboard-notify-subsection-title">Contact actions</h3>
-          <ul class="dashboard-analytics-rank" id="dashboardAnalyticsContacts"></ul>
-        </div>
-      </div>
-      <div class="dashboard-analytics-action" id="dashboardAnalyticsAction" hidden>
-        <h3 class="dashboard-notify-subsection-title" id="dashboardAnalyticsActionTitle"></h3>
-        <p id="dashboardAnalyticsActionDetail"></p>
-      </div>
-    </section>
+    <div id="insightsShell" data-ordering="{{ if $orderingOn }}true{{ else }}false{{ end }}" data-loyverse="{{ if $loyverseOn }}true{{ else }}false{{ end }}">
+      {{ partial "dashboard/insights-dashboard.html" . }}
+    </div>
   </main>
 
 </div>
 
 
 
+<script src="{{ partial "head/asset-url.html" `/js/dashboard-analytics-platform.js` }}" defer></script>
 <script>
   window.SITE_TIER = {{ $tier | jsonify }};
   window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';

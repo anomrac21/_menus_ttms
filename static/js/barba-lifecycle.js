@@ -15,6 +15,7 @@
     '/edit-menu-colors',
     '/edit-menu',
     '/analytics',
+    '/insights',
     '/notifications',
     '/menu-settings',
     '/location-settings',

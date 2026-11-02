@@ -719,7 +719,7 @@
     if (!panel) return;
     panel.hidden = false;
     renderRankList('dashboardAnalyticsDishes', data.dishes, 'No dish views in this period.');
-    renderRankList('dashboardAnalyticsSearches', data.searches, 'No searches in this period.');
+    renderRankList('dashboardAnalyticsSearches', Array.isArray(data.searchTerms) ? data.searchTerms : (Array.isArray(data.searches) ? data.searches : []), 'No searches in this period.');
     var contacts = document.getElementById('dashboardAnalyticsContacts');
     if (contacts) {
       contacts.innerHTML =
@@ -747,7 +747,7 @@
     renderDelta('deltaMenuItemViews', changePct.menuItemViews, data.menuItemViews);
     renderDelta('deltaAddToCart', changePct.addToCart, data.addToCart);
     renderDelta('deltaOrderSubmissions', changePct.orderSubmissions, data.orderSubmissions);
-    renderDelta('deltaSearches', changePct.searches, data.searches);
+    renderDelta('deltaSearches', changePct.searches, typeof data.searches === 'number' ? data.searches : 0);
   }
 
   function clearInsights() {
@@ -770,7 +770,7 @@
     setMetric('metricMenuItemViews', d.menuItemViews, 'Menu item views');
     setMetric('metricAddToCart', d.addToCart, 'Add to cart');
     setMetric('metricOrderSubmissions', d.orderSubmissions, 'Orders submitted');
-    setMetric('metricSearches', d.searches, 'Searches');
+    setMetric('metricSearches', typeof d.searches === 'number' ? d.searches : null, 'Searches');
     setAnalyticsNoteState(noteEl, 'ok', 'Showing analytics for the last ' + days + ' days. Order submissions are menu clicks, not confirmed sales.');
   }
 
@@ -780,6 +780,10 @@
     if (data.changePct) renderDeltas(data.changePct, data);
     else clearInsights();
     renderInsights(data);
+    if (global.InsightsPlatform) {
+      InsightsPlatform.render(data);
+      InsightsPlatform.loadOrders(days);
+    }
   }
 
   function applyLegacyAnalytics(summaryResult, trendsResult, days, setMetric, noteEl) {
@@ -794,6 +798,12 @@
       renderAnalyticsTrendChart((trendsResult.data && trendsResult.data.rows) || [], days);
     } else {
       renderAnalyticsTrendChart([], days);
+    }
+    if (global.InsightsPlatform && document.getElementById('insightsShell')) {
+      var data = summaryResult.ok ? Object.assign({}, summaryResult.data || {}) : {};
+      data.rows = (trendsResult.ok && trendsResult.data && trendsResult.data.rows) || data.rows || [];
+      InsightsPlatform.render(data);
+      if (summaryResult.ok) InsightsPlatform.loadOrders(days);
     }
   }
 
@@ -826,6 +836,7 @@
       if (el.textContent === '') el.setAttribute('aria-label', 'Data not yet loaded');
     });
 
+    if (global.InsightsPlatform && typeof InsightsPlatform.mount === 'function') InsightsPlatform.mount();
     setAnalyticsNoteState(noteEl, 'loading', 'Loading analytics…');
     setAnalyticsTrendsLoading(true);
     ANALYTICS_METRIC_IDS.forEach(startAnalyticsLoadingCount);
@@ -925,6 +936,7 @@
     formatCount: formatCount,
     fetchSummary: fetchSummary,
     fetchTrends: fetchTrends,
+    fetchWithAuth: fetchWithAuth,
     loadDashboardCard: loadDashboardCard,
     loadAnalyticsPage: loadAnalyticsPage,
     renderAnalyticsTrendChart: renderAnalyticsTrendChart,

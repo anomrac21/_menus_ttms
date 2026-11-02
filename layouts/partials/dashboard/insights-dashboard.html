@@ -1,0 +1,142 @@
+<section class="dashboard-settings-panel insights-shell" aria-labelledby="insights-heading">
+  <div class="dashboard-settings-panel-head">
+    <span class="dashboard-settings-panel-icon dashboard-analytics-panel-icon" aria-hidden="true"><i class="fa fa-line-chart"></i></span>
+    <div class="dashboard-settings-panel-head-text">
+      <h2 id="insights-heading" class="dashboard-analytics-heading">TTMenus Insights</h2>
+      <p class="dashboard-analytics-subtitle" id="analytics-last-month-heading">Last 30 days</p>
+    </div>
+  </div>
+  <div class="dashboard-orders-hub-tabs dashboard-analytics-period-tabs" id="dashboardAnalyticsPeriodTabs" role="tablist" aria-label="Analytics period">
+    <button type="button" class="dashboard-orders-hub-tab" role="tab" data-analytics-days="7" aria-selected="false">7 days</button>
+    <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" data-analytics-days="30" aria-selected="true">30 days</button>
+    <button type="button" class="dashboard-orders-hub-tab" role="tab" data-analytics-days="90" aria-selected="false">90 days</button>
+  </div>
+  <nav class="insights-nav" id="insightsNav" aria-label="Insights sections"></nav>
+
+  <div class="insights-panel is-active" data-insights-panel="overview">
+    <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full" id="dashboardAnalyticsMetrics">
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Unique visitors</span>
+        <span class="dashboard-analytics-card-value" id="metricUniqueVisitors" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaUniqueVisitors" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Menu views</span>
+        <span class="dashboard-analytics-card-value" id="metricPageViews" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaPageViews" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Menu item views</span>
+        <span class="dashboard-analytics-card-value" id="metricMenuItemViews" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaMenuItemViews" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Customer actions</span>
+        <span class="dashboard-analytics-card-value" id="metricCustomerActions" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaCustomerActions" hidden></span>
+      </div>
+    </div>
+    <div class="dashboard-analytics-trends dashboard-notify-trends" id="dashboardAnalyticsTrendsSection">
+      <h3 class="dashboard-notify-subsection-title">Restaurant activity</h3>
+      <p class="dashboard-analytics-subtitle">Daily visitors and menu views.</p>
+      <div class="dashboard-notify-trends-chart-wrap" id="dashboardAnalyticsTrendChartWrap">
+        <div class="dashboard-notify-trends-chart" id="dashboardAnalyticsTrendChart" role="img" aria-label="Daily restaurant activity"></div>
+        <p id="dashboardAnalyticsTrendEmpty" class="dashboard-notify-empty" hidden>No activity in this period yet.</p>
+      </div>
+    </div>
+    <div class="insights-split">
+      <div>
+        <h3 class="dashboard-notify-subsection-title">Customer journey</h3>
+        <ol class="insights-journey" id="insightsJourney"></ol>
+        <p class="dashboard-analytics-subtitle">Discovered counts unique visitors. Menu opened counts page views. Item views and ordering actions are events, not confirmed sales.</p>
+      </div>
+      <div>
+        <h3 class="dashboard-notify-subsection-title">Top dishes</h3>
+        <div id="insightsTopDishes"></div>
+      </div>
+    </div>
+    <div class="insights-split">
+      <div class="insights-score" id="insightsScore"></div>
+      <div class="dashboard-analytics-action" id="dashboardAnalyticsAction" hidden>
+        <h3 class="dashboard-notify-subsection-title" id="dashboardAnalyticsActionTitle"></h3>
+        <p id="dashboardAnalyticsActionDetail"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="visitors" hidden>
+    <div class="dashboard-analytics-metrics" id="insightsVisitorMetrics"></div>
+    <div class="insights-split">
+      <div><h3 class="dashboard-notify-subsection-title">Traffic sources</h3><div id="insightsSources"></div></div>
+      <div><h3 class="dashboard-notify-subsection-title">Devices</h3><div id="insightsDevices"></div></div>
+      <div><h3 class="dashboard-notify-subsection-title">Country</h3><div id="insightsCountries"></div></div>
+    </div>
+    <div class="insights-split">
+      <div>
+        <h3 class="dashboard-notify-subsection-title">Trinidad and Tobago regions</h3>
+        <div id="insightsRegions"></div>
+      </div>
+      <div>
+        <h3 class="dashboard-notify-subsection-title">Trinidad and Tobago</h3>
+        <p class="dashboard-analytics-subtitle">Visits inside Trinidad and Tobago. Every other country is grouped as Other.</p>
+        <div id="insightsTrinidadMap" class="insights-trinidad-map" role="img" aria-label="Heat map of visits in Trinidad and Tobago"></div>
+        <p id="insightsTrinidadMapEmpty" class="dashboard-analytics-subtitle" hidden></p>
+      </div>
+    </div>
+    <h3 class="dashboard-notify-subsection-title">Contact and map actions</h3>
+    <ul class="dashboard-analytics-rank" id="dashboardAnalyticsContacts"></ul>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="menu" hidden>
+    <div class="insights-split">
+      <div><h3 class="dashboard-notify-subsection-title">Most viewed dishes</h3><div id="insightsMenuDishes"></div></div>
+      <div><h3 class="dashboard-notify-subsection-title">Most searched items</h3><ol class="dashboard-analytics-rank" id="dashboardAnalyticsSearches"></ol></div>
+    </div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="behaviour" hidden>
+    <h3 class="dashboard-notify-subsection-title">Peak days</h3>
+    <div id="insightsPeakDays"></div>
+    <h3 class="dashboard-notify-subsection-title">Peak hours</h3>
+    <div id="insightsHours"></div>
+    <h3 class="dashboard-notify-subsection-title">Returning visitors</h3>
+    <p id="insightsReturning" class="dashboard-analytics-subtitle"></p>
+    <h3 class="dashboard-notify-subsection-title">Locations chosen on the menu</h3>
+    <div id="insightsLocations"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="promotions" hidden>
+    <div id="insightsPromotions"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="orders" hidden>
+    <div id="insightsOrders"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="sales" hidden>
+    <div id="insightsSales"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="customers" hidden>
+    <div id="insightsCustomers"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="pos" hidden>
+    <div id="insightsPos"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="reports" hidden>
+    <div id="insightsReports"></div>
+  </div>
+
+  <div class="insights-panel" data-insights-panel="recommendations" hidden>
+    <div id="insightsRecommendations"></div>
+  </div>
+
+  <aside class="dashboard-analytics-footnote dashboard-analytics-note dashboard-analytics-note--loading" id="dashboardAnalyticsNote" aria-live="polite">
+    <i class="fa fa-spinner fa-spin dashboard-analytics-note-icon dashboard-analytics-note-icon--loading" aria-hidden="true"></i>
+    <i class="fa fa-check-circle dashboard-analytics-note-icon dashboard-analytics-note-icon--ok" aria-hidden="true" hidden></i>
+    <i class="fa fa-exclamation-triangle dashboard-analytics-note-icon dashboard-analytics-note-icon--warn" aria-hidden="true" hidden></i>
+    <span class="dashboard-analytics-note-text">Loading analytics…</span>
+  </aside>
+</section>
