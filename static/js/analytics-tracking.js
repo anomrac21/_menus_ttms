@@ -44,6 +44,7 @@ class TTMSAnalytics {
       console.log('🎯 TTMS Analytics initialized');
 
       this.setCustomDimensions();
+      this.captureCampaignAttribution();
       this.trackPageEngagement();
       this.observeAdImpressions();
       this.setupScrollTracking();
@@ -83,6 +84,46 @@ class TTMSAnalytics {
     _paq.push(['setCustomVariable', 3, 'IsPWA', isPWA ? 'Yes' : 'No', 'visit']);
     
     console.log('📊 Custom dimensions set:', { sessionId: this.sessionId, deviceType, isPWA });
+  }
+
+  /**
+   * Pass UTM / Matomo campaign query params into the visit for campaign attribution.
+   */
+  captureCampaignAttribution() {
+    if (!this.enabled || typeof _paq === 'undefined') return;
+    let params;
+    try {
+      params = new URLSearchParams(window.location.search || '');
+    } catch (e) {
+      return;
+    }
+    const campaign =
+      params.get('utm_campaign') ||
+      params.get('mtm_campaign') ||
+      params.get('pk_campaign') ||
+      params.get('piwik_campaign');
+    const keyword =
+      params.get('utm_term') ||
+      params.get('mtm_kwd') ||
+      params.get('pk_kwd') ||
+      params.get('piwik_kwd');
+    const source = params.get('utm_source') || params.get('mtm_source') || params.get('pk_source');
+    const medium = params.get('utm_medium') || params.get('mtm_medium') || params.get('pk_medium');
+    const content = params.get('utm_content') || params.get('mtm_content') || params.get('pk_content');
+
+    if (campaign) {
+      _paq.push(['setCampaignName', campaign]);
+    }
+    if (keyword) {
+      _paq.push(['setCampaignKeyword', keyword]);
+    }
+    if (source || medium || content) {
+      const label = [source, medium, content].filter(Boolean).join(' / ');
+      _paq.push(['setCustomVariable', 7, 'CampaignMeta', label, 'visit']);
+    }
+    if (campaign || keyword || source || medium) {
+      console.log('📣 Campaign attribution set:', { campaign, keyword, source, medium, content });
+    }
   }
 
   /**

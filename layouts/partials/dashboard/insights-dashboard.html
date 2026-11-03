@@ -68,6 +68,7 @@
     <div class="dashboard-analytics-metrics" id="insightsVisitorMetrics"></div>
     <div class="insights-split">
       <div><h3 class="dashboard-notify-subsection-title">Traffic sources</h3><div id="insightsSources"></div></div>
+      <div><h3 class="dashboard-notify-subsection-title">Campaigns</h3><div id="insightsCampaigns"></div></div>
       <div><h3 class="dashboard-notify-subsection-title">Devices</h3><div id="insightsDevices"></div></div>
       <div><h3 class="dashboard-notify-subsection-title">Country</h3><div id="insightsCountries"></div></div>
     </div>
@@ -95,6 +96,11 @@
   </div>
 
   <div class="insights-panel" data-insights-panel="behaviour" hidden>
+    <h3 class="dashboard-notify-subsection-title">Ordering funnel</h3>
+    <p class="dashboard-analytics-subtitle">Observed menu events. Order submit clicks are not confirmed sales.</p>
+    <div id="insightsObservedFunnel"></div>
+    <h3 class="dashboard-notify-subsection-title">Cart abandonment</h3>
+    <p id="insightsCartAbandonment" class="dashboard-analytics-subtitle"></p>
     <h3 class="dashboard-notify-subsection-title">Peak days</h3>
     <div id="insightsPeakDays"></div>
     <h3 class="dashboard-notify-subsection-title">Peak hours</h3>
@@ -111,6 +117,9 @@
 
   <div class="insights-panel" data-insights-panel="orders" hidden>
     <div id="insightsOrders"></div>
+    <h3 class="dashboard-notify-subsection-title">Observed menu funnel</h3>
+    <p class="dashboard-analytics-subtitle">Compared with verified TTMenus orders above when ordering is enabled.</p>
+    <div id="insightsOrdersFunnel"></div>
   </div>
 
   <div class="insights-panel" data-insights-panel="sales" hidden>
