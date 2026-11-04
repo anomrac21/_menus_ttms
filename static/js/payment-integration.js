@@ -477,8 +477,11 @@
           params.get('status') ||
           params.get('invalid') ||
           '';
+        // Hosted CONNECT often returns to fail URL with only our payment_id
+        // (Scotia HPP crash / genericException) — treat that as gateway reject.
         var providerRejected = !!(
           failReason ||
+          paymentId ||
           params.get('response_hash') ||
           params.get('response_code_3dsecure') ||
           params.get('processor_response_code')
