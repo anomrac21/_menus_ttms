@@ -468,12 +468,33 @@
         if (typeof window.trackPaymentEvent === 'function') {
           window.trackPaymentEvent('Checkout Cancel');
         }
-        if (titleEl) titleEl.textContent = 'Payment cancelled';
-        if (statusEl) {
-          statusEl.textContent =
-            'You left checkout before paying. Nothing was charged. Open your cart to try again, or return to the menu.';
+        // Fiserv CONNECT posts fail params when the hosted page never opens
+        // (bad hash, test store on prod URL, etc.) — surface that instead of "you left".
+        var failReason =
+          params.get('fail_reason') ||
+          params.get('failReason') ||
+          params.get('fail_rc') ||
+          params.get('status') ||
+          params.get('invalid') ||
+          '';
+        var providerRejected = !!(
+          failReason ||
+          params.get('response_hash') ||
+          params.get('response_code_3dsecure') ||
+          params.get('processor_response_code')
+        );
+        if (titleEl) {
+          titleEl.textContent = providerRejected ? 'Payment could not start' : 'Payment cancelled';
         }
-        setDetail(paymentId ? 'Reference: ' + shortPaymentRef(paymentId) : '');
+        if (statusEl) {
+          statusEl.textContent = providerRejected
+            ? 'Checkout was rejected before card entry. Nothing was charged. Open your cart and try again — if this keeps happening, the menu’s payment gateway may be misconfigured.'
+            : 'You left checkout before paying. Nothing was charged. Open your cart to try again, or return to the menu.';
+        }
+        var detailBits = [];
+        if (paymentId) detailBits.push('Reference: ' + shortPaymentRef(paymentId));
+        if (failReason) detailBits.push('Provider: ' + String(failReason).slice(0, 120));
+        setDetail(detailBits.join(' · '));
         return;
       }
 
