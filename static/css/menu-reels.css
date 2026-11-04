@@ -1035,9 +1035,9 @@ html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass {
     padding: 0;
     padding-block: .6em 5em;
     box-sizing: border-box;
-    content-visibility: auto;
-    contain-intrinsic-size: auto var(--ttms-reel-slide-height, calc(100dvh - var(--ttms-header-height, 5em)));
-}
+    /* Keep painted: content-visibility:auto fought fixed slide height and jittered scroll. */
+    content-visibility: visible;
+  }
 
 /* Hold the slide while the real card is still offstage. Same box as a menu item. */
 .menu-reel-slot.menu-reels-slide {
@@ -1060,17 +1060,6 @@ html.menu-nav-smooth .hero-content.menu-reels-slide--intro .menu-smash-pass {
 
 @keyframes menu-reel-slot-spin {
     to { transform: rotate(360deg); }
-}
-
-@media (hover: none) and (pointer: coarse) {
-    .menu-item-card.menu-reels-slide {
-        content-visibility: visible;
-    }
-}
-
-.menu-item-card.menu-reels-slide.expanded,
-.menu-item-card.menu-reels-slide[aria-expanded='true'] {
-    content-visibility: visible;
 }
 
 .menu-item-card.menu-reels-slide::after {

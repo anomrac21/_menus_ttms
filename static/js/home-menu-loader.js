@@ -1,7 +1,8 @@
 /**
  * Homepage menu reels: lazy-load menu item cards from /api/menu-items.json.
  * Each dish reserves a full slide with a throbber first. Real cards replace that
- * space only after scrolling slows and the slide is near the screen.
+ * space near the viewport. Hydrated cards stay mounted (no dehydrate) so scrolling
+ * does not thrash layout and jitter the scroll position.
  */
 (function () {
   'use strict';
@@ -651,23 +652,6 @@
     return true;
   }
 
-  function dehydrateNode(node, header) {
-    if (!node || !node.classList.contains('menu-item-card')) return false;
-    if (node.getAttribute('aria-expanded') === 'true' || node.getAttribute('data-item-expanded') === 'true') {
-      return false;
-    }
-    if (document.body && document.body.classList.contains('menu-reels-item-modal-open')) return false;
-    if (node.classList.contains('is-viewing-snapshot')) return false;
-    if (urlInSnapshotSet(node.getAttribute('data-item-url'), pinnedMenuUrls)) return false;
-    if (node.querySelector('.menu-item-snapshot-badge:not([hidden]), .menu-content-draft-badge--title-row:not([hidden])')) {
-      return false;
-    }
-    var index = parseInt(node.getAttribute('data-reel-slot-index'), 10);
-    if (!Number.isFinite(index)) return false;
-    node.replaceWith(buildSlot(header, index));
-    return true;
-  }
-
   function slideNeedsHydration(node, metrics) {
     if (!node.classList.contains('menu-reel-slot')) return false;
     var band = slideBand(node, metrics);
@@ -688,33 +672,21 @@
     var track = getTrack();
     if (!track) return;
     var fast = isFastScroll();
+    var scrolling = !!scrollMotion.timer;
     var metrics = viewportMetrics();
     var hydrated = 0;
-    var dehydrated = 0;
+    var perTick = fast ? 2 : scrolling ? 4 : 12;
     track.querySelectorAll('.menu-header.menu-reels-slide[data-home-menu-lazy]').forEach(function (header) {
       if (!sectionItems.has(header)) return;
-      if (sectionIsNearView(header)) {
-        if (fast) {
-          sectionSlideNodes(header).forEach(function (node) {
-            if (hydrated >= 2 || !slideNeedsHydration(node, metrics)) return;
-            if (hydrateNode(header, node)) hydrated += 1;
-          });
-        } else {
-          hydrateSectionNow(header);
-        }
+      if (!sectionIsNearView(header)) return;
+      if (scrolling || fast) {
+        sectionSlideNodes(header).forEach(function (node) {
+          if (hydrated >= perTick || !slideNeedsHydration(node, metrics)) return;
+          if (hydrateNode(header, node)) hydrated += 1;
+        });
         return;
       }
-      if (fast) return;
-      sectionSlideNodes(header).forEach(function (node) {
-        var band = slideBand(node, metrics);
-        if (
-          node.classList.contains('menu-item-card') &&
-          (band.ahead > 2.5 || band.behind > 2.5) &&
-          dehydrated < 3
-        ) {
-          if (dehydrateNode(node, header)) dehydrated += 1;
-        }
-      });
+      hydrateSectionNow(header);
     });
     if (hydrated) scheduleHydratedCardInit();
   }
