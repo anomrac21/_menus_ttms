@@ -47,7 +47,7 @@ weight = 30
   enabled = false
   apiUrl = "https://pay.ttmenus.com"
   currency = "TTD"
-  provider = "wipay"
+  provider = "fiserv"
   apiKey = ""
 
 # Cluster map-service (TileServer GL) + OSRM — no third-party map key

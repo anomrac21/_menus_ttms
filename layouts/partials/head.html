@@ -1491,7 +1491,7 @@ window.SiteConfig.notifyServiceUrl = window.NOTIFY_CONFIG.serviceUrl;
 {{- $payApiUrl := site.Params.paymentService.apiUrl | default "https://pay.ttmenus.com" -}}
 {{- $payClientId := site.Params.paymentService.clientId | default site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
 {{- $payCurrency := site.Params.paymentService.currency | default "TTD" -}}
-{{- $payProvider := site.Params.paymentService.provider | default "wipay" -}}
+{{- $payProvider := site.Params.paymentService.provider | default "fiserv" -}}
 {{- $paySuccessUrl := site.Params.paymentService.successUrl | default "" -}}
 {{- $payCancelUrl := site.Params.paymentService.cancelUrl | default "" -}}
 <link rel="preconnect" href="{{ $payApiUrl }}" crossorigin>
