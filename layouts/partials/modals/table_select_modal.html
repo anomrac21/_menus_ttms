@@ -63,13 +63,16 @@
 					<h2 id="myTableNum" class="selected-table-display"></h2>
 					<div class="table-modal-actions" id="here">
 						<button type="button" onclick="confirmTable('order');" class="btn-confirm-table">
-							{{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
+							{{- $confirmChannel := partial "ordering/checkout-channel.html" . -}}
+							{{- $payWrap := and (or (eq $confirmChannel "loyverse") (eq $confirmChannel "none")) site.Params.features.payments site.Params.paymentService.enabled -}}
+							{{- if $payWrap -}}
 							<i class="fa fa-credit-card" aria-hidden="true"></i>
 							<span>Pay &amp; Confirm</span>
-							{{- else -}}
-							{{- $confirmChannel := partial "ordering/checkout-channel.html" . -}}
-							{{- if eq $confirmChannel "phone" -}}
+							{{- else if eq $confirmChannel "phone" -}}
 							<i class="fa fa-phone" aria-hidden="true"></i>
+							<span>Confirm Order</span>
+							{{- else if eq $confirmChannel "loyverse" -}}
+							<img src="/icons/loyverse-mark.svg" alt="" width="16" height="16">
 							<span>Confirm Order</span>
 							{{- else if eq $confirmChannel "none" -}}
 							<i class="fa fa-check" aria-hidden="true"></i>
@@ -77,7 +80,6 @@
 							{{- else -}}
 							<i class="fa fa-whatsapp" aria-hidden="true"></i>
 							<span>Confirm Order</span>
-							{{- end -}}
 							{{- end -}}
 						</button>
 						<button type="button" onclick="closeTableModal();" class="btn-cancel-table">

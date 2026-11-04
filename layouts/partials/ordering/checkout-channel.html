@@ -1,18 +1,30 @@
+{{- /* Single guest checkout mode: phone | whatsapp | loyverse | none (never stacked). */ -}}
 {{- $os := site.Params.orderingsystem | default dict -}}
+{{- $pos := site.Params.posintegration | default dict -}}
+{{- $features := site.Params.features | default dict -}}
+{{- $loyverseConnect := default false $features.loyverse_connect -}}
+{{- $posOn := and $loyverseConnect (default false $pos.enabled) -}}
 {{- $channel := "" -}}
-{{- with $os.checkoutchannel -}}
-  {{- $c := lower (trim . " ") -}}
-  {{- if or (eq $c "phone") (eq $c "whatsapp") (eq $c "none") -}}
-    {{- $channel = $c -}}
+{{- if $posOn -}}
+  {{- $channel = "loyverse" -}}
+{{- else -}}
+  {{- with $os.checkoutchannel -}}
+    {{- $c := lower (trim . " ") -}}
+    {{- if or (eq $c "phone") (eq $c "whatsapp") (eq $c "none") -}}
+      {{- $channel = $c -}}
+    {{- else if eq $c "loyverse" -}}
+      {{- /* Stored loyverse without POS → in-menu only */ -}}
+      {{- $channel = "none" -}}
+    {{- end -}}
   {{- end -}}
-{{- end -}}
-{{- if not $channel -}}
-  {{- $usePhone := true -}}
-  {{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
-  {{- if $usePhone -}}
-    {{- $channel = "phone" -}}
-  {{- else -}}
-    {{- $channel = "whatsapp" -}}
+  {{- if not $channel -}}
+    {{- $usePhone := true -}}
+    {{- if isset $os "usephonecall" -}}{{- $usePhone = $os.usephonecall -}}{{- end -}}
+    {{- if $usePhone -}}
+      {{- $channel = "phone" -}}
+    {{- else -}}
+      {{- $channel = "whatsapp" -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 {{- return $channel -}}

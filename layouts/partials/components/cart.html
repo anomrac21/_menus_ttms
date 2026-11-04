@@ -113,18 +113,20 @@
 			<div id="itemTotal" class="cart-total-grand">TOTAL $0.00</div>
 		</div>
 		<div class="cart-checkout-bar__actions">
-		{{- if and site.Params.features.payments site.Params.paymentService.enabled -}}
-			<button type="button" class="btn-place-order btn-pay-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-credit-card" aria-hidden="true"></i><span>Pay &amp; Order</span></button>
-		{{- else -}}
 			{{- $cartChannel := partial "ordering/checkout-channel.html" . -}}
-			{{- if eq $cartChannel "phone" -}}
+			{{- /* Pay wrap only for Loyverse / None — never stacks on Phone or WhatsApp. */ -}}
+			{{- $payWrap := and (or (eq $cartChannel "loyverse") (eq $cartChannel "none")) site.Params.features.payments site.Params.paymentService.enabled -}}
+			{{- if $payWrap -}}
+			<button type="button" class="btn-place-order btn-pay-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-credit-card" aria-hidden="true"></i><span>Pay &amp; Order</span></button>
+			{{- else if eq $cartChannel "phone" -}}
 			<button type="button" class="placeOrder btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-phone" aria-hidden="true"></i><span>Order Now</span></button>
+			{{- else if eq $cartChannel "loyverse" -}}
+			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><img src="/icons/loyverse-mark.svg" alt="" width="16" height="16"><span>Order Now</span></button>
 			{{- else if eq $cartChannel "none" -}}
 			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-check" aria-hidden="true"></i><span>Order Now</span></button>
 			{{- else -}}
 			<button type="button" class="btn-place-order btn-place-order--disabled" onclick="placeOrderClick();" disabled aria-disabled="true"><i class="fa fa-whatsapp" aria-hidden="true"></i><span>Order Now</span></button>
 			{{- end -}}
-		{{- end -}}
 		</div>
 	</div>
 	</div>

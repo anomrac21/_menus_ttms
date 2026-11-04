@@ -15,7 +15,8 @@ const orderingDisabledMessage = {{ (site.Params.orderingsystem.orderingDisabledM
 const orderCheckoutChannel = String({{ $checkoutChannel | jsonify | safeJS }}).replace(/^["']+|["']+$/g, '');
 const usephonecall = orderCheckoutChannel === 'phone';
 const orderPhone = '{{ site.Params.orderingsystem.phone }}';
-const paymentsEnabled = {{ and site.Params.features.payments site.Params.paymentService.enabled }};
+{{- /* Pay-before-order only for Loyverse / None — Phone and WhatsApp stay exclusive. */ -}}
+const paymentsEnabled = {{ and (or (eq $checkoutChannel "loyverse") (eq $checkoutChannel "none")) site.Params.features.payments site.Params.paymentService.enabled }};
 
 // Location storage key
 const LOCATION_STORAGE_KEY = 'ttms_selected_location';

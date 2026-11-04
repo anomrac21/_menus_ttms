@@ -24,27 +24,15 @@
 {{- $payCurrency := $pay.currency | default "TTD" -}}
 {{- $paymentsDetail := printf "Pay securely online%s. Checkout in %s." (cond (ne $payProvider "") (printf " via %s" $payProvider) "") $payCurrency -}}
 
-{{- $pos := site.Params.posintegration | default dict -}}
-{{- $loyverseConnect := default false $f.loyverse_connect -}}
-{{- $posOn := and $loyverseConnect (default false $pos.enabled) -}}
-{{- $fallbackWa := true -}}
-{{- if isset $pos "fallback_to_whatsapp" -}}{{- $fallbackWa = $pos.fallback_to_whatsapp -}}{{- end -}}
-{{- $guestCheckout := or (not $posOn) $fallbackWa -}}
 {{- $checkoutChannel := partial "ordering/checkout-channel.html" . -}}
-{{- $hasPhone := and $guestCheckout (eq $checkoutChannel "phone") $os.phone -}}
-{{- $hasWhatsApp := and $guestCheckout (eq $checkoutChannel "whatsapp") $os.whatsapp -}}
 {{- $orderingDetail := "Add items from the menu and place your order." -}}
-{{- if and $posOn $hasPhone -}}
-  {{- $orderingDetail = "Orders go to the POS, or call to place your order." -}}
-{{- else if and $posOn $hasWhatsApp -}}
-  {{- $orderingDetail = "Orders go to the POS, or send your cart on WhatsApp." -}}
+{{- if eq $checkoutChannel "loyverse" -}}
+  {{- $orderingDetail = "Orders are sent to the connected POS." -}}
 {{- else if eq $checkoutChannel "none" -}}
   {{- $orderingDetail = "Add items and place the order in the menu." -}}
-{{- else if $posOn -}}
-  {{- $orderingDetail = "Orders are sent to the connected POS." -}}
-{{- else if $hasPhone -}}
+{{- else if eq $checkoutChannel "phone" -}}
   {{- $orderingDetail = "Order by phone: add items, then call." -}}
-{{- else if $hasWhatsApp -}}
+{{- else if eq $checkoutChannel "whatsapp" -}}
   {{- $orderingDetail = "Order via WhatsApp: add items, then send your cart." -}}
 {{- end -}}
 

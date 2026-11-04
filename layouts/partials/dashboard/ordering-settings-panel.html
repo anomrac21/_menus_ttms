@@ -41,26 +41,26 @@
 
         <fieldset class="dashboard-ordering-group dashboard-ordering-group--channel" id="osGuestCheckoutGroup" data-os-requires-ordering data-os-requires-guest-checkout{{ if not $orderingOn }} hidden{{ end }}>
           <legend class="dashboard-ordering-group-title">Guest checkout</legend>
-          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.</p>
+          <p class="dashboard-ordering-group-hint" id="os-channel-group-hint">Choose one checkout mode. Phone opens the dialer. WhatsApp sends the order summary. Loyverse sends to the POS. None keeps the order in the menu.</p>
           <div class="dashboard-ordering-channel">
             <div class="dashboard-ordering-channel-switch" role="radiogroup" aria-label="How guests send an order">
-              <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "phone") }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "phone") }}true{{ else }}false{{ end }}">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "phone" }} active{{ end }}" id="os-channel-phone" data-channel="phone" aria-pressed="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
                 <i class="fa fa-phone" aria-hidden="true"></i><span>Phone</span>
               </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "whatsapp") }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "whatsapp") }}true{{ else }}false{{ end }}">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "whatsapp" }} active{{ end }}" id="os-channel-whatsapp" data-channel="whatsapp" aria-pressed="{{ if eq $checkoutChannel "whatsapp" }}true{{ else }}false{{ end }}">
                 <i class="fa fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span>
               </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if $posOn }} active{{ end }}" id="os-channel-loyverse" data-channel="loyverse" aria-pressed="{{ if $posOn }}true{{ else }}false{{ end }}"{{ if not $loyverseConnect }} aria-controls="os-loyverse-upgrade-hint"{{ end }}>
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "loyverse" }} active{{ end }}" id="os-channel-loyverse" data-channel="loyverse" aria-pressed="{{ if eq $checkoutChannel "loyverse" }}true{{ else }}false{{ end }}"{{ if not $loyverseConnect }} aria-controls="os-loyverse-upgrade-hint"{{ end }}>
                 <img src="/icons/loyverse-mark.svg" alt="" width="16" height="16">
                 <span>Loyverse</span>
               </button>
-              <button type="button" class="dashboard-ordering-channel-btn{{ if and (not $posOn) (eq $checkoutChannel "none") }} active{{ end }}" id="os-channel-none" data-channel="none" aria-pressed="{{ if and (not $posOn) (eq $checkoutChannel "none") }}true{{ else }}false{{ end }}">
+              <button type="button" class="dashboard-ordering-channel-btn{{ if eq $checkoutChannel "none" }} active{{ end }}" id="os-channel-none" data-channel="none" aria-pressed="{{ if eq $checkoutChannel "none" }}true{{ else }}false{{ end }}">
                 <i class="fa fa-ban" aria-hidden="true"></i><span>None</span>
               </button>
             </div>
-            <input type="hidden" id="os-checkout-channel" name="checkoutchannel" value="{{ if $posOn }}loyverse{{ else }}{{ $checkoutChannel }}{{ end }}">
+            <input type="hidden" id="os-checkout-channel" name="checkoutchannel" value="{{ $checkoutChannel }}">
             <input type="hidden" id="os-phonecall" name="usephonecall" value="{{ if eq $checkoutChannel "phone" }}true{{ else }}false{{ end }}">
-            <div class="dashboard-ordering-contact" id="os-contact-wrap"{{ if or $posOn (eq $checkoutChannel "none") }} hidden{{ end }}>
+            <div class="dashboard-ordering-contact" id="os-contact-wrap"{{ if or (eq $checkoutChannel "loyverse") (eq $checkoutChannel "none") }} hidden{{ end }}>
               <label class="dashboard-settings-label" for="os-contact" id="os-contact-label">{{ if eq $checkoutChannel "phone" }}Phone number{{ else }}WhatsApp number{{ end }}</label>
               <div class="dashboard-ordering-contact-field">
                 <span class="dashboard-ordering-contact-icon" id="os-contact-icon" aria-hidden="true"><i class="fa {{ if eq $checkoutChannel "phone" }}fa-phone{{ else }}fa-whatsapp{{ end }}" aria-hidden="true"></i></span>

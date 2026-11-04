@@ -82,8 +82,9 @@
     if (loyverse && !loyverse.disabled && loyverse.checked) return 'loyverse';
     var el = document.getElementById('os-checkout-channel');
     var value = el && el.value;
-    if (value === 'phone' || value === 'whatsapp' || value === 'none') return value;
-    if (value === 'loyverse') return 'none';
+    if (value === 'phone' || value === 'whatsapp' || value === 'none' || value === 'loyverse') {
+      return value === 'loyverse' ? 'none' : value;
+    }
     var phoneEl = document.getElementById('os-phonecall');
     return !phoneEl || phoneEl.value === 'true' ? 'phone' : 'whatsapp';
   }
@@ -140,8 +141,8 @@
       channelHint.textContent = loyverseUpgradeOpen
         ? 'Loyverse checkout needs a Tier 1 plan.'
         : channel === 'loyverse'
-        ? 'Orders go to the Loyverse till. Phone and WhatsApp stay closed.'
-        : 'Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.';
+        ? 'One mode: Loyverse. Orders go to the till. Phone and WhatsApp stay closed.'
+        : 'Choose one mode. Phone opens the dialer. WhatsApp sends the order summary. None keeps the order in the menu.';
     }
     var contactWrap = document.getElementById('os-contact-wrap');
     setHidden(contactWrap, loyverseUpgradeOpen || channel === 'none' || channel === 'loyverse');
@@ -234,7 +235,7 @@
           loyverseCb.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
-      channelEl.value = channel === 'loyverse' ? 'none' : channel;
+      channelEl.value = channel;
       phonecallEl.value = channel === 'phone' ? 'true' : 'false';
       if (channel === 'phone' || channel === 'whatsapp') {
         contactEl.value = channel === 'phone'
