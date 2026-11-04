@@ -1,7 +1,45 @@
 {{ define "main" }}
-<article class="payment-return-page">
-  <h1>{{ .Title }}</h1>
-  <p id="paymentReturnMessage">{{ .Content }}</p>
-  <a id="paymentReturnContinue" class="btn-payment-primary hide" href="/">Return to menu</a>
+{{- $isCancel := or (eq .File.ContentBaseName "cancel") (strings.Contains .RelPermalink "/payment/cancel") -}}
+{{- $variant := cond $isCancel "cancel" "success" -}}
+{{- $title := .Title -}}
+{{- $defaultMsg := .Plain | strings.TrimSpace -}}
+{{- if not $defaultMsg -}}
+  {{- if $isCancel -}}
+    {{- $defaultMsg = "Payment was cancelled. Nothing was charged. You can return to your cart and try again." -}}
+  {{- else -}}
+    {{- $defaultMsg = "Verifying your payment…" -}}
+  {{- end -}}
+{{- end -}}
+<article
+  class="payment-return-page payment-return-page--{{ $variant }}"
+  data-payment-return="{{ $variant }}"
+  aria-labelledby="paymentReturnTitle"
+>
+  <div class="payment-return-page__icon" aria-hidden="true">
+    {{- if $isCancel -}}
+    <svg viewBox="0 0 48 48" width="48" height="48" focusable="false">
+      <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="2.5"/>
+      <path d="M16 16l16 16M32 16L16 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    {{- else -}}
+    <svg viewBox="0 0 48 48" width="48" height="48" focusable="false">
+      <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="2.5"/>
+      <path d="M14 25l7 7 13-15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{- end -}}
+  </div>
+  <p class="payment-return-page__eyebrow">Secure checkout</p>
+  <h1 id="paymentReturnTitle">{{ $title }}</h1>
+  <p id="paymentReturnMessage" class="payment-return-page__message" role="status" aria-live="polite">{{ $defaultMsg }}</p>
+  <p id="paymentReturnDetail" class="payment-return-page__detail" hidden></p>
+  <div class="payment-return-page__actions">
+    {{- if $isCancel -}}
+    <a id="paymentReturnContinue" class="btn-payment-primary" href="/">Return to menu</a>
+    <button type="button" id="paymentReturnCart" class="btn-payment-secondary">Back to cart</button>
+    {{- else -}}
+    <a id="paymentReturnContinue" class="btn-payment-primary hide" href="/">Continue order</a>
+    <a class="btn-payment-secondary" href="/">Return to menu</a>
+    {{- end -}}
+  </div>
 </article>
 {{ end }}

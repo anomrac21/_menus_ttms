@@ -1,8 +1,7 @@
 ---
 title: Payment Cancelled
-layout: payment
-type: payment-cancel
+type: payment
 url: /payment/cancel/
 ---
 
-Your payment was cancelled. You can return to the menu and try again.
+Payment was cancelled. Nothing was charged. You can return to your cart and try again.

@@ -1,7 +1,6 @@
 ---
 title: Payment Successful
-layout: payment
-type: payment-success
+type: payment
 url: /payment/success/
 ---
 

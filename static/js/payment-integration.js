@@ -420,59 +420,178 @@
       var isCancel = path.indexOf('/payment/cancel') !== -1;
       if (!isSuccess && !isCancel) return;
 
+      var page = document.querySelector('[data-payment-return]');
       var pending = readPending();
       var params = new URLSearchParams(window.location.search);
       var paymentId = params.get('payment_id') || (pending && pending.paymentId) || '';
+      var titleEl = document.getElementById('paymentReturnTitle');
+      var statusEl = document.getElementById('paymentReturnMessage');
+      var detailEl = document.getElementById('paymentReturnDetail');
+      var continueBtn = document.getElementById('paymentReturnContinue');
+      var cartBtn = document.getElementById('paymentReturnCart');
+
+      function setDetail(text) {
+        if (!detailEl) return;
+        if (!text) {
+          detailEl.hidden = true;
+          detailEl.textContent = '';
+          return;
+        }
+        detailEl.hidden = false;
+        detailEl.textContent = text;
+      }
+
+      function shortPaymentRef(id) {
+        if (!id) return '';
+        var s = String(id);
+        return s.length > 28 ? s.slice(0, 12) + '…' + s.slice(-8) : s;
+      }
+
+      if (cartBtn) {
+        cartBtn.addEventListener('click', function () {
+          var home = (pending && pending.returnPath) || '/';
+          if (path.indexOf('/payment/') === 0 && home.indexOf('/payment/') === -1) {
+            try {
+              sessionStorage.setItem('ttms_open_cart', '1');
+            } catch (e) {}
+            window.location.href = home;
+            return;
+          }
+          if (typeof window.toggleCart === 'function') {
+            window.toggleCart();
+          }
+        });
+      }
 
       if (isCancel) {
         writePending(null);
         if (typeof window.trackPaymentEvent === 'function') {
           window.trackPaymentEvent('Checkout Cancel');
         }
-        var cancelMsg = document.getElementById('paymentReturnMessage');
-        if (cancelMsg) cancelMsg.textContent = 'Payment was cancelled. You can return to your cart and try again.';
+        if (titleEl) titleEl.textContent = 'Payment cancelled';
+        if (statusEl) {
+          statusEl.textContent =
+            'You left checkout before paying. Nothing was charged. Open your cart to try again, or return to the menu.';
+        }
+        setDetail(paymentId ? 'Reference: ' + shortPaymentRef(paymentId) : '');
         return;
       }
 
-      var statusEl = document.getElementById('paymentReturnMessage');
-      var continueBtn = document.getElementById('paymentReturnContinue');
-      if (statusEl) statusEl.textContent = 'Verifying your payment…';
+      if (page) page.classList.add('is-verifying');
+      if (titleEl) titleEl.textContent = 'Confirming payment';
+      if (statusEl) statusEl.textContent = 'Checking with the payment provider…';
 
       var idempotencyKey = pending && pending.idempotencyKey;
       var verified = false;
+      var amountLabel = '';
 
-      if (paymentId) {
-        try {
-          var status = await fetchStatus(paymentId);
-          if (status && status.status === 'succeeded') {
-            markPaid({
-              idempotencyKey: idempotencyKey || buildIdempotencyKey({ idempotencyKey: status.metadata && status.metadata.order_ref }),
-              paymentId: paymentId,
-              status: status.status,
-              amount: status.amount && status.amount.value,
-              currency: status.amount && status.amount.currency
-            });
-            verified = true;
-          } else if (status && status.status === 'requires_action') {
-            if (statusEl) statusEl.textContent = 'Payment is still processing. Please wait a moment and refresh.';
-          } else {
-            if (statusEl) statusEl.textContent = 'Payment was not completed. Status: ' + (status && status.status);
-          }
-        } catch (e) {
-          if (statusEl) statusEl.textContent = 'Could not verify payment: ' + e.message;
+      if (!paymentId) {
+        if (page) {
+          page.classList.remove('is-verifying');
+          page.classList.add('is-failed');
         }
+        if (titleEl) titleEl.textContent = 'Payment not confirmed';
+        if (statusEl) {
+          statusEl.textContent =
+            'We could not find a payment reference on this return link. If you were charged, keep your receipt and contact the restaurant.';
+        }
+        setDetail('');
+        return;
+      }
+
+      try {
+        var status = await fetchStatus(paymentId);
+        if (status && status.status === 'succeeded') {
+          amountLabel =
+            status.amount && status.amount.value
+              ? '$' + status.amount.value + ' ' + (status.amount.currency || 'TTD')
+              : '';
+          markPaid({
+            idempotencyKey:
+              idempotencyKey ||
+              buildIdempotencyKey({
+                idempotencyKey: status.metadata && status.metadata.order_ref
+              }),
+            paymentId: paymentId,
+            status: status.status,
+            amount: status.amount && status.amount.value,
+            currency: status.amount && status.amount.currency
+          });
+          verified = true;
+        } else if (status && status.status === 'requires_action') {
+          if (page) {
+            page.classList.remove('is-verifying');
+            page.classList.add('is-failed');
+          }
+          if (titleEl) titleEl.textContent = 'Payment still processing';
+          if (statusEl) {
+            statusEl.textContent =
+              'The bank has not finished yet. Wait a moment, then refresh this page. Do not pay again until you see a confirmed status.';
+          }
+          setDetail('Reference: ' + shortPaymentRef(paymentId));
+        } else if (status && (status.status === 'canceled' || status.status === 'cancelled')) {
+          if (page) {
+            page.classList.remove('is-verifying');
+            page.classList.add('is-failed');
+          }
+          if (titleEl) titleEl.textContent = 'Payment cancelled';
+          if (statusEl) {
+            statusEl.textContent = 'This payment was cancelled. Nothing should have been charged.';
+          }
+          setDetail('Reference: ' + shortPaymentRef(paymentId));
+        } else {
+          if (page) {
+            page.classList.remove('is-verifying');
+            page.classList.add('is-failed');
+          }
+          if (titleEl) titleEl.textContent = 'Payment not completed';
+          if (statusEl) {
+            statusEl.textContent =
+              'Checkout did not finish successfully' +
+              (status && status.status ? ' (status: ' + status.status + ')' : '') +
+              '. You can return to your cart and try again.';
+          }
+          setDetail('Reference: ' + shortPaymentRef(paymentId));
+        }
+      } catch (e) {
+        if (page) {
+          page.classList.remove('is-verifying');
+          page.classList.add('is-failed');
+        }
+        if (titleEl) titleEl.textContent = 'Could not verify payment';
+        if (statusEl) {
+          statusEl.textContent =
+            'We could not reach the payment service' +
+            (e && e.message ? ': ' + e.message : '.') +
+            ' If you were charged, keep your receipt and contact the restaurant.';
+        }
+        setDetail('Reference: ' + shortPaymentRef(paymentId));
       }
 
       if (verified) {
         writePending(null);
+        if (page) {
+          page.classList.remove('is-verifying', 'is-failed');
+          page.classList.add('is-verified');
+        }
         if (typeof window.trackPaymentEvent === 'function') {
           window.trackPaymentEvent('Return Success', paymentId);
         }
-        if (statusEl) statusEl.textContent = 'Payment successful! You can complete your order.';
+        if (titleEl) titleEl.textContent = 'Payment successful';
+        if (statusEl) {
+          statusEl.textContent = amountLabel
+            ? 'Paid ' + amountLabel + '. Return to the menu to finish placing your order.'
+            : 'Payment confirmed. Return to the menu to finish placing your order.';
+        }
+        setDetail('Reference: ' + shortPaymentRef(paymentId));
         if (continueBtn) {
           continueBtn.classList.remove('hide');
-          continueBtn.onclick = function () {
+          continueBtn.onclick = function (ev) {
+            if (ev) ev.preventDefault();
             var target = (pending && pending.returnPath) || '/';
+            try {
+              sessionStorage.setItem('ttms_open_cart', '1');
+            } catch (err) {}
             window.location.href = target;
           };
         }
@@ -490,5 +609,13 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     PaymentIntegration.handleReturnPage();
+    try {
+      if (sessionStorage.getItem('ttms_open_cart') === '1') {
+        sessionStorage.removeItem('ttms_open_cart');
+        setTimeout(function () {
+          if (typeof window.toggleCart === 'function') window.toggleCart();
+        }, 400);
+      }
+    } catch (e) {}
   });
 })();

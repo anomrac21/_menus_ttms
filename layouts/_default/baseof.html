@@ -23,15 +23,16 @@
 {{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $multiLocHome := and .IsHome (partial "menu/multi-location-enabled.html" .) -}}
 {{- $isLocationHome := and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug) -}}
-{{- $isMenuCategoryList := and (eq .Kind "section") (ne .Type "locations") (ne .Section "locations") (not .IsHome) -}}
+{{- $isMenuCategoryList := and (eq .Kind "section") (ne .Type "locations") (ne .Section "locations") (ne .Section "payment") (not .IsHome) -}}
 {{- $isTaxonomyTerm := eq .Kind "term" -}}
+{{- $isPaymentReturn := eq .Section "payment" -}}
 {{- $isMenuReelsPage := and (not $multiLocHome) (or .IsHome (eq .Layout "location-home") $isLocationHome $isMenuCategoryList $isTaxonomyTerm) -}}
 <!DOCTYPE html>
-<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
+<html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}{{ if $isPaymentReturn }} class="ttms-payment-return"{{ end }}>
 <head>
   {{ partial "head.html" . }}
 </head>
-<body{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}>
+<body{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}{{ if $isPaymentReturn }} class="ttms-payment-return"{{ end }}>
   <a class="skip-link" href="#main">Skip to main content</a>
   {{ partial "layout/loader.html" . }}
   {{ partial "features/askofserver.html" . }}
@@ -46,7 +47,7 @@
         {{ block "main" . }}{{ end }}
         
       </main>
-      {{- if not (or $isMenuReelsPage $multiLocHome) -}}
+      {{- if not (or $isMenuReelsPage $multiLocHome $isPaymentReturn) -}}
       <div class="bottomads">
           {{ partial "ads/frontpageads.html" . }}
       </div>

@@ -128,30 +128,101 @@
 }
 
 .payment-return-page {
-    max-width: 28rem;
-    margin: 2rem auto;
-    padding: 1.5rem;
+    max-width: 26rem;
+    margin: 2.5rem auto 3rem;
+    padding: 1.75rem 1.35rem 1.5rem;
     text-align: center;
-    border-radius: 1rem;
-    background: color-mix(in srgb, var(--scheme-white) 5%, transparent);
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 0%, color-mix(in srgb, var(--scheme-accent) 14%, transparent), transparent 70%),
+      color-mix(in srgb, var(--scheme-white) 6%, transparent);
+}
+
+.payment-return-page__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 0.85rem;
+    border-radius: 999px;
+    color: var(--scheme-accent);
+    background: color-mix(in srgb, var(--scheme-accent) 16%, transparent);
+}
+
+.payment-return-page--cancel .payment-return-page__icon {
+    color: var(--scheme-accent-2, var(--scheme-accent));
+    background: color-mix(in srgb, var(--scheme-accent-2, var(--scheme-accent)) 16%, transparent);
+}
+
+.payment-return-page--success.is-verified .payment-return-page__icon {
+    color: var(--scheme-accent);
+}
+
+.payment-return-page--success.is-failed .payment-return-page__icon {
+    color: var(--scheme-accent-2, #c45c4a);
+    background: color-mix(in srgb, var(--scheme-accent-2, #c45c4a) 16%, transparent);
+}
+
+.payment-return-page__eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--main-text-color) 55%, transparent);
 }
 
 .payment-return-page h1 {
-    font-size: 1.35rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.45rem;
+    margin: 0 0 0.65rem;
+    letter-spacing: -0.02em;
 }
 
-.payment-return-page p {
-    margin-bottom: 1rem;
-    color: color-mix(in srgb, var(--main-text-color) 78%, transparent);
+.payment-return-page__message {
+    margin: 0 0 0.55rem;
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--main-text-color) 86%, transparent);
 }
 
-.payment-return-page .btn-payment-primary {
+.payment-return-page__detail {
+    margin: 0 0 1.15rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--main-text-color) 62%, transparent);
+    word-break: break-all;
+}
+
+.payment-return-page__detail[hidden] {
+    display: none !important;
+}
+
+.payment-return-page__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-top: 0.35rem;
+}
+
+.payment-return-page .btn-payment-primary,
+.payment-return-page .btn-payment-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 0 1.25rem;
     text-decoration: none;
+    box-sizing: border-box;
+}
+
+.payment-return-page .btn-payment-primary.hide {
+    display: none !important;
+}
+
+/* Payment return pages are not menu items — hide smash/cart chrome leftovers if any. */
+body:has([data-payment-return]) .menu-item-card,
+body:has([data-payment-return]) .single-page-add-cart {
+    display: none !important;
 }
 
 .cart-checkout-bar__actions {
