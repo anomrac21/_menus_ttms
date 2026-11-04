@@ -2924,7 +2924,12 @@ async function confirmWhatsAppOrder(){
 		alert('The following items are not currently available and cannot be ordered:\n\n' + list + '\n\nLunch items are available Monday–Friday, 11AM–2PM. Please remove them from your cart to proceed.');
 		return;
 	}
-	if (paymentsEnabled && window.PaymentIntegration) {
+	if (paymentsEnabled) {
+		if (!window.PaymentIntegration || typeof window.PaymentIntegration.ensurePaidBeforeOrder !== 'function') {
+			alert('Payment checkout is still loading. Please wait a moment and try Order again.');
+			return;
+		}
+		// Pay first (hosted page). Only place the ticket after payment succeeds.
 		await window.PaymentIntegration.ensurePaidBeforeOrder(null, function () {
 			constructWAMessage();
 			return confirmSendOrder();

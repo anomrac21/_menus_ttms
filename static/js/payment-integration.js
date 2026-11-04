@@ -308,10 +308,18 @@
       if (!isEnabled()) return true;
       context = context || this.getOrderPaymentContext();
       var key = buildIdempotencyKey(context);
-      if (isLocallyPaid(key)) return true;
       var pending = readPending();
-      if (pending && pending.idempotencyKey === key && pending.paymentId) {
-        return verifyPaid(key, pending.paymentId);
+      var paymentId = (pending && pending.idempotencyKey === key && pending.paymentId)
+        ? pending.paymentId
+        : '';
+      if (!paymentId && isLocallyPaid(key)) {
+        var entry = readPaidMap()[key];
+        paymentId = entry && entry.paymentId ? entry.paymentId : '';
+      }
+      // Never trust local "paid" alone — verify with payment-service so we always
+      // open the hosted page when the charge is not actually succeeded.
+      if (paymentId) {
+        return verifyPaid(key, paymentId);
       }
       return false;
     },
@@ -394,11 +402,14 @@
         if (typeof onSuccess === 'function') onSuccess();
         return true;
       }
+      context = context || this.getOrderPaymentContext();
       var paid = await this.isCurrentOrderPaid(context);
       if (paid) {
         if (typeof onSuccess === 'function') onSuccess();
         return true;
       }
+      // Opens modal → POST /pay → redirect/form to Fiserv. Does not call onSuccess
+      // until payment is already succeeded (or after return + verify).
       return this.startCheckout(context, onSuccess);
     },
 

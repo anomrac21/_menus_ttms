@@ -64,11 +64,7 @@
 					<div class="table-modal-actions" id="here">
 						<button type="button" onclick="confirmTable('order');" class="btn-confirm-table">
 							{{- $confirmChannel := partial "ordering/checkout-channel.html" . -}}
-							{{- $payWrap := and (or (eq $confirmChannel "loyverse") (eq $confirmChannel "none")) site.Params.features.payments site.Params.paymentService.enabled -}}
-							{{- if $payWrap -}}
-							<i class="fa fa-credit-card" aria-hidden="true"></i>
-							<span>Pay &amp; Confirm</span>
-							{{- else if eq $confirmChannel "phone" -}}
+							{{- if eq $confirmChannel "phone" -}}
 							<i class="fa fa-phone" aria-hidden="true"></i>
 							<span>Confirm Order</span>
 							{{- else if eq $confirmChannel "loyverse" -}}
