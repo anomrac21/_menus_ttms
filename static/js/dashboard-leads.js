@@ -398,8 +398,7 @@
   }
 
     async function submitToCps(form) {
-    const baseUrl = getCpsBaseUrl();
-      if (!baseUrl) throw new Error('CPS URL is not configured');
+    const baseUrl = getCpsBaseUrl() || 'https://cps.ttmenus.com';
     const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
     const bearer = getBearerToken();
     if (bearer) headers.Authorization = bearer;
@@ -410,8 +409,8 @@
         body: JSON.stringify(cfg.cpsPayload(form)),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.success === false) {
-      throw new Error(data.error || data.message || `HTTP ${res.status}`);
+    if (!res.ok || data.success === false || !(Number(data.lead_id) > 0)) {
+      throw new Error(data.error || data.message || 'The request did not save in CRM. Try again.');
     }
     return data;
   }
@@ -442,7 +441,18 @@
           return;
         }
         if (isCpsCollectOnlyMode()) throw new Error('collect-only');
-        const result = await submitToCps(form);
+        let result;
+        let attemptErr;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            result = await submitToCps(form);
+            attemptErr = null;
+            break;
+          } catch (err) {
+            attemptErr = err;
+          }
+        }
+        if (attemptErr) throw attemptErr;
         persist(form);
         showThanks({ duplicate: !!(result && result.duplicate) });
         setStatus(result && result.duplicate ? messages.duplicate : messages.thanks);

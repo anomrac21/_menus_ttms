@@ -119,6 +119,25 @@
     );
   }
 
+  function maskEmail(value) {
+    var text = String(value || '').trim();
+    var at = text.indexOf('@');
+    if (at <= 0) return '';
+    var local = text.slice(0, at);
+    var domain = text.slice(at + 1);
+    if (!domain) return '';
+    var head = local.charAt(0);
+    var tail = local.length > 2 ? local.charAt(local.length - 1) : '';
+    var hidden = Math.max(3, Math.min(6, local.length - (tail ? 2 : 1)));
+    return head + new Array(hidden + 1).join('•') + tail + '@' + domain;
+  }
+
+  function maskPhone(value) {
+    var digits = String(value || '').replace(/\D/g, '');
+    if (digits.length < 4) return digits ? '••••' : '';
+    return '••••' + digits.slice(-4);
+  }
+
   function line(className, value) {
     var text = String(value || '').trim();
     if (!text) return '';
@@ -158,8 +177,8 @@
       verified +
       '<div class="dashboard-dine-account__who">' +
       line('dashboard-dine-account__name', name) +
-      line('dashboard-dine-account__meta', user.email) +
-      line('dashboard-dine-account__meta', prefs.delivery_phone) +
+      line('dashboard-dine-account__meta', maskEmail(user.email)) +
+      line('dashboard-dine-account__meta', maskPhone(prefs.delivery_phone)) +
       line('dashboard-dine-account__meta', prefs.dine_area) +
       '</div>' +
       detail('Tastes', chips(tastes) || '<p class="dashboard-dine-account__empty">None yet</p>') +
