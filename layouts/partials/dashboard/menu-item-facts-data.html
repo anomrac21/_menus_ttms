@@ -1,0 +1,169 @@
+{{- /*
+  Turns menu-item front matter into display fields for the catalog card.
+  Returns images, description, prices, and facts.
+*/ -}}
+{{- $currency := "TTD" -}}
+{{- with site.Params.paymentService.currency -}}{{- $currency = . -}}{{- end -}}
+{{- with site.Params.currency -}}{{- $currency = . -}}{{- end -}}
+{{- $title := strings.TrimSpace (printf "%s" (.title | default "")) -}}
+{{- $desc := strings.TrimSpace (plainify (printf "%s" (.description | default ""))) -}}
+{{- if or (eq (lower $desc) "<nil>") (eq (lower $desc) (lower $title)) -}}{{- $desc = "" -}}{{- end -}}
+
+{{- $imageRows := slice -}}
+{{- $imgs := .images -}}
+{{- $imageList := slice -}}
+{{- if reflect.IsSlice $imgs -}}
+  {{- $imageList = $imgs -}}
+{{- else if reflect.IsMap $imgs -}}
+  {{- range $imgs -}}
+    {{- $imageList = $imageList | append . -}}
+  {{- end -}}
+{{- else if $imgs -}}
+  {{- $imageList = slice $imgs -}}
+{{- end -}}
+{{- range $imageList -}}
+  {{- $imgPath := "" -}}
+  {{- if reflect.IsMap . -}}
+    {{- $imgPath = .image | default .src | default .path | default "" -}}
+  {{- else -}}
+    {{- $imgPath = . -}}
+  {{- end -}}
+  {{- $imgPath = strings.TrimSpace (printf "%s" $imgPath) -}}
+  {{- if and $imgPath (ne $imgPath "<nil>") (ne $imgPath "-") -}}
+    {{- $src := partial "ttms/menu-img-src.html" (dict "path" $imgPath "size" "thumb") -}}
+    {{- $imageRows = $imageRows | append (dict "src" $src "path" $imgPath "alt" ($title | default "Menu item")) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $priceRows := slice -}}
+{{- range .prices -}}
+  {{- $amount := .price -}}
+  {{- $amountText := strings.TrimSpace (printf "%v" $amount) -}}
+  {{- if and $amountText (ne $amountText "<nil>") -}}
+    {{- $v1 := strings.TrimSpace (printf "%v" (.variable1 | default .size | default "")) -}}
+    {{- $v2 := strings.TrimSpace (printf "%v" (.variable2 | default .flavour | default .flavor | default "")) -}}
+    {{- if or (eq (lower $v1) "-") (eq (lower $v1) "—") (eq (lower $v1) "n/a") (eq (lower $v1) "none") (eq $v1 "<nil>") -}}{{- $v1 = "" -}}{{- end -}}
+    {{- if or (eq (lower $v2) "-") (eq (lower $v2) "—") (eq (lower $v2) "n/a") (eq (lower $v2) "none") (eq $v2 "<nil>") -}}{{- $v2 = "" -}}{{- end -}}
+    {{- $bits := slice -}}
+    {{- with $v1 -}}{{- $bits = $bits | append . -}}{{- end -}}
+    {{- with $v2 -}}{{- $bits = $bits | append . -}}{{- end -}}
+    {{- $priceRows = $priceRows | append (dict "label" (delimit $bits " · ") "value" (printf "%s %s" $currency $amountText)) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $facts := slice -}}
+{{- $groups := slice
+  (dict "label" "Types" "items" .types)
+  (dict "label" "Tags" "items" .tags)
+  (dict "label" "Ingredients" "items" .ingredients)
+  (dict "label" "Cooking" "items" .cookingmethods)
+  (dict "label" "Events" "items" .events)
+-}}
+{{- range $groups -}}
+  {{- $label := .label -}}
+  {{- $names := slice -}}
+  {{- range .items -}}
+    {{- $name := "" -}}
+    {{- if reflect.IsMap . -}}
+      {{- $name = .name | default .title | default .label | default "" -}}
+    {{- else -}}
+      {{- $name = . -}}
+    {{- end -}}
+    {{- $name = strings.TrimSpace (printf "%s" $name) -}}
+    {{- if and $name (ne $name "<nil>") (ne $name "-") -}}
+      {{- $names = $names | append $name -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $joined := delimit $names ", " -}}
+  {{- if $joined -}}
+    {{- $facts = $facts | append (dict "label" $label "value" $joined) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- range slice (dict "label" "Additions" "items" .additions) (dict "label" "Modifications" "items" .modifications) -}}
+  {{- $label := .label -}}
+  {{- $names := slice -}}
+  {{- range .items -}}
+    {{- if reflect.IsMap . -}}
+      {{- $name := strings.TrimSpace (printf "%s" (.name | default .title | default "")) -}}
+      {{- if and $name (ne $name "<nil>") -}}
+        {{- $priceText := strings.TrimSpace (printf "%v" (.price | default "")) -}}
+        {{- if and $priceText (ne $priceText "<nil>") (ne $priceText "0") (ne $priceText "0.0") -}}
+          {{- $names = $names | append (printf "%s (%s %s)" $name $currency $priceText) -}}
+        {{- else -}}
+          {{- $names = $names | append $name -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $name := strings.TrimSpace (printf "%s" .) -}}
+      {{- if and $name (ne $name "<nil>") -}}{{- $names = $names | append $name -}}{{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $joined := delimit $names ", " -}}
+  {{- if $joined -}}
+    {{- $facts = $facts | append (dict "label" $label "value" $joined) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- range .side_categories -}}
+  {{- if reflect.IsMap . -}}
+    {{- $label := strings.TrimSpace (printf "%s" (.display_name | default .category_name | default "Sides")) -}}
+    {{- if or (eq $label "<nil>") (not $label) -}}{{- $label = "Sides" -}}{{- end -}}
+    {{- $names := slice -}}
+    {{- range .items -}}
+      {{- if reflect.IsMap . -}}
+        {{- $name := strings.TrimSpace (printf "%s" (.name | default "")) -}}
+        {{- if and $name (ne $name "<nil>") -}}
+          {{- $priceText := strings.TrimSpace (printf "%v" (.price | default "")) -}}
+          {{- if and $priceText (ne $priceText "<nil>") (ne $priceText "0") -}}
+            {{- $names = $names | append (printf "%s (%s %s)" $name $currency $priceText) -}}
+          {{- else -}}
+            {{- $names = $names | append $name -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $value := delimit $names ", " -}}
+    {{- if not $value -}}{{- $value = $label -}}{{- end -}}
+    {{- $facts = $facts | append (dict "label" (printf "Sides · %s" $label) "value" $value) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- with .availability -}}
+  {{- if reflect.IsMap . -}}
+    {{- $bits := slice -}}
+    {{- $days := slice -}}
+    {{- range .days -}}
+      {{- $day := strings.TrimSpace (printf "%s" .) -}}
+      {{- if and $day (ne $day "<nil>") -}}{{- $days = $days | append $day -}}{{- end -}}
+    {{- end -}}
+    {{- with delimit $days ", " -}}{{- $bits = $bits | append . -}}{{- end -}}
+    {{- $start := strings.TrimSpace (printf "%v" (.time_start | default "")) -}}
+    {{- $finish := strings.TrimSpace (printf "%v" (.time_finish | default "")) -}}
+    {{- if eq $start "<nil>" -}}{{- $start = "" -}}{{- end -}}
+    {{- if eq $finish "<nil>" -}}{{- $finish = "" -}}{{- end -}}
+    {{- if or $start $finish -}}
+      {{- $bits = $bits | append (trim (printf "%s–%s" $start $finish) "–") -}}
+    {{- end -}}
+    {{- with delimit $bits " · " -}}
+      {{- $facts = $facts | append (dict "label" "Availability" "value" .) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $promoNames := slice -}}
+{{- range .promotions -}}
+  {{- $name := "" -}}
+  {{- if reflect.IsMap . -}}
+    {{- $name = .title | default .name | default "" -}}
+  {{- else -}}
+    {{- $name = . -}}
+  {{- end -}}
+  {{- $name = strings.TrimSpace (printf "%s" $name) -}}
+  {{- if and $name (ne $name "<nil>") -}}{{- $promoNames = $promoNames | append $name -}}{{- end -}}
+{{- end -}}
+{{- with delimit $promoNames ", " -}}
+  {{- $facts = $facts | append (dict "label" "Promotions" "value" .) -}}
+{{- end -}}
+
+{{- return dict "images" $imageRows "description" $desc "prices" $priceRows "facts" $facts -}}

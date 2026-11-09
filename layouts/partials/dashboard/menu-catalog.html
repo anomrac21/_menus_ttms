@@ -87,15 +87,9 @@
           {{- if and (ne $secSlug "promotions") $sec.RegularPages (not (partial "menu/is-excluded-section.html" $sec.RelPermalink)) -}}
             {{- $secPath := strings.TrimSuffix "/" (strings.TrimPrefix "/" $sec.RelPermalink) -}}
             {{- range $sec.RegularPages -}}
-              {{- $priceLabel := "" -}}
-              {{- with .Params.prices -}}
-                {{- with index . 0 -}}
-                  {{- with .price -}}{{- $priceLabel = printf "%v" . -}}{{- end -}}
-                {{- end -}}
-              {{- end -}}
+              {{- $facts := partial "dashboard/menu-item-facts.html" . -}}
               {{- $meta := slice -}}
               {{- if not $showTabs -}}{{- $meta = $meta | append ($loc.city | default $loc.slug) -}}{{- end -}}
-              {{- if $priceLabel -}}{{- $meta = $meta | append $priceLabel -}}{{- end -}}
               {{- $fileSlug := "" -}}
               {{- with .File -}}{{- $fileSlug = .ContentBaseName -}}{{- end -}}
               {{- if not $fileSlug -}}
@@ -111,7 +105,7 @@
                 {{- $itemUrl = printf "/locations/%s/%s/%s/" $loc.slug $secSlug $fileSlug -}}
                 {{- $editSection = printf "locations/%s/%s" $loc.slug $secSlug -}}
               {{- end -}}
-              {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $meta "kind" "menu-item" "itemUrl" $itemUrl "sectionSlug" $editSection "locationSlug" $loc.slug "sectionKey" $secSlug "sectionLabel" ($sec.LinkTitle | default $sec.Title) "sectionWeight" ($sec.Params.weight | default 0) "shared" (eq $authoring "shared")) -}}
+              {{- $rows = $rows | append (merge $facts (dict "title" (.LinkTitle | default .Title) "meta" $meta "kind" "menu-item" "itemUrl" $itemUrl "sectionSlug" $editSection "locationSlug" $loc.slug "sectionKey" $secSlug "sectionLabel" ($sec.LinkTitle | default $sec.Title) "sectionWeight" ($sec.Params.weight | default 0) "shared" (eq $authoring "shared"))) -}}
             {{- end -}}
           {{- end -}}
         {{- end -}}
@@ -124,15 +118,8 @@
       {{- if ne $secSlug "promotions" -}}
         {{- $secPath := strings.TrimSuffix "/" (strings.TrimPrefix "/" $sec.RelPermalink) -}}
         {{- range $sec.RegularPages -}}
-          {{- $priceLabel := "" -}}
-          {{- with .Params.prices -}}
-            {{- with index . 0 -}}
-              {{- with .price -}}{{- $priceLabel = printf "%v" . -}}{{- end -}}
-            {{- end -}}
-          {{- end -}}
-          {{- $meta := slice -}}
-          {{- if $priceLabel -}}{{- $meta = $meta | append $priceLabel -}}{{- end -}}
-          {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $meta "kind" "menu-item" "itemUrl" .RelPermalink "sectionSlug" $secPath "sectionKey" $secSlug "sectionLabel" ($sec.LinkTitle | default $sec.Title) "sectionWeight" ($sec.Params.weight | default 0)) -}}
+          {{- $facts := partial "dashboard/menu-item-facts.html" . -}}
+          {{- $rows = $rows | append (merge $facts (dict "title" (.LinkTitle | default .Title) "meta" (slice) "kind" "menu-item" "itemUrl" .RelPermalink "sectionSlug" $secPath "sectionKey" $secSlug "sectionLabel" ($sec.LinkTitle | default $sec.Title) "sectionWeight" ($sec.Params.weight | default 0))) -}}
         {{- end -}}
       {{- end -}}
     {{- end -}}

@@ -1,0 +1,46 @@
+{{- $path := .path | default . -}}
+{{- $parsed := newScratch -}}
+{{- $parsed.Set "raw" (os.ReadFile $path) -}}
+{{- $trimmed := strings.TrimSpace (printf "%s" ($parsed.Get "raw")) -}}
+{{- $parsed.Set "fm" "" -}}
+{{- $parsed.Set "body" $trimmed -}}
+{{- if hasPrefix $trimmed "---" -}}
+  {{- $chunks := split (strings.TrimPrefix "---" $trimmed) "---" -}}
+  {{- $parsed.Set "fm" (index $chunks 0) -}}
+  {{- $parsed.Set "body" (delimit (after 1 $chunks) "---") -}}
+{{- end -}}
+{{- $fmText := strings.TrimSpace (printf "%s" ($parsed.Get "fm")) -}}
+{{- $parsed.Set "data" dict -}}
+{{- if $fmText -}}
+  {{- $parsed.Set "data" (transform.Unmarshal $fmText | default dict) -}}
+{{- end -}}
+{{- $data := $parsed.Get "data" -}}
+{{- $images := index $data "images" -}}
+{{- $singleImage := index $data "image" -}}
+{{- if $singleImage -}}
+  {{- if not $images -}}
+    {{- $parsed.Set "images" (slice $singleImage) -}}
+  {{- else if reflect.IsSlice $images -}}
+    {{- $parsed.Set "images" ($images | append $singleImage) -}}
+  {{- else -}}
+    {{- $parsed.Set "images" $images -}}
+  {{- end -}}
+{{- else -}}
+  {{- $parsed.Set "images" $images -}}
+{{- end -}}
+{{- return partial "dashboard/menu-item-facts-data.html" (dict
+  "title" (index $data "title")
+  "images" ($parsed.Get "images")
+  "prices" (index $data "prices")
+  "tags" (index $data "tags")
+  "ingredients" (index $data "ingredients")
+  "types" (index $data "types")
+  "cookingmethods" (index $data "cookingmethods")
+  "events" (index $data "events")
+  "additions" (index $data "additions")
+  "modifications" (index $data "modifications")
+  "side_categories" (index $data "side_categories" | default (index $data "sideCategories"))
+  "availability" (index $data "availability")
+  "promotions" (index $data "promotions")
+  "description" ($parsed.Get "body")
+) -}}

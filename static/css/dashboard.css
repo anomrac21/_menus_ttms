@@ -12917,6 +12917,117 @@ button.dashboard-settings-panel-toggle:focus-visible {
 
 #menuCatalogList .dashboard-settings-location-card {
   position: relative;
+  align-items: flex-start;
+}
+
+#menuCatalogList .dashboard-catalog-drag,
+#menuCatalogList .dashboard-settings-location-card-actions {
+  margin-top: 0.15rem;
+}
+
+.dashboard-menu-catalog-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 0.45rem;
+}
+
+.dashboard-menu-catalog-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  max-width: 9.6rem;
+}
+
+.dashboard-menu-catalog-images img {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--dash-info) 18%, transparent);
+}
+
+.dashboard-menu-catalog-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-menu-catalog-description {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--dash-ink) 78%, transparent);
+  white-space: pre-wrap;
+}
+
+.dashboard-menu-catalog-prices {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.dashboard-menu-catalog-description + .dashboard-menu-catalog-prices {
+  margin-top: 0.4rem;
+}
+
+.dashboard-menu-catalog-prices li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.dashboard-menu-catalog-price-label {
+  color: color-mix(in srgb, var(--dash-info) 92%, transparent);
+}
+
+.dashboard-menu-catalog-price-value {
+  margin-left: auto;
+  font-weight: 650;
+  color: var(--dash-ink);
+}
+
+.dashboard-menu-catalog-facts {
+  margin: 0.45rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.dashboard-menu-catalog-fact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.45rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.dashboard-menu-catalog-fact dt {
+  margin: 0;
+  font-weight: 650;
+  color: var(--dash-ink);
+}
+
+.dashboard-menu-catalog-fact dt::after {
+  content: ":";
+}
+
+.dashboard-menu-catalog-fact dd {
+  margin: 0;
+  color: color-mix(in srgb, var(--dash-ink) 78%, transparent);
+}
+
+@media (max-width: 560px) {
+  .dashboard-menu-catalog-detail {
+    flex-direction: column;
+  }
 }
 
 #menuCatalogList .dashboard-settings-location-card.is-reorder-selected {
@@ -14582,6 +14693,137 @@ select.dashboard-settings-input {
 .dashboard-settings-page .dashboard-settings-main {
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Menu settings: keep previews, logos, and actions in the middle of each panel. */
+#dashboardMenuSettingsPage .dashboard-settings-snapshot-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-snapshot-bar .dashboard-menu-status-view-switch {
+  width: min(100%, 24rem);
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-snapshot-bar .dashboard-menu-status-slot {
+  align-items: center;
+  text-align: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-snapshot-bar .dashboard-menu-status-muted,
+#dashboardMenuSettingsPage .dashboard-settings-panel-body > .dashboard-settings-hint,
+#dashboardMenuSettingsPage .dashboard-settings-hero-preview-label,
+#dashboardMenuSettingsPage .dashboard-settings-hero-logo-hint {
+  text-align: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-hero-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-hero-preview-col,
+#dashboardMenuSettingsPage .dashboard-settings-hero-fields,
+#dashboardMenuSettingsPage #socialForm .dashboard-settings-form-grid {
+  width: min(100%, 28rem);
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-hero-preview .logo_container,
+#dashboardMenuSettingsPage .dashboard-settings-hero-preview-logo-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-hero-image-row,
+#dashboardMenuSettingsPage .dashboard-settings-hero-image-actions {
+  justify-content: center;
+}
+
+#dashboardMenuSettingsPage #socialForm .dashboard-settings-form-grid {
+  grid-template-columns: minmax(0, 1fr);
+  margin-inline: auto;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-branding-grid {
+  justify-items: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-branding-card,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--hero,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--share,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--wide,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--tall,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: min(100%, 20rem);
+  grid-column: auto;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--mappin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: min(100%, 28rem);
+  grid-column: auto;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-branding-card-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card .dashboard-settings-branding-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--hero .dashboard-settings-branding-card-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--share .dashboard-settings-branding-card-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--wide .dashboard-settings-branding-card-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--tall .dashboard-settings-branding-card-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--tab .dashboard-settings-branding-card-upload,
+#dashboardMenuSettingsPage .dashboard-settings-branding-card--mappin .dashboard-settings-branding-card-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  order: -1;
+}
+
+#dashboardMenuSettingsPage .dashboard-branding-frame,
+#dashboardMenuSettingsPage .dashboard-branding-frame--hero,
+#dashboardMenuSettingsPage .dashboard-branding-frame--share,
+#dashboardMenuSettingsPage .dashboard-branding-frame--wide {
+  margin-inline: auto;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-branding-mappin-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+#dashboardMenuSettingsPage .dashboard-mappin-style-form {
+  width: 100%;
+  align-items: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-mappin-style-head {
+  flex-direction: column;
+  justify-content: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-mappin-style-grid {
+  width: 100%;
+}
+
+#dashboardMenuSettingsPage .dashboard-mappin-style-field {
+  align-items: center;
+}
+
+#dashboardMenuSettingsPage .dashboard-settings-branding-advanced > summary {
+  text-align: center;
 }
 
 .dashboard-settings-page .dashboard-settings-panel,

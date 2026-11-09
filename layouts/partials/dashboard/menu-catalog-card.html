@@ -18,6 +18,42 @@
       {{- end -}}
     </p>
     {{- end -}}
+    {{- if eq $kind "menu-item" -}}
+    <div class="dashboard-menu-catalog-detail">
+      {{- with .images -}}
+      <div class="dashboard-menu-catalog-images">
+        {{- range . -}}
+        <img src="{{ .src }}" alt="{{ .alt }}" width="72" height="72" loading="lazy" data-src-path="{{ .path }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+        {{- end -}}
+      </div>
+      {{- end -}}
+      <div class="dashboard-menu-catalog-copy">
+        {{- with .description -}}
+        <p class="dashboard-menu-catalog-description">{{ . }}</p>
+        {{- end -}}
+        {{- with .prices -}}
+        <ul class="dashboard-menu-catalog-prices">
+          {{- range . -}}
+          <li>
+            {{- with .label -}}<span class="dashboard-menu-catalog-price-label">{{ . }}</span>{{- end -}}
+            <span class="dashboard-menu-catalog-price-value">{{ .value }}</span>
+          </li>
+          {{- end -}}
+        </ul>
+        {{- end -}}
+        {{- with .facts -}}
+        <dl class="dashboard-menu-catalog-facts">
+          {{- range . -}}
+          <div class="dashboard-menu-catalog-fact">
+            <dt>{{ .label }}</dt>
+            <dd>{{ .value }}</dd>
+          </div>
+          {{- end -}}
+        </dl>
+        {{- end -}}
+      </div>
+    </div>
+    {{- end -}}
   </div>
   <div class="dashboard-settings-location-card-actions">
     <button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>
@@ -35,7 +71,7 @@
   {{- else -}}
   <div class="menu-item-card" hidden data-item-url="{{ .itemUrl }}" data-section-slug="{{ .sectionSlug }}">
     <span class="menu-item-title">{{ $title }}</span>
-    <p class="menu-item-description"></p>
+    <p class="menu-item-description">{{ .description }}</p>
     <div class="menu-item-actions" data-actions-kind="menu-item" data-item-url="{{ .itemUrl }}" data-item-title="{{ $title }}" data-section-slug="{{ .sectionSlug }}"></div>
   </div>
   {{- end -}}

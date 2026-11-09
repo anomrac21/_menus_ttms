@@ -39,23 +39,20 @@
           {{- $fileBase := strings.TrimSuffix ".md" .Name -}}
           {{- $itemInfo := newScratch -}}
           {{- $itemInfo.Set "title" (humanize $fileBase) -}}
-          {{- $itemInfo.Set "price" "" -}}
-          {{- with os.ReadFile (printf "%s/%s/%s" $root $slug .Name) -}}
+          {{- $itemPath := printf "%s/%s/%s" $root $slug .Name -}}
+          {{- with os.ReadFile $itemPath -}}
             {{- range split . "\n" -}}
               {{- $line := strings.TrimSpace . -}}
               {{- if hasPrefix $line "title:" -}}
                 {{- $title := strings.TrimSpace (strings.TrimPrefix "title:" $line) -}}
                 {{- $itemInfo.Set "title" (replaceRE "^[\"']+|[\"']+$" "" $title) -}}
-              {{- else if and (hasPrefix $line "price:") (not ($itemInfo.Get "price")) -}}
-                {{- $itemInfo.Set "price" (strings.TrimSpace (strings.TrimPrefix "price:" $line)) -}}
               {{- end -}}
             {{- end -}}
           {{- end -}}
-          {{- $meta := slice -}}
-          {{- with $itemInfo.Get "price" -}}{{- if ne . "0" -}}{{- $meta = $meta | append . -}}{{- end -}}{{- end -}}
-          {{- $rows = $rows | append (dict
+          {{- $facts := partial "dashboard/menu-item-facts-file.html" (dict "path" $itemPath) -}}
+          {{- $rows = $rows | append (merge $facts (dict
             "title" ($itemInfo.Get "title")
-            "meta" $meta
+            "meta" (slice)
             "kind" "menu-item"
             "itemUrl" (printf "/_shared/%s/%s/" $slug $fileBase)
             "sectionSlug" (printf "_shared/%s" $slug)
@@ -64,7 +61,7 @@
             "sectionKey" $slug
             "sectionLabel" ($info.Get "title")
             "sectionWeight" ($info.Get "weight")
-          ) -}}
+          )) -}}
         {{- end -}}
       {{- end -}}
     {{- end -}}

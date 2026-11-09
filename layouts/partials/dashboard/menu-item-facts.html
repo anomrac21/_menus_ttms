@@ -1,0 +1,25 @@
+{{- $page := . -}}
+{{- $images := $page.Params.images -}}
+{{- with $page.Params.image -}}
+  {{- if not $images -}}
+    {{- $images = slice . -}}
+  {{- else if reflect.IsSlice $images -}}
+    {{- $images = $images | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- return partial "dashboard/menu-item-facts-data.html" (dict
+  "title" ($page.LinkTitle | default $page.Title)
+  "images" $images
+  "prices" $page.Params.prices
+  "tags" $page.Params.tags
+  "ingredients" $page.Params.ingredients
+  "types" $page.Params.types
+  "cookingmethods" $page.Params.cookingmethods
+  "events" $page.Params.events
+  "additions" $page.Params.additions
+  "modifications" $page.Params.modifications
+  "side_categories" ($page.Params.side_categories | default $page.Params.sideCategories)
+  "availability" $page.Params.availability
+  "promotions" $page.Params.promotions
+  "description" ($page.Plain | default $page.Summary)
+) -}}
