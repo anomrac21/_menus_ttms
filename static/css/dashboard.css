@@ -4899,6 +4899,43 @@ html.ttms-ios .dashboard-edit-menu-action {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--dash-accent) 35%, transparent);
 }
 
+.dashboard-history-kicker {
+  margin: 0.85rem 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--dash-info) 80%, var(--dash-ink));
+}
+
+.dashboard-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.dashboard-history-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+.dashboard-history-row .dashboard-menu-status-snapshot-item {
+  flex: 1;
+  min-width: 0;
+  cursor: default;
+}
+
+.dashboard-history-row .dashboard-menu-status-snapshot-item:hover {
+  transform: none;
+}
+
+.dashboard-history-row .btn-dash {
+  align-self: center;
+  flex: 0 0 auto;
+}
+
 .dashboard-menu-status-slot-grid,
 .dashboard-menu-status-view-switch {
   display: grid;

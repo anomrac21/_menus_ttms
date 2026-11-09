@@ -18,7 +18,7 @@
           <span class="dashboard-menu-status-slot-title">Saved version</span>
         </button>
       </div>
-      <p class="dashboard-menu-status-muted" id="settingsSnapshotNote">Saves stay on the snapshot until you publish from the dashboard.</p>
+      <p class="dashboard-menu-status-muted" id="settingsSnapshotNote">Saves stay private until you publish from the dashboard.</p>
     </div>
     {{ partial "dashboard/hero-settings-panel.html" . }}
 
@@ -67,7 +67,7 @@
           </div>
         </div>
         <div class="dashboard-settings-form-actions">
-          <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveSocial">Save to snapshot</button>
+          <button type="submit" class="btn-dash btn-dash-primary" id="btnSaveSocial">Save</button>
           <span id="socialSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
         </div>
       </form>
@@ -129,7 +129,7 @@
         </div>
       </div>
       <div class="dashboard-settings-form-actions dashboard-settings-branding-save-row">
-        <button type="button" class="btn-dash btn-dash-primary" id="btnSaveBranding">Save to snapshot</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="btnSaveBranding">Save</button>
         <span id="brandingSaveStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
       </div>
       </div>
@@ -236,9 +236,9 @@
     }
     function snapshotSavedStatus(data, fallback) {
       if (data && data.version_id) rememberSnapshot(data.version_id);
-      if (data && data.status === 'draft') return 'Saved to snapshot.';
+      if (data && data.status === 'draft') return 'Saved. Publish from the dashboard when you want this on the live menu.';
       if (data && data.message) return data.message;
-      return fallback || 'Saved to snapshot.';
+      return fallback || 'Saved. Publish from the dashboard when you want this on the live menu.';
     }
     var liveSocialValues = {};
     ['email', 'facebook', 'instagram', 'youtube', 'tiktok'].forEach(function(name) {
@@ -538,7 +538,7 @@
                 delete brandingPreviewUrls[name];
               }
               refreshBrandingPreview(name);
-              if (statusEl) statusEl.textContent = 'Saved to snapshot.';
+              if (statusEl) statusEl.textContent = 'Saved.';
             });
           });
         });
@@ -549,7 +549,7 @@
             return data;
           });
         }).then(function() {
-          if (brandingSaveStatus) brandingSaveStatus.textContent = 'Saved to snapshot.';
+          if (brandingSaveStatus) brandingSaveStatus.textContent = 'Saved. Publish from the dashboard when you want this on the live menu.';
         }).catch(function(err) {
           alert('Could not save branding: ' + (err.message || err));
           if (brandingSaveStatus) brandingSaveStatus.textContent = '';
@@ -669,7 +669,7 @@
           if (!rel) throw new Error('Upload did not return a path');
           if (heroImagePathEl) heroImagePathEl.value = rel;
           updateHeroSettingsPreview();
-          if (heroImageStatus) heroImageStatus.textContent = 'Image uploaded. Save to snapshot to keep it.';
+          if (heroImageStatus) heroImageStatus.textContent = 'Image chosen. Click Save to keep it.';
         })
         .finally(function() {
           setHeroThumbLoading(false);

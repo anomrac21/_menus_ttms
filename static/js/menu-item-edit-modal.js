@@ -42,6 +42,32 @@
     return document.getElementById('menuItemEditModalDelete');
   }
 
+  function setSaveBusy(on, message) {
+    var btn = getSaveBtn();
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.setAttribute('aria-busy', on ? 'true' : 'false');
+    var label = btn.querySelector('.menu-item-edit-modal__save-label');
+    if (label) label.textContent = on ? (message || 'Saving…') : 'Save';
+  }
+
+  function showSavedNotice(title) {
+    var existing = document.getElementById('ttmsContentSavedNotice');
+    if (existing) existing.remove();
+    var el = document.createElement('div');
+    el.id = 'ttmsContentSavedNotice';
+    el.className = 'menu-item-edit-saved-notice';
+    el.setAttribute('role', 'status');
+    var name = title ? String(title).trim() : '';
+    el.textContent = name
+      ? 'Saved “' + name + '”. Publish from the dashboard when you want customers to see it.'
+      : 'Saved. Publish from the dashboard when you want customers to see it.';
+    document.body.appendChild(el);
+    window.setTimeout(function () {
+      if (el.parentNode) el.remove();
+    }, 6500);
+  }
+
   function postToFrame(payload) {
     var frame = getFrame();
     if (!frame || !frame.contentWindow) return;
@@ -439,7 +465,19 @@
         return;
       }
     }
-    if (!data || data.type !== 'ttms:close-menu-item-edit-modal') return;
+    if (!data || !data.type) return;
+    if (data.type === 'ttms:embed-panel-save-state') {
+      setSaveBusy(!!data.busy, data.message);
+      return;
+    }
+    if (data.type !== 'ttms:close-menu-item-edit-modal') return;
+    if (data.saved && data.title && currentMenuRoot) {
+      var card = currentMenuRoot.closest('.dashboard-settings-location-card');
+      var titleEl = card && card.querySelector('.dashboard-settings-location-card-title');
+      if (titleEl && String(data.title).trim()) titleEl.textContent = String(data.title).trim();
+    }
+    if (data.saved) showSavedNotice(data.title);
+    setSaveBusy(false);
     closeImmediately({ reload: data.reload });
   }
 

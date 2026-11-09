@@ -14,6 +14,9 @@ function initLocationsSettings() {
         : null;
       var locationsState = [];
       var snapshotLocationsApplied = false;
+      var locationsDirty = false;
+      var locationsLoadGen = 0;
+      var locationsEditToken = 0;
 
       function locStr(v) {
         if (v === null || v === undefined) return '';
@@ -21,6 +24,30 @@ function initLocationsSettings() {
       }
       function locDigits(v) {
         return locStr(v).replace(/\D/g, '');
+      }
+      function slugifyLocationPart(value) {
+        return locStr(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+      function uniqueLocationSlug(city, address, ignoreIndex) {
+        var base = slugifyLocationPart(city) || slugifyLocationPart(address) || 'location';
+        var used = {};
+        locationsState.forEach(function(loc, i) {
+          if (i === ignoreIndex) return;
+          var s = locStr(loc && loc.slug);
+          if (s) used[s] = true;
+        });
+        if (!used[base]) return base;
+        var extra = slugifyLocationPart(address);
+        var stem = extra && extra !== base ? base + '-' + extra : base;
+        if (!used[stem]) return stem;
+        var n = 2;
+        while (used[stem + '-' + n]) n += 1;
+        return stem + '-' + n;
+      }
+      function noteLocationsEdited() {
+        locationsDirty = true;
+        locationsLoadGen += 1;
+        locationsEditToken += 1;
       }
       function splitCsv(value) {
         return locStr(value)
@@ -171,6 +198,8 @@ function initLocationsSettings() {
           opening_hours: loc.opening_hours && typeof loc.opening_hours === 'object' ? loc.opening_hours : {}
         };
         out.latlon = [out.latlon.lat || 0, out.latlon.lon || 0];
+        var slug = locStr(loc.slug);
+        if (slug) out.slug = slug;
         var loyverseStoreId = locStr(loc.loyverse_store_id);
         if (loyverseStoreId) out.loyverse_store_id = loyverseStoreId;
         return out;
@@ -196,10 +225,13 @@ function initLocationsSettings() {
         var fooddrop = locStr(document.getElementById('settingsLocationFooddrop').value);
         if (fooddrop) payload.delivery.fooddrop = fooddrop;
         var editIdx = editIndexEl ? parseInt(editIndexEl.value, 10) : -1;
+        var existingSlug = '';
         if (!isNaN(editIdx) && editIdx >= 0 && locationsState[editIdx]) {
+          existingSlug = locStr(locationsState[editIdx].slug);
           var existingStore = locStr(locationsState[editIdx].loyverse_store_id);
           if (existingStore) payload.loyverse_store_id = existingStore;
         }
+        payload.slug = existingSlug || uniqueLocationSlug(payload.city, payload.address, isNaN(editIdx) ? -1 : editIdx);
         return payload;
       }
       function parseLocationsInitialText(raw) {
@@ -253,9 +285,11 @@ function initLocationsSettings() {
         listEl.querySelectorAll('.btn-settings-location-delete').forEach(function(btn) {
           btn.addEventListener('click', function() {
             var idx = parseInt(btn.getAttribute('data-index'), 10);
-            if (!isNaN(idx) && confirm('Remove this location from the list? Save locations to commit.')) {
+            if (!isNaN(idx) && confirm('Remove this location? It stays on the snapshot until you publish.')) {
               locationsState.splice(idx, 1);
+              noteLocationsEdited();
               renderLocationsList();
+              saveAllLocations();
             }
           });
         });
@@ -301,6 +335,7 @@ function initLocationsSettings() {
       function loadLocationsFromCms(replaceAlways) {
         var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
         if (!token) return Promise.resolve();
+        var gen = ++locationsLoadGen;
         var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var url = window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/data-locations';
         return fetch(url, {
@@ -309,6 +344,7 @@ function initLocationsSettings() {
         })
           .then(window.parseCmsApiResponse)
           .then(function(data) {
+            if (locationsDirty || gen !== locationsLoadGen) return;
             if (snapshotLocationsApplied && !replaceAlways) return;
             if (data && Array.isArray(data.locations) && (replaceAlways || data.locations.length > 0)) {
               locationsState = data.locations.map(normalizeLocation).filter(Boolean);
@@ -327,6 +363,7 @@ function initLocationsSettings() {
         }
         var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
         var url = window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/config/data-locations';
+        var tokenAtSend = locationsEditToken;
         if (saveAllBtn) saveAllBtn.disabled = true;
         if (saveAllStatus) saveAllStatus.textContent = 'Saving…';
         fetch(url, {
@@ -341,6 +378,7 @@ function initLocationsSettings() {
         })
           .then(window.parseCmsApiResponse)
           .then(function(data) {
+            if (tokenAtSend === locationsEditToken) locationsDirty = false;
             if (saveAllStatus) saveAllStatus.textContent = window.snapshotSavedStatus(data);
           })
           .catch(function(err) {
@@ -407,17 +445,21 @@ function initLocationsSettings() {
           } else {
             locationsState.push(payload);
           }
+          noteLocationsEdited();
           renderLocationsList();
           closeLocationModal();
+          saveAllLocations();
         });
       }
       if (removeBtn) {
         removeBtn.addEventListener('click', function() {
           var idx = editIndexEl ? parseInt(editIndexEl.value, 10) : -1;
-          if (!isNaN(idx) && idx >= 0 && confirm('Remove this location?')) {
+          if (!isNaN(idx) && idx >= 0 && confirm('Remove this location? It stays on the snapshot until you publish.')) {
             locationsState.splice(idx, 1);
+            noteLocationsEdited();
             renderLocationsList();
             closeLocationModal();
+            saveAllLocations();
           }
         });
       }
@@ -426,11 +468,13 @@ function initLocationsSettings() {
       });
       window.__ttmsSettingsLocations = {
         apply: function(list) {
+          if (locationsDirty) return;
           snapshotLocationsApplied = true;
           locationsState = (Array.isArray(list) ? list : []).map(normalizeLocation).filter(Boolean);
           renderLocationsList();
         },
         reloadLive: function() {
+          locationsDirty = false;
           snapshotLocationsApplied = false;
           return loadLocationsFromCms(true);
         }

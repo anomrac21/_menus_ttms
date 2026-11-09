@@ -110,11 +110,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (onSave) {
       btn.disabled = false;
       btn.innerHTML =
-        '<i class="fa fa-cloud-upload" aria-hidden="true"></i>' +
-        '<span class="dashboard-wizard-save-btn-label">Save snapshot</span>';
+        '<i class="fa fa-check" aria-hidden="true"></i>' +
+        '<span class="dashboard-wizard-save-btn-label">Save changes</span>';
       btn.classList.add('dashboard-btn-primary', 'dashboard-wizard-save-btn');
       btn.classList.remove('dashboard-btn-secondary');
-      btn.setAttribute('aria-label', 'Save draft and menu snapshot');
+      btn.setAttribute('aria-label', 'Save changes');
       syncEmbedWizardSaveButtonPendingState(btn);
     } else {
       btn.textContent = 'Next';
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     btn.classList.toggle('dashboard-wizard-save-btn--pending', pending);
     btn.setAttribute(
       'aria-label',
-      pending ? 'Save draft and menu snapshot: pending changes' : 'Save draft and menu snapshot'
+      pending ? 'Save changes. They stay private until you publish.' : 'Save changes'
     );
   }
 
@@ -344,17 +344,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
+  function notifyEmbedSaveState(busy, message) {
+    if (!embedPanelMode || !parentMenuWindow) return;
+    try {
+      parentMenuWindow.postMessage(
+        { type: 'ttms:embed-panel-save-state', busy: !!busy, message: message || '' },
+        window.location.origin
+      );
+    } catch (e) { /* ignore */ }
+  }
+
+  function currentEditorTitle() {
+    var type = selectedInfo && selectedInfo.contentType;
+    if (type === 'section-header' && inputSectionTitle) return (inputSectionTitle.value || '').trim();
+    if (type === 'promotion') {
+      var promoTitle = document.getElementById('dashboardEditPromoTitle');
+      if (promoTitle) return (promoTitle.value || '').trim();
+    }
+    if (type === 'location') {
+      var city = inputLocationCity ? (inputLocationCity.value || '').trim() : '';
+      var address = inputLocationAddress ? (inputLocationAddress.value || '').trim() : '';
+      return city || address;
+    }
+    if (inputTitle) return (inputTitle.value || '').trim();
+    return '';
+  }
+
   function saveEmbedPanelSnapshot() {
     if (_embedSaveInFlight) return _embedSaveInFlight;
     var step = 'start';
-    setEditStatus('Saving draft and snapshot…');
+    var savedTitle = '';
+    setEditStatus('Saving…');
+    notifyEmbedSaveState(true, 'Saving…');
     _embedSaveInFlight = Promise.resolve()
       .then(function() {
         step = 'draft';
         // Form state is enough for the draft: avoid touching the live parent DOM on mobile.
         return persistCurrentDraftToCMS({ skipHighlights: true, skipApplyPreview: true, force: true });
       })
-      .then(function() {
+      .then(function(ok) {
+        if (ok === false) {
+          throw new Error('This selection cannot be saved from the editor. Close it and update it from the matching settings page.');
+        }
         step = 'snapshot';
         // Never merge latest CMS snapshot in embed mode: parsing a nested/corrupt
         // menu_data blob via res.json() overflows the call stack on mobile Safari.
@@ -368,14 +399,16 @@ document.addEventListener('DOMContentLoaded', async function() {
       })
       .then(function() {
         step = 'ui';
+        savedTitle = currentEditorTitle();
         editFormDirty = false;
-        setEditStatus('Saved to menu snapshot');
+        setEditStatus('Saved. Publish from the dashboard when you want customers to see it.');
+        notifyEmbedSaveState(false, '');
         try { applyEditHighlights(); } catch (hlErr) { console.warn('applyEditHighlights', hlErr); }
         try { syncPendingChangesPanel(); } catch (syncErr) { console.warn('syncPendingChangesPanel', syncErr); }
         try {
           if (parentMenuWindow) {
             parentMenuWindow.postMessage(
-              { type: 'ttms:close-menu-item-edit-modal', reload: false },
+              { type: 'ttms:close-menu-item-edit-modal', reload: true, saved: true, title: savedTitle },
               window.location.origin
             );
           }
@@ -384,9 +417,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       })
       .catch(function(err) {
         setEditStatus('Save failed');
+        notifyEmbedSaveState(false, '');
         console.warn('saveEmbedPanelSnapshot', step, err);
-        var msg = err && err.message ? err.message : String(err);
-        alert('Could not save [' + step + ']: ' + msg);
+        var msg = readableCmsError(err);
+        alert(step === 'draft' ? 'Could not save this change. ' + msg : 'Could not save. ' + msg);
       })
       .finally(function() {
         _embedSaveInFlight = null;
@@ -2754,8 +2788,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (type === 'menu-item') return buildMenuItemPayloadFromState();
     if (type === 'section-header') return buildSectionPayloadFromState();
     if (type === 'home-hero') return buildHomeHeroPayloadFromState();
-    // Slideshow would overwrite content/_index.md; not supported until backend merge.
-    if (type === 'slideshow') return null;
+    if (type === 'slideshow') return buildSlideshowPayloadFromState();
     if (type === 'location') return null;
     return null;
   }
@@ -2834,6 +2867,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
+  function readableCmsErrorText(status, txt) {
+    var detail = '';
+    try {
+      var parsed = JSON.parse(txt);
+      if (parsed && (parsed.error || parsed.message)) detail = String(parsed.error || parsed.message);
+    } catch (e) { /* not json */ }
+    if (!detail) detail = String(txt || '').replace(/\s+/g, ' ').trim();
+    if (detail.length > 240) detail = detail.slice(0, 240) + '…';
+    if (status === 401 || status === 403) return 'Your session expired. Sign in again, then retry.';
+    return detail || ('The server could not save this change (' + status + ').');
+  }
+
+  function readableCmsError(err) {
+    var raw = err && err.message ? String(err.message) : String(err || 'Something went wrong.');
+    return raw.replace(/\s+/g, ' ').trim();
+  }
+
   function postToCMS(path, payload) {
     var url = CMS_SERVICE_URL.replace(/\/+$/, '') + path;
     cmsLogJson('POST →', path, payload);
@@ -2858,7 +2908,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (!res.ok) {
         return res.text().then(function (txt) {
           cmsLogJson('POST ✗', path, { status: res.status, body: txt && txt.length > 4000 ? txt.slice(0, 4000) + '…' : txt });
-          throw new Error('CMS error ' + res.status + ': ' + txt);
+          throw new Error(readableCmsErrorText(res.status, txt));
         });
       }
       return res.json().catch(function () { return {}; });
@@ -7744,7 +7794,22 @@ document.addEventListener('DOMContentLoaded', async function() {
       panel.setAttribute('aria-hidden', on ? 'false' : 'true');
     });
     if (btnLocationWizardPrev) btnLocationWizardPrev.disabled = locationWizardStep === 0;
-    if (btnLocationWizardNext) btnLocationWizardNext.disabled = locationWizardStep >= LOCATION_WIZARD_LABELS.length - 1;
+    if (btnLocationWizardNext) {
+      var locationOnLast = locationWizardStep >= LOCATION_WIZARD_LABELS.length - 1;
+      if (embedPanelMode && locationOnLast) {
+        btnLocationWizardNext.disabled = false;
+        btnLocationWizardNext.innerHTML = '<i class="fa fa-check" aria-hidden="true"></i> Save changes';
+        btnLocationWizardNext.classList.add('dashboard-btn-primary');
+        btnLocationWizardNext.classList.remove('dashboard-btn-secondary');
+        btnLocationWizardNext.setAttribute('aria-label', 'Save changes');
+      } else {
+        btnLocationWizardNext.disabled = locationOnLast;
+        btnLocationWizardNext.textContent = 'Next';
+        btnLocationWizardNext.classList.add('dashboard-btn-secondary');
+        btnLocationWizardNext.classList.remove('dashboard-btn-primary');
+        btnLocationWizardNext.removeAttribute('aria-label');
+      }
+    }
     if (dashboardLocationWizardProgress) {
       dashboardLocationWizardProgress.textContent = 'Step ' + (locationWizardStep + 1) + ' of ' + LOCATION_WIZARD_LABELS.length + ' · ' + LOCATION_WIZARD_LABELS[locationWizardStep];
     }
@@ -11077,6 +11142,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if (btnLocationWizardNext) {
       btnLocationWizardNext.addEventListener('click', function() {
+        if (embedPanelMode && locationWizardStep >= LOCATION_WIZARD_LABELS.length - 1) {
+          saveEmbedPanelSnapshot();
+          return;
+        }
         var panel = root.querySelector('.dashboard-location-wizard-panel[data-location-wizard-index="' + locationWizardStep + '"]');
         tryAdvanceWizardPanel(panel, function() {
           setLocationWizardStep(locationWizardStep + 1);
@@ -11174,12 +11243,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         function renderSummary() {
           if (!publishSummaryList || !publishSummaryCount) return;
           publishSummaryList.innerHTML = '';
-          publishSummaryCount.textContent =
+            publishSummaryCount.textContent =
             pending.length === 0
-              ? 'No files selected'
+              ? 'Nothing selected'
               : pending.length === 1
-                ? '1 file ready to publish to Git'
-                : pending.length + ' files ready to publish to Git';
+                ? '1 change ready to go live'
+                : pending.length + ' changes ready to go live';
           if (publishSummaryConfirm) {
             publishSummaryConfirm.disabled = pending.length === 0;
             if (pending.length === 0) {
@@ -11698,6 +11767,73 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
+  function locationObjectFromEditor() {
+    var address = inputLocationAddress ? (inputLocationAddress.value || '').trim() : '';
+    var city = inputLocationCity ? (inputLocationCity.value || '').trim() : '';
+    var island = inputLocationIsland ? (inputLocationIsland.value || '').trim() : '';
+    function splitList(value) {
+      return String(value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    }
+    var hours = { mode: 'Auto' };
+    if (inputLocationOpeningHours && inputLocationOpeningHours.value.trim()) {
+      try { hours = JSON.parse(inputLocationOpeningHours.value); } catch (e) { /* keep default */ }
+    }
+    var loc = {
+      address: address,
+      city: city,
+      island: island,
+      phone: inputLocationPhone ? String(inputLocationPhone.value || '').replace(/\D/g, '') : '',
+      whatsapp: inputLocationWhatsapp ? String(inputLocationWhatsapp.value || '').replace(/\D/g, '') : '',
+      latlon: [
+        inputLocationLat ? parseFloat(inputLocationLat.value) || 0 : 0,
+        inputLocationLng ? parseFloat(inputLocationLng.value) || 0 : 0
+      ],
+      subcategories: splitList(inputLocationSubcategories ? inputLocationSubcategories.value : ''),
+      orderingtables: splitList(inputLocationOrderingtables ? inputLocationOrderingtables.value : ''),
+      delivery: {},
+      opening_hours: hours
+    };
+    var fooddrop = inputLocationFooddrop ? (inputLocationFooddrop.value || '').trim() : '';
+    if (fooddrop) loc.delivery.fooddrop = fooddrop;
+    return loc;
+  }
+
+  function saveLocationDraftToCMS() {
+    var base = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID);
+    var idxMatch = String((selectedInfo && selectedInfo.contentPath) || '').match(/index\s+(\d+)/i);
+    var idx = idxMatch ? parseInt(idxMatch[1], 10) : -1;
+    function publishedLocations() {
+      return getFromCMS(base + '/config/data-locations').then(function (data) {
+        return data && Array.isArray(data.locations) ? data.locations : [];
+      }).catch(function () { return []; });
+    }
+    return getFromCMS(base + '/menu-versions/site').then(function (data) {
+      var locs = data && data.site && data.site.locations;
+      if (locs && !Array.isArray(locs) && Array.isArray(locs.locations)) locs = locs.locations;
+      if (Array.isArray(locs) && locs.length) return locs;
+      return publishedLocations();
+    }).catch(publishedLocations).then(function (list) {
+      list = Array.isArray(list) ? list.slice() : [];
+      var loc = locationObjectFromEditor();
+      if (!loc.address || !loc.city || !loc.island) {
+        throw new Error('Address, city, and island are required.');
+      }
+      if (!isNaN(idx) && idx >= 0 && idx < list.length) {
+        var prev = list[idx] && typeof list[idx] === 'object' ? list[idx] : {};
+        if (prev.slug) loc.slug = prev.slug;
+        if (prev.loyverse_store_id) loc.loyverse_store_id = prev.loyverse_store_id;
+        list[idx] = loc;
+      } else {
+        list.push(loc);
+      }
+      return postToCMS(base + '/config/data-locations', { locations: list });
+    }).then(function () {
+      editFormDirty = false;
+      setEditStatus('Saved. Publish from the dashboard when you want customers to see it.');
+      return true;
+    });
+  }
+
   function persistCurrentDraftToCMS(opts) {
     opts = opts || {};
     if (!selectedInfo || !selectedElement) {
@@ -11709,9 +11845,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       return Promise.resolve(true);
     }
     if (!opts.skipApplyPreview) applyEditToPreview();
+    if ((selectedInfo.contentType || '') === 'location') {
+      return saveLocationDraftToCMS();
+    }
     var draftPayload = buildContentEditPayload();
     if (!draftPayload) {
-      cmsLogJson('save draft skipped', 'persistCurrentDraftToCMS', { reason: 'buildContentEditPayload returned null (e.g. slideshow/location or unsupported type)' });
+      cmsLogJson('save draft skipped', 'persistCurrentDraftToCMS', { reason: 'buildContentEditPayload returned null' });
       return Promise.resolve(false);
     }
     var previewPath = '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
@@ -11873,7 +12012,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (!data || !data.type) return;
 
       if (data.type === 'ttms:embed-panel-click-save') {
-        if (btnSave && !btnSave.disabled) btnSave.click();
+        saveEmbedPanelSnapshot();
         return;
       }
 

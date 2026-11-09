@@ -10,6 +10,9 @@
   var cachedPreviews = [];
   var serverPreviews = [];
   var cachedVersions = [];
+  var cachedRepoCommits = [];
+  var repoCommitLoadState = 'idle';
+  var SNAPSHOT_HISTORY_LIMIT = 5;
   var snapshotLoadState = 'idle';
   var draftLoadState = 'idle';
   var snapshotLoadError = '';
@@ -24,6 +27,19 @@
   var statusBlockCollapsed = {};
   var STATUS_BLOCK_KEYS = ['snapshots', 'drafts', 'publish'];
   var STATUS_BLOCK_DEFAULT_COLLAPSED = { snapshots: true, drafts: true, publish: true };
+
+  function readablePublishError(err) {
+    var raw = err && err.message ? String(err.message) : String(err || '');
+    try {
+      var parsed = JSON.parse(raw);
+      if (parsed && (parsed.error || parsed.message)) raw = String(parsed.error || parsed.message);
+    } catch (e) { /* plain text */ }
+    raw = raw.replace(/\s+/g, ' ').trim();
+    if (!raw) return 'Something went wrong. Try again.';
+    if (/unauthorized|invalid token|session/i.test(raw)) return 'Your session expired. Sign in again, then retry.';
+    if (raw.length > 240) raw = raw.slice(0, 240) + '…';
+    return raw;
+  }
 
   function statusBlockCollapsedStorageKey() {
     return 'ttmenus_menu_status_blocks_collapsed_' + CMS_CLIENT_ID;
@@ -2025,15 +2041,18 @@
       status.className = 'dashboard-menu-status-muted';
       if (!version) {
         status.textContent =
-          'No snapshot yet. A dish, section, theme, or settings change creates one. Later changes update that same snapshot.';
+          'No snapshot yet. A dish, section, theme, or settings change creates one. The last five saves are kept.';
       } else {
         var counts = snapshotCountLine(version);
         status.textContent =
-          'Edit menu, Edit theme, and Settings update this snapshot' +
+          'The last five saves are kept. Revert makes an older save the current snapshot. The live menu changes when you publish' +
           (counts ? ' (' + counts + ')' : '') +
           '.';
       }
       snapshotStatusEl.appendChild(status);
+      appendSnapshotHistory(snapshotStatusEl);
+      appendPublishedPushes(snapshotStatusEl);
+      ensureRepoCommits();
 
       if (snapshotLoadState === 'error' && snapshotLoadError) {
         var keepErr = document.createElement('p');
@@ -2078,6 +2097,222 @@
         foot.appendChild(deleteBtn);
         snapshotStatusEl.appendChild(foot);
       }
+    }
+
+    function appendHistoryRow(parent, title, when, actionLabel, onClick) {
+      var row = document.createElement('div');
+      row.className = 'dashboard-history-row';
+      var item = document.createElement('div');
+      item.className = 'dashboard-menu-status-snapshot-item';
+      var titleEl = document.createElement('span');
+      titleEl.className = 'dashboard-menu-status-snapshot-item-title';
+      titleEl.textContent = title || 'Saved version';
+      var whenEl = document.createElement('span');
+      whenEl.className = 'dashboard-menu-status-snapshot-item-when';
+      whenEl.textContent = when || '';
+      item.appendChild(titleEl);
+      item.appendChild(whenEl);
+      row.appendChild(item);
+      if (actionLabel && onClick) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-dash btn-dash-secondary';
+        btn.textContent = actionLabel;
+        btn.addEventListener('click', function () {
+          onClick(btn);
+        });
+        row.appendChild(btn);
+      }
+      parent.appendChild(row);
+    }
+
+    function appendSnapshotHistory(host) {
+      var older = cachedVersions.slice(1, SNAPSHOT_HISTORY_LIMIT);
+      if (!older.length) return;
+      var kicker = document.createElement('p');
+      kicker.className = 'dashboard-history-kicker';
+      kicker.textContent = 'Earlier snapshots';
+      host.appendChild(kicker);
+      var list = document.createElement('div');
+      list.className = 'dashboard-history-list';
+      older.forEach(function (entry) {
+        var parts = snapshotDisplayParts(entry);
+        var id = versionIdFromRecord(entry);
+        appendHistoryRow(
+          list,
+          parts.when || parts.title || 'Saved version',
+          snapshotCountLine(entry),
+          'Revert',
+          function (btn) {
+            revertSnapshot(id, btn);
+          }
+        );
+      });
+      host.appendChild(list);
+    }
+
+    function appendPublishedPushes(host) {
+      var kicker = document.createElement('p');
+      kicker.className = 'dashboard-history-kicker';
+      kicker.textContent = 'Published pushes';
+      host.appendChild(kicker);
+      if (repoCommitLoadState === 'loading' || repoCommitLoadState === 'idle') {
+        var loadingP = document.createElement('p');
+        loadingP.className = 'dashboard-menu-status-muted';
+        loadingP.textContent = 'Loading the last five pushes…';
+        host.appendChild(loadingP);
+        return;
+      }
+      if (repoCommitLoadState === 'error') {
+        var errP = document.createElement('p');
+        errP.className = 'dashboard-menu-status-error';
+        errP.textContent = 'Could not load published pushes.';
+        host.appendChild(errP);
+        return;
+      }
+      if (!cachedRepoCommits.length) {
+        var emptyP = document.createElement('p');
+        emptyP.className = 'dashboard-menu-status-muted';
+        emptyP.textContent = 'No published pushes yet.';
+        host.appendChild(emptyP);
+        return;
+      }
+      var list = document.createElement('div');
+      list.className = 'dashboard-history-list';
+      cachedRepoCommits.slice(0, SNAPSHOT_HISTORY_LIMIT).forEach(function (commit, index) {
+        var when = '';
+        if (commit.date) {
+          try {
+            when = new Date(commit.date).toLocaleString(undefined, {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+            });
+          } catch (e) {
+            when = String(commit.date);
+          }
+        }
+        var title = (commit.subject || 'Published menu') + (commit.short ? ' · ' + commit.short : '');
+        if (index === 0 || commit.current) title = 'Live · ' + title;
+        appendHistoryRow(list, title, when, index === 0 || commit.current ? '' : 'Revert', function (btn) {
+          revertRepoCommit(commit.hash || commit.short, commit.subject || commit.short || 'that push', btn);
+        });
+      });
+      host.appendChild(list);
+    }
+
+    function ensureRepoCommits() {
+      if (repoCommitLoadState !== 'idle') return;
+      fetchRepoCommits();
+    }
+
+    function fetchRepoCommits() {
+      repoCommitLoadState = 'loading';
+      return cmsGetJsonWithAuth(cmsClientPath('/repo/commits'))
+        .then(function (res) {
+          if (!res.ok) {
+            repoCommitLoadState = 'error';
+            cachedRepoCommits = [];
+          } else {
+            var list = res.data && (res.data.commits || res.data.Commits);
+            cachedRepoCommits = Array.isArray(list) ? list : [];
+            repoCommitLoadState = 'ok';
+          }
+          if (snapshotLoadState === 'ok') renderSnapshotStatusSummary();
+        })
+        .catch(function () {
+          repoCommitLoadState = 'error';
+          cachedRepoCommits = [];
+          if (snapshotLoadState === 'ok') renderSnapshotStatusSummary();
+        });
+    }
+
+    function revertSnapshot(versionId, button) {
+      if (!versionId) return;
+      if (!confirm('Make this the current snapshot? The live menu stays as it is until you publish.')) return;
+      setDashButtonBusy(button, true, 'Restoring…');
+      ensureAccessTokenForCms()
+        .then(function (token) {
+          if (!token) throw new Error('CMS session expired. Sign out and sign in again.');
+          return fetch(cmsClientPath('/menu-versions/' + encodeURIComponent(versionId) + '/revert'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: getAuthHeaders(),
+          });
+        })
+        .then(function (res) {
+          if (!res.ok) {
+            return res.text().then(function (text) {
+              var msg = text || 'Could not restore snapshot';
+              try {
+                var data = JSON.parse(text);
+                if (data && (data.error || data.message)) msg = data.error || data.message;
+              } catch (e) {}
+              throw new Error(msg);
+            });
+          }
+          return res.json().catch(function () {
+            return {};
+          });
+        })
+        .then(function (data) {
+          showPublishFlashMessage((data && data.message) || 'Snapshot restored.');
+          return fetchMenuVersions({ forceEmpty: true });
+        })
+        .catch(function (err) {
+          setDashButtonBusy(button, false, '', 'Revert');
+          alert('Could not restore snapshot: ' + ((err && err.message) || err));
+        });
+    }
+
+    function revertRepoCommit(sha, subject, button) {
+      if (!sha) return;
+      if (
+        !confirm(
+          'Publish the site again as it was in “' +
+            subject +
+            '”? This adds a new commit and updates the live menu. Newer commits stay in the history.'
+        )
+      ) {
+        return;
+      }
+      setDashButtonBusy(button, true, 'Restoring…');
+      ensureAccessTokenForCms()
+        .then(function (token) {
+          if (!token) throw new Error('CMS session expired. Sign out and sign in again.');
+          return fetch(cmsClientPath('/repo/commits/' + encodeURIComponent(sha) + '/revert'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: getAuthHeaders(),
+          });
+        })
+        .then(function (res) {
+          if (!res.ok) {
+            return res.text().then(function (text) {
+              var msg = text || 'Could not restore that push';
+              try {
+                var data = JSON.parse(text);
+                if (data && (data.error || data.message)) msg = data.error || data.message;
+              } catch (e) {}
+              throw new Error(msg);
+            });
+          }
+          return res.json().catch(function () {
+            return {};
+          });
+        })
+        .then(function (data) {
+          showPublishFlashMessage((data && data.message) || 'Published menu restored.');
+          repoCommitLoadState = 'idle';
+          cachedRepoCommits = [];
+          return fetchRepoCommits();
+        })
+        .catch(function (err) {
+          setDashButtonBusy(button, false, '', 'Revert');
+          alert('Could not restore that push: ' + ((err && err.message) || err));
+        });
     }
 
     function deleteCurrentSnapshot(versionId, button) {
@@ -2522,6 +2757,18 @@
       }
     }
 
+    function mergeVersionLists(prevList, nextList) {
+      var prevById = {};
+      (prevList || []).forEach(function (v) {
+        var id = versionIdFromRecord(v);
+        if (id) prevById[id] = v;
+      });
+      return (nextList || []).map(function (v) {
+        var id = versionIdFromRecord(v);
+        return mergeSnapshotRecord(id ? prevById[id] : null, v);
+      });
+    }
+
     function mergeSnapshotRecord(prev, next) {
       if (!prev) return next;
       if (!next) return prev;
@@ -2607,13 +2854,9 @@
         .sort(function (a, b) {
           return versionSortKey(b) - versionSortKey(a);
         })
-        .slice(0, 1);
+        .slice(0, SNAPSHOT_HISTORY_LIMIT);
       if (next.length && cachedVersions.length && !opts.forceEmpty) {
-        var prevId = versionIdFromRecord(cachedVersions[0]);
-        var nextId = versionIdFromRecord(next[0]);
-        if (!prevId || !nextId || prevId === nextId) {
-          next = [mergeSnapshotRecord(cachedVersions[0], next[0])];
-        }
+        next = mergeVersionLists(cachedVersions, next);
       }
       if (!next.length && cachedVersions.length && !opts.forceEmpty) {
         snapshotLoadState = 'ok';
@@ -2709,8 +2952,19 @@
           var listedId = versionIdFromRecord(raw[0]);
           if (listedId && !versionMenuData(raw[0])) {
             var held = heldSnapshotWithMenuData(listedId);
-            if (held) return applyLoadedVersions([mergeSnapshotRecord(held, raw[0])], opts);
-            return fetchSnapshotById(listedId, gen, opts);
+            if (held) {
+              raw[0] = mergeSnapshotRecord(held, raw[0]);
+              return applyLoadedVersions(raw, opts);
+            }
+            return cmsGetJsonWithAuth(cmsClientPath('/menu-versions/' + encodeURIComponent(listedId))).then(
+              function (detail) {
+                if (gen !== snapshotFetchGen) return cachedVersions;
+                if (detail.ok && versionRecordFromPayload(detail.data)) {
+                  raw[0] = mergeSnapshotRecord(versionRecordFromPayload(detail.data), raw[0]);
+                }
+                return applyLoadedVersions(raw, opts);
+              }
+            );
           }
           return applyLoadedVersions(raw, opts);
         })
@@ -2845,10 +3099,10 @@
           publishSummaryList.innerHTML = '';
           var countBase =
             pending.length === 0
-              ? 'No files selected'
+              ? 'Nothing selected'
               : pending.length === 1
-                ? '1 file ready to publish to Git'
-                : pending.length + ' files ready to publish to Git';
+                ? '1 change ready to go live'
+                : pending.length + ' changes ready to go live';
           var catParts = summarizeChangeCategories(pending);
           publishSummaryCount.textContent =
             catParts.length ? countBase + ' (' + catParts.join(' · ') + ')' : countBase;
@@ -2987,12 +3241,9 @@
                 });
                 renderLastPublishSummary();
                 var flashMsg =
-                  'Success: ' +
-                  pending.length +
-                  ' file' +
-                  (pending.length === 1 ? '' : 's') +
-                  ' published to your live site.';
-                if (hash) flashMsg += ' Git commit ' + hash.slice(0, 7) + '.';
+                  pending.length === 1
+                    ? 'Published. Customers will see this after the site finishes updating.'
+                    : 'Published ' + pending.length + ' changes. Customers will see them after the site finishes updating.';
                 var publishWarnings = resp && Array.isArray(resp.warnings) ? resp.warnings.filter(Boolean) : [];
                 if (publishWarnings.length) {
                   flashMsg += ' ' + publishWarnings.join(' ');
@@ -3010,7 +3261,7 @@
               })
               .catch(function (err) {
                 console.error('Publish failed', err);
-                alert('Publish failed: ' + (err.message || err));
+                alert('Could not publish. ' + readablePublishError(err));
                 setDashButtonBusy(
                   publishSummaryConfirm,
                   false,

@@ -1407,8 +1407,7 @@
         }).then(parseCms);
       })
       .then(function (data) {
-        var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
-        setItemMapStatus(h ? 'Saved · commit ' + h + ' (redeploy menu to apply)' : 'Saved.');
+        setItemMapStatus((data && data.message) || 'Saved to snapshot. Publish to update the live menu.');
         if (window.POS_CONFIG) {
           window.POS_CONFIG.itemMapping = Object.assign(
             {},
