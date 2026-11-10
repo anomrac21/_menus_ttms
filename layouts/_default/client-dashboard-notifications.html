@@ -18,18 +18,8 @@ window.MENU_IMAGE_CONFIG = {
     "toolbarLabel" "Notifications toolbar"
     "closeTitle" "Close notifications"
   ) }}
-  <div class="dashboard-workspace" id="dashboardNotifyTabs">
-    {{- if $notifyFeature -}}
-    <div class="dashboard-notify-tablist" role="tablist" aria-label="Notification sections">
-      <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabOverview" aria-controls="notifyPanelOverview" aria-selected="true" tabindex="0"><i class="fa fa-bar-chart" aria-hidden="true"></i> Overview</button>
-      <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabWelcome" aria-controls="notifyPanelWelcome" aria-selected="false" tabindex="-1"><i class="fa fa-handshake-o" aria-hidden="true"></i> Welcome</button>
-      <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabSend" aria-controls="notifyPanelSend" aria-selected="false" tabindex="-1"><i class="fa fa-paper-plane" aria-hidden="true"></i> Send</button>
-      <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabSubscribers" aria-controls="notifyPanelSubscribers" aria-selected="false" tabindex="-1"><i class="fa fa-users" aria-hidden="true"></i> Subscribers</button>
-      <button type="button" class="dashboard-notify-tab" role="tab" id="notifyTabHistory" aria-controls="notifyPanelHistory" aria-selected="false" tabindex="-1"><i class="fa fa-history" aria-hidden="true"></i> History</button>
-    </div>
-    {{- end -}}
-    <div class="cards">
-  <main class="dashboard-notify-main" id="main">
+
+  <main class="dashboard-notify-main dashboard-analytics-main--full" id="main">
 
     {{- if not $notifyFeature -}}
     <p class="dashboard-notify-banner dashboard-notify-banner-warn" role="status">
@@ -39,28 +29,42 @@ window.MENU_IMAGE_CONFIG = {
     {{- end -}}
 
     <p id="dashboardNotifyConfigError" class="dashboard-notify-banner" hidden>
-
       <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
-
       <span>Notification API is not configured. Enable <code class="dashboard-notify-inline-code">params.notifications</code> in your site config and set <code class="dashboard-notify-inline-code">apiUrl</code>.</span>
-
     </p>
 
     <p id="dashboardNotifyLoadError" class="dashboard-notify-banner dashboard-notify-banner-warn" hidden role="alert"></p>
 
     {{- if $notifyFeature -}}
+    <section class="dashboard-settings-panel insights-shell insights-shell--premium notify-shell" aria-labelledby="notify-shell-heading">
+      <div class="dashboard-settings-panel-head insights-shell-head">
+        <span class="dashboard-settings-panel-icon dashboard-notify-panel-icon" aria-hidden="true"><i class="fa fa-bell"></i></span>
+        <div class="dashboard-settings-panel-head-text">
+          <div class="insights-shell-title-row">
+            <h2 id="notify-shell-heading" class="dashboard-analytics-heading">Notifications</h2>
+          </div>
+          <p class="dashboard-analytics-subtitle">Send updates, offers, and reminders to subscribers.</p>
+        </div>
+      </div>
 
-    <div class="dashboard-notify-tabs">
+      <div class="insights-workspace" id="dashboardNotifyTabs">
+        <nav class="insights-nav dashboard-side" id="notifyNav" aria-label="Notification sections">
+          <p class="dashboard-side-kicker">Sections</p>
+          <div class="dashboard-side-nav" role="tablist" aria-label="Notification sections">
+            <button type="button" class="dashboard-side-link insights-nav-link is-active" role="tab" id="notifyTabOverview" aria-controls="notifyPanelOverview" aria-selected="true" tabindex="0" data-notify-tab="overview"><i class="fa fa-bar-chart" aria-hidden="true"></i><span class="dashboard-side-label">Overview</span></button>
+            <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabWelcome" aria-controls="notifyPanelWelcome" aria-selected="false" tabindex="-1" data-notify-tab="welcome"><i class="fa fa-handshake-o" aria-hidden="true"></i><span class="dashboard-side-label">Welcome</span></button>
+            <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabSend" aria-controls="notifyPanelSend" aria-selected="false" tabindex="-1" data-notify-tab="send"><i class="fa fa-paper-plane" aria-hidden="true"></i><span class="dashboard-side-label">Send</span></button>
+            <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabSubscribers" aria-controls="notifyPanelSubscribers" aria-selected="false" tabindex="-1" data-notify-tab="subscribers"><i class="fa fa-users" aria-hidden="true"></i><span class="dashboard-side-label">Subscribers</span><span class="dashboard-side-count" id="notifyNavSubscribersCount" hidden></span></button>
+            <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabHistory" aria-controls="notifyPanelHistory" aria-selected="false" tabindex="-1" data-notify-tab="history"><i class="fa fa-history" aria-hidden="true"></i><span class="dashboard-side-label">History</span></button>
+          </div>
+        </nav>
 
-      <div class="dashboard-notify-tab-panels">
-
-        <div class="dashboard-notify-tab-panel" id="notifyPanelOverview" role="tabpanel" aria-labelledby="notifyTabOverview">
-
-          {{ partial "dashboard/notify-overview.html" (dict "showSubscribers" false) }}
-
+        <div class="insights-workspace-main">
+        <div class="insights-panel is-active dashboard-notify-tab-panel" id="notifyPanelOverview" role="tabpanel" aria-labelledby="notifyTabOverview" data-notify-panel="overview">
+          {{ partial "dashboard/notify-overview.html" (dict "showSubscribers" false "hideHead" true) }}
         </div>
 
-        <div class="dashboard-notify-tab-panel" id="notifyPanelWelcome" role="tabpanel" aria-labelledby="notifyTabWelcome" hidden>
+        <div class="insights-panel dashboard-notify-tab-panel" id="notifyPanelWelcome" role="tabpanel" aria-labelledby="notifyTabWelcome" data-notify-panel="welcome" hidden>
 
           <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--welcome dashboard-notify-tab-section" aria-labelledby="notify-welcome-heading">
 
@@ -274,7 +278,7 @@ window.MENU_IMAGE_CONFIG = {
 
 
 
-        <div class="dashboard-notify-tab-panel" id="notifyPanelSend" role="tabpanel" aria-labelledby="notifyTabSend" hidden>
+        <div class="insights-panel dashboard-notify-tab-panel" id="notifyPanelSend" role="tabpanel" aria-labelledby="notifyTabSend" data-notify-panel="send" hidden>
 
           <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--send dashboard-notify-tab-section" aria-labelledby="notify-send-heading">
 
@@ -530,7 +534,7 @@ window.MENU_IMAGE_CONFIG = {
 
 
 
-        <div class="dashboard-notify-tab-panel" id="notifyPanelSubscribers" role="tabpanel" aria-labelledby="notifyTabSubscribers" hidden>
+        <div class="insights-panel dashboard-notify-tab-panel" id="notifyPanelSubscribers" role="tabpanel" aria-labelledby="notifyTabSubscribers" data-notify-panel="subscribers" hidden>
 
           <section class="dashboard-settings-panel dashboard-notify-panel dashboard-notify-tab-section" aria-labelledby="notify-subscribers-heading">
             <div class="dashboard-settings-panel-head">
@@ -562,7 +566,7 @@ window.MENU_IMAGE_CONFIG = {
 
         </div>
 
-        <div class="dashboard-notify-tab-panel" id="notifyPanelHistory" role="tabpanel" aria-labelledby="notifyTabHistory" hidden>
+        <div class="insights-panel dashboard-notify-tab-panel" id="notifyPanelHistory" role="tabpanel" aria-labelledby="notifyTabHistory" data-notify-panel="history" hidden>
 
           <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--history dashboard-notify-tab-section" aria-labelledby="notify-reports-heading">
 
@@ -646,17 +650,12 @@ window.MENU_IMAGE_CONFIG = {
 
         </div>
 
+        </div>
       </div>
-
-    </div>
-
+    </section>
     {{- end -}}
 
-
-
   </main>
-    </div>
-  </div>
 </div>
 
 

@@ -1,4 +1,5 @@
-<section class="dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--overview dashboard-notify-tab-section" aria-labelledby="notifications-heading">
+<section class="dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--overview dashboard-notify-tab-section{{ if .hideHead }} dashboard-notify-panel--shell{{ end }}" aria-labelledby="{{ if .hideHead }}notify-shell-heading{{ else }}notifications-heading{{ end }}">
+  {{- if not .hideHead }}
   <div class="dashboard-settings-panel-head">
     <span class="dashboard-settings-panel-icon dashboard-notify-panel-icon" aria-hidden="true"><i class="fa fa-bell"></i></span>
     <div class="dashboard-settings-panel-head-text">
@@ -11,6 +12,7 @@
     </div>
     {{- end }}
   </div>
+  {{- end }}
   <div class="dashboard-orders-hub-tabs dashboard-analytics-period-tabs" id="dashboardNotifyPeriodTabs" role="tablist" aria-label="Notification period">
     <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardNotifyPeriod-1" data-notify-days="1" aria-selected="false">1 day</button>
     <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardNotifyPeriod-7" data-notify-days="7" aria-selected="false">7 days</button>
@@ -21,7 +23,7 @@
     <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
     <span>Loading notification stats…</span>
   </p>
-  <div class="dashboard-analytics-metrics dashboard-notify-metrics" id="dashboardNotificationsMetrics">
+  <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full dashboard-notify-metrics" id="dashboardNotificationsMetrics">
     <div class="dashboard-analytics-card dashboard-notify-metric-card dashboard-notify-metric-card--primary">
       <span class="dashboard-notify-metric-icon" aria-hidden="true"><i class="fa fa-send"></i></span>
       <span class="dashboard-analytics-card-label dashboard-notify-period-label" data-label="Messages sent">Messages sent (30d)</span>

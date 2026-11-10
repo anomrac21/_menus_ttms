@@ -568,6 +568,7 @@
     var unsubscribes = sumTrendField(trendRows, 'new_unsubscribed');
 
     paintNotifyCardCount(sub.active);
+    paintNotifyNavSubscriberCount(sub.active);
     var cardSubs = document.getElementById('dashboardCardNotifySubs');
     var cardSent = document.getElementById('dashboardCardNotifySent');
     if (cardSubs) cardSubs.textContent = formatCount(sub.active);
@@ -1799,7 +1800,7 @@
     root.setAttribute('data-notify-tabs-bound', 'true');
 
     var tabs = Array.prototype.slice.call(
-      root.querySelectorAll('.dashboard-notify-tablist [role="tab"]')
+      root.querySelectorAll('#notifyNav [role="tab"], .dashboard-side-nav [role="tab"], .dashboard-notify-tablist [role="tab"]')
     );
     if (!tabs.length) return;
 
@@ -1813,10 +1814,13 @@
       tabs.forEach(function (tab, i) {
         var selected = i === index;
         tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        tab.setAttribute('aria-current', selected ? 'page' : 'false');
         tab.classList.toggle('dashboard-notify-tab--active', selected);
+        tab.classList.toggle('is-active', selected);
         tab.tabIndex = selected ? 0 : -1;
         var panel = panels[i];
         if (!panel) return;
+        panel.classList.toggle('is-active', selected);
         if (selected) {
           panel.removeAttribute('hidden');
         } else {
@@ -1826,7 +1830,7 @@
     }
 
     var initial = tabs.findIndex(function (tab) {
-      return tab.getAttribute('aria-selected') === 'true';
+      return tab.getAttribute('aria-selected') === 'true' || tab.classList.contains('is-active');
     });
     if (initial < 0) initial = 0;
     selectTab(initial);
@@ -1854,6 +1858,23 @@
         }
       });
     });
+  }
+
+  function paintNotifyNavSubscriberCount(active) {
+    var el = document.getElementById('notifyNavSubscribersCount');
+    if (!el) return;
+    var n = Number(active);
+    if (!isFinite(n) || n < 0) {
+      el.hidden = true;
+      el.textContent = '';
+      el.classList.remove('is-hot', 'is-zero', 'is-loading');
+      return;
+    }
+    el.hidden = false;
+    el.classList.remove('is-loading');
+    el.classList.toggle('is-hot', n > 0);
+    el.classList.toggle('is-zero', n === 0);
+    el.textContent = formatCount(n);
   }
 
   function getNotifyServiceRoot() {
