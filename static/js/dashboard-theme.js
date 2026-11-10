@@ -93,10 +93,11 @@
 
   function init() {
     var saved = storageGet();
-    if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    /* Dashboard defaults to dark unless the visitor explicitly chose light. */
+    if (saved !== 'light' && saved !== 'dark') {
       saved = 'dark';
     }
-    applyTheme(saved === 'dark' ? 'dark' : 'light');
+    applyTheme(saved === 'light' ? 'light' : 'dark');
   }
 
   window.toggleTheme = function (theme) {

@@ -636,8 +636,12 @@ html:has(.dashboard-control-room)::after {
   text-size-adjust: 100%;
 }
 
+.dashboard-control-room {
+  --dashboard-shell-max: 1180px;
+}
+
 .dashboard-control-room .dashboard-header {
-  max-width: 1000px;
+  max-width: var(--dashboard-shell-max);
   width: 100%;
   box-sizing: border-box;
   margin: 0 auto 1.35rem;
@@ -9655,13 +9659,13 @@ body.menu-item-edit-modal-open {
 
 .dashboard-analytics-main {
   flex: 1;
-  max-width: 1000px;
+  max-width: var(--dashboard-shell-max, 1180px);
   margin: 0 auto;
   width: 100%;
 }
 
 .dashboard-analytics-main--full {
-  max-width: 1080px;
+  max-width: var(--dashboard-shell-max, 1180px);
 }
 
 .dashboard-analytics-period {
@@ -16624,14 +16628,15 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
     align-items: start;
     gap: 0 1rem;
     width: 100%;
-    max-width: 1180px;
+    max-width: var(--dashboard-shell-max, 1180px);
     margin: 0 auto;
   }
 
   #dashboardControlRoom .dashboard-header,
   #dashboardAuthPage .dashboard-header,
-  #dashboardNotificationsPage .dashboard-header {
-    max-width: 1180px;
+  #dashboardNotificationsPage .dashboard-header,
+  #dashboardAnalyticsPage .dashboard-header {
+    max-width: var(--dashboard-shell-max, 1180px);
   }
 
   #dashboardControlRoom .dashboard-side,
@@ -17136,10 +17141,6 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
 }
 
 @media (min-width: 960px) {
-  .dashboard-analytics-main--full {
-    max-width: 1180px;
-  }
-
   .insights-workspace {
     display: grid;
     grid-template-columns: 16.75rem minmax(0, 1fr);
