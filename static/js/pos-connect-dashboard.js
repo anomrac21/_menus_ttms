@@ -11,6 +11,9 @@
   var cachedMenuItems = [];
   var proposedItemMapping = {};
   var menuTitleHints = [];
+  var loyverseItemsLoadPromise = null;
+  var storesLoadPromise = null;
+  var unmatchedFixStarted = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -197,8 +200,10 @@
   function showItemMapButtons(show) {
     var a = $('btnPosAutoMapItems');
     var s = $('btnPosSaveItemMapping');
+    var load = $('btnPosLoadItems');
     if (a) a.hidden = !show;
     if (s) s.hidden = !show;
+    if (load) load.hidden = false;
   }
 
   function pos() {
@@ -348,7 +353,8 @@
       count = stats.matched + ' of ' + stats.total + ' items matched';
       if (stats.unmatched.length) {
         var shown = stats.unmatched.slice(0, 3);
-        var more = stats.unmatched.length - shown.length;          extra =
+        var more = stats.unmatched.length - shown.length;
+        extra =
           '<p class="dashboard-pos-item-match-unmapped">Won’t print: ' +
           escapeHtml(shown.join(', ')) +
           (more > 0 ? ' +' + more + ' more' : '') +
@@ -548,6 +554,7 @@
     el.setAttribute('data-user-toggled', '1');
     el.open = true;
     if (el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (key === 'items') beginFixUnmatched(false);
   }
 
   function syncPosSteps(setup) {
@@ -571,7 +578,8 @@
     else if (!setup.total) setStepPill('posStepLocationsPill', 'attention', 'No locations');
     else if (setup.storesDone) setStepPill('posStepLocationsPill', 'ready', 'All ' + setup.total + ' ready');
     else {
-      var left = setup.total - setup.mapped;      setStepPill('posStepLocationsPill', 'attention', left === 1 ? '1 left' : left + ' left');
+      var left = setup.total - setup.mapped;
+      setStepPill('posStepLocationsPill', 'attention', left === 1 ? '1 left' : left + ' left');
     }
 
     setStepPill('posStepOrdersPill', 'ready', 'Optional');
@@ -635,7 +643,8 @@
         setSetupRow('items', 'ready', 'All ' + setup.itemTotal + ' dishes match Loyverse.');
       } else {
         var shown = setup.unmatched.slice(0, 3);
-        var more = setup.unmatched.length - shown.length;        setSetupRow(
+        var more = setup.unmatched.length - shown.length;
+        setSetupRow(
           'items',
           'attention',
           setup.itemMatched +
@@ -705,14 +714,18 @@
         badge.textContent =
           setup.unmatched.length === 1 ? '1 dish to match' : setup.unmatched.length + ' dishes to match';
       } else if (!setup.storesDone && setup.total) {
-        var left = setup.total - setup.mapped;        badge.setAttribute('data-state', 'attention');
-        badge.textContent = left === 1 ? '1 location left' : left + ' locations left';
+        var leftLoc = setup.total - setup.mapped;
+        badge.setAttribute('data-state', 'attention');
+        badge.textContent = leftLoc === 1 ? '1 location left' : leftLoc + ' locations left';
       } else {
         badge.setAttribute('data-state', 'connected');
         badge.textContent = 'Ready';
       }
     }
     if (board) board.hidden = false;
+    if (linked && setup.storesDone && setup.unmatched.length && !unmatchedFixStarted) {
+      beginFixUnmatched(true);
+    }
   }
 
   function updateLocationCardState(card, storeId) {
@@ -1067,7 +1080,9 @@
     var text = $('posConnectStatus');
     var state = banner && banner.getAttribute('data-state');
     var copy = ((text && text.textContent) || '').toLowerCase();
-    return state === 'error' || state === 'checking' || /sign in/i.test(copy);
+    // Only retry while still checking or waiting on sign-in — never loop on store/item errors.
+    if (state === 'checking') return true;
+    return /sign in|not authenticated/i.test(copy);
   }
 
   function refreshStatusWhenReady() {
@@ -1077,7 +1092,11 @@
         return refreshStatus();
       })
       .then(function (d) {
-        if (d && d.connected) loadStores();
+        if (d && d.connected && !cachedStores.length) {
+          return loadStores().then(function () {
+            return d;
+          });
+        }
         return d;
       })
       .finally(function () {
@@ -1105,10 +1124,12 @@
             'connected',
             'Linked. Guest orders can go to your Loyverse tills.' + statusNote
           );
-          var loadStores = $('btnPosLoadStores');
-          var loadItems = $('btnPosLoadItems');
-          if (loadStores) loadStores.hidden = false;
-          if (loadItems) loadItems.hidden = false;
+          var loadStoresBtn = $('btnPosLoadStores');
+          if (loadStoresBtn) loadStoresBtn.hidden = false;
+          var setup = collectPosSetup();
+          if (setup.unmatched.length && !unmatchedFixStarted) {
+            beginFixUnmatched(true);
+          }
         } else if (d.last_error) {
           setAccountState('error', d.last_error);
         } else {
@@ -1120,7 +1141,7 @@
       })
       .catch(function (err) {
         var msg = String(err.message || err);
-        if (/sign in required/i.test(msg)) {
+        if (/sign in required|not authenticated/i.test(msg)) {
           setAccountState('error', 'Sign in to see whether Loyverse is linked.');
           return;
         }
@@ -1157,7 +1178,8 @@
   }
 
   function loadStores() {
-    return ensureAuth()
+    if (storesLoadPromise) return storesLoadPromise;
+    storesLoadPromise = ensureAuth()
       .then(function () {
         return pos().listStores();
       })
@@ -1190,8 +1212,14 @@
         });
       })
       .catch(function (err) {
-        setStatus(String(err.message || err), true);
+        // Keep account "connected" — store listing failures must not flip the banner to error
+        // or visibility/auth listeners will refresh in a loop.
+        setMapStatus(String(err.message || err), true);
+      })
+      .finally(function () {
+        storesLoadPromise = null;
       });
+    return storesLoadPromise;
   }
 
   function listAllLoyverseItems() {
@@ -1312,11 +1340,13 @@
 
   function renderItemMapPreview(map) {
     var el = $('posItemMapPreview');
+    var rawRow = $('posItemsRawRow');
     if (!el) return;
     var keys = Object.keys(map || {}).sort();
     if (!keys.length) {
       el.hidden = true;
       el.innerHTML = '';
+      if (rawRow) rawRow.hidden = true;
       return;
     }
     var rows = keys
@@ -1324,11 +1354,11 @@
         var v = map[k];
         var id = typeof v === 'string' ? v : (v && v.variant_id) || '';
         return (
-          '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;border-bottom:1px solid color-mix(in srgb, var(--dash-black) 8%, transparent);padding:0.25rem 0;">' +
-          '<code style="flex:1;min-width:10rem;">' +
+          '<div class="dashboard-pos-item-preview-row">' +
+          '<code>' +
           escapeHtml(k) +
           '</code>' +
-          '<span style="opacity:0.8;">' +
+          '<span>' +
           escapeHtml(id) +
           '</span></div>'
         );
@@ -1336,17 +1366,169 @@
       .join('');
     el.innerHTML = rows;
     el.hidden = false;
+    if (rawRow) rawRow.hidden = false;
   }
 
-  function loadItems() {
-    var preview = $('posItemsPreview');
-    setItemMapStatus('Loading items…');
-    return ensureAuth()
+  function collectUnmatchedDishes() {
+    var setup = collectPosSetup();
+    var seen = {};
+    var out = [];
+    (setup.unmatched || []).forEach(function (name) {
+      var title = String(name || '').trim();
+      if (!title || seen[title]) return;
+      seen[title] = true;
+      out.push({ title: title });
+    });
+    return out;
+  }
+
+  function flattenLoyverseVariants() {
+    var out = [];
+    cachedLoyverseItems.forEach(function (it) {
+      var name = String(it.item_name || it.name || '').trim();
+      (it.variants || []).forEach(function (v) {
+        var vid = String(v.variant_id || v.id || '').trim();
+        if (!vid) return;
+        var parts = [name];
+        if (v.option1_value) parts.push(String(v.option1_value));
+        if (v.option2_value) parts.push(String(v.option2_value));
+        out.push({
+          variantId: vid,
+          label: parts.filter(Boolean).join(' · '),
+          name: name,
+          option1: String(v.option1_value || ''),
+          option2: String(v.option2_value || ''),
+        });
+      });
+    });
+    return out;
+  }
+
+  function scoreNameMatch(a, b) {
+    var left = normalizeName(a);
+    var right = normalizeName(b);
+    if (!left || !right) return 0;
+    if (left === right) return 100;
+    if (left.indexOf(right) >= 0 || right.indexOf(left) >= 0) return 70;
+    var la = left.split(' ');
+    var rb = right.split(' ');
+    var hits = 0;
+    la.forEach(function (tok) {
+      if (tok.length > 2 && rb.indexOf(tok) >= 0) hits += 1;
+    });
+    if (!hits) return 0;
+    return Math.min(60, Math.round((hits / Math.max(la.length, 1)) * 60));
+  }
+
+  function bestVariantForDish(title) {
+    var variants = flattenLoyverseVariants();
+    var best = null;
+    var bestScore = 0;
+    variants.forEach(function (v) {
+      var score = Math.max(scoreNameMatch(title, v.name), scoreNameMatch(title, v.label));
+      if (score > bestScore) {
+        bestScore = score;
+        best = v;
+      }
+    });
+    return bestScore >= 70 ? best : null;
+  }
+
+  function variantOptionsHtml(selectedId) {
+    var html = '<option value="">Choose a Loyverse item…</option>';
+    flattenLoyverseVariants().forEach(function (v) {
+      var sel = v.variantId === selectedId ? ' selected' : '';
+      html +=
+        '<option value="' +
+        escapeAttr(v.variantId) +
+        '"' +
+        sel +
+        '>' +
+        escapeHtml(v.label) +
+        '</option>';
+    });
+    return html;
+  }
+
+  function renderUnmatchedMapper() {
+    var list = $('posUnmatchedList');
+    if (!list) return;
+    var dishes = collectUnmatchedDishes();
+    if (!dishes.length) {
+      list.hidden = true;
+      list.innerHTML = '';
+      showItemMapButtons(false);
+      return;
+    }
+    list.hidden = false;
+    list.innerHTML = dishes
+      .map(function (dish) {
+        var existing = mappingValue(itemMappingMap()[dish.title] || proposedItemMapping[dish.title]);
+        var suggested = existing ? null : bestVariantForDish(dish.title);
+        var selected = existing || (suggested && suggested.variantId) || '';
+        if (selected && !existing) {
+          proposedItemMapping[dish.title] = { variant_id: selected };
+        }
+        var hint = suggested && !existing ? 'Suggested match' : existing ? 'Already mapped' : 'Needs a match';
+        return (
+          '<div class="dashboard-pos-unmatched-row" data-title="' +
+          escapeAttr(dish.title) +
+          '">' +
+          '<div class="dashboard-pos-unmatched-copy">' +
+          '<strong>' +
+          escapeHtml(dish.title) +
+          '</strong>' +
+          '<span>' +
+          escapeHtml(hint) +
+          '</span></div>' +
+          '<label class="dashboard-pos-unmatched-pick">' +
+          '<span class="dashboard-pos-unmatched-pick-label">Print as</span>' +
+          '<select class="dashboard-settings-input" data-unmatched-title="' +
+          escapeAttr(dish.title) +
+          '">' +
+          variantOptionsHtml(selected) +
+          '</select></label></div>'
+        );
+      })
+      .join('');
+    list.querySelectorAll('select[data-unmatched-title]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var title = sel.getAttribute('data-unmatched-title') || '';
+        var vid = String(sel.value || '').trim();
+        if (!title) return;
+        if (vid) proposedItemMapping[title] = { variant_id: vid };
+        else delete proposedItemMapping[title];
+        var saveBtn = $('btnPosSaveItemMapping');
+        if (saveBtn) saveBtn.hidden = !Object.keys(proposedItemMapping).length;
+      });
+    });
+    showItemMapButtons(!!cachedLoyverseItems.length);
+    var saveBtn = $('btnPosSaveItemMapping');
+    if (saveBtn) {
+      saveBtn.hidden = !Object.keys(proposedItemMapping).length && !dishes.some(function (d) {
+        return !!mappingValue(itemMappingMap()[d.title]);
+      });
+      if (!saveBtn.hidden && dishes.some(function (d) {
+        return !!mappingValue(proposedItemMapping[d.title] || itemMappingMap()[d.title]);
+      })) {
+        saveBtn.hidden = false;
+      }
+    }
+  }
+
+  function ensureLoyverseItems(force) {
+    if (!force && cachedLoyverseItems.length) {
+      return Promise.resolve(cachedLoyverseItems);
+    }
+    if (loyverseItemsLoadPromise && !force) return loyverseItemsLoadPromise;
+    loyverseItemsLoadPromise = ensureAuth()
       .then(function () {
         return Promise.all([listAllLoyverseItems(), loadMenuTitleHints()]);
       })
       .then(function (results) {
         cachedLoyverseItems = results[0] || [];
+        var preview = $('posItemsPreview');
+        var rawRow = $('posItemsRawRow');
         var lines = [];
         cachedLoyverseItems.forEach(function (it) {
           var name = it.item_name || it.name || '';
@@ -1358,16 +1540,73 @@
           });
         });
         if (preview) {
-          preview.hidden = false;
-          preview.textContent = lines.length
-            ? lines.join('\n')
-            : 'No Loyverse items found.';
+          preview.hidden = !lines.length;
+          preview.textContent = lines.length ? lines.join('\n') : 'No Loyverse items found.';
         }
-        showItemMapButtons(cachedLoyverseItems.length > 0);
+        if (rawRow) rawRow.hidden = !cachedLoyverseItems.length;
+        return cachedLoyverseItems;
+      })
+      .finally(function () {
+        loyverseItemsLoadPromise = null;
+      });
+    return loyverseItemsLoadPromise;
+  }
+
+  function beginFixUnmatched(quiet) {
+    unmatchedFixStarted = true;
+    var panel = $('posMatchItemsPanel');
+    if (panel) {
+      panel.hidden = false;
+      if (!quiet) {
+        panel.setAttribute('data-user-toggled', '1');
+        panel.open = true;
+      } else if (panel.getAttribute('data-user-toggled') !== '1') {
+        panel.open = true;
+      }
+    }
+    setItemMapStatus('Finding Loyverse matches…');
+    return ensureLoyverseItems(false)
+      .then(function (items) {
+        if (!items.length) {
+          showItemMapButtons(false);
+          setItemMapStatus('No Loyverse items found on this account.', true);
+          renderUnmatchedMapper();
+          return;
+        }
+        proposedItemMapping = Object.assign({}, proposedItemMapping, buildProposedMapping(items));
+        renderItemMapPreview(proposedItemMapping);
+        renderUnmatchedMapper();
+        var unmatched = collectUnmatchedDishes();
+        var suggested = unmatched.filter(function (d) {
+          return !!mappingValue(proposedItemMapping[d.title]);
+        }).length;
         setItemMapStatus(
-          cachedLoyverseItems.length
-            ? 'Loaded ' + cachedLoyverseItems.length + ' Loyverse item(s). Auto-map, then save.'
-            : 'No items to map.'
+          unmatched.length
+            ? 'Choose a Loyverse item for each dish' +
+                (suggested ? ' (' + suggested + ' suggested)' : '') +
+                ', then Save matches.'
+            : 'Every dish already matches.'
+        );
+      })
+      .catch(function (err) {
+        setItemMapStatus(String(err.message || err), true);
+        showItemMapButtons(false);
+      });
+  }
+
+  function loadItems() {
+    unmatchedFixStarted = true;
+    setItemMapStatus('Loading Loyverse items…');
+    return ensureLoyverseItems(true)
+      .then(function (items) {
+        proposedItemMapping = Object.assign({}, proposedItemMapping, buildProposedMapping(items));
+        renderItemMapPreview(proposedItemMapping);
+        renderUnmatchedMapper();
+        setItemMapStatus(
+          items.length
+            ? 'Loaded ' + items.length + ' Loyverse item(s). Review matches, then save.'
+            : 'No items to map.',
+          !items.length
         );
       })
       .catch(function (err) {
@@ -1377,18 +1616,31 @@
 
   function autoMapItems() {
     if (!cachedLoyverseItems.length) {
-      setItemMapStatus('Load Loyverse items first.', true);
-      return;
+      return beginFixUnmatched(false);
     }
-    proposedItemMapping = buildProposedMapping(cachedLoyverseItems);
+    proposedItemMapping = Object.assign({}, proposedItemMapping, buildProposedMapping(cachedLoyverseItems));
     renderItemMapPreview(proposedItemMapping);
+    renderUnmatchedMapper();
     var n = Object.keys(proposedItemMapping).length;
-    setItemMapStatus(n ? 'Proposed ' + n + ' mapping key(s) - review and Save.' : 'No mappings produced.', !n);
+    setItemMapStatus(n ? 'Suggested ' + n + ' match(es). Review and Save.' : 'No name matches found.', !n);
+  }
+
+  function readUnmatchedSelections() {
+    var list = $('posUnmatchedList');
+    if (!list) return;
+    list.querySelectorAll('select[data-unmatched-title]').forEach(function (sel) {
+      var title = sel.getAttribute('data-unmatched-title') || '';
+      var vid = String(sel.value || '').trim();
+      if (!title) return;
+      if (vid) proposedItemMapping[title] = { variant_id: vid };
+      else delete proposedItemMapping[title];
+    });
   }
 
   function saveItemMapping() {
+    readUnmatchedSelections();
     if (!Object.keys(proposedItemMapping).length) {
-      setItemMapStatus('Auto-map items first (or load + auto-map).', true);
+      setItemMapStatus('Pick a Loyverse item for each unmatched dish first.', true);
       return;
     }
     setItemMapStatus('Saving…');
@@ -1407,16 +1659,19 @@
         }).then(parseCms);
       })
       .then(function (data) {
-        setItemMapStatus((data && data.message) || 'Saved to snapshot. Publish to update the live menu.');
-        if (window.POS_CONFIG) {
-          window.POS_CONFIG.itemMapping = Object.assign(
-            {},
-            window.POS_CONFIG.itemMapping || {},
-            proposedItemMapping
-          );
-        }
+        setItemMapStatus((data && data.message) || 'Saved. Publish the menu so tills use the new matches.');
+        window.POS_CONFIG = window.POS_CONFIG || {};
+        window.POS_CONFIG.itemMapping = Object.assign(
+          {},
+          window.POS_CONFIG.itemMapping || {},
+          proposedItemMapping
+        );
         paintLocationItemMatches();
         updateLocationSummary();
+        renderUnmatchedMapper();
+        if (!collectUnmatchedDishes().length) {
+          setItemMapStatus('All dishes match. Publish when you are ready.');
+        }
       })
       .catch(function (err) {
         setItemMapStatus(String(err.message || err), true);
@@ -1657,7 +1912,12 @@
     var setupNext = $('posSetupNext');
     if (setupNext) {
       setupNext.addEventListener('click', function () {
-        openPosStep(setupNext.getAttribute('data-action') || '');
+        var action = setupNext.getAttribute('data-action') || '';
+        if (action === 'items') {
+          beginFixUnmatched(false);
+          return;
+        }
+        openPosStep(action);
       });
     }
 

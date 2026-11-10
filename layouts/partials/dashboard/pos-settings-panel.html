@@ -200,16 +200,20 @@
 
     <details class="dashboard-pos-advanced" id="posMatchItemsPanel" data-pos-step="items" data-pos-requires-connected hidden>
       <summary>Fix unmatched dishes</summary>
-      <p class="dashboard-pos-step-hint">A dish matches when its name (or Name|Size) exists as a Loyverse item. Unmatched dishes will not print on the till.</p>
+      <p class="dashboard-pos-step-hint">Pick the Loyverse item each dish should print as. Unmatched dishes stay off the till until you save.</p>
       <div id="posItemMatchByLocation" class="dashboard-pos-item-match-overview" hidden></div>
+      <div id="posUnmatchedList" class="dashboard-pos-unmatched-list" hidden></div>
       <div class="dashboard-pos-location-actions">
-        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems" hidden>Load items from Loyverse</button>
-        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoMapItems" hidden>Match dishes by name</button>
-        <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveItemMapping" hidden>Save item mapping</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveItemMapping" hidden>Save matches</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosLoadItems">Find matches in Loyverse</button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="btnPosAutoMapItems" hidden>Suggest by name</button>
         <span id="posItemMapStatus" class="dashboard-pos-inline-status" role="status"></span>
       </div>
-      <div id="posItemMapPreview" class="dashboard-pos-item-preview" hidden></div>
-      <pre id="posItemsPreview" class="dashboard-settings-input dashboard-pos-item-raw" hidden></pre>
+      <details class="dashboard-pos-fallback" id="posItemsRawRow" hidden>
+        <summary>Raw Loyverse catalog</summary>
+        <div id="posItemMapPreview" class="dashboard-pos-item-preview" hidden></div>
+        <pre id="posItemsPreview" class="dashboard-settings-input dashboard-pos-item-raw" hidden></pre>
+      </details>
     </details>
 
     <details class="dashboard-pos-advanced dashboard-pos-advanced--danger" id="posReplaceCatalogRow" data-pos-requires-connected hidden>
