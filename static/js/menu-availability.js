@@ -84,18 +84,35 @@
     return headers;
   }
 
+  function titleHost(card) {
+    return (
+      card.querySelector('.menu-item-title-row .menu-item-title') ||
+      card.querySelector('.menu-item-header-content .menu-item-title') ||
+      card.querySelector('.menu-item-title')
+    );
+  }
+
+  function placeBadgeInTitle(card, badge) {
+    var title = titleHost(card);
+    var titleText = title && title.querySelector('.menu-item-title-text');
+    if (titleText && titleText.parentNode) {
+      if (badge.parentNode !== titleText.parentNode || badge.previousSibling !== titleText) {
+        titleText.parentNode.insertBefore(badge, titleText.nextSibling);
+      }
+      return;
+    }
+    if (title && badge.parentNode !== title) title.appendChild(badge);
+  }
+
   function ensureBadge(card) {
     var badge = card.querySelector('.menu-item-sold-out-badge');
-    if (badge) return badge;
-    badge = document.createElement('span');
-    badge.className = 'menu-item-sold-out-badge';
-    badge.textContent = 'Sold out';
-    badge.hidden = true;
-    var titleRow =
-      card.querySelector('.menu-item-title-row') ||
-      card.querySelector('.menu-item-title') ||
-      card;
-    titleRow.appendChild(badge);
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'menu-item-sold-out-badge';
+      badge.textContent = 'Sold out';
+      badge.hidden = true;
+    }
+    placeBadgeInTitle(card, badge);
     return badge;
   }
 
@@ -114,7 +131,7 @@
     }
     var badge = ensureBadge(card);
     badge.hidden = !soldOut;
-    syncStaffToggle(card, soldOut);
+    syncStaffToggle(card);
   }
 
   function applyAllCards() {
@@ -138,43 +155,12 @@
     } catch (e) {}
   }
 
-  function syncStaffToggle(card, soldOut) {
-    if (!state.staff) {
-      card.querySelectorAll('[data-live-sold-out-toggle]').forEach(function (el) {
-        el.hidden = true;
-      });
-      return;
-    }
-    var wrap = card.querySelector('[data-live-sold-out-wrap]');
-    if (!wrap) {
-      wrap = document.createElement('label');
-      wrap.className = 'menu-item-sold-out-toggle';
-      wrap.setAttribute('data-live-sold-out-wrap', '1');
-      wrap.innerHTML =
-        '<input type="checkbox" data-live-sold-out-toggle>' +
-        '<span data-live-sold-out-text>Sold out</span>';
-      var anchor =
-        card.querySelector('.menu-item-header-content') ||
-        card.querySelector('.menu-item-title-row') ||
-        card;
-      anchor.appendChild(wrap);
-      var input = wrap.querySelector('input');
-      input.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-      });
-      input.addEventListener('change', function (ev) {
-        ev.stopPropagation();
-        var url = card.getAttribute('data-item-url') || '';
-        setUnavailable(url, !!input.checked).catch(function () {
-          input.checked = isSoldOut(url);
-        });
-      });
-    }
-    wrap.hidden = false;
-    var input = wrap.querySelector('[data-live-sold-out-toggle]');
-    if (input && document.activeElement !== input) {
-      input.checked = !!soldOut;
-    }
+  function syncStaffToggle(card) {
+    // Live menu uses the ⋮ "Mark sold out / Mark available" action.
+    // Remove any leftover body checkbox from earlier builds.
+    card.querySelectorAll('[data-live-sold-out-wrap]').forEach(function (el) {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
   }
 
   function syncActionMenuLabels() {
@@ -307,7 +293,7 @@
         label.innerHTML =
           '<input type="checkbox" data-sold-out-toggle>' +
           '<span data-sold-out-label>Available</span>';
-        actions.insertBefore(label, actions.firstChild);
+        actions.appendChild(label);
         input = label.querySelector('input');
       }
       if (input.getAttribute('data-bound') === '1') return;
