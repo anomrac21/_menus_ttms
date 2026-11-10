@@ -33,6 +33,29 @@
   <p class="dashboard-card-desc">Connect Loyverse is a Tier 1 feature. <a href="https://ttmenus.com/account/?client_id={{ $hubClientId | urlquery }}" target="_blank" rel="noopener">Upgrade on Account</a> to enable POS mapping.</p>
   {{- else -}}
   <p class="dashboard-card-desc">Guest orders stay in TTMenus. Loyverse gets a receipt on the till you pick for each location.</p>
+  <div class="dashboard-pos-bridge-wrap" id="posReceiptBridge" data-state="checking" aria-hidden="true">
+    <div class="insights-pos-bridge dashboard-pos-bridge">
+      <div class="insights-pos-node insights-pos-node--ttmenus">
+        <span class="insights-pos-node-glow"></span>
+        <img class="insights-pos-logo insights-pos-logo--ttmenus" src="/branding/favicon192.webp" alt="" width="48" height="48">
+        <span class="insights-pos-node-label">TTMenus</span>
+      </div>
+      <div class="insights-pos-link">
+        <span class="insights-pos-link-rail"></span>
+        <span class="insights-pos-link-pulse"></span>
+        <span class="insights-pos-packet insights-pos-packet--a"></span>
+        <span class="insights-pos-packet insights-pos-packet--b"></span>
+        <span class="insights-pos-packet insights-pos-packet--c"></span>
+        <span class="insights-pos-link-label">Receipts</span>
+      </div>
+      <div class="insights-pos-node insights-pos-node--loyverse">
+        <span class="insights-pos-node-glow"></span>
+        <img class="insights-pos-logo insights-pos-logo--loyverse" src="/icons/loyverse-mark.svg" alt="" width="48" height="48">
+        <span class="insights-pos-node-label">Loyverse</span>
+      </div>
+    </div>
+    <p class="dashboard-pos-bridge-caption" id="posReceiptBridgeCaption">Orders stay in TTMenus · receipts move to Loyverse</p>
+  </div>
   <div class="dashboard-pos-setup" id="posSetupBoard" aria-live="polite">
     <p class="dashboard-pos-setup-kicker">What this menu needs</p>
     <ul class="dashboard-pos-setup-list">

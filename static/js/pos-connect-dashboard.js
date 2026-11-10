@@ -251,15 +251,29 @@
         badge.textContent = 'Not connected';
       }
     }
+    var bridge = $('posReceiptBridge');
+    var bridgeCaption = $('posReceiptBridgeCaption');
+    if (bridge) {
+      bridge.setAttribute('data-state', state === 'error' ? 'disconnected' : state);
+    }
+    if (bridgeCaption) {
+      if (state === 'connected') {
+        bridgeCaption.textContent = 'Linked · guest tickets stay in TTMenus, receipts flow to Loyverse';
+      } else if (state === 'checking') {
+        bridgeCaption.textContent = 'Checking the TTMenus → Loyverse receipt path…';
+      } else {
+        bridgeCaption.textContent = 'Link Loyverse to send till receipts from TTMenus orders';
+      }
+    }
     if (state === 'connected' && prevState !== 'connected') {
-      [banner, badge, $('posIntegrationPanel')].forEach(function (node) {
+      [banner, badge, $('posIntegrationPanel'), bridge].forEach(function (node) {
         if (!node) return;
         node.classList.remove('is-just-connected');
         void node.offsetWidth;
         node.classList.add('is-just-connected');
       });
     } else if (state !== 'connected') {
-      [banner, badge, $('posIntegrationPanel')].forEach(function (node) {
+      [banner, badge, $('posIntegrationPanel'), bridge].forEach(function (node) {
         if (node) node.classList.remove('is-just-connected');
       });
     }

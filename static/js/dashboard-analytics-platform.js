@@ -10,7 +10,7 @@
     { id: 'visitors', label: 'Visitors', always: true },
     { id: 'menu', label: 'Menu Analytics', always: true },
     { id: 'behaviour', label: 'Customer Behaviour', always: true },
-    { id: 'promotions', label: 'Promotions', key: 'promotions' },
+    { id: 'promotions', label: 'Promotions', always: true },
     { id: 'orders', label: 'Orders', key: 'orders' },
     { id: 'sales', label: 'Sales', key: 'sales' },
     { id: 'customers', label: 'Customers', key: 'customers' },
@@ -393,10 +393,8 @@
     shell()._insightsData = data;
     var ordering = flag('data-ordering');
     var loyverse = flag('data-loyverse');
-    var promotions = hasPromotions(data);
     var returning = Number(data.returningVisits) || 0;
     showNav({
-      promotions: promotions,
       orders: ordering,
       sales: ordering,
       customers: ordering || returning > 0,
@@ -460,10 +458,13 @@
     setText('insightsCustomers', customersHtml(data, shell()._orderStats || null));
     setText('insightsSales', ordering ? salesHtml(shell()._orderStats || null) : '');
     setText('insightsPromotions', '<p class="dashboard-analytics-subtitle">Loading promotions…</p>');
-    loadPromoCatalog().then(function (catalog) {
-      showNav({ promotions: hasPromotions(data, catalog) });
-      setText('insightsPromotions', promotionsHtml(data, catalog));
-    });
+    loadPromoCatalog()
+      .then(function (catalog) {
+        setText('insightsPromotions', promotionsHtml(data, catalog));
+      })
+      .catch(function () {
+        setText('insightsPromotions', promotionsHtml(data, []));
+      });
     setText('insightsPos', loyverse ? posHtml(shell()._orderStats || null) : '');
     if (ordering) {
       setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Loading TTMenus orders…</p>');
@@ -656,7 +657,6 @@
     if (root && Array.isArray(root._promoCatalog)) {
       return Promise.resolve(root._promoCatalog);
     }
-    var urls = ['/promotions/index.json'];
     return fetch('/index.json', { credentials: 'omit', headers: { Accept: 'application/json' } })
       .then(function (res) {
         return res.ok ? res.json() : null;
@@ -674,11 +674,11 @@
             .replace(/^-+|-+$/g, '');
           if (slug && slugs.indexOf(slug) === -1) slugs.push(slug);
         });
-        if (slugs.length > 1) {
-          urls = slugs.map(function (slug) {
-            return '/' + encodeURIComponent(slug) + '/promotions/index.json';
-          });
-        }
+        // Multi-location menus publish /{slug}/promotions/index.json; also try the site-wide feed.
+        var urls = ['/promotions/index.json'];
+        slugs.forEach(function (slug) {
+          urls.push('/' + encodeURIComponent(slug) + '/promotions/index.json');
+        });
         var fetches = urls.map(function (url) {
           return fetch(url, { credentials: 'omit', headers: { Accept: 'application/json' }, cache: 'no-store' })
             .then(function (res) {
@@ -700,15 +700,21 @@
         return Promise.all(fetches);
       })
       .then(function (parts) {
+        parts = Array.isArray(parts) ? parts : [];
         var catalog = [];
         var i;
         for (i = 0; i < parts.length - 1; i++) {
           catalog = catalog.concat(promoCatalogFromJson(parts[i], 'promotion'));
         }
-        catalog = catalog.concat(menuItemPromotionsFromCatalog(parts[parts.length - 1]));
+        if (parts.length) {
+          catalog = catalog.concat(menuItemPromotionsFromCatalog(parts[parts.length - 1]));
+        }
         catalog = dedupePromoCatalog(catalog);
         if (root) root._promoCatalog = catalog;
         return catalog;
+      })
+      .catch(function () {
+        return [];
       });
   }
 
@@ -752,9 +758,21 @@
     });
 
     if (!cards.length) {
-      return (
-        '<p class="dashboard-analytics-subtitle">Only menu promotions and item promotions with images appear here. Add them in Promotion settings or on a menu item.</p>'
-      );
+      var rawImpressions = Number(data.promotionImpressions) || 0;
+      var rawClicks = Number(data.promotionClicks) || 0;
+      var htmlEmpty =
+        '<p class="insights-promo-summary">Promotions with images from this menu will show here with previews and click stats.</p>';
+      if (rawImpressions || rawClicks) {
+        htmlEmpty +=
+          '<p class="dashboard-analytics-subtitle">' +
+          escapeHtml(count(rawImpressions)) +
+          ' promotion impressions and ' +
+          escapeHtml(count(rawClicks)) +
+          ' clicks were tracked, but none matched a menu promotion or item promotion that has an image yet.</p>';
+      }
+      htmlEmpty +=
+        '<p class="dashboard-analytics-subtitle">Add a promotion under Promotion settings, or attach a promotion image on a menu item. Page titles and checkout events are not listed here.</p>';
+      return htmlEmpty;
     }
 
     var trackedImpressions = cards.reduce(function (sum, row) {

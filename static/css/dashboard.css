@@ -2868,6 +2868,41 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
   margin-top: 0.65rem;
 }
 
+.dashboard-pos-bridge-wrap {
+  margin: 0.15rem 0 1rem;
+}
+
+.dashboard-pos-bridge-wrap .dashboard-pos-bridge {
+  margin: 0;
+}
+
+.dashboard-pos-bridge-caption {
+  margin: 0.55rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--dash-ink) 72%, transparent);
+}
+
+.dashboard-pos-bridge-wrap[data-state="disconnected"] .insights-pos-link-rail::after,
+.dashboard-pos-bridge-wrap[data-state="disconnected"] .insights-pos-link-pulse,
+.dashboard-pos-bridge-wrap[data-state="disconnected"] .insights-pos-packet,
+.dashboard-pos-bridge-wrap[data-state="error"] .insights-pos-link-rail::after,
+.dashboard-pos-bridge-wrap[data-state="error"] .insights-pos-link-pulse,
+.dashboard-pos-bridge-wrap[data-state="error"] .insights-pos-packet {
+  animation-play-state: paused;
+  opacity: 0.35;
+}
+
+.dashboard-pos-bridge-wrap[data-state="disconnected"] .insights-pos-node-glow,
+.dashboard-pos-bridge-wrap[data-state="error"] .insights-pos-node-glow {
+  animation: none;
+  opacity: 0.35;
+}
+
+.dashboard-pos-bridge-wrap.is-just-connected .dashboard-pos-bridge {
+  animation: dashboard-pos-connected-bloom 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .dashboard-pos-embed.is-collapsed .dashboard-pos-embed-body {
   display: none;
 }
@@ -3428,6 +3463,12 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
   .dashboard-pos-advanced,
   .dashboard-pos-location-card,
   .dashboard-pos-item-match,
+  .dashboard-pos-bridge-wrap .insights-pos-node-glow,
+  .dashboard-pos-bridge-wrap .insights-pos-logo,
+  .dashboard-pos-bridge-wrap .insights-pos-link-rail::after,
+  .dashboard-pos-bridge-wrap .insights-pos-link-pulse,
+  .dashboard-pos-bridge-wrap .insights-pos-packet,
+  .dashboard-pos-bridge-wrap.is-just-connected .dashboard-pos-bridge,
   #posIntegrationPanel {
     animation: none !important;
     transition: none !important;
