@@ -553,10 +553,65 @@
     'metricVisits',
     'metricUniqueVisitors',
     'metricMenuItemViews',
+    'metricCustomerActions',
     'metricAddToCart',
     'metricOrderSubmissions',
     'metricSearches',
+    'metricInsightsVisits',
+    'metricInsightsUniqueVisitors',
+    'metricInsightsMenuViews',
+    'metricInsightsSearches',
+    'metricOrdersCount',
+    'metricOrdersValue',
+    'metricOrdersAov',
+    'metricOrdersSubmits',
+    'metricOrdersCartAdds',
+    'metricSalesValue',
+    'metricSalesCompleted',
+    'metricSalesAov',
+    'metricSalesCancellation',
+    'metricPosReceipts',
+    'metricPosReceiptValue',
+    'metricPosReceiptQueued',
+    'metricPosReceiptFailed',
+    'metricCustomersNew',
+    'metricCustomersReturning',
+    'metricCustomersOrdering',
+    'metricCustomersRepeat',
+    'metricReportUniqueVisitors',
+    'metricReportMenuViews',
+    'metricReportMenuItemViews',
+    'metricReportCustomerActions',
+    'metricReportEngagement',
+    'metricReportCartAbandonment',
+    'metricReportOrders',
+    'metricReportOrderValue',
+    'metricReportAov',
+    'metricReportOrderClicks',
+    'metricReportCartAdds',
+    'metricReportCompletedValue',
+    'metricReportCompletedOrders',
+    'metricReportCompletedAov',
+    'metricReportOrderingCustomers',
+    'metricReportRepeatCustomers',
+    'metricReportCancellation',
   ];
+
+  function parseDisplayedMetricCount(el) {
+    if (!el) return 0;
+    var raw = String(el.textContent || '').replace(/[^\d.-]/g, '');
+    var n = parseInt(raw, 10);
+    return isFinite(n) ? n : 0;
+  }
+
+  function metricCountDuration(fromValue, toValue) {
+    var delta = Math.abs(Number(toValue) - Number(fromValue)) || 0;
+    if (delta <= 1) return 420;
+    if (delta < 20) return 700;
+    if (delta < 100) return 980;
+    if (delta < 500) return 1200;
+    return 1450;
+  }
 
   function startAnalyticsLoadingCount(id) {
     stopAnalyticsMetricAnimation(id);
@@ -591,41 +646,73 @@
     });
   }
 
-  function animateAnalyticsMetric(id, target, name) {
+  function animateAnalyticsMetric(id, target, name, options) {
+    options = options || {};
     var el = document.getElementById(id);
     if (!el) return;
     stopAnalyticsMetricAnimation(id);
     if (target == null || target === '' || isNaN(Number(target))) {
       el.textContent = '';
-      el.setAttribute('aria-label', name + ', data not available');
+      el.setAttribute('aria-label', (name || id) + ', data not available');
       return;
     }
-    var endValue = Math.floor(Number(target));
-    el.setAttribute('aria-label', name + ': ' + formatCount(endValue));
+    var format =
+      typeof options.format === 'function'
+        ? options.format
+        : function (n) {
+            return formatCount(n);
+          };
+    var precise = !!options.format;
+    var endValue = precise ? Number(target) : Math.floor(Number(target));
+    var label = name || el.getAttribute('data-metric-label') || id;
+    el.setAttribute('aria-label', label + ': ' + format(endValue));
     if (global.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.textContent = formatCount(endValue);
+      el.textContent = format(endValue);
+      el.classList.remove('dashboard-analytics-card-value--counting', 'is-count-pop');
       return;
     }
+    var startValue = options.from != null && isFinite(Number(options.from))
+      ? Number(options.from)
+      : parseDisplayedMetricCount(el);
+    if (!precise) startValue = Math.floor(startValue);
+    if (options.fromZero) startValue = 0;
+    var duration = options.duration || metricCountDuration(startValue, endValue);
+    var delay = Math.max(0, Number(options.delay) || 0);
     var requestAtStart = analyticsRequest;
-    var state = { started: performance.now() };
+    var state = { started: 0, delayed: true };
     analyticsMetricAnimations[id] = state;
     el.classList.add('dashboard-analytics-card-value--counting');
+    el.classList.remove('is-count-pop');
+
     function tick(now) {
       if (analyticsMetricAnimations[id] !== state || requestAtStart !== analyticsRequest) {
         if (analyticsMetricAnimations[id] === state) stopAnalyticsMetricAnimation(id);
         return;
       }
-      var progress = Math.min(1, (now - state.started) / 480);
+      if (!state.started) {
+        if (now - state.readyAt < delay) {
+          state.rafId = requestAnimationFrame(tick);
+          return;
+        }
+        state.started = now;
+      }
+      var progress = Math.min(1, (now - state.started) / duration);
       var eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = formatCount(Math.round(eased * endValue));
+      var mixed = startValue + (endValue - startValue) * eased;
+      var current = precise ? mixed : Math.round(mixed);
+      el.textContent = format(current);
       if (progress < 1) {
         state.rafId = requestAnimationFrame(tick);
         return;
       }
-      el.textContent = formatCount(endValue);
+      el.textContent = format(endValue);
       el.classList.remove('dashboard-analytics-card-value--counting');
+      el.classList.remove('is-count-pop');
+      void el.offsetWidth;
+      el.classList.add('is-count-pop');
       delete analyticsMetricAnimations[id];
     }
+    state.readyAt = performance.now();
     state.rafId = requestAnimationFrame(tick);
   }
 
@@ -817,11 +904,25 @@
     var requestId = ++analyticsRequest;
     var noteEl = document.getElementById('dashboardAnalyticsNote');
 
+    var overviewMetricOrder = {
+      metricUniqueVisitors: 0,
+      metricPageViews: 1,
+      metricMenuItemViews: 2,
+      metricCustomerActions: 3,
+      metricVisits: 1,
+      metricAddToCart: 4,
+      metricOrderSubmissions: 5,
+      metricSearches: 6
+    };
+
     function setMetric(id, value, name) {
       var el = document.getElementById(id);
       if (!el) return;
       if (id.indexOf('metric') === 0) {
-        animateAnalyticsMetric(id, value, name);
+        animateAnalyticsMetric(id, value, name, {
+          fromZero: true,
+          delay: (overviewMetricOrder[id] != null ? overviewMetricOrder[id] : 0) * 70
+        });
         return;
       }
       if (value == null || value === '') {
@@ -946,5 +1047,6 @@
     renderAnalyticsTrendChart: renderAnalyticsTrendChart,
     applyAnalyticsHeaderActions: applyAnalyticsHeaderActions,
     isPaidPlan: isPaidPlan,
+    animateMetric: animateAnalyticsMetric,
   };
 })(typeof window !== 'undefined' ? window : this);

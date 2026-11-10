@@ -10107,6 +10107,36 @@ body.menu-item-edit-modal-open {
 .dashboard-analytics-card-value--counting {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+  transition: color 0.2s ease;
+}
+
+.dashboard-analytics-metrics--full .dashboard-analytics-card-value--counting {
+  color: color-mix(in srgb, var(--dash-warning, #d4a017) 82%, var(--dash-ink, #fff));
+}
+
+.dashboard-analytics-card-value.is-count-pop {
+  animation: dashboard-analytics-count-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes dashboard-analytics-count-pop {
+  0% {
+    transform: translateY(0.15em) scale(0.96);
+    opacity: 0.72;
+  }
+  55% {
+    transform: translateY(-0.04em) scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-analytics-card-value.is-count-pop {
+    animation: none;
+  }
 }
 
 .dashboard-notify-panel--loading .dashboard-analytics-card-value--counting {

@@ -11,7 +11,7 @@
     { id: 'menu', label: 'Menu Analytics', always: true },
     { id: 'behaviour', label: 'Customer Behaviour', always: true },
     { id: 'promotions', label: 'Promotions', always: true },
-    { id: 'orders', label: 'Orders', key: 'orders' },
+    { id: 'orders', label: 'Ordering', key: 'orders' },
     { id: 'sales', label: 'Sales', key: 'sales' },
     { id: 'customers', label: 'Customers', key: 'customers' },
     { id: 'pos', label: 'POS Integration', key: 'pos' },
@@ -276,11 +276,11 @@
     ]);
   }
 
-  function namedTable(rows, label) {
+  function namedTable(rows, label, countLabel) {
     if (!rows) return '<p class="dashboard-analytics-subtitle">Not available for this period yet.</p>';
     return table(rows, [
       { label: label, cell: function (row) { return escapeHtml(row.name); } },
-      { label: 'Visits', cell: function (row) { return escapeHtml(count(row.count)); } }
+      { label: countLabel || 'Visits', cell: function (row) { return escapeHtml(count(row.count)); } }
     ]);
   }
 
@@ -296,19 +296,48 @@
     return list.filter(function (row) { return row.count > 0; });
   }
 
+  function hourSortKey(value) {
+    var hour = parseInt(String(value == null ? '' : value).replace(/:.*$/, ''), 10);
+    return isFinite(hour) ? hour : 99;
+  }
+
+  function peakHours(rows, limit) {
+    var top = (rows || []).slice().sort(function (a, b) {
+      return (Number(b.count) || 0) - (Number(a.count) || 0);
+    }).slice(0, limit || 6);
+    top.sort(function (a, b) {
+      return hourSortKey(a.name) - hourSortKey(b.name);
+    });
+    return top.map(function (row) {
+      return { name: formatHourAmPm(row.name), count: row.count };
+    });
+  }
+
   function metricCards(bits) {
     return (
-      '<div class="dashboard-analytics-metrics">' +
+      '<div class="dashboard-analytics-metrics dashboard-analytics-metrics--full">' +
       bits
         .map(function (bit) {
+          var opts = bit[2] || {};
+          var id = opts.id || '';
+          var initial = opts.animate != null ? '' : escapeHtml(bit[1] == null ? '' : String(bit[1]));
+          var delta = opts.delta
+            ? '<span class="dashboard-analytics-card-delta">' + escapeHtml(opts.delta) + '</span>'
+            : '';
           return (
             '<div class="dashboard-analytics-card dashboard-analytics-metric-card">' +
             '<span class="dashboard-analytics-card-label">' +
             escapeHtml(bit[0]) +
             '</span>' +
-            '<span class="dashboard-analytics-card-value">' +
-            escapeHtml(bit[1]) +
-            '</span></div>'
+            '<span class="dashboard-analytics-card-value"' +
+            (id ? ' id="' + escapeHtml(id) + '"' : '') +
+            ' aria-label="' +
+            escapeHtml(bit[0]) +
+            '">' +
+            initial +
+            '</span>' +
+            delta +
+            '</div>'
           );
         })
         .join('') +
@@ -316,25 +345,216 @@
     );
   }
 
+  function animateMetricCardBits(bits) {
+    bits.forEach(function (bit, index) {
+      var opts = bit[2] || {};
+      if (!opts.id || opts.animate == null) return;
+      if (global.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.animateMetric === 'function') {
+        DashboardAnalyticsSnapshot.animateMetric(opts.id, opts.animate, bit[0], {
+          fromZero: true,
+          delay: index * 70,
+          format: opts.format
+        });
+        return;
+      }
+      var el = document.getElementById(opts.id);
+      if (!el) return;
+      el.textContent = opts.format ? opts.format(opts.animate) : count(opts.animate);
+      el.setAttribute('aria-label', bit[0] + ': ' + el.textContent);
+    });
+  }
+
+  function setMetricPanel(id, result) {
+    if (!result || typeof result === 'string') {
+      setText(id, result || '');
+      return;
+    }
+    setText(id, result.html || '');
+    animateMetricCardBits(result.bits || []);
+  }
+
+  function openOrderValue(stats) {
+    if (!stats) return 0;
+    if (stats.openValue != null) return Number(stats.openValue) || 0;
+    if ((Number(stats.openCount) || 0) > 0 && !(Number(stats.completedCount) || 0)) {
+      return Number(stats.totalValue) || 0;
+    }
+    return 0;
+  }
+
+  function completedOrderValue(stats) {
+    if (!stats) return 0;
+    if (stats.completedValue != null) return Number(stats.completedValue) || 0;
+    if ((Number(stats.completedCount) || 0) > 0 && !(Number(stats.openCount) || 0)) {
+      return Number(stats.totalValue) || 0;
+    }
+    return 0;
+  }
+
+  function averageOpenValue(stats) {
+    if (!stats) return 0;
+    if (stats.averageOpenValue != null) return Number(stats.averageOpenValue) || 0;
+    var open = Number(stats.openCount) || 0;
+    return open > 0 ? openOrderValue(stats) / open : 0;
+  }
+
+  function averageCompletedValue(stats) {
+    if (!stats) return 0;
+    if (stats.averageCompletedValue != null) return Number(stats.averageCompletedValue) || 0;
+    var done = Number(stats.completedCount) || 0;
+    return done > 0 ? completedOrderValue(stats) / done : 0;
+  }
+
+  function ordersMetricBits(stats, data) {
+    stats = stats || {};
+    data = data || {};
+    var currency = stats.currency || 'TTD';
+    var openCount = Number(stats.openCount) || 0;
+    var openValue = openOrderValue(stats);
+    var openAvg = averageOpenValue(stats);
+    var submits = Number(data.orderSubmissions) || 0;
+    var carts = Number(data.addToCart) || 0;
+    var bits = [
+      ['Unconfirmed orders', count(openCount), { id: 'metricOrdersCount', animate: openCount }],
+      [
+        'Unconfirmed value',
+        money(openValue, currency),
+        {
+          id: 'metricOrdersValue',
+          animate: openValue,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      [
+        'Average unconfirmed',
+        money(openAvg, currency),
+        {
+          id: 'metricOrdersAov',
+          animate: openAvg,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      ['Order clicks', count(submits), { id: 'metricOrdersSubmits', animate: submits }],
+      ['Cart adds', count(carts), { id: 'metricOrdersCartAdds', animate: carts }]
+    ];
+    return bits;
+  }
+
+  function ordersPanel(stats, data) {
+    stats = stats || null;
+    data = data || {};
+    if (!stats) {
+      var loadingBits = ordersMetricBits({}, data);
+      return {
+        html:
+          metricCards(loadingBits) +
+          '<p class="dashboard-analytics-subtitle">Loading unconfirmed TTMenus tickets and menu order clicks…</p>',
+        bits: loadingBits
+      };
+    }
+    var openCount = Number(stats.openCount) || 0;
+    var ticketCount = Number(stats.orderCount) || 0;
+    var bits = ordersMetricBits(stats, data);
+    var html = metricCards(bits);
+    html +=
+      '<p class="dashboard-analytics-subtitle">Unconfirmed orders are open TTMenus tickets still waiting on kitchen or payment. Order clicks and cart adds are menu events before a ticket exists. Completed sales stay under Sales.</p>';
+    if (ticketCount > 0) {
+      html +=
+        '<h3 class="dashboard-notify-subsection-title">Tickets by status</h3>' +
+        namedTable(stats.byStatus || [], 'Status', 'Orders');
+      if (!openCount) {
+        html +=
+          '<p class="dashboard-analytics-subtitle">No open tickets right now. ' +
+          escapeHtml(count(ticketCount)) +
+          ' tickets in this period are already completed or cancelled.</p>';
+      }
+    } else if ((Number(data.orderSubmissions) || 0) > 0 || (Number(data.addToCart) || 0) > 0) {
+      html +=
+        '<p class="dashboard-analytics-subtitle">Guests are adding to cart or tapping order, but no TTMenus tickets were created in this period yet.</p>';
+    } else {
+      html +=
+        '<p class="dashboard-analytics-subtitle">No unconfirmed tickets or menu order clicks in this period yet.</p>';
+    }
+    return { html: html, bits: bits };
+  }
+
+  function salesMetricBits(stats) {
+    var currency = stats.currency || 'TTD';
+    var completed = Number(stats.completedCount) || 0;
+    var value = completedOrderValue(stats);
+    var avg = averageCompletedValue(stats);
+    var cancel = stats.cancellationRate != null ? Number(stats.cancellationRate) : null;
+    return [
+      [
+        'Completed value',
+        money(value, currency),
+        {
+          id: 'metricSalesValue',
+          animate: value,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      ['Completed orders', count(completed), { id: 'metricSalesCompleted', animate: completed }],
+      [
+        'Average completed',
+        money(avg, currency),
+        {
+          id: 'metricSalesAov',
+          animate: avg,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      [
+        'Cancellation rate',
+        cancel != null ? cancel + '%' : '—',
+        cancel == null
+          ? { id: 'metricSalesCancellation' }
+          : {
+              id: 'metricSalesCancellation',
+              animate: cancel,
+              format: function (n) {
+                return Math.round(n) + '%';
+              }
+            }
+      ]
+    ];
+  }
+
   function salesHtml(stats) {
     if (!stats) {
-      return '<p class="dashboard-analytics-subtitle">Loading TTMenus sales…</p>';
+      return { html: '<p class="dashboard-analytics-subtitle">Loading TTMenus sales…</p>', bits: [] };
     }
-    var orders = Number(stats.orderCount) || 0;
-    if (!orders) {
-      return (
-        '<p class="dashboard-analytics-subtitle">No verified TTMenus orders in this period yet. Sales appear after guests place orders through the menu.</p>' +
-        (stats.note ? '<p class="dashboard-analytics-subtitle">' + escapeHtml(stats.note) + '</p>' : '')
-      );
+    var completed = Number(stats.completedCount) || 0;
+    var openCount = Number(stats.openCount) || 0;
+    if (!completed) {
+      return {
+        html:
+          '<p class="dashboard-analytics-subtitle">' +
+          (openCount
+            ? escapeHtml(count(openCount)) +
+              ' unconfirmed ticket' +
+              (openCount === 1 ? '' : 's') +
+              ' worth ' +
+              escapeHtml(money(openOrderValue(stats), stats.currency)) +
+              ' are still open under Ordering. Completed sales appear when tickets become ready or paid.'
+            : 'No completed TTMenus sales in this period yet. Unconfirmed tickets and menu order clicks stay under Ordering.') +
+          '</p>' +
+          (stats.note ? '<p class="dashboard-analytics-subtitle">' + escapeHtml(stats.note) + '</p>' : ''),
+        bits: []
+      };
     }
+    var bits = salesMetricBits(stats);
     var html =
-      metricCards([
-        ['Order value', money(stats.totalValue, stats.currency)],
-        ['Orders', count(stats.orderCount)],
-        ['Average order', money(stats.averageOrderValue, stats.currency)],
-        ['Completed', count(stats.completedCount)]
-      ]) +
-      '<p class="dashboard-analytics-subtitle">Verified TTMenus order value for this period. Menu order-click counts stay under Customer Behaviour.</p>';
+      metricCards(bits) +
+      '<p class="dashboard-analytics-subtitle">Completed TTMenus sales only (ready and paid). Open tickets stay under Ordering.</p>';
     if (Array.isArray(stats.popularItems) && stats.popularItems.length) {
       html +=
         '<h3 class="dashboard-notify-subsection-title">Top selling items</h3>' +
@@ -343,32 +563,50 @@
           { label: 'Quantity', cell: function (row) { return escapeHtml(count(row.count)); } }
         ]);
     } else {
-      html += '<p class="dashboard-analytics-subtitle">Item quantities appear when order carts include dish names.</p>';
+      html += '<p class="dashboard-analytics-subtitle">Item quantities appear when completed order carts include dish names.</p>';
     }
-    if (Array.isArray(stats.byStatus) && stats.byStatus.length) {
-      html += '<h3 class="dashboard-notify-subsection-title">Orders by status</h3>' + namedTable(stats.byStatus, 'Status');
-    }
-    return html;
+    return { html: html, bits: bits };
   }
 
-  function customersHtml(data, stats) {
+  function customersMetricBits(data, stats) {
     data = data || {};
     var returning = Number(data.returningVisits) || 0;
     var fresh = Number(data.newVisits) || 0;
     var bits = [];
     if (fresh || returning) {
-      bits.push(['New visits', count(fresh)]);
-      bits.push(['Returning visits', count(returning)]);
+      bits.push(['New visits', count(fresh), { id: 'metricCustomersNew', animate: fresh }]);
+      bits.push(['Returning visits', count(returning), { id: 'metricCustomersReturning', animate: returning }]);
     }
     if (stats && Number(stats.orderCount) > 0) {
-      bits.push(['Ordering customers', count(stats.customerCount)]);
-      bits.push(['Repeat customers', count(stats.repeatCustomers)]);
+      bits.push([
+        'Ordering customers',
+        count(stats.customerCount),
+        { id: 'metricCustomersOrdering', animate: Number(stats.customerCount) || 0 }
+      ]);
+      bits.push([
+        'Repeat customers',
+        count(stats.repeatCustomers),
+        { id: 'metricCustomersRepeat', animate: Number(stats.repeatCustomers) || 0 }
+      ]);
     }
+    return bits;
+  }
+
+  function customersHtml(data, stats) {
+    data = data || {};
+    var returning = Number(data.returningVisits) || 0;
+    var bits = customersMetricBits(data, stats);
     if (!bits.length) {
       if (stats && !Number(stats.orderCount)) {
-        return '<p class="dashboard-analytics-subtitle">No ordering customers in this period yet. Returning visits and repeat buyers appear once guests come back or place another order.</p>';
+        return {
+          html: '<p class="dashboard-analytics-subtitle">No ordering customers in this period yet. Returning visits and repeat buyers appear once guests come back or place another order.</p>',
+          bits: []
+        };
       }
-      return '<p class="dashboard-analytics-subtitle">Customer counts appear when Matomo reports new/returning visits or when guests place TTMenus orders.</p>';
+      return {
+        html: '<p class="dashboard-analytics-subtitle">Customer counts appear when Matomo reports new/returning visits or when guests place TTMenus orders.</p>',
+        bits: []
+      };
     }
     var html = metricCards(bits);
     if (stats && Number(stats.orderCount) > 0) {
@@ -384,7 +622,7 @@
         escapeHtml(count(returning)) +
         ' returning visits in this period. Repeat purchases appear when TTMenus orders are available.</p>';
     }
-    return html;
+    return { html: html, bits: bits };
   }
 
   function render(data) {
@@ -401,8 +639,19 @@
       pos: loyverse
     });
 
-    var actionEl = document.getElementById('metricCustomerActions');
-    if (actionEl) actionEl.textContent = count(actions(data));
+    var actionTotal = actions(data);
+    if (global.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.animateMetric === 'function') {
+      DashboardAnalyticsSnapshot.animateMetric('metricCustomerActions', actionTotal, 'Customer actions', {
+        fromZero: true,
+        delay: 210
+      });
+    } else {
+      var actionEl = document.getElementById('metricCustomerActions');
+      if (actionEl) {
+        actionEl.textContent = count(actionTotal);
+        actionEl.setAttribute('aria-label', 'Customer actions: ' + count(actionTotal));
+      }
+    }
     renderActionDelta(data);
 
     journey(data);
@@ -421,15 +670,25 @@
         '<p class="dashboard-analytics-subtitle">Based on visits, menu views, dish interest, and customer actions in this period.</p>'
     );
 
-    var visitorBits = [
-      ['Visits', data.visits],
-      ['Unique visitors', data.uniqueVisitors],
-      ['Menu views', data.pageViews],
-      ['Searches on the menu', searchCount(data)]
+    var visitorMetrics = [
+      ['metricInsightsVisits', data.visits, 'Visits'],
+      ['metricInsightsUniqueVisitors', data.uniqueVisitors, 'Unique visitors'],
+      ['metricInsightsMenuViews', data.pageViews, 'Menu views'],
+      ['metricInsightsSearches', searchCount(data), 'Searches']
     ];
-    setText('insightsVisitorMetrics', visitorBits.map(function (bit) {
-      return '<div class="dashboard-analytics-card dashboard-analytics-metric-card"><span class="dashboard-analytics-card-label">' + escapeHtml(bit[0]) + '</span><span class="dashboard-analytics-card-value">' + escapeHtml(count(bit[1])) + '</span></div>';
-    }).join(''));
+    visitorMetrics.forEach(function (bit, index) {
+      if (global.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.animateMetric === 'function') {
+        DashboardAnalyticsSnapshot.animateMetric(bit[0], bit[1], bit[2], {
+          fromZero: true,
+          delay: index * 70
+        });
+        return;
+      }
+      var el = document.getElementById(bit[0]);
+      if (!el) return;
+      el.textContent = count(bit[1]);
+      el.setAttribute('aria-label', bit[2] + ': ' + count(bit[1]));
+    });
     setText('insightsSources', namedTable(data.sources, 'Source'));
     setText('insightsCampaigns', campaignHtml(data.campaigns));
     setText('insightsDevices', namedTable(data.devices, 'Device'));
@@ -447,16 +706,14 @@
     setText('insightsOrdersFunnel', funnelHtml(data.observedFunnel));
     setText('insightsCartAbandonment', cartAbandonmentHtml(data.observedFunnel));
     setText('insightsPeakDays', namedTable(peakDays(data.rows).slice(0, 7), 'Day'));
-    setText('insightsHours', namedTable((data.hours || []).slice(0, 6).map(function (row) {
-      return { name: formatHourAmPm(row.name), count: row.count };
-    }), 'Hour'));
+    setText('insightsHours', namedTable(peakHours(data.hours, 6), 'Hour'));
     var fresh = Number(data.newVisits) || 0;
     setText('insightsReturning', returning || fresh
       ? count(fresh) + ' new visits and ' + count(returning) + ' returning visits.'
       : 'Returning and new visits appear when Matomo reports them for this period.');
     setText('insightsLocations', namedTable(data.locations, 'Location'));
-    setText('insightsCustomers', customersHtml(data, shell()._orderStats || null));
-    setText('insightsSales', ordering ? salesHtml(shell()._orderStats || null) : '');
+    setMetricPanel('insightsCustomers', customersHtml(data, shell()._orderStats || null));
+    setMetricPanel('insightsSales', ordering ? salesHtml(shell()._orderStats || null) : '');
     setText('insightsPromotions', '<p class="dashboard-analytics-subtitle">Loading promotions…</p>');
     loadPromoCatalog()
       .then(function (catalog) {
@@ -465,12 +722,13 @@
       .catch(function () {
         setText('insightsPromotions', promotionsHtml(data, []));
       });
-    setText('insightsPos', loyverse ? posHtml(shell()._orderStats || null) : '');
+    if (loyverse) setMetricPanel('insightsPos', posHtml(shell()._orderStats || null));
+    else setText('insightsPos', '');
     if (ordering) {
-      setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Loading TTMenus orders…</p>');
+      setMetricPanel('insightsOrders', ordersPanel(shell()._orderStats || null, data));
     }
     setText('insightsRecommendations', recommendationsHtml(data, shell()._orderStats || null));
-    setText('insightsReports', reportHtml(data, shell()._orderStats || null));
+    setMetricPanel('insightsReports', reportHtml(data, shell()._orderStats || null));
     renderTrinidadMap();
   }
 
@@ -1011,17 +1269,28 @@
       );
     }
 
-    if (orders && Number(orders.orderCount) > 0) {
+    if (orders && (Number(orders.openCount) || 0) > 0) {
+      pushRec(
+        14,
+        'Clear unconfirmed tickets',
+        count(orders.openCount) +
+          ' open tickets worth ' +
+          money(openOrderValue(orders), orders.currency) +
+          ' are still unconfirmed. Move them to ready/paid or cancel stale ones so Ordering and Sales stay accurate.',
+        'Ordering'
+      );
+    }
+    if (orders && Number(orders.completedCount) > 0) {
       pushRec(
         15,
-        'Protect verified order value',
-        count(orders.orderCount) +
-          ' TTMenus orders brought ' +
-          money(orders.totalValue, orders.currency) +
-          (orders.averageOrderValue
-            ? ' (average ' + money(orders.averageOrderValue, orders.currency) + ').'
+        'Protect completed sales',
+        count(orders.completedCount) +
+          ' completed TTMenus orders brought ' +
+          money(completedOrderValue(orders), orders.currency) +
+          (averageCompletedValue(orders)
+            ? ' (average ' + money(averageCompletedValue(orders), orders.currency) + ').'
             : '.') +
-          ' Feature the dishes that already convert and watch completion rate next period.',
+          ' Feature the dishes that already convert.',
         'Sales'
       );
       if (orders.cancellationRate != null && Number(orders.cancellationRate) >= 15) {
@@ -1037,10 +1306,10 @@
     } else if (flag('data-ordering') && Number(data.orderSubmissions) > 0) {
       pushRec(
         22,
-        'Turn order clicks into verified tickets',
+        'Turn order clicks into tickets',
         count(data.orderSubmissions) +
-          ' order-submit clicks were observed, but verified TTMenus sales are not in this report yet. Confirm checkout and payment are completing.',
-        'Sales'
+          ' order-submit clicks were observed, but no completed TTMenus sales landed yet. Confirm checkout creates tickets and staff can finish them.',
+        'Ordering'
       );
     }
 
@@ -1111,11 +1380,183 @@
     return html + '</div>';
   }
 
+  function reportHeadlineBits(data) {
+    data = data || {};
+    var change = data.changePct || {};
+    var funnel = data.observedFunnel || {};
+    var actionTotal = actions(data);
+    var engagement = score(data);
+    var bits = [
+      [
+        'Unique visitors',
+        count(data.uniqueVisitors),
+        {
+          id: 'metricReportUniqueVisitors',
+          animate: Number(data.uniqueVisitors) || 0,
+          delta: changeLabel(change.uniqueVisitors)
+        }
+      ],
+      [
+        'Menu views',
+        count(data.pageViews),
+        {
+          id: 'metricReportMenuViews',
+          animate: Number(data.pageViews) || 0,
+          delta: changeLabel(change.pageViews)
+        }
+      ],
+      [
+        'Menu item views',
+        count(data.menuItemViews),
+        {
+          id: 'metricReportMenuItemViews',
+          animate: Number(data.menuItemViews) || 0,
+          delta: changeLabel(change.menuItemViews)
+        }
+      ],
+      [
+        'Customer actions',
+        count(actionTotal),
+        { id: 'metricReportCustomerActions', animate: Number(actionTotal) || 0 }
+      ],
+      [
+        'Engagement score',
+        engagement + '/100',
+        {
+          id: 'metricReportEngagement',
+          animate: Number(engagement) || 0,
+          format: function (n) {
+            return Math.round(n) + '/100';
+          }
+        }
+      ]
+    ];
+    if (funnel.cartAbandonmentRate != null) {
+      bits.push([
+        'Cart abandonment',
+        funnel.cartAbandonmentRate + '%',
+        {
+          id: 'metricReportCartAbandonment',
+          animate: Number(funnel.cartAbandonmentRate) || 0,
+          format: function (n) {
+            return Math.round(n) + '%';
+          }
+        }
+      ]);
+    }
+    return bits;
+  }
+
+  function reportOrderingBits(orders, data) {
+    if (!orders && !data) return [];
+    orders = orders || {};
+    data = data || {};
+    if (!(Number(orders.orderCount) || 0) && !(Number(data.orderSubmissions) || 0) && !(Number(data.addToCart) || 0)) {
+      return [];
+    }
+    var currency = orders.currency || 'TTD';
+    var openCount = Number(orders.openCount) || 0;
+    var openValue = openOrderValue(orders);
+    var openAvg = averageOpenValue(orders);
+    return [
+      ['Unconfirmed orders', count(openCount), { id: 'metricReportOrders', animate: openCount }],
+      [
+        'Unconfirmed value',
+        money(openValue, currency),
+        {
+          id: 'metricReportOrderValue',
+          animate: openValue,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      [
+        'Average unconfirmed',
+        money(openAvg, currency),
+        {
+          id: 'metricReportAov',
+          animate: openAvg,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      [
+        'Order clicks',
+        count(data.orderSubmissions),
+        { id: 'metricReportOrderClicks', animate: Number(data.orderSubmissions) || 0 }
+      ],
+      [
+        'Cart adds',
+        count(data.addToCart),
+        { id: 'metricReportCartAdds', animate: Number(data.addToCart) || 0 }
+      ]
+    ];
+  }
+
+  function reportSalesBits(orders) {
+    if (!orders || !(Number(orders.completedCount) || 0)) return [];
+    var currency = orders.currency || 'TTD';
+    var completed = Number(orders.completedCount) || 0;
+    var value = completedOrderValue(orders);
+    var avg = averageCompletedValue(orders);
+    var cancel = orders.cancellationRate != null ? Number(orders.cancellationRate) : null;
+    var bits = [
+      [
+        'Completed value',
+        money(value, currency),
+        {
+          id: 'metricReportCompletedValue',
+          animate: value,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      ['Completed orders', count(completed), { id: 'metricReportCompletedOrders', animate: completed }],
+      [
+        'Average completed',
+        money(avg, currency),
+        {
+          id: 'metricReportCompletedAov',
+          animate: avg,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      [
+        'Ordering customers',
+        count(orders.customerCount),
+        { id: 'metricReportOrderingCustomers', animate: Number(orders.customerCount) || 0 }
+      ],
+      [
+        'Repeat customers',
+        count(orders.repeatCustomers),
+        { id: 'metricReportRepeatCustomers', animate: Number(orders.repeatCustomers) || 0 }
+      ]
+    ];
+    bits.push([
+      'Cancellation rate',
+      cancel != null ? cancel + '%' : '—',
+      cancel == null
+        ? { id: 'metricReportCancellation' }
+        : {
+            id: 'metricReportCancellation',
+            animate: cancel,
+            format: function (n) {
+              return Math.round(n) + '%';
+            }
+          }
+    ]);
+    return bits;
+  }
+
   function reportHtml(data, orders) {
     data = data || {};
     orders = orders || null;
     var days = data.periodDays || 30;
-    var change = data.changePct || {};
     var funnel = data.observedFunnel || {};
     var dishes = topNamedLines(data.dishes, 5);
     var sources = (data.sources || []).slice(0, 4).map(function (row) {
@@ -1130,10 +1571,14 @@
     var peaks = peakDays(data.rows || []).slice(0, 5).map(function (row) {
       return [row.name, count(row.count)];
     });
-    var hours = (data.hours || []).slice(0, 5).map(function (row) {
-      return [formatHourAmPm(row.name), count(row.count)];
+    var hours = peakHours(data.hours, 5).map(function (row) {
+      return [row.name, count(row.count)];
     });
     var countries = focusCountries(data.countries) || [];
+    var headlineBits = reportHeadlineBits(data);
+    var orderingBits = reportOrderingBits(orders, data);
+    var salesBits = reportSalesBits(orders);
+    var animateBits = headlineBits.concat(orderingBits, salesBits);
     var html =
       '<div class="insights-report">' +
       '<header class="insights-report-hero">' +
@@ -1141,22 +1586,10 @@
       '<h3 class="insights-report-title">Last ' +
       escapeHtml(String(days)) +
       ' days</h3>' +
-      '<p class="dashboard-analytics-subtitle">A full snapshot of visitors, menu interest, ordering behaviour, and verified sales for this window. Switch 7 / 30 / 90 above to refresh it.</p>' +
+      '<p class="dashboard-analytics-subtitle">A full snapshot of visitors, menu interest, unconfirmed ordering, and completed sales for this window. Switch 7 / 30 / 90 above to refresh it.</p>' +
       '</header>';
 
-    html += reportSection(
-      'Headline metrics',
-      '<div class="insights-report-metrics">' +
-        reportMetric('Unique visitors', count(data.uniqueVisitors), changeLabel(change.uniqueVisitors)) +
-        reportMetric('Menu views', count(data.pageViews), changeLabel(change.pageViews)) +
-        reportMetric('Menu item views', count(data.menuItemViews), changeLabel(change.menuItemViews)) +
-        reportMetric('Customer actions', count(actions(data)), '') +
-        reportMetric('Engagement score', score(data) + '/100', '') +
-        (funnel.cartAbandonmentRate != null
-          ? reportMetric('Observed cart abandonment', funnel.cartAbandonmentRate + '%', '')
-          : '') +
-        '</div>'
-    );
+    html += reportSection('Headline metrics', metricCards(headlineBits));
 
     html += reportSection(
       'Audience',
@@ -1224,23 +1657,21 @@
       ])
     );
 
-    if (orders) {
-      html += reportSection(
-        'Verified TTMenus sales',
-        reportList([
-          ['Orders', count(orders.orderCount)],
-          ['Order value', money(orders.totalValue, orders.currency)],
-          ['Average order value', money(orders.averageOrderValue, orders.currency)],
-          ['Ordering customers', count(orders.customerCount)],
-          ['Repeat customers', count(orders.repeatCustomers)],
-          ['Completion rate', orders.completionRate != null ? orders.completionRate + '%' : '—'],
-          ['Cancellation rate', orders.cancellationRate != null ? orders.cancellationRate + '%' : '—']
-        ])
-      );
+    if (orderingBits.length) {
+      html += reportSection('Unconfirmed ordering', metricCards(orderingBits));
     } else if (flag('data-ordering')) {
       html += reportSection(
-        'Verified TTMenus sales',
-        '<p class="dashboard-analytics-subtitle">Verified order totals appear here when the order service loads for this period. Menu order clicks stay in the funnel above.</p>'
+        'Unconfirmed ordering',
+        '<p class="dashboard-analytics-subtitle">Open ticket value and menu order clicks appear here once guests start ordering in this period.</p>'
+      );
+    }
+
+    if (salesBits.length) {
+      html += reportSection('Completed TTMenus sales', metricCards(salesBits));
+    } else if (flag('data-ordering')) {
+      html += reportSection(
+        'Completed TTMenus sales',
+        '<p class="dashboard-analytics-subtitle">Completed sales appear when tickets become ready or paid. Open tickets stay under unconfirmed ordering.</p>'
       );
     }
 
@@ -1257,14 +1688,13 @@
     );
 
     html +=
-      '<p class="insights-report-footnote">Order submissions and cart abandonment are observed menu events, not confirmed sales unless listed under verified TTMenus sales.</p></div>';
-    return html;
+      '<p class="insights-report-footnote">Order clicks and cart abandonment are observed menu events. Open tickets are unconfirmed sales. Ready and paid tickets are completed sales.</p></div>';
+    return { html: html, bits: animateBits };
   }
 
   function applyOrderStats(stats) {
     if (!stats) return;
     if (shell()) shell()._orderStats = stats;
-    var hasOrders = Number(stats.orderCount) > 0;
     var data = (shell() && shell()._insightsData) || {};
     showNav({
       orders: true,
@@ -1272,27 +1702,12 @@
       customers: true,
       pos: flag('data-loyverse')
     });
-    var completion = stats.completionRate != null ? stats.completionRate + '%' : '—';
-    var cancel = stats.cancellationRate != null ? stats.cancellationRate + '%' : '—';
-    setText(
-      'insightsOrders',
-      metricCards([
-        ['TTMenus orders', count(stats.orderCount)],
-        ['Order value', money(stats.totalValue, stats.currency)],
-        ['Average order value', money(stats.averageOrderValue, stats.currency)],
-        ['Completion rate', completion],
-        ['Cancellation rate', cancel]
-      ]) +
-        '<p class="dashboard-analytics-subtitle">Verified TTMenus orders. Completion counts ready and paid tickets. Menu order-click counts stay separate.</p>' +
-        (hasOrders
-          ? namedTable(stats.byStatus || [], 'Status')
-          : '<p class="dashboard-analytics-subtitle">No verified orders in this period yet.</p>')
-    );
-    setText('insightsSales', salesHtml(stats));
-    setText('insightsCustomers', customersHtml(data, stats));
-    if (flag('data-loyverse')) setText('insightsPos', posHtml(stats));
+    setMetricPanel('insightsOrders', ordersPanel(stats, data));
+    setMetricPanel('insightsSales', salesHtml(stats));
+    setMetricPanel('insightsCustomers', customersHtml(data, stats));
+    if (flag('data-loyverse')) setMetricPanel('insightsPos', posHtml(stats));
     if (shell() && shell()._insightsData) {
-      setText('insightsReports', reportHtml(shell()._insightsData, stats));
+      setMetricPanel('insightsReports', reportHtml(shell()._insightsData, stats));
       setText('insightsRecommendations', recommendationsHtml(shell()._insightsData, stats));
     }
   }
@@ -1321,11 +1736,34 @@
     };
   }
 
+  function posMetricBits(stats) {
+    stats = stats || {};
+    var currency = stats.currency || 'TTD';
+    var receipts = Number(stats.loyverseReceiptCount) || 0;
+    var receiptValue = Number(stats.loyverseReceiptValue) || 0;
+    var queued = Number(stats.loyverseReceiptQueued) || 0;
+    var failed = Number(stats.loyverseReceiptFailed) || 0;
+    var bits = [
+      ['Verified receipts', count(receipts), { id: 'metricPosReceipts', animate: receipts }],
+      [
+        'Receipt value',
+        money(receiptValue, currency),
+        {
+          id: 'metricPosReceiptValue',
+          animate: receiptValue,
+          format: function (n) {
+            return money(n, currency);
+          }
+        }
+      ],
+      ['Queued receipts', count(queued), { id: 'metricPosReceiptQueued', animate: queued }],
+      ['Failed receipts', count(failed), { id: 'metricPosReceiptFailed', animate: failed }]
+    ];
+    return bits;
+  }
+
   function posHtml(stats) {
     var cfg = posConfigSummary();
-    var orders = stats ? Number(stats.orderCount) || 0 : 0;
-    var value = stats ? Number(stats.totalValue) || 0 : 0;
-    var currency = (stats && stats.currency) || 'TTD';
     var details = [
       ['Status', 'Connected'],
       ['Receipt timing', cfg.modeLabel],
@@ -1333,15 +1771,8 @@
       ['Fallback till', cfg.storeId ? 'Set' : 'First Loyverse store if a location has none']
     ];
     if (cfg.clientId) details.push(['Menu client', cfg.clientId]);
-    var periodBits = [];
-    if (stats) {
-      periodBits.push(['TTMenus orders this period', count(orders)]);
-      periodBits.push(['Order value this period', money(value, currency)]);
-    } else if (flag('data-ordering')) {
-      periodBits.push(['TTMenus orders this period', '…']);
-      periodBits.push(['Order value this period', '…']);
-    }
-    return (
+    var bits = stats ? posMetricBits(stats) : [];
+    var html =
       '<div class="insights-pos" data-state="connected">' +
       '<div class="insights-pos-bridge" aria-hidden="true">' +
       '<div class="insights-pos-node insights-pos-node--ttmenus">' +
@@ -1364,8 +1795,8 @@
       '</div>' +
       '</div>' +
       '<p class="insights-pos-status"><span class="insights-pos-status-dot" aria-hidden="true"></span>Linked for till receipts</p>' +
-      '<p class="dashboard-analytics-subtitle">Guest tickets stay in TTMenus Orders. Loyverse gets a closed receipt on the till you picked for each location. In-store Loyverse sales are not imported here.</p>' +
-      (periodBits.length ? metricCards(periodBits) : '') +
+      '<p class="dashboard-analytics-subtitle">Verified receipts are TTMenus tickets that already posted a Loyverse receipt number. Queued and failed counts are still waiting on the till bridge. In-store Loyverse sales are not imported here.</p>' +
+      (bits.length ? metricCards(bits) : '') +
       '<h3 class="dashboard-notify-subsection-title">Connection details</h3>' +
       '<ul class="insights-pos-details">' +
       details
@@ -1380,8 +1811,8 @@
         })
         .join('') +
       '</ul>' +
-      '</div>'
-    );
+      '</div>';
+    return { html: html, bits: bits };
   }
 
   function orderClientId() {
@@ -1472,7 +1903,7 @@
               escapeHtml(why) +
               '. Sales appear when verified orders load.</p>'
           );
-          setText('insightsCustomers', customersHtml((shell() && shell()._insightsData) || {}, null));
+          setMetricPanel('insightsCustomers', customersHtml((shell() && shell()._insightsData) || {}, null));
           return;
         }
         applyOrderStats(result.data || {});
@@ -1480,7 +1911,7 @@
       .catch(function () {
         setText('insightsOrders', '<p class="dashboard-analytics-subtitle">TTMenus orders could not be loaded. Menu order clicks stay under customer actions and are not sales.</p>');
         setText('insightsSales', '<p class="dashboard-analytics-subtitle">TTMenus sales could not be loaded for this period.</p>');
-        setText('insightsCustomers', customersHtml((shell() && shell()._insightsData) || {}, null));
+        setMetricPanel('insightsCustomers', customersHtml((shell() && shell()._insightsData) || {}, null));
       });
   }
 

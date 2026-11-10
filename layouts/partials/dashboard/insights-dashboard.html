@@ -68,7 +68,24 @@
   </div>
 
   <div class="insights-panel" data-insights-panel="visitors" hidden>
-    <div class="dashboard-analytics-metrics" id="insightsVisitorMetrics"></div>
+    <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full" id="insightsVisitorMetrics">
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Visits</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsVisits" aria-label="Data not yet loaded"></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Unique visitors</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsUniqueVisitors" aria-label="Data not yet loaded"></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Menu views</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsMenuViews" aria-label="Data not yet loaded"></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Searches</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsSearches" aria-label="Data not yet loaded"></span>
+      </div>
+    </div>
     <div class="insights-split">
       <div><h3 class="dashboard-notify-subsection-title">Traffic sources</h3><div id="insightsSources"></div></div>
       <div><h3 class="dashboard-notify-subsection-title">Campaigns</h3><div id="insightsCampaigns"></div></div>
@@ -121,7 +138,7 @@
   <div class="insights-panel" data-insights-panel="orders" hidden>
     <div id="insightsOrders"></div>
     <h3 class="dashboard-notify-subsection-title">Observed menu funnel</h3>
-    <p class="dashboard-analytics-subtitle">Compared with verified TTMenus orders above when ordering is enabled.</p>
+    <p class="dashboard-analytics-subtitle">Menu events that lead to unconfirmed tickets above. Order clicks are not completed sales.</p>
     <div id="insightsOrdersFunnel"></div>
   </div>
 
