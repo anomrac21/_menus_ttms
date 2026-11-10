@@ -189,6 +189,97 @@
     return list.filter(function (row) { return row.count > 0; });
   }
 
+  function metricCards(bits) {
+    return (
+      '<div class="dashboard-analytics-metrics">' +
+      bits
+        .map(function (bit) {
+          return (
+            '<div class="dashboard-analytics-card dashboard-analytics-metric-card">' +
+            '<span class="dashboard-analytics-card-label">' +
+            escapeHtml(bit[0]) +
+            '</span>' +
+            '<span class="dashboard-analytics-card-value">' +
+            escapeHtml(bit[1]) +
+            '</span></div>'
+          );
+        })
+        .join('') +
+      '</div>'
+    );
+  }
+
+  function salesHtml(stats) {
+    if (!stats) {
+      return '<p class="dashboard-analytics-subtitle">Loading TTMenus sales…</p>';
+    }
+    var orders = Number(stats.orderCount) || 0;
+    if (!orders) {
+      return (
+        '<p class="dashboard-analytics-subtitle">No verified TTMenus orders in this period yet. Sales appear after guests place orders through the menu.</p>' +
+        (stats.note ? '<p class="dashboard-analytics-subtitle">' + escapeHtml(stats.note) + '</p>' : '')
+      );
+    }
+    var html =
+      metricCards([
+        ['Order value', money(stats.totalValue, stats.currency)],
+        ['Orders', count(stats.orderCount)],
+        ['Average order', money(stats.averageOrderValue, stats.currency)],
+        ['Completed', count(stats.completedCount)]
+      ]) +
+      '<p class="dashboard-analytics-subtitle">Verified TTMenus order value for this period. Menu order-click counts stay under Customer Behaviour.</p>';
+    if (Array.isArray(stats.popularItems) && stats.popularItems.length) {
+      html +=
+        '<h3 class="dashboard-notify-subsection-title">Top selling items</h3>' +
+        table(stats.popularItems, [
+          { label: 'Menu item', cell: function (row) { return escapeHtml(row.name); } },
+          { label: 'Quantity', cell: function (row) { return escapeHtml(count(row.count)); } }
+        ]);
+    } else {
+      html += '<p class="dashboard-analytics-subtitle">Item quantities appear when order carts include dish names.</p>';
+    }
+    if (Array.isArray(stats.byStatus) && stats.byStatus.length) {
+      html += '<h3 class="dashboard-notify-subsection-title">Orders by status</h3>' + namedTable(stats.byStatus, 'Status');
+    }
+    return html;
+  }
+
+  function customersHtml(data, stats) {
+    data = data || {};
+    var returning = Number(data.returningVisits) || 0;
+    var fresh = Number(data.newVisits) || 0;
+    var bits = [];
+    if (fresh || returning) {
+      bits.push(['New visits', count(fresh)]);
+      bits.push(['Returning visits', count(returning)]);
+    }
+    if (stats && Number(stats.orderCount) > 0) {
+      bits.push(['Ordering customers', count(stats.customerCount)]);
+      bits.push(['Repeat customers', count(stats.repeatCustomers)]);
+    }
+    if (!bits.length) {
+      if (stats && !Number(stats.orderCount)) {
+        return '<p class="dashboard-analytics-subtitle">No ordering customers in this period yet. Returning visits and repeat buyers appear once guests come back or place another order.</p>';
+      }
+      return '<p class="dashboard-analytics-subtitle">Customer counts appear when Matomo reports new/returning visits or when guests place TTMenus orders.</p>';
+    }
+    var html = metricCards(bits);
+    if (stats && Number(stats.orderCount) > 0) {
+      html +=
+        '<p class="dashboard-analytics-subtitle">' +
+        escapeHtml(count(stats.customerCount)) +
+        ' customers placed a TTMenus order. ' +
+        escapeHtml(count(stats.repeatCustomers)) +
+        ' ordered more than once in this period.</p>';
+    } else if (returning) {
+      html +=
+        '<p class="dashboard-analytics-subtitle">' +
+        escapeHtml(count(returning)) +
+        ' returning visits in this period. Repeat purchases appear when TTMenus orders are available.</p>';
+    }
+    return html;
+  }
+
   function render(data) {
     if (!shell()) return;
     data = data || {};
@@ -196,11 +287,12 @@
     var ordering = flag('data-ordering');
     var loyverse = flag('data-loyverse');
     var promotions = hasPromotions(data);
+    var returning = Number(data.returningVisits) || 0;
     showNav({
       promotions: promotions,
       orders: ordering,
-      sales: false,
-      customers: (Number(data.returningVisits) || 0) > 0,
+      sales: ordering,
+      customers: ordering || returning > 0,
       pos: loyverse
     });
 
@@ -243,19 +335,15 @@
       var hour = String(row.name);
       return { name: hour + ':00', count: row.count };
     }), 'Hour'));
-    var returning = Number(data.returningVisits) || 0;
     var fresh = Number(data.newVisits) || 0;
     setText('insightsReturning', returning || fresh
       ? count(fresh) + ' new visits and ' + count(returning) + ' returning visits.'
       : 'Returning and new visits appear when Matomo reports them for this period.');
     setText('insightsLocations', namedTable(data.locations, 'Location'));
-    if (Number(data.returningVisits) > 0) {
-      setText('insightsCustomers', '<p>' + count(data.returningVisits) + ' returning visits in this period. Repeat purchases are listed when TTMenus orders are available.</p>');
-    }
+    setText('insightsCustomers', customersHtml(data, shell()._orderStats || null));
+    setText('insightsSales', ordering ? salesHtml(shell()._orderStats || null) : '');
     setText('insightsPromotions', promotionsHtml(data));
-    setText('insightsPos', loyverse
-      ? '<p>Loyverse is connected for receipt push. In-store sales are not imported into Insights, so this section does not show a sales report.</p>'
-      : '');
+    setText('insightsPos', loyverse ? posHtml(shell()._orderStats || null) : '');
     if (ordering) {
       setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Loading TTMenus orders…</p>');
     }
@@ -263,7 +351,7 @@
     setText('insightsRecommendations', rec.title
       ? '<h3 class="dashboard-notify-subsection-title">' + escapeHtml(rec.title) + '</h3><p>' + escapeHtml(rec.detail || '') + '</p>'
       : '<p class="dashboard-analytics-subtitle">A suggestion appears when this period has menu activity.</p>');
-    setText('insightsReports', reportHtml(data, null));
+    setText('insightsReports', reportHtml(data, shell()._orderStats || null));
     renderTrinidadMap();
   }
 
@@ -360,38 +448,136 @@
 
   function applyOrderStats(stats) {
     if (!stats) return;
-    var hasSales = Number(stats.orderCount) > 0;
+    if (shell()) shell()._orderStats = stats;
+    var hasOrders = Number(stats.orderCount) > 0;
+    var data = (shell() && shell()._insightsData) || {};
     showNav({
       orders: true,
-      sales: Number(stats.totalValue) > 0 || (Array.isArray(stats.popularItems) && stats.popularItems.length > 0),
-      customers: hasSales || (shell() && shell()._insightsVisible && shell()._insightsVisible.customers),
+      sales: true,
+      customers: true,
       pos: flag('data-loyverse')
     });
     var completion = stats.completionRate != null ? stats.completionRate + '%' : '—';
     var cancel = stats.cancellationRate != null ? stats.cancellationRate + '%' : '—';
-    setText('insightsOrders',
-      '<div class="dashboard-analytics-metrics">' +
-      '<div class="dashboard-analytics-card dashboard-analytics-metric-card"><span class="dashboard-analytics-card-label">TTMenus orders</span><span class="dashboard-analytics-card-value">' + escapeHtml(count(stats.orderCount)) + '</span></div>' +
-      '<div class="dashboard-analytics-card dashboard-analytics-metric-card"><span class="dashboard-analytics-card-label">Order value</span><span class="dashboard-analytics-card-value">' + escapeHtml(money(stats.totalValue, stats.currency)) + '</span></div>' +
-      '<div class="dashboard-analytics-card dashboard-analytics-metric-card"><span class="dashboard-analytics-card-label">Average order value</span><span class="dashboard-analytics-card-value">' + escapeHtml(money(stats.averageOrderValue, stats.currency)) + '</span></div>' +
-      '<div class="dashboard-analytics-card dashboard-analytics-metric-card"><span class="dashboard-analytics-card-label">Completion rate</span><span class="dashboard-analytics-card-value">' + escapeHtml(completion) + '</span></div>' +
-      '<div class="dashboard-analytics-card dashboard-analytics-metric-card"><span class="dashboard-analytics-card-label">Cancellation rate</span><span class="dashboard-analytics-card-value">' + escapeHtml(cancel) + '</span></div>' +
-      '</div>' +
-      '<p class="dashboard-analytics-subtitle">Verified TTMenus orders. Completion counts ready and paid tickets. Menu order-click counts stay separate.</p>' +
-      namedTable(stats.byStatus || [], 'Status'));
-    setText('insightsSales', hasSales
-      ? '<p>Verified TTMenus order value for this period is ' + escapeHtml(money(stats.totalValue, stats.currency)) + ' across ' + escapeHtml(count(stats.orderCount)) + ' orders.</p>' + table(stats.popularItems || [], [
-        { label: 'Menu item', cell: function (row) { return escapeHtml(row.name); } },
-        { label: 'Quantity', cell: function (row) { return escapeHtml(count(row.count)); } }
-      ])
-      : '');
-    if (hasSales) {
-      setText('insightsCustomers',
-        '<p>' + count(stats.customerCount) + ' customers placed a TTMenus order. ' + count(stats.repeatCustomers) + ' ordered more than once in this period.</p>');
-    }
+    setText(
+      'insightsOrders',
+      metricCards([
+        ['TTMenus orders', count(stats.orderCount)],
+        ['Order value', money(stats.totalValue, stats.currency)],
+        ['Average order value', money(stats.averageOrderValue, stats.currency)],
+        ['Completion rate', completion],
+        ['Cancellation rate', cancel]
+      ]) +
+        '<p class="dashboard-analytics-subtitle">Verified TTMenus orders. Completion counts ready and paid tickets. Menu order-click counts stay separate.</p>' +
+        (hasOrders
+          ? namedTable(stats.byStatus || [], 'Status')
+          : '<p class="dashboard-analytics-subtitle">No verified orders in this period yet.</p>')
+    );
+    setText('insightsSales', salesHtml(stats));
+    setText('insightsCustomers', customersHtml(data, stats));
+    if (flag('data-loyverse')) setText('insightsPos', posHtml(stats));
     if (shell() && shell()._insightsData) {
       setText('insightsReports', reportHtml(shell()._insightsData, stats));
     }
+  }
+
+  function receiptModeLabel(mode) {
+    mode = String(mode || '').toLowerCase();
+    if (mode === 'direct') return 'Send receipt as soon as the guest orders';
+    if (mode === 'off') return 'Don’t send a Loyverse receipt';
+    return 'Send receipt when staff tap Charge';
+  }
+
+  function posConfigSummary() {
+    var cfg = global.POS_CONFIG || {};
+    var orderCfg = global.ORDER_CONFIG || {};
+    var mode = cfg.loyverseReceiptMode || orderCfg.loyverseReceiptMode || '';
+    if (!mode && cfg.autoProcessOrders) mode = 'direct';
+    if (!mode) mode = 'on_payment';
+    return {
+      enabled: cfg.enabled !== false,
+      provider: String(cfg.provider || 'loyverse'),
+      mode: mode,
+      modeLabel: receiptModeLabel(mode),
+      storeId: String(cfg.storeId || '').trim(),
+      requiredOnly: cfg.syncMenu !== false,
+      clientId: String(cfg.clientId || orderClientId() || '').trim()
+    };
+  }
+
+  function posHtml(stats) {
+    var cfg = posConfigSummary();
+    var orders = stats ? Number(stats.orderCount) || 0 : 0;
+    var value = stats ? Number(stats.totalValue) || 0 : 0;
+    var currency = (stats && stats.currency) || 'TTD';
+    var details = [
+      ['Status', 'Connected'],
+      ['Receipt timing', cfg.modeLabel],
+      ['Catalog matching', cfg.requiredOnly ? 'Only items needed for this menu' : 'Full Loyverse catalog'],
+      ['Fallback till', cfg.storeId ? 'Set' : 'First Loyverse store if a location has none']
+    ];
+    if (cfg.clientId) details.push(['Menu client', cfg.clientId]);
+    var periodBits = [];
+    if (stats) {
+      periodBits.push(['TTMenus orders this period', count(orders)]);
+      periodBits.push(['Order value this period', money(value, currency)]);
+    } else if (flag('data-ordering')) {
+      periodBits.push(['TTMenus orders this period', '…']);
+      periodBits.push(['Order value this period', '…']);
+    }
+    return (
+      '<div class="insights-pos" data-state="connected">' +
+      '<div class="insights-pos-bridge" aria-hidden="true">' +
+      '<div class="insights-pos-node insights-pos-node--ttmenus">' +
+      '<span class="insights-pos-node-glow"></span>' +
+      '<img class="insights-pos-logo insights-pos-logo--ttmenus" src="/branding/favicon192.webp" alt="" width="48" height="48">' +
+      '<span class="insights-pos-node-label">TTMenus</span>' +
+      '</div>' +
+      '<div class="insights-pos-link">' +
+      '<span class="insights-pos-link-rail"></span>' +
+      '<span class="insights-pos-link-pulse"></span>' +
+      '<span class="insights-pos-packet insights-pos-packet--a"></span>' +
+      '<span class="insights-pos-packet insights-pos-packet--b"></span>' +
+      '<span class="insights-pos-packet insights-pos-packet--c"></span>' +
+      '<span class="insights-pos-link-label">Receipts</span>' +
+      '</div>' +
+      '<div class="insights-pos-node insights-pos-node--loyverse">' +
+      '<span class="insights-pos-node-glow"></span>' +
+      '<img class="insights-pos-logo insights-pos-logo--loyverse" src="/icons/loyverse-mark.svg" alt="" width="48" height="48">' +
+      '<span class="insights-pos-node-label">Loyverse</span>' +
+      '</div>' +
+      '</div>' +
+      '<p class="insights-pos-status"><span class="insights-pos-status-dot" aria-hidden="true"></span>Linked for till receipts</p>' +
+      '<p class="dashboard-analytics-subtitle">Guest tickets stay in TTMenus Orders. Loyverse gets a closed receipt on the till you picked for each location. In-store Loyverse sales are not imported here.</p>' +
+      (periodBits.length ? metricCards(periodBits) : '') +
+      '<h3 class="dashboard-notify-subsection-title">Connection details</h3>' +
+      '<ul class="insights-pos-details">' +
+      details
+        .map(function (row) {
+          return (
+            '<li><span>' +
+            escapeHtml(row[0]) +
+            '</span><strong>' +
+            escapeHtml(row[1]) +
+            '</strong></li>'
+          );
+        })
+        .join('') +
+      '</ul>' +
+      '</div>'
+    );
+  }
+
+  function orderClientId() {
+    var cfg = global.ORDER_CONFIG || {};
+    return String(
+      cfg.clientId ||
+        global.CLIENT_ID ||
+        global.SITE_CLIENT_ID ||
+        global.CMS_CLIENT_ID ||
+        (global.POS_CONFIG && global.POS_CONFIG.clientId) ||
+        ''
+    ).trim();
   }
 
   function loadOrders(days) {
@@ -400,21 +586,51 @@
     var base = String(cfg.apiUrl || '').replace(/\/$/, '');
     if (!base || !global.DashboardAnalyticsSnapshot) {
       setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Ordering is enabled, but the order service address is not configured. Menu order clicks are not sales.</p>');
+      setText('insightsSales', '<p class="dashboard-analytics-subtitle">Sales need the order service address in site settings.</p>');
       return Promise.resolve();
     }
+    if (!/\/api\/v1$/i.test(base)) {
+      base = base.replace(/\/$/, '') + '/api/v1';
+    }
     var period = days || 30;
+    var cid = orderClientId();
+    var url =
+      base +
+      '/client/orders/stats?days=' +
+      encodeURIComponent(String(period));
+    if (cid) url += '&client_id=' + encodeURIComponent(cid);
     var request = global.DashboardAnalyticsSnapshot.fetchWithAuth
-      ? DashboardAnalyticsSnapshot.fetchWithAuth(base + '/client/orders/stats?days=' + encodeURIComponent(String(period)))
+      ? DashboardAnalyticsSnapshot.fetchWithAuth(url)
       : Promise.resolve({ ok: false });
-    return request.then(function (result) {
-      if (!result || !result.ok) {
+    return request
+      .then(function (result) {
+        if (!result || !result.ok) {
+          var why =
+            result && result.data && (result.data.error || result.data.message)
+              ? String(result.data.error || result.data.message)
+              : 'TTMenus orders could not be loaded';
+          setText(
+            'insightsOrders',
+            '<p class="dashboard-analytics-subtitle">' +
+              escapeHtml(why) +
+              '. Menu order clicks stay under customer actions and are not sales.</p>'
+          );
+          setText(
+            'insightsSales',
+            '<p class="dashboard-analytics-subtitle">' +
+              escapeHtml(why) +
+              '. Sales appear when verified orders load.</p>'
+          );
+          setText('insightsCustomers', customersHtml((shell() && shell()._insightsData) || {}, null));
+          return;
+        }
+        applyOrderStats(result.data || {});
+      })
+      .catch(function () {
         setText('insightsOrders', '<p class="dashboard-analytics-subtitle">TTMenus orders could not be loaded. Menu order clicks stay under customer actions and are not sales.</p>');
-        return;
-      }
-      applyOrderStats(result.data || {});
-    }).catch(function () {
-      setText('insightsOrders', '<p class="dashboard-analytics-subtitle">TTMenus orders could not be loaded. Menu order clicks stay under customer actions and are not sales.</p>');
-    });
+        setText('insightsSales', '<p class="dashboard-analytics-subtitle">TTMenus sales could not be loaded for this period.</p>');
+        setText('insightsCustomers', customersHtml((shell() && shell()._insightsData) || {}, null));
+      });
   }
 
   var trinidadMap = null;
@@ -588,11 +804,12 @@
   function mount() {
     var nav = document.getElementById('insightsNav');
     if (!shell() || !nav || nav.getAttribute('data-built') === '1') return;
+    var ordering = flag('data-ordering');
     showNav({
       promotions: false,
-      orders: flag('data-ordering'),
-      sales: false,
-      customers: false,
+      orders: ordering,
+      sales: ordering,
+      customers: ordering,
       pos: flag('data-loyverse')
     });
   }

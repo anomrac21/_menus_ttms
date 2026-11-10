@@ -16838,3 +16838,324 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
 .insights-trinidad-map .maplibregl-ctrl-attrib {
   font-size: 10px;
 }
+
+.insights-pos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.insights-pos-bridge {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 1fr) minmax(7rem, 1.6fr) minmax(5.5rem, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.15rem 1rem 1rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 8%, transparent);
+  background:
+    radial-gradient(circle at 18% 40%, color-mix(in srgb, var(--dash-accent, #e11) 16%, transparent), transparent 42%),
+    radial-gradient(circle at 82% 55%, color-mix(in srgb, #22c55e 14%, transparent), transparent 40%),
+    color-mix(in srgb, var(--dash-bg, #fff) 72%, transparent);
+  overflow: hidden;
+}
+
+.insights-pos-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  z-index: 1;
+}
+
+.insights-pos-node-glow {
+  position: absolute;
+  inset: -0.35rem auto auto 50%;
+  width: 4.2rem;
+  height: 4.2rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-accent, #e11) 22%, transparent);
+  filter: blur(10px);
+  animation: insights-pos-glow 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.insights-pos-node--loyverse .insights-pos-node-glow {
+  background: color-mix(in srgb, #22c55e 26%, transparent);
+  animation-delay: 0.45s;
+}
+
+.insights-pos-logo {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--dash-bg, #fff) 88%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--dash-ink) 12%, transparent);
+  animation: insights-pos-logo-breathe 3.2s ease-in-out infinite;
+}
+
+.insights-pos-logo--loyverse {
+  padding: 0.45rem;
+  animation-delay: 0.35s;
+}
+
+.insights-pos-node-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--dash-ink);
+}
+
+.insights-pos-link {
+  position: relative;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insights-pos-link-rail {
+  position: absolute;
+  left: 0.2rem;
+  right: 0.2rem;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--dash-accent, #e11) 55%, transparent),
+    color-mix(in srgb, var(--dash-ink) 18%, transparent) 50%,
+    color-mix(in srgb, #22c55e 55%, transparent)
+  );
+  overflow: hidden;
+}
+
+.insights-pos-link-rail::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, #fff 70%, transparent),
+    transparent
+  );
+  transform: translateX(-120%);
+  animation: insights-pos-shimmer 2.4s linear infinite;
+}
+
+.insights-pos-link-pulse {
+  position: absolute;
+  left: 0.2rem;
+  right: 0.2rem;
+  height: 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-accent, #e11) 10%, transparent);
+  filter: blur(6px);
+  animation: insights-pos-link-pulse 2.2s ease-in-out infinite;
+}
+
+.insights-pos-packet {
+  position: absolute;
+  top: 50%;
+  left: 8%;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: -0.28rem;
+  border-radius: 999px;
+  background: var(--dash-accent, #e11);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dash-accent, #e11) 18%, transparent);
+  animation: insights-pos-packet 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.insights-pos-packet--b {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #f59e0b 18%, transparent);
+  animation-delay: 0.85s;
+}
+
+.insights-pos-packet--c {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #22c55e 18%, transparent);
+  animation-delay: 1.7s;
+}
+
+.insights-pos-link-label {
+  position: relative;
+  z-index: 1;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dash-ink);
+  background: color-mix(in srgb, var(--dash-bg, #fff) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+}
+
+.insights-pos-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--dash-ink);
+}
+
+.insights-pos-status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 color-mix(in srgb, #22c55e 45%, transparent);
+  animation: insights-pos-status-dot 1.8s ease-out infinite;
+}
+
+.insights-pos-details {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.insights-pos-details li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 8%, transparent);
+  background: color-mix(in srgb, var(--dash-bg, #fff) 55%, transparent);
+}
+
+.insights-pos-details span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--dash-info, #64748b) 88%, transparent);
+}
+
+.insights-pos-details strong {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--dash-ink);
+  text-align: right;
+}
+
+@keyframes insights-pos-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translateX(-50%) scale(0.92);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+@keyframes insights-pos-logo-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes insights-pos-shimmer {
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes insights-pos-link-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scaleY(0.7);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes insights-pos-packet {
+  0% {
+    left: 6%;
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    left: 90%;
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes insights-pos-status-dot {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, #22c55e 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (max-width: 640px) {
+  .insights-pos-bridge {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+    text-align: center;
+  }
+
+  .insights-pos-link {
+    height: 3.8rem;
+    transform: rotate(90deg);
+    width: 3.8rem;
+    margin: 0.15rem auto;
+  }
+
+  .insights-pos-link-label {
+    transform: rotate(-90deg);
+  }
+
+  .insights-pos-details li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .insights-pos-details strong {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insights-pos-node-glow,
+  .insights-pos-logo,
+  .insights-pos-link-rail::after,
+  .insights-pos-link-pulse,
+  .insights-pos-packet,
+  .insights-pos-status-dot {
+    animation: none;
+  }
+}
