@@ -462,24 +462,24 @@
 /* Loader entrance (starts hidden until .is-in) */
 #loader .loader-feature {
   opacity: 0;
-  transform: translateY(0.5rem) scale(0.96);
+  transform: translateY(0.32rem) scale(0.97);
 }
 
 #loader .loader-feature.is-in {
-  animation: loaderFeatureIn 0.45s var(--ttms-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+  animation: loaderFeatureIn 0.36s var(--ttms-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
 }
 
 #loader .loader-feature.is-in .loader-feature-icon {
-  animation: loaderIconPop 0.4s var(--ttms-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) 0.08s both;
+  animation: loaderIconPop 0.32s var(--ttms-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) 0.05s both;
 }
 
 @keyframes loaderFeatureIn {
-  0% { opacity: 0; transform: translateY(0.5rem) scale(0.96); }
+  0% { opacity: 0; transform: translateY(0.32rem) scale(0.97); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes loaderIconPop {
-  0% { transform: scale(0.85); }
+  0% { transform: scale(0.9); }
   100% { transform: scale(1); }
 }
 

@@ -265,9 +265,9 @@
     gap: 0;
     z-index: var(--ttms-z-loader, 99999);
     transition:
-      opacity 0.72s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.78s cubic-bezier(0.22, 1, 0.36, 1),
-      visibility 0.78s linear;
+      opacity 0.52s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.58s linear;
   }
 
   #loader.loader-ready {
@@ -291,11 +291,11 @@
     overflow: hidden;
     /* Do not use will-change or -webkit-optimize-contrast: both freeze animated GIFs on iOS. */
     transition:
-      max-height 1s cubic-bezier(0.22, 1, 0.36, 1),
-      max-width 1s cubic-bezier(0.22, 1, 0.36, 1),
-      height 1s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.7s ease,
-      filter 0.7s ease;
+      max-height 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+      max-width 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.5s ease,
+      filter 0.5s ease;
   }
 
   #menuImage {
@@ -305,15 +305,15 @@
     max-height: min(4.25rem, 12dvh);
     filter: none;
     transition:
-      width 1.05s cubic-bezier(0.22, 1, 0.36, 1),
-      height 1.05s cubic-bezier(0.22, 1, 0.36, 1),
-      max-width 1.05s cubic-bezier(0.22, 1, 0.36, 1),
-      max-height 1.05s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.65s ease,
-      transform 1.05s cubic-bezier(0.22, 1, 0.36, 1),
-      filter 0.65s ease,
-      border-radius 0.7s ease,
-      box-shadow 0.7s ease;
+      width 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      max-width 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.45s ease,
+      transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.45s ease,
+      border-radius 0.5s ease,
+      box-shadow 0.5s ease;
   }
 
   .loader-brand-stage {
@@ -328,13 +328,13 @@
     width: min(100%, 42rem);
     max-height: min(86dvh, 44rem);
     transition:
-      gap 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-      max-height 0.9s ease,
-      min-height 0.9s ease;
+      gap 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 0.65s ease,
+      min-height 0.65s ease;
   }
 
   .loader-brand-stage.is-entering {
-    animation: loaderBrandIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: loaderBrandIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   /* Status stays fully collapsed until loader-ready */
@@ -354,16 +354,16 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(0.75rem);
+    transform: translateY(0.5rem);
     flex: 0 0 auto;
     min-height: 0;
     transition:
-      opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-      max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-      visibility 0.55s linear,
-      gap 0.45s ease,
-      padding 0.45s ease;
+      opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.4s linear,
+      gap 0.35s ease,
+      padding 0.35s ease;
   }
 
   #loader.loader-ready .loader-status {
@@ -378,7 +378,7 @@
 
   /* Safety - never leave chips invisible if JS stagger fails */
   #loader.loader-ready .loader-feature:not(.is-in) {
-    animation: loaderFeatureIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 1.4s forwards;
+    animation: loaderFeatureIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.9s forwards;
   }
 
   #loader.loader-force-hidden {
@@ -393,11 +393,11 @@
     font-size: 0.9rem;
     line-height: 1.35;
     opacity: 0;
-    transform: translateY(0.85rem) scale(0.94);
+    transform: translateY(0.55rem) scale(0.96);
   }
 
   #loader.loader-ready .loader-location {
-    animation: loaderLocationIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: loaderLocationIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   .loader-location-label {
@@ -434,7 +434,7 @@
   }
 
   #loader.loader-ready .loader-location-pin::before {
-    animation: loaderPinRing 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+    animation: loaderPinRing 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
   }
 
   .loader-location-icon {
@@ -447,7 +447,7 @@
   }
 
   #loader.loader-ready .loader-location-icon {
-    animation: loaderPinDrop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: loaderPinDrop 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .loader-location-value {
@@ -482,13 +482,13 @@
   }
 
   #loader.loader-ready .loader-location-value {
-    animation: loaderLocationValueIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+    animation: loaderLocationValueIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
   }
 
   @keyframes loaderLocationIn {
     0% {
       opacity: 0;
-      transform: translateY(0.5rem);
+      transform: translateY(0.35rem);
     }
     100% {
       opacity: 1;
@@ -499,7 +499,7 @@
   @keyframes loaderLocationValueIn {
     0% {
       opacity: 0;
-      transform: scale(0.94);
+      transform: scale(0.96);
     }
     100% {
       opacity: 1;
@@ -510,7 +510,7 @@
   @keyframes loaderPinDrop {
     0% {
       opacity: 0;
-      transform: translateY(-0.4rem) scale(0.88);
+      transform: translateY(-0.28rem) scale(0.92);
     }
     100% {
       opacity: 1;
@@ -520,19 +520,19 @@
 
   @keyframes loaderPinRing {
     0% {
-      opacity: 0.75;
-      transform: scale(0.55);
+      opacity: 0.7;
+      transform: scale(0.6);
     }
     100% {
       opacity: 0;
-      transform: scale(1.85);
+      transform: scale(1.65);
     }
   }
 
   @keyframes loaderBrandIn {
     0% {
       opacity: 1;
-      transform: scale(0.97) translateY(0.2rem);
+      transform: scale(0.985) translateY(0.12rem);
     }
     100% {
       opacity: 1;
@@ -542,8 +542,8 @@
 
   @keyframes loaderClientLogoPop {
     0% {
-      transform: scale(0.72);
-      opacity: 0.5;
+      transform: scale(0.84);
+      opacity: 0.65;
     }
     100% {
       transform: scale(1);
@@ -568,7 +568,7 @@
     font-size: 0.72rem;
     padding: 0.3rem 0.7rem 0.3rem 0.3rem;
     opacity: 0;
-    transform: translateY(0.75rem) scale(0.88);
+    transform: translateY(0.4rem) scale(0.94);
   }
 
   #loader .loader-feature-badge {
@@ -582,7 +582,7 @@
   }
 
   @keyframes loaderFeatureIn {
-    0% { opacity: 0; transform: translateY(0.5rem) scale(0.96); }
+    0% { opacity: 0; transform: translateY(0.32rem) scale(0.97); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -618,7 +618,7 @@
   }
 
   #loader.loader--verified.loader-morph #menuImage.is-popping {
-    animation: loaderClientLogoPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: loaderClientLogoPop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   #loader.loader--paid.loader-morph #menuImage {
@@ -633,7 +633,7 @@
   }
 
   #loader.loader--paid.loader-morph #menuImage.is-popping {
-    animation: loaderClientLogoPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: loaderClientLogoPop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   @media (max-height: 700px) {
@@ -697,24 +697,24 @@
     html.ttms-ios #menuImage,
     html.ttms-ios .loader-brand-stage,
     html.ttms-ios .loader-status {
-      transition-duration: 0.85s !important;
+      transition-duration: 0.65s !important;
     }
     html.ttms-ios #loader.loader-ready .loader-location {
-      animation: loaderLocationIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      animation: loaderLocationIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both !important;
     }
     html.ttms-ios #loader.loader-ready .loader-location-value {
-      animation: loaderLocationValueIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      animation: loaderLocationValueIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both !important;
     }
     html.ttms-ios #loader.loader-ready .loader-location-icon {
-      animation: loaderPinDrop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      animation: loaderPinDrop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both !important;
     }
     html.ttms-ios #loader.loader-ready .loader-feature.is-in,
     html.ttms-ios #loader.loader-ready .loader-feature:not(.is-in) {
-      animation: loaderFeatureIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      animation: loaderFeatureIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both !important;
     }
     html.ttms-ios #loader.loader--verified.loader-morph #menuImage.is-popping,
     html.ttms-ios #loader.loader--paid.loader-morph #menuImage.is-popping {
-      animation: loaderClientLogoPop 0.85s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      animation: loaderClientLogoPop 0.65s cubic-bezier(0.22, 1, 0.36, 1) both !important;
     }
   }
   

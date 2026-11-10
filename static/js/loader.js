@@ -8,7 +8,7 @@ let hideForceTimer = null;
 let loaderGeneration = 0;
 let loaderHasHiddenOnce = false;
 /** Minimum time loader stays visible so morph, chips, and logo pop can play. */
-var LOADER_MIN_VISIBLE_MS = 4200;
+var LOADER_MIN_VISIBLE_MS = 3000;
 var loaderShownAt = 0;
 
 function forceHideLoaderElement(loader) {
@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function staggerLoaderFeatures() {
         var chips = loader.querySelectorAll('.loader-features .loader-feature');
-        var gapMs = 260;
+        var gapMs = 150;
         for (var i = 0; i < chips.length; i++) {
             (function (chip, index) {
                 var id = setTimeout(function () {
@@ -519,9 +519,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Location fanfare first, then each feature chip one-by-one.
         revealTimer = setTimeout(function () {
             loader.classList.add('loader-ready');
-            var featuresDelay = setTimeout(staggerLoaderFeatures, 420);
+            var featuresDelay = setTimeout(staggerLoaderFeatures, 220);
             featureRevealTimers.push(featuresDelay);
-        }, 480);
+        }, 320);
         if (!loaderIsVerified()) return;
         // Hold full TTMenus mark, then hand the stage to the client logo.
         morphTimer = setTimeout(function () {
@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 menuImage.classList.add('is-popping');
             }
             loader.classList.add('loader-morph');
-        }, 720);
+        }, 480);
     }
 
     if (typeof barba === 'undefined') {
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (footerBtns) footerBtns.classList.add('visible');
             setTimeout(function () {
                 forceHideLoaderElement(loader);
-            }, 820);
+            }, 600);
         }, noBarbaWait);
         return;
     }
@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (gen !== loaderGeneration) return;
             forceHideLoaderElement(loader);
             isHidingLoader = false;
-        }, 820);
+        }, 600);
 
         const footerBtns = document.getElementById('footerBtns');
         if (footerBtns) {

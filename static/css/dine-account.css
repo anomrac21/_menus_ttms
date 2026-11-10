@@ -10,36 +10,12 @@
   display: none;
 }
 
-#dashboard.dashboard-panel .dashboard-lead.is-account.is-open {
-  padding: 0.2rem 0.35rem 0.45rem;
-  margin-bottom: 0.4rem;
-}
-
-#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__toggle {
-  gap: 0.5rem;
-  padding: 0.28rem 0.28rem 0.15rem 0.2rem;
-}
-
-#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__icon {
-  width: 2rem;
-  height: 2rem;
-}
-
-#dashboard.dashboard-panel .dashboard-lead.is-account.is-open .dashboard-lead__icon {
-  transform: none;
-}
-
-#dashboard.dashboard-panel .dashboard-lead.is-account .dashboard-lead__title {
-  margin-top: 0;
-  font-size: 0.98rem;
-}
-
 #dashboard.dashboard-panel .dashboard-lead__account {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.4rem;
-  padding: 0.05rem 0.4rem 0.15rem 0.35rem;
+  gap: 0.55rem;
+  padding: 0.2rem 0.15rem 0.35rem;
   text-align: left;
 }
 
@@ -66,16 +42,17 @@
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__name {
-  font-size: 0.95rem;
+  font-size: 1.08rem;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
   color: var(--dashboard-ink, #090a13);
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__meta,
 #dashboard.dashboard-panel .dashboard-dine-account__empty {
-  font-size: 0.78rem;
-  line-height: 1.3;
+  font-size: 0.84rem;
+  line-height: 1.4;
   color: var(--dashboard-ink-muted, #6b7280);
 }
 
@@ -90,9 +67,9 @@
 
 #dashboard.dashboard-panel .dashboard-dine-account__label {
   flex: 0 0 auto;
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--dashboard-ink-muted, #6b7280);
 }
@@ -108,11 +85,11 @@
 }
 
 #dashboard.dashboard-panel .dashboard-dine-account__chips li {
-  padding: 0.08rem 0.45rem;
+  padding: 0.18rem 0.55rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dashboard-accent, #e5ad36) 22%, var(--hub-panel-surface, #fff));
   color: var(--dashboard-ink, #090a13);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.35;
 }
