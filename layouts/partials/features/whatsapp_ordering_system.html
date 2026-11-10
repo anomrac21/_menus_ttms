@@ -105,17 +105,70 @@ function getBasePriceFromPricesArrayCart(pricesArray) {
 	return prices.length ? (prices.length === 1 ? prices[0] : Math.min(...prices)) : 0;
 }
 
+function bogoPaidQuantity(qty, promo) {
+	const n = Math.max(0, Math.floor(Number(qty) || 0));
+	let buy = parseInt(promo && promo.buy, 10);
+	let get = parseInt(promo && promo.get, 10);
+	if (!(buy > 0) || !(get > 0)) {
+		const label = String(promo && promo.label || '');
+		const freeWith = label.match(/(\d+)\s*free\s*with\s*(\d+)/i);
+		const buyGet = label.match(/buy\s*(\d+)\s*,?\s*get\s*(\d+)/i);
+		if (freeWith) {
+			get = parseInt(freeWith[1], 10);
+			buy = parseInt(freeWith[2], 10);
+		} else if (buyGet) {
+			buy = parseInt(buyGet[1], 10);
+			get = parseInt(buyGet[2], 10);
+		}
+	}
+	if (!(buy > 0)) buy = 1;
+	if (!(get > 0)) get = 1;
+	const group = buy + get;
+	const groups = Math.floor(n / group);
+	const rem = n % group;
+	const free = groups * get + Math.max(0, rem - buy);
+	return n - free;
+}
+
+function cartLineUnitPrice(o) {
+	let arr = o && o.pricesArray;
+	try { arr = typeof arr === 'string' ? JSON.parse(arr) : arr; } catch (e) { arr = null; }
+	const size = String(o && o.size || '').replace(/\s+/g, ' ').trim();
+	if (Array.isArray(arr)) {
+		for (let i = 0; i + 2 < arr.length; i += 3) {
+			const v1 = String(arr[i] == null ? '' : arr[i]).trim();
+			const v2 = String(arr[i + 1] == null ? '' : arr[i + 1]).trim();
+			const price = parseFloat(arr[i + 2]);
+			if (!(price > 0)) continue;
+			const parts = [];
+			if (v1 && v1 !== '-' && v1.toLowerCase() !== 'none') parts.push(v1);
+			if (v2 && v2 !== '-' && v2.toLowerCase() !== 'none') parts.push(v2);
+			const label = parts.join(' ');
+			if (label && size === label) return price;
+			if (!label && (size === '' || size === '-')) return price;
+		}
+	}
+	return getBasePriceFromPricesArrayCart(o && o.pricesArray);
+}
+
 function applyPromosToOrder(today, timeInfo) {
 	for (let i = 0; i < order.length; i++) {
 		const o = order[i];
 		if (!o.promotions && !o.pricesArray) continue;
 		const promo = getActivePromoForCart(o.promotions, today, timeInfo);
-		const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
-		const basePrice = getBasePriceFromPricesArrayCart(o.pricesArray);
-		const sideAndAdd = (o.sideAndAddTotal != null) ? o.sideAndAddTotal : 0;
+		const unit = cartLineUnitPrice(o);
+		const sideAndAdd = (o.sideAndAddTotal != null) ? Number(o.sideAndAddTotal) || 0 : 0;
 		const amt = parseFloat(o.amt) || 1;
-		if (pct > 0 && basePrice > 0) {
-			o.cost = basePrice * (100 - pct) / 100 * amt + sideAndAdd;
+		if (!(unit > 0)) continue;
+		const type = promo && promo.type ? String(promo.type) : '';
+		if (type === 'bogo' || type === 'buy_n_get_n') {
+			o.cost = unit * bogoPaidQuantity(amt, promo) + sideAndAdd;
+		} else if (type === 'amount_off') {
+			const off = parseFloat(promo.value) || 0;
+			o.cost = Math.max(0, unit - off) * amt + sideAndAdd;
+		} else if (type === 'percent_off') {
+			const pct = parseInt(promo.value, 10) || 0;
+			if (pct > 0) o.cost = unit * (100 - pct) / 100 * amt + sideAndAdd;
 		}
 	}
 }

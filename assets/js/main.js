@@ -16,6 +16,85 @@
         return typeof price === 'number' && !isNaN(price);
     }
 
+    function isBogoPromo(promo) {
+        if (!promo || promo.type == null) return false;
+        const t = String(promo.type).toLowerCase();
+        return t === 'bogo' || t === 'buy_n_get_n';
+    }
+
+    function bogoCounts(promo) {
+        let buy = parseInt(promo && promo.buy, 10);
+        let get = parseInt(promo && promo.get, 10);
+        if (!(buy > 0) || !(get > 0)) {
+            const label = String(promo && promo.label || '');
+            const freeWith = label.match(/(\d+)\s*free\s*with\s*(\d+)/i);
+            const buyGet = label.match(/buy\s*(\d+)\s*,?\s*get\s*(\d+)/i);
+            if (freeWith) {
+                get = parseInt(freeWith[1], 10);
+                buy = parseInt(freeWith[2], 10);
+            } else if (buyGet) {
+                buy = parseInt(buyGet[1], 10);
+                get = parseInt(buyGet[2], 10);
+            }
+        }
+        if (!(buy > 0)) buy = 1;
+        if (!(get > 0)) get = 1;
+        return { buy: buy, get: get };
+    }
+
+    /** Items the customer pays for. Buy 1 get 1 on a qty of 3 charges 2. */
+    function bogoPaidQuantity(qty, promo) {
+        const n = Math.max(0, Math.floor(Number(qty) || 0));
+        const counts = bogoCounts(promo);
+        const group = counts.buy + counts.get;
+        const groups = Math.floor(n / group);
+        const rem = n % group;
+        const free = groups * counts.get + Math.max(0, rem - counts.buy);
+        return n - free;
+    }
+
+    function promoOfferText(promo) {
+        if (!promo) return '';
+        if (promo.label) return String(promo.label);
+        if (promo.type === 'percent_off' && promo.value) return String(promo.value) + '% off';
+        if (promo.type === 'amount_off' && promo.value) return '$' + String(promo.value) + ' off';
+        if (isBogoPromo(promo)) {
+            const counts = bogoCounts(promo);
+            return 'Buy ' + counts.buy + ', get ' + counts.get + ' free';
+        }
+        return '';
+    }
+
+    function discountedUnitPrice(unit, promo) {
+        if (!(unit > 0) || !promo || isBogoPromo(promo)) return unit;
+        if (promo.type === 'percent_off') {
+            const pct = parseInt(promo.value, 10) || 0;
+            if (pct > 0) return unit * (100 - pct) / 100;
+        }
+        if (promo.type === 'amount_off') {
+            const off = parseFloat(promo.value) || 0;
+            if (off > 0) return Math.max(0, unit - off);
+        }
+        return unit;
+    }
+
+    function stampActivePromo(el, promo) {
+        if (!el) return;
+        const pct = promo && promo.type === 'percent_off' && promo.value ? (parseInt(promo.value, 10) || 0) : 0;
+        const off = promo && promo.type === 'amount_off' ? (parseFloat(promo.value) || 0) : 0;
+        el.setAttribute('data-active-promo-percent', String(pct));
+        el.setAttribute('data-active-promo-amount', String(off > 0 ? off : 0));
+        el.setAttribute('data-active-promo-type', promo && promo.type ? String(promo.type) : '');
+        if (isBogoPromo(promo)) {
+            const counts = bogoCounts(promo);
+            el.setAttribute('data-promo-buy', String(counts.buy));
+            el.setAttribute('data-promo-get', String(counts.get));
+        } else {
+            el.removeAttribute('data-promo-buy');
+            el.removeAttribute('data-promo-get');
+        }
+    }
+
     function init() {
         hideAllPanels();
         initializeFooter();
@@ -171,27 +250,24 @@
     function applyPromoToCard(card, today, timeInfo) {
         const promotions = card.getAttribute('data-promotions');
         const promo = getActivePromoForDay(promotions, today, timeInfo);
-        const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
-        card.setAttribute('data-active-promo-percent', String(pct));
+        stampActivePromo(card, promo);
+        const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value, 10) || 0 : 0;
 
         const pricesStr = card.getAttribute('data-prices-array');
         const basePrice = getBasePriceFromPricesArray(pricesStr);
-        const displayPrice = pct > 0 ? basePrice * (100 - pct) / 100 : basePrice;
+        const displayPrice = discountedUnitPrice(basePrice, promo);
+        const cutsUnit = basePrice > 0 && displayPrice !== basePrice;
 
+        const offerText = promoOfferText(promo);
         const badge = card.querySelector('.menu-item-title .menu-item-promo-badge');
         if (badge) {
-            if (promo && promo.label) {
-                badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
+            if (offerText) {
+                badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + escapePromoLabel(offerText) + '</span>';
                 badge.style.display = '';
             } else { badge.style.display = 'none'; }
-        } else if (promo && promo.label) {
+        } else if (offerText) {
             const titleEl = card.querySelector('.menu-item-title');
-            if (titleEl) {
-                const span = document.createElement('span');
-                span.className = 'menu-item-promo-badge';
-                span.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
-                titleEl.appendChild(span);
-            }
+            if (titleEl) titleEl.insertAdjacentHTML('beforeend', buildPromoBadgeMarkup(offerText));
         }
 
         const priceEl = card.querySelector('.menu-item-price');
@@ -200,12 +276,12 @@
             const hasRange = range && range[0] !== range[1];
             if (hasRange) {
                 const [p1, p2] = range;
-                if (pct > 0) {
-                    const d1 = p1 * (100 - pct) / 100, d2 = p2 * (100 - pct) / 100;
+                if (cutsUnit) {
+                    const d1 = discountedUnitPrice(p1, promo), d2 = discountedUnitPrice(p2, promo);
                     priceEl.innerHTML = `<span class="menu-item-price-original">$${p1.toFixed(2).replace(/\.00$/, '')} | $${p2.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${d1.toFixed(2).replace(/\.00$/, '')} | $${d2.toFixed(2).replace(/\.00$/, '')}</span>`;
                 } else priceEl.innerHTML = `$${p1.toFixed(2).replace(/\.00$/, '')} | $${p2.toFixed(2).replace(/\.00$/, '')}`;
             } else {
-                if (pct > 0) priceEl.innerHTML = `<span class="menu-item-price-original">$${basePrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
+                if (cutsUnit) priceEl.innerHTML = `<span class="menu-item-price-original">$${basePrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
                 else priceEl.textContent = `$${basePrice.toFixed(2).replace(/\.00$/, '')}`;
             }
         }
@@ -215,7 +291,7 @@
         const expandedPrice = card.querySelector('.expanded-price');
         const addCartBtn = card.querySelector('.expanded-add-cart');
         if (expandedPrice) {
-            if (pct > 0) {
+            if (cutsUnit) {
                 expandedPrice.innerHTML = `<span class="menu-item-price-original">$${basePrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
                 expandedPrice.setAttribute('data-unit-price', String(displayPrice));
                 expandedPrice.setAttribute('data-original-unit-price', String(basePrice));
@@ -364,23 +440,18 @@
     function applyPromoToSinglePage(dataEl, today, timeInfo) {
         const promotions = dataEl.getAttribute('data-promotions');
         const promo = getActivePromoForDay(promotions, today, timeInfo);
-        const pct = promo && promo.type === 'percent_off' && promo.value ? parseInt(promo.value) : 0;
-        dataEl.setAttribute('data-active-promo-percent', String(pct));
+        stampActivePromo(dataEl, promo);
 
+        const offerText = promoOfferText(promo);
         const badge = document.querySelector('.single-page-title .menu-item-promo-badge, h3.menu-item-title.single-page-title .menu-item-promo-badge');
         if (badge) {
-            if (promo && promo.label) {
-                badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
+            if (offerText) {
+                badge.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + escapePromoLabel(offerText) + '</span>';
                 badge.style.display = '';
             } else { badge.style.display = 'none'; }
-        } else if (promo && promo.label) {
+        } else if (offerText) {
             const title = document.querySelector('.single-page-title, h3.menu-item-title.single-page-title');
-            if (title) {
-                const span = document.createElement('span');
-                span.className = 'menu-item-promo-badge';
-                span.innerHTML = '<span class="menu-item-promo-label">Promotion</span> <span class="menu-item-promo-value">' + promo.label + '</span>';
-                title.appendChild(span);
-            }
+            if (title) title.insertAdjacentHTML('beforeend', ' ' + buildPromoBadgeMarkup(offerText));
         }
 
         const priceItems = document.querySelectorAll('.single-page-prices-section .prices li');
@@ -391,8 +462,8 @@
             if (!match) return;
             const origPrice = parseFloat(match[1]);
             if (isNaN(origPrice) || origPrice <= 0) return;
-            const disc = pct > 0 ? origPrice * (100 - pct) / 100 : origPrice;
-            if (pct > 0) li.innerHTML = `<span class="menu-item-price-original"><b>$${origPrice.toFixed(2).replace(/\.00$/, '')}</b></span> <b class="menu-item-price-promo">$${disc.toFixed(2).replace(/\.00$/, '')}</b>`;
+            const disc = discountedUnitPrice(origPrice, promo);
+            if (disc !== origPrice) li.innerHTML = `<span class="menu-item-price-original"><b>$${origPrice.toFixed(2).replace(/\.00$/, '')}</b></span> <b class="menu-item-price-promo">$${disc.toFixed(2).replace(/\.00$/, '')}</b>`;
             else li.innerHTML = `<b>$${origPrice.toFixed(2).replace(/\.00$/, '')}</b>`;
         });
 
@@ -640,7 +711,8 @@
             dt.day,
             { hour: dt.hour, minute: dt.minute }
         );
-        if (promo && promo.label) return String(promo.label).trim();
+        const offerText = promoOfferText(promo);
+        if (offerText) return offerText.trim();
 
         const cardBadge = card.querySelector('.menu-item-promo-badge');
         const valueEl = cardBadge && cardBadge.querySelector('.menu-item-promo-value');
@@ -1953,9 +2025,13 @@
                 
                 // Apply promotion discount if active
                 const promoPercent = parseInt(element.getAttribute('data-active-promo-percent')) || 0;
+                const promoAmount = parseFloat(element.getAttribute('data-active-promo-amount')) || 0;
+                const promoType = element.getAttribute('data-active-promo-type') || '';
                 let displayUnitPrice = unitPrice;
                 if (promoPercent > 0) {
                     displayUnitPrice = unitPrice * (100 - promoPercent) / 100;
+                } else if (promoAmount > 0 && promoType === 'amount_off') {
+                    displayUnitPrice = Math.max(0, unitPrice - promoAmount);
                 }
                 
                 const initialQuantity = 1;
@@ -2315,7 +2391,7 @@
                                 <button class="btn-quantity" onclick="adjustExpandedQuantity(this, 1)">
                                     <i class="fa fa-chevron-up"></i>
                                 </button>
-                                <span class="expanded-price" data-unit-price="${displayUnitPrice}" data-original-unit-price="${unitPrice}" data-promo-percent="${promoPercent}">${promoPercent > 0 ? `<span class="menu-item-price-original">$${unitPrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayUnitPrice.toFixed(2).replace(/\.00$/, '')}</span>` : itemPriceText}</span>
+                                <span class="expanded-price" data-unit-price="${displayUnitPrice}" data-original-unit-price="${unitPrice}" data-promo-percent="${promoPercent}">${displayUnitPrice !== unitPrice ? `<span class="menu-item-price-original">$${unitPrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayUnitPrice.toFixed(2).replace(/\.00$/, '')}</span>` : itemPriceText}</span>
                             </div>
                             <button class="expanded-add-cart" onclick="addExpandedItemToCart(this, '${url}')" data-unit-price="${displayUnitPrice}" data-item-url="${url}">
                                 <i class="fa fa-cart-plus"></i>
@@ -2808,11 +2884,15 @@
         }
         if (!isPriced(unitPrice)) unitPrice = 0;
         
-        // Apply promotion discount if active
+        // Apply promotion discount if active. Buy N get N keeps the unit price and drops free items from the total.
         const promoPercent = parseInt(card.getAttribute('data-active-promo-percent')) || 0;
+        const promoAmount = parseFloat(card.getAttribute('data-active-promo-amount')) || 0;
+        const promoType = card.getAttribute('data-active-promo-type') || '';
         let displayUnitPrice = unitPrice;
         if (promoPercent > 0) {
             displayUnitPrice = unitPrice * (100 - promoPercent) / 100;
+        } else if (promoAmount > 0 && promoType === 'amount_off') {
+            displayUnitPrice = Math.max(0, unitPrice - promoAmount);
         }
         
         const root = getExpandedViewRoot(card);
@@ -2829,14 +2909,23 @@
             sidePrice += price;
         });
         
-        const totalPrice = (displayUnitPrice + sidePrice) * quantity;
+        let menuCharge = displayUnitPrice * quantity;
+        if (promoType === 'bogo' || promoType === 'buy_n_get_n') {
+            const paid = bogoPaidQuantity(quantity, {
+                type: 'bogo',
+                buy: card.getAttribute('data-promo-buy'),
+                get: card.getAttribute('data-promo-get')
+            });
+            menuCharge = unitPrice * paid;
+        }
+        const totalPrice = menuCharge + sidePrice * quantity;
         
         const priceElement = root.querySelector('.expanded-price');
         const addCartButton = root.querySelector('.expanded-add-cart');
         const priceButton = addCartButton?.querySelector('.cart-button-price');
         
         if (priceElement) {
-            if (promoPercent > 0) {
+            if (displayUnitPrice !== unitPrice) {
                 priceElement.innerHTML = `<span class="menu-item-price-original">$${unitPrice.toFixed(2).replace(/\.00$/, '')}</span> <span class="menu-item-price-promo">$${displayUnitPrice.toFixed(2).replace(/\.00$/, '')}</span>`;
             } else {
                 priceElement.textContent = `$${unitPrice.toFixed(2).replace(/\.00$/, '')}`;
@@ -4150,8 +4239,13 @@
         
         // Apply promotion discount if active
         const promoPercent = parseInt(dataContainer.getAttribute('data-active-promo-percent')) || 0;
+        const promoAmount = parseFloat(dataContainer.getAttribute('data-active-promo-amount')) || 0;
+        const promoType = dataContainer.getAttribute('data-active-promo-type') || '';
+        const rawUnit = unitPrice;
         if (promoPercent > 0) {
             unitPrice = unitPrice * (100 - promoPercent) / 100;
+        } else if (promoAmount > 0 && promoType === 'amount_off') {
+            unitPrice = Math.max(0, unitPrice - promoAmount);
         }
         
         // Calculate side prices
@@ -4178,11 +4272,20 @@
         });
         
         const totalModAndAddPrice = modificationPrice + additionPrice;
-        const totalPrice = (unitPrice + sidePrice + totalModAndAddPrice) * quantity;
+        let menuCharge = unitPrice * quantity;
+        if (promoType === 'bogo' || promoType === 'buy_n_get_n') {
+            const paid = bogoPaidQuantity(quantity, {
+                type: 'bogo',
+                buy: dataContainer.getAttribute('data-promo-buy'),
+                get: dataContainer.getAttribute('data-promo-get')
+            });
+            menuCharge = rawUnit * paid;
+        }
+        const totalPrice = menuCharge + (sidePrice + totalModAndAddPrice) * quantity;
         const displayUnit = unitPrice + sidePrice + totalModAndAddPrice;
         const origUnit = promoPercent > 0 && unitPrice > 0
             ? unitPrice / ((100 - promoPercent) / 100)
-            : unitPrice;
+            : rawUnit;
 
         const addCartButton = document.querySelector('.single-page-add-cart-btn, .single-page-item-card .expanded-add-cart');
         const priceButton = addCartButton?.querySelector('.cart-button-price');
@@ -4195,7 +4298,7 @@
             addCartButton.setAttribute('data-unit-price', String(displayUnit));
         }
         if (expandedPrice) {
-            if (promoPercent > 0 && origUnit > 0) {
+            if (unitPrice !== rawUnit && origUnit > 0) {
                 expandedPrice.innerHTML =
                     `<span class="menu-item-price-original">$${origUnit.toFixed(2).replace(/\.00$/, '')}</span> ` +
                     `<span class="menu-item-price-promo">$${displayUnit.toFixed(2).replace(/\.00$/, '')}</span>`;

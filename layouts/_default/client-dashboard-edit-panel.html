@@ -335,8 +335,9 @@
                         <div id="dashboardEditEventsContainer" class="dashboard-list-ui"></div>
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddEvent">Add event</button>
                       </div>
-                      <div class="dashboard-edit-field">
+                      <div class="dashboard-edit-field" data-dashboard-composite="menu-item-promotions">
                         <label>Item promotions</label>
+                        <p class="dashboard-edit-field-note">Optional. If you add a promotion, an image is required.</p>
                         <div id="dashboardEditMenuItemPromotionsContainer" class="dashboard-menu-item-promotions-ui"></div>
                         <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddMenuItemPromotion">Add promotion</button>
                       </div>
@@ -477,14 +478,14 @@
                   <p class="dashboard-menu-item-wizard-progress" id="dashboardPromotionWizardProgress" aria-live="polite">Step 1 of 3 · Main</p>
                   <div class="dashboard-menu-item-wizard-panels">
                     <div class="dashboard-menu-item-wizard-panel dashboard-promotion-wizard-panel" data-promo-wizard-index="0" role="tabpanel" id="dashboardPromoWizardPanel0" aria-hidden="false">
-                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Title, photos, and a short description.</p>
+                      <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Title, at least one photo, and a short description.</p>
                       <div class="dashboard-edit-field">
                         <label for="dashboardEditPromoTitle">Title <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
                         <input type="text" id="dashboardEditPromoTitle" class="dashboard-edit-input" placeholder="Promotion title" required>
                       </div>
-                      <div class="dashboard-edit-field" data-dashboard-composite="promo-images">
-                        <label id="dashboardEditPromoImagesLabel">Images</label>
-                        <p class="dashboard-edit-field-note dashboard-menu-item-images-hint">Add a photo, or choose one already on the site. Drag the handle to change the order. New photos stay private until you publish.</p>
+                      <div class="dashboard-edit-field" data-dashboard-composite="promo-images" data-dashboard-required="true">
+                        <label id="dashboardEditPromoImagesLabel">Images <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
+                        <p class="dashboard-edit-field-note dashboard-menu-item-images-hint">At least one photo is required. Add a photo, or choose one already on the site. Drag the handle to change the order. New photos stay private until you publish.</p>
                         <div id="dashboardEditPromoImagesContainer" class="dashboard-menu-item-images-ui" role="list" aria-labelledby="dashboardEditPromoImagesLabel"></div>
                         <p id="dashboardPromoImagesUploadStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite" aria-atomic="true"></p>
                         <div class="dashboard-image-add-actions">
@@ -514,10 +515,24 @@
                           <span>Recurring</span>
                         </label>
                       </div>
-                      <div class="dashboard-edit-field">
-                        <label>Days of week</label>
-                        <div id="dashboardEditPromoDaysofweekContainer" class="dashboard-list-ui"></div>
-                        <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnAddPromoDay">Add day</button>
+                      <div class="dashboard-edit-field dashboard-promo-days-field" id="dashboardEditPromoDaysWrap">
+                        <label id="dashboardEditPromoDaysLabel">Days of week</label>
+                        <p class="dashboard-edit-field-note">Leave empty for any day. Tap days to limit when this offer shows.</p>
+                        <div class="dashboard-availability-days dashboard-promo-days" id="dashboardEditPromoDays" role="group" aria-labelledby="dashboardEditPromoDaysLabel">
+                          <button type="button" class="dashboard-availability-day" data-day="Monday" aria-pressed="false">Mon</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Tuesday" aria-pressed="false">Tue</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Wednesday" aria-pressed="false">Wed</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Thursday" aria-pressed="false">Thu</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Friday" aria-pressed="false">Fri</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Saturday" aria-pressed="false">Sat</button>
+                          <button type="button" class="dashboard-availability-day" data-day="Sunday" aria-pressed="false">Sun</button>
+                        </div>
+                        <div class="dashboard-availability-day-presets" id="dashboardEditPromoDaysPresets" role="group" aria-label="Day presets">
+                          <button type="button" class="dashboard-availability-preset" data-promo-offer-day-preset="weekdays">Weekdays</button>
+                          <button type="button" class="dashboard-availability-preset" data-promo-offer-day-preset="weekend">Weekend</button>
+                          <button type="button" class="dashboard-availability-preset" data-promo-offer-day-preset="all">All</button>
+                          <button type="button" class="dashboard-availability-preset" data-promo-offer-day-preset="none">Any day</button>
+                        </div>
                       </div>
                       <div class="dashboard-edit-field">
                         <label for="dashboardEditPromoWeight">Weight</label>

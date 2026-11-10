@@ -17,6 +17,7 @@
   var currentMenuRoot = null;
   var currentContentPath = '';
   var modalLoadingFallbackTimer = null;
+  var editDomSnapshot = null;
 
   function getModal() {
     return document.getElementById(MODAL_ID);
@@ -40,6 +41,53 @@
 
   function getDeleteBtn() {
     return document.getElementById('menuItemEditModalDelete');
+  }
+
+  function getDiscardPrompt() {
+    return document.getElementById('menuItemEditDiscardPrompt');
+  }
+
+  function hasUnsavedChanges() {
+    var saveBtn = getSaveBtn();
+    if (!saveBtn) return false;
+    if (saveBtn.classList.contains('menu-item-edit-modal__save--pending')) return true;
+    var countEl = document.getElementById('menuItemEditModalSaveCount');
+    if (countEl && !countEl.classList.contains('hidden')) {
+      var n = parseInt(countEl.textContent, 10);
+      if (!isNaN(n) && n > 0) return true;
+    }
+    return false;
+  }
+
+  function showDiscardPrompt() {
+    var prompt = getDiscardPrompt();
+    if (!prompt) return false;
+    prompt.hidden = false;
+    prompt.classList.remove('hidden');
+    prompt.setAttribute('aria-hidden', 'false');
+    var discardBtn = document.getElementById('menuItemEditDiscardConfirm');
+    if (discardBtn && typeof discardBtn.focus === 'function') {
+      window.setTimeout(function () {
+        try { discardBtn.focus(); } catch (e) { /* ignore */ }
+      }, 0);
+    }
+    return true;
+  }
+
+  function hideDiscardPrompt() {
+    var prompt = getDiscardPrompt();
+    if (!prompt) return;
+    prompt.classList.add('hidden');
+    prompt.hidden = true;
+    prompt.setAttribute('aria-hidden', 'true');
+  }
+
+  function requestClose() {
+    if (hasUnsavedChanges()) {
+      if (showDiscardPrompt()) return;
+      if (!window.confirm('Lose unsaved changes? Closing discards what you have not saved.')) return;
+    }
+    close();
   }
 
   function setSaveBusy(on, message) {
@@ -328,14 +376,101 @@
     }
   }
 
+  function snapshotTargetFor(menuRoot) {
+    if (!menuRoot) return null;
+    return (
+      menuRoot.closest('.dashboard-settings-location-card') ||
+      menuRoot.closest('.menu-item-card, .menu-header, article.ads-reels-slide') ||
+      menuRoot
+    );
+  }
+
+  function captureEditDomSnapshot(menuRoot) {
+    editDomSnapshot = null;
+    var target = snapshotTargetFor(menuRoot);
+    if (!target || !target.parentNode) return;
+    var isNew = !!(
+      menuRoot.hasAttribute('data-dashboard-edit-new-item') ||
+      menuRoot.hasAttribute('data-dashboard-edit-new-section') ||
+      menuRoot.hasAttribute('data-dashboard-edit-new-promotion') ||
+      target.querySelector(
+        '[data-dashboard-edit-new-item], [data-dashboard-edit-new-section], [data-dashboard-edit-new-promotion]'
+      )
+    );
+    editDomSnapshot = {
+      el: target,
+      html: target.outerHTML,
+      isNew: isNew,
+    };
+  }
+
+  function clearEditDomSnapshot() {
+    editDomSnapshot = null;
+  }
+
+  function restoreEditDomSnapshot() {
+    var snap = editDomSnapshot;
+    editDomSnapshot = null;
+    if (!snap || !snap.el) return;
+    if (snap.isNew) {
+      if (snap.el.parentNode) snap.el.parentNode.removeChild(snap.el);
+      return;
+    }
+    if (!snap.el.parentNode || snap.html == null) return;
+    try {
+      var wrap = document.createElement('div');
+      wrap.innerHTML = snap.html;
+      var restored = wrap.firstElementChild;
+      if (!restored) return;
+      snap.el.parentNode.replaceChild(restored, snap.el);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  function refreshCatalogUiAfterEdit() {
+    var list = document.getElementById('menuCatalogList');
+    if (!list) return;
+    var summary = document.getElementById('menuCatalogSummary');
+    var emptyEl = document.getElementById('menuCatalogEmpty');
+    var visible = list.querySelectorAll('.dashboard-settings-location-card:not(.hidden)');
+    var count = visible.length;
+    var noun = summary ? summary.getAttribute('data-noun') || 'item' : 'item';
+    if (emptyEl) emptyEl.classList.toggle('hidden', count > 0);
+    if (summary) {
+      var scope = '';
+      var match = String(summary.textContent || '').match(/\s+in\s+(.+)$/);
+      if (match) scope = ' in ' + match[1];
+      if (count === 0) summary.textContent = 'No ' + noun + 's' + scope;
+      else if (count === 1) summary.textContent = '1 ' + noun + scope;
+      else summary.textContent = count + ' ' + noun + 's' + scope;
+    }
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.applyIndicators === 'function') {
+      window.TTMSContentDrafts.applyIndicators(list);
+    }
+  }
+
+  function refreshDraftIndicatorsSoft() {
+    refreshCatalogUiAfterEdit();
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
+      window.TTMSContentDrafts.refresh();
+      return;
+    }
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.applyIndicators === 'function') {
+      window.TTMSContentDrafts.applyIndicators(document);
+    }
+  }
+
   function open(menuRoot) {
     if (!hasAdminSiteAccess()) return false;
     var modal = getModal();
     var frame = getFrame();
     if (!modal || !frame) return false;
 
+    hideDiscardPrompt();
     currentMenuRoot = menuRoot;
     currentContentPath = contentPathForMenuRoot(menuRoot);
+    captureEditDomSnapshot(menuRoot);
 
     storeFocusKeys(menuRoot);
     setModalTitle(menuRoot);
@@ -396,6 +531,7 @@
     var frame = getFrame();
     if (!modal) return;
 
+    hideDiscardPrompt();
     modal.classList.remove('is-open');
     modal.classList.add('is-closing');
     modal.setAttribute('aria-hidden', 'true');
@@ -420,10 +556,16 @@
     currentContentPath = '';
     syncModalDraftBadge();
 
-    if (opts.reload) {
-      if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
-        window.TTMSContentDrafts.refresh();
-      }
+    if (opts.discarded) {
+      // Undo live preview mutations / remove unsaved new cards without a full page reload.
+      restoreEditDomSnapshot();
+      window.setTimeout(refreshDraftIndicatorsSoft, prefersReduced ? 0 : 40);
+      return;
+    }
+
+    clearEditDomSnapshot();
+    if (opts.reload || opts.saved) {
+      window.setTimeout(refreshDraftIndicatorsSoft, prefersReduced ? 0 : 40);
     }
   }
 
@@ -443,16 +585,33 @@
       postToFrame({ type: 'ttms:embed-panel-click-delete' });
       return;
     }
+    if (e.target.closest('#menuItemEditDiscardConfirm')) {
+      e.preventDefault();
+      hideDiscardPrompt();
+      close();
+      return;
+    }
+    if (e.target.closest('[data-menu-item-edit-discard-cancel]')) {
+      e.preventDefault();
+      hideDiscardPrompt();
+      return;
+    }
     if (e.target.closest('[data-close-menu-item-edit-modal]')) {
       e.preventDefault();
-      close();
+      requestClose();
     }
   }
 
   function onDocumentKeydown(e) {
-    if (e.key === 'Escape' && getModal() && !getModal().hidden) {
-      close();
+    if (e.key !== 'Escape') return;
+    var modal = getModal();
+    if (!modal || modal.hidden) return;
+    var prompt = getDiscardPrompt();
+    if (prompt && !prompt.hidden) {
+      hideDiscardPrompt();
+      return;
     }
+    requestClose();
   }
 
   function onMessage(event) {
@@ -474,11 +633,18 @@
     if (data.saved && data.title && currentMenuRoot) {
       var card = currentMenuRoot.closest('.dashboard-settings-location-card');
       var titleEl = card && card.querySelector('.dashboard-settings-location-card-title');
-      if (titleEl && String(data.title).trim()) titleEl.textContent = String(data.title).trim();
+      var titleText = String(data.title).trim();
+      if (titleEl && titleText) titleEl.textContent = titleText;
+      var hiddenTitle = currentMenuRoot.querySelector('.menu-item-title');
+      if (hiddenTitle && titleText) hiddenTitle.textContent = titleText;
+      if (currentMenuRoot.classList && currentMenuRoot.classList.contains('menu-item-card')) {
+        var actions = currentMenuRoot.querySelector('.menu-item-actions');
+        if (actions && titleText) actions.setAttribute('data-item-title', titleText);
+      }
     }
     if (data.saved) showSavedNotice(data.title);
     setSaveBusy(false);
-    closeImmediately({ reload: data.reload });
+    closeImmediately({ reload: data.reload, saved: !!data.saved });
   }
 
   function onEmbedCloseRequest(event) {
@@ -492,7 +658,11 @@
       }
     }
     if (!data || data.type !== 'ttms:embed-panel-close-complete') return;
-    closeImmediately({ reload: data.reload });
+    closeImmediately({
+      reload: !!data.reload,
+      discarded: !!data.discarded,
+      saved: !!data.saved,
+    });
   }
 
   function onEmbedFormReady(event) {

@@ -150,20 +150,44 @@
     return false;
   }
 
-  function menuItemPromotionsFilled(host) {
+  function menuItemPromoRowHasData(row) {
+    if (!row) return false;
+    if (row.querySelector('.dashboard-availability-day[aria-pressed="true"]')) return true;
+    if (row.querySelector('.menu-item-promo-days') && !controlIsEmpty(row.querySelector('.menu-item-promo-days'))) return true;
+    if (row.querySelector('.menu-item-promo-label') && !controlIsEmpty(row.querySelector('.menu-item-promo-label'))) return true;
+    if (row.querySelector('.menu-item-promo-value') && !controlIsEmpty(row.querySelector('.menu-item-promo-value'))) return true;
+    if (row.querySelector('.menu-item-promo-image') && !controlIsEmpty(row.querySelector('.menu-item-promo-image'))) return true;
+    var typeEl = row.querySelector('.menu-item-promo-type');
+    var type = typeEl ? String(typeEl.value || '').trim() : '';
+    if (type === 'bogo' || type === 'buy_n_get_n') {
+      if (row.querySelector('.menu-item-promo-buy') && !controlIsEmpty(row.querySelector('.menu-item-promo-buy'))) return true;
+      if (row.querySelector('.menu-item-promo-get') && !controlIsEmpty(row.querySelector('.menu-item-promo-get'))) return true;
+    }
+    return false;
+  }
+
+  function menuItemPromotionsMissingImages(host) {
     var rows = host.querySelectorAll('.dashboard-menu-item-promo-row');
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
-      if (
-        (row.querySelector('.menu-item-promo-days') && !controlIsEmpty(row.querySelector('.menu-item-promo-days'))) ||
-        (row.querySelector('.menu-item-promo-label') && !controlIsEmpty(row.querySelector('.menu-item-promo-label'))) ||
-        (row.querySelector('.menu-item-promo-value') && !controlIsEmpty(row.querySelector('.menu-item-promo-value'))) ||
-        (row.querySelector('.menu-item-promo-image') && !controlIsEmpty(row.querySelector('.menu-item-promo-image')))
-      ) {
-        return true;
-      }
+      if (!menuItemPromoRowHasData(row)) continue;
+      var imageEl = row.querySelector('.menu-item-promo-image');
+      if (!imageEl || controlIsEmpty(imageEl)) return true;
     }
     return false;
+  }
+
+  function menuItemPromotionsFilled(host) {
+    var rows = host.querySelectorAll('.dashboard-menu-item-promo-row');
+    var any = false;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (!menuItemPromoRowHasData(row)) continue;
+      any = true;
+      var imageEl = row.querySelector('.menu-item-promo-image');
+      if (!imageEl || controlIsEmpty(imageEl)) return false;
+    }
+    return any;
   }
 
   function compositeFilled(host, kind) {
@@ -241,6 +265,9 @@
     }
     var composite = inferCompositeKind(host);
     if (composite) {
+      if (composite === 'menu-item-promotions' && menuItemPromotionsMissingImages(host)) {
+        return 'dashboard-edit-field--prompt-required';
+      }
       if (compositeFilled(host, composite)) return 'dashboard-edit-field--prompt-complete';
       return hostWantsRequiredWhenEmpty(host)
         ? 'dashboard-edit-field--prompt-required'
@@ -617,6 +644,9 @@
     }
     var composite = inferCompositeKind(host);
     if (composite) {
+      if (composite === 'menu-item-promotions') {
+        return menuItemPromotionsMissingImages(host);
+      }
       if (!hostWantsRequiredWhenEmpty(host)) return false;
       return !compositeFilled(host, composite);
     }

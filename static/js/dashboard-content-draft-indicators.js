@@ -139,12 +139,25 @@
     return headers;
   }
 
+  function previewPath(p) {
+    if (!p) return '';
+    var payload = p.payload || p.Payload || {};
+    return normDraftPath(
+      p.content_path ||
+        p.contentPath ||
+        p.ContentPath ||
+        payload.contentPath ||
+        payload.ContentPath ||
+        payload.content_path ||
+        ''
+    );
+  }
+
   function dedupePreviews(previews) {
     var best = {};
     if (!previews || !previews.length) return [];
     previews.forEach(function (p) {
-      var payload = p.payload || p.Payload || {};
-      var path = p.content_path || payload.contentPath || payload.content_path || '';
+      var path = previewPath(p);
       if (!path) return;
       var cur = best[path];
       var t = new Date(p.updated_at || p.UpdatedAt || 0).getTime();
@@ -273,6 +286,86 @@
     if (stored || path) editBtn.setAttribute('data-content-path', stored || path);
   }
 
+  function catalogSourceEl(card) {
+    if (!card) return null;
+    return (
+      card.querySelector('.menu-item-card[data-item-url]') ||
+      card.querySelector('.menu-header[data-section-slug], .menu-header[data-content-path]') ||
+      card.querySelector(
+        'article.ads-reels-slide[data-content-path], article.ads-reels-slide[data-ad-id], article.ads-reels-slide[data-ad-url]'
+      )
+    );
+  }
+
+  function ensureCatalogMeta(card) {
+    var meta = card.querySelector('.dashboard-settings-location-card-meta');
+    if (meta) return meta;
+    var main = card.querySelector('.dashboard-settings-location-card-main');
+    if (!main) return null;
+    meta = document.createElement('p');
+    meta.className = 'dashboard-settings-location-card-meta';
+    var title = main.querySelector('.dashboard-settings-location-card-title');
+    if (title && title.nextSibling) main.insertBefore(meta, title.nextSibling);
+    else main.insertBefore(meta, main.firstChild);
+    return meta;
+  }
+
+  function syncCatalogEditDraftState(editBtn, path, hasDraft, stored) {
+    if (!editBtn) return;
+    editBtn.classList.toggle('has-cms-draft', hasDraft);
+    var inline = editBtn.querySelector('.menu-content-draft-badge--inline');
+    if (!inline) {
+      var wrap = document.createElement('span');
+      wrap.innerHTML = badgeMarkup('menu-content-draft-badge--inline');
+      inline = wrap.firstChild;
+      editBtn.insertBefore(inline, editBtn.firstChild);
+    } else if (editBtn.firstChild !== inline) {
+      editBtn.insertBefore(inline, editBtn.firstChild);
+    }
+    inline.hidden = !hasDraft;
+    if (stored || path) editBtn.setAttribute('data-content-path', stored || path);
+    else editBtn.removeAttribute('data-content-path');
+  }
+
+  function ensureCatalogCardDraft(card) {
+    if (!card || !card.classList || !card.classList.contains('dashboard-settings-location-card')) return;
+    var source = catalogSourceEl(card);
+    var path = source ? contentPathForElement(source) : null;
+    if (path && isThemePath(path)) path = null;
+    var stored = path ? resolveDraftPath(path) : '';
+    var hasDraft = !!stored;
+
+    card.classList.toggle('has-cms-draft', hasDraft);
+    if (path) card.setAttribute('data-content-path', stored || path);
+    else card.removeAttribute('data-content-path');
+
+    var flag = card.querySelector('.dashboard-menu-catalog-draft');
+    if (!hasDraft) {
+      if (flag) flag.remove();
+    } else {
+      var meta = ensureCatalogMeta(card);
+      if (meta) {
+        if (!flag) {
+          flag = document.createElement('span');
+          flag.className = 'dashboard-menu-catalog-draft';
+          flag.innerHTML =
+            '<i class="fa fa-exclamation-circle" aria-hidden="true"></i> Modified';
+          meta.appendChild(flag);
+        }
+        flag.title = 'Unpublished CMS draft: publish from dashboard';
+        flag.setAttribute('aria-label', 'Unpublished CMS draft');
+        flag.setAttribute('data-content-path', stored || path);
+      }
+    }
+
+    syncCatalogEditDraftState(
+      card.querySelector('.btn-menu-catalog-edit'),
+      path,
+      hasDraft,
+      stored
+    );
+  }
+
   function applyIndicators(root) {
     if (!hasAdminSiteAccess()) return;
     var scope = root || document;
@@ -301,14 +394,21 @@
       var actions = slide.querySelector('[data-menu-item-actions]');
       if (actions) syncActionsMenuDraftState(actions, path);
     });
+
+    var catalogRoot =
+      (scope.id === 'menuCatalogList' && scope) ||
+      (scope.querySelector && scope.querySelector('#menuCatalogList')) ||
+      (scope === document ? document.getElementById('menuCatalogList') : null);
+    if (catalogRoot) {
+      catalogRoot.querySelectorAll('.dashboard-settings-location-card').forEach(ensureCatalogCardDraft);
+    }
   }
 
   function ingestPreviews(list) {
     draftPaths = new Set();
     previewsByPath = {};
     list.forEach(function (p) {
-      var payload = p.payload || p.Payload || {};
-      var path = normDraftPath(p.content_path || payload.contentPath || payload.content_path || '');
+      var path = previewPath(p);
       if (!path || isThemePath(path)) return;
       draftPaths.add(path);
       previewsByPath[path] = p;

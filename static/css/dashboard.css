@@ -8278,8 +8278,7 @@ body.menu-item-edit-modal-open {
 .dashboard-edit-field .dashboard-btn-secondary#btnAddCookingmethod,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddType,
 .dashboard-edit-field .dashboard-btn-secondary#btnAddEvent,
-.dashboard-edit-field .dashboard-btn-secondary#btnAddMenuItemPromotion,
-.dashboard-edit-field .dashboard-btn-secondary#btnAddPromoDay {
+.dashboard-edit-field .dashboard-btn-secondary#btnAddMenuItemPromotion {
   margin-top: 0.5rem;
   font-size: 0.85rem;
   padding: 0.4rem 0.75rem;
@@ -8297,8 +8296,7 @@ body.menu-item-edit-modal-open {
 .dashboard-edit-field .dashboard-btn-secondary#btnAddEvent:hover,
 .dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-cat:hover,
 .dashboard-edit-field .dashboard-btn-secondary.dashboard-btn-add-item:hover,
-.dashboard-edit-field .dashboard-btn-secondary#btnAddMenuItemPromotion:hover,
-.dashboard-edit-field .dashboard-btn-secondary#btnAddPromoDay:hover {
+.dashboard-edit-field .dashboard-btn-secondary#btnAddMenuItemPromotion:hover {
   background: color-mix(in srgb, var(--dash-ink) 12%, transparent);
   border-color: color-mix(in srgb, var(--dash-ink) 50%, transparent);
 }
@@ -8473,6 +8471,37 @@ body.menu-item-edit-modal-open {
 }
 .dashboard-menu-item-promo-field-span {
   grid-column: 1 / -1;
+}
+.dashboard-promo-days-field .dashboard-availability-days {
+  margin-top: 0.35rem;
+}
+.dashboard-promo-days-field .dashboard-availability-day-presets {
+  margin-top: 0.45rem;
+}
+.dashboard-promo-days-field > .dashboard-edit-field-note {
+  margin: 0.15rem 0 0;
+}
+.dashboard-promo-type-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--dash-ink) 68%, transparent);
+}
+.dashboard-promo-value-wrap.is-hidden,
+.dashboard-promo-deal.is-hidden {
+  display: none;
+}
+.dashboard-promo-deal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.75rem;
+}
+.dashboard-promo-deal-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 @media (max-width: 520px) {
   .dashboard-menu-item-promo-grid {
@@ -8742,10 +8771,54 @@ body.menu-item-edit-modal-open {
 }
 
 .dashboard-menu-item-image-thumb {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
+}
+
+.dashboard-menu-item-promo-image-path-row.dashboard-menu-item-image-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "thumb"
+    "meta";
+  align-items: stretch;
+  gap: 0.45rem;
+  width: -webkit-fill-available;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-menu-item-promo-image-path-row .dashboard-menu-item-image-thumb-wrap {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: 7.5rem;
+}
+
+.dashboard-menu-item-promo-image-path-row .dashboard-menu-item-image-thumb {
+  object-fit: contain;
+}
+
+.dashboard-menu-item-promo-image-path-row .dashboard-menu-item-image-path-col,
+.dashboard-menu-item-promo-image-path-row .dashboard-menu-item-image-path-actions {
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-menu-item-promo-image-path-row .dashboard-menu-item-image-path-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.dashboard-menu-item-promo-image-path-row .dashboard-menu-item-image-path-actions .dashboard-btn {
+  width: 100%;
+  min-width: 0;
 }
 
 .dashboard-menu-item-image-path-col {
@@ -12920,6 +12993,18 @@ button.dashboard-settings-panel-toggle:focus-visible {
   align-items: flex-start;
 }
 
+#menuCatalogList .dashboard-settings-location-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+}
+
+#menuCatalogList .dashboard-settings-location-card-title {
+  display: block;
+  width: 100%;
+}
+
 #menuCatalogList .dashboard-catalog-drag,
 #menuCatalogList .dashboard-settings-location-card-actions {
   margin-top: 0.15rem;
@@ -12929,7 +13014,8 @@ button.dashboard-settings-panel-toggle:focus-visible {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  margin-top: 0.45rem;
+  margin-top: 0.2rem;
+  width: 100%;
 }
 
 .dashboard-menu-catalog-images {
@@ -12963,23 +13049,29 @@ button.dashboard-settings-panel-toggle:focus-visible {
 
 .dashboard-menu-catalog-prices {
   list-style: none;
-  margin: 0.4rem 0 0;
+  margin: 0.28rem 0 0;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.22rem;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
 }
 
 .dashboard-menu-catalog-description + .dashboard-menu-catalog-prices {
-  margin-top: 0.4rem;
+  margin-top: 0.35rem;
 }
 
 .dashboard-menu-catalog-prices li {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem 0.75rem;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  width: auto;
+  margin: 0;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-info) 16%, transparent);
   font-size: 0.78rem;
   line-height: 1.35;
 }
@@ -12988,25 +13080,39 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: color-mix(in srgb, var(--dash-info) 92%, transparent);
 }
 
+.dashboard-menu-catalog-price-label::after {
+  content: "·";
+  margin-left: 0.35rem;
+  color: color-mix(in srgb, var(--dash-ink) 45%, transparent);
+}
+
 .dashboard-menu-catalog-price-value {
-  margin-left: auto;
+  margin: 0;
   font-weight: 650;
   color: var(--dash-ink);
+  white-space: nowrap;
 }
 
 .dashboard-menu-catalog-facts {
-  margin: 0.45rem 0 0;
+  margin: 0.3rem 0 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.28rem;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
 }
 
 .dashboard-menu-catalog-fact {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.45rem;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  width: auto;
+  margin: 0;
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dash-ink) 7%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .dashboard-menu-catalog-fact dt {

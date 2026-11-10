@@ -11,7 +11,8 @@
 </div>
 {{ partial "modals/menu_item_edit_modal.html" . }}
 <link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/menu-item-edit-modal.css" }}">
-<script src="/js/dashboard-content-draft-indicators.js" defer></script>
+<link rel="stylesheet" href="{{ partial "head/asset-url.html" "/css/dashboard-content-draft-indicators.css" }}">
+<script src="{{ partial "head/asset-url.html" "/js/dashboard-content-draft-indicators.js" }}" defer></script>
 <script src="/js/menu-item-edit-modal.js" defer></script>
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-menu-catalog.js" }}" defer></script>
 <script>
@@ -23,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     return;
   }
   initMenuCatalog();
+  if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
+    window.TTMSContentDrafts.refresh();
+  }
 });
 </script>
 {{ end }}

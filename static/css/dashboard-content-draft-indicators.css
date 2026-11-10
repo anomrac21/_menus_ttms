@@ -9,6 +9,7 @@
   height: 1.35rem;
   border-radius: 999px;
   color: #fff;
+  background: var(--primary-yellow, #e5ad36);
   vertical-align: middle;
   line-height: 1;
 }
@@ -90,4 +91,46 @@
   gap: 0.45rem;
   min-width: 0;
   flex: 1 1 auto;
+}
+
+.dashboard-menu-catalog-draft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  color: var(--dash-accent, #cd2e57);
+  background: color-mix(in srgb, var(--primary-yellow, #e5ad36) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary-yellow, #e5ad36) 48%, transparent);
+}
+
+.dashboard-menu-catalog-draft .fa {
+  font-size: 0.7rem;
+  color: var(--primary-yellow-dark, #d19b2e);
+}
+
+#menuCatalogList .dashboard-settings-location-card.has-cms-draft {
+  border-color: color-mix(in srgb, var(--primary-yellow, #e5ad36) 55%, transparent);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--primary-yellow, #e5ad36) 78%, transparent);
+}
+
+#menuCatalogList .dashboard-settings-location-card.has-cms-draft.is-order-changed {
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--primary-yellow, #e5ad36) 78%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--dash-warning, #e5ad36) 28%, transparent);
+}
+
+.btn-menu-catalog-edit .menu-content-draft-badge--inline {
+  display: none;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.35rem;
+}
+
+.btn-menu-catalog-edit.has-cms-draft .menu-content-draft-badge--inline {
+  display: inline-flex;
 }

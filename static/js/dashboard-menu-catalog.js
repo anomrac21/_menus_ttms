@@ -337,6 +337,22 @@ function initMenuCatalog() {
     }
   } catch (err) { /* ignore */ }
 
+  function refreshCatalogDraftIndicators() {
+    if (!window.TTMSContentDrafts || typeof window.TTMSContentDrafts.applyIndicators !== 'function') return;
+    window.TTMSContentDrafts.applyIndicators(list);
+  }
+
+  function refreshCatalogDrafts() {
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
+      window.TTMSContentDrafts.refresh().finally(refreshCatalogDraftIndicators);
+      return;
+    }
+    refreshCatalogDraftIndicators();
+  }
+
+  window.addEventListener('ttms:content-drafts-ready', refreshCatalogDraftIndicators);
+  refreshCatalogDrafts();
+
   enableSectionReorder();
 
   function sectionSlugOf(card) {
@@ -822,6 +838,7 @@ function initMenuCatalog() {
       }).then(function () {
         reorderPhase = 'idle';
         markChangedFromLive(true);
+        refreshCatalogDrafts();
       }).catch(function (err) {
         console.error(err);
         reorderPhase = 'idle';

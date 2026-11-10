@@ -27,8 +27,8 @@
         </button>
       </div>
       <div class="menu-item-edit-modal__actions">
-      <button
-        type="button"
+        <button
+          type="button"
           class="menu-item-edit-modal__icon-btn menu-item-edit-modal__delete"
           id="menuItemEditModalDelete"
           aria-label="Mark for deletion"
@@ -51,11 +51,12 @@
         <button
           type="button"
           class="menu-item-edit-modal__icon-btn menu-item-edit-modal__close"
-        data-close-menu-item-edit-modal
-        aria-label="Close editor"
-      >
-        <i class="fa fa-times" aria-hidden="true"></i>
-      </button>
+          data-close-menu-item-edit-modal
+          aria-label="Close without saving"
+          title="Close without saving"
+        >
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </button>
       </div>
     </header>
     <div class="menu-item-edit-modal__body">
@@ -79,6 +80,25 @@
         src="about:blank"
         loading="lazy"
       ></iframe>
+    </div>
+    <div
+      id="menuItemEditDiscardPrompt"
+      class="menu-item-edit-discard-prompt hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="menuItemEditDiscardPromptTitle"
+      aria-hidden="true"
+      hidden
+    >
+      <div class="menu-item-edit-discard-prompt__backdrop" data-menu-item-edit-discard-cancel tabindex="-1" aria-hidden="true"></div>
+      <div class="menu-item-edit-discard-prompt__dialog">
+        <h3 id="menuItemEditDiscardPromptTitle" class="menu-item-edit-discard-prompt__title">Lose unsaved changes?</h3>
+        <p class="menu-item-edit-discard-prompt__text">Closing discards what you have not saved. Press Save first if you want to keep these edits.</p>
+        <div class="menu-item-edit-discard-prompt__actions">
+          <button type="button" class="menu-item-edit-discard-prompt__btn menu-item-edit-discard-prompt__btn--keep" data-menu-item-edit-discard-cancel>Keep editing</button>
+          <button type="button" class="menu-item-edit-discard-prompt__btn menu-item-edit-discard-prompt__btn--discard" id="menuItemEditDiscardConfirm">Discard</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

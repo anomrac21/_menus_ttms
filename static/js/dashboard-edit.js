@@ -372,6 +372,24 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   function saveEmbedPanelSnapshot() {
     if (_embedSaveInFlight) return _embedSaveInFlight;
+    var FP = window.DashboardEditFieldPrompts;
+    if (FP && typeof FP.validateVisibleForm === 'function') {
+      var formCheck = FP.validateVisibleForm();
+      if (!formCheck.ok) {
+        setEditStatus(formCheck.message || 'Fill in required fields before saving.');
+        if (FP.focusFieldHost && formCheck.firstHost) FP.focusFieldHost(formCheck.firstHost);
+        return Promise.resolve(false);
+      }
+    }
+    var promoImgCheck = validatePromotionImagesForSave();
+    if (!promoImgCheck.ok) {
+      setEditStatus(promoImgCheck.message || 'Add a promotion image before saving.');
+      if (FP && FP.focusFieldHost && promoImgCheck.host) FP.focusFieldHost(promoImgCheck.host);
+      else if (promoImgCheck.host && typeof promoImgCheck.host.scrollIntoView === 'function') {
+        try { promoImgCheck.host.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* ignore */ }
+      }
+      return Promise.resolve(false);
+    }
     var step = 'start';
     var savedTitle = '';
     setEditStatus('Saving…');
@@ -626,9 +644,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   var btnAddPromoImageFile = document.getElementById('btnAddPromoImageFile');
   var promoImagesUploadStatusEl = document.getElementById('dashboardPromoImagesUploadStatus');
   var inputPromoRecurring = document.getElementById('dashboardEditPromoRecurring');
-  var promoDaysofweekContainer = document.getElementById('dashboardEditPromoDaysofweekContainer');
+  var promoDaysRoot = document.getElementById('dashboardEditPromoDays');
+  var promoDaysPresets = document.getElementById('dashboardEditPromoDaysPresets');
   var inputPromoWeight = document.getElementById('dashboardEditPromoWeight');
-  var btnAddPromoDay = document.getElementById('btnAddPromoDay');
   var slideshowViewEl = document.getElementById('dashboardEditSlideshowView');
   var inputSlideshowImages = document.getElementById('dashboardEditSlideshowImages');
   var slideshowImagesContainer = document.getElementById('dashboardEditSlideshowImagesContainer');
@@ -1481,7 +1499,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var link = inputPromoLink ? (inputPromoLink.value || '').trim() : '';
     var imagesArr = promoImagesContainer ? gatherPromoImagePathsFromRows() : (inputPromoImages ? hoursParseStringList(inputPromoImages.value) : []);
     var recurring = !!(inputPromoRecurring && inputPromoRecurring.checked);
-    var daysArr = promoDaysofweekContainer ? getStringListFromUI(promoDaysofweekContainer) : [];
+    var daysArr = getPromoOfferDaysFromUi();
     var weightVal = inputPromoWeight ? inputPromoWeight.value.trim() : '';
     var weightNum = weightVal ? parseInt(weightVal, 10) : 0;
     if (isNaN(weightNum)) weightNum = 0;
@@ -5162,7 +5180,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (inputPromoImages) inputPromoImages.value = '';
     if (promoImagesContainer) renderPromoImagesUI([], true);
     if (inputPromoRecurring) inputPromoRecurring.checked = false;
-    if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, []);
+    setPromoOfferDaysUi([]);
     if (inputPromoWeight) inputPromoWeight.value = '';
     setMenuItemWizardStep(0);
     setPromotionWizardStep(0);
@@ -5272,6 +5290,63 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   bindAvailabilityDaysUi();
+
+  function getPromoOfferDaysFromUi() {
+    if (!promoDaysRoot) return [];
+    return Array.prototype.map.call(
+      promoDaysRoot.querySelectorAll('.dashboard-availability-day[aria-pressed="true"]'),
+      function(btn) { return btn.getAttribute('data-day'); }
+    ).filter(Boolean);
+  }
+
+  function setPromoOfferDaysUi(days, opts) {
+    opts = opts || {};
+    if (!promoDaysRoot) return;
+    var selected = {};
+    (Array.isArray(days) ? days : []).forEach(function(d) {
+      var n = normalizeAvailabilityDay(d);
+      if (n) selected[n] = true;
+    });
+    Array.prototype.forEach.call(promoDaysRoot.querySelectorAll('.dashboard-availability-day'), function(btn) {
+      var on = !!selected[btn.getAttribute('data-day')];
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.classList.toggle('is-on', on);
+    });
+    if (opts.markDirty) {
+      editFormDirty = true;
+      setEditStatus('Unsaved changes (not yet published)');
+    }
+  }
+
+  function bindPromoOfferDaysUi() {
+    if (promoDaysRoot && !promoDaysRoot.getAttribute('data-bound')) {
+      promoDaysRoot.setAttribute('data-bound', '1');
+      promoDaysRoot.addEventListener('click', function(e) {
+        var btn = e.target.closest('.dashboard-availability-day');
+        if (!btn || !promoDaysRoot.contains(btn)) return;
+        var on = btn.getAttribute('aria-pressed') === 'true';
+        btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+        btn.classList.toggle('is-on', !on);
+        setPromoOfferDaysUi(getPromoOfferDaysFromUi(), { markDirty: true });
+      });
+    }
+    if (promoDaysPresets && !promoDaysPresets.getAttribute('data-bound')) {
+      promoDaysPresets.setAttribute('data-bound', '1');
+      promoDaysPresets.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-promo-offer-day-preset]');
+        if (!btn || !promoDaysPresets.contains(btn)) return;
+        var kind = btn.getAttribute('data-promo-offer-day-preset');
+        var next = [];
+        if (kind === 'weekdays') next = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        else if (kind === 'weekend') next = ['Saturday', 'Sunday'];
+        else if (kind === 'all') next = AVAILABILITY_DAY_ORDER.slice();
+        // "Any day" / none → empty list (shows every day)
+        setPromoOfferDaysUi(next, { markDirty: true });
+      });
+    }
+  }
+
+  bindPromoOfferDaysUi();
 
   function getMenuItemAvailabilityFromState() {
     var days = getAvailabilityDaysFromUi();
@@ -5470,6 +5545,41 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     return out;
   }
+  function promoDealBox(labelText, className, value) {
+    var box = document.createElement('label');
+    box.className = 'dashboard-promo-deal-box';
+    var cap = document.createElement('span');
+    cap.textContent = labelText;
+    var input = document.createElement('input');
+    input.type = 'number';
+    input.min = '1';
+    input.step = '1';
+    input.className = 'dashboard-edit-input ' + className;
+    input.value = String(value);
+    box.appendChild(cap);
+    box.appendChild(input);
+    return box;
+  }
+  function promoDealCounts(promo) {
+    promo = promo || {};
+    var buy = parseInt(promo.buy, 10);
+    var get = parseInt(promo.get, 10);
+    if (!(buy > 0) || !(get > 0)) {
+      var label = String(promo.label || '');
+      var freeWith = label.match(/(\d+)\s*free\s*with\s*(\d+)/i);
+      var buyGet = label.match(/buy\s*(\d+)\s*,?\s*get\s*(\d+)/i);
+      if (freeWith) {
+        get = parseInt(freeWith[1], 10);
+        buy = parseInt(freeWith[2], 10);
+      } else if (buyGet) {
+        buy = parseInt(buyGet[1], 10);
+        get = parseInt(buyGet[2], 10);
+      }
+    }
+    if (!(buy > 0)) buy = 1;
+    if (!(get > 0)) get = 1;
+    return { buy: buy, get: get };
+  }
   function createMenuItemPromotionRow(promo) {
     promo = promo || {};
     var daysArr = promo.days;
@@ -5505,22 +5615,103 @@ document.addEventListener('DOMContentLoaded', async function() {
       wrap.appendChild(lbl);
       wrap.appendChild(node);
       grid.appendChild(wrap);
+      return wrap;
     }
+    var daysField = document.createElement('div');
+    daysField.className = 'dashboard-promo-days-field';
+    var daysGroup = document.createElement('div');
+    daysGroup.className = 'dashboard-availability-days dashboard-promo-days';
+    daysGroup.setAttribute('role', 'group');
+    daysGroup.setAttribute('aria-label', 'Days');
+    var dayShort = { Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun' };
+    AVAILABILITY_DAY_ORDER.forEach(function(day) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dashboard-availability-day';
+      btn.setAttribute('data-day', day);
+      btn.setAttribute('aria-pressed', 'false');
+      btn.textContent = dayShort[day];
+      daysGroup.appendChild(btn);
+    });
+    var daysPresets = document.createElement('div');
+    daysPresets.className = 'dashboard-availability-day-presets';
+    daysPresets.setAttribute('role', 'group');
+    daysPresets.setAttribute('aria-label', 'Day presets');
+    [['weekdays', 'Weekdays'], ['weekend', 'Weekend'], ['all', 'All'], ['none', 'Any day']].forEach(function(pair) {
+      var preset = document.createElement('button');
+      preset.type = 'button';
+      preset.className = 'dashboard-availability-preset';
+      preset.setAttribute('data-promo-day-preset', pair[0]);
+      preset.textContent = pair[1];
+      daysPresets.appendChild(preset);
+    });
     var inpDays = document.createElement('input');
-    inpDays.type = 'text';
-    inpDays.className = 'dashboard-edit-input menu-item-promo-days';
-    inpDays.placeholder = 'Friday, Saturday, Sunday';
-    inpDays.value = daysStr;
-    addField('Days (comma-separated)', inpDays, true);
+    inpDays.type = 'hidden';
+    inpDays.className = 'menu-item-promo-days';
+    function selectedPromoDays() {
+      return AVAILABILITY_DAY_ORDER.filter(function(day) {
+        var btn = daysGroup.querySelector('.dashboard-availability-day[data-day="' + day + '"]');
+        return btn && btn.getAttribute('aria-pressed') === 'true';
+      });
+    }
+    function paintPromoDays(days) {
+      var selected = {};
+      (Array.isArray(days) ? days : String(days || '').split(',')).forEach(function(d) {
+        var n = normalizeAvailabilityDay(d);
+        if (n) selected[n] = true;
+      });
+      Array.prototype.forEach.call(daysGroup.querySelectorAll('.dashboard-availability-day'), function(btn) {
+        var on = !!selected[btn.getAttribute('data-day')];
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.classList.toggle('is-on', on);
+      });
+      inpDays.value = AVAILABILITY_DAY_ORDER.filter(function(d) { return selected[d]; }).join(', ');
+    }
+    function markPromoDaysDirty() {
+      inpDays.value = selectedPromoDays().join(', ');
+      inpDays.dispatchEvent(new Event('input', { bubbles: true }));
+      inpDays.dispatchEvent(new Event('change', { bubbles: true }));
+      editFormDirty = true;
+      setEditStatus('Unsaved changes (not yet published)');
+    }
+    daysGroup.addEventListener('click', function(e) {
+      var btn = e.target.closest('.dashboard-availability-day');
+      if (!btn || !daysGroup.contains(btn)) return;
+      var on = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+      btn.classList.toggle('is-on', !on);
+      markPromoDaysDirty();
+    });
+    daysPresets.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-promo-day-preset]');
+      if (!btn || !daysPresets.contains(btn)) return;
+      var kind = btn.getAttribute('data-promo-day-preset');
+      var next = [];
+      if (kind === 'weekdays') next = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      else if (kind === 'weekend') next = ['Saturday', 'Sunday'];
+      else if (kind === 'all') next = AVAILABILITY_DAY_ORDER.slice();
+      paintPromoDays(next);
+      markPromoDaysDirty();
+    });
+    paintPromoDays(Array.isArray(daysArr) ? daysArr : daysStr);
+    daysField.appendChild(daysGroup);
+    daysField.appendChild(daysPresets);
+    daysField.appendChild(inpDays);
+    addField('Days', daysField, true);
+    if (typeVal === 'buy_n_get_n') typeVal = 'bogo';
     var selType = document.createElement('select');
     selType.className = 'dashboard-edit-input menu-item-promo-type';
-    var TYPES = ['percent_off', 'amount_off'];
+    var TYPES = [
+      { value: 'percent_off', label: 'Percent off' },
+      { value: 'amount_off', label: 'Amount off' },
+      { value: 'bogo', label: 'Buy N, get N free' }
+    ];
     var found = false;
     TYPES.forEach(function(t) {
       var opt = document.createElement('option');
-      opt.value = t;
-      opt.textContent = t;
-      if (t === typeVal) { opt.selected = true; found = true; }
+      opt.value = t.value;
+      opt.textContent = t.label;
+      if (t.value === typeVal) { opt.selected = true; found = true; }
       selType.appendChild(opt);
     });
     if (!found && typeVal) {
@@ -5530,14 +5721,44 @@ document.addEventListener('DOMContentLoaded', async function() {
       optExtra.selected = true;
       selType.appendChild(optExtra);
     }
-    addField('Type', selType, false);
+    var typeWrap = addField('Type', selType, false);
+    var typeHint = document.createElement('p');
+    typeHint.className = 'dashboard-promo-type-hint';
+    typeWrap.appendChild(typeHint);
     var inpVal = document.createElement('input');
     inpVal.type = 'number';
     inpVal.className = 'dashboard-edit-input menu-item-promo-value';
     inpVal.step = 'any';
     inpVal.min = '0';
     inpVal.value = valNum !== 0 ? String(valNum) : '';
-    addField('Value', inpVal, false);
+    var valueWrap = addField('Percent', inpVal, false);
+    valueWrap.classList.add('dashboard-promo-value-wrap');
+    var valueLabel = valueWrap.querySelector('label');
+    var deal = promoDealCounts(promo);
+    var dealWrap = document.createElement('div');
+    dealWrap.className = 'dashboard-promo-deal dashboard-menu-item-promo-field-span';
+    dealWrap.appendChild(promoDealBox('Buy', 'menu-item-promo-buy', deal.buy));
+    dealWrap.appendChild(promoDealBox('Get free', 'menu-item-promo-get', deal.get));
+    grid.appendChild(dealWrap);
+    function syncPromoTypeFields() {
+      var kind = selType.value;
+      var isBogo = kind === 'bogo' || kind === 'buy_n_get_n';
+      valueWrap.classList.toggle('is-hidden', isBogo);
+      dealWrap.classList.toggle('is-hidden', !isBogo);
+      if (kind === 'amount_off') {
+        valueLabel.textContent = 'Amount off';
+        inpVal.placeholder = '20';
+        typeHint.textContent = 'Subtracts this amount from each item. A $80 item with 20 off is $60.';
+      } else if (isBogo) {
+        typeHint.textContent = 'The customer pays for Buy items and receives Get free. Buy 1, get 1 is two for the price of one. Buy 10, get 5 is fifteen for the price of ten.';
+      } else {
+        valueLabel.textContent = 'Percent';
+        inpVal.placeholder = '10';
+        typeHint.textContent = 'Takes this percent off the item price. 10 on a $80 item makes it $72.';
+      }
+    }
+    selType.addEventListener('change', syncPromoTypeFields);
+    syncPromoTypeFields();
     var inpLab = document.createElement('input');
     inpLab.type = 'text';
     inpLab.className = 'dashboard-edit-input menu-item-promo-label';
@@ -5624,7 +5845,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     promoImgRow.appendChild(promoThumbWrap);
     promoImgRow.appendChild(promoPathCol);
     updatePromoItemThumb();
-    addField('Image', promoImgRow, true);
+    var imageFieldWrap = addField('Image', promoImgRow, true);
+    if (imageFieldWrap) {
+      imageFieldWrap.setAttribute('data-dashboard-promo-image-required', 'true');
+      var imageLbl = imageFieldWrap.querySelector('label');
+      if (imageLbl && imageLbl.innerHTML.indexOf('dashboard-edit-required') === -1) {
+        imageLbl.innerHTML = 'Image <span class="dashboard-edit-required" aria-hidden="true">*</span>';
+      }
+    }
     row.appendChild(head);
     row.appendChild(grid);
     return row;
@@ -5637,6 +5865,41 @@ document.addEventListener('DOMContentLoaded', async function() {
       container.appendChild(createMenuItemPromotionRow(p));
     });
   }
+  function menuItemPromoRowHasData(row) {
+    if (!row) return false;
+    var daysGroup = row.querySelector('.dashboard-promo-days');
+    if (daysGroup && daysGroup.querySelector('.dashboard-availability-day[aria-pressed="true"]')) return true;
+    var daysEl = row.querySelector('.menu-item-promo-days');
+    if (daysEl && String(daysEl.value || '').trim()) return true;
+    var labelEl = row.querySelector('.menu-item-promo-label');
+    if (labelEl && String(labelEl.value || '').trim()) return true;
+    var valueEl = row.querySelector('.menu-item-promo-value');
+    if (valueEl && String(valueEl.value || '').trim()) return true;
+    var imageEl = row.querySelector('.menu-item-promo-image');
+    if (imageEl && String(imageEl.value || '').trim()) return true;
+    var typeEl = row.querySelector('.menu-item-promo-type');
+    var type = typeEl ? (typeEl.value || '').trim() : '';
+    if (type === 'bogo' || type === 'buy_n_get_n') {
+      var buyEl = row.querySelector('.menu-item-promo-buy');
+      var getEl = row.querySelector('.menu-item-promo-get');
+      if ((buyEl && String(buyEl.value || '').trim()) || (getEl && String(getEl.value || '').trim())) return true;
+    }
+    return false;
+  }
+
+  function validateMenuItemPromotionImages(container) {
+    var root = container || menuItemPromotionsContainer;
+    if (!root) return { ok: true, message: '' };
+    var missing = false;
+    root.querySelectorAll('.dashboard-menu-item-promo-row').forEach(function(row) {
+      if (!menuItemPromoRowHasData(row)) return;
+      var imageEl = row.querySelector('.menu-item-promo-image');
+      if (!imageEl || !String(imageEl.value || '').trim()) missing = true;
+    });
+    if (!missing) return { ok: true, message: '' };
+    return { ok: false, message: 'Each item promotion needs an image.' };
+  }
+
   function getMenuItemPromotionsFromUI(container) {
     if (!container) return [];
     var out = [];
@@ -5646,17 +5909,65 @@ document.addEventListener('DOMContentLoaded', async function() {
       var valueEl = row.querySelector('.menu-item-promo-value');
       var labelEl = row.querySelector('.menu-item-promo-label');
       var imageEl = row.querySelector('.menu-item-promo-image');
-      var daysStr = daysEl ? (daysEl.value || '').trim() : '';
-      var days = daysStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      var daysGroup = row.querySelector('.dashboard-promo-days');
+      var days = [];
+      if (daysGroup) {
+        days = AVAILABILITY_DAY_ORDER.filter(function(day) {
+          var btn = daysGroup.querySelector('.dashboard-availability-day[data-day="' + day + '"]');
+          return btn && btn.getAttribute('aria-pressed') === 'true';
+        });
+      } else {
+        var daysStr = daysEl ? (daysEl.value || '').trim() : '';
+        days = daysStr.split(',').map(function(s) { return normalizeAvailabilityDay(s); }).filter(Boolean);
+      }
       var label = labelEl ? (labelEl.value || '').trim() : '';
       var image = imageEl ? (imageEl.value || '').trim() : '';
       var type = typeEl ? (typeEl.value || 'percent_off').trim() : 'percent_off';
       var vRaw = valueEl ? (valueEl.value || '').trim() : '';
       var valueNum = vRaw !== '' && !isNaN(parseFloat(vRaw)) ? parseFloat(vRaw) : 0;
-      if (!days.length && !label && !image && vRaw === '') return;
-      out.push({ days: days, type: type, value: valueNum, label: label, image: image });
+      var isBogo = type === 'bogo' || type === 'buy_n_get_n';
+      if (!days.length && !label && !image && vRaw === '' && !isBogo) return;
+      if (!days.length && !label && !image && isBogo) return;
+      var entry = { days: days, type: type, value: valueNum, label: label, image: image };
+      if (isBogo) {
+        var buyEl = row.querySelector('.menu-item-promo-buy');
+        var getEl = row.querySelector('.menu-item-promo-get');
+        var buy = parseInt(buyEl && buyEl.value, 10);
+        var getN = parseInt(getEl && getEl.value, 10);
+        entry.type = 'bogo';
+        entry.buy = buy > 0 ? buy : 1;
+        entry.get = getN > 0 ? getN : 1;
+        entry.value = 0;
+      }
+      out.push(entry);
     });
     return out;
+  }
+
+  function validatePromotionImagesForSave() {
+    var type = selectedInfo && selectedInfo.contentType;
+    if (type === 'promotion') {
+      var imagesArr = promoImagesContainer
+        ? gatherPromoImagePathsFromRows()
+        : (inputPromoImages ? hoursParseStringList(inputPromoImages.value) : []);
+      if (!imagesArr.length) {
+        return { ok: false, message: 'Add at least one promotion image before saving.', host: document.querySelector('[data-dashboard-composite="promo-images"]') };
+      }
+      return { ok: true, message: '', host: null };
+    }
+    if (type === 'menu-item') {
+      var itemPromoCheck = validateMenuItemPromotionImages();
+      if (!itemPromoCheck.ok) {
+        return {
+          ok: false,
+          message: itemPromoCheck.message,
+          host: menuItemPromotionsContainer && menuItemPromotionsContainer.closest
+            ? menuItemPromotionsContainer.closest('.dashboard-edit-field')
+            : null
+        };
+      }
+    }
+    return { ok: true, message: '', host: null };
   }
   function hoursFormatSideCategories(cats) {
     if (!Array.isArray(cats) || cats.length === 0) return '';
@@ -8004,7 +8315,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var rawDays = el.getAttribute('data-ad-daysofweek');
         if (rawDays) daysArr = JSON.parse(rawDays);
       } catch (e) {}
-      if (promoDaysofweekContainer) renderStringListUI(promoDaysofweekContainer, Array.isArray(daysArr) ? daysArr : []);
+      setPromoOfferDaysUi(Array.isArray(daysArr) ? daysArr : []);
       if (inputPromoWeight) inputPromoWeight.value = el.getAttribute('data-ad-weight') || '';
     } else if (contentType === 'home-hero') {
       /* inputHomeHeroImage and cache are set before showEditForm from GET /content/file */
@@ -8208,8 +8519,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (promoImagesContainer) renderPromoImagesUI(promoImages, true);
         else if (inputPromoImages) inputPromoImages.value = promoImages.join('\n');
         if (inputPromoRecurring) inputPromoRecurring.checked = !!fm.recurring;
-        if (promoDaysofweekContainer && fm.daysofweek != null) {
-          renderStringListUI(promoDaysofweekContainer, Array.isArray(fm.daysofweek) ? fm.daysofweek : []);
+        if (fm.daysofweek != null) {
+          setPromoOfferDaysUi(Array.isArray(fm.daysofweek) ? fm.daysofweek : []);
         }
         if (inputPromoWeight && fm.weight != null) inputPromoWeight.value = String(fm.weight);
         setEditStatus('Loaded CMS draft');
@@ -11180,11 +11491,6 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
     }
   })();
-  if (btnAddPromoDay && promoDaysofweekContainer) {
-    btnAddPromoDay.addEventListener('click', function() {
-      promoDaysofweekContainer.appendChild(createListRow(''));
-    });
-  }
   function fetchPreviewsForPublish() {
     var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/previews';
     var headers = { 'Accept': 'application/json' };
@@ -11528,7 +11834,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var imagesArr = promoImagesContainer ? gatherPromoImagePathsFromRows() : (inputPromoImages ? hoursParseStringList(inputPromoImages.value) : []);
         applyPromotionFieldsToElement(selectedElement, titleVal, descVal, linkVal, imagesArr);
         selectedElement.setAttribute('data-ad-recurring', (inputPromoRecurring && inputPromoRecurring.checked) ? 'true' : 'false');
-        var daysArr = promoDaysofweekContainer ? getStringListFromUI(promoDaysofweekContainer) : [];
+        var daysArr = getPromoOfferDaysFromUi();
         selectedElement.setAttribute('data-ad-daysofweek', JSON.stringify(daysArr));
         var weightVal = inputPromoWeight ? inputPromoWeight.value.trim() : '';
         selectedElement.setAttribute('data-ad-weight', weightVal);
@@ -12034,26 +12340,26 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       if (data.type !== 'ttms:embed-panel-close-request') return;
 
-      function notifyParent(reload) {
-        try {
-          window.parent.postMessage(
-            { type: 'ttms:embed-panel-close-complete', reload: !!reload },
-            window.location.origin
-          );
-        } catch (err) { /* ignore */ }
+      // X / backdrop / Escape discard — only the Save button persists.
+      // Parent restores a DOM snapshot instead of reloading the whole page.
+      var hadPending = false;
+      try {
+        hadPending = !!editFormDirty || collectPendingMenuChanges().length > 0;
+      } catch (pendingErr) {
+        hadPending = !!editFormDirty;
       }
-
-      if (!editFormDirty) {
-        notifyParent(false);
-        return;
-      }
-      persistCurrentDraftToCMS()
-        .then(function () {
-          notifyParent(false);
-        })
-        .catch(function () {
-          notifyParent(false);
-        });
+      editFormDirty = false;
+      setEditStatus(hadPending ? 'Changes discarded' : '');
+      try {
+        window.parent.postMessage(
+          {
+            type: 'ttms:embed-panel-close-complete',
+            reload: false,
+            discarded: !!hadPending
+          },
+          window.location.origin
+        );
+      } catch (err) { /* ignore */ }
     });
 
     setTimeout(function() {

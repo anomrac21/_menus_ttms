@@ -94,9 +94,17 @@ body.menu-item-edit-modal-open {
 .menu-item-edit-modal__actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-direction: row;
   gap: 0.4rem;
   flex-shrink: 0;
+  margin-inline-start: auto;
 }
+
+/* LTR: Delete → Save → Close (X is always the rightmost control). */
+.menu-item-edit-modal__delete { order: 1; }
+.menu-item-edit-modal__save { order: 2; }
+.menu-item-edit-modal__close { order: 3; }
 
 .menu-item-edit-modal__icon-btn {
   flex-shrink: 0;
@@ -240,6 +248,91 @@ body.menu-item-edit-modal-open {
   color: #fff;
   box-shadow: 0 10px 28px color-mix(in srgb, #000 35%, transparent);
   font: 600 0.95rem/1.4 system-ui, sans-serif;
+}
+
+.menu-item-edit-discard-prompt {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.menu-item-edit-discard-prompt.hidden,
+.menu-item-edit-discard-prompt[hidden] {
+  display: none !important;
+}
+
+.menu-item-edit-discard-prompt__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, #000 48%, transparent);
+}
+
+.menu-item-edit-discard-prompt__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(22rem, 100%);
+  padding: 1.1rem 1.15rem 1rem;
+  border-radius: 14px;
+  background: var(--dash-bg, #fff);
+  color: var(--dash-ink, #111);
+  box-shadow: 0 16px 40px color-mix(in srgb, #000 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #111) 12%, transparent);
+}
+
+.menu-item-edit-discard-prompt__title {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.menu-item-edit-discard-prompt__text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--dash-ink, #111) 78%, transparent);
+}
+
+.menu-item-edit-discard-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.menu-item-edit-discard-prompt__btn {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #111) 18%, transparent);
+  background: color-mix(in srgb, var(--dash-ink, #111) 6%, transparent);
+  color: var(--dash-ink, #111);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menu-item-edit-discard-prompt__btn--keep:hover,
+.menu-item-edit-discard-prompt__btn--keep:focus-visible {
+  background: color-mix(in srgb, var(--dash-ink, #111) 12%, transparent);
+  outline: none;
+}
+
+.menu-item-edit-discard-prompt__btn--discard {
+  background: var(--favorite-color, #c62828);
+  border-color: var(--favorite-color, #c62828);
+  color: #fff;
+}
+
+.menu-item-edit-discard-prompt__btn--discard:hover,
+.menu-item-edit-discard-prompt__btn--discard:focus-visible {
+  filter: brightness(1.06);
+  outline: none;
 }
 
 @media (min-width: 900px) {
