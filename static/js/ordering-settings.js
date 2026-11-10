@@ -333,13 +333,22 @@
         if (receiptMode !== 'on_payment' && receiptMode !== 'direct' && receiptMode !== 'off') {
           receiptMode = autoCb && autoCb.checked ? 'direct' : 'on_payment';
         }
+        var requiredOnlyCb =
+          document.getElementById('posRequiredItemsOnlyCb') ||
+          document.getElementById('posRequiredItemsOnlyMatchCb');
+        var requiredOnly =
+          requiredOnlyCb != null
+            ? !!requiredOnlyCb.checked
+            : posCfg.syncMenu == null
+              ? true
+              : !!posCfg.syncMenu;
         var posBody = {
           enabled: !!loyverseCb.checked,
           provider: 'loyverse',
           api_url: loyverseServiceUrl(posCfg),
           oauth_url: loyverseServiceUrl(posCfg),
           store_id: (storeSel && storeSel.value) || posCfg.storeId || '',
-          sync_menu: !!posCfg.syncMenu,
+          sync_menu: requiredOnly,
           auto_process_orders: receiptMode === 'direct',
           loyverse_receipt_mode: receiptMode,
           fallback_to_whatsapp: false,
@@ -363,6 +372,7 @@
               window.POS_CONFIG.autoProcessOrders = !!posBody.auto_process_orders;
               window.POS_CONFIG.loyverseReceiptMode = posBody.loyverse_receipt_mode;
               window.POS_CONFIG.fallbackToWhatsapp = !!posBody.fallback_to_whatsapp;
+              window.POS_CONFIG.syncMenu = !!posBody.sync_menu;
             }
             syncOrderingDashboardVisibility();
             return posData;

@@ -8,12 +8,114 @@
   var cachedStores = [];
   var cachedLocations = [];
   var cachedLoyverseItems = [];
+  var cachedLoyverseItemsAll = [];
   var cachedMenuItems = [];
   var proposedItemMapping = {};
   var menuTitleHints = [];
   var loyverseItemsLoadPromise = null;
   var storesLoadPromise = null;
   var unmatchedFixStarted = false;
+  var unmatchedBrowseAll = {};
+
+  function requiredItemsOnlyEnabled() {
+    var matchCb = $('posRequiredItemsOnlyMatchCb');
+    if (matchCb) return !!matchCb.checked;
+    var settingsCb = $('posRequiredItemsOnlyCb');
+    if (settingsCb) return !!settingsCb.checked;
+    if (window.POS_CONFIG && typeof window.POS_CONFIG.syncMenu === 'boolean') {
+      return !!window.POS_CONFIG.syncMenu;
+    }
+    return true;
+  }
+
+  function setRequiredItemsOnly(on, persistCfg) {
+    var checked = !!on;
+    var matchCb = $('posRequiredItemsOnlyMatchCb');
+    var settingsCb = $('posRequiredItemsOnlyCb');
+    if (matchCb) matchCb.checked = checked;
+    if (settingsCb) settingsCb.checked = checked;
+    if (persistCfg !== false) {
+      window.POS_CONFIG = window.POS_CONFIG || {};
+      window.POS_CONFIG.syncMenu = checked;
+    }
+  }
+
+  function syncRequiredItemsOnlyControls(sourceEl) {
+    var on = !!(sourceEl && sourceEl.checked);
+    setRequiredItemsOnly(on);
+    unmatchedBrowseAll = {};
+    if (cachedLoyverseItemsAll.length) {
+      cachedLoyverseItems = filterLoyverseItemsForMenu(cachedLoyverseItemsAll);
+      renderUnmatchedMapper();
+      setItemMapStatus(
+        on
+          ? 'Showing Loyverse items needed for this menu (' +
+              cachedLoyverseItems.length +
+              ' of ' +
+              cachedLoyverseItemsAll.length +
+              ').'
+          : 'Showing full Loyverse catalog (' + cachedLoyverseItemsAll.length + ').'
+      );
+    }
+  }
+
+  function menuRequiredTitles() {
+    var titles = [];
+    var seen = {};
+    function pushTitle(raw) {
+      var title = String(raw || '').trim();
+      if (!title || seen[title]) return;
+      seen[title] = true;
+      titles.push(title);
+    }
+    collectUnmatchedDishes().forEach(function (d) {
+      pushTitle(d.title);
+    });
+    cachedMenuItems.forEach(function (it) {
+      if (!it) return;
+      pushTitle(it.name || it.linkTitle || it.title);
+    });
+    (menuTitleHints || []).forEach(pushTitle);
+    return titles;
+  }
+
+  function loyverseItemMatchesTitles(item, titles) {
+    if (!item || !titles || !titles.length) return false;
+    var name = String(item.item_name || item.name || '').trim();
+    if (!name) return false;
+    for (var i = 0; i < titles.length; i += 1) {
+      if (scoreNameMatch(name, titles[i]) >= 40) return true;
+      var variants = item.variants || [];
+      for (var v = 0; v < variants.length; v += 1) {
+        var label = name;
+        if (variants[v].option1_value) label += ' ' + variants[v].option1_value;
+        if (variants[v].option2_value) label += ' ' + variants[v].option2_value;
+        if (scoreNameMatch(label, titles[i]) >= 40) return true;
+      }
+    }
+    return false;
+  }
+
+  function filterLoyverseItemsForMenu(items) {
+    var list = Array.isArray(items) ? items : [];
+    if (!requiredItemsOnlyEnabled()) return list.slice();
+    var titles = menuRequiredTitles();
+    if (!titles.length) return list.slice();
+    return list.filter(function (it) {
+      return loyverseItemMatchesTitles(it, titles);
+    });
+  }
+
+  function titlesStillMissingCandidates(items, titles) {
+    var missing = [];
+    (titles || []).forEach(function (title) {
+      var found = (items || []).some(function (it) {
+        return loyverseItemMatchesTitles(it, [title]);
+      });
+      if (!found) missing.push(title);
+    });
+    return missing;
+  }
 
   function $(id) {
     return document.getElementById(id);
@@ -938,6 +1040,7 @@
         var ap = $('posAutoProcessCb');
         if (en) en.checked = !!d.enabled;
         if (ap) ap.checked = !!d.auto_process_orders;
+        setRequiredItemsOnly(d.sync_menu == null ? true : !!d.sync_menu);
         applyReceiptMode(receiptModeFromData(d));
         if (typeof window.syncOrderingDashboardVisibility === 'function') {
           window.syncOrderingDashboardVisibility();
@@ -950,6 +1053,7 @@
         var ap = $('posAutoProcessCb');
         if (en) en.checked = !!c.enabled;
         if (ap) ap.checked = !!c.autoProcessOrders;
+        setRequiredItemsOnly(c.syncMenu == null ? true : !!c.syncMenu);
         applyReceiptMode(receiptModeFromData({
           loyverse_receipt_mode: c.loyverseReceiptMode,
           auto_process_orders: c.autoProcessOrders,
@@ -968,13 +1072,14 @@
         var c = window.POS_CONFIG || {};
         var mode = ($('posReceiptModeSelect') && $('posReceiptModeSelect').value) || 'on_payment';
         applyReceiptMode(mode);
+        setRequiredItemsOnly(requiredItemsOnlyEnabled());
         var body = {
           enabled: !!($('posEnabledCb') && $('posEnabledCb').checked),
           provider: 'loyverse',
           api_url: loyverseServiceUrl(c),
           oauth_url: loyverseServiceUrl(c),
           store_id: ($('posStoreSelect') && $('posStoreSelect').value) || c.storeId || '',
-          sync_menu: !!c.syncMenu,
+          sync_menu: requiredItemsOnlyEnabled(),
           auto_process_orders: mode === 'direct',
           loyverse_receipt_mode: mode,
           fallback_to_whatsapp: false,
@@ -994,7 +1099,10 @@
       .then(function (data) {
         var h = data && data.commit && data.commit.hash ? String(data.commit.hash).slice(0, 7) : '';
         setSettingsStatus(h ? 'Saved · commit ' + h + ' (redeploy to apply)' : 'Saved.');
-        if (window.POS_CONFIG) window.POS_CONFIG.fallbackToWhatsapp = false;
+        if (window.POS_CONFIG) {
+          window.POS_CONFIG.fallbackToWhatsapp = false;
+          window.POS_CONFIG.syncMenu = requiredItemsOnlyEnabled();
+        }
         if (typeof window.syncOrderingDashboardVisibility === 'function') {
           window.syncOrderingDashboardVisibility();
         }
@@ -1225,6 +1333,14 @@
   function listAllLoyverseItems() {
     var all = [];
     var guard = 0;
+    var requiredOnly = requiredItemsOnlyEnabled();
+    var requiredTitles = requiredOnly ? menuRequiredTitles() : [];
+    var unmatchedTitles = collectUnmatchedDishes().map(function (d) {
+      return d.title;
+    });
+    // Keep paging while unmatched dishes still lack a candidate; otherwise we can stop early.
+    var earlyStopTitles = unmatchedTitles.length ? unmatchedTitles : requiredTitles;
+
     function page(cursor) {
       guard += 1;
       if (guard > 40) return Promise.resolve(all);
@@ -1232,6 +1348,12 @@
         var items = (d && d.items) || [];
         all = all.concat(items);
         var next = (d && (d.cursor || d.next_cursor)) || '';
+        if (requiredOnly && earlyStopTitles.length) {
+          var stillMissing = titlesStillMissingCandidates(all, earlyStopTitles);
+          if (!stillMissing.length) {
+            return all;
+          }
+        }
         if (next && items.length) return page(next);
         return all;
       });
@@ -1434,9 +1556,23 @@
     return bestScore >= 70 ? best : null;
   }
 
-  function variantOptionsHtml(selectedId) {
+  function variantsForDishSelect(dishTitle, browseAll) {
+    var all = flattenLoyverseVariants();
+    if (browseAll || !requiredItemsOnlyEnabled()) return all;
+    var related = all.filter(function (v) {
+      return (
+        scoreNameMatch(dishTitle, v.name) >= 40 ||
+        scoreNameMatch(dishTitle, v.label) >= 40
+      );
+    });
+    if (related.length) return related;
+    // Nothing close — fall back to the menu-filtered catalog (not the entire account dump).
+    return all;
+  }
+
+  function variantOptionsHtml(dishTitle, selectedId, browseAll) {
     var html = '<option value="">Choose a Loyverse item…</option>';
-    flattenLoyverseVariants().forEach(function (v) {
+    variantsForDishSelect(dishTitle, browseAll).forEach(function (v) {
       var sel = v.variantId === selectedId ? ' selected' : '';
       html +=
         '<option value="' +
@@ -1469,7 +1605,21 @@
         if (selected && !existing) {
           proposedItemMapping[dish.title] = { variant_id: selected };
         }
-        var hint = suggested && !existing ? 'Suggested match' : existing ? 'Already mapped' : 'Needs a match';
+        var browseAll = !!unmatchedBrowseAll[dish.title] || !requiredItemsOnlyEnabled();
+        var options = variantsForDishSelect(dish.title, browseAll);
+        var hint = suggested && !existing
+          ? 'Suggested match'
+          : existing
+            ? 'Already mapped'
+            : options.length
+              ? 'Needs a match'
+              : 'No close Loyverse match yet';
+        var browseBtn =
+          requiredItemsOnlyEnabled() && !browseAll
+            ? '<button type="button" class="dashboard-pos-unmatched-browse" data-browse-title="' +
+              escapeAttr(dish.title) +
+              '">Browse all loaded items</button>'
+            : '';
         return (
           '<div class="dashboard-pos-unmatched-row" data-title="' +
           escapeAttr(dish.title) +
@@ -1480,13 +1630,15 @@
           '</strong>' +
           '<span>' +
           escapeHtml(hint) +
-          '</span></div>' +
+          '</span>' +
+          browseBtn +
+          '</div>' +
           '<label class="dashboard-pos-unmatched-pick">' +
           '<span class="dashboard-pos-unmatched-pick-label">Print as</span>' +
           '<select class="dashboard-settings-input" data-unmatched-title="' +
           escapeAttr(dish.title) +
           '">' +
-          variantOptionsHtml(selected) +
+          variantOptionsHtml(dish.title, selected, browseAll) +
           '</select></label></div>'
         );
       })
@@ -1502,22 +1654,33 @@
         if (saveBtn) saveBtn.hidden = !Object.keys(proposedItemMapping).length;
       });
     });
+    list.querySelectorAll('[data-browse-title]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var title = btn.getAttribute('data-browse-title') || '';
+        if (!title) return;
+        unmatchedBrowseAll[title] = true;
+        if (!cachedLoyverseItemsAll.length || cachedLoyverseItemsAll.length === cachedLoyverseItems.length) {
+          setRequiredItemsOnly(false);
+          loadItems();
+          return;
+        }
+        cachedLoyverseItems = cachedLoyverseItemsAll.slice();
+        renderUnmatchedMapper();
+      });
+    });
     showItemMapButtons(!!cachedLoyverseItems.length);
     var saveBtn = $('btnPosSaveItemMapping');
     if (saveBtn) {
-      saveBtn.hidden = !Object.keys(proposedItemMapping).length && !dishes.some(function (d) {
-        return !!mappingValue(itemMappingMap()[d.title]);
-      });
-      if (!saveBtn.hidden && dishes.some(function (d) {
+      var hasPick = dishes.some(function (d) {
         return !!mappingValue(proposedItemMapping[d.title] || itemMappingMap()[d.title]);
-      })) {
-        saveBtn.hidden = false;
-      }
+      });
+      saveBtn.hidden = !hasPick;
     }
   }
 
   function ensureLoyverseItems(force) {
-    if (!force && cachedLoyverseItems.length) {
+    if (!force && cachedLoyverseItemsAll.length) {
+      cachedLoyverseItems = filterLoyverseItemsForMenu(cachedLoyverseItemsAll);
       return Promise.resolve(cachedLoyverseItems);
     }
     if (loyverseItemsLoadPromise && !force) return loyverseItemsLoadPromise;
@@ -1526,7 +1689,8 @@
         return Promise.all([listAllLoyverseItems(), loadMenuTitleHints()]);
       })
       .then(function (results) {
-        cachedLoyverseItems = results[0] || [];
+        cachedLoyverseItemsAll = results[0] || [];
+        cachedLoyverseItems = filterLoyverseItemsForMenu(cachedLoyverseItemsAll);
         var preview = $('posItemsPreview');
         var rawRow = $('posItemsRawRow');
         var lines = [];
@@ -1543,7 +1707,7 @@
           preview.hidden = !lines.length;
           preview.textContent = lines.length ? lines.join('\n') : 'No Loyverse items found.';
         }
-        if (rawRow) rawRow.hidden = !cachedLoyverseItems.length;
+        if (rawRow) rawRow.hidden = !cachedLoyverseItemsAll.length;
         return cachedLoyverseItems;
       })
       .finally(function () {
@@ -1564,28 +1728,40 @@
         panel.open = true;
       }
     }
-    setItemMapStatus('Finding Loyverse matches…');
+    setItemMapStatus(
+      requiredItemsOnlyEnabled()
+        ? 'Pulling Loyverse items needed for this menu…'
+        : 'Loading full Loyverse catalog…'
+    );
     return ensureLoyverseItems(false)
       .then(function (items) {
-        if (!items.length) {
+        if (!cachedLoyverseItemsAll.length) {
           showItemMapButtons(false);
           setItemMapStatus('No Loyverse items found on this account.', true);
           renderUnmatchedMapper();
           return;
         }
-        proposedItemMapping = Object.assign({}, proposedItemMapping, buildProposedMapping(items));
+        proposedItemMapping = Object.assign(
+          {},
+          proposedItemMapping,
+          buildProposedMapping(cachedLoyverseItemsAll)
+        );
         renderItemMapPreview(proposedItemMapping);
         renderUnmatchedMapper();
         var unmatched = collectUnmatchedDishes();
         var suggested = unmatched.filter(function (d) {
           return !!mappingValue(proposedItemMapping[d.title]);
         }).length;
+        var scopeNote = requiredItemsOnlyEnabled()
+          ? 'Using ' + items.length + ' of ' + cachedLoyverseItemsAll.length + ' Loyverse items for this menu. '
+          : '';
         setItemMapStatus(
           unmatched.length
-            ? 'Choose a Loyverse item for each dish' +
+            ? scopeNote +
+                'Choose a Loyverse item for each dish' +
                 (suggested ? ' (' + suggested + ' suggested)' : '') +
                 ', then Save matches.'
-            : 'Every dish already matches.'
+            : scopeNote + 'Every dish already matches.'
         );
       })
       .catch(function (err) {
@@ -1596,17 +1772,33 @@
 
   function loadItems() {
     unmatchedFixStarted = true;
-    setItemMapStatus('Loading Loyverse items…');
+    unmatchedBrowseAll = {};
+    setItemMapStatus(
+      requiredItemsOnlyEnabled()
+        ? 'Pulling Loyverse items needed for this menu…'
+        : 'Loading full Loyverse catalog…'
+    );
     return ensureLoyverseItems(true)
       .then(function (items) {
-        proposedItemMapping = Object.assign({}, proposedItemMapping, buildProposedMapping(items));
+        proposedItemMapping = Object.assign(
+          {},
+          proposedItemMapping,
+          buildProposedMapping(cachedLoyverseItemsAll)
+        );
         renderItemMapPreview(proposedItemMapping);
         renderUnmatchedMapper();
+        if (!cachedLoyverseItemsAll.length) {
+          setItemMapStatus('No items to map.', true);
+          return;
+        }
         setItemMapStatus(
-          items.length
-            ? 'Loaded ' + items.length + ' Loyverse item(s). Review matches, then save.'
-            : 'No items to map.',
-          !items.length
+          requiredItemsOnlyEnabled()
+            ? 'Loaded ' +
+                items.length +
+                ' item(s) needed for this menu (from ' +
+                cachedLoyverseItemsAll.length +
+                ' pulled). Review matches, then save.'
+            : 'Loaded full catalog (' + cachedLoyverseItemsAll.length + ' item(s)). Review matches, then save.'
         );
       })
       .catch(function (err) {
@@ -1892,6 +2084,24 @@
     }
     if (s) s.addEventListener('click', loadStores);
     if (i) i.addEventListener('click', loadItems);
+    var requiredCb = $('posRequiredItemsOnlyCb');
+    var requiredMatchCb = $('posRequiredItemsOnlyMatchCb');
+    if (requiredCb) {
+      requiredCb.addEventListener('change', function () {
+        syncRequiredItemsOnlyControls(requiredCb);
+      });
+    }
+    if (requiredMatchCb) {
+      requiredMatchCb.addEventListener('change', function () {
+        syncRequiredItemsOnlyControls(requiredMatchCb);
+      });
+    }
+    setRequiredItemsOnly(
+      window.POS_CONFIG && typeof window.POS_CONFIG.syncMenu === 'boolean'
+        ? !!window.POS_CONFIG.syncMenu
+        : true,
+      false
+    );
     if (saveSet) saveSet.addEventListener('click', savePosSettings);
     if (autoBtn) autoBtn.addEventListener('click', autoMatchByName);
     if (saveMap) saveMap.addEventListener('click', saveLocationMapping);

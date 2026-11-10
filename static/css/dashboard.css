@@ -3693,6 +3693,40 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
   margin-top: 0.5rem;
 }
 
+.dashboard-pos-required-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.75rem 0 0.25rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 8%, transparent);
+  background: color-mix(in srgb, var(--dash-bg) 35%, transparent);
+}
+
+.dashboard-pos-required-toggle .dashboard-switch {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.dashboard-pos-required-toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.dashboard-pos-required-toggle-copy strong {
+  font-size: 0.86rem;
+  color: var(--dash-ink);
+}
+
+.dashboard-pos-required-toggle-copy span {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--dash-info) 84%, transparent);
+}
+
 .dashboard-pos-unmatched-list {
   display: flex;
   flex-direction: column;
@@ -3726,6 +3760,20 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
 .dashboard-pos-unmatched-copy span {
   font-size: 0.76rem;
   color: color-mix(in srgb, var(--dash-info) 82%, transparent);
+}
+
+.dashboard-pos-unmatched-browse {
+  margin-top: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dash-accent);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .dashboard-pos-unmatched-pick {

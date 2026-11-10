@@ -190,17 +190,39 @@
             </label>
           </div>
         </div>
+        <div class="dashboard-settings-row dashboard-ordering-switch-row">
+          <span class="dashboard-settings-label" id="pos-required-items-label">Only pull items needed for this menu</span>
+          <div class="dashboard-settings-value">
+            <label class="dashboard-switch" for="posRequiredItemsOnlyCb">
+              <input type="checkbox" id="posRequiredItemsOnlyCb" class="dashboard-switch-input" checked aria-describedby="pos-required-items-hint">
+              <span class="dashboard-switch-track" aria-hidden="true"></span>
+              <span class="dashboard-switch-state" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+        <p class="dashboard-pos-step-hint" id="pos-required-items-hint">On: match lists stay short and stop once every dish has a Loyverse candidate. Off: load the full Loyverse catalog.</p>
       </div>
       <div class="dashboard-pos-location-actions">
         <button type="button" class="btn-dash btn-dash-primary" id="btnPosSaveSettings">Save POS settings</button>
         <span id="posSettingsSaveStatus" class="dashboard-pos-inline-status" role="status"></span>
       </div>
-      </div>
+    </div>
     </details>
 
     <details class="dashboard-pos-advanced" id="posMatchItemsPanel" data-pos-step="items" data-pos-requires-connected hidden>
       <summary>Fix unmatched dishes</summary>
       <p class="dashboard-pos-step-hint">Pick the Loyverse item each dish should print as. Unmatched dishes stay off the till until you save.</p>
+      <div class="dashboard-pos-required-toggle">
+        <label class="dashboard-switch" for="posRequiredItemsOnlyMatchCb">
+          <input type="checkbox" id="posRequiredItemsOnlyMatchCb" class="dashboard-switch-input" checked>
+          <span class="dashboard-switch-track" aria-hidden="true"></span>
+          <span class="dashboard-switch-state" aria-hidden="true"></span>
+        </label>
+        <span class="dashboard-pos-required-toggle-copy">
+          <strong>Only pull items needed for this menu</strong>
+          <span>Skip the rest of your Loyverse catalog while matching.</span>
+        </span>
+      </div>
       <div id="posItemMatchByLocation" class="dashboard-pos-item-match-overview" hidden></div>
       <div id="posUnmatchedList" class="dashboard-pos-unmatched-list" hidden></div>
       <div class="dashboard-pos-location-actions">
