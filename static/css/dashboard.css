@@ -9956,8 +9956,9 @@ body.menu-item-edit-modal-open {
 
   .dashboard-analytics-period-tabs .dashboard-orders-hub-tab {
     flex: 1 1 0;
-    padding-inline: 0.3rem;
-    font-size: 0.78rem;
+    min-width: 0;
+    padding-inline: 0.22rem;
+    font-size: 0.74rem;
   }
 }
 

@@ -437,8 +437,8 @@
           snap.setAttribute(
             'aria-label',
             'Notification snapshot, last ' +
-              days +
-              ' days: ' +
+              periodDaysLabel(days) +
+              ': ' +
               formatCount(active) +
               ' subscribers, ' +
               formatCount(sent) +
@@ -476,6 +476,11 @@
     overviewBundlePromise = null;
   }
 
+  function periodDaysLabel(days) {
+    var n = Number(days) || 0;
+    return n === 1 ? '1 day' : n + ' days';
+  }
+
   function selectedNotifyDays() {
     var active = document.querySelector('#dashboardNotifyPeriodTabs [data-notify-days][aria-selected="true"]');
     var days = active ? parseInt(active.getAttribute('data-notify-days'), 10) : 30;
@@ -484,7 +489,7 @@
 
   function applyNotifyPeriod(days) {
     var heading = document.getElementById('notify-trends-heading');
-    if (heading) heading.textContent = 'Last ' + days + ' days';
+    if (heading) heading.textContent = 'Last ' + periodDaysLabel(days);
     document.querySelectorAll('.dashboard-notify-period-label').forEach(function (el) {
       var base = el.getAttribute('data-label') || 'Metric';
       el.textContent = base + ' (' + days + 'd)';
@@ -498,7 +503,7 @@
     if (chart && !chart.querySelector('svg')) {
       chart.setAttribute(
         'aria-label',
-        'Notification activity chart for the last ' + days + ' days'
+        'Notification activity chart for the last ' + periodDaysLabel(days)
       );
     }
   }

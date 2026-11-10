@@ -1646,8 +1646,8 @@
         60,
         'Encourage search when the menu is long',
         'No searches were recorded in the last ' +
-          days +
-          ' days. If the catalog is large, make search more visible so guests find dishes faster.',
+          (days === 1 ? '1 day' : days + ' days') +
+          '. If the catalog is large, make search more visible so guests find dishes faster.',
         'Search'
       );
     }
@@ -1921,9 +1921,9 @@
       '<header class="insights-report-hero">' +
       '<p class="insights-report-kicker">Period report</p>' +
       '<h3 class="insights-report-title">Last ' +
-      escapeHtml(String(days)) +
-      ' days</h3>' +
-      '<p class="dashboard-analytics-subtitle">A full snapshot of visitors, menu interest, unconfirmed ordering, and completed sales for this window. Switch 7 / 30 / 90 above to refresh it.</p>' +
+      escapeHtml(days === 1 ? '1 day' : String(days) + ' days') +
+      '</h3>' +
+      '<p class="dashboard-analytics-subtitle">A full snapshot of visitors, menu interest, unconfirmed ordering, and completed sales for this window. Switch 1 / 7 / 30 / 90 above to refresh it.</p>' +
       '</header>';
 
     html += reportSection('Headline metrics', metricCards(headlineBits));

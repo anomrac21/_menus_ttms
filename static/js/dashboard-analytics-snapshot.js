@@ -220,7 +220,7 @@
         if (snap) {
           snap.setAttribute(
             'aria-label',
-            'Analytics snapshot, last ' + days + ' days: ' +
+            'Analytics snapshot, last ' + periodDaysLabel(days) + ': ' +
               formatCount(d.pageViews) + ' page views, ' + formatCount(d.visits) + ' visits'
           );
         }
@@ -454,8 +454,8 @@
     chart.setAttribute(
       'aria-label',
       'Analytics activity chart for the last ' +
-        (days || 30) +
-        ' days with daily page views, visits, menu item views, add to cart, orders, and searches'
+        periodDaysLabel(days || 30) +
+        ' with daily page views, visits, menu item views, add to cart, orders, and searches'
     );
   }
 
@@ -656,6 +656,11 @@
     }).observe(chart);
   }
 
+  function periodDaysLabel(days) {
+    var n = Number(days) || 0;
+    return n === 1 ? '1 day' : n + ' days';
+  }
+
   function selectedAnalyticsDays() {
     var active = document.querySelector('#dashboardAnalyticsPeriodTabs [data-analytics-days][aria-selected="true"]');
     var days = active ? parseInt(active.getAttribute('data-analytics-days'), 10) : 30;
@@ -664,9 +669,9 @@
 
   function applyAnalyticsPeriod(days) {
     var heading = document.getElementById('analytics-last-month-heading');
-    if (heading) heading.textContent = 'Last ' + days + ' days';
+    if (heading) heading.textContent = 'Last ' + periodDaysLabel(days);
     var count = document.getElementById('dashboardCardAnalyticsCount');
-    if (count) count.setAttribute('aria-label', 'Visits last ' + days + ' days');
+    if (count) count.setAttribute('aria-label', 'Visits last ' + periodDaysLabel(days));
     document.querySelectorAll('#dashboardAnalyticsPeriodTabs [data-analytics-days]').forEach(function (tab) {
       var on = String(tab.getAttribute('data-analytics-days')) === String(days);
       tab.classList.toggle('is-active', on);
@@ -786,7 +791,7 @@
     setMetric('metricAddToCart', d.addToCart, 'Add to cart');
     setMetric('metricOrderSubmissions', d.orderSubmissions, 'Orders submitted');
     setMetric('metricSearches', typeof d.searches === 'number' ? d.searches : null, 'Searches');
-    setAnalyticsNoteState(noteEl, 'ok', 'Showing analytics for the last ' + days + ' days. Order submissions are menu clicks, not confirmed sales.');
+    setAnalyticsNoteState(noteEl, 'ok', 'Showing analytics for the last ' + periodDaysLabel(days) + '. Order submissions are menu clicks, not confirmed sales.');
   }
 
   function applyAnalyticsOverview(data, days, setMetric, noteEl) {
