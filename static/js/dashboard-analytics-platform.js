@@ -146,6 +146,30 @@
     scoreAnim = global.requestAnimationFrame(tick);
   }
 
+  function scoreDeltaHtml(data) {
+    var current = score(data);
+    var previous = score(data.previous || {});
+    var pts = current - previous;
+    var cls = pts > 0 ? ' is-up' : pts < 0 ? ' is-down' : '';
+    var label;
+    if (!(Number(data.visits) || Number(data.uniqueVisitors) || Number(data.pageViews)) && current === 0) {
+      return '';
+    }
+    if (!data.previous && !data.changePct) {
+      return '';
+    }
+    if (previous <= 0 && current > 0) label = 'New';
+    else if (pts === 0) label = '0 pts vs previous';
+    else label = (pts > 0 ? '+' : '') + pts + ' pts vs previous';
+    return (
+      '<p class="dashboard-analytics-card-delta insights-score-delta' +
+      cls +
+      '" id="deltaInsightsScore">' +
+      escapeHtml(label) +
+      '</p>'
+    );
+  }
+
   function renderScore(data) {
     var el = document.getElementById('insightsScore');
     if (!el) return;
@@ -154,6 +178,7 @@
       '<div class="insights-score-copy">' +
       '<h3 class="dashboard-notify-subsection-title">Engagement score</h3>' +
       '<p class="dashboard-analytics-subtitle">Based on visits, menu views, dish interest, and customer actions in this period.</p>' +
+      scoreDeltaHtml(data) +
       '</div>' +
       '<div class="insights-score-meter" style="--insights-score:0">' +
       '<p class="insights-score-value"><span data-insights-score-value>0</span><span>/100</span></p>' +
@@ -195,6 +220,9 @@
         '<span class="dashboard-side-label">' +
         escapeHtml(section.label) +
         '</span>' +
+        '<span class="dashboard-side-count is-loading" data-insights-count="' +
+        section.id +
+        '" hidden></span>' +
         '</button>'
       );
     }).join('');
@@ -406,7 +434,11 @@
           var id = opts.id || '';
           var initial = opts.animate != null ? '' : escapeHtml(bit[1] == null ? '' : String(bit[1]));
           var delta = opts.delta
-            ? '<span class="dashboard-analytics-card-delta">' + escapeHtml(opts.delta) + '</span>'
+            ? '<span class="dashboard-analytics-card-delta' +
+              deltaClassName(opts.deltaPct) +
+              '">' +
+              escapeHtml(opts.delta) +
+              '</span>'
             : '';
           return (
             '<div class="dashboard-analytics-card dashboard-analytics-metric-card">' +
@@ -654,12 +686,27 @@
 
   function customersMetricBits(data, stats) {
     data = data || {};
+    var previous = data.previous || {};
     var returning = Number(data.returningVisits) || 0;
     var fresh = Number(data.newVisits) || 0;
     var bits = [];
     if (fresh || returning) {
-      bits.push(['New visits', count(fresh), { id: 'metricCustomersNew', animate: fresh }]);
-      bits.push(['Returning visits', count(returning), { id: 'metricCustomersReturning', animate: returning }]);
+      bits.push([
+        'New visits',
+        count(fresh),
+        Object.assign(
+          { id: 'metricCustomersNew', animate: fresh },
+          deltaOpts(percentChange(fresh, previous.newVisits), fresh)
+        )
+      ]);
+      bits.push([
+        'Returning visits',
+        count(returning),
+        Object.assign(
+          { id: 'metricCustomersReturning', animate: returning },
+          deltaOpts(percentChange(returning, previous.returningVisits), returning)
+        )
+      ]);
     }
     if (stats && Number(stats.orderCount) > 0) {
       bits.push([
@@ -737,6 +784,8 @@
       }
     }
     renderActionDelta(data);
+    paintPanelComparisons(data);
+    paintNavCounts(data, shell()._orderStats || null);
 
     journey(data);
     setText('insightsTopDishes', dishTable(data.dishes));
@@ -747,7 +796,14 @@
       ['metricInsightsVisits', data.visits, 'Visits'],
       ['metricInsightsUniqueVisitors', data.uniqueVisitors, 'Unique visitors'],
       ['metricInsightsMenuViews', data.pageViews, 'Menu views'],
-      ['metricInsightsSearches', searchCount(data), 'Searches']
+      ['metricInsightsSearches', searchCount(data), 'Searches'],
+      ['metricInsightsMenuItemViews', data.menuItemViews, 'Menu item views'],
+      ['metricInsightsMenuSearches', searchCount(data), 'Searches'],
+      ['metricInsightsDishCount', dishCount(data), 'Dishes with views'],
+      ['metricInsightsActions', actionTotal, 'Customer actions'],
+      ['metricInsightsReturning', data.returningVisits, 'Returning visits'],
+      ['metricInsightsCartAdds', data.addToCart, 'Cart adds'],
+      ['metricInsightsOrderClicks', data.orderSubmissions, 'Order clicks']
     ];
     visitorMetrics.forEach(function (bit, index) {
       if (global.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.animateMetric === 'function') {
@@ -790,42 +846,138 @@
     setText('insightsPromotions', '<p class="dashboard-analytics-subtitle">Loading promotions…</p>');
     loadPromoCatalog()
       .then(function (catalog) {
-        setText('insightsPromotions', promotionsHtml(data, catalog));
+        setMetricPanel('insightsPromotions', promotionsHtml(data, catalog));
+        paintNavCounts(data, shell()._orderStats || null);
       })
       .catch(function () {
-        setText('insightsPromotions', promotionsHtml(data, []));
+        setMetricPanel('insightsPromotions', promotionsHtml(data, []));
       });
     if (loyverse) setMetricPanel('insightsPos', posHtml(shell()._orderStats || null));
     else setText('insightsPos', '');
     if (ordering) {
       setMetricPanel('insightsOrders', ordersPanel(shell()._orderStats || null, data));
     }
-    setText('insightsRecommendations', recommendationsHtml(data, shell()._orderStats || null));
+    setMetricPanel('insightsRecommendations', recommendationsHtml(data, shell()._orderStats || null));
     setMetricPanel('insightsReports', reportHtml(data, shell()._orderStats || null));
     renderTrinidadMap();
   }
 
   function renderActionDelta(data) {
-    var el = document.getElementById('deltaCustomerActions');
-    if (!el) return;
-    el.classList.remove('is-up', 'is-down');
-    if (!data.changePct) {
-      el.hidden = true;
-      el.textContent = '';
-      return;
-    }
     var current = actions(data);
     var before = actions(data.previous || {});
-    if (before <= 0) {
-      el.hidden = current <= 0;
-      el.textContent = current > 0 ? 'New' : '';
-      return;
-    }
-    var rounded = Math.round(((current - before) / before) * 1000) / 10;
-    el.hidden = false;
-    el.textContent = (rounded > 0 ? '+' : '') + rounded + '% vs previous';
-    if (rounded > 0) el.classList.add('is-up');
-    if (rounded < 0) el.classList.add('is-down');
+    var pct = before > 0 ? percentChange(current, before) : current > 0 ? null : 0;
+    paintDeltaEl('deltaCustomerActions', pct, current);
+  }
+
+  function dishCount(data) {
+    return (cleanNamedRows((data && data.dishes) || []) || []).filter(function (row) {
+      return (Number(row.count) || 0) > 0;
+    }).length;
+  }
+
+  function promoCount(data) {
+    data = data || {};
+    var impressions = Number(data.promotionImpressions) || 0;
+    var clicks = Number(data.promotionClicks) || 0;
+    if (impressions || clicks) return impressions || clicks;
+    return cleanPromotionRows(Array.isArray(data.promotions) ? data.promotions : []).length;
+  }
+
+  function navCountMap(data, orders) {
+    data = data || {};
+    orders = orders || null;
+    var recs = buildRecommendations(data, orders);
+    return {
+      overview: score(data),
+      visitors: Number(data.uniqueVisitors) || 0,
+      menu: Number(data.menuItemViews) || 0,
+      behaviour: actions(data),
+      promotions: promoCount(data),
+      orders: orders ? Number(orders.openCount) || 0 : Number(data.orderSubmissions) || 0,
+      sales: orders ? Number(orders.completedCount) || 0 : 0,
+      customers: Number(data.returningVisits) || (orders ? Number(orders.uniqueCustomers) || 0 : 0),
+      pos: orders ? Number(orders.loyverseReceiptCount) || 0 : 0,
+      reports: Number(data.visits) || 0,
+      recommendations: recs.length
+    };
+  }
+
+  function paintNavCounts(data, orders) {
+    var map = navCountMap(data, orders);
+    Object.keys(map).forEach(function (id) {
+      var el = document.querySelector('#insightsNav [data-insights-count="' + id + '"]');
+      if (!el) return;
+      var n = Number(map[id]) || 0;
+      el.classList.remove('is-loading', 'is-hot', 'is-zero');
+      el.hidden = false;
+      el.textContent = count(n);
+      el.classList.toggle('is-hot', n > 0);
+      el.classList.toggle('is-zero', n === 0);
+      el.setAttribute('aria-label', count(n));
+    });
+  }
+
+  function resolvedPct(serverPct, current, previous) {
+    if (serverPct != null && isFinite(Number(serverPct))) return Number(serverPct);
+    return percentChange(current, previous);
+  }
+
+  function paintPanelComparisons(data) {
+    data = data || {};
+    var change = data.changePct || {};
+    var previous = data.previous || {};
+    paintDeltaEl(
+      'deltaInsightsVisits',
+      resolvedPct(change.visits, data.visits, previous.visits),
+      data.visits
+    );
+    paintDeltaEl(
+      'deltaInsightsUniqueVisitors',
+      resolvedPct(change.uniqueVisitors, data.uniqueVisitors, previous.uniqueVisitors),
+      data.uniqueVisitors
+    );
+    paintDeltaEl(
+      'deltaInsightsMenuViews',
+      resolvedPct(change.pageViews, data.pageViews, previous.pageViews),
+      data.pageViews
+    );
+    paintDeltaEl(
+      'deltaInsightsSearches',
+      resolvedPct(change.searches, searchCount(data), searchCount(previous)),
+      searchCount(data)
+    );
+    paintDeltaEl(
+      'deltaInsightsMenuItemViews',
+      resolvedPct(change.menuItemViews, data.menuItemViews, previous.menuItemViews),
+      data.menuItemViews
+    );
+    paintDeltaEl(
+      'deltaInsightsMenuSearches',
+      resolvedPct(change.searches, searchCount(data), searchCount(previous)),
+      searchCount(data)
+    );
+    var actionTotal = actions(data);
+    var actionPrev = actions(previous);
+    paintDeltaEl(
+      'deltaInsightsActions',
+      actionPrev > 0 ? percentChange(actionTotal, actionPrev) : actionTotal > 0 ? null : 0,
+      actionTotal
+    );
+    paintDeltaEl(
+      'deltaInsightsReturning',
+      percentChange(data.returningVisits, previous.returningVisits),
+      data.returningVisits
+    );
+    paintDeltaEl(
+      'deltaInsightsCartAdds',
+      resolvedPct(change.addToCart, data.addToCart, previous.addToCart),
+      data.addToCart
+    );
+    paintDeltaEl(
+      'deltaInsightsOrderClicks',
+      resolvedPct(change.orderSubmissions, data.orderSubmissions, previous.orderSubmissions),
+      data.orderSubmissions
+    );
   }
 
   function hasPromotions(data, catalog) {
@@ -1088,10 +1240,32 @@
       return b.impressions + b.clicks - (a.impressions + a.clicks) || a.title.localeCompare(b.title);
     });
 
+    var rawImpressions = Number(data.promotionImpressions) || 0;
+    var rawClicks = Number(data.promotionClicks) || 0;
+    var prev = data.previous || {};
+    var prevImpressions = Number(prev.promotionImpressions) || 0;
+    var prevClicks = Number(prev.promotionClicks) || 0;
     if (!cards.length) {
-      var rawImpressions = Number(data.promotionImpressions) || 0;
-      var rawClicks = Number(data.promotionClicks) || 0;
+      var emptyBits = [
+        [
+          'Impressions',
+          count(rawImpressions),
+          Object.assign(
+            { id: 'metricPromoImpressions', animate: rawImpressions },
+            deltaOpts(percentChange(rawImpressions, prevImpressions), rawImpressions)
+          )
+        ],
+        [
+          'Clicks',
+          count(rawClicks),
+          Object.assign(
+            { id: 'metricPromoClicks', animate: rawClicks },
+            deltaOpts(percentChange(rawClicks, prevClicks), rawClicks)
+          )
+        ]
+      ];
       var htmlEmpty =
+        metricCards(emptyBits) +
         '<p class="insights-promo-summary">Promotions with images from this menu will show here with previews and click stats.</p>';
       if (rawImpressions || rawClicks) {
         htmlEmpty +=
@@ -1103,7 +1277,7 @@
       }
       htmlEmpty +=
         '<p class="dashboard-analytics-subtitle">Add a promotion under Promotion settings, or attach a promotion image on a menu item. Page titles and checkout events are not listed here.</p>';
-      return htmlEmpty;
+      return { html: htmlEmpty, bits: emptyBits };
     }
 
     var trackedImpressions = cards.reduce(function (sum, row) {
@@ -1112,7 +1286,31 @@
     var trackedClicks = cards.reduce(function (sum, row) {
       return sum + (Number(row.clicks) || 0);
     }, 0);
+    var promoBits = [
+      [
+        'Impressions',
+        count(trackedImpressions),
+        Object.assign(
+          { id: 'metricPromoImpressions', animate: trackedImpressions },
+          deltaOpts(percentChange(trackedImpressions, prevImpressions), trackedImpressions)
+        )
+      ],
+      [
+        'Clicks',
+        count(trackedClicks),
+        Object.assign(
+          { id: 'metricPromoClicks', animate: trackedClicks },
+          deltaOpts(percentChange(trackedClicks, prevClicks), trackedClicks)
+        )
+      ],
+      [
+        'Promotions',
+        count(cards.length),
+        { id: 'metricPromoCards', animate: cards.length }
+      ]
+    ];
     var html =
+      metricCards(promoBits) +
       '<p class="insights-promo-summary">' +
       escapeHtml(count(trackedImpressions)) +
       ' tracked impressions and ' +
@@ -1151,13 +1349,56 @@
         '</dl>' +
         '</div></article>';
     });
-    return html + '</div>';
+    return { html: html + '</div>', bits: promoBits };
   }
 
   function changeLabel(pct) {
     if (pct == null || !isFinite(Number(pct))) return '';
     var n = Math.round(Number(pct) * 10) / 10;
     return (n > 0 ? '+' : '') + n + '% vs previous';
+  }
+
+  function percentChange(current, previous) {
+    current = Number(current) || 0;
+    previous = Number(previous) || 0;
+    if (previous <= 0) return current > 0 ? null : 0;
+    return Math.round(((current - previous) / previous) * 1000) / 10;
+  }
+
+  function paintDeltaEl(id, pct, current) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('is-up', 'is-down');
+    if (pct == null || !isFinite(Number(pct))) {
+      if ((Number(current) || 0) > 0 && pct == null) {
+        el.hidden = false;
+        el.textContent = 'New';
+        return;
+      }
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    var rounded = Math.round(Number(pct) * 10) / 10;
+    el.hidden = false;
+    el.textContent = (rounded > 0 ? '+' : '') + rounded + '% vs previous';
+    if (rounded > 0) el.classList.add('is-up');
+    if (rounded < 0) el.classList.add('is-down');
+  }
+
+  function deltaClassName(pct) {
+    if (pct == null || !isFinite(Number(pct))) return '';
+    if (Number(pct) > 0) return ' is-up';
+    if (Number(pct) < 0) return ' is-down';
+    return '';
+  }
+
+  function deltaOpts(pct, current) {
+    if (pct == null || !isFinite(Number(pct))) {
+      if ((Number(current) || 0) > 0) return { delta: 'New', deltaPct: null };
+      return {};
+    }
+    return { delta: changeLabel(pct), deltaPct: Number(pct) };
   }
 
   function reportMetric(label, value, delta) {
@@ -1428,7 +1669,11 @@
 
   function recommendationsHtml(data, orders) {
     var recs = buildRecommendations(data || {}, orders || null);
+    var bits = [
+      ['Recommended actions', count(recs.length), { id: 'metricRecCount', animate: recs.length }]
+    ];
     var html =
+      metricCards(bits) +
       '<p class="dashboard-analytics-subtitle">Prioritized actions from this period’s visitors, dish interest, ordering funnel, and sales signals.</p>' +
       '<div class="insights-rec-list">';
     recs.forEach(function (rec, index) {
@@ -1450,7 +1695,7 @@
         '</p>' +
         '</article>';
     });
-    return html + '</div>';
+    return { html: html + '</div>', bits: bits };
   }
 
   function reportHeadlineBits(data) {
@@ -1459,49 +1704,68 @@
     var funnel = data.observedFunnel || {};
     var actionTotal = actions(data);
     var engagement = score(data);
+    var previous = data.previous || {};
+    var prevEngagement = score(previous);
+    var engagementPts = engagement - prevEngagement;
+    var engagementDelta =
+      !data.previous && !data.changePct
+        ? {}
+        : prevEngagement <= 0 && engagement > 0
+          ? { delta: 'New', deltaPct: null }
+          : {
+              delta: (engagementPts > 0 ? '+' : '') + engagementPts + ' pts vs previous',
+              deltaPct: engagementPts
+            };
+    var actionPrev = actions(previous);
     var bits = [
       [
         'Unique visitors',
         count(data.uniqueVisitors),
-        {
-          id: 'metricReportUniqueVisitors',
-          animate: Number(data.uniqueVisitors) || 0,
-          delta: changeLabel(change.uniqueVisitors)
-        }
+        Object.assign(
+          { id: 'metricReportUniqueVisitors', animate: Number(data.uniqueVisitors) || 0 },
+          deltaOpts(change.uniqueVisitors, data.uniqueVisitors)
+        )
       ],
       [
         'Menu views',
         count(data.pageViews),
-        {
-          id: 'metricReportMenuViews',
-          animate: Number(data.pageViews) || 0,
-          delta: changeLabel(change.pageViews)
-        }
+        Object.assign(
+          { id: 'metricReportMenuViews', animate: Number(data.pageViews) || 0 },
+          deltaOpts(change.pageViews, data.pageViews)
+        )
       ],
       [
         'Menu item views',
         count(data.menuItemViews),
-        {
-          id: 'metricReportMenuItemViews',
-          animate: Number(data.menuItemViews) || 0,
-          delta: changeLabel(change.menuItemViews)
-        }
+        Object.assign(
+          { id: 'metricReportMenuItemViews', animate: Number(data.menuItemViews) || 0 },
+          deltaOpts(change.menuItemViews, data.menuItemViews)
+        )
       ],
       [
         'Customer actions',
         count(actionTotal),
-        { id: 'metricReportCustomerActions', animate: Number(actionTotal) || 0 }
+        Object.assign(
+          { id: 'metricReportCustomerActions', animate: Number(actionTotal) || 0 },
+          deltaOpts(
+            actionPrev > 0 ? percentChange(actionTotal, actionPrev) : actionTotal > 0 ? null : 0,
+            actionTotal
+          )
+        )
       ],
       [
         'Engagement score',
         engagement + '/100',
-        {
-          id: 'metricReportEngagement',
-          animate: Number(engagement) || 0,
-          format: function (n) {
-            return Math.round(n) + '/100';
-          }
-        }
+        Object.assign(
+          {
+            id: 'metricReportEngagement',
+            animate: Number(engagement) || 0,
+            format: function (n) {
+              return Math.round(n) + '/100';
+            }
+          },
+          engagementDelta
+        )
       ]
     ];
     if (funnel.cartAbandonmentRate != null) {
@@ -1781,8 +2045,9 @@
     if (flag('data-loyverse')) setMetricPanel('insightsPos', posHtml(stats));
     if (shell() && shell()._insightsData) {
       setMetricPanel('insightsReports', reportHtml(shell()._insightsData, stats));
-      setText('insightsRecommendations', recommendationsHtml(shell()._insightsData, stats));
+      setMetricPanel('insightsRecommendations', recommendationsHtml(shell()._insightsData, stats));
     }
+    paintNavCounts(data, stats);
   }
 
   function receiptModeLabel(mode) {

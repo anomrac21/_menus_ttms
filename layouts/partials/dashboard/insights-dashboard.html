@@ -75,18 +75,22 @@
       <div class="dashboard-analytics-card dashboard-analytics-metric-card">
         <span class="dashboard-analytics-card-label">Visits</span>
         <span class="dashboard-analytics-card-value" id="metricInsightsVisits" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsVisits" hidden></span>
       </div>
       <div class="dashboard-analytics-card dashboard-analytics-metric-card">
         <span class="dashboard-analytics-card-label">Unique visitors</span>
         <span class="dashboard-analytics-card-value" id="metricInsightsUniqueVisitors" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsUniqueVisitors" hidden></span>
       </div>
       <div class="dashboard-analytics-card dashboard-analytics-metric-card">
         <span class="dashboard-analytics-card-label">Menu views</span>
         <span class="dashboard-analytics-card-value" id="metricInsightsMenuViews" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsMenuViews" hidden></span>
       </div>
       <div class="dashboard-analytics-card dashboard-analytics-metric-card">
         <span class="dashboard-analytics-card-label">Searches</span>
         <span class="dashboard-analytics-card-value" id="metricInsightsSearches" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsSearches" hidden></span>
       </div>
     </div>
     <div class="insights-split">
@@ -112,6 +116,23 @@
   </div>
 
   <div class="insights-panel" data-insights-panel="menu" hidden>
+    <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full" id="insightsMenuMetrics">
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Menu item views</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsMenuItemViews" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsMenuItemViews" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Searches</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsMenuSearches" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsMenuSearches" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Dishes with views</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsDishCount" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsDishCount" hidden></span>
+      </div>
+    </div>
     <div class="insights-split">
       <div><h3 class="dashboard-notify-subsection-title">Most viewed dishes</h3><div id="insightsMenuDishes"></div></div>
       <div><h3 class="dashboard-notify-subsection-title">Most searched items</h3><ol class="dashboard-analytics-rank" id="dashboardAnalyticsSearches"></ol></div>
@@ -119,6 +140,28 @@
   </div>
 
   <div class="insights-panel" data-insights-panel="behaviour" hidden>
+    <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full" id="insightsBehaviourMetrics">
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Customer actions</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsActions" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsActions" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Returning visits</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsReturning" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsReturning" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Cart adds</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsCartAdds" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsCartAdds" hidden></span>
+      </div>
+      <div class="dashboard-analytics-card dashboard-analytics-metric-card">
+        <span class="dashboard-analytics-card-label">Order clicks</span>
+        <span class="dashboard-analytics-card-value" id="metricInsightsOrderClicks" aria-label="Data not yet loaded"></span>
+        <span class="dashboard-analytics-card-delta" id="deltaInsightsOrderClicks" hidden></span>
+      </div>
+    </div>
     <h3 class="dashboard-notify-subsection-title">Ordering funnel</h3>
     <p class="dashboard-analytics-subtitle">Observed menu events. Order submit clicks are not confirmed sales.</p>
     <div id="insightsObservedFunnel"></div>
