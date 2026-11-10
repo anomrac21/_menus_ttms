@@ -37,6 +37,17 @@
     }
   }
 
+  function formatHourAmPm(value) {
+    var hour = parseInt(String(value == null ? '' : value).replace(/:.*$/, ''), 10);
+    if (!isFinite(hour) || hour < 0 || hour > 23) {
+      return String(value == null ? '' : value);
+    }
+    var suffix = hour >= 12 ? 'PM' : 'AM';
+    var hour12 = hour % 12;
+    if (hour12 === 0) hour12 = 12;
+    return hour12 + ':00 ' + suffix;
+  }
+
   function count(n) {
     if (global.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.formatCount) {
       return DashboardAnalyticsSnapshot.formatCount(n);
@@ -144,8 +155,21 @@
       ['Menu items viewed', data.menuItemViews, 'Item view events'],
       ['Ordering actions', (Number(data.addToCart) || 0) + (Number(data.orderSubmissions) || 0), 'Cart adds and order clicks, not confirmed sales']
     ];
-    setText('insightsJourney', steps.map(function (step) {
-      return '<li><span>' + escapeHtml(step[0]) + '</span><strong>' + escapeHtml(count(step[1])) + '</strong><small>' + escapeHtml(step[2]) + '</small></li>';
+    setText('insightsJourney', steps.map(function (step, index) {
+      return (
+        '<li class="insights-journey-step">' +
+        '<span class="insights-journey-index" aria-hidden="true">' +
+        (index + 1) +
+        '</span>' +
+        '<span class="insights-journey-copy"><span>' +
+        escapeHtml(step[0]) +
+        '</span><small>' +
+        escapeHtml(step[2]) +
+        '</small></span>' +
+        '<strong>' +
+        escapeHtml(count(step[1])) +
+        '</strong></li>'
+      );
     }).join(''));
   }
 
@@ -161,8 +185,86 @@
     return rows.reduce(function (sum, row) { return sum + (Number(row.count) || 0); }, 0);
   }
 
+  var noiseEventSuffixes = [
+    ' - Page Enter',
+    ' - Item View',
+    ' - Scroll Depth',
+    ' - Time on Page',
+    ' - Install Prompt Shown',
+    ' - Install Prompt',
+    ' - Checkout Start',
+    ' - Pull to Refresh',
+    ' - Outbound Link',
+    ' - Add Item',
+    ' - Remove Item',
+    ' - Impression',
+    ' - Click',
+    ' - Submit',
+    ' - Query',
+    ' - Select',
+    ' - Close',
+    ' - Open',
+    ' - Logout',
+    ' - Menu Click'
+  ];
+
+  function cleanEventLabel(name) {
+    var label = String(name || '').trim();
+    var i;
+    for (i = 0; i < noiseEventSuffixes.length; i++) {
+      if (label.length > noiseEventSuffixes[i].length && label.slice(-noiseEventSuffixes[i].length) === noiseEventSuffixes[i]) {
+        return label.slice(0, -noiseEventSuffixes[i].length).trim();
+      }
+    }
+    return label;
+  }
+
+  function usefulEventName(name) {
+    var label = cleanEventLabel(name);
+    if (!label || /^others$/i.test(label) || /^event name not defined$/i.test(label)) return false;
+    if (/^\d+%$/.test(label)) return false;
+    var lower = label.toLowerCase();
+    if (
+      lower === 'scroll depth' ||
+      lower === 'page enter' ||
+      lower === 'time on page' ||
+      lower.indexOf('install prompt') !== -1
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  function cleanNamedRows(rows) {
+    if (!Array.isArray(rows)) return rows;
+    var merged = {};
+    var order = [];
+    rows.forEach(function (row) {
+      var name = cleanEventLabel(row && row.name);
+      if (!usefulEventName(name)) return;
+      var n = Number(row && row.count) || 0;
+      if (!merged[name]) {
+        merged[name] = 0;
+        order.push(name);
+      }
+      merged[name] += n;
+    });
+    return order
+      .map(function (name) {
+        return { name: name, count: merged[name] };
+      })
+      .filter(function (row) {
+        return row.count > 0;
+      })
+      .sort(function (a, b) {
+        return b.count - a.count;
+      });
+  }
+
   function dishTable(rows) {
     if (!rows) return '<p class="dashboard-analytics-subtitle">Dish rankings are not in this response.</p>';
+    rows = cleanNamedRows(rows);
+    if (!rows.length) return '<p class="dashboard-analytics-subtitle">No dish views in this period yet.</p>';
     return table(rows, [
       { label: 'Menu item', cell: function (row) { return escapeHtml(row.name); } },
       { label: 'Views', cell: function (row) { return escapeHtml(count(row.count)); } }
@@ -303,7 +405,18 @@
     journey(data);
     setText('insightsTopDishes', dishTable(data.dishes));
     setText('insightsMenuDishes', dishTable(data.dishes));
-    setText('insightsScore', '<h3 class="dashboard-notify-subsection-title">Engagement score</h3><p class="insights-score-value">' + score(data) + '<span>/100</span></p><p class="dashboard-analytics-subtitle">Based on visits, menu views, dish interest, and customer actions in this period.</p>');
+    setText(
+      'insightsScore',
+      '<h3 class="dashboard-notify-subsection-title">Engagement score</h3>' +
+        '<div class="insights-score-meter" style="--insights-score:' +
+        score(data) +
+        '">' +
+        '<p class="insights-score-value">' +
+        score(data) +
+        '<span>/100</span></p>' +
+        '</div>' +
+        '<p class="dashboard-analytics-subtitle">Based on visits, menu views, dish interest, and customer actions in this period.</p>'
+    );
 
     var visitorBits = [
       ['Visits', data.visits],
@@ -332,8 +445,7 @@
     setText('insightsCartAbandonment', cartAbandonmentHtml(data.observedFunnel));
     setText('insightsPeakDays', namedTable(peakDays(data.rows).slice(0, 7), 'Day'));
     setText('insightsHours', namedTable((data.hours || []).slice(0, 6).map(function (row) {
-      var hour = String(row.name);
-      return { name: hour + ':00', count: row.count };
+      return { name: formatHourAmPm(row.name), count: row.count };
     }), 'Hour'));
     var fresh = Number(data.newVisits) || 0;
     setText('insightsReturning', returning || fresh
@@ -348,9 +460,23 @@
       setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Loading TTMenus orders…</p>');
     }
     var rec = data.action || {};
-    setText('insightsRecommendations', rec.title
-      ? '<h3 class="dashboard-notify-subsection-title">' + escapeHtml(rec.title) + '</h3><p>' + escapeHtml(rec.detail || '') + '</p>'
-      : '<p class="dashboard-analytics-subtitle">A suggestion appears when this period has menu activity.</p>');
+    var recTitle = cleanEventLabel(rec.title || '');
+    var recDetail = String(rec.detail || '');
+    noiseEventSuffixes.forEach(function (suffix) {
+      recDetail = recDetail.split(suffix).join('');
+    });
+    setText(
+      'insightsRecommendations',
+      recTitle && usefulEventName(recTitle)
+        ? '<h3 class="dashboard-notify-subsection-title">' +
+            escapeHtml(recTitle.indexOf('Feature ') === 0 || recTitle.indexOf('feature ') === 0 ? recTitle : 'Feature ' + recTitle) +
+            '</h3><p>' +
+            escapeHtml(recDetail.trim()) +
+            '</p>'
+        : rec.title
+          ? '<p class="dashboard-analytics-subtitle">A suggestion appears when dish-level menu activity is available.</p>'
+          : '<p class="dashboard-analytics-subtitle">A suggestion appears when this period has menu activity.</p>'
+    );
     setText('insightsReports', reportHtml(data, shell()._orderStats || null));
     renderTrinidadMap();
   }
@@ -411,10 +537,36 @@
     return count(funnel.cartAbandons) + ' cart adds did not reach an order-submit click (' + rate + '). This is observed menu behaviour, not a verified abandoned checkout.';
   }
 
+  function cleanPromotionRows(rows) {
+    if (!Array.isArray(rows)) return [];
+    var merged = {};
+    var order = [];
+    rows.forEach(function (row) {
+      var name = cleanEventLabel(row && row.name);
+      if (!usefulEventName(name)) return;
+      if (!merged[name]) {
+        merged[name] = { name: name, impressions: 0, clicks: 0, clickRate: 0 };
+        order.push(name);
+      }
+      merged[name].impressions += Number(row.impressions) || 0;
+      merged[name].clicks += Number(row.clicks) || 0;
+    });
+    return order.map(function (name) {
+      var row = merged[name];
+      row.clickRate = row.impressions > 0 ? Math.round((row.clicks / row.impressions) * 1000) / 10 : 0;
+      return row;
+    });
+  }
+
   function promotionsHtml(data) {
-    var rows = Array.isArray(data.promotions) ? data.promotions : [];
+    var rows = cleanPromotionRows(Array.isArray(data.promotions) ? data.promotions : []);
     if (!rows.length && !hasPromotions(data)) return '';
-    var html = '<p>' + count(data.promotionImpressions) + ' promotion impressions and ' + count(data.promotionClicks) + ' promotion clicks on this menu.</p>';
+    var html =
+      '<p class="insights-promo-summary">' +
+      escapeHtml(count(data.promotionImpressions)) +
+      ' promotion impressions and ' +
+      escapeHtml(count(data.promotionClicks)) +
+      ' promotion clicks on this menu.</p>';
     if (rows.length) {
       html += table(rows, [
         { label: 'Promotion', cell: function (row) { return escapeHtml(row.name); } },
@@ -422,6 +574,8 @@
         { label: 'Clicks', cell: function (row) { return escapeHtml(count(row.clicks)); } },
         { label: 'Click rate', cell: function (row) { return row.impressions ? escapeHtml(String(row.clickRate || 0) + '%') : '—'; } }
       ]);
+    } else {
+      html += '<p class="dashboard-analytics-subtitle">Promotion names will appear once ads are tracked with a title.</p>';
     }
     return html;
   }
@@ -584,7 +738,7 @@
     if (!flag('data-ordering')) return Promise.resolve();
     var cfg = global.ORDER_CONFIG || {};
     var base = String(cfg.apiUrl || '').replace(/\/$/, '');
-    if (!base || !global.DashboardAnalyticsSnapshot) {
+    if (!base) {
       setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Ordering is enabled, but the order service address is not configured. Menu order clicks are not sales.</p>');
       setText('insightsSales', '<p class="dashboard-analytics-subtitle">Sales need the order service address in site settings.</p>');
       return Promise.resolve();
@@ -599,10 +753,45 @@
       '/client/orders/stats?days=' +
       encodeURIComponent(String(period));
     if (cid) url += '&client_id=' + encodeURIComponent(cid);
-    var request = global.DashboardAnalyticsSnapshot.fetchWithAuth
-      ? DashboardAnalyticsSnapshot.fetchWithAuth(url)
-      : Promise.resolve({ ok: false });
-    return request
+
+    function orderHeaders() {
+      var headers = { Accept: 'application/json' };
+      if (cid) headers['X-TTMenus-Client-Id'] = cid;
+      var snap = global.DashboardAnalyticsSnapshot;
+      if (snap && typeof snap.authHeaders === 'function') {
+        return Object.assign(headers, snap.authHeaders());
+      }
+      var ac = global.AuthClient;
+      if (ac && typeof ac.getAccessToken === 'function') {
+        var token = ac.getAccessToken();
+        if (token) headers.Authorization = 'Bearer ' + token;
+      }
+      return headers;
+    }
+
+    function fetchOrders() {
+      if (global.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.fetchWithAuth) {
+        return DashboardAnalyticsSnapshot.fetchWithAuth(url, {
+          headers: cid ? { 'X-TTMenus-Client-Id': cid } : undefined
+        });
+      }
+      return fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: orderHeaders()
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: res.ok, status: res.status, data: data };
+        });
+      });
+    }
+
+    var ready = Promise.resolve();
+    if (global.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.ensureAccessTokenForCms === 'function') {
+      ready = DashboardAnalyticsSnapshot.ensureAccessTokenForCms();
+    }
+    return ready
+      .then(fetchOrders)
       .then(function (result) {
         if (!result || !result.ok) {
           var why =

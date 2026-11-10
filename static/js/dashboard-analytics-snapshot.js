@@ -181,12 +181,14 @@
     );
   }
 
-  function fetchWithAuth(url) {
+  function fetchWithAuth(url, options) {
+    options = options || {};
     function doFetch() {
+      var headers = Object.assign({}, authHeaders(), options.headers || {});
       return fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-        headers: authHeaders(),
+        method: options.method || 'GET',
+        credentials: options.credentials || 'include',
+        headers: headers,
       }).then(function (res) {
         return res.json().then(function (data) {
           return { ok: res.ok, status: res.status, data: data };
@@ -934,6 +936,8 @@
 
   global.DashboardAnalyticsSnapshot = {
     formatCount: formatCount,
+    authHeaders: authHeaders,
+    ensureAccessTokenForCms: ensureAccessTokenForCms,
     fetchSummary: fetchSummary,
     fetchTrends: fetchTrends,
     fetchWithAuth: fetchWithAuth,
