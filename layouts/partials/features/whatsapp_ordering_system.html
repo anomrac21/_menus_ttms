@@ -2669,6 +2669,8 @@ async function checkCartForUnavailableItems() {
 		const o = order[i];
 		if (o.availability && !isWithinAvailabilityCart(o.availability, day, timeInfo)) {
 			unavailable.push(o.item);
+		} else if (window.MenuAvailability && typeof MenuAvailability.isSoldOut === 'function' && o.url && MenuAvailability.isSoldOut(o.url)) {
+			unavailable.push(o.item);
 		}
 	}
 	return unavailable;

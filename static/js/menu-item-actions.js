@@ -77,6 +77,9 @@
       '>Comment</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--view" role="menuitem" data-auth="admin-site" hidden><i class="fa fa-exclamation" aria-hidden="true"></i> View snapshot</button>' +
       '<button type="button" class="menu-item-actions__option menu-item-actions__option--edit" role="menuitem" data-auth="admin-site">Edit</button>' +
+      (kind === 'menu-item'
+        ? '<button type="button" class="menu-item-actions__option menu-item-actions__option--sold-out" role="menuitem" data-auth="admin-site" hidden>Mark sold out</button>'
+        : '') +
       '</div></div>'
     );
   }
@@ -301,15 +304,29 @@
   }
 
   function syncActionsMenuVisibility() {
+    var staff = hasAdminSiteAccess();
     document.querySelectorAll('[data-menu-item-actions]').forEach(function (menu) {
       var trigger = menu.querySelector('.menu-item-actions__trigger');
       var editBtn = menu.querySelector('.menu-item-actions__option--edit');
+      var soldOutBtn = menu.querySelector('.menu-item-actions__option--sold-out');
       menu.style.display = '';
       if (trigger) trigger.style.display = '';
-      if (!editBtn) return;
-      editBtn.hidden = false;
-      editBtn.style.display = '';
-      editBtn.classList.add('is-auth-visible');
+      if (editBtn) {
+        editBtn.hidden = false;
+        editBtn.style.display = '';
+        editBtn.classList.add('is-auth-visible');
+      }
+      if (soldOutBtn) {
+        soldOutBtn.hidden = !staff;
+        soldOutBtn.style.display = staff ? '' : 'none';
+        if (staff) soldOutBtn.classList.add('is-auth-visible');
+        if (staff && window.MenuAvailability && typeof window.MenuAvailability.isSoldOut === 'function') {
+          var url = menu.getAttribute('data-item-url') || '';
+          soldOutBtn.textContent = window.MenuAvailability.isSoldOut(url)
+            ? 'Mark available'
+            : 'Mark sold out';
+        }
+      }
     });
   }
 

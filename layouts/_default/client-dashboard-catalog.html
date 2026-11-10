@@ -15,6 +15,7 @@
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-content-draft-indicators.js" }}" defer></script>
 <script src="/js/menu-item-edit-modal.js" defer></script>
 <script src="{{ partial "head/asset-url.html" "/js/dashboard-menu-catalog.js" }}" defer></script>
+<script src="{{ partial "head/asset-url.html" "/js/menu-availability.js" }}" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
   if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
@@ -26,6 +27,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   initMenuCatalog();
   if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.refresh === 'function') {
     window.TTMSContentDrafts.refresh();
+  }
+  if (window.MenuAvailability && typeof window.MenuAvailability.refresh === 'function') {
+    window.MenuAvailability.refresh();
   }
 });
 </script>

@@ -62,5 +62,16 @@
     >
       Edit
     </button>
+    {{- if eq $actionsKind "menu-item" -}}
+    <button
+      type="button"
+      class="menu-item-actions__option menu-item-actions__option--sold-out"
+      role="menuitem"
+      data-auth="admin-site"
+      hidden
+    >
+      Mark sold out
+    </button>
+    {{- end -}}
   </div>
 </div>

@@ -303,10 +303,16 @@
       }
     }
     if (btn && btn.getAttribute('data-opens') === 'notify-inbox') {
-      btn.setAttribute(
-        'aria-label',
-        count > 0 ? 'Open menu alerts, ' + count + ' new' : 'Open menu alerts'
-      );
+      if (!isSubscribed()) {
+        btn.setAttribute('aria-label', 'Get menu alerts');
+        btn.title = 'Get menu alerts';
+      } else {
+        btn.setAttribute(
+          'aria-label',
+          count > 0 ? 'Open menu alerts, ' + count + ' new' : 'Open menu alerts'
+        );
+        btn.title = 'Menu alerts';
+      }
     }
   }
 
@@ -714,9 +720,36 @@
     }, CLOSE_MS);
   }
 
+  function promptSubscribeThenOpen() {
+    var svc = window.NotificationService;
+    if (svc && typeof svc.subscribe === 'function') {
+      Promise.resolve(svc.subscribe())
+        .then(function () {
+          if (isSubscribed()) openInbox();
+          syncBadge(readCache());
+          syncSubscribeChrome();
+        })
+        .catch(function () {
+          syncBadge(readCache());
+          syncSubscribeChrome();
+        });
+      return;
+    }
+    if (typeof window.toggleNotificationSubscription === 'function') {
+      window.toggleNotificationSubscription();
+    }
+  }
+
   function toggleInbox() {
-    if (isOpen()) closeInbox();
-    else openInbox();
+    if (isOpen()) {
+      closeInbox();
+      return;
+    }
+    if (!isSubscribed()) {
+      promptSubscribeThenOpen();
+      return;
+    }
+    openInbox();
   }
 
   function onKeydown(event) {

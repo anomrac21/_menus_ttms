@@ -4090,6 +4090,57 @@ html.ttms-ios .dashboard-orders-page.is-orders-loading .dashboard-orders-inbox-i
   }
 }
 
+.dashboard-sold-out-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #fff) 14%, transparent);
+  background: color-mix(in srgb, var(--dash-bg, #111) 40%, transparent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dashboard-sold-out-toggle input {
+  margin: 0;
+  accent-color: #d97706;
+}
+
+.dashboard-settings-location-card.is-sold-out .dashboard-settings-location-card-title::after {
+  content: 'Sold out';
+  margin-left: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #d97706;
+}
+
+.dashboard-sold-out-settings {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #fff) 10%, transparent);
+  background: color-mix(in srgb, var(--dash-black, #000) 16%, transparent);
+}
+
+.dashboard-sold-out-settings__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-sold-out-settings__label input {
+  margin: 0;
+  accent-color: #d97706;
+}
+
 .dashboard-menu-inventory {
   margin: 0 0 0.85rem;
   padding: 0.75rem 0.8rem;

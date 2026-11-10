@@ -1602,6 +1602,7 @@ const NotificationService = {
       btn.setAttribute('aria-pressed', 'true');
       if (btn.getAttribute('data-opens') === 'notify-inbox') {
         btn.title = 'Menu alerts';
+        btn.setAttribute('aria-label', 'Open menu alerts');
       } else if (btnText) {
         btnText.textContent = 'Alerts on';
       } else {
@@ -1624,7 +1625,8 @@ const NotificationService = {
       btn.classList.remove('subscribed');
       btn.setAttribute('aria-pressed', 'false');
       if (btn.getAttribute('data-opens') === 'notify-inbox') {
-        btn.title = 'Menu alerts';
+        btn.title = 'Get menu alerts';
+        btn.setAttribute('aria-label', 'Get menu alerts');
       } else if (btnText) {
         btnText.textContent = 'Get menu alerts';
       } else {

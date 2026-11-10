@@ -581,23 +581,29 @@
 
     function applyAvailabilityToCard(card, today, timeInfo) {
         const avail = card.getAttribute('data-availability');
-        if (!avail) return;
-        const available = isWithinAvailability(avail, today, timeInfo);
+        if (!avail) {
+            const soldOutOnly = card.getAttribute('data-sold-out') === 'true';
+            card.classList.toggle('menu-item-unavailable', soldOutOnly);
+            return;
+        }
+        const scheduleOk = isWithinAvailability(avail, today, timeInfo);
+        const soldOut = card.getAttribute('data-sold-out') === 'true';
+        const available = scheduleOk && !soldOut;
         const msg = formatAvailabilityMessage(avail);
         card.classList.toggle('menu-item-unavailable', !available);
-        card.setAttribute('data-availability-active', available ? 'true' : 'false');
+        card.setAttribute('data-availability-active', scheduleOk ? 'true' : 'false');
 
         const scheduleEl = ensureAvailabilityScheduleElement(card, avail);
         if (scheduleEl) {
             const textEl = scheduleEl.querySelector('.menu-item-availability__text');
             if (textEl) textEl.textContent = msg;
-            scheduleEl.classList.toggle('is-active', available);
-            scheduleEl.classList.toggle('is-outside-window', !available);
-            scheduleEl.setAttribute('aria-label', available ? msg : `Outside ordering window: ${msg}`);
+            scheduleEl.classList.toggle('is-active', scheduleOk);
+            scheduleEl.classList.toggle('is-outside-window', !scheduleOk);
+            scheduleEl.setAttribute('aria-label', scheduleOk ? msg : `Outside ordering window: ${msg}`);
         }
 
         card.querySelectorAll('.menu-item-unavailable-overlay').forEach((el) => el.remove());
-        applyAvailabilityToExpandedCard(card, available, msg);
+        applyAvailabilityToExpandedCard(card, available, soldOut ? 'Sold out' : msg);
     }
 
     function applyAvailabilityToSinglePage(dataEl, today, timeInfo) {
@@ -2465,9 +2471,17 @@
                 updateExpandedItemPriceFromOptions(element);
                 const dt = window.__ttmsDateTime || getLocalDateTime();
                 const availAttr = element.getAttribute('data-availability');
-                if (availAttr) {
-                    const available = isWithinAvailability(availAttr, dt.day, { hour: dt.hour, minute: dt.minute });
-                    applyAvailabilityToExpandedCard(element, available, formatAvailabilityMessage(availAttr));
+                const soldOut = element.getAttribute('data-sold-out') === 'true';
+                if (availAttr || soldOut) {
+                    const scheduleOk = availAttr
+                        ? isWithinAvailability(availAttr, dt.day, { hour: dt.hour, minute: dt.minute })
+                        : true;
+                    const available = scheduleOk && !soldOut;
+                    applyAvailabilityToExpandedCard(
+                        element,
+                        available,
+                        soldOut ? 'Sold out' : formatAvailabilityMessage(availAttr)
+                    );
                 }
             }, 50);
 
@@ -3080,7 +3094,7 @@
             return;
         }
         const root = getExpandedViewRoot(card);
-        if (card.classList.contains('menu-item-unavailable')) {
+        if (card.classList.contains('menu-item-unavailable') || card.getAttribute('data-sold-out') === 'true') {
             alert('This item is not currently available for ordering. ' + formatAvailabilityMessage(card.getAttribute('data-availability')));
             return;
         }
