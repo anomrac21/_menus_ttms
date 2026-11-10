@@ -96,6 +96,71 @@
     return s;
   }
 
+  var scoreAnim = null;
+
+  function prefersReducedMotion() {
+    return !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function paintScore(root, n) {
+    var meter = root.querySelector('.insights-score-meter');
+    var value = root.querySelector('[data-insights-score-value]');
+    var rounded = Math.max(0, Math.min(100, Math.round(n)));
+    if (meter) meter.style.setProperty('--insights-score', String(rounded));
+    if (value) value.textContent = String(rounded);
+    root.setAttribute('aria-label', 'Engagement score ' + rounded + ' out of 100');
+  }
+
+  function animateScore(root, target) {
+    if (!root) return;
+    if (scoreAnim) {
+      global.cancelAnimationFrame(scoreAnim);
+      scoreAnim = null;
+    }
+    var end = Math.max(0, Math.min(100, Number(target) || 0));
+    if (prefersReducedMotion()) {
+      paintScore(root, end);
+      root.classList.remove('is-animating');
+      root.classList.add('is-ready');
+      return;
+    }
+    root.classList.remove('is-ready');
+    root.classList.add('is-animating');
+    paintScore(root, 0);
+    void root.offsetWidth;
+    var duration = Math.min(1400, 720 + end * 8);
+    var start = global.performance && performance.now ? performance.now() : Date.now();
+    function tick(now) {
+      var t = Math.min(1, (now - start) / duration);
+      var eased = 1 - Math.pow(1 - t, 3);
+      paintScore(root, end * eased);
+      if (t < 1) {
+        scoreAnim = global.requestAnimationFrame(tick);
+        return;
+      }
+      scoreAnim = null;
+      paintScore(root, end);
+      root.classList.remove('is-animating');
+      root.classList.add('is-ready');
+    }
+    scoreAnim = global.requestAnimationFrame(tick);
+  }
+
+  function renderScore(data) {
+    var el = document.getElementById('insightsScore');
+    if (!el) return;
+    var target = score(data);
+    el.innerHTML =
+      '<div class="insights-score-copy">' +
+      '<h3 class="dashboard-notify-subsection-title">Engagement score</h3>' +
+      '<p class="dashboard-analytics-subtitle">Based on visits, menu views, dish interest, and customer actions in this period.</p>' +
+      '</div>' +
+      '<div class="insights-score-meter" style="--insights-score:0">' +
+      '<p class="insights-score-value"><span data-insights-score-value>0</span><span>/100</span></p>' +
+      '</div>';
+    animateScore(el, target);
+  }
+
   function showNav(visible) {
     var nav = document.getElementById('insightsNav');
     var root = shell();
@@ -657,18 +722,7 @@
     journey(data);
     setText('insightsTopDishes', dishTable(data.dishes));
     setText('insightsMenuDishes', dishTable(data.dishes));
-    setText(
-      'insightsScore',
-      '<h3 class="dashboard-notify-subsection-title">Engagement score</h3>' +
-        '<div class="insights-score-meter" style="--insights-score:' +
-        score(data) +
-        '">' +
-        '<p class="insights-score-value">' +
-        score(data) +
-        '<span>/100</span></p>' +
-        '</div>' +
-        '<p class="dashboard-analytics-subtitle">Based on visits, menu views, dish interest, and customer actions in this period.</p>'
-    );
+    renderScore(data);
 
     var visitorMetrics = [
       ['metricInsightsVisits', data.visits, 'Visits'],

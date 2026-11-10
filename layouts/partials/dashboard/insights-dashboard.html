@@ -17,6 +17,7 @@
   <nav class="insights-nav" id="insightsNav" aria-label="Insights sections"></nav>
 
   <div class="insights-panel is-active" data-insights-panel="overview">
+    <div class="insights-score insights-score--hero" id="insightsScore" aria-live="polite"></div>
     <div class="dashboard-analytics-metrics dashboard-analytics-metrics--full" id="dashboardAnalyticsMetrics">
       <div class="dashboard-analytics-card dashboard-analytics-metric-card">
         <span class="dashboard-analytics-card-label">Unique visitors</span>
@@ -58,12 +59,9 @@
         <div id="insightsTopDishes"></div>
       </div>
     </div>
-    <div class="insights-split">
-      <div class="insights-score" id="insightsScore"></div>
-      <div class="dashboard-analytics-action" id="dashboardAnalyticsAction" hidden>
-        <h3 class="dashboard-notify-subsection-title" id="dashboardAnalyticsActionTitle"></h3>
-        <p id="dashboardAnalyticsActionDetail"></p>
-      </div>
+    <div class="dashboard-analytics-action" id="dashboardAnalyticsAction" hidden>
+      <h3 class="dashboard-notify-subsection-title" id="dashboardAnalyticsActionTitle"></h3>
+      <p id="dashboardAnalyticsActionDetail"></p>
     </div>
   </div>
 

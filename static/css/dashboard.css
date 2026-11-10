@@ -9657,13 +9657,11 @@ body.menu-item-edit-modal-open {
   flex: 1;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem 1rem;
   width: 100%;
 }
 
 .dashboard-analytics-main--full {
   max-width: 1080px;
-  padding: 1.35rem 1rem 2.5rem;
 }
 
 .dashboard-analytics-period {
@@ -17164,15 +17162,59 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
   gap: 0.35rem;
 }
 
+.insights-score--hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem 1.35rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--dash-warning, #d4a017) 28%, transparent);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--dash-warning, #d4a017) 18%, transparent), transparent 55%),
+    linear-gradient(165deg, color-mix(in srgb, var(--dash-ink, #fff) 7%, transparent) 0%, color-mix(in srgb, var(--dash-bg, #111) 55%, transparent) 100%);
+  box-shadow:
+    0 14px 32px color-mix(in srgb, var(--dash-black, #000) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--dash-warning, #d4a017) 14%, transparent);
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+}
+
+.insights-score--hero.is-animating,
+.insights-score--hero.is-ready {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.45s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.insights-score-copy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.insights-score-copy .dashboard-notify-subsection-title {
+  margin: 0;
+}
+
+.insights-score-copy .dashboard-analytics-subtitle {
+  margin: 0;
+  max-width: 34rem;
+}
+
 .insights-score-meter {
   --insights-score: 0;
   position: relative;
   width: 7.5rem;
   height: 7.5rem;
-  margin: 0.35rem 0 0.15rem;
+  margin: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
   background:
     radial-gradient(circle at center, color-mix(in srgb, var(--dash-bg, #111) 92%, transparent) 58%, transparent 59%),
     conic-gradient(
@@ -17180,21 +17222,83 @@ html.dashboard-edit-embed-panel .dashboard-edit-form-loading.is-visible {
       var(--dash-warning, #d4a017) calc(var(--insights-score) * 1%),
       color-mix(in srgb, var(--dash-ink, #fff) 12%, transparent) 0
     );
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--dash-black, #000) 22%, transparent);
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--dash-black, #000) 22%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--dash-warning, #d4a017) 18%, transparent);
+}
+
+.insights-score--hero .insights-score-meter {
+  width: 8.25rem;
+  height: 8.25rem;
+}
+
+.insights-score--hero.is-animating .insights-score-meter {
+  animation: insights-score-meter-glow 1.2s ease-out;
 }
 
 .insights-score-value {
   margin: 0;
   font-size: 1.85rem;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.03em;
   text-align: center;
+  line-height: 1;
 }
 
-.insights-score-value span {
+.insights-score-value [data-insights-score-value] {
+  font-variant-numeric: tabular-nums;
+}
+
+.insights-score-value span:not([data-insights-score-value]) {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--dashboard-muted, #6b7280);
+}
+
+@keyframes insights-score-meter-glow {
+  0% {
+    filter: saturate(0.85);
+    box-shadow:
+      0 8px 18px color-mix(in srgb, var(--dash-black, #000) 16%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--dash-warning, #d4a017) 10%, transparent);
+  }
+  55% {
+    filter: saturate(1.15);
+    box-shadow:
+      0 16px 34px color-mix(in srgb, var(--dash-warning, #d4a017) 22%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--dash-warning, #d4a017) 28%, transparent);
+  }
+  100% {
+    filter: none;
+    box-shadow:
+      0 12px 28px color-mix(in srgb, var(--dash-black, #000) 22%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--dash-warning, #d4a017) 18%, transparent);
+  }
+}
+
+@media (max-width: 640px) {
+  .insights-score--hero {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .insights-score--hero .insights-score-meter {
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .insights-score--hero,
+  .insights-score--hero.is-animating,
+  .insights-score--hero.is-ready {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .insights-score--hero.is-animating .insights-score-meter {
+    animation: none;
+  }
 }
 
 .insights-table {
