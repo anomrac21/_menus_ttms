@@ -8,6 +8,8 @@
   var COUNT_IDS = [
     'dashboardCardOrdersCount',
     'dashboardOrdersHubInboxCount',
+    'dashboardOrdersLinkInboxCount',
+    'dashboardOrdersLinkKitchenCount',
     'dashboardCardDeliveryCount',
     'dashboardCardEditMenuCount',
     'dashboardMenuHubPublishCount',
@@ -138,6 +140,7 @@
   function setOrdersCount(n) {
     setCount('dashboardCardOrdersCount', n);
     setCount('dashboardOrdersHubInboxCount', n);
+    setCount('dashboardOrdersLinkInboxCount', n);
   }
 
   async function loadOrders() {
@@ -152,6 +155,21 @@
     } catch (_) {
       setUnavailable('dashboardCardOrdersCount');
       setUnavailable('dashboardOrdersHubInboxCount');
+      setUnavailable('dashboardOrdersLinkInboxCount');
+    }
+  }
+
+  async function loadKitchen() {
+    if (!global.OrderClient || typeof global.OrderClient.kitchenPending !== 'function') {
+      setCount('dashboardOrdersLinkKitchenCount', 0);
+      return;
+    }
+    try {
+      var res = await global.OrderClient.kitchenPending();
+      var orders = (res && res.orders) || [];
+      setCount('dashboardOrdersLinkKitchenCount', orders.length);
+    } catch (_) {
+      setUnavailable('dashboardOrdersLinkKitchenCount');
     }
   }
 
@@ -183,7 +201,7 @@
   }
 
   async function refresh() {
-    await Promise.all([loadOrders(), loadDelivery()]);
+    await Promise.all([loadOrders(), loadKitchen(), loadDelivery()]);
   }
 
   function init() {
