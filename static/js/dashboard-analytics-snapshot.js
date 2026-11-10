@@ -78,80 +78,6 @@
     return global.CLIENT_ID || global.SITE_CLIENT_ID || global.CMS_CLIENT_ID || '';
   }
 
-  function normalizeHubClientId(raw) {
-    var cid = String(raw || '').trim();
-    if (!cid) return '';
-    if (cid.indexOf('ttms_') !== 0) {
-      cid = 'ttms_' + cid.replace(/^ttms_/, '');
-    }
-    return cid;
-  }
-
-  function siteTierFromConfig() {
-    var page = document.getElementById('dashboardAnalyticsPage');
-    var fromDom = page && page.getAttribute('data-site-tier');
-    if (fromDom) return String(fromDom).toLowerCase();
-    if (global.SITE_TIER) return String(global.SITE_TIER).toLowerCase();
-    if (global.SiteConfig && global.SiteConfig.tier) {
-      return String(global.SiteConfig.tier).toLowerCase();
-    }
-    return 'free';
-  }
-
-  function isPaidPlan(plan) {
-    var p = String(plan || 'free').toLowerCase().trim();
-    return p !== '' && p !== 'free';
-  }
-
-  function hubAccountUpgradeUrl() {
-    var base = String(global.HUB_ACCOUNT_URL || 'https://ttmenus.com/account/').replace(/\/+$/, '');
-    var cid = normalizeHubClientId(clientId());
-    return base + '/?client_id=' + encodeURIComponent(cid);
-  }
-
-  function setAnalyticsHeaderActions(plan) {
-    var paid = isPaidPlan(plan);
-    var external = document.querySelector('.dashboard-analytics-external-link');
-    var upgrade = document.querySelector('.dashboard-analytics-upgrade-link');
-    if (external) external.hidden = !paid;
-    if (upgrade) {
-      upgrade.hidden = paid;
-      if (!paid) upgrade.href = hubAccountUpgradeUrl();
-    }
-  }
-
-  function fetchBillingPlan() {
-    var base = String(global.CPS_SERVICE_URL || '').replace(/\/+$/, '');
-    var cid = normalizeHubClientId(clientId());
-    if (!base || !cid) return Promise.resolve(null);
-    var ac = global.AuthClient;
-    if (!ac || typeof ac.authenticatedRequest !== 'function') {
-      return Promise.resolve(null);
-    }
-    return ac
-      .authenticatedRequest(
-        base + '/api/billing/status?client_ids=' + encodeURIComponent(cid),
-        { method: 'GET', headers: { Accept: 'application/json' }, credentials: 'include' }
-      )
-      .then(function (res) {
-        if (!res || !res.ok) return null;
-        return res.json().then(function (data) {
-          var status = data && data.billing ? data.billing[cid] : null;
-          return status && status.plan ? String(status.plan).toLowerCase() : null;
-        });
-      })
-      .catch(function () {
-        return null;
-      });
-  }
-
-  function applyAnalyticsHeaderActions() {
-    setAnalyticsHeaderActions(siteTierFromConfig());
-    return fetchBillingPlan().then(function (billingPlan) {
-      if (billingPlan) setAnalyticsHeaderActions(billingPlan);
-    });
-  }
-
   function cmsApiBase() {
     var api = (global.CMS_API_URL || '').replace(/\/+$/, '');
     if (api) return api;
@@ -1045,8 +971,6 @@
     loadDashboardCard: loadDashboardCard,
     loadAnalyticsPage: loadAnalyticsPage,
     renderAnalyticsTrendChart: renderAnalyticsTrendChart,
-    applyAnalyticsHeaderActions: applyAnalyticsHeaderActions,
-    isPaidPlan: isPaidPlan,
     animateMetric: animateAnalyticsMetric,
   };
 })(typeof window !== 'undefined' ? window : this);

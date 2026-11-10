@@ -9642,19 +9642,9 @@ body.menu-item-edit-modal-open {
   gap: 0.4rem;
 }
 
-.dashboard-analytics-upgrade-link {
-  flex-shrink: 0;
-  white-space: nowrap;
-  gap: 0.4rem;
-}
-
 .dashboard-analytics-external-link .fa {
   font-size: 0.85em;
   opacity: 0.9;
-}
-
-.dashboard-analytics-upgrade-link .fa {
-  font-size: 0.85em;
 }
 
 .dashboard-analytics-main {
@@ -10039,8 +10029,7 @@ body.menu-item-edit-modal-open {
     flex-wrap: wrap;
   }
 
-  .dashboard-control-room .dashboard-subpage-header-bar .dashboard-analytics-external-link,
-  .dashboard-control-room .dashboard-subpage-header-bar .dashboard-analytics-upgrade-link {
+  .dashboard-control-room .dashboard-subpage-header-bar .dashboard-analytics-external-link {
     width: auto;
   }
 

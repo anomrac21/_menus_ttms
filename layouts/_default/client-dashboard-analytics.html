@@ -1,32 +1,14 @@
 {{ define "main" }}
-{{- $tier := lower (default "free" site.Params.tier) -}}
-{{- /* Tier 1+ only - free / free_verified must not unlock analytics via Matomo id alone */ -}}
-{{- $analyticsAccess := false -}}
-{{- with site.Params.features -}}
-  {{- $analyticsAccess = or (default false .analytics_access) (default false .analytics) -}}
-{{- end -}}
-{{- $isPaid := $analyticsAccess -}}
-{{- $dashClient := site.Params.contentManagement.clientId | default site.Params.ads.clientId | default "" -}}
-{{- $hubClientId := $dashClient -}}
-{{- if not (hasPrefix $hubClientId "ttms_") -}}
-  {{- $hubClientId = printf "ttms_%s" ($hubClientId | strings.TrimPrefix "_ttms_") -}}
-{{- end -}}
-
 {{- $orderingOn := false -}}
 {{- with site.Params.orderingsystem -}}{{- $orderingOn = default false .enabled -}}{{- end -}}
 {{- $loyverseOn := false -}}
 {{- with site.Params.features -}}{{- $loyverseOn = default false .loyverse_connect -}}{{- end -}}
-<div class="dashboard-analytics-page dashboard-analytics-page--full dashboard-control-room" id="dashboardAnalyticsPage" data-site-tier="{{ $tier }}">
+<div class="dashboard-analytics-page dashboard-analytics-page--full dashboard-control-room" id="dashboardAnalyticsPage">
   {{ partial "dashboard/subpage-header.html" (dict
     "kicker" "Insights"
     "toolbarLabel" "Insights toolbar"
     "closeTitle" "Close insights"
-    "buttons" (slice
-      (dict "href" (printf "https://ttmenus.com/account/?client_id=%s" ($hubClientId | urlquery)) "label" "Upgrade" "class" "btn-dash btn-dash-primary dashboard-analytics-upgrade-link" "icon" "fa-arrow-up" "target" "_blank" "rel" "noopener" "hidden" $isPaid)
-    )
   ) }}
-
-
 
   <main class="dashboard-analytics-main dashboard-analytics-main--full">
     <div id="insightsShell" data-ordering="{{ if $orderingOn }}true{{ else }}false{{ end }}" data-loyverse="{{ if $loyverseOn }}true{{ else }}false{{ end }}">
@@ -36,14 +18,8 @@
 
 </div>
 
-
-
 <script src="{{ partial "head/asset-url.html" `/js/dashboard-analytics-platform.js` }}" defer></script>
 <script>
-  window.SITE_TIER = {{ $tier | jsonify }};
-  window.HUB_ACCOUNT_URL = 'https://ttmenus.com/account/';
-  window.CPS_SERVICE_URL = window.CPS_SERVICE_URL || {{ (site.Params.cpsServiceUrl | default "https://cps.ttmenus.com") | jsonify }};
-
   document.addEventListener('DOMContentLoaded', async function() {
 
     if (window.AuthClient && typeof AuthClient.whenReady === 'function') {
@@ -56,10 +32,6 @@
 
       return;
 
-    }
-
-    if (window.DashboardAnalyticsSnapshot && typeof DashboardAnalyticsSnapshot.applyAnalyticsHeaderActions === 'function') {
-      DashboardAnalyticsSnapshot.applyAnalyticsHeaderActions();
     }
 
     function runAnalyticsLoad() {
