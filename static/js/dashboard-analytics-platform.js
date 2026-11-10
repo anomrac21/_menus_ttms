@@ -223,11 +223,16 @@
     var label = cleanEventLabel(name);
     if (!label || /^others$/i.test(label) || /^event name not defined$/i.test(label)) return false;
     if (/^\d+%$/.test(label)) return false;
+    if (label.indexOf(' | ') !== -1) return false;
     var lower = label.toLowerCase();
     if (
+      lower === 'order' ||
+      lower === 'checkout' ||
+      lower.indexOf('payment cancelled') !== -1 ||
       lower === 'scroll depth' ||
       lower === 'page enter' ||
       lower === 'time on page' ||
+      lower === 'checkout start' ||
       lower.indexOf('install prompt') !== -1
     ) {
       return false;
@@ -454,29 +459,16 @@
     setText('insightsLocations', namedTable(data.locations, 'Location'));
     setText('insightsCustomers', customersHtml(data, shell()._orderStats || null));
     setText('insightsSales', ordering ? salesHtml(shell()._orderStats || null) : '');
-    setText('insightsPromotions', promotionsHtml(data));
+    setText('insightsPromotions', '<p class="dashboard-analytics-subtitle">Loading promotions…</p>');
+    loadPromoCatalog().then(function (catalog) {
+      showNav({ promotions: hasPromotions(data, catalog) });
+      setText('insightsPromotions', promotionsHtml(data, catalog));
+    });
     setText('insightsPos', loyverse ? posHtml(shell()._orderStats || null) : '');
     if (ordering) {
       setText('insightsOrders', '<p class="dashboard-analytics-subtitle">Loading TTMenus orders…</p>');
     }
-    var rec = data.action || {};
-    var recTitle = cleanEventLabel(rec.title || '');
-    var recDetail = String(rec.detail || '');
-    noiseEventSuffixes.forEach(function (suffix) {
-      recDetail = recDetail.split(suffix).join('');
-    });
-    setText(
-      'insightsRecommendations',
-      recTitle && usefulEventName(recTitle)
-        ? '<h3 class="dashboard-notify-subsection-title">' +
-            escapeHtml(recTitle.indexOf('Feature ') === 0 || recTitle.indexOf('feature ') === 0 ? recTitle : 'Feature ' + recTitle) +
-            '</h3><p>' +
-            escapeHtml(recDetail.trim()) +
-            '</p>'
-        : rec.title
-          ? '<p class="dashboard-analytics-subtitle">A suggestion appears when dish-level menu activity is available.</p>'
-          : '<p class="dashboard-analytics-subtitle">A suggestion appears when this period has menu activity.</p>'
-    );
+    setText('insightsRecommendations', recommendationsHtml(data, shell()._orderStats || null));
     setText('insightsReports', reportHtml(data, shell()._orderStats || null));
     renderTrinidadMap();
   }
@@ -504,9 +496,12 @@
     if (rounded < 0) el.classList.add('is-down');
   }
 
-  function hasPromotions(data) {
-    if ((Number(data.promotionImpressions) || 0) + (Number(data.promotionClicks) || 0) > 0) return true;
-    return Array.isArray(data.promotions) && data.promotions.length > 0;
+  function hasPromotions(data, catalog) {
+    if (catalog && catalog.length) return true;
+    if ((Number(data.promotionImpressions) || 0) + (Number(data.promotionClicks) || 0) > 0) {
+      return cleanPromotionRows(Array.isArray(data.promotions) ? data.promotions : []).length > 0;
+    }
+    return cleanPromotionRows(Array.isArray(data.promotions) ? data.promotions : []).length > 0;
   }
 
   function campaignHtml(rows) {
@@ -558,46 +553,694 @@
     });
   }
 
-  function promotionsHtml(data) {
-    var rows = cleanPromotionRows(Array.isArray(data.promotions) ? data.promotions : []);
-    if (!rows.length && !hasPromotions(data)) return '';
+  function normalizePromoKey(name) {
+    return String(name || '')
+      .toLowerCase()
+      .replace(/&amp;/g, '&')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function firstPromoImage(entry) {
+    if (!entry) return '';
+    if (typeof entry.image === 'string' && entry.image.trim()) return entry.image.trim();
+    var images = entry.images;
+    if (!Array.isArray(images)) return '';
+    var i;
+    for (i = 0; i < images.length; i++) {
+      var img = images[i];
+      if (!img) continue;
+      if (typeof img === 'string' && img.trim()) return img.trim();
+      var src = img.image || img.image_url || img.url || img.src || '';
+      if (src) return String(src).trim();
+    }
+    return '';
+  }
+
+  function absoluteAssetUrl(path) {
+    var src = String(path || '').trim();
+    if (!src) return '';
+    if (/^(https?:)?\/\//i.test(src) || src.indexOf('data:') === 0) return src;
+    if (src.charAt(0) === '/') return src;
+    return '/' + src.replace(/^\/+/, '');
+  }
+
+  function promoCatalogFromJson(payload, kind) {
+    var items = [];
+    if (Array.isArray(payload)) items = payload;
+    else if (payload && typeof payload === 'object') {
+      items = payload.items || payload.promotions || payload.ads || payload.data || [];
+    }
+    if (!Array.isArray(items)) return [];
+    return items
+      .map(function (item) {
+        var title = String((item && (item.title || item.name)) || '').trim();
+        var image = firstPromoImage(item);
+        if (!title || !image) return null;
+        return {
+          title: title,
+          image: absoluteAssetUrl(image),
+          url: String((item && (item.url || item.link)) || '').trim(),
+          kind: kind || 'promotion'
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function menuItemPromotionsFromCatalog(payload) {
+    var items = [];
+    if (payload && Array.isArray(payload.menu_items)) items = payload.menu_items;
+    else if (payload && Array.isArray(payload.menuItems)) items = payload.menuItems;
+    else if (Array.isArray(payload)) items = payload;
+    var out = [];
+    items.forEach(function (item) {
+      var promos = item && item.promotions;
+      if (!Array.isArray(promos) || !promos.length) return;
+      var title = String((item && (item.name || item.title)) || '').trim();
+      if (!title) return;
+      var itemImage = '';
+      if (Array.isArray(item.images) && item.images.length) {
+        itemImage = typeof item.images[0] === 'string' ? item.images[0] : firstPromoImage({ images: item.images });
+      } else if (item.image) {
+        itemImage = String(item.image);
+      }
+      promos.forEach(function (promo) {
+        var image = firstPromoImage(promo) || itemImage;
+        if (!image) return;
+        out.push({
+          title: title,
+          image: absoluteAssetUrl(image),
+          url: String((item && item.url) || '').trim(),
+          kind: 'item-promotion'
+        });
+      });
+    });
+    return out;
+  }
+
+  function dedupePromoCatalog(rows) {
+    var seen = {};
+    var out = [];
+    (rows || []).forEach(function (row) {
+      var key = normalizePromoKey(row.title) + '|' + row.kind + '|' + row.image;
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      out.push(row);
+    });
+    return out;
+  }
+
+  function loadPromoCatalog() {
+    var root = shell();
+    if (root && Array.isArray(root._promoCatalog)) {
+      return Promise.resolve(root._promoCatalog);
+    }
+    var urls = ['/promotions/index.json'];
+    return fetch('/index.json', { credentials: 'omit', headers: { Accept: 'application/json' } })
+      .then(function (res) {
+        return res.ok ? res.json() : null;
+      })
+      .catch(function () {
+        return null;
+      })
+      .then(function (idx) {
+        var locs = idx && Array.isArray(idx.locations) ? idx.locations : [];
+        var slugs = [];
+        locs.forEach(function (loc) {
+          var slug = String((loc && (loc.slug || loc.city)) || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+          if (slug && slugs.indexOf(slug) === -1) slugs.push(slug);
+        });
+        if (slugs.length > 1) {
+          urls = slugs.map(function (slug) {
+            return '/' + encodeURIComponent(slug) + '/promotions/index.json';
+          });
+        }
+        var fetches = urls.map(function (url) {
+          return fetch(url, { credentials: 'omit', headers: { Accept: 'application/json' }, cache: 'no-store' })
+            .then(function (res) {
+              return res.ok ? res.json() : null;
+            })
+            .catch(function () {
+              return null;
+            });
+        });
+        fetches.push(
+          fetch('/api/menu-items.json', { credentials: 'omit', headers: { Accept: 'application/json' } })
+            .then(function (res) {
+              return res.ok ? res.json() : null;
+            })
+            .catch(function () {
+              return null;
+            })
+        );
+        return Promise.all(fetches);
+      })
+      .then(function (parts) {
+        var catalog = [];
+        var i;
+        for (i = 0; i < parts.length - 1; i++) {
+          catalog = catalog.concat(promoCatalogFromJson(parts[i], 'promotion'));
+        }
+        catalog = catalog.concat(menuItemPromotionsFromCatalog(parts[parts.length - 1]));
+        catalog = dedupePromoCatalog(catalog);
+        if (root) root._promoCatalog = catalog;
+        return catalog;
+      });
+  }
+
+  function matchPromoStats(title, statsRows) {
+    var key = normalizePromoKey(title);
+    if (!key) return { impressions: 0, clicks: 0, clickRate: 0 };
+    var exact = null;
+    var partial = null;
+    (statsRows || []).forEach(function (row) {
+      var rowKey = normalizePromoKey(row.name);
+      if (!rowKey) return;
+      if (rowKey === key) exact = row;
+      else if (!partial && (rowKey.indexOf(key) !== -1 || key.indexOf(rowKey) !== -1)) partial = row;
+    });
+    var hit = exact || partial;
+    if (!hit) return { impressions: 0, clicks: 0, clickRate: 0 };
+    return {
+      impressions: Number(hit.impressions) || 0,
+      clicks: Number(hit.clicks) || 0,
+      clickRate: hit.impressions ? Math.round((hit.clicks / hit.impressions) * 1000) / 10 : 0
+    };
+  }
+
+  function promotionsHtml(data, catalog) {
+    catalog = Array.isArray(catalog) ? catalog : [];
+    var statsRows = cleanPromotionRows(Array.isArray(data.promotions) ? data.promotions : []);
+    var cards = catalog.map(function (promo) {
+      var stats = matchPromoStats(promo.title, statsRows);
+      return {
+        title: promo.title,
+        image: promo.image,
+        url: promo.url,
+        kind: promo.kind,
+        impressions: stats.impressions,
+        clicks: stats.clicks,
+        clickRate: stats.clickRate
+      };
+    });
+    cards.sort(function (a, b) {
+      return b.impressions + b.clicks - (a.impressions + a.clicks) || a.title.localeCompare(b.title);
+    });
+
+    if (!cards.length) {
+      return (
+        '<p class="dashboard-analytics-subtitle">Only menu promotions and item promotions with images appear here. Add them in Promotion settings or on a menu item.</p>'
+      );
+    }
+
+    var trackedImpressions = cards.reduce(function (sum, row) {
+      return sum + (Number(row.impressions) || 0);
+    }, 0);
+    var trackedClicks = cards.reduce(function (sum, row) {
+      return sum + (Number(row.clicks) || 0);
+    }, 0);
     var html =
       '<p class="insights-promo-summary">' +
-      escapeHtml(count(data.promotionImpressions)) +
-      ' promotion impressions and ' +
-      escapeHtml(count(data.promotionClicks)) +
-      ' promotion clicks on this menu.</p>';
-    if (rows.length) {
-      html += table(rows, [
-        { label: 'Promotion', cell: function (row) { return escapeHtml(row.name); } },
-        { label: 'Impressions', cell: function (row) { return escapeHtml(count(row.impressions)); } },
-        { label: 'Clicks', cell: function (row) { return escapeHtml(count(row.clicks)); } },
-        { label: 'Click rate', cell: function (row) { return row.impressions ? escapeHtml(String(row.clickRate || 0) + '%') : '—'; } }
-      ]);
-    } else {
-      html += '<p class="dashboard-analytics-subtitle">Promotion names will appear once ads are tracked with a title.</p>';
+      escapeHtml(count(trackedImpressions)) +
+      ' tracked impressions and ' +
+      escapeHtml(count(trackedClicks)) +
+      ' tracked clicks across ' +
+      escapeHtml(count(cards.length)) +
+      ' promotions with images.</p>' +
+      '<div class="insights-promo-grid">';
+
+    cards.forEach(function (row) {
+      var kindLabel = row.kind === 'item-promotion' ? 'Item promotion' : 'Promotion';
+      html +=
+        '<article class="insights-promo-card">' +
+        '<div class="insights-promo-media">' +
+        '<img src="' +
+        escapeHtml(row.image) +
+        '" alt="" loading="lazy" decoding="async">' +
+        '</div>' +
+        '<div class="insights-promo-body">' +
+        '<span class="insights-promo-kind">' +
+        escapeHtml(kindLabel) +
+        '</span>' +
+        '<h4 class="insights-promo-title">' +
+        escapeHtml(row.title) +
+        '</h4>' +
+        '<dl class="insights-promo-stats">' +
+        '<div><dt>Impressions</dt><dd>' +
+        escapeHtml(count(row.impressions)) +
+        '</dd></div>' +
+        '<div><dt>Clicks</dt><dd>' +
+        escapeHtml(count(row.clicks)) +
+        '</dd></div>' +
+        '<div><dt>Click rate</dt><dd>' +
+        escapeHtml(row.impressions ? String(row.clickRate) + '%' : '—') +
+        '</dd></div>' +
+        '</dl>' +
+        '</div></article>';
+    });
+    return html + '</div>';
+  }
+
+  function changeLabel(pct) {
+    if (pct == null || !isFinite(Number(pct))) return '';
+    var n = Math.round(Number(pct) * 10) / 10;
+    return (n > 0 ? '+' : '') + n + '% vs previous';
+  }
+
+  function reportMetric(label, value, delta) {
+    return (
+      '<div class="insights-report-metric">' +
+      '<span class="insights-report-metric-label">' +
+      escapeHtml(label) +
+      '</span>' +
+      '<strong>' +
+      escapeHtml(value) +
+      '</strong>' +
+      (delta
+        ? '<span class="insights-report-metric-delta">' + escapeHtml(delta) + '</span>'
+        : '') +
+      '</div>'
+    );
+  }
+
+  function reportSection(title, body) {
+    if (!body) return '';
+    return (
+      '<section class="insights-report-section">' +
+      '<h3 class="dashboard-notify-subsection-title">' +
+      escapeHtml(title) +
+      '</h3>' +
+      body +
+      '</section>'
+    );
+  }
+
+  function reportList(rows) {
+    if (!rows || !rows.length) return '';
+    return (
+      '<ul class="insights-report-list">' +
+      rows
+        .map(function (row) {
+          return (
+            '<li><span>' +
+            escapeHtml(row[0]) +
+            '</span><strong>' +
+            escapeHtml(row[1]) +
+            '</strong></li>'
+          );
+        })
+        .join('') +
+      '</ul>'
+    );
+  }
+
+  function topNamedLines(rows, limit) {
+    return (cleanNamedRows(rows) || []).slice(0, limit || 5).map(function (row) {
+      return [row.name, count(row.count)];
+    });
+  }
+
+  function buildRecommendations(data, orders) {
+    var days = data.periodDays || 30;
+    var dishes = cleanNamedRows(data.dishes) || [];
+    var funnel = data.observedFunnel || {};
+    var peaks = peakDays(data.rows || []).slice(0, 3);
+    var hours = (data.hours || []).slice(0, 3);
+    var sources = Array.isArray(data.sources) ? data.sources.slice(0, 3) : [];
+    var devices = Array.isArray(data.devices) ? data.devices.slice(0, 2) : [];
+    var contacts =
+      (Number(data.whatsappClicks) || 0) +
+      (Number(data.phoneClicks) || 0) +
+      (Number(data.directionClicks) || 0);
+    var recs = [];
+    var seen = {};
+
+    function pushRec(priority, title, detail, tag) {
+      var key = normalizePromoKey(title + '|' + detail);
+      if (!title || !detail || seen[key]) return;
+      seen[key] = true;
+      recs.push({ priority: priority, title: title, detail: detail, tag: tag || 'Insight' });
     }
-    return html;
+
+    if (dishes.length && dishes[0].count > 0 && usefulEventName(dishes[0].name)) {
+      pushRec(
+        10,
+        'Feature ' + dishes[0].name,
+        dishes[0].name +
+          ' led dish interest with ' +
+          count(dishes[0].count) +
+          ' views. Put it in the next promotion and track the orders that follow.',
+        'Menu'
+      );
+    }
+
+    if (funnel.cartAbandonmentRate != null && funnel.cartAbandonmentRate >= 45 && funnel.cartAdds > 0) {
+      pushRec(
+        20,
+        'Tighten the path from cart to order',
+        count(funnel.cartAbandons) +
+          ' cart adds (' +
+          funnel.cartAbandonmentRate +
+          '%) did not reach an order-submit click. Review price clarity, required fields, and how early the order button appears.',
+        'Ordering'
+      );
+    }
+
+    if (
+      Number(data.menuItemViews) >= 40 &&
+      Number(data.orderSubmissions) > 0 &&
+      Number(data.orderSubmissions) / Number(data.menuItemViews) < 0.12
+    ) {
+      pushRec(
+        25,
+        'Close the gap between dish views and order clicks',
+        count(data.menuItemViews) +
+          ' item views produced only ' +
+          count(data.orderSubmissions) +
+          ' order-submit clicks. Check descriptions, photos, and add-to-cart friction on top dishes.',
+        'Conversion'
+      );
+    }
+
+    if (peaks.length && peaks[0].count > 0) {
+      pushRec(
+        30,
+        'Plan specials around ' + peaks[0].name,
+        peaks[0].name +
+          ' was the strongest day for menu interest. Schedule promotions and staffing before that peak.',
+        'Timing'
+      );
+    }
+
+    if (hours.length && hours[0].count > 0) {
+      pushRec(
+        35,
+        'Push offers near ' + formatHourAmPm(hours[0].name),
+        formatHourAmPm(hours[0].name) +
+          ' is the busiest hour in this period. Time WhatsApp blasts and featured dishes around it.',
+        'Timing'
+      );
+    }
+
+    if (sources.length && /direct/i.test(String(sources[0].name || '')) && Number(sources[0].count) > 0) {
+      pushRec(
+        40,
+        'Grow tracked campaign traffic',
+        'Most visits are Direct Entry. Add utm_campaign or mtm_campaign links on Instagram, WhatsApp, and flyers so Insights can credit the channel.',
+        'Traffic'
+      );
+    } else if (sources.length && sources[0].count > 0) {
+      pushRec(
+        40,
+        'Double down on ' + sources[0].name,
+        sources[0].name +
+          ' brought ' +
+          count(sources[0].count) +
+          ' visits. Keep that channel warm and compare it with the next best source.',
+        'Traffic'
+      );
+    }
+
+    if (devices.length === 1 || (devices[0] && /smart|phone|mobile/i.test(String(devices[0].name || '')))) {
+      pushRec(
+        45,
+        'Keep the mobile menu fast',
+        (devices[0] ? devices[0].name : 'Phones') +
+          ' carry a large share of visits. Make sure photos, promotions, and checkout stay quick on small screens.',
+        'Experience'
+      );
+    }
+
+    if (contacts <= 0 && Number(data.visits) >= 20) {
+      pushRec(
+        50,
+        'Make phone, WhatsApp, and directions easier to tap',
+        count(data.visits) +
+          ' visits produced no contact or map actions. Surface WhatsApp, call, and directions higher on the menu.',
+        'Contact'
+      );
+    } else if ((Number(data.whatsappClicks) || 0) > (Number(data.phoneClicks) || 0) + (Number(data.directionClicks) || 0)) {
+      pushRec(
+        50,
+        'Lean into WhatsApp as the response channel',
+        count(data.whatsappClicks) +
+          ' WhatsApp taps led contact actions. Keep reply templates and ordering replies ready for peak hours.',
+        'Contact'
+      );
+    }
+
+    if (orders && Number(orders.orderCount) > 0) {
+      pushRec(
+        15,
+        'Protect verified order value',
+        count(orders.orderCount) +
+          ' TTMenus orders brought ' +
+          money(orders.totalValue, orders.currency) +
+          (orders.averageOrderValue
+            ? ' (average ' + money(orders.averageOrderValue, orders.currency) + ').'
+            : '.') +
+          ' Feature the dishes that already convert and watch completion rate next period.',
+        'Sales'
+      );
+      if (orders.cancellationRate != null && Number(orders.cancellationRate) >= 15) {
+        pushRec(
+          18,
+          'Investigate cancellations',
+          'Cancellation rate is ' +
+            orders.cancellationRate +
+            '%. Check payment drop-offs, stockouts, and delivery timing messages.',
+          'Sales'
+        );
+      }
+    } else if (flag('data-ordering') && Number(data.orderSubmissions) > 0) {
+      pushRec(
+        22,
+        'Turn order clicks into verified tickets',
+        count(data.orderSubmissions) +
+          ' order-submit clicks were observed, but verified TTMenus sales are not in this report yet. Confirm checkout and payment are completing.',
+        'Sales'
+      );
+    }
+
+    if (Number(data.searches) > 0 || (searchTerms(data) || []).length) {
+      var terms = searchTerms(data) || [];
+      if (terms.length) {
+        pushRec(
+          55,
+          'Stock and spotlight “' + terms[0].name + '”',
+          'Guests searched for “' +
+            terms[0].name +
+            '” ' +
+            count(terms[0].count) +
+            ' times. Make sure that item is easy to find and available.',
+          'Search'
+        );
+      }
+    } else if (Number(data.visits) >= 25) {
+      pushRec(
+        60,
+        'Encourage search when the menu is long',
+        'No searches were recorded in the last ' +
+          days +
+          ' days. If the catalog is large, make search more visible so guests find dishes faster.',
+        'Search'
+      );
+    }
+
+    if (!recs.length) {
+      pushRec(
+        100,
+        'Build more menu activity first',
+        'Once guests open dishes, add to cart, and return, Insights will turn those signals into concrete next steps.',
+        'Insight'
+      );
+    }
+
+    recs.sort(function (a, b) {
+      return a.priority - b.priority;
+    });
+    return recs.slice(0, 8);
+  }
+
+  function recommendationsHtml(data, orders) {
+    var recs = buildRecommendations(data || {}, orders || null);
+    var html =
+      '<p class="dashboard-analytics-subtitle">Prioritized actions from this period’s visitors, dish interest, ordering funnel, and sales signals.</p>' +
+      '<div class="insights-rec-list">';
+    recs.forEach(function (rec, index) {
+      html +=
+        '<article class="insights-rec-card">' +
+        '<div class="insights-rec-head">' +
+        '<span class="insights-rec-index" aria-hidden="true">' +
+        (index + 1) +
+        '</span>' +
+        '<span class="insights-rec-tag">' +
+        escapeHtml(rec.tag) +
+        '</span>' +
+        '</div>' +
+        '<h3 class="insights-rec-title">' +
+        escapeHtml(rec.title) +
+        '</h3>' +
+        '<p class="insights-rec-detail">' +
+        escapeHtml(rec.detail) +
+        '</p>' +
+        '</article>';
+    });
+    return html + '</div>';
   }
 
   function reportHtml(data, orders) {
+    data = data || {};
+    orders = orders || null;
     var days = data.periodDays || 30;
-    var html = '<p>The ' + escapeHtml(String(days)) + '-day period above is the report. Switch it to 7, 30, or 90 days. A downloadable report is not available.</p>';
-    html += '<ul class="dashboard-analytics-rank">';
-    html += '<li>Unique visitors <span>' + escapeHtml(count(data.uniqueVisitors)) + '</span></li>';
-    html += '<li>Menu views <span>' + escapeHtml(count(data.pageViews)) + '</span></li>';
-    html += '<li>Menu item views <span>' + escapeHtml(count(data.menuItemViews)) + '</span></li>';
-    html += '<li>Customer actions <span>' + escapeHtml(count(actions(data))) + '</span></li>';
-    if (data.observedFunnel && data.observedFunnel.cartAbandonmentRate != null) {
-      html += '<li>Observed cart abandonment <span>' + escapeHtml(String(data.observedFunnel.cartAbandonmentRate) + '%') + '</span></li>';
+    var change = data.changePct || {};
+    var funnel = data.observedFunnel || {};
+    var dishes = topNamedLines(data.dishes, 5);
+    var sources = (data.sources || []).slice(0, 4).map(function (row) {
+      return [row.name, count(row.count)];
+    });
+    var devices = (data.devices || []).slice(0, 4).map(function (row) {
+      return [row.name, count(row.count)];
+    });
+    var regions = (data.regions || []).slice(0, 4).map(function (row) {
+      return [row.name, count(row.count)];
+    });
+    var peaks = peakDays(data.rows || []).slice(0, 5).map(function (row) {
+      return [row.name, count(row.count)];
+    });
+    var hours = (data.hours || []).slice(0, 5).map(function (row) {
+      return [formatHourAmPm(row.name), count(row.count)];
+    });
+    var countries = focusCountries(data.countries) || [];
+    var html =
+      '<div class="insights-report">' +
+      '<header class="insights-report-hero">' +
+      '<p class="insights-report-kicker">Period report</p>' +
+      '<h3 class="insights-report-title">Last ' +
+      escapeHtml(String(days)) +
+      ' days</h3>' +
+      '<p class="dashboard-analytics-subtitle">A full snapshot of visitors, menu interest, ordering behaviour, and verified sales for this window. Switch 7 / 30 / 90 above to refresh it.</p>' +
+      '</header>';
+
+    html += reportSection(
+      'Headline metrics',
+      '<div class="insights-report-metrics">' +
+        reportMetric('Unique visitors', count(data.uniqueVisitors), changeLabel(change.uniqueVisitors)) +
+        reportMetric('Menu views', count(data.pageViews), changeLabel(change.pageViews)) +
+        reportMetric('Menu item views', count(data.menuItemViews), changeLabel(change.menuItemViews)) +
+        reportMetric('Customer actions', count(actions(data)), '') +
+        reportMetric('Engagement score', score(data) + '/100', '') +
+        (funnel.cartAbandonmentRate != null
+          ? reportMetric('Observed cart abandonment', funnel.cartAbandonmentRate + '%', '')
+          : '') +
+        '</div>'
+    );
+
+    html += reportSection(
+      'Audience',
+      reportList(
+        [
+          ['Visits', count(data.visits)],
+          ['Unique visitors', count(data.uniqueVisitors)],
+          ['New visits', count(data.newVisits)],
+          ['Returning visits', count(data.returningVisits)]
+        ].concat(
+          countries.map(function (row) {
+            return [row.name, count(row.count)];
+          })
+        )
+      ) +
+        (sources.length
+          ? '<h4 class="insights-report-subtitle">Traffic sources</h4>' + reportList(sources)
+          : '') +
+        (devices.length
+          ? '<h4 class="insights-report-subtitle">Devices</h4>' + reportList(devices)
+          : '') +
+        (regions.length
+          ? '<h4 class="insights-report-subtitle">Trinidad and Tobago regions</h4>' + reportList(regions)
+          : '')
+    );
+
+    html += reportSection(
+      'Menu interest',
+      reportList([
+        ['Menu views', count(data.pageViews)],
+        ['Menu item views', count(data.menuItemViews)],
+        ['Searches', count(searchCount(data))],
+        ['Locations chosen', count((data.locations || []).reduce(function (sum, row) {
+          return sum + (Number(row.count) || 0);
+        }, 0))]
+      ]) +
+        (dishes.length
+          ? '<h4 class="insights-report-subtitle">Top dishes</h4>' + reportList(dishes)
+          : '<p class="dashboard-analytics-subtitle">No clean dish names in this period yet.</p>')
+    );
+
+    html += reportSection(
+      'Ordering funnel',
+      funnelHtml(funnel) +
+        '<p class="dashboard-analytics-subtitle">' +
+        escapeHtml(cartAbandonmentHtml(funnel)) +
+        '</p>'
+    );
+
+    var peakBody =
+      (peaks.length ? '<h4 class="insights-report-subtitle">Busiest days</h4>' + reportList(peaks) : '') +
+      (hours.length ? '<h4 class="insights-report-subtitle">Busiest hours</h4>' + reportList(hours) : '');
+    html += reportSection(
+      'Peak times',
+      peakBody ||
+        '<p class="dashboard-analytics-subtitle">Peak timing appears once daily activity is recorded.</p>'
+    );
+
+    html += reportSection(
+      'Contact actions',
+      reportList([
+        ['Phone', count(data.phoneClicks)],
+        ['WhatsApp', count(data.whatsappClicks)],
+        ['Directions', count(data.directionClicks)]
+      ])
+    );
+
+    if (orders) {
+      html += reportSection(
+        'Verified TTMenus sales',
+        reportList([
+          ['Orders', count(orders.orderCount)],
+          ['Order value', money(orders.totalValue, orders.currency)],
+          ['Average order value', money(orders.averageOrderValue, orders.currency)],
+          ['Ordering customers', count(orders.customerCount)],
+          ['Repeat customers', count(orders.repeatCustomers)],
+          ['Completion rate', orders.completionRate != null ? orders.completionRate + '%' : '—'],
+          ['Cancellation rate', orders.cancellationRate != null ? orders.cancellationRate + '%' : '—']
+        ])
+      );
+    } else if (flag('data-ordering')) {
+      html += reportSection(
+        'Verified TTMenus sales',
+        '<p class="dashboard-analytics-subtitle">Verified order totals appear here when the order service loads for this period. Menu order clicks stay in the funnel above.</p>'
+      );
     }
-    if (orders && orders.orderCount > 0) {
-      html += '<li>TTMenus order value <span>' + escapeHtml(money(orders.totalValue, orders.currency)) + '</span></li>';
-      if (orders.completionRate != null) {
-        html += '<li>Order completion rate <span>' + escapeHtml(String(orders.completionRate) + '%') + '</span></li>';
-      }
-    }
-    return html + '</ul>';
+
+    html += reportSection(
+      'Recommendations snapshot',
+      '<ol class="insights-report-recs">' +
+        buildRecommendations(data, orders)
+          .slice(0, 4)
+          .map(function (rec) {
+            return '<li><strong>' + escapeHtml(rec.title) + '</strong><span>' + escapeHtml(rec.detail) + '</span></li>';
+          })
+          .join('') +
+        '</ol>'
+    );
+
+    html +=
+      '<p class="insights-report-footnote">Order submissions and cart abandonment are observed menu events, not confirmed sales unless listed under verified TTMenus sales.</p></div>';
+    return html;
   }
 
   function applyOrderStats(stats) {
@@ -632,6 +1275,7 @@
     if (flag('data-loyverse')) setText('insightsPos', posHtml(stats));
     if (shell() && shell()._insightsData) {
       setText('insightsReports', reportHtml(shell()._insightsData, stats));
+      setText('insightsRecommendations', recommendationsHtml(shell()._insightsData, stats));
     }
   }
 
