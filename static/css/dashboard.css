@@ -12865,6 +12865,8 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: var(--dash-accent);
   font-weight: 700;
 }
+
+.dashboard-ordering-contact {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
