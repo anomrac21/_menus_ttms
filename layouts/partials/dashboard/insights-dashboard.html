@@ -14,7 +14,12 @@
     <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" data-analytics-days="30" aria-selected="true">30 days</button>
     <button type="button" class="dashboard-orders-hub-tab" role="tab" data-analytics-days="90" aria-selected="false">90 days</button>
   </div>
-  <nav class="insights-nav" id="insightsNav" aria-label="Insights sections"></nav>
+  <div class="insights-workspace">
+  <nav class="insights-nav dashboard-side" id="insightsNav" aria-label="Insights sections">
+    <p class="dashboard-side-kicker">Sections</p>
+    <div class="dashboard-side-nav" id="insightsSideNav"></div>
+  </nav>
+  <div class="insights-workspace-main">
 
   <div class="insights-panel is-active" data-insights-panel="overview">
     <div class="insights-score insights-score--hero" id="insightsScore" aria-live="polite"></div>
@@ -166,4 +171,6 @@
     <i class="fa fa-exclamation-triangle dashboard-analytics-note-icon dashboard-analytics-note-icon--warn" aria-hidden="true" hidden></i>
     <span class="dashboard-analytics-note-text">Loading analytics…</span>
   </aside>
+  </div>
+  </div>
 </section>

@@ -6,17 +6,17 @@
   'use strict';
 
   var sections = [
-    { id: 'overview', label: 'Overview', always: true },
-    { id: 'visitors', label: 'Visitors', always: true },
-    { id: 'menu', label: 'Menu Analytics', always: true },
-    { id: 'behaviour', label: 'Customer Behaviour', always: true },
-    { id: 'promotions', label: 'Promotions', always: true },
-    { id: 'orders', label: 'Ordering', key: 'orders' },
-    { id: 'sales', label: 'Sales', key: 'sales' },
-    { id: 'customers', label: 'Customers', key: 'customers' },
-    { id: 'pos', label: 'POS Integration', key: 'pos' },
-    { id: 'reports', label: 'Reports', always: true },
-    { id: 'recommendations', label: 'Recommendations', always: true }
+    { id: 'overview', label: 'Overview', icon: 'fa-th-large', always: true },
+    { id: 'visitors', label: 'Visitors', icon: 'fa-users', always: true },
+    { id: 'menu', label: 'Menu Analytics', icon: 'fa-cutlery', always: true },
+    { id: 'behaviour', label: 'Customer Behaviour', icon: 'fa-line-chart', always: true },
+    { id: 'promotions', label: 'Promotions', icon: 'fa-tag', always: true },
+    { id: 'orders', label: 'Ordering', icon: 'fa-shopping-cart', key: 'orders' },
+    { id: 'sales', label: 'Sales', icon: 'fa-money', key: 'sales' },
+    { id: 'customers', label: 'Customers', icon: 'fa-user', key: 'customers' },
+    { id: 'pos', label: 'POS Integration', icon: 'fa-credit-card', key: 'pos' },
+    { id: 'reports', label: 'Reports', icon: 'fa-file-text-o', always: true },
+    { id: 'recommendations', label: 'Recommendations', icon: 'fa-lightbulb-o', always: true }
   ];
 
   function shell() {
@@ -161,12 +161,17 @@
     animateScore(el, target);
   }
 
+  function insightsNavHost() {
+    return document.getElementById('insightsSideNav') || document.getElementById('insightsNav');
+  }
+
   function showNav(visible) {
     var nav = document.getElementById('insightsNav');
+    var host = insightsNavHost();
     var root = shell();
     if (root) root._insightsVisible = Object.assign(root._insightsVisible || {}, visible);
     visible = (root && root._insightsVisible) || visible || {};
-    if (!nav || nav.getAttribute('data-built') === '1') {
+    if (!nav || !host || nav.getAttribute('data-built') === '1') {
       sections.forEach(function (section) {
         var btn = nav && nav.querySelector('[data-insights-tab="' + section.id + '"]');
         if (!btn || section.always) return;
@@ -176,9 +181,22 @@
       return;
     }
     nav.setAttribute('data-built', '1');
-    nav.innerHTML = sections.map(function (section) {
+    host.innerHTML = sections.map(function (section) {
       var hidden = section.always || visible[section.key] ? '' : ' hidden';
-      return '<button type="button" class="dashboard-orders-hub-tab" data-insights-tab="' + section.id + '"' + hidden + '>' + escapeHtml(section.label) + '</button>';
+      return (
+        '<button type="button" class="dashboard-side-link insights-nav-link" data-insights-tab="' +
+        section.id +
+        '" aria-selected="false"' +
+        hidden +
+        '>' +
+        '<i class="fa ' +
+        escapeHtml(section.icon || 'fa-circle') +
+        '" aria-hidden="true"></i>' +
+        '<span class="dashboard-side-label">' +
+        escapeHtml(section.label) +
+        '</span>' +
+        '</button>'
+      );
     }).join('');
     nav.addEventListener('click', function (event) {
       var btn = event.target.closest('[data-insights-tab]');
@@ -204,6 +222,7 @@
       var on = btn.getAttribute('data-insights-tab') === id;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.setAttribute('aria-current', on ? 'page' : 'false');
     });
     if (id === 'visitors') renderTrinidadMap();
   }
