@@ -77,64 +77,106 @@
   </div>
 
   <div class="dashboard-ads-create" id="dashboardAdsCreatePanel" hidden>
-    <form id="dashboardAdsCreateForm" class="dashboard-ads-create-form" novalidate>
+    <form id="dashboardAdsCreateForm" class="dashboard-ads-create-form" novalidate data-ads-step="0">
       <input type="hidden" id="dashboardAdsClientId" name="client_id" value="{{ $adsClientId }}" autocomplete="off">
-      <div class="dashboard-ads-create-grid">
-        <div class="dashboard-edit-field">
-          <label for="dashboardAdsTitle">Title</label>
-          <input type="text" id="dashboardAdsTitle" class="dashboard-edit-input" maxlength="100" required placeholder="Weekend special">
-        </div>
-        <div class="dashboard-edit-field">
-          <label for="dashboardAdsLink">Click link <span class="dashboard-ads-optional">(optional)</span></label>
-          <input type="text" id="dashboardAdsLink" class="dashboard-edit-input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://… or tel:…">
-        </div>
-        <div class="dashboard-edit-field">
-          <label for="dashboardAdsStatus">Status</label>
-          <select id="dashboardAdsStatus" class="dashboard-edit-input">
-            <option value="active" selected>Active</option>
-            <option value="draft">Draft</option>
-            <option value="paused">Paused</option>
-          </select>
-        </div>
-        <div class="dashboard-edit-field">
-          <label for="dashboardAdsWeight">Priority</label>
-          <input type="number" id="dashboardAdsWeight" class="dashboard-edit-input" min="0" max="100" value="10">
-        </div>
+      <input type="hidden" id="dashboardAdsWeight" value="30">
+
+      <div class="dashboard-menu-item-wizard-nav dashboard-ads-wizard-nav" id="dashboardAdsWizardNav" role="tablist" aria-label="Create ad steps">
+        <button type="button" class="dashboard-wizard-tab dashboard-wizard-tab-active" data-ads-step="0" role="tab" aria-selected="true" id="dashboardAdsTabImage" aria-controls="dashboardAdsPanelImage">Image</button>
+        <button type="button" class="dashboard-wizard-tab" data-ads-step="1" role="tab" aria-selected="false" id="dashboardAdsTabDetails" aria-controls="dashboardAdsPanelDetails">Details</button>
+        <button type="button" class="dashboard-wizard-tab" data-ads-step="2" role="tab" aria-selected="false" id="dashboardAdsTabDays" aria-controls="dashboardAdsPanelDays">Days</button>
+        <button type="button" class="dashboard-wizard-tab" data-ads-step="3" role="tab" aria-selected="false" id="dashboardAdsTabSubmit" aria-controls="dashboardAdsPanelSubmit">Submit</button>
       </div>
 
-      <div class="dashboard-edit-field">
-        <label for="dashboardAdsImage">Image or video</label>
-        <div class="dashboard-ads-upload-row">
-          <input type="file" id="dashboardAdsImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg" required>
-          <span class="dashboard-ads-upload-name" id="dashboardAdsImageName">No file selected</span>
+      <div class="dashboard-menu-item-wizard-panels dashboard-ads-wizard-panels">
+        <div class="dashboard-menu-item-wizard-panel" data-ads-step="0" role="tabpanel" id="dashboardAdsPanelImage" aria-labelledby="dashboardAdsTabImage" aria-hidden="false">
+          <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note" id="dashboardAdsImageNote">Add the image or video customers see in the menu reels.</p>
+          <div class="dashboard-edit-field" id="dashboardAdsImageField">
+            <div class="dashboard-ads-upload-row" id="dashboardAdsUploadRow">
+              <input type="file" id="dashboardAdsImage" class="dashboard-ads-image-input" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg" required tabindex="-1" aria-hidden="true">
+              <button type="button" class="btn-dash btn-dash-primary dashboard-ads-pick-media" id="dashboardAdsPickMedia">
+                <i class="fa fa-photo" aria-hidden="true"></i>
+                <span>Choose image or video</span>
+              </button>
+              <button type="button" class="btn-dash btn-dash-secondary dashboard-ads-replace-media" id="dashboardAdsReplaceMedia" hidden>
+                <i class="fa fa-refresh" aria-hidden="true"></i>
+                <span>Replace media</span>
+              </button>
+              <p class="dashboard-ads-upload-name" id="dashboardAdsImageName" aria-live="polite">No file selected yet</p>
+            </div>
+            <div class="dashboard-ads-upload-progress" id="dashboardAdsUploadProgress" hidden>
+              <div class="dashboard-ads-upload-bar" id="dashboardAdsUploadBar"></div>
+            </div>
+            <div class="dashboard-ads-upload-preview" id="dashboardAdsUploadPreview" hidden></div>
+            <p class="dashboard-settings-hint" id="dashboardAdsImageHint">JPG, PNG, WebP, GIF (50MB) or MP4/WebM (100MB). Portrait 9:16 works best in menu reels.</p>
+          </div>
         </div>
-        <div class="dashboard-ads-upload-progress" id="dashboardAdsUploadProgress" hidden>
-          <div class="dashboard-ads-upload-bar" id="dashboardAdsUploadBar"></div>
-        </div>
-        <div class="dashboard-ads-upload-preview" id="dashboardAdsUploadPreview" hidden></div>
-        <p class="dashboard-settings-hint">JPG, PNG, WebP, GIF (50MB) or MP4/WebM (100MB). Portrait 9:16 works best in menu reels.</p>
-      </div>
 
-      <fieldset class="dashboard-ads-days">
-        <legend>Show on</legend>
-        <div class="dashboard-ads-days-grid" id="dashboardAdsDays">
-          {{- range (slice "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday") -}}
-          <label class="dashboard-ads-day">
-            <input type="checkbox" name="dashboardAdsDay" value="{{ . }}" checked>
-            <span>{{ slicestr . 0 3 }}</span>
-          </label>
-          {{- end -}}
+        <div class="dashboard-menu-item-wizard-panel hidden" data-ads-step="1" role="tabpanel" id="dashboardAdsPanelDetails" aria-labelledby="dashboardAdsTabDetails" aria-hidden="true">
+          <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Name the ad, optional click link, and whether it should go live.</p>
+          <div class="dashboard-ads-create-grid">
+            <div class="dashboard-edit-field">
+              <label for="dashboardAdsTitle">Title</label>
+              <input type="text" id="dashboardAdsTitle" class="dashboard-edit-input" maxlength="100" required placeholder="Weekend special">
+            </div>
+            <div class="dashboard-edit-field">
+              <label for="dashboardAdsLink">Click link <span class="dashboard-ads-optional">(optional)</span></label>
+              <input type="text" id="dashboardAdsLink" class="dashboard-edit-input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://… or tel:…">
+            </div>
+            <div class="dashboard-edit-field">
+              <label for="dashboardAdsStatus">Status</label>
+              <select id="dashboardAdsStatus" class="dashboard-edit-input">
+                <option value="active" selected>Active</option>
+                <option value="draft">Draft</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+          </div>
         </div>
-      </fieldset>
+
+        <div class="dashboard-menu-item-wizard-panel hidden" data-ads-step="2" role="tabpanel" id="dashboardAdsPanelDays" aria-labelledby="dashboardAdsTabDays" aria-hidden="true">
+          <div class="dashboard-edit-field dashboard-promo-days-field" id="dashboardAdsDaysWrap">
+            <label id="dashboardAdsDaysLabel">Days of week</label>
+            <p class="dashboard-edit-field-note">Leave empty for any day. Tap days to limit when this ad shows.</p>
+            <div class="dashboard-availability-days dashboard-promo-days" id="dashboardAdsDays" role="group" aria-labelledby="dashboardAdsDaysLabel">
+              <button type="button" class="dashboard-availability-day is-on" data-day="Monday" aria-pressed="true">Mon</button>
+              <button type="button" class="dashboard-availability-day is-on" data-day="Tuesday" aria-pressed="true">Tue</button>
+              <button type="button" class="dashboard-availability-day is-on" data-day="Wednesday" aria-pressed="true">Wed</button>
+              <button type="button" class="dashboard-availability-day is-on" data-day="Thursday" aria-pressed="true">Thu</button>
+              <button type="button" class="dashboard-availability-day is-on" data-day="Friday" aria-pressed="true">Fri</button>
+              <button type="button" class="dashboard-availability-day is-on" data-day="Saturday" aria-pressed="true">Sat</button>
+              <button type="button" class="dashboard-availability-day is-on" data-day="Sunday" aria-pressed="true">Sun</button>
+            </div>
+            <div class="dashboard-availability-day-presets" id="dashboardAdsDaysPresets" role="group" aria-label="Day presets">
+              <button type="button" class="dashboard-availability-preset" data-ads-day-preset="weekdays">Weekdays</button>
+              <button type="button" class="dashboard-availability-preset" data-ads-day-preset="weekend">Weekend</button>
+              <button type="button" class="dashboard-availability-preset" data-ads-day-preset="all">All</button>
+              <button type="button" class="dashboard-availability-preset" data-ads-day-preset="none">Any day</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-menu-item-wizard-panel hidden" data-ads-step="3" role="tabpanel" id="dashboardAdsPanelSubmit" aria-labelledby="dashboardAdsTabSubmit" aria-hidden="true">
+          <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">This is how the ad will look in menu reels. Create it when you’re ready.</p>
+          <div class="dashboard-ads-submit-preview is-ready" id="dashboardAdsSubmitPreview" aria-label="Assembled ad preview"></div>
+          <ul class="dashboard-ads-review-meta" id="dashboardAdsReviewMeta">
+            <li><span>Status</span> <strong data-ads-review="status">—</strong></li>
+            <li><span>Days</span> <strong data-ads-review="days">—</strong></li>
+            <li><span>Link</span> <strong data-ads-review="link">—</strong></li>
+          </ul>
+        </div>
+      </div>
 
       <p class="dashboard-ads-form-status" id="dashboardAdsFormStatus" role="status" aria-live="polite" hidden></p>
 
-      <div class="dashboard-ads-create-actions">
-        <button type="submit" class="btn-dash btn-dash-primary" id="dashboardAdsSubmit">
+      <div class="dashboard-menu-item-wizard-footer dashboard-ads-wizard-footer">
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardAdsCreateCancel">Cancel</button>
+        <button type="button" class="btn-dash btn-dash-secondary hidden" id="dashboardAdsWizardPrev" hidden disabled>Back</button>
+        <button type="button" class="btn-dash btn-dash-primary" id="dashboardAdsWizardNext">Next</button>
+        <button type="submit" class="btn-dash btn-dash-primary hidden" id="dashboardAdsSubmit" hidden>
           <i class="fa fa-cloud-upload" aria-hidden="true"></i>
           <span class="dashboard-ads-submit-label">Create ad</span>
         </button>
-        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardAdsCreateCancel">Cancel</button>
       </div>
     </form>
   </div>

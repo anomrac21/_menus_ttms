@@ -1321,8 +1321,86 @@ document.addEventListener('DOMContentLoaded', async function() {
     return '';
   }
 
+  function slugifyPromoTitle(str) {
+    return String(str || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function promotionSlugFromContentPath(path) {
+    var m = String(path || '').match(/\/promotions\/([^/]+)\.md$/i);
+    return m ? m[1] : '';
+  }
+
+  function normalizePromoLinkPath(link) {
+    var v = String(link || '').trim();
+    if (!v) return '';
+    try {
+      if (/^https?:\/\//i.test(v)) {
+        var u = new URL(v);
+        v = u.pathname || '';
+      }
+    } catch (e) { /* keep raw */ }
+    if (v.charAt(0) !== '/') v = '/' + v;
+    if (v.slice(-1) !== '/') v += '/';
+    return v;
+  }
+
+  var promoLinkAutoDefault = '';
+
+  function currentPromotionSlugForLink() {
+    var path =
+      (selectedInfo && selectedInfo.contentPath) ||
+      (selectedElement && selectedElement.getAttribute('data-content-path')) ||
+      '';
+    var fromPath = promotionSlugFromContentPath(path);
+    if (fromPath) return fromPath;
+    var title = inputPromoTitle ? String(inputPromoTitle.value || '').trim() : '';
+    var fromTitle = slugifyPromoTitle(title);
+    var isNew = !!(selectedElement && selectedElement.getAttribute('data-dashboard-edit-new-promotion'));
+    if (isNew && fromTitle) return fromTitle;
+    if (selectedElement) {
+      var url = selectedElement.getAttribute('data-ad-url') || selectedElement.getAttribute('data-ad-link') || '';
+      var fromUrl = promotionSlugFromLink(url);
+      if (fromUrl && /\/promotions\//i.test(String(url))) return fromUrl;
+      var id = selectedElement.getAttribute('data-ad-id') || '';
+      if (id.indexOf('menu-ad-') === 0) {
+        var idSlug = id.replace(/^menu-ad-/, '');
+        if (idSlug) return idSlug;
+      }
+    }
+    return fromTitle || 'promotion';
+  }
+
+  function expectedPromotionLinkUrl() {
+    return '/promotions/' + currentPromotionSlugForLink() + '/';
+  }
+
+  function ensurePromoLinkDefault(opts) {
+    opts = opts || {};
+    if (!inputPromoLink) return;
+    var expected = expectedPromotionLinkUrl();
+    var currentNorm = normalizePromoLinkPath(inputPromoLink.value);
+    var expectedNorm = normalizePromoLinkPath(expected);
+    var autoNorm = normalizePromoLinkPath(promoLinkAutoDefault);
+    var shouldApply =
+      !!opts.force ||
+      !currentNorm ||
+      (autoNorm && currentNorm === autoNorm) ||
+      currentNorm === expectedNorm;
+    if (shouldApply) {
+      inputPromoLink.value = expected;
+      promoLinkAutoDefault = expected;
+    }
+    inputPromoLink.setAttribute('placeholder', expected);
+  }
+
   function promotionSlugFromElement(el) {
     if (!el) return '';
+    var path = el.getAttribute('data-content-path') || '';
+    var fromPath = promotionSlugFromContentPath(path);
+    if (fromPath) return fromPath;
     var id = el.getAttribute('data-ad-id') || '';
     if (id.indexOf('menu-ad-') === 0) {
       var slug = id.replace(/^menu-ad-/, '').replace(/-\d+$/, '');
@@ -1330,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     var title = el.getAttribute('data-ad-title') || '';
     if (title) {
-      var titleSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      var titleSlug = slugifyPromoTitle(title);
       if (titleSlug) return titleSlug;
     }
     var url = el.getAttribute('data-ad-url') || el.getAttribute('data-ad-link') || '';
@@ -5148,6 +5226,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (inputLocationOpeningHours) inputLocationOpeningHours.value = '';
     if (inputPromoTitle) inputPromoTitle.value = '';
     if (inputPromoLink) inputPromoLink.value = '';
+    promoLinkAutoDefault = '';
     if (inputSectionWeight) inputSectionWeight.value = '';
     if (inputSectionIcon) inputSectionIcon.value = '';
     if (window.DashboardSectionIconPicker && typeof window.DashboardSectionIconPicker.syncFromInput === 'function') {
@@ -5177,6 +5256,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (inputPromoTitle) inputPromoTitle.value = '';
     if (inputPromoDescription) inputPromoDescription.value = '';
     if (inputPromoLink) inputPromoLink.value = '';
+    promoLinkAutoDefault = '';
     if (inputPromoImages) inputPromoImages.value = '';
     if (promoImagesContainer) renderPromoImagesUI([], true);
     if (inputPromoRecurring) inputPromoRecurring.checked = false;
@@ -8164,6 +8244,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       clearEmbedChangesFilterIfKind('promotion');
     }
+    if (promoWizardStep === 1) ensurePromoLinkDefault();
     scrollEmbedWizardTabIntoView(root);
     if (window.DashboardEditFieldPrompts) window.DashboardEditFieldPrompts.enable();
   }
@@ -8293,8 +8374,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (inputPromoTitle) inputPromoTitle.value = (el.getAttribute('data-ad-title') || (adTitleEl ? getTextContent(adTitleEl) : '')) || '';
       if (inputPromoDescription) inputPromoDescription.value = el.getAttribute('data-ad-description') || '';
       if (inputPromoLink) {
+        promoLinkAutoDefault = '';
         inputPromoLink.value = (el.getAttribute('data-ad-link') || el.getAttribute('data-ad-url') || '') ||
           (adLinkEl ? (adLinkEl.getAttribute('href') || '') : '');
+        ensurePromoLinkDefault();
       }
       var imagesArr = [];
       try {
@@ -8514,7 +8597,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (contentType === 'promotion' || kind === 'promotion') {
         if (inputPromoTitle && fm.title != null) inputPromoTitle.value = fm.title;
         if (inputPromoDescription && p.body != null) inputPromoDescription.value = p.body;
-        if (inputPromoLink && fm.link != null) inputPromoLink.value = fm.link;
+        if (inputPromoLink) {
+          promoLinkAutoDefault = '';
+          if (fm.link != null) inputPromoLink.value = fm.link;
+          ensurePromoLinkDefault();
+        }
         var promoImages = pathsFromFmImages(fm.images);
         if (promoImagesContainer) renderPromoImagesUI(promoImages, true);
         else if (inputPromoImages) inputPromoImages.value = promoImages.join('\n');
@@ -11413,6 +11500,20 @@ document.addEventListener('DOMContentLoaded', async function() {
   (function setupPromotionWizard() {
     var root = document.getElementById('dashboardPromotionWizardRoot');
     if (!root) return;
+    if (inputPromoTitle) {
+      inputPromoTitle.addEventListener('input', function() {
+        ensurePromoLinkDefault();
+      });
+    }
+    if (inputPromoLink) {
+      inputPromoLink.addEventListener('input', function() {
+        var currentNorm = normalizePromoLinkPath(inputPromoLink.value);
+        var expectedNorm = normalizePromoLinkPath(expectedPromotionLinkUrl());
+        if (!currentNorm || currentNorm === expectedNorm) {
+          promoLinkAutoDefault = expectedPromotionLinkUrl();
+        }
+      });
+    }
     root.querySelectorAll('.dashboard-wizard-tab[data-promo-wizard-index]').forEach(function(tab) {
       tab.addEventListener('click', function() {
         var idx = parseInt(tab.getAttribute('data-promo-wizard-index'), 10);
