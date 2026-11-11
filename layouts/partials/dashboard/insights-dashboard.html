@@ -47,8 +47,26 @@
       </div>
     </div>
     <div class="dashboard-analytics-trends dashboard-notify-trends" id="dashboardAnalyticsTrendsSection">
-      <h3 class="dashboard-notify-subsection-title">Restaurant activity</h3>
-      <p class="dashboard-analytics-subtitle">Daily visitors and menu views.</p>
+      <div class="dashboard-notify-trends-head">
+        <div class="dashboard-analytics-trends-title-block">
+          <h3 class="dashboard-notify-subsection-title">Restaurant activity</h3>
+          <p class="dashboard-analytics-subtitle">Daily visitors and menu views.</p>
+        </div>
+        <div class="dashboard-orders-hub-tabs dashboard-analytics-chart-type-tabs" id="dashboardAnalyticsChartTypeTabs" role="tablist" aria-label="Chart type">
+          <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" data-chart-type="bars" data-analytics-chart="bars" aria-selected="true">Bars</button>
+          <button type="button" class="dashboard-orders-hub-tab" role="tab" data-chart-type="lines" data-analytics-chart="lines" aria-selected="false">Lines</button>
+          <button type="button" class="dashboard-orders-hub-tab" role="tab" data-chart-type="area" data-analytics-chart="area" aria-selected="false">Area</button>
+          <button type="button" class="dashboard-orders-hub-tab" role="tab" data-chart-type="stacked" data-analytics-chart="stacked" aria-selected="false">Stacked</button>
+        </div>
+      </div>
+      <div class="dashboard-notify-trends-legend" id="dashboardAnalyticsTrendLegend" aria-hidden="true">
+        <span class="dashboard-notify-trends-legend-item dashboard-analytics-trends-legend-item--pageviews"><i class="fa fa-square" aria-hidden="true"></i> Page views</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-analytics-trends-legend-item--visits"><i class="fa fa-square" aria-hidden="true"></i> Visits</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-analytics-trends-legend-item--menu"><i class="fa fa-square" aria-hidden="true"></i> Menu item views</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-analytics-trends-legend-item--cart"><i class="fa fa-square" aria-hidden="true"></i> Add to cart</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-analytics-trends-legend-item--orders"><i class="fa fa-square" aria-hidden="true"></i> Orders</span>
+        <span class="dashboard-notify-trends-legend-item dashboard-analytics-trends-legend-item--search"><i class="fa fa-square" aria-hidden="true"></i> Searches</span>
+      </div>
       <div class="dashboard-notify-trends-chart-wrap" id="dashboardAnalyticsTrendChartWrap">
         <div class="dashboard-notify-trends-chart" id="dashboardAnalyticsTrendChart" role="img" aria-label="Daily restaurant activity"></div>
         <p id="dashboardAnalyticsTrendEmpty" class="dashboard-notify-empty" hidden>No activity in this period yet.</p>

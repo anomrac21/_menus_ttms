@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tier === 'tier2') {
             return ANIM_SCALE.concat(ANIM_ROTATE);
         }
-        if (tier === 'tier1' || tier === 'tier1_4mo') {
+        if (tier === 'always_on' || tier === 'tier1' || tier === 'tier1_4mo') {
             return ANIM_ROTATE.concat(ANIM_SLIDE.slice(0, 4));
         }
         if (tier === 'free_verified') {
@@ -570,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.SiteConfig && window.SiteConfig.tier) tier = window.SiteConfig.tier;
         else if (window.SITE_TIER) tier = window.SITE_TIER;
         tier = String(tier).toLowerCase();
-        return tier === 'tier1' || tier === 'tier1_4mo' || tier === 'tier2';
+        return tier === 'always_on' || tier === 'tier1' || tier === 'tier1_4mo' || tier === 'tier2';
     }
 
     function loaderReelsTurn(kind) {

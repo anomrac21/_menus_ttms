@@ -72,20 +72,28 @@
       <span class="dashboard-analytics-card-meta" id="metricNotifyUnsubscribes30dMeta"></span>
     </div>
   </div>
-  <div class="dashboard-notify-subsection dashboard-notify-trends" id="dashboardNotifyTrendsSection" aria-labelledby="notify-trends-heading">
+  <div class="dashboard-notify-subsection dashboard-notify-trends" id="dashboardNotifyTrendsSection" aria-labelledby="notify-trends-heading" data-chart-type="bars">
     <div class="dashboard-notify-trends-head">
-      <h3 id="notify-trends-heading" class="dashboard-notify-subsection-title">Last 30 days</h3>
-      <div class="dashboard-notify-trends-legend" id="dashboardNotifyTrendLegend" aria-hidden="true">
-        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--sent"><i class="fa fa-square" aria-hidden="true"></i> Sent</span>
-        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--delivered"><i class="fa fa-square" aria-hidden="true"></i> Arrived</span>
-        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--confirmed"><i class="fa fa-square" aria-hidden="true"></i> Opened</span>
-        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--clicked"><i class="fa fa-square" aria-hidden="true"></i> Clicked</span>
-        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--subscribed"><i class="fa fa-square" aria-hidden="true"></i> Subscribers</span>
-        <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--unsubscribed"><i class="fa fa-square" aria-hidden="true"></i> Unsubscribed</span>
+      <div class="dashboard-analytics-trends-title-block">
+        <h3 id="notify-trends-heading" class="dashboard-notify-subsection-title">Last 30 days</h3>
+        <p class="dashboard-analytics-subtitle dashboard-notify-subsection-lead">Daily sends, delivery outcomes, and subscriber changes.</p>
+      </div>
+      <div class="dashboard-orders-hub-tabs dashboard-analytics-chart-type-tabs" id="dashboardNotifyChartTypeTabs" role="tablist" aria-label="Chart type">
+        <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" data-chart-type="bars" aria-selected="true">Bars</button>
+        <button type="button" class="dashboard-orders-hub-tab" role="tab" data-chart-type="lines" aria-selected="false">Lines</button>
+        <button type="button" class="dashboard-orders-hub-tab" role="tab" data-chart-type="area" aria-selected="false">Area</button>
+        <button type="button" class="dashboard-orders-hub-tab" role="tab" data-chart-type="stacked" aria-selected="false">Stacked</button>
       </div>
     </div>
-    <p class="dashboard-analytics-subtitle dashboard-notify-subsection-lead">Daily sends, delivery outcomes, and subscriber changes.</p>
-    <div class="dashboard-notify-trends-chart-wrap">
+    <div class="dashboard-notify-trends-legend" id="dashboardNotifyTrendLegend" aria-hidden="true">
+      <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--sent"><i class="fa fa-square" aria-hidden="true"></i> Sent</span>
+      <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--delivered"><i class="fa fa-square" aria-hidden="true"></i> Arrived</span>
+      <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--confirmed"><i class="fa fa-square" aria-hidden="true"></i> Opened</span>
+      <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--clicked"><i class="fa fa-square" aria-hidden="true"></i> Clicked</span>
+      <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--subscribed"><i class="fa fa-square" aria-hidden="true"></i> Subscribers</span>
+      <span class="dashboard-notify-trends-legend-item dashboard-notify-trends-legend-item--unsubscribed"><i class="fa fa-square" aria-hidden="true"></i> Unsubscribed</span>
+    </div>
+    <div class="dashboard-notify-trends-chart-wrap" id="dashboardNotifyTrendChartWrap">
       <div class="dashboard-notify-trends-chart" id="dashboardNotifyTrendChart" role="img" aria-label="Notification activity chart for the last 30 days"></div>
       <p id="dashboardNotifyTrendEmpty" class="dashboard-notify-empty" hidden>No activity in this period yet.</p>
     </div>

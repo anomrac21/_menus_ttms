@@ -1,0 +1,211 @@
+{{- /*
+  Ads card: create ads on ads.ttmenus.com, list network ads + menu promotions with analytics.
+*/ -}}
+{{- $adsServiceUrl := site.Params.adsServiceUrl | default "https://ads.ttmenus.com" -}}
+{{- $adsApiUrl := site.Params.ads.apiUrl | default (printf "%s/api/v1" (strings.TrimSuffix $adsServiceUrl "/")) -}}
+{{- $adsClientId := site.Params.ads.clientId | default (site.Params.contentManagement.clientId | default "") -}}
+{{- $locs := partial "menu/visible-locations.html" . -}}
+{{- $multi := partial "menu/multi-location-enabled.html" . -}}
+{{- $collect := slice -}}
+{{- $seen := dict -}}
+{{- if $multi -}}
+  {{- range $locs -}}
+    {{- with site.GetPage (printf "/%s/promotions" .slug) -}}
+      {{- range .RegularPages -}}{{- $collect = $collect | append . -}}{{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- with site.GetPage "/promotions" -}}
+    {{- range .RegularPages -}}{{- $collect = $collect | append . -}}{{- end -}}
+  {{- end -}}
+{{- else -}}
+  {{- with partial "menu/promotions-page.html" . -}}
+    {{- $collect = .RegularPages -}}
+  {{- end -}}
+{{- end -}}
+{{- $promos := slice -}}
+{{- range $collect -}}
+  {{- if not (index $seen .RelPermalink) -}}
+    {{- $seen = merge $seen (dict .RelPermalink true) -}}
+    {{- $title := .LinkTitle | default .Title -}}
+    {{- $img := "" -}}
+    {{- with .Params.images -}}
+      {{- range . -}}
+        {{- if and (not $img) .image -}}{{- $img = .image -}}{{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if and (not $img) .Params.image -}}{{- $img = .Params.image -}}{{- end -}}
+    {{- $imgSrc := "" -}}
+    {{- if $img -}}
+      {{- $imgSrc = partial "ttms/menu-img-src.html" (dict "path" $img "size" "ad") -}}
+    {{- end -}}
+    {{- $locLabel := "" -}}
+    {{- $first := index (split (strings.TrimPrefix "/" .RelPermalink) "/") 0 -}}
+    {{- range $locs -}}
+      {{- if eq .slug $first -}}{{- $locLabel = .city | default .slug -}}{{- end -}}
+    {{- end -}}
+    {{- $promos = $promos | append (dict
+      "title" $title
+      "url" .RelPermalink
+      "editUrl" "/promotion-settings/"
+      "image" $imgSrc
+      "location" $locLabel
+    ) -}}
+  {{- end -}}
+{{- end -}}
+{{- $promoCount := len $promos -}}
+
+<div
+  class="dashboard-ads-overview"
+  id="dashboardAdsOverview"
+  data-promo-count="{{ $promoCount }}"
+  data-ads-service-url="{{ $adsServiceUrl }}"
+  data-ads-api-url="{{ $adsApiUrl }}"
+  data-ads-client-id="{{ $adsClientId }}"
+  aria-label="Menu ads and promotions"
+>
+  <div class="dashboard-ads-overview-head">
+    <div>
+      <p class="dashboard-card-desc">Create ads for this menu and track how customers engage with them.</p>
+      <p class="dashboard-ads-overview-lead" id="dashboardAdsOverviewLead">Loading ads…</p>
+    </div>
+    <div class="dashboard-ads-overview-actions">
+      <button type="button" class="btn-dash btn-dash-primary" id="dashboardAdsAddToggle" aria-expanded="false" aria-controls="dashboardAdsCreatePanel">
+        <i class="fa fa-plus" aria-hidden="true"></i> Add ad
+      </button>
+      <a href="{{ $adsServiceUrl }}/ads/" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Ads console</a>
+    </div>
+  </div>
+
+  <div class="dashboard-ads-create" id="dashboardAdsCreatePanel" hidden>
+    <form id="dashboardAdsCreateForm" class="dashboard-ads-create-form" novalidate>
+      <input type="hidden" id="dashboardAdsClientId" name="client_id" value="{{ $adsClientId }}" autocomplete="off">
+      <div class="dashboard-ads-create-grid">
+        <div class="dashboard-edit-field">
+          <label for="dashboardAdsTitle">Title</label>
+          <input type="text" id="dashboardAdsTitle" class="dashboard-edit-input" maxlength="100" required placeholder="Weekend special">
+        </div>
+        <div class="dashboard-edit-field">
+          <label for="dashboardAdsLink">Click link <span class="dashboard-ads-optional">(optional)</span></label>
+          <input type="text" id="dashboardAdsLink" class="dashboard-edit-input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://… or tel:…">
+        </div>
+        <div class="dashboard-edit-field">
+          <label for="dashboardAdsStatus">Status</label>
+          <select id="dashboardAdsStatus" class="dashboard-edit-input">
+            <option value="active" selected>Active</option>
+            <option value="draft">Draft</option>
+            <option value="paused">Paused</option>
+          </select>
+        </div>
+        <div class="dashboard-edit-field">
+          <label for="dashboardAdsWeight">Priority</label>
+          <input type="number" id="dashboardAdsWeight" class="dashboard-edit-input" min="0" max="100" value="10">
+        </div>
+      </div>
+
+      <div class="dashboard-edit-field">
+        <label for="dashboardAdsImage">Image or video</label>
+        <div class="dashboard-ads-upload-row">
+          <input type="file" id="dashboardAdsImage" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg" required>
+          <span class="dashboard-ads-upload-name" id="dashboardAdsImageName">No file selected</span>
+        </div>
+        <div class="dashboard-ads-upload-progress" id="dashboardAdsUploadProgress" hidden>
+          <div class="dashboard-ads-upload-bar" id="dashboardAdsUploadBar"></div>
+        </div>
+        <div class="dashboard-ads-upload-preview" id="dashboardAdsUploadPreview" hidden></div>
+        <p class="dashboard-settings-hint">JPG, PNG, WebP, GIF (50MB) or MP4/WebM (100MB). Portrait 9:16 works best in menu reels.</p>
+      </div>
+
+      <fieldset class="dashboard-ads-days">
+        <legend>Show on</legend>
+        <div class="dashboard-ads-days-grid" id="dashboardAdsDays">
+          {{- range (slice "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday") -}}
+          <label class="dashboard-ads-day">
+            <input type="checkbox" name="dashboardAdsDay" value="{{ . }}" checked>
+            <span>{{ slicestr . 0 3 }}</span>
+          </label>
+          {{- end -}}
+        </div>
+      </fieldset>
+
+      <p class="dashboard-ads-form-status" id="dashboardAdsFormStatus" role="status" aria-live="polite" hidden></p>
+
+      <div class="dashboard-ads-create-actions">
+        <button type="submit" class="btn-dash btn-dash-primary" id="dashboardAdsSubmit">
+          <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+          <span class="dashboard-ads-submit-label">Create ad</span>
+        </button>
+        <button type="button" class="btn-dash btn-dash-secondary" id="dashboardAdsCreateCancel">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="dashboard-ads-totals" id="dashboardAdsTotals" aria-label="Ad totals" hidden>
+    <div class="dashboard-ads-total">
+      <span class="dashboard-ads-total-label">Impressions</span>
+      <span class="dashboard-ads-total-value" id="dashboardAdsTotalImpressions">—</span>
+    </div>
+    <div class="dashboard-ads-total">
+      <span class="dashboard-ads-total-label">Clicks</span>
+      <span class="dashboard-ads-total-value" id="dashboardAdsTotalClicks">—</span>
+    </div>
+    <div class="dashboard-ads-total">
+      <span class="dashboard-ads-total-label">Click rate</span>
+      <span class="dashboard-ads-total-value" id="dashboardAdsTotalRate">—</span>
+    </div>
+  </div>
+
+  <p id="dashboardAdsHint" class="dashboard-card-analytics-hint hidden" role="status"></p>
+
+  <div class="dashboard-ads-section">
+    <h4 class="dashboard-ads-section-title">Ads for this menu</h4>
+    <div class="dashboard-ads-promo-list" id="dashboardAdsNetworkList" aria-live="polite">
+      <p class="dashboard-analytics-subtitle" id="dashboardAdsNetworkEmpty">Loading ads…</p>
+    </div>
+  </div>
+
+  {{- if gt $promoCount 0 -}}
+  <div class="dashboard-ads-section">
+    <div class="dashboard-ads-section-head">
+      <h4 class="dashboard-ads-section-title">Menu promotions</h4>
+      <a href="/promotion-settings/" class="dashboard-ads-promo-link">Manage</a>
+    </div>
+    <div class="dashboard-ads-promo-list" id="dashboardAdsPromoList">
+      {{- range $promos -}}
+      <article class="dashboard-ads-promo-card" data-promo-title="{{ .title }}" data-promo-kind="promotion">
+        <div class="dashboard-ads-promo-media"{{ if not .image }} aria-hidden="true"{{ end }}>
+          {{- if .image -}}
+          <img src="{{ .image }}" alt="" loading="lazy" decoding="async">
+          {{- else -}}
+          <span class="dashboard-ads-promo-media-fallback"><i class="fa fa-bullhorn" aria-hidden="true"></i></span>
+          {{- end -}}
+        </div>
+        <div class="dashboard-ads-promo-body">
+          <div class="dashboard-ads-promo-copy">
+            <span class="dashboard-ads-promo-kind">Promotion{{ with .location }} · {{ . }}{{ end }}</span>
+            <h4 class="dashboard-ads-promo-title">{{ .title }}</h4>
+          </div>
+          <dl class="dashboard-ads-promo-stats">
+            <div>
+              <dt>Impressions</dt>
+              <dd data-promo-metric="impressions">—</dd>
+            </div>
+            <div>
+              <dt>Clicks</dt>
+              <dd data-promo-metric="clicks">—</dd>
+            </div>
+            <div>
+              <dt>Click rate</dt>
+              <dd data-promo-metric="rate">—</dd>
+            </div>
+          </dl>
+          <div class="dashboard-ads-promo-links">
+            <a href="{{ .url }}" class="dashboard-ads-promo-link">View on menu</a>
+            <a href="{{ .editUrl }}" class="dashboard-ads-promo-link">Edit</a>
+          </div>
+        </div>
+      </article>
+      {{- end -}}
+    </div>
+  </div>
+  {{- end -}}
+</div>

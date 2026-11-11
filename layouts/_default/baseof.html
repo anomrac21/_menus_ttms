@@ -9,6 +9,7 @@
   {{- $dashCss := partial "head/asset-url.html" `/css/dashboard.css` -}}
   <link rel="stylesheet" href="{{ $authCss }}">
   <link rel="stylesheet" href="{{ $dashCss }}">
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-trends-chart.js` }}" defer></script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-analytics-snapshot.js` }}" defer></script>
   <script src="/js/analytics-integrations.js" defer></script>
 </head>

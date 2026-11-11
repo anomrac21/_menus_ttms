@@ -1,6 +1,6 @@
 {{- $tier := lower (default "free" site.Params.tier) -}}
 {{- $verified := ne $tier "free" -}}
-{{- $paid := or (eq $tier "tier1") (eq $tier "tier1_4mo") (eq $tier "tier2") -}}
+{{- $paid := or (eq $tier "always_on") (eq $tier "tier1") (eq $tier "tier1_4mo") (eq $tier "tier2") -}}
 {{- $f := site.Params.features | default dict -}}
 {{- $ordering := false -}}
 {{- with site.Params.orderingsystem -}}{{- $ordering = default false .enabled -}}{{- end -}}

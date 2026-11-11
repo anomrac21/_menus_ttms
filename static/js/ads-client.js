@@ -2611,7 +2611,7 @@
     if (window.SiteConfig && window.SiteConfig.tier) tier = window.SiteConfig.tier;
     else if (window.SITE_TIER) tier = window.SITE_TIER;
     tier = String(tier).toLowerCase();
-    return tier === 'tier1' || tier === 'tier1_4mo' || tier === 'tier2';
+    return tier === 'always_on' || tier === 'tier1' || tier === 'tier1_4mo' || tier === 'tier2';
   },
 
   /**

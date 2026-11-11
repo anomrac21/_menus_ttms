@@ -233,6 +233,163 @@
       });
   }
 
+  function normalizePromoKey(name) {
+    return String(name || '')
+      .toLowerCase()
+      .replace(/&amp;/g, '&')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function cleanPromotionRows(rows) {
+    if (!Array.isArray(rows)) return [];
+    var merged = {};
+    var order = [];
+    rows.forEach(function (row) {
+      var name = String((row && row.name) || '').trim();
+      if (!name) return;
+      if (!merged[name]) {
+        merged[name] = { name: name, impressions: 0, clicks: 0 };
+        order.push(name);
+      }
+      merged[name].impressions += Number(row.impressions) || 0;
+      merged[name].clicks += Number(row.clicks) || 0;
+    });
+    return order.map(function (name) {
+      var row = merged[name];
+      row.clickRate = row.impressions > 0 ? Math.round((row.clicks / row.impressions) * 1000) / 10 : 0;
+      return row;
+    });
+  }
+
+  function matchPromoStats(title, statsRows) {
+    var key = normalizePromoKey(title);
+    if (!key) return { impressions: 0, clicks: 0, clickRate: 0 };
+    var exact = null;
+    var partial = null;
+    (statsRows || []).forEach(function (row) {
+      var rowKey = normalizePromoKey(row.name);
+      if (!rowKey) return;
+      if (rowKey === key) exact = row;
+      else if (!partial && (rowKey.indexOf(key) !== -1 || key.indexOf(rowKey) !== -1)) partial = row;
+    });
+    var hit = exact || partial;
+    if (!hit) return { impressions: 0, clicks: 0, clickRate: 0 };
+    return {
+      impressions: Number(hit.impressions) || 0,
+      clicks: Number(hit.clicks) || 0,
+      clickRate: hit.impressions ? Math.round((hit.clicks / hit.impressions) * 1000) / 10 : 0,
+    };
+  }
+
+  function setPromoMetric(card, key, value) {
+    var el = card.querySelector('[data-promo-metric="' + key + '"]');
+    if (el) el.textContent = value;
+  }
+
+  /**
+   * Ads card: fill per-promotion impressions / clicks from analytics summary.
+   */
+  function loadAdsCard(options) {
+    options = options || {};
+    var days = options.days || 30;
+    var root = document.getElementById('dashboardAdsOverview');
+    if (!root) return Promise.resolve();
+
+    var hint = document.getElementById('dashboardAdsHint');
+    var totals = document.getElementById('dashboardAdsTotals');
+    var lead = document.getElementById('dashboardAdsOverviewLead');
+    var cards = root.querySelectorAll('.dashboard-ads-promo-card[data-promo-title]');
+    var countEl = document.getElementById('dashboardCardAdsCount');
+
+    if (countEl && root.getAttribute('data-promo-count') != null) {
+      countEl.textContent = formatCount(Number(root.getAttribute('data-promo-count')) || 0);
+      countEl.classList.remove('is-loading');
+      countEl.removeAttribute('aria-busy');
+    }
+
+    return fetchSummary(days)
+      .then(function (x) {
+        if (!x.ok) {
+          if (hint) {
+            hint.textContent = errorMessage(x.status, x.data);
+            hint.classList.remove('hidden');
+          }
+          Array.prototype.forEach.call(cards, function (card) {
+            setPromoMetric(card, 'impressions', '—');
+            setPromoMetric(card, 'clicks', '—');
+            setPromoMetric(card, 'rate', '—');
+          });
+          return;
+        }
+
+        var d = x.data || {};
+        var statsRows = cleanPromotionRows(Array.isArray(d.promotions) ? d.promotions : []);
+        var trackedImpressions = 0;
+        var trackedClicks = 0;
+
+        Array.prototype.forEach.call(cards, function (card) {
+          var title = card.getAttribute('data-promo-title') || '';
+          var stats = matchPromoStats(title, statsRows);
+          trackedImpressions += stats.impressions;
+          trackedClicks += stats.clicks;
+          setPromoMetric(card, 'impressions', formatCount(stats.impressions));
+          setPromoMetric(card, 'clicks', formatCount(stats.clicks));
+          setPromoMetric(
+            card,
+            'rate',
+            stats.impressions ? String(stats.clickRate) + '%' : '—'
+          );
+        });
+
+        var rawImpressions = Number(d.promotionImpressions) || 0;
+        var rawClicks = Number(d.promotionClicks) || 0;
+        var showImpressions = cards.length ? trackedImpressions : rawImpressions;
+        var showClicks = cards.length ? trackedClicks : rawClicks;
+        var rate =
+          showImpressions > 0 ? Math.round((showClicks / showImpressions) * 1000) / 10 : null;
+
+        var impEl = document.getElementById('dashboardAdsTotalImpressions');
+        var clickEl = document.getElementById('dashboardAdsTotalClicks');
+        var rateEl = document.getElementById('dashboardAdsTotalRate');
+        if (impEl) impEl.textContent = formatCount(showImpressions);
+        if (clickEl) clickEl.textContent = formatCount(showClicks);
+        if (rateEl) rateEl.textContent = rate != null ? String(rate) + '%' : '—';
+        if (totals) totals.hidden = false;
+
+        if (lead) {
+          var n = cards.length || Number(root.getAttribute('data-promo-count')) || 0;
+          lead.textContent =
+            'Last ' +
+            periodDaysLabel(days) +
+            (n
+              ? ' · ' + formatCount(n) + ' promotion' + (n === 1 ? '' : 's')
+              : ' · no promotions yet');
+        }
+
+        if (hint) {
+          if (!cards.length && (rawImpressions || rawClicks)) {
+            hint.textContent =
+              formatCount(rawImpressions) +
+              ' impressions and ' +
+              formatCount(rawClicks) +
+              ' clicks were tracked, but no matching menu promotions are published yet.';
+            hint.classList.remove('hidden');
+          } else {
+            hint.classList.add('hidden');
+            hint.textContent = '';
+          }
+        }
+      })
+      .catch(function () {
+        if (hint) {
+          hint.textContent = 'Could not load promotion analytics. Try again later.';
+          hint.classList.remove('hidden');
+        }
+      });
+  }
+
   /**
    * Full /analytics/ page metrics.
    */
@@ -315,148 +472,103 @@
       });
   }
 
+  function analyticsTrendSeriesMeta() {
+    return [
+      { key: 'pageViews', label: 'Page views', slug: 'pageviews' },
+      { key: 'visits', label: 'Visits', slug: 'visits' },
+      { key: 'menuItemViews', label: 'Menu item views', slug: 'menu' },
+      { key: 'addToCart', label: 'Add to cart', slug: 'cart' },
+      { key: 'orderSubmissions', label: 'Orders', slug: 'orders' },
+      { key: 'searches', label: 'Searches', slug: 'search' },
+    ];
+  }
+
+  function getAnalyticsChartType() {
+    var DTC = global.DashboardTrendsChart;
+    if (DTC && typeof DTC.getType === 'function') return DTC.getType();
+    try {
+      var stored = localStorage.getItem('ttms_analytics_chart_type') || localStorage.getItem('ttms_dashboard_chart_type');
+      if (['bars', 'lines', 'area', 'stacked'].indexOf(stored) >= 0) return stored;
+    } catch (e) { /* ignore */ }
+    return 'bars';
+  }
+
+  function bindAnalyticsChartTypeTabs() {
+    var list = document.getElementById('dashboardAnalyticsChartTypeTabs');
+    if (!list) return;
+    // Prefer shared data-chart-type attrs; keep legacy data-analytics-chart working.
+    list.querySelectorAll('[data-analytics-chart]').forEach(function (tab) {
+      if (!tab.getAttribute('data-chart-type')) {
+        tab.setAttribute('data-chart-type', tab.getAttribute('data-analytics-chart'));
+      }
+    });
+    var DTC = global.DashboardTrendsChart;
+    if (DTC && typeof DTC.bindTypeTabs === 'function') {
+      DTC.bindTypeTabs(list, function () {
+        if (analyticsChartRows.length) renderAnalyticsTrendChart(analyticsChartRows, analyticsChartDays);
+      });
+      return;
+    }
+    if (list.getAttribute('data-bound') === '1') return;
+    list.setAttribute('data-bound', '1');
+    list.addEventListener('click', function (event) {
+      var btn = event.target.closest('[data-chart-type], [data-analytics-chart]');
+      if (!btn || !list.contains(btn)) return;
+      var type = btn.getAttribute('data-chart-type') || btn.getAttribute('data-analytics-chart');
+      if (!type) return;
+      try { localStorage.setItem('ttms_dashboard_chart_type', type); } catch (e) { /* ignore */ }
+      if (analyticsChartRows.length) renderAnalyticsTrendChart(analyticsChartRows, analyticsChartDays);
+    });
+  }
+
   function renderAnalyticsTrendChart(rows, days) {
     var chart = document.getElementById('dashboardAnalyticsTrendChart');
     var empty = document.getElementById('dashboardAnalyticsTrendEmpty');
     if (!chart) return;
 
+    bindAnalyticsChartTypeTabs();
     rows = normalizeTrendRows(rows);
-    var hasData = rows.some(function (r) {
-      return r.pageViews + r.visits + r.menuItemViews + r.addToCart + r.orderSubmissions + r.searches > 0;
-    });
+    analyticsChartRows = rows;
+    analyticsChartDays = days || 30;
+    ensureAnalyticsChartWatch(chart);
 
-    if (!hasData) {
+    var chartType = getAnalyticsChartType();
+    var DTC = global.DashboardTrendsChart;
+    var typeLabel = DTC && DTC.typeLabel ? DTC.typeLabel(chartType) : chartType;
+    var aria =
+      'Analytics ' +
+      typeLabel +
+      ' chart for the last ' +
+      periodDaysLabel(days || 30) +
+      ' with daily page views, visits, menu item views, add to cart, orders, and searches';
+
+    if (DTC && typeof DTC.render === 'function') {
+      DTC.applyTypeTabs(document.getElementById('dashboardAnalyticsChartTypeTabs'), chartType);
+      DTC.render({
+        chartEl: chart,
+        emptyEl: empty,
+        sectionEl: document.getElementById('dashboardAnalyticsTrendsSection'),
+        rows: rows,
+        series: analyticsTrendSeriesMeta(),
+        type: chartType,
+        classPrefix: 'dashboard-analytics-trends',
+        formatDate: formatShortDate,
+        escapeHtml: escapeHtml,
+        ariaLabel: aria,
+      });
+      return;
+    }
+
+    // Fallback: bars-only if shared chart helper is unavailable.
+    if (!rows.some(function (r) {
+      return r.pageViews + r.visits + r.menuItemViews + r.addToCart + r.orderSubmissions + r.searches > 0;
+    })) {
       chart.innerHTML = '';
       if (empty) empty.hidden = false;
       return;
     }
     if (empty) empty.hidden = true;
-    analyticsChartRows = rows;
-    analyticsChartDays = days || 30;
-    ensureAnalyticsChartWatch(chart);
-
-    var height = 260;
-    var pad = { top: 16, right: 32, bottom: 36, left: 44 };
-    var innerH = height - pad.top - pad.bottom;
-    var maxVal = 1;
-
-    rows.forEach(function (r) {
-      maxVal = Math.max(maxVal, r.pageViews, r.visits, r.menuItemViews, r.addToCart, r.orderSubmissions, r.searches);
-    });
-
-    var series = [
-      { key: 'pageViews', label: 'Page views', className: 'dashboard-analytics-trends-bar--pageviews' },
-      { key: 'visits', label: 'Visits', className: 'dashboard-analytics-trends-bar--visits' },
-      { key: 'menuItemViews', label: 'Menu item views', className: 'dashboard-analytics-trends-bar--menu' },
-      { key: 'addToCart', label: 'Add to cart', className: 'dashboard-analytics-trends-bar--cart' },
-      { key: 'orderSubmissions', label: 'Orders', className: 'dashboard-analytics-trends-bar--orders' },
-      { key: 'searches', label: 'Searches', className: 'dashboard-analytics-trends-bar--search' },
-    ];
-    var seriesCount = series.length;
-    var barGap = 3;
-    var groupGap = 18;
-    var minBar = 7;
-    var maxBar = 14;
-    var host = chart.clientWidth || 320;
-    chart._ttmsChartW = chart.clientWidth || 0;
-    var minGroup = seriesCount * minBar + (seriesCount - 1) * barGap + groupGap;
-    var innerForHost = Math.max(0, host - pad.left - pad.right);
-    var barGroupW = Math.max(minGroup, innerForHost / rows.length);
-    var barRoom = barGroupW - groupGap - (seriesCount - 1) * barGap;
-    var barW = Math.max(minBar, Math.min(maxBar, barRoom / seriesCount));
-    var width = Math.ceil(pad.left + pad.right + barGroupW * rows.length);
-
-    var svg =
-      '<svg class="dashboard-notify-trends-svg" width="' +
-      width +
-      '" viewBox="0 0 ' +
-      width +
-      ' ' +
-      height +
-      '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">';
-
-    for (var g = 0; g <= 4; g++) {
-      var y = pad.top + (innerH * g) / 4;
-      var val = Math.round(maxVal * (1 - g / 4));
-      svg +=
-        '<line class="dashboard-notify-trends-grid" x1="' +
-        pad.left +
-        '" y1="' +
-        y +
-        '" x2="' +
-        (width - pad.right) +
-        '" y2="' +
-        y +
-        '"></line>';
-      svg +=
-        '<text class="dashboard-notify-trends-axis-y" x="' +
-        (pad.left - 8) +
-        '" y="' +
-        (y + 4) +
-        '" text-anchor="end">' +
-        escapeHtml(String(val)) +
-        '</text>';
-    }
-
-    rows.forEach(function (row, index) {
-      var groupX = pad.left + index * barGroupW + barGroupW / 2;
-      series.forEach(function (s, seriesIndex) {
-        var value = Number(row[s.key]) || 0;
-        var barH = maxVal ? (value / maxVal) * innerH : 0;
-        var x = groupX - (barW * seriesCount + (seriesCount - 1) * barGap) / 2 + seriesIndex * (barW + barGap);
-        var yBar = pad.top + innerH - barH;        svg +=
-          '<rect class="dashboard-notify-trends-bar ' +
-          s.className +
-          '" x="' +
-          x +
-          '" y="' +
-          yBar +
-          '" width="' +
-          barW +
-          '" height="' +
-          barH +
-          '" rx="1"><title>' +
-          escapeHtml(formatShortDate(row.date)) +
-          ' · ' +
-          s.label +
-          ': ' +
-          value +
-          '</title></rect>';
-      });
-
-    });
-
-    var labelGap = 72;
-    var marks = [];
-    rows.forEach(function (row, index) {
-      var groupX = pad.left + index * barGroupW + barGroupW / 2;
-      var prev = marks[marks.length - 1];
-      if (index === rows.length - 1) {
-        while (marks.length && groupX - marks[marks.length - 1].x < labelGap) marks.pop();
-        marks.push({ x: groupX, date: row.date });
-        return;
-      }
-      if (!prev || groupX - prev.x >= labelGap) marks.push({ x: groupX, date: row.date });
-    });
-    marks.forEach(function (mark) {
-      svg +=
-        '<text class="dashboard-notify-trends-axis-x" x="' +
-        mark.x +
-        '" y="' +
-        (height - 8) +
-        '" text-anchor="middle">' +
-        escapeHtml(formatShortDate(mark.date)) +
-        '</text>';
-    });
-
-    svg += '</svg>';
-    chart.innerHTML = svg;
-    chart.setAttribute(
-      'aria-label',
-      'Analytics activity chart for the last ' +
-        periodDaysLabel(days || 30) +
-        ' with daily page views, visits, menu item views, add to cart, orders, and searches'
-    );
+    chart.setAttribute('aria-label', aria);
   }
 
   var analyticsRequest = 0;
@@ -830,6 +942,7 @@
   function loadAnalyticsPage(options) {
     options = options || {};
     bindAnalyticsPeriodTabs();
+    bindAnalyticsChartTypeTabs();
     var days = options.days || selectedAnalyticsDays();
     applyAnalyticsPeriod(days);
     var requestId = ++analyticsRequest;
@@ -974,6 +1087,7 @@
     fetchTrends: fetchTrends,
     fetchWithAuth: fetchWithAuth,
     loadDashboardCard: loadDashboardCard,
+    loadAdsCard: loadAdsCard,
     loadAnalyticsPage: loadAnalyticsPage,
     renderAnalyticsTrendChart: renderAnalyticsTrendChart,
     animateMetric: animateAnalyticsMetric,

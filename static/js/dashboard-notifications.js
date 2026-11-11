@@ -710,12 +710,89 @@
     }).observe(chart);
   }
 
+  function notifyTrendSeriesMeta() {
+    return [
+      { key: 'sent', label: 'Sent', slug: 'sent' },
+      { key: 'delivered', label: 'Arrived', slug: 'delivered' },
+      { key: 'confirmed', label: 'Opened', slug: 'confirmed' },
+      { key: 'clicked', label: 'Clicked', slug: 'clicked' },
+      { key: 'subscribed', label: 'Subscribers', slug: 'subscribed' },
+      { key: 'unsubscribed', label: 'Unsubscribed', slug: 'unsubscribed' },
+    ];
+  }
+
+  function bindNotifyChartTypeTabs() {
+    var list = document.getElementById('dashboardNotifyChartTypeTabs');
+    if (!list) return;
+    var DTC = window.DashboardTrendsChart;
+    if (DTC && typeof DTC.bindTypeTabs === 'function') {
+      DTC.bindTypeTabs(list, function () {
+        if (notifyChartRows.length) renderNotifyTrendChart(notifyChartRows);
+      });
+      return;
+    }
+    if (list.getAttribute('data-bound') === '1') return;
+    list.setAttribute('data-bound', '1');
+    list.addEventListener('click', function (event) {
+      var btn = event.target.closest('[data-chart-type]');
+      if (!btn || !list.contains(btn)) return;
+      var type = btn.getAttribute('data-chart-type');
+      if (!type) return;
+      try {
+        localStorage.setItem('ttms_dashboard_chart_type', type);
+      } catch (e) { /* ignore */ }
+      if (notifyChartRows.length) renderNotifyTrendChart(notifyChartRows);
+    });
+  }
+
   function renderNotifyTrendChart(rows) {
     var chart = document.getElementById('dashboardNotifyTrendChart');
     var empty = document.getElementById('dashboardNotifyTrendEmpty');
     if (!chart) return;
 
+    bindNotifyChartTypeTabs();
     rows = rows || [];
+    notifyChartRows = rows;
+    ensureNotifyChartWatch(chart);
+
+    var DTC = window.DashboardTrendsChart;
+    var chartType =
+      DTC && typeof DTC.getType === 'function'
+        ? DTC.getType()
+        : (function () {
+            try {
+              var stored = localStorage.getItem('ttms_dashboard_chart_type');
+              if (['bars', 'lines', 'area', 'stacked'].indexOf(stored) >= 0) return stored;
+            } catch (e) { /* ignore */ }
+            return 'bars';
+          })();
+    var typeLabel = DTC && DTC.typeLabel ? DTC.typeLabel(chartType) : chartType;
+    var days = selectedNotifyDays();
+    var aria =
+      'Notification ' +
+      typeLabel +
+      ' chart for the last ' +
+      days +
+      ' days with daily sends, delivery outcomes, and subscriber changes';
+
+    if (DTC && typeof DTC.render === 'function') {
+      DTC.applyTypeTabs(document.getElementById('dashboardNotifyChartTypeTabs'), chartType);
+      DTC.render({
+        chartEl: chart,
+        emptyEl: empty,
+        sectionEl: document.getElementById('dashboardNotifyTrendsSection'),
+        rows: rows,
+        series: notifyTrendSeriesMeta(),
+        type: chartType,
+        classPrefix: 'dashboard-notify-trends',
+        formatDate: formatShortDate,
+        escapeHtml: escapeHtml,
+        ariaLabel: aria,
+      });
+      return;
+    }
+
+    // Fallback: empty state only if shared helper is unavailable.
     var hasData = rows.some(function (r) {
       return (
         (r.sent || 0) +
@@ -727,147 +804,13 @@
         0
       );
     });
-
     if (!hasData) {
       chart.innerHTML = '';
       if (empty) empty.hidden = false;
       return;
     }
     if (empty) empty.hidden = true;
-
-    notifyChartRows = rows;
-    ensureNotifyChartWatch(chart);
-
-    var height = 260;
-    var pad = { top: 16, right: 32, bottom: 36, left: 44 };
-    var innerH = height - pad.top - pad.bottom;
-    var maxVal = 1;
-
-    rows.forEach(function (r) {
-      maxVal = Math.max(
-        maxVal,
-        r.sent || 0,
-        r.delivered || 0,
-        r.confirmed || 0,
-        r.clicked || 0,
-        r.subscribed || 0,
-        r.unsubscribed || 0
-      );
-    });
-
-    var series = [
-      { key: 'sent', label: 'Sent', className: 'dashboard-notify-trends-bar--sent' },
-      { key: 'delivered', label: 'Arrived', className: 'dashboard-notify-trends-bar--delivered' },
-      { key: 'confirmed', label: 'Opened', className: 'dashboard-notify-trends-bar--confirmed' },
-      { key: 'clicked', label: 'Clicked', className: 'dashboard-notify-trends-bar--clicked' },
-      { key: 'subscribed', label: 'Subscribers', className: 'dashboard-notify-trends-bar--subscribed' },
-      { key: 'unsubscribed', label: 'Unsubscribed', className: 'dashboard-notify-trends-bar--unsubscribed' },
-    ];
-    var seriesCount = series.length;
-    var barGap = 3;
-    var groupGap = 18;
-    var minBar = 7;
-    var maxBar = 14;
-    var host = chart.clientWidth || 320;
-    chart._ttmsChartW = chart.clientWidth || 0;
-    var minGroup = seriesCount * minBar + (seriesCount - 1) * barGap + groupGap;
-    var innerForHost = Math.max(0, host - pad.left - pad.right);
-    var barGroupW = Math.max(minGroup, innerForHost / rows.length);
-    var barRoom = barGroupW - groupGap - (seriesCount - 1) * barGap;
-    var barW = Math.max(minBar, Math.min(maxBar, barRoom / seriesCount));
-    var width = Math.ceil(pad.left + pad.right + barGroupW * rows.length);
-
-    var svg =
-      '<svg class="dashboard-notify-trends-svg" width="' +
-      width +
-      '" viewBox="0 0 ' +
-      width +
-      ' ' +
-      height +
-      '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">';
-
-    for (var g = 0; g <= 4; g++) {
-      var y = pad.top + (innerH * g) / 4;
-      var val = Math.round(maxVal * (1 - g / 4));
-      svg +=
-        '<line class="dashboard-notify-trends-grid" x1="' +
-        pad.left +
-        '" y1="' +
-        y +
-        '" x2="' +
-        (width - pad.right) +
-        '" y2="' +
-        y +
-        '"></line>';
-      svg +=
-        '<text class="dashboard-notify-trends-axis-y" x="' +
-        (pad.left - 8) +
-        '" y="' +
-        (y + 4) +
-        '" text-anchor="end">' +
-        escapeHtml(String(val)) +
-        '</text>';
-    }
-
-    rows.forEach(function (row, index) {
-      var groupX = pad.left + index * barGroupW + barGroupW / 2;
-      series.forEach(function (s, seriesIndex) {
-        var value = Number(row[s.key]) || 0;
-        var barH = maxVal ? (value / maxVal) * innerH : 0;
-        var x = groupX - (barW * seriesCount + (seriesCount - 1) * barGap) / 2 + seriesIndex * (barW + barGap);
-        var y = pad.top + innerH - barH;        svg +=
-          '<rect class="dashboard-notify-trends-bar ' +
-          s.className +
-          '" x="' +
-          x +
-          '" y="' +
-          y +
-          '" width="' +
-          barW +
-          '" height="' +
-          barH +
-          '" rx="1"><title>' +
-          escapeHtml(formatShortDate(row.date)) +
-          ' · ' +
-          s.label +
-          ': ' +
-          value +
-          '</title></rect>';
-      });
-
-    });
-
-    var labelGap = 72;
-    var marks = [];
-    rows.forEach(function (row, index) {
-      var groupX = pad.left + index * barGroupW + barGroupW / 2;
-      var prev = marks[marks.length - 1];
-      if (index === rows.length - 1) {
-        while (marks.length && groupX - marks[marks.length - 1].x < labelGap) marks.pop();
-        marks.push({ x: groupX, date: row.date });
-        return;
-      }
-      if (!prev || groupX - prev.x >= labelGap) marks.push({ x: groupX, date: row.date });
-    });
-    marks.forEach(function (mark) {
-      svg +=
-        '<text class="dashboard-notify-trends-axis-x" x="' +
-        mark.x +
-        '" y="' +
-        (height - 8) +
-        '" text-anchor="middle">' +
-        escapeHtml(formatShortDate(mark.date)) +
-        '</text>';
-    });
-
-    svg += '</svg>';
-    chart.innerHTML = svg;
-    chart.setAttribute(
-      'aria-label',
-      'Notification activity chart for the last ' +
-        selectedNotifyDays() +
-        ' days with daily sends, delivery outcomes, and subscriber changes'
-    );
+    chart.setAttribute('aria-label', aria);
   }
 
   async function loadEngagementTrends(requestId) {

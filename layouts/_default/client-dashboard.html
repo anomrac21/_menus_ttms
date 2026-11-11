@@ -21,7 +21,9 @@
   </script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-images.js` }}" defer></script>
   {{- end }}
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-trends-chart.js` }}" defer></script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-analytics-snapshot.js` }}" defer></script>
+  <script src="{{ partial "head/asset-url.html" `/js/dashboard-ads.js` }}" defer></script>
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-menu-status.js` }}" defer></script>
   <script>
   window.SITE_DISPLAY_NAME = {{ (site.Title | default `Menu Demo`) | jsonify }};
@@ -340,16 +342,15 @@
         </div>
       </div>
       {{- end }}
+      {{- $adsCounts := partial "menu/inventory-counts.html" . -}}
       <div class="card card-dashboard-ads is-collapsed" data-dashboard-card="ads">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="ads" aria-expanded="false" aria-controls="dashboardCardBody-ads">
           <h3 class="dashboard-card-title"><i class="fa fa-bullhorn" aria-hidden="true"></i> Ads</h3>
+          <span class="dashboard-card-count" id="dashboardCardAdsCount" aria-label="Promotions">{{ $adsCounts.promotions }}</span>
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-ads">
-          <p class="dashboard-card-desc">Configure advertisements and promotions.</p>
-          <div class="dashboard-card-actions">
-            <a href="{{ site.Params.adsServiceUrl | default "https://ads.ttmenus.com" }}" class="btn-dash btn-dash-secondary" target="_blank" rel="noopener"><i class="fa fa-external-link" aria-hidden="true"></i> Ads</a>
-          </div>
+          {{ partial "dashboard/ads-overview.html" . }}
         </div>
       </div>
       <div class="card card-dashboard-analytics is-collapsed" data-dashboard-card="analytics">
@@ -475,6 +476,12 @@
         DashboardAnalyticsSnapshot.loadAnalyticsPage({ days: 30 });
       } else if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadDashboardCard) {
         DashboardAnalyticsSnapshot.loadDashboardCard({ days: 30 });
+      }
+      if (window.DashboardAnalyticsSnapshot && DashboardAnalyticsSnapshot.loadAdsCard) {
+        DashboardAnalyticsSnapshot.loadAdsCard({ days: 30 });
+      }
+      if (window.DashboardAds && typeof DashboardAds.init === 'function') {
+        DashboardAds.init();
       }
 
       if (window.DashboardOpsSnapshot && typeof DashboardOpsSnapshot.init === 'function') {
