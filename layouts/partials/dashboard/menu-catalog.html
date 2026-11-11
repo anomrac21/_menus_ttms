@@ -167,15 +167,17 @@
         {{- $contentPath = printf "content/_shared/promotions/%s.md" $fileSlug -}}
         {{- $promoUrl = printf "/promotions/%s/" $fileSlug -}}
       {{- else if and (eq $authoring "location") $fileSlug $locSlug -}}
-        {{- $contentPath = printf "content/locations/%s/promotions/%s.md" $locSlug $fileSlug -}}
-        {{- $promoUrl = printf "/locations/%s/promotions/%s/" $locSlug $fileSlug -}}
+        {{- /* Location promos live under content/{slug}/promotions (not content/locations/…). */ -}}
+        {{- $contentPath = printf "content/%s/promotions/%s.md" $locSlug $fileSlug -}}
+        {{- $promoUrl = printf "/%s/promotions/%s/" $locSlug $fileSlug -}}
       {{- else if and $showTabs (not $locSlug) -}}
         {{- $locSlug = "_shared" -}}
         {{- if $fileSlug -}}{{- $contentPath = printf "content/_shared/promotions/%s.md" $fileSlug -}}{{- end -}}
       {{- end -}}
+      {{- $promoFacts := partial "dashboard/menu-promo-facts.html" . -}}
       {{- $promoMeta := slice -}}
       {{- if and $locLabel (not $showTabs) -}}{{- $promoMeta = slice $locLabel -}}{{- end -}}
-      {{- $rows = $rows | append (dict "title" (.LinkTitle | default .Title) "meta" $promoMeta "kind" "promotion" "catalogIndex" (printf "%d" $promoIndex) "adId" (printf "menu-ad-%s" $adSlug) "adUrl" $promoUrl "locationSlug" $locSlug "contentPath" $contentPath "shared" (and $isSharedPromo $showTabs)) -}}
+      {{- $rows = $rows | append (merge $promoFacts (dict "title" (.LinkTitle | default .Title) "meta" $promoMeta "kind" "promotion" "catalogIndex" (printf "%d" $promoIndex) "adId" (printf "menu-ad-%s" $adSlug) "adUrl" $promoUrl "locationSlug" $locSlug "contentPath" $contentPath "shared" (and $isSharedPromo $showTabs) "locationLabel" $locLabel)) -}}
       {{- $promoIndex = add $promoIndex 1 -}}
     {{- end -}}
   {{- end -}}

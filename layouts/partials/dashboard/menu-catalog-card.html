@@ -12,6 +12,49 @@
   <button type="button" class="dashboard-catalog-drag" aria-label="Drag to reorder {{ $title }}"><i class="fa fa-bars" aria-hidden="true"></i></button>
   {{- end -}}
   <div class="dashboard-settings-location-card-main">
+    {{- if eq $kind "promotion" -}}
+    {{- $kindLabel := "Promotion" -}}
+    {{- with .locationLabel -}}{{- $kindLabel = printf "Promotion · %s" . -}}{{- else -}}
+      {{- if .shared -}}{{- $kindLabel = "Promotion · Shared" -}}{{- end -}}
+    {{- end -}}
+    {{- $dest := .link | default .adUrl | default "" -}}
+    {{- $daysLabel := .daysLabel | default "Always" -}}
+    {{- $orderLabel := printf "%v" (.weight | default 0) -}}
+    <article class="dashboard-ads-promo-card dashboard-menu-catalog-promo" data-promo-kind="promotion" data-promo-title="{{ $title }}"{{ with .imagePath }} data-promo-image-path="{{ . }}"{{ end }}>
+      <div class="dashboard-ads-promo-media"{{ if not .image }} aria-hidden="true"{{ end }} data-promo-media>
+        {{- if .image -}}
+        <img src="{{ .image }}" alt="" loading="lazy" decoding="async"{{ with .imagePath }} data-src-path="{{ . }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)"{{ end }}>
+        {{- else -}}
+        <span class="dashboard-ads-promo-media-fallback"><i class="fa fa-bullhorn" aria-hidden="true"></i></span>
+        {{- end -}}
+      </div>
+      <div class="dashboard-ads-promo-body">
+        <div class="dashboard-ads-promo-copy">
+          <span class="dashboard-ads-promo-kind" data-promo-kind-label>{{ $kindLabel }}</span>
+          <h3 class="dashboard-settings-location-card-title dashboard-ads-promo-title" data-promo-title>{{ $title }}</h3>
+        </div>
+        <dl class="dashboard-ads-promo-stats">
+          <div>
+            <dt>Destination</dt>
+            <dd data-promo-stat="link" title="{{ $dest }}">{{ if $dest }}{{ $dest }}{{ else }}—{{ end }}</dd>
+          </div>
+          <div>
+            <dt>Schedule</dt>
+            <dd data-promo-stat="days">{{ $daysLabel }}</dd>
+          </div>
+          <div>
+            <dt>Order</dt>
+            <dd data-promo-stat="weight">{{ $orderLabel }}</dd>
+          </div>
+        </dl>
+        <div class="dashboard-ads-promo-links">
+          {{- with $dest -}}
+          <a href="{{ . }}" class="dashboard-ads-promo-link" data-promo-view-link>View on menu</a>
+          {{- end -}}
+        </div>
+      </div>
+    </article>
+    {{- else -}}
     <h3 class="dashboard-settings-location-card-title">{{ $title }}</h3>
     {{- $meta := .meta | default slice -}}
     {{- if or .shared (gt (len $meta) 0) -}}
@@ -57,6 +100,7 @@
         {{- end -}}
       </div>
     </div>
+    {{- end -}}
     {{- end -}}
   </div>
   <div class="dashboard-settings-location-card-actions">

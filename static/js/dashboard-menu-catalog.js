@@ -58,15 +58,54 @@ function initMenuCatalog() {
     return parts.join(' · ');
   }
 
+  function modifiedVisibleCount() {
+    return visibleCards().filter(function (card) {
+      return card.classList.contains('has-cms-draft');
+    }).length;
+  }
+
   function updateSummary() {
     var count = visibleCards().length;
+    var modified = modifiedVisibleCount();
     var scope = scopeLabel();
     var where = scope ? (' in ' + scope) : '';
     if (emptyEl) emptyEl.classList.toggle('hidden', count > 0);
     if (!summaryEl) return;
-    if (count === 0) summaryEl.textContent = 'No ' + noun + 's' + where;
-    else if (count === 1) summaryEl.textContent = '1 ' + noun + where;
-    else summaryEl.textContent = count + ' ' + noun + 's' + where;
+    var base =
+      count === 0
+        ? 'No ' + noun + 's' + where
+        : count === 1
+          ? '1 ' + noun + where
+          : count + ' ' + noun + 's' + where;
+    if (modified > 0) {
+      base +=
+        ' · ' +
+        modified +
+        ' modified';
+    }
+    summaryEl.textContent = base;
+  }
+
+  var catalogStatusClearTimer = null;
+  function setCatalogStatus(message, opts) {
+    opts = opts || {};
+    var el = document.getElementById('menuCatalogReorderStatus');
+    if (!el) return;
+    if (catalogStatusClearTimer) {
+      clearTimeout(catalogStatusClearTimer);
+      catalogStatusClearTimer = null;
+    }
+    el.textContent = message || '';
+    el.classList.toggle('is-error', !!opts.isError);
+    el.classList.toggle('is-ok', !!opts.isOk && !opts.isError);
+    if (message && opts.autoClearMs) {
+      catalogStatusClearTimer = setTimeout(function () {
+        if (el.textContent === message) {
+          el.textContent = '';
+          el.classList.remove('is-error', 'is-ok');
+        }
+      }, opts.autoClearMs);
+    }
   }
 
   var lastOpenEditorAt = 0;
@@ -287,9 +326,11 @@ function initMenuCatalog() {
     var loc = activeLocation();
     var contentPath = 'content/_shared/promotions/' + slug + '.md';
     var adUrl = '/promotions/' + slug + '/';
+    var kindLabel = 'Promotion · Shared';
     if (loc.slug && loc.slug !== '_shared') {
-      contentPath = 'content/locations/' + loc.slug + '/promotions/' + slug + '.md';
-      adUrl = '/locations/' + loc.slug + '/promotions/' + slug + '/';
+      contentPath = 'content/' + loc.slug + '/promotions/' + slug + '.md';
+      adUrl = '/' + loc.slug + '/promotions/' + slug + '/';
+      kindLabel = 'Promotion · ' + (loc.label || loc.slug);
     }
     var adId = 'menu-ad-' + slug;
     var index = String(list.querySelectorAll('.ads-reels-slide').length);
@@ -297,7 +338,24 @@ function initMenuCatalog() {
       '<div class="dashboard-settings-location-card">' +
       '<button type="button" class="dashboard-catalog-drag" aria-label="Drag to reorder ' + esc(title) + '"><i class="fa fa-bars" aria-hidden="true"></i></button>' +
       '<div class="dashboard-settings-location-card-main">' +
-      '<h3 class="dashboard-settings-location-card-title">' + esc(title) + '</h3>' +
+      '<article class="dashboard-ads-promo-card dashboard-menu-catalog-promo" data-promo-kind="promotion" data-promo-title="' + esc(title) + '">' +
+      '<div class="dashboard-ads-promo-media" aria-hidden="true" data-promo-media>' +
+      '<span class="dashboard-ads-promo-media-fallback"><i class="fa fa-bullhorn" aria-hidden="true"></i></span>' +
+      '</div>' +
+      '<div class="dashboard-ads-promo-body">' +
+      '<div class="dashboard-ads-promo-copy">' +
+      '<span class="dashboard-ads-promo-kind" data-promo-kind-label>' + esc(kindLabel) + '</span>' +
+      '<h3 class="dashboard-settings-location-card-title dashboard-ads-promo-title" data-promo-title>' + esc(title) + '</h3>' +
+      '</div>' +
+      '<dl class="dashboard-ads-promo-stats">' +
+      '<div><dt>Destination</dt><dd data-promo-stat="link" title="' + esc(adUrl) + '">' + esc(adUrl) + '</dd></div>' +
+      '<div><dt>Schedule</dt><dd data-promo-stat="days">Always</dd></div>' +
+      '<div><dt>Order</dt><dd data-promo-stat="weight">0</dd></div>' +
+      '</dl>' +
+      '<div class="dashboard-ads-promo-links">' +
+      '<a href="' + esc(adUrl) + '" class="dashboard-ads-promo-link" data-promo-view-link>View on menu</a>' +
+      '</div>' +
+      '</div></article>' +
       '</div>' +
       '<div class="dashboard-settings-location-card-actions">' +
       '<button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>' +
@@ -306,6 +364,10 @@ function initMenuCatalog() {
       '<div class="menu-item-actions" data-actions-kind="promotion" data-promotion-catalog-index="' + esc(index) + '" data-ad-id="' + esc(adId) + '" data-item-title="' + esc(title) + '" data-item-url="' + esc(adUrl) + '"></div>' +
       '</article></div>'
     );
+    setCatalogStatus('New promotion added. Edit details, then publish when ready.', {
+      isOk: true,
+      autoClearMs: 6500
+    });
   }
 
   function addCurrent() {
@@ -412,8 +474,11 @@ function initMenuCatalog() {
   } catch (err) { /* ignore */ }
 
   function refreshCatalogDraftIndicators() {
-    if (!window.TTMSContentDrafts || typeof window.TTMSContentDrafts.applyIndicators !== 'function') return;
-    window.TTMSContentDrafts.applyIndicators(list);
+    if (window.TTMSContentDrafts && typeof window.TTMSContentDrafts.applyIndicators === 'function') {
+      window.TTMSContentDrafts.applyIndicators(list);
+    }
+    syncPromoCardsFromDrafts();
+    updateSummary();
   }
 
   function refreshCatalogDrafts() {
@@ -425,6 +490,26 @@ function initMenuCatalog() {
   }
 
   window.addEventListener('ttms:content-drafts-ready', refreshCatalogDraftIndicators);
+  window.addEventListener('ttms:catalog-edit-feedback', function (ev) {
+    var detail = (ev && ev.detail) || {};
+    if (detail.card) {
+      if (kind === 'promotions') {
+        if (detail.model) applyPromoPreviewToCard(detail.card, detail.model);
+        else if (detail.title) applyPromoPreviewToCard(detail.card, { title: detail.title });
+      }
+      if (detail.saved !== false && (detail.title || detail.model || detail.message)) {
+        detail.card.classList.add('has-cms-draft');
+      }
+    }
+    if (detail.message) {
+      setCatalogStatus(detail.message, {
+        isOk: !detail.isError,
+        isError: !!detail.isError,
+        autoClearMs: detail.autoClearMs != null ? detail.autoClearMs : 6500
+      });
+    }
+    updateSummary();
+  });
   refreshCatalogDrafts();
 
   enableSectionReorder();
@@ -512,10 +597,239 @@ function initMenuCatalog() {
   }
 
   function setReorderStatus(message, isError) {
-    var el = document.getElementById('menuCatalogReorderStatus');
-    if (!el) return;
-    el.textContent = message || '';
-    el.classList.toggle('is-error', !!isError);
+    setCatalogStatus(message, { isError: !!isError, isOk: !isError && !!message });
+  }
+
+  function dayLabelsFromFrontMatter(days) {
+    if (!days || !days.length) return 'Always';
+    var map = {
+      mon: 'Mon',
+      monday: 'Mon',
+      tue: 'Tue',
+      tuesday: 'Tue',
+      wed: 'Wed',
+      wednesday: 'Wed',
+      thu: 'Thu',
+      thursday: 'Thu',
+      fri: 'Fri',
+      friday: 'Fri',
+      sat: 'Sat',
+      saturday: 'Sat',
+      sun: 'Sun',
+      sunday: 'Sun'
+    };
+    var out = [];
+    var i;
+    for (i = 0; i < days.length; i++) {
+      var raw = String(days[i] || '').trim();
+      if (!raw) continue;
+      var key = raw.toLowerCase();
+      out.push(map[key] || raw.charAt(0).toUpperCase() + raw.slice(1));
+    }
+    return out.length ? out.join(', ') : 'Always';
+  }
+
+  function firstPromoImagePath(fm) {
+    if (!fm || typeof fm !== 'object') return '';
+    if (fm.image) return String(fm.image || '').trim();
+    var images = fm.images || fm.Images;
+    if (!images) return '';
+    if (typeof images === 'string') return String(images).trim();
+    if (Array.isArray(images)) {
+      var i;
+      for (i = 0; i < images.length; i++) {
+        var row = images[i];
+        if (!row) continue;
+        if (typeof row === 'string' && row.trim()) return row.trim();
+        if (row.image) return String(row.image).trim();
+        if (row.Image) return String(row.Image).trim();
+      }
+    }
+    return '';
+  }
+
+  function resolvePromoImageSrc(path) {
+    var p = String(path || '').trim();
+    if (!p) return '';
+    if (/^https?:\/\//i.test(p) || p.indexOf('data:') === 0 || p.indexOf('blob:') === 0) return p;
+    if (p.indexOf('draft-assets/') === 0) {
+      var cms = String(window.CMS_SERVICE_URL || 'https://cms.ttmenus.com').replace(/\/+$/, '');
+      var client =
+        (window.CMS_CLIENT_ID ||
+          (document.documentElement && document.documentElement.getAttribute('data-cms-client-id')) ||
+          '') + '';
+      var name = p.replace(/^draft-assets\//, '');
+      return (
+        cms +
+        '/api/clients/' +
+        encodeURIComponent(client) +
+        '/preview/draft-assets/' +
+        encodeURIComponent(name)
+      );
+    }
+    if (window.TtmsThumbor && typeof window.TtmsThumbor.menuImageSrc === 'function') {
+      return window.TtmsThumbor.menuImageSrc(p, 'ad') || window.TtmsThumbor.menuImageSrc(p, 'card') || p;
+    }
+    return p.charAt(0) === '/' ? p : '/' + p;
+  }
+
+  function hydrateDraftPromoImg(img) {
+    if (!img) return;
+    var path = img.getAttribute('data-src-path') || '';
+    if (path.indexOf('draft-assets/') !== 0) return;
+    if (typeof window.hydrateAuthenticatedDraftAssetImg === 'function') {
+      window.hydrateAuthenticatedDraftAssetImg(img);
+    }
+  }
+
+  function ensurePromoPreviewCard(card) {
+    if (!card) return null;
+    var existing = card.querySelector('.dashboard-menu-catalog-promo');
+    if (existing) return existing;
+    var main = card.querySelector('.dashboard-settings-location-card-main');
+    if (!main) return null;
+    var titleEl = main.querySelector('.dashboard-settings-location-card-title');
+    var title = titleEl ? String(titleEl.textContent || '').trim() : 'Promotion';
+    var loc = card.getAttribute('data-location-slug') || '';
+    var kindLabel =
+      loc === '_shared' ? 'Promotion · Shared' : loc ? 'Promotion · ' + loc : 'Promotion';
+    var slide = card.querySelector('article.ads-reels-slide');
+    var dest =
+      (slide && (slide.getAttribute('data-ad-url') || '')) ||
+      '';
+    main.innerHTML =
+      '<article class="dashboard-ads-promo-card dashboard-menu-catalog-promo" data-promo-kind="promotion" data-promo-title="' +
+      esc(title) +
+      '">' +
+      '<div class="dashboard-ads-promo-media" aria-hidden="true" data-promo-media>' +
+      '<span class="dashboard-ads-promo-media-fallback"><i class="fa fa-bullhorn" aria-hidden="true"></i></span>' +
+      '</div>' +
+      '<div class="dashboard-ads-promo-body">' +
+      '<div class="dashboard-ads-promo-copy">' +
+      '<span class="dashboard-ads-promo-kind" data-promo-kind-label>' +
+      esc(kindLabel) +
+      '</span>' +
+      '<h3 class="dashboard-settings-location-card-title dashboard-ads-promo-title" data-promo-title>' +
+      esc(title) +
+      '</h3>' +
+      '</div>' +
+      '<dl class="dashboard-ads-promo-stats">' +
+      '<div><dt>Destination</dt><dd data-promo-stat="link"' +
+      (dest ? ' title="' + esc(dest) + '"' : '') +
+      '>' +
+      (dest ? esc(dest) : '—') +
+      '</dd></div>' +
+      '<div><dt>Schedule</dt><dd data-promo-stat="days">Always</dd></div>' +
+      '<div><dt>Order</dt><dd data-promo-stat="weight">0</dd></div>' +
+      '</dl>' +
+      '<div class="dashboard-ads-promo-links">' +
+      (dest
+        ? '<a href="' + esc(dest) + '" class="dashboard-ads-promo-link" data-promo-view-link>View on menu</a>'
+        : '') +
+      '</div>' +
+      '</div></article>';
+    return main.querySelector('.dashboard-menu-catalog-promo');
+  }
+
+  function applyPromoPreviewToCard(card, model) {
+    if (!card || !model) return;
+    var promo = ensurePromoPreviewCard(card);
+    if (!promo) return;
+    if (model.title) {
+      promo.setAttribute('data-promo-title', model.title);
+      var titleEls = promo.querySelectorAll('[data-promo-title], .dashboard-settings-location-card-title');
+      Array.prototype.forEach.call(titleEls, function (el) {
+        el.textContent = model.title;
+      });
+      var drag = card.querySelector('.dashboard-catalog-drag');
+      if (drag) drag.setAttribute('aria-label', 'Drag to reorder ' + model.title);
+      var slide = card.querySelector('article.ads-reels-slide');
+      if (slide) {
+        slide.setAttribute('data-ad-title', model.title);
+        var actions = slide.querySelector('.menu-item-actions');
+        if (actions) actions.setAttribute('data-item-title', model.title);
+      }
+    }
+    if (model.link != null) {
+      var link = String(model.link || '').trim();
+      var linkEl = promo.querySelector('[data-promo-stat="link"]');
+      if (linkEl) {
+        linkEl.textContent = link || '—';
+        if (link) linkEl.setAttribute('title', link);
+        else linkEl.removeAttribute('title');
+      }
+      var view = promo.querySelector('[data-promo-view-link]');
+      var linksWrap = promo.querySelector('.dashboard-ads-promo-links');
+      if (link) {
+        if (!view && linksWrap) {
+          view = document.createElement('a');
+          view.className = 'dashboard-ads-promo-link';
+          view.setAttribute('data-promo-view-link', '');
+          view.textContent = 'View on menu';
+          linksWrap.appendChild(view);
+        }
+        if (view) view.setAttribute('href', link);
+        var slide2 = card.querySelector('article.ads-reels-slide');
+        if (slide2) {
+          slide2.setAttribute('data-ad-url', link);
+          var actions2 = slide2.querySelector('.menu-item-actions');
+          if (actions2) actions2.setAttribute('data-item-url', link);
+        }
+      } else if (view && view.parentNode) {
+        view.parentNode.removeChild(view);
+      }
+    }
+    if (model.daysLabel != null) {
+      var daysEl = promo.querySelector('[data-promo-stat="days"]');
+      if (daysEl) daysEl.textContent = model.daysLabel || 'Always';
+    }
+    if (model.weight != null && model.weight !== '') {
+      var weightEl = promo.querySelector('[data-promo-stat="weight"]');
+      if (weightEl) weightEl.textContent = String(model.weight);
+    }
+    if (model.imagePath != null) {
+      var media = promo.querySelector('[data-promo-media]');
+      var path = String(model.imagePath || '').trim();
+      promo.setAttribute('data-promo-image-path', path);
+      if (!media) return;
+      if (!path) {
+        media.setAttribute('aria-hidden', 'true');
+        media.innerHTML =
+          '<span class="dashboard-ads-promo-media-fallback"><i class="fa fa-bullhorn" aria-hidden="true"></i></span>';
+        return;
+      }
+      media.removeAttribute('aria-hidden');
+      var src = resolvePromoImageSrc(path);
+      media.innerHTML =
+        '<img src="' +
+        esc(src) +
+        '" alt="" loading="lazy" decoding="async" data-src-path="' +
+        esc(path) +
+        '" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">';
+      hydrateDraftPromoImg(media.querySelector('img'));
+    }
+  }
+
+  function syncPromoCardsFromDrafts() {
+    if (kind !== 'promotions') return;
+    Array.prototype.forEach.call(cards(), function (card) {
+      ensurePromoPreviewCard(card);
+      var path = promotionContentPathOf(card);
+      if (!path || !window.TTMSContentDrafts || typeof window.TTMSContentDrafts.getPreview !== 'function') {
+        return;
+      }
+      var preview = window.TTMSContentDrafts.getPreview(path);
+      if (!preview) return;
+      var payload = preview.payload || preview.Payload || {};
+      var fm = payload.frontMatter || payload.FrontMatter || {};
+      applyPromoPreviewToCard(card, {
+        title: fm.title || fm.Title || '',
+        link: fm.link || fm.Link || '',
+        daysLabel: dayLabelsFromFrontMatter(fm.daysofweek || fm.daysOfWeek || []),
+        weight: fm.weight != null ? fm.weight : fm.Weight,
+        imagePath: firstPromoImagePath(fm)
+      });
+    });
   }
 
   function weightForCard(card) {

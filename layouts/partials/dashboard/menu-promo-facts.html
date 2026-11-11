@@ -1,0 +1,45 @@
+{{- /*
+  Facts for promotions catalog / ads-style preview cards.
+  Input: page context (promotion single).
+*/ -}}
+{{- $page := . -}}
+{{- $imgPath := "" -}}
+{{- with $page.Params.images -}}
+  {{- range . -}}
+    {{- if and (not $imgPath) .image -}}{{- $imgPath = .image -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (not $imgPath) $page.Params.image -}}{{- $imgPath = $page.Params.image -}}{{- end -}}
+{{- $imgSrc := "" -}}
+{{- if $imgPath -}}
+  {{- $imgSrc = partial "ttms/menu-img-src.html" (dict "path" $imgPath "size" "ad") -}}
+{{- end -}}
+{{- $link := strings.TrimSpace (printf "%s" ($page.Params.link | default $page.RelPermalink | default "")) -}}
+{{- $weight := $page.Params.weight | default 0 -}}
+{{- $days := $page.Params.daysofweek | default slice -}}
+{{- $daysLabel := "Always" -}}
+{{- if and $days (gt (len $days) 0) -}}
+  {{- $labels := slice -}}
+  {{- range $days -}}
+    {{- $d := lower (printf "%s" .) -}}
+    {{- if or (eq $d "mon") (eq $d "monday") -}}{{- $labels = $labels | append "Mon" -}}
+    {{- else if or (eq $d "tue") (eq $d "tuesday") -}}{{- $labels = $labels | append "Tue" -}}
+    {{- else if or (eq $d "wed") (eq $d "wednesday") -}}{{- $labels = $labels | append "Wed" -}}
+    {{- else if or (eq $d "thu") (eq $d "thursday") -}}{{- $labels = $labels | append "Thu" -}}
+    {{- else if or (eq $d "fri") (eq $d "friday") -}}{{- $labels = $labels | append "Fri" -}}
+    {{- else if or (eq $d "sat") (eq $d "saturday") -}}{{- $labels = $labels | append "Sat" -}}
+    {{- else if or (eq $d "sun") (eq $d "sunday") -}}{{- $labels = $labels | append "Sun" -}}
+    {{- else if . -}}{{- $labels = $labels | append (humanize .) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if gt (len $labels) 0 -}}{{- $daysLabel = delimit $labels ", " -}}{{- end -}}
+{{- end -}}
+{{- $recurring := $page.Params.recurring | default false -}}
+{{- return (dict
+  "image" $imgSrc
+  "imagePath" $imgPath
+  "link" $link
+  "weight" $weight
+  "daysLabel" $daysLabel
+  "recurring" $recurring
+) -}}

@@ -90,7 +90,11 @@
         {{- $promoInfo.Set "title" (humanize $fileBase) -}}
         {{- $promoInfo.Set "weight" $promoIndex -}}
         {{- $promoInfo.Set "link" (printf "/promotions/%s/" $fileBase) -}}
+        {{- $promoInfo.Set "imagePath" "" -}}
+        {{- $promoInfo.Set "daysLabel" "Always" -}}
+        {{- $promoInfo.Set "recurring" false -}}
         {{- with os.ReadFile (printf "%s/%s" $promoDir .Name) -}}
+          {{- $rawDays := slice -}}
           {{- range split . "\n" -}}
             {{- $line := strings.TrimSpace . -}}
             {{- if hasPrefix $line "title:" -}}
@@ -101,9 +105,59 @@
             {{- else if hasPrefix $line "link:" -}}
               {{- $link := strings.TrimSpace (strings.TrimPrefix "link:" $line) -}}
               {{- $promoInfo.Set "link" (replaceRE "^[\"']+|[\"']+$" "" $link) -}}
+            {{- else if hasPrefix $line "image:" -}}
+              {{- $img := strings.TrimSpace (strings.TrimPrefix "image:" $line) -}}
+              {{- $img = replaceRE "^[\"']+|[\"']+$" "" $img -}}
+              {{- if and $img (ne $img "\"\"") (ne $img "''") -}}
+                {{- $promoInfo.Set "imagePath" $img -}}
+              {{- end -}}
+            {{- else if hasPrefix $line "recurring:" -}}
+              {{- $rec := lower (strings.TrimSpace (strings.TrimPrefix "recurring:" $line)) -}}
+              {{- $promoInfo.Set "recurring" (or (eq $rec "true") (eq $rec "yes") (eq $rec "1")) -}}
+            {{- else if and (hasPrefix $line "-") (findRE `(?i)(mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)` $line) -}}
+              {{- $day := replaceRE `^-\s*` "" $line -}}
+              {{- $day = replaceRE `^["']+|["']+$` "" (strings.TrimSpace $day) -}}
+              {{- if $day -}}{{- $rawDays = $rawDays | append $day -}}{{- end -}}
             {{- end -}}
           {{- end -}}
+          {{- if gt (len $rawDays) 0 -}}
+            {{- $labels := slice -}}
+            {{- range $rawDays -}}
+              {{- $d := lower (printf "%s" .) -}}
+              {{- if or (eq $d "mon") (eq $d "monday") -}}{{- $labels = $labels | append "Mon" -}}
+              {{- else if or (eq $d "tue") (eq $d "tuesday") -}}{{- $labels = $labels | append "Tue" -}}
+              {{- else if or (eq $d "wed") (eq $d "wednesday") -}}{{- $labels = $labels | append "Wed" -}}
+              {{- else if or (eq $d "thu") (eq $d "thursday") -}}{{- $labels = $labels | append "Thu" -}}
+              {{- else if or (eq $d "fri") (eq $d "friday") -}}{{- $labels = $labels | append "Fri" -}}
+              {{- else if or (eq $d "sat") (eq $d "saturday") -}}{{- $labels = $labels | append "Sat" -}}
+              {{- else if or (eq $d "sun") (eq $d "sunday") -}}{{- $labels = $labels | append "Sun" -}}
+              {{- else -}}{{- $labels = $labels | append (humanize .) -}}
+              {{- end -}}
+            {{- end -}}
+            {{- $promoInfo.Set "daysLabel" (delimit $labels ", ") -}}
+          {{- end -}}
         {{- end -}}
+        {{- $imgSrc := "" -}}
+        {{- with $promoInfo.Get "imagePath" -}}
+          {{- $imgSrc = partial "ttms/menu-img-src.html" (dict "path" . "size" "ad") -}}
+        {{- end -}}
+        {{- /* Prefer live page params when the shared promo is mounted under /promotions. */ -}}
+        {{- $pageFacts := dict -}}
+        {{- with site.GetPage ($promoInfo.Get "link") -}}
+          {{- $pageFacts = partial "dashboard/menu-promo-facts.html" . -}}
+          {{- $promoInfo.Set "title" (.LinkTitle | default .Title | default ($promoInfo.Get "title")) -}}
+        {{- else -}}
+          {{- with site.GetPage (printf "/promotions/%s" $fileBase) -}}
+            {{- $pageFacts = partial "dashboard/menu-promo-facts.html" . -}}
+            {{- $promoInfo.Set "title" (.LinkTitle | default .Title | default ($promoInfo.Get "title")) -}}
+          {{- end -}}
+        {{- end -}}
+        {{- if $pageFacts.image -}}{{- $imgSrc = $pageFacts.image -}}{{- end -}}
+        {{- if $pageFacts.imagePath -}}{{- $promoInfo.Set "imagePath" $pageFacts.imagePath -}}{{- end -}}
+        {{- if $pageFacts.link -}}{{- $promoInfo.Set "link" $pageFacts.link -}}{{- end -}}
+        {{- if isset $pageFacts "weight" -}}{{- $promoInfo.Set "weight" $pageFacts.weight -}}{{- end -}}
+        {{- if $pageFacts.daysLabel -}}{{- $promoInfo.Set "daysLabel" $pageFacts.daysLabel -}}{{- end -}}
+        {{- if isset $pageFacts "recurring" -}}{{- $promoInfo.Set "recurring" $pageFacts.recurring -}}{{- end -}}
         {{- $rows = $rows | append (dict
           "title" ($promoInfo.Get "title")
           "meta" (slice)
@@ -114,6 +168,13 @@
           "locationSlug" "_shared"
           "contentPath" (printf "content/_shared/promotions/%s.md" $fileBase)
           "weight" ($promoInfo.Get "weight")
+          "image" $imgSrc
+          "imagePath" ($promoInfo.Get "imagePath")
+          "link" ($promoInfo.Get "link")
+          "daysLabel" ($promoInfo.Get "daysLabel")
+          "recurring" ($promoInfo.Get "recurring")
+          "shared" true
+          "locationLabel" "Shared"
         ) -}}
         {{- $promoIndex = add $promoIndex 1 -}}
       {{- end -}}

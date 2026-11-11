@@ -59,6 +59,12 @@
     var rel = key.replace(/^content\//, '');
     var parts = rel.split('/').filter(Boolean);
     var candidates = [];
+    // content/locations/{slug}/… ↔ content/{slug}/… (catalog vs File.Path)
+    if (parts[0] === 'locations' && parts.length > 2) {
+      candidates.push('content/' + parts.slice(1).join('/'));
+    } else if (parts.length > 1 && parts[0] !== '_shared' && parts[0] !== 'locations') {
+      candidates.push('content/locations/' + rel);
+    }
     if (loc && parts[0] === loc && parts.length > 1) {
       candidates.push('content/' + parts.slice(1).join('/'));
     }

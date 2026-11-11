@@ -14630,6 +14630,38 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: var(--primary-red, #e23b3b);
 }
 
+.dashboard-catalog-reorder-status.is-ok {
+  color: color-mix(in srgb, var(--dash-success, #16a34a) 88%, var(--dash-ink));
+}
+
+#menuCatalogList .dashboard-settings-location-card[data-catalog-kind='promotion'],
+#menuCatalogList[data-catalog-kind='promotions'] .dashboard-settings-location-card {
+  align-items: stretch;
+}
+
+#menuCatalogList .dashboard-menu-catalog-promo {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+#menuCatalogList .dashboard-menu-catalog-promo .dashboard-ads-promo-stats dd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+#menuCatalogList .dashboard-menu-catalog-promo .dashboard-ads-promo-title {
+  font-size: 1rem;
+}
+
+#menuCatalogList .dashboard-settings-location-card.has-cms-draft .dashboard-menu-catalog-promo {
+  outline: none;
+}
+
 .dashboard-settings-location-card-main {
   flex: 1;
   min-width: 0;
