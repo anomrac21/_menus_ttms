@@ -1111,18 +1111,11 @@
       })
       .then(function (sitePayload) {
         if (!sitePayload) return null;
+        // Only use the site payload when it already carries menu_data.
+        // Chasing version_id with a second GET often 404s on pruned snapshots
+        // and still paints a console error even when we ignore the response.
         if (sitePayload.menu_data || sitePayload.MenuData) return sitePayload;
-        var id = sitePayload.version_id || sitePayload.versionId || sitePayload.id || sitePayload.ID;
-        if (!id) return null;
-        var url =
-          cmsApiBase() +
-          '/clients/' +
-          encodeURIComponent(clientId()) +
-          '/menu-versions/' +
-          encodeURIComponent(id);
-        return fetch(url, { method: 'GET', credentials: 'include', headers: authHeaders() }).then(function (res) {
-          return res.ok ? res.json() : null;
-        });
+        return null;
       })
       .then(function (version) {
         var menuData = version && (version.menu_data || version.MenuData);

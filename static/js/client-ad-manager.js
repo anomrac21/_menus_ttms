@@ -74,19 +74,36 @@ class ClientAdManager {
     });
   }
 
+  promotionsJsonUrls() {
+    const bust = `t=${Date.now()}`;
+    const urls = [];
+    const path = String((typeof location !== 'undefined' && location.pathname) || '/')
+      .replace(/^\/+|\/+$/g, '');
+    const first = path.split('/')[0];
+    if (first && first.toLowerCase() !== 'promotions') {
+      urls.push(`/${encodeURIComponent(first)}/promotions/index.json?${bust}`);
+    }
+    urls.push(`/promotions/index.json?${bust}`);
+    return urls;
+  }
+
   async loadPromotionsJson() {
     try {
-      const url = `/promotions/index.json?t=${Date.now()}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      if (data && data.items) {
-        this.ads = data.items;
-        return true;
+      const urls = this.promotionsJsonUrls();
+      for (let i = 0; i < urls.length; i++) {
+        const response = await fetch(urls[i], {
+          headers: { Accept: 'application/json' },
+          credentials: 'omit',
+        });
+        if (!response.ok) continue;
+        const data = await response.json();
+        if (data && Array.isArray(data.items) && data.items.length) {
+          this.ads = data.items;
+          return true;
+        }
       }
       return false;
-    } catch (error) {
-      console.error('Failed to load promotions JSON:', error);
+    } catch (_) {
       return false;
     }
   }
@@ -468,6 +485,13 @@ class ClientAdManager {
 
     const loading = container.querySelector('.ads-loading');
     if (loading) loading.remove();
+
+    // Reels sponsored strip is owned by AdsClient (#pageadscontainer). Don't
+    // fall back to a missing /promotions/index.json just to fill an empty SSR slot.
+    if (document.getElementById('pageadscontainer')) {
+      this.hasPopulatedHome = true;
+      return;
+    }
 
     const { ads } = await this.getAdsForDisplay(null);
     if (ads.length === 0) {
