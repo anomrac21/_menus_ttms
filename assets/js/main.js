@@ -119,53 +119,18 @@
      * Skipped on localhost; uses short timeout elsewhere.
      * @returns {{ day: string, hour: number, minute: number }|null}
      */
+    /**
+     * worldtimeapi.org is frequently unreachable (ERR_CONNECTION_RESET) and still
+     * paints a console error even when fetch is caught. Local clock is enough for
+     * day/time promo windows.
+     */
     function shouldUseExternalTimeApi() {
-        try {
-            var host = window.location.hostname;
-            if (host === 'localhost' || host === '127.0.0.1') return false;
-        } catch (_) { /* ignore */ }
-        return true;
+        return false;
     }
 
     async function fetchDateTimeFromAPI() {
         if (!shouldUseExternalTimeApi()) return null;
-        try {
-            const cachedRaw = sessionStorage.getItem('ttms_datetime_cache');
-            if (cachedRaw) {
-                const cached = JSON.parse(cachedRaw);
-                if (cached && cached.expires > Date.now() && cached.data && cached.data.day) {
-                    return cached.data;
-                }
-            }
-
-            var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-            var timeoutId = controller
-                ? setTimeout(function () { controller.abort(); }, 2500)
-                : null;
-            const res = await fetch('https://worldtimeapi.org/api/ip', {
-                cache: 'no-store',
-                signal: controller ? controller.signal : undefined,
-            });
-            if (timeoutId) clearTimeout(timeoutId);
-            if (!res.ok) return null;
-            const data = await res.json();
-            const dayNum = data.day_of_week; // 1=Monday .. 7=Sunday
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const day = days[dayNum - 1] || null;
-            let hour = 0, minute = 0;
-            if (data.datetime) {
-                const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
-                if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
-            }
-            const result = day ? { day, hour, minute } : null;
-            if (result) {
-                sessionStorage.setItem('ttms_datetime_cache', JSON.stringify({
-                    data: result,
-                    expires: Date.now() + (5 * 60 * 1000)
-                }));
-            }
-            return result;
-        } catch (_) { return null; }
+        return null;
     }
 
     /** Fallback when the time API is unavailable: still apply day-based promos using local clock. */

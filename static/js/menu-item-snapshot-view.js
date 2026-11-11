@@ -1097,19 +1097,22 @@
             return null;
           })
         : Promise.resolve(null);
-    var listUrl = cmsApiBase() + '/clients/' + encodeURIComponent(clientId()) + '/menu-versions';
+    // Prefer /menu-versions/site — list ids can point at pruned snapshots (404).
+    var siteUrl = cmsApiBase() + '/clients/' + encodeURIComponent(clientId()) + '/menu-versions/site';
     loadPromise = tokenReady.then(function () {
-      return fetch(listUrl, { method: 'GET', credentials: 'include', headers: authHeaders() });
+      return fetch(siteUrl, { method: 'GET', credentials: 'include', headers: authHeaders() });
     })
       .then(function (res) {
-        return res.ok ? res.json() : { versions: [] };
+        if (!res.ok) return null;
+        return res.json();
       })
       .catch(function () {
-        return { versions: [] };
+        return null;
       })
-      .then(function (data) {
-        var versions = data && data.versions ? data.versions : [];
-        var id = versions[0] && (versions[0].id || versions[0].ID);
+      .then(function (sitePayload) {
+        if (!sitePayload) return null;
+        if (sitePayload.menu_data || sitePayload.MenuData) return sitePayload;
+        var id = sitePayload.version_id || sitePayload.versionId || sitePayload.id || sitePayload.ID;
         if (!id) return null;
         var url =
           cmsApiBase() +

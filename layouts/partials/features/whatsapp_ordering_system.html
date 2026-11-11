@@ -33,20 +33,15 @@ let categorySidesTracking = {};
 let cartDateTimeCache = null;
 
 function fetchDateTimeForCart() {
-	return fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' })
-		.then(res => res.ok ? res.json() : null)
-		.then(data => {
-			if (!data || !data.day_of_week) return null;
-			const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-			const day = days[data.day_of_week - 1] || null;
-			let hour = 0, minute = 0;
-			if (data.datetime) {
-				const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
-				if (m) { hour = parseInt(m[1], 10); minute = parseInt(m[2], 10); }
-			}
-			return day ? { day, hour, minute } : null;
-		})
-		.catch(() => null);
+	// Prefer local clock — worldtimeapi.org often fails with ERR_CONNECTION_RESET
+	// (browser still logs the failed request even when fetch is caught).
+	const d = new Date();
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	return Promise.resolve({
+		day: days[d.getDay()],
+		hour: d.getHours(),
+		minute: d.getMinutes(),
+	});
 }
 
 function parseTimeToMinutesCart(timeStr) {

@@ -25,43 +25,14 @@ class ClientAdManager {
     }
   }
 
+  // worldtimeapi.org is flaky and logs ERR_CONNECTION_RESET even when caught.
   _shouldUseExternalTimeApi() {
-    try {
-      var host = window.location.hostname;
-      if (host === 'localhost' || host === '127.0.0.1') return false;
-    } catch (_) { /* ignore */ }
-    return true;
+    return false;
   }
 
   async fetchDateTimeFromAPI() {
     if (!this._shouldUseExternalTimeApi()) return null;
-    try {
-      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      var timeoutId = controller
-        ? setTimeout(function () { controller.abort(); }, 2500)
-        : null;
-      const res = await fetch('https://worldtimeapi.org/api/ip', {
-        cache: 'no-store',
-        signal: controller ? controller.signal : undefined,
-      });
-      if (timeoutId) clearTimeout(timeoutId);
-      if (!res.ok) return null;
-      const data = await res.json();
-      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      const day = days[(data.day_of_week || 1) - 1] || null;
-      let hour = 0;
-      let minute = 0;
-      if (data.datetime) {
-        const m = data.datetime.match(/T(\d{1,2}):(\d{2})/);
-        if (m) {
-          hour = parseInt(m[1], 10);
-          minute = parseInt(m[2], 10);
-        }
-      }
-      return day ? { day, hour, minute } : null;
-    } catch (_) {
-      return null;
-    }
+    return null;
   }
 
   async ensureDateTime() {

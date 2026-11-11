@@ -69,56 +69,72 @@ function recoverStuckUiState() {
     }, 12000);
 })();
 
+function hasAdsClientContainer() {
+    return !!document.getElementById('pageadscontainer');
+}
+
+function hasClientAdManagerContainer() {
+    return !!(
+        document.getElementById('homepage-ads-container') ||
+        document.getElementById('frontpage-ads-container') ||
+        document.getElementById('client-ads-container')
+    );
+}
+
+/** ClientAdManager only — reels #pageadscontainer is owned by AdsClient. */
+function shouldUseAdManager() {
+    if (hasAdsClientContainer()) return false;
+    return hasClientAdManagerContainer();
+}
+
 // Function to ensure ads are loaded with retry mechanism
 function ensureAdsLoaded() {
-    // Reels homepage uses AdsClient, not client-ad-manager
-    if (document.getElementById('pageadscontainer')) {
+    // Reels / sponsored strip uses AdsClient, not ClientAdManager
+    if (hasAdsClientContainer()) {
         if (typeof window.AdsClient !== 'undefined' && typeof window.AdsClient.loadAds === 'function') {
             window.AdsClient.loadAds();
         }
         return;
     }
 
+    if (!shouldUseAdManager()) return;
+
     // Prevent multiple simultaneous attempts
-    if (isAdsLoading) {
-        console.log('Ads already loading, skipping...');
-        return;
-    }
-    
+    if (isAdsLoading) return;
+
     isAdsLoading = true;
     let retryCount = 0;
     const maxRetries = 5;
-    
+
     const tryLoadAds = () => {
-        console.log(`Attempt ${retryCount + 1}: Checking AdManager...`);
-        console.log('window.adManager:', window.adManager);
-        console.log('typeof window.adManager.populateAds:', typeof window.adManager?.populateAds);
-        
+        if (!shouldUseAdManager()) {
+            isAdsLoading = false;
+            return;
+        }
+
         if (window.adManager && typeof window.adManager.populateAds === 'function') {
-            console.log('AdManager found! Checking if ads need refreshing...');
             try {
-                // Check if ads are actually visible in containers
-                const adContainers = document.querySelectorAll('#homepage-ads-container, #pageadscontainer');
+                const adContainers = document.querySelectorAll(
+                    '#homepage-ads-container, #frontpage-ads-container, #client-ads-container'
+                );
                 let needsRefresh = false;
-                
+
                 adContainers.forEach(container => {
-                    if (container && (container.innerHTML.includes('Loading ads...') || container.innerHTML.includes('Ads loading...') || container.innerHTML.trim() === '')) {
+                    if (
+                        container &&
+                        (container.innerHTML.includes('Loading ads...') ||
+                            container.innerHTML.includes('Ads loading...') ||
+                            container.innerHTML.trim() === '')
+                    ) {
                         needsRefresh = true;
-                        console.log(`Container ${container.id} needs refresh: current content:`, container.innerHTML.substring(0, 100));
                     }
                 });
-                
+
                 if (needsRefresh || !window.adManager.hasPopulated) {
-                    console.log('Ads need refreshing, calling populateAds...');
-                    // Reset the flag to allow fresh population
                     if (window.adManager.hasPopulated) {
                         window.adManager.hasPopulated = false;
-                        console.log('Reset hasPopulated flag for fresh ad population');
                     }
                     window.adManager.populateAds();
-                    console.log('Ads refreshed successfully');
-                } else {
-                    console.log('Ads already populated and visible, skipping refresh...');
                 }
                 isAdsLoading = false;
             } catch (error) {
@@ -127,24 +143,12 @@ function ensureAdsLoaded() {
             }
         } else if (retryCount < maxRetries) {
             retryCount++;
-            console.log(`AdManager not ready, retrying... (${retryCount}/${maxRetries})`);
-            setTimeout(tryLoadAds, 1000); // Increased delay to 1 second
+            setTimeout(tryLoadAds, 1000);
         } else {
-            console.log('AdManager not available after maximum retries');
-            console.log('Final check - window.adManager:', window.adManager);
-            
-            // Fallback - try to refresh any existing ads manually
-            const adContainers = document.querySelectorAll('#homepage-ads-container, #pageadscontainer');
-            adContainers.forEach(container => {
-                if (container.innerHTML.includes('Loading ads...')) {
-                    container.innerHTML = '<p>Ads loading...</p>';
-                }
-            });
-            
             isAdsLoading = false;
         }
     };
-    
+
     tryLoadAds();
 }
 
@@ -1161,29 +1165,21 @@ window.addEventListener("beforeunload", () => {
 
 // Listen for page refresh/reload events
 window.addEventListener('load', () => {
-    if (!shouldUseAdManager()) return;
-    console.log('Page load event fired, attempting to load ads...');
+    if (!shouldUseAdManager() && !hasAdsClientContainer()) return;
     ensureAdsLoaded();
-    setTimeout(() => ensureAdsLoaded(), 2000);
+    if (shouldUseAdManager()) setTimeout(() => ensureAdsLoaded(), 2000);
 });
-
-function shouldUseAdManager() {
-    return !document.getElementById('pageadscontainer');
-}
 
 // Also try to load ads as soon as possible
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOMContentLoaded fired, checking ads...');
         setTimeout(() => ensureAdsLoaded(), 1000);
     });
 } else {
-    // DOM is already loaded
-    console.log('DOM already loaded, checking ads immediately...');
     setTimeout(() => ensureAdsLoaded(), 500);
 }
 
-// Also listen for when the AdManager becomes available (homepage only)
+// Also listen for when the AdManager becomes available (legacy client-ad containers only)
 const checkAdManager = setInterval(() => {
     if (!shouldUseAdManager()) {
         clearInterval(checkAdManager);
@@ -1191,37 +1187,28 @@ const checkAdManager = setInterval(() => {
     }
 
     adManagerCheckCount++;
-    
+
     if (window.adManager && typeof window.adManager.populateAds === 'function') {
         clearInterval(checkAdManager);
-        console.log('AdManager detected via interval check, refreshing ads...');
         ensureAdsLoaded();
     }
-    
+
     // Stop checking after 20 attempts (10 seconds)
     if (adManagerCheckCount >= 20) {
         clearInterval(checkAdManager);
-        console.log('AdManager check interval cleared after 20 attempts');
-        
-        if (!window.adManager) {
-            console.error('AdManager never became available. Please check the console for AdManager initialization messages.');
-        }
     }
 }, 500);
 
 // Additional check: try to refresh ads when the page becomes visible
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && shouldUseAdManager()) {
-        console.log('Page became visible, checking ads...');
+    if (!document.hidden && (shouldUseAdManager() || hasAdsClientContainer())) {
         setTimeout(() => ensureAdsLoaded(), 500);
     }
 });
 
 // Listen for the custom event when AdManager is ready
 window.addEventListener('adManagerReady', (event) => {
-    console.log('AdManager ready event received:', event.detail);
     if (event.detail && typeof event.detail.populateAds === 'function') {
-        console.log('AdManager is ready via event, refreshing ads...');
         setTimeout(() => ensureAdsLoaded(), 100);
     }
 });
