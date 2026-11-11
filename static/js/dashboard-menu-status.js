@@ -19,6 +19,7 @@
   var draftLoadError = '';
   var refreshInFlight = null;
   var refreshQueued = false;
+  var refreshQueuedOpts = null;
   var snapshotFetchGen = 0;
   var omittedDraftIds = new Set();
   var draftAnalyses = {};
@@ -28,7 +29,8 @@
   var draftGroupCollapsed = {};
   var statusBlockCollapsed = {};
   var STATUS_BLOCK_KEYS = ['snapshots', 'drafts', 'publish'];
-  var STATUS_BLOCK_DEFAULT_COLLAPSED = { snapshots: true, drafts: true, publish: true };
+  // Drafts start open so change details are readable; Publish CTA lives outside these blocks.
+  var STATUS_BLOCK_DEFAULT_COLLAPSED = { snapshots: true, drafts: false, publish: true };
 
   function readablePublishError(err) {
     var raw = err && err.message ? String(err.message) : String(err || '');
@@ -74,9 +76,13 @@
     return !!statusBlockCollapsed[blockKey];
   }
 
-  function toggleStatusBlockCollapsed(blockKey) {
-    statusBlockCollapsed[blockKey] = !isStatusBlockCollapsed(blockKey);
+  function setStatusBlockCollapsed(blockKey, collapsed) {
+    statusBlockCollapsed[blockKey] = !!collapsed;
     saveStatusBlockCollapsed();
+  }
+
+  function toggleStatusBlockCollapsed(blockKey) {
+    setStatusBlockCollapsed(blockKey, !isStatusBlockCollapsed(blockKey));
   }
 
   function draftGroupCollapsedStorageKey() {
@@ -1952,13 +1958,44 @@
       return sha.length > 7 ? sha.slice(0, 7) : sha;
     }
 
+    function publishFlashMsgEl() {
+      return document.getElementById('dashboardPublishFlashMsg') || publishFlashEl;
+    }
+
+    function publishFlashWarningsEl() {
+      return document.getElementById('dashboardPublishFlashWarnings');
+    }
+
+    function setPublishFlashWarnings(warnings) {
+      var list = publishFlashWarningsEl();
+      if (!list) return;
+      list.textContent = '';
+      var items = Array.isArray(warnings) ? warnings.filter(Boolean) : [];
+      if (!items.length) {
+        list.classList.add('hidden');
+        return;
+      }
+      items.forEach(function (w) {
+        var li = document.createElement('li');
+        li.textContent = String(w);
+        list.appendChild(li);
+      });
+      list.classList.remove('hidden');
+    }
+
     function showPublishFlashMessage(msg, opts) {
       opts = opts || {};
       if (!publishFlashEl) return;
-      publishFlashEl.textContent = msg || '';
+      var state = opts.state || (opts.error ? 'error' : opts.progress ? 'deploying' : 'live');
+      var msgEl = publishFlashMsgEl();
+      if (msgEl && msgEl !== publishFlashEl) msgEl.textContent = msg || '';
+      else publishFlashEl.textContent = msg || '';
       publishFlashEl.classList.remove('hidden');
-      publishFlashEl.classList.toggle('is-progress', !!opts.progress);
-      publishFlashEl.classList.toggle('is-error', !!opts.error);
+      publishFlashEl.classList.toggle('is-progress', !!opts.progress || state === 'publishing' || state === 'deploying');
+      publishFlashEl.classList.toggle('is-error', !!opts.error || state === 'error');
+      publishFlashEl.setAttribute('data-publish-state', state);
+      if (opts.warnings) setPublishFlashWarnings(opts.warnings);
+      else if (!opts.keepWarnings) setPublishFlashWarnings([]);
       if (global.__ttmsPublishFlashTimer) clearTimeout(global.__ttmsPublishFlashTimer);
       if (opts.persist) {
         global.__ttmsPublishFlashTimer = null;
@@ -1967,7 +2004,30 @@
       global.__ttmsPublishFlashTimer = setTimeout(function () {
         publishFlashEl.classList.add('hidden');
         publishFlashEl.classList.remove('is-progress', 'is-error');
+        publishFlashEl.setAttribute('data-publish-state', 'idle');
+        if (!opts.keepWarnings) setPublishFlashWarnings([]);
       }, opts.duration || 9000);
+    }
+
+    function expandPublishStoryBlocks(opts) {
+      opts = opts || {};
+      if (opts.drafts != null) {
+        setStatusBlockCollapsed('drafts', !opts.drafts);
+        syncStatusBlockUI('drafts');
+      }
+      if (opts.publish != null) {
+        setStatusBlockCollapsed('publish', !opts.publish);
+        syncStatusBlockUI('publish');
+      }
+    }
+
+    function syncDraftBlockOpenForPublishable() {
+      var publishableCount = getPublishablePreviews().length;
+      // Keep drafts open when there is work; otherwise leave user preference alone after first load.
+      if (publishableCount > 0) {
+        setStatusBlockCollapsed('drafts', false);
+        syncStatusBlockUI('drafts');
+      }
     }
 
     function stopPublishDeployWatch() {
@@ -2021,18 +2081,18 @@
         if (matchesLive(summary, buildInfo)) {
           showPublishFlashMessage(
             'Live' + (short ? ' · ' + short : '') + '. Customers see the published menu.',
-            { duration: 10000 }
+            { state: 'live', duration: 12000, keepWarnings: true }
           );
           stopPublishDeployWatch();
           if (DDS && typeof DDS.refresh === 'function') DDS.refresh();
-          scheduleRefreshMenuCard();
+          scheduleRefreshMenuCard({ soft: true });
           return;
         }
         if (isFailed(summary)) {
           showPublishFlashMessage(
             (summary && (summary.label || summary.detail)) ||
               'Site update failed. Check Deployments for details.',
-            { error: true, duration: 14000 }
+            { state: 'error', error: true, duration: 16000, keepWarnings: true }
           );
           stopPublishDeployWatch();
           return;
@@ -2044,7 +2104,12 @@
         if (detail) msg += ' — ' + detail;
         else if (short) msg += ' · waiting for ' + short;
         msg += ' (' + elapsed + 's)';
-        showPublishFlashMessage(msg, { persist: true, progress: true });
+        showPublishFlashMessage(msg, {
+          persist: true,
+          progress: true,
+          state: 'deploying',
+          keepWarnings: true,
+        });
       }
 
       var unsub = null;
@@ -2096,11 +2161,12 @@
       }
 
       publishDeployWatch = { timer: null, unsubscribe: unsub };
+      expandPublishStoryBlocks({ publish: true });
       showPublishFlashMessage(
         'Published' +
           (short ? ' · ' + short : '') +
           '. Building new site pod (old menu stays up until ready)…',
-        { persist: true, progress: true }
+        { persist: true, progress: true, state: 'deploying', keepWarnings: true }
       );
       if (DDS && typeof DDS.refresh === 'function') DDS.refresh();
       poll();
@@ -2591,6 +2657,7 @@
       var publishable = getPublishablePreviews();
       var publishableCount = publishable.length;
       setStatusBlockSummary('drafts', draftBlockSummaryText(n, publishableCount));
+      syncDraftBlockOpenForPublishable();
       if (n === 0) {
         var p0 = document.createElement('p');
         p0.className = 'dashboard-menu-status-muted';
@@ -2895,10 +2962,28 @@
         if (data.fileLabels.length > maxL) {
           var liMoreP = document.createElement('li');
           liMoreP.className = 'dashboard-menu-status-row dashboard-menu-status-row--more';
-          liMoreP.textContent = '… and ' + (data.fileLabels.length - maxL) +' more';
+          liMoreP.textContent = '… and ' + (data.fileLabels.length - maxL) + ' more';
           publishRows.push(liMoreP);
         }
         appendStatusRows(lastPublishEl, publishRows, maxL + 1);
+      }
+      if (data.warnings && data.warnings.length) {
+        var warnIntro = document.createElement('p');
+        warnIntro.className = 'dashboard-menu-status-muted';
+        warnIntro.textContent =
+          data.warnings.length === 1
+            ? '1 publish note'
+            : data.warnings.length + ' publish notes';
+        lastPublishEl.appendChild(warnIntro);
+        var warnList = document.createElement('ul');
+        warnList.className = 'dashboard-publish-flash-warnings';
+        warnList.classList.remove('hidden');
+        data.warnings.forEach(function (w) {
+          var liW = document.createElement('li');
+          liW.textContent = String(w);
+          warnList.appendChild(liW);
+        });
+        lastPublishEl.appendChild(warnList);
       }
     }
 
@@ -2909,14 +2994,19 @@
         publishBtn.classList.remove('hidden');
         publishBtn.classList.add('btn-dash-publish');
         publishBtn.disabled = publishable.length === 0;
-        var label = publishBtn.querySelector('.card-publish-btn-label');
+        publishBtn.classList.remove('is-loading');
+        publishBtn.setAttribute('aria-busy', 'false');
         var countText =
           'Publish' +
           (publishable.length > 1 ? ' (' + publishable.length + ')' : publishable.length === 0 ? ' (0)' : '');
-        if (label) label.textContent = countText;
-        else publishBtn.textContent = countText;
+        publishBtn.innerHTML =
+          '<i class="fa fa-cloud-upload" aria-hidden="true"></i><span class="card-publish-btn-label">' +
+          countText +
+          '</span>';
       } else {
         publishBtn.disabled = false;
+        publishBtn.classList.remove('is-loading');
+        publishBtn.setAttribute('aria-busy', 'false');
         publishBtn.classList.add('hidden');
       }
     }
@@ -3080,12 +3170,24 @@
     function fetchSnapshotSiteFallback(gen, opts) {
       return cmsGetJsonWithAuth(cmsClientPath('/menu-versions/site')).then(function (res) {
         if (gen !== snapshotFetchGen) return cachedVersions;
-        var id = '';
-        if (res.ok && res.data) {
-          id = String(res.data.version_id || res.data.versionId || res.data.id || '').trim();
+        if (!res.ok || !res.data) return applyLoadedVersions([], opts);
+        var payload = res.data;
+        var rec = versionRecordFromPayload(payload) || payload;
+        // Site often returns a version_id without menu_data; chasing GET /menu-versions/:id
+        // 404s on pruned snapshots and still paints a console error. Only use embedded data.
+        if (versionMenuData(rec) || versionMenuData(payload)) {
+          if (!versionIdFromRecord(rec)) {
+            var sid = String(payload.version_id || payload.versionId || payload.id || '').trim();
+            if (sid) rec.id = sid;
+          }
+          if (!versionMenuData(rec) && versionMenuData(payload)) {
+            rec.menu_data = payload.menu_data || payload.MenuData;
+          }
+          return applyLoadedVersions([rec], opts);
         }
+        var id = String(payload.version_id || payload.versionId || payload.id || '').trim();
         if (!id) return applyLoadedVersions([], opts);
-        return fetchSnapshotById(id, gen, opts);
+        return applyLoadedVersions([{ id: id, name: payload.name || 'Menu snapshot' }], opts);
       });
     }
 
@@ -3119,17 +3221,9 @@
             var held = heldSnapshotWithMenuData(listedId);
             if (held) {
               raw[0] = mergeSnapshotRecord(held, raw[0]);
-              return applyLoadedVersions(raw, opts);
             }
-            return cmsGetJsonWithAuth(cmsClientPath('/menu-versions/' + encodeURIComponent(listedId))).then(
-              function (detail) {
-                if (gen !== snapshotFetchGen) return cachedVersions;
-                if (detail.ok && versionRecordFromPayload(detail.data)) {
-                  raw[0] = mergeSnapshotRecord(versionRecordFromPayload(detail.data), raw[0]);
-                }
-                return applyLoadedVersions(raw, opts);
-              }
-            );
+            // Skip detail GET — pruned ids 404 and spam the console; list metadata is enough.
+            return applyLoadedVersions(raw, opts);
           }
           return applyLoadedVersions(raw, opts);
         })
@@ -3183,22 +3277,36 @@
         });
     }
 
-    function refreshMenuCard() {
+    function refreshMenuCard(opts) {
+      opts = opts || {};
+      var soft = !!opts.soft;
       if (refreshInFlight) {
         refreshQueued = true;
+        refreshQueuedOpts = opts;
         return refreshInFlight;
       }
       if (redirectToLoginIfUnauthenticated()) {
         return Promise.resolve();
       }
-      snapshotLoadState = 'loading';
-      draftLoadState = 'loading';
-      renderSnapshotStatusSummary();
-      renderDraftStatusSummary();
+      if (!soft || !cachedVersions.length) {
+        snapshotLoadState = 'loading';
+        renderSnapshotStatusSummary();
+      } else {
+        setStatusBlockSummary('snapshots', 'Updating…');
+      }
+      if (!soft || !cachedPreviews.length) {
+        draftLoadState = 'loading';
+        renderDraftStatusSummary();
+      } else {
+        setStatusBlockSummary(
+          'drafts',
+          draftBlockSummaryText(cachedPreviews.length, getPublishablePreviews().length) + ' · updating…'
+        );
+      }
       refreshInFlight = ensureAccessTokenForCms()
         .then(function () {
           if (redirectToLoginIfUnauthenticated()) return;
-          return Promise.all([fetchMenuVersions(), fetchPreviews()]).then(function () {
+          return Promise.all([fetchMenuVersions(opts), fetchPreviews()]).then(function () {
             analyzeDraftsAgainstBaseline();
           });
         })
@@ -3206,7 +3314,9 @@
           refreshInFlight = null;
           if (refreshQueued) {
             refreshQueued = false;
-            refreshMenuCard();
+            var queued = refreshQueuedOpts || {};
+            refreshQueuedOpts = null;
+            refreshMenuCard(queued);
           }
         });
       return refreshInFlight;
@@ -3354,15 +3464,29 @@
           publishSummaryConfirm.onclick = function () {
             if (pending.length === 0) return;
             setDashButtonBusy(publishSummaryConfirm, true, 'Publishing…');
+            if (publishBtn) {
+              setDashButtonBusy(publishBtn, true, 'Publishing…');
+            }
+            showPublishFlashMessage('Publishing your changes to Git…', {
+              persist: true,
+              progress: true,
+              state: 'publishing',
+            });
+            expandPublishStoryBlocks({ drafts: true, publish: true });
             ensureAccessTokenForCms().then(function (token) {
               if (!token) {
-                alert('CMS session expired. Sign out and sign in again.');
+                showPublishFlashMessage('CMS session expired. Sign in again, then retry.', {
+                  state: 'error',
+                  error: true,
+                  duration: 14000,
+                });
                 setDashButtonBusy(
                   publishSummaryConfirm,
                   false,
                   '',
                   '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
                 );
+                if (publishBtn) syncPublishButton();
                 return;
               }
             var changes = pending.map(function (p) {
@@ -3397,23 +3521,36 @@
                 });
                 saveOmittedDraftIds();
                 var labels = pending.map(previewSummaryLabel);
+                var publishWarnings =
+                  resp && Array.isArray(resp.warnings) ? resp.warnings.filter(Boolean) : [];
                 persistLastPublishRecord({
                   at: new Date().toISOString(),
                   ok: true,
                   count: pending.length,
                   commitHash: hash,
                   fileLabels: labels.slice(0, 24),
+                  warnings: publishWarnings.slice(0, 12),
                 });
+                // Optimistic clear so the report does not sit on already-published drafts.
+                serverPreviews = [];
+                cachedPreviews = [];
+                syncPublishButton();
+                renderDraftStatusSummary();
                 renderLastPublishSummary();
                 var flashMsg =
                   pending.length === 1
-                    ? 'Published. Customers will see this after the site finishes updating.'
-                    : 'Published ' + pending.length + ' changes. Customers will see them after the site finishes updating.';
-                var publishWarnings = resp && Array.isArray(resp.warnings) ? resp.warnings.filter(Boolean) : [];
+                    ? 'Published. Building the live site…'
+                    : 'Published ' + pending.length + ' changes. Building the live site…';
                 if (publishWarnings.length) {
-                  flashMsg += ' ' + publishWarnings.join(' ');
-                  alert(publishWarnings.join('\n\n'));
+                  flashMsg =
+                    'Published with notes. Building the live site… Re-upload any missing photos if needed.';
                 }
+                showPublishFlashMessage(flashMsg, {
+                  persist: true,
+                  progress: true,
+                  state: publishWarnings.length ? 'warning' : 'deploying',
+                  warnings: publishWarnings,
+                });
                 closePublishSummaryModal();
                 setDashButtonBusy(
                   publishSummaryConfirm,
@@ -3421,18 +3558,24 @@
                   '',
                   '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
                 );
+                if (publishBtn) syncPublishButton();
                 startPublishDeployWatch(hash);
-                return refreshMenuCard();
+                return refreshMenuCard({ soft: true });
               })
               .catch(function (err) {
                 console.error('Publish failed', err);
-                alert('Could not publish. ' + readablePublishError(err));
+                showPublishFlashMessage('Could not publish. ' + readablePublishError(err), {
+                  state: 'error',
+                  error: true,
+                  duration: 16000,
+                });
                 setDashButtonBusy(
                   publishSummaryConfirm,
                   false,
                   '',
                   '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
                 );
+                if (publishBtn) syncPublishButton();
               });
             });
           };
@@ -3441,11 +3584,15 @@
     }
 
     var refreshScheduleTimer = null;
-    function scheduleRefreshMenuCard() {
+    var refreshScheduleOpts = null;
+    function scheduleRefreshMenuCard(opts) {
+      refreshScheduleOpts = opts || null;
       if (refreshScheduleTimer) clearTimeout(refreshScheduleTimer);
       refreshScheduleTimer = setTimeout(function () {
         refreshScheduleTimer = null;
-        if (document.getElementById('dashboardMenuStatusPanel')) refreshMenuCard();
+        var o = refreshScheduleOpts || {};
+        refreshScheduleOpts = null;
+        if (document.getElementById('dashboardMenuStatusPanel')) refreshMenuCard(o);
       }, 350);
     }
 

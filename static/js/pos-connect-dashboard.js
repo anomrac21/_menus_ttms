@@ -1376,34 +1376,10 @@
   }
 
   function loadMenuTitleHints() {
-    return fetch('/menu-items.json', { credentials: 'same-origin' })
-      .then(function (r) {
-        return r.ok ? r.json() : null;
-      })
-      .then(function (data) {
-        var titles = [];
-        function walk(node) {
-          if (!node) return;
-          if (Array.isArray(node)) {
-            node.forEach(walk);
-            return;
-          }
-          if (typeof node !== 'object') return;
-          if (node.title) titles.push(String(node.title));
-          if (node.name) titles.push(String(node.name));
-          Object.keys(node).forEach(function (k) {
-            if (k === 'title' || k === 'name') return;
-            walk(node[k]);
-          });
-        }
-        walk(data);
-        menuTitleHints = Array.from(new Set(titles.filter(Boolean)));
-        return menuTitleHints;
-      })
-      .catch(function () {
-        menuTitleHints = [];
-        return menuTitleHints;
-      });
+    // Prefer /api/menu-items.json — /menu-items.json 404s on multi-location demos.
+    return loadMenuCatalog().then(function () {
+      return menuTitleHints || [];
+    });
   }
 
   function bestMenuTitleMatch(loyverseName) {
