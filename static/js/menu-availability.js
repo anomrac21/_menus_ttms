@@ -289,12 +289,28 @@
         var actions = card.querySelector('.dashboard-settings-location-card-actions');
         if (!actions) return;
         var label = document.createElement('label');
-        label.className = 'dashboard-sold-out-toggle';
+        label.className = 'dashboard-sold-out-toggle dashboard-switch';
+        label.title = 'Mark sold out without publishing';
         label.innerHTML =
-          '<input type="checkbox" data-sold-out-toggle>' +
+          '<input type="checkbox" class="dashboard-switch-input" data-sold-out-toggle>' +
+          '<span class="dashboard-switch-track" aria-hidden="true"></span>' +
           '<span data-sold-out-label>Available</span>';
         actions.appendChild(label);
         input = label.querySelector('input');
+      } else {
+        var wrap = input.closest('.dashboard-sold-out-toggle');
+        if (wrap) {
+          wrap.classList.add('dashboard-switch');
+          if (!input.classList.contains('dashboard-switch-input')) {
+            input.classList.add('dashboard-switch-input');
+          }
+          if (!wrap.querySelector('.dashboard-switch-track')) {
+            var track = document.createElement('span');
+            track.className = 'dashboard-switch-track';
+            track.setAttribute('aria-hidden', 'true');
+            input.insertAdjacentElement('afterend', track);
+          }
+        }
       }
       if (input.getAttribute('data-bound') === '1') return;
       input.setAttribute('data-bound', '1');
@@ -378,7 +394,8 @@
     normalizeItemKey: normalizeItemKey,
     refresh: fetchSnapshot,
     setUnavailable: setUnavailable,
-    apply: applyAllCards
+    apply: applyAllCards,
+    enhance: enhanceDashboardCards
   };
 
   if (document.readyState === 'loading') {

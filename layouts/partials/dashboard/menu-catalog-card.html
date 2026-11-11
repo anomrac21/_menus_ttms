@@ -60,10 +60,11 @@
     {{- end -}}
   </div>
   <div class="dashboard-settings-location-card-actions">
-    <button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>
+    <button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i><span>Edit</span></button>
     {{- if and (eq $kind "menu-item") .itemUrl -}}
-    <label class="dashboard-sold-out-toggle" title="Mark sold out without publishing">
-      <input type="checkbox" data-sold-out-toggle aria-label="Sold out {{ $title }}">
+    <label class="dashboard-sold-out-toggle dashboard-switch" title="Mark sold out without publishing">
+      <input type="checkbox" class="dashboard-switch-input" data-sold-out-toggle aria-label="Sold out {{ $title }}">
+      <span class="dashboard-switch-track" aria-hidden="true"></span>
       <span data-sold-out-label>Available</span>
     </label>
     {{- end -}}

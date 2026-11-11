@@ -9,6 +9,8 @@
   var knownIds = {};
   var refreshSeq = 0;
   var notifyByOrderId = {};
+  var notifyReceiptById = {};
+  var notifyOpenByOrderId = {};
   var notifyLoadSeq = 0;
   var lastOrdersCache = [];
 
@@ -153,6 +155,27 @@
     }
     var name = String((order && order.restaurant_name) || '').trim();
     return { slug: '', title: name || 'Menu', subtitle: '' };
+  }
+
+  function selectedOrdersStatus() {
+    var root = $('dashboardOrdersFilter');
+    if (!root) return '';
+    if (root.tagName === 'SELECT') return root.value || '';
+    var active = root.querySelector('.dashboard-orders-status-filter.is-active[data-orders-status]');
+    if (!active) active = root.querySelector('[data-orders-status][aria-selected="true"]');
+    return active ? String(active.getAttribute('data-orders-status') || '') : '';
+  }
+
+  function onOrdersStatusFilterClick(e) {
+    var btn = e.target.closest('[data-orders-status]');
+    var root = $('dashboardOrdersFilter');
+    if (!btn || !root || !root.contains(btn)) return;
+    root.querySelectorAll('[data-orders-status]').forEach(function (el) {
+      var on = el === btn;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    refresh();
   }
 
   function fillLocationFilter() {
@@ -390,35 +413,117 @@
     }
   }
 
+  function receiptRank(status) {
+    var key = String(status || '').toLowerCase();
+    if (key === 'clicked' || key === 'read') return 5;
+    if (key === 'confirmed' || key === 'opened') return 4;
+    if (key === 'delivered' || key === 'received') return 3;
+    if (key === 'sent') return 2;
+    if (key === 'pending' || key === 'queued') return 1;
+    if (key === 'failed' || key === 'bounced') return 0;
+    return 1;
+  }
+
+  function bestReceiptFromDeliveries(deliveries, fallbackStatus) {
+    var best = String(fallbackStatus || 'pending').toLowerCase();
+    var bestRank = receiptRank(best);
+    var when = '';
+    (Array.isArray(deliveries) ? deliveries : []).forEach(function (d) {
+      var status = String((d && d.status) || '').toLowerCase();
+      var rank = receiptRank(status);
+      if (rank > bestRank) {
+        best = status;
+        bestRank = rank;
+      }
+      var stamp = d && (d.clicked_at || d.confirmed_at || d.delivered_at);
+      if (stamp) when = stamp;
+    });
+    if (best === 'clicked') best = 'read';
+    if (best === 'confirmed' || best === 'opened') best = 'read';
+    if (best === 'received') best = 'delivered';
+    return { status: best, when: when };
+  }
+
+  function receiptTicksMarkup(receipt) {
+    var status = String((receipt && receipt.status) || 'pending').toLowerCase();
+    var label = 'Sending';
+    var cls = 'is-pending';
+    if (status === 'failed' || status === 'bounced') {
+      label = 'Failed';
+      cls = 'is-failed';
+    } else if (status === 'read') {
+      label = 'Read';
+      cls = 'is-read';
+    } else if (status === 'delivered') {
+      label = 'Delivered';
+      cls = 'is-delivered';
+    } else if (status === 'sent') {
+      label = 'Sent';
+      cls = 'is-sent';
+    }
+    var twin = cls === 'is-delivered' || cls === 'is-read';
+    return (
+      '<span class="dashboard-order-notify-ticks ' +
+      cls +
+      '" title="' +
+      escapeHtml(label) +
+      '" aria-label="' +
+      escapeHtml(label) +
+      '">' +
+      (cls === 'is-failed'
+        ? '<i class="fa fa-exclamation-circle" aria-hidden="true"></i>'
+        : cls === 'is-pending'
+          ? '<i class="fa fa-clock-o" aria-hidden="true"></i>'
+          : '<svg viewBox="0 0 16 11" aria-hidden="true" class="dashboard-order-notify-tick">' +
+            '<path d="M1.2 5.6l2.7 2.7L8.9 1.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>' +
+            '</svg>' +
+            (twin
+              ? '<svg viewBox="0 0 16 11" aria-hidden="true" class="dashboard-order-notify-tick dashboard-order-notify-tick--second">' +
+                '<path d="M1.2 5.6l2.7 2.7L8.9 1.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>' +
+                '</svg>'
+              : '')) +
+      '</span>'
+    );
+  }
+
   function renderNotifyHistory(orderId) {
-    var items = notifyByOrderId[orderId] || [];
+    var items = (notifyByOrderId[orderId] || []).slice().reverse();
     if (!items.length) {
-      return '<p class="dashboard-order-notify-empty">No customer alerts yet.</p>';
+      return '<p class="dashboard-order-notify-empty">No customer alerts sent yet.</p>';
     }
     return (
-      '<ul class="dashboard-order-notify-list">' +
+      '<ul class="dashboard-order-notify-thread" aria-label="Sent customer alerts">' +
       items
-        .slice(0, 8)
+        .slice(-20)
         .map(function (n) {
           var data = (n && n.data) || {};
+          var notifId = String((n && n.id) || '').trim();
           var action = notifyActionLabel(data.action || n.type);
           var title = String((n && n.title) || action).trim();
           var message = String((n && n.message) || '').trim();
           var when = formatNotifyWhen(n.created_at || n.createdAt || n.sent_at);
+          var receipt =
+            (notifId && notifyReceiptById[notifId]) ||
+            bestReceiptFromDeliveries(null, n.status || 'sent');
           return (
-            '<li class="dashboard-order-notify-item">' +
-            '<span class="dashboard-order-notify-item-main">' +
-            '<strong>' +
+            '<li class="dashboard-order-notify-bubble" data-notification-id="' +
+            escapeHtml(notifId) +
+            '">' +
+            '<div class="dashboard-order-notify-bubble-body">' +
+            '<span class="dashboard-order-notify-bubble-kind">' +
+            escapeHtml(action) +
+            '</span>' +
+            '<strong class="dashboard-order-notify-bubble-title">' +
             escapeHtml(title) +
             '</strong>' +
             (message && message !== title
-              ? '<span class="dashboard-order-notify-item-msg">' + escapeHtml(message) + '</span>'
+              ? '<span class="dashboard-order-notify-bubble-msg">' + escapeHtml(message) + '</span>'
               : '') +
-            '</span>' +
-            '<span class="dashboard-order-notify-item-meta">' +
-            escapeHtml(action) +
-            (when ? ' · ' + escapeHtml(when) : '') +
-            '</span>' +
+            '</div>' +
+            '<div class="dashboard-order-notify-bubble-foot">' +
+            (when ? '<time>' + escapeHtml(when) + '</time>' : '') +
+            receiptTicksMarkup(receipt) +
+            '</div>' +
             '</li>'
           );
         })
@@ -442,28 +547,75 @@
       .trim();
   }
 
-  async function fetchOrderNotifications(orders) {
-    var domain = notifyClientDomain();
-    var base = notifyApiBase();
-    if (!domain || !base) return;
-    var seq = ++notifyLoadSeq;
+  function notifyAuthHeaders() {
     var token = '';
     try {
       if (window.AuthClient && typeof window.AuthClient.getAccessToken === 'function') {
         token = window.AuthClient.getAccessToken() || '';
       }
     } catch (_) {}
-    if (!token) return;
+    var headers = { Accept: 'application/json' };
+    if (token) headers.Authorization = 'Bearer ' + token;
+    return headers;
+  }
+
+  async function fetchNotificationReceipt(notificationId) {
+    var id = String(notificationId || '').trim();
+    if (!id) return null;
+    if (notifyReceiptById[id] && notifyReceiptById[id].loaded) return notifyReceiptById[id];
+    var base = notifyApiBase();
+    if (!base) return null;
+    try {
+      var res = await fetch(base + '/notifications/' + encodeURIComponent(id), {
+        method: 'GET',
+        credentials: 'include',
+        headers: notifyAuthHeaders(),
+      });
+      var data = null;
+      try {
+        data = await res.json();
+      } catch (_) {
+        data = null;
+      }
+      if (!res.ok) return null;
+      var report = (data && data.report) || {};
+      var notification = (data && data.notification) || {};
+      var fallback = notification.status || 'sent';
+      if (Number(report.opened) > 0 || Number(report.clicked) > 0) fallback = 'read';
+      else if (Number(report.received) > 0 || Number(report.sent) > 0) fallback = 'delivered';
+      else if (Number(report.failed) > 0 && !Number(report.sent)) fallback = 'failed';
+      var receipt = bestReceiptFromDeliveries(data && data.deliveries, fallback);
+      receipt.loaded = true;
+      notifyReceiptById[id] = receipt;
+      return receipt;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function loadReceiptsForOrder(orderId) {
+    var items = notifyByOrderId[orderId] || [];
+    if (!items.length) return;
+    await Promise.all(
+      items.map(function (n) {
+        return fetchNotificationReceipt(n && n.id);
+      })
+    );
+    paintNotifyHistories();
+  }
+
+  async function fetchOrderNotifications(orders) {
+    var domain = notifyClientDomain();
+    var base = notifyApiBase();
+    if (!domain || !base) return;
+    var seq = ++notifyLoadSeq;
     try {
       var res = await fetch(
-        base + '/notifications?client_domain=' + encodeURIComponent(domain) + '&limit=80',
+        base + '/notifications?client_domain=' + encodeURIComponent(domain) + '&limit=100',
         {
           method: 'GET',
           credentials: 'include',
-          headers: {
-            Authorization: 'Bearer ' + token,
-            Accept: 'application/json',
-          },
+          headers: notifyAuthHeaders(),
         }
       );
       var data = null;
@@ -481,7 +633,8 @@
       items.forEach(function (n) {
         var dataMap = (n && n.data) || {};
         var oid = String(dataMap.order_id || dataMap.orderId || '').trim();
-        if (!oid || !next[oid]) return;
+        if (!oid) return;
+        if (!next[oid]) next[oid] = [];
         next[oid].push(n);
       });
       Object.keys(next).forEach(function (id) {
@@ -493,17 +646,39 @@
       });
       notifyByOrderId = next;
       paintNotifyHistories();
+      Object.keys(notifyOpenByOrderId).forEach(function (orderId) {
+        if (notifyOpenByOrderId[orderId]) loadReceiptsForOrder(orderId);
+      });
     } catch (_) {}
   }
 
   function paintNotifyHistories() {
     var host = $('ttms-orders-list');
     if (!host) return;
-    host.querySelectorAll('[data-order-notify-history]').forEach(function (el) {
-      var id = el.getAttribute('data-order-notify-history');
+    host.querySelectorAll('[data-order-notify]').forEach(function (wrap) {
+      var id = wrap.getAttribute('data-order-notify');
       if (!id) return;
-      el.innerHTML = renderNotifyHistory(id);
+      var open = !!notifyOpenByOrderId[id];
+      wrap.classList.toggle('is-open', open);
+      wrap.classList.toggle('is-collapsed', !open);
+      var toggle = wrap.querySelector('[data-act="notify-toggle"]');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        var countEl = toggle.querySelector('[data-notify-count]');
+        var items = notifyByOrderId[id] || [];
+        if (countEl) countEl.textContent = String(items.length);
+      }
+      var body = wrap.querySelector('[data-order-notify-body]');
+      if (body) body.hidden = !open;
+      var history = wrap.querySelector('[data-order-notify-history]');
+      if (history) history.innerHTML = renderNotifyHistory(id);
     });
+  }
+
+  function setNotifyPanelOpen(orderId, open) {
+    notifyOpenByOrderId[orderId] = !!open;
+    paintNotifyHistories();
+    if (open) loadReceiptsForOrder(orderId);
   }
 
   function renderTicket(o, enter) {
@@ -576,12 +751,23 @@
           '</p>'
         : '') +
       (adapters ? '<p class="dashboard-order-adapters">' + adapters + '</p>' : '') +
-      '<div class="dashboard-order-notify" data-order-notify="' +
+      '<div class="dashboard-order-notify ' +
+      (notifyOpenByOrderId[o.id] ? 'is-open' : 'is-collapsed') +
+      '" data-order-notify="' +
       escapeHtml(o.id) +
       '">' +
-      '<div class="dashboard-order-notify-head">' +
+      '<button type="button" class="dashboard-order-notify-toggle" data-act="notify-toggle" aria-expanded="' +
+      (notifyOpenByOrderId[o.id] ? 'true' : 'false') +
+      '">' +
       '<span class="dashboard-order-notify-title">Customer alerts</span>' +
-      '</div>' +
+      '<span class="dashboard-order-notify-count" data-notify-count>' +
+      (notifyByOrderId[o.id] || []).length +
+      '</span>' +
+      '<span class="dashboard-order-notify-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>' +
+      '</button>' +
+      '<div class="dashboard-order-notify-body" data-order-notify-body' +
+      (notifyOpenByOrderId[o.id] ? '' : ' hidden') +
+      '>' +
       '<div class="dashboard-order-notify-history" data-order-notify-history="' +
       escapeHtml(o.id) +
       '">' +
@@ -598,6 +784,7 @@
           '<button type="submit" class="btn-dash btn-dash-secondary" data-act="notify">Send</button>' +
           '</form>'
         : '<p class="dashboard-order-notify-empty">Guest checkout — no push inbox for a personal alert.</p>') +
+      '</div>' +
       '</div>' +
       '<div class="dashboard-order-actions">' +
       '<button type="button" class="btn-dash btn-dash-secondary" data-act="ready"' +
@@ -717,7 +904,7 @@
       if (!hasTickets) showThrobber();
     }
     try {
-      var filter = ($('dashboardOrdersFilter') && $('dashboardOrdersFilter').value) || '';
+      var filter = selectedOrdersStatus();
       var location = ($('dashboardOrdersLocation') && $('dashboardOrdersLocation').value) || '';
       var res = await window.OrderClient.listClient({ status: filter, location: location });
       if (seq !== refreshSeq) return;
@@ -774,6 +961,20 @@
       if (input) input.value = '';
       var statusEl = $('dashboardOrdersStatus');
       if (statusEl) statusEl.textContent = 'Personal alert sent for #' + (order && (order.ticket_number || order.order_ref) || id);
+      notifyOpenByOrderId[id] = true;
+      if (!notifyByOrderId[id]) notifyByOrderId[id] = [];
+      var localId = 'local-' + Date.now();
+      notifyByOrderId[id].unshift({
+        id: localId,
+        title: title,
+        message: message,
+        type: 'order',
+        status: 'sent',
+        created_at: new Date().toISOString(),
+        data: { order_id: id, action: 'staff_message' },
+      });
+      notifyReceiptById[localId] = { status: 'sent', loaded: true };
+      paintNotifyHistories();
       await fetchOrderNotifications(lastOrdersCache);
       await refresh({ preserve: true });
     } catch (err) {
@@ -795,6 +996,10 @@
     if (!card) return;
     var id = card.getAttribute('data-id');
     var act = btn.getAttribute('data-act');
+    if (act === 'notify-toggle') {
+      setNotifyPanelOpen(id, !notifyOpenByOrderId[id]);
+      return;
+    }
     var needsConfirm = act === 'charge' || act === 'cancel';
     if (needsConfirm && !ticketActionConfirm(card, act)) return;
     btn.disabled = true;
@@ -846,7 +1051,7 @@
     var refreshBtn = $('ttms-orders-refresh');
     if (refreshBtn) refreshBtn.addEventListener('click', refresh);
     var filter = $('dashboardOrdersFilter');
-    if (filter) filter.addEventListener('change', refresh);
+    if (filter) filter.addEventListener('click', onOrdersStatusFilterClick);
     var location = $('dashboardOrdersLocation');
     if (location) location.addEventListener('change', refresh);
     fillLocationFilter();

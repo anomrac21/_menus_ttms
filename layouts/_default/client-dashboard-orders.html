@@ -23,17 +23,14 @@
             <option value="">All locations</option>
           </select>
         </label>
-        <label class="dashboard-orders-filter">
-          <span class="visually-hidden">Status</span>
-          <select id="dashboardOrdersFilter">
-            <option value="">Open + active</option>
-            <option value="open">Open</option>
-            <option value="ready">Ready</option>
-            <option value="paid">Paid</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="all">All</option>
-          </select>
-        </label>
+        <div class="dashboard-orders-filter dashboard-orders-status-filters" id="dashboardOrdersFilter" role="tablist" aria-label="Status">
+          <button type="button" class="dashboard-orders-status-filter is-active" role="tab" aria-selected="true" data-orders-status="" id="dashboardOrdersFilter-active">Open + active</button>
+          <button type="button" class="dashboard-orders-status-filter" role="tab" aria-selected="false" data-orders-status="open" id="dashboardOrdersFilter-open">Open</button>
+          <button type="button" class="dashboard-orders-status-filter" role="tab" aria-selected="false" data-orders-status="ready" id="dashboardOrdersFilter-ready">Ready</button>
+          <button type="button" class="dashboard-orders-status-filter" role="tab" aria-selected="false" data-orders-status="paid" id="dashboardOrdersFilter-paid">Paid</button>
+          <button type="button" class="dashboard-orders-status-filter" role="tab" aria-selected="false" data-orders-status="cancelled" id="dashboardOrdersFilter-cancelled">Cancelled</button>
+          <button type="button" class="dashboard-orders-status-filter" role="tab" aria-selected="false" data-orders-status="all" id="dashboardOrdersFilter-all">All</button>
+        </div>
         <button type="button" class="btn-dash btn-dash-primary dashboard-orders-refresh" id="ttms-orders-refresh"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh</button>
       </div>
       <div id="ttms-orders-list" class="dashboard-orders-list"></div>

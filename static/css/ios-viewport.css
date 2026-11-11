@@ -20,7 +20,8 @@ body.ttms-scroll-locked {
     overscroll-behavior: none;
 }
 
-body.ttms-scroll-locked {
+/* Fixed lock only when JS opts in (iOS). Android uses overflow:hidden alone. */
+body.ttms-scroll-locked.ttms-scroll-locked--fixed {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;

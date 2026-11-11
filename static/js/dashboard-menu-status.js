@@ -23,6 +23,8 @@
   var omittedDraftIds = new Set();
   var draftAnalyses = {};
   var draftAnalysisInFlight = null;
+  var draftAnalysisGen = 0;
+  var DRAFT_ANALYSIS_TIMEOUT_MS = 12000;
   var draftGroupCollapsed = {};
   var statusBlockCollapsed = {};
   var STATUS_BLOCK_KEYS = ['snapshots', 'drafts', 'publish'];
@@ -1942,14 +1944,166 @@
       analyzeDraftsAgainstBaseline();
     }
 
-    function showPublishFlashMessage(msg) {
+    var publishDeployWatch = null;
+
+    function shortCommit(sha) {
+      sha = String(sha || '').trim();
+      if (!sha) return '';
+      return sha.length > 7 ? sha.slice(0, 7) : sha;
+    }
+
+    function showPublishFlashMessage(msg, opts) {
+      opts = opts || {};
       if (!publishFlashEl) return;
-      publishFlashEl.textContent = msg;
+      publishFlashEl.textContent = msg || '';
       publishFlashEl.classList.remove('hidden');
+      publishFlashEl.classList.toggle('is-progress', !!opts.progress);
+      publishFlashEl.classList.toggle('is-error', !!opts.error);
       if (global.__ttmsPublishFlashTimer) clearTimeout(global.__ttmsPublishFlashTimer);
+      if (opts.persist) {
+        global.__ttmsPublishFlashTimer = null;
+        return;
+      }
       global.__ttmsPublishFlashTimer = setTimeout(function () {
         publishFlashEl.classList.add('hidden');
-      }, 9000);
+        publishFlashEl.classList.remove('is-progress', 'is-error');
+      }, opts.duration || 9000);
+    }
+
+    function stopPublishDeployWatch() {
+      if (!publishDeployWatch) return;
+      if (publishDeployWatch.timer) clearTimeout(publishDeployWatch.timer);
+      if (typeof publishDeployWatch.unsubscribe === 'function') {
+        try {
+          publishDeployWatch.unsubscribe();
+        } catch (e) {}
+      }
+      publishDeployWatch = null;
+    }
+
+    function commitMatchesExpected(actual, expected) {
+      actual = String(actual || '').trim().toLowerCase();
+      expected = String(expected || '').trim().toLowerCase();
+      if (!actual || !expected) return false;
+      return (
+        actual === expected ||
+        expected.indexOf(actual) === 0 ||
+        actual.indexOf(expected.slice(0, 7)) === 0
+      );
+    }
+
+    function startPublishDeployWatch(expectedCommit) {
+      stopPublishDeployWatch();
+      var startedAt = Date.now();
+      var maxMs = 4 * 60 * 1000;
+      var expected = String(expectedCommit || '').trim();
+      var short = shortCommit(expected);
+      var DDS = global.DashboardDeployStatus;
+
+      function matchesLive(summary, buildInfo) {
+        if (expected) {
+          return (
+            commitMatchesExpected(summary && summary.live_commit, expected) ||
+            commitMatchesExpected(buildInfo && buildInfo.commit, expected)
+          );
+        }
+        var state = String((summary && summary.state) || '').toLowerCase();
+        return state === 'live' || state === 'success' || state === 'ready';
+      }
+
+      function isFailed(summary) {
+        var state = String((summary && summary.state) || '').toLowerCase();
+        return state === 'failure' || state === 'failed' || state === 'error';
+      }
+
+      function applyTick(summary, buildInfo) {
+        if (!publishDeployWatch) return;
+        if (matchesLive(summary, buildInfo)) {
+          showPublishFlashMessage(
+            'Live' + (short ? ' · ' + short : '') + '. Customers see the published menu.',
+            { duration: 10000 }
+          );
+          stopPublishDeployWatch();
+          if (DDS && typeof DDS.refresh === 'function') DDS.refresh();
+          scheduleRefreshMenuCard();
+          return;
+        }
+        if (isFailed(summary)) {
+          showPublishFlashMessage(
+            (summary && (summary.label || summary.detail)) ||
+              'Site update failed. Check Deployments for details.',
+            { error: true, duration: 14000 }
+          );
+          stopPublishDeployWatch();
+          return;
+        }
+        var elapsed = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+        var label = (summary && summary.label) || 'Updating live site';
+        var detail = (summary && summary.detail) || '';
+        var msg = label;
+        if (detail) msg += ' — ' + detail;
+        else if (short) msg += ' · waiting for ' + short;
+        msg += ' (' + elapsed + 's)';
+        showPublishFlashMessage(msg, { persist: true, progress: true });
+      }
+
+      var unsub = null;
+      if (DDS && typeof DDS.onStatus === 'function') {
+        unsub = DDS.onStatus(function (summary, buildInfo) {
+          applyTick(summary, buildInfo);
+        });
+      }
+
+      function poll() {
+        if (!publishDeployWatch) return;
+        if (Date.now() - startedAt > maxMs) {
+          showPublishFlashMessage(
+            'Publish saved' +
+              (short ? ' (' + short + ')' : '') +
+              '. Site update is still running — watch the Live badge above.',
+            { duration: 14000 }
+          );
+          stopPublishDeployWatch();
+          return;
+        }
+        var pStatus =
+          DDS && typeof DDS.fetchDeployStatus === 'function'
+            ? DDS.fetchDeployStatus()
+            : Promise.resolve(null);
+        var pBuild =
+          DDS && typeof DDS.fetchBuildInfo === 'function'
+            ? DDS.fetchBuildInfo()
+            : fetch('/build-info.json', { cache: 'no-store', credentials: 'same-origin' })
+                .then(function (res) {
+                  return res.ok ? res.json() : null;
+                })
+                .catch(function () {
+                  return null;
+                });
+        Promise.all([pStatus, pBuild])
+          .then(function (parts) {
+            if (!publishDeployWatch) return;
+            applyTick(parts[0], parts[1]);
+            if (publishDeployWatch) {
+              publishDeployWatch.timer = setTimeout(poll, 2500);
+            }
+          })
+          .catch(function () {
+            if (publishDeployWatch) {
+              publishDeployWatch.timer = setTimeout(poll, 4000);
+            }
+          });
+      }
+
+      publishDeployWatch = { timer: null, unsubscribe: unsub };
+      showPublishFlashMessage(
+        'Published' +
+          (short ? ' · ' + short : '') +
+          '. Building new site pod (old menu stays up until ready)…',
+        { persist: true, progress: true }
+      );
+      if (DDS && typeof DDS.refresh === 'function') DDS.refresh();
+      poll();
     }
 
     function setSnapshotLoadingChrome(on) {
@@ -2621,8 +2775,16 @@
         return Promise.resolve();
       }
       applyProvisionalDraftAnalyses();
+      var gen = ++draftAnalysisGen;
+      var timeoutId = setTimeout(function () {
+        if (gen !== draftAnalysisGen) return;
+        console.warn('Draft analysis timed out; showing provisional change details');
+        draftAnalysisInFlight = null;
+        renderDraftStatusSummary();
+      }, DRAFT_ANALYSIS_TIMEOUT_MS);
       draftAnalysisInFlight = fetchLiveContentFilesBatch(paths)
         .then(function (liveByPath) {
+          if (gen !== draftAnalysisGen) return;
           applyDraftAnalysesFromLiveMap(liveByPath || {});
           renderDraftStatusSummary();
         })
@@ -2630,6 +2792,8 @@
           console.warn('Draft analysis failed', err);
         })
         .finally(function () {
+          clearTimeout(timeoutId);
+          if (gen !== draftAnalysisGen) return;
           draftAnalysisInFlight = null;
           renderDraftStatusSummary();
         });
@@ -2813,6 +2977,7 @@
       cachedPreviews = [];
       draftAnalyses = {};
       draftAnalysisInFlight = null;
+      draftAnalysisGen += 1;
       syncPublishButton();
       renderDraftStatusSummary();
       if (!ids.length) return Promise.resolve();
@@ -3249,7 +3414,6 @@
                   flashMsg += ' ' + publishWarnings.join(' ');
                   alert(publishWarnings.join('\n\n'));
                 }
-                showPublishFlashMessage(flashMsg);
                 closePublishSummaryModal();
                 setDashButtonBusy(
                   publishSummaryConfirm,
@@ -3257,6 +3421,7 @@
                   '',
                   '<i class="fa fa-cloud-upload" aria-hidden="true"></i> Publish'
                 );
+                startPublishDeployWatch(hash);
                 return refreshMenuCard();
               })
               .catch(function (err) {

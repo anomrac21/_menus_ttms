@@ -26,7 +26,8 @@ body.menu-item-edit-modal-open {
   overscroll-behavior: none;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.28s ease;
+  transition: opacity 0.2s ease;
+  contain: layout style;
 }
 
 .menu-item-edit-modal[hidden]:not(.is-closing) {
@@ -45,7 +46,11 @@ body.menu-item-edit-modal-open {
 .menu-item-edit-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--dash-info) 72%, transparent);
+  background: color-mix(in srgb, var(--dash-info) 78%, transparent);
+}
+
+/* Blur is expensive on Android/low-end GPUs — keep it for iOS/desktop only. */
+html:not(.ttms-android) .menu-item-edit-modal__backdrop {
   backdrop-filter: blur(4px);
 }
 
@@ -64,12 +69,14 @@ body.menu-item-edit-modal-open {
   border-left: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--dash-accent) 22%, transparent);
   box-shadow: 0 24px 64px color-mix(in srgb, var(--dash-black) 45%, transparent);
-  transform: translateY(18px);
-  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate3d(0, 18px, 0);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  contain: layout paint;
 }
 
 .menu-item-edit-modal.is-open .menu-item-edit-modal__panel {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
 
 .menu-item-edit-modal__header {
@@ -233,6 +240,7 @@ body.menu-item-edit-modal-open {
   border: 0;
   background: var(--dash-bg);
   overflow: hidden;
+  contain: strict;
 }
 
 .menu-item-edit-saved-notice {

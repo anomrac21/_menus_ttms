@@ -20,6 +20,8 @@
 
   var cachedEvents = [];
 
+  var statusListeners = [];
+
 
 
   function cmsApiBase() {
@@ -53,6 +55,26 @@
   function isAdmin() {
 
     return global.AuthClient && typeof global.AuthClient.isAdmin === 'function' && global.AuthClient.isAdmin();
+
+  }
+
+
+
+  function notifyStatusListeners(summary, buildInfo) {
+
+    statusListeners.slice().forEach(function (fn) {
+
+      try {
+
+        fn(summary, buildInfo);
+
+      } catch (e) {
+
+        /* ignore listener errors */
+
+      }
+
+    });
 
   }
 
@@ -108,7 +130,19 @@
 
 
 
+  function isLocalHugoDev() {
+
+    var host = String((global.location && location.hostname) || '').toLowerCase();
+
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+
+  }
+
+
+
   function fetchBuildInfo() {
+
+    if (isLocalHugoDev()) return Promise.resolve(null);
 
     return fetch('/build-info.json', { cache: 'no-store', credentials: 'same-origin' })
 
@@ -789,6 +823,28 @@
     connectDeployStream: connectDeployStream,
 
     stopDeployStream: stopDeployStream,
+
+    fetchDeployStatus: fetchDeployStatus,
+
+    fetchBuildInfo: fetchBuildInfo,
+
+    onStatus: function (fn) {
+
+      if (typeof fn !== 'function') return function () {};
+
+      statusListeners.push(fn);
+
+      return function () {
+
+        statusListeners = statusListeners.filter(function (x) {
+
+          return x !== fn;
+
+        });
+
+      };
+
+    },
 
   };
 

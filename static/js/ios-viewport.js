@@ -54,19 +54,32 @@
     if (shouldLock && !locked) {
       scrollY = window.scrollY || document.documentElement.scrollTop || 0;
       document.body.classList.add('ttms-scroll-locked');
-      document.body.style.top = '-' + scrollY + 'px';
       document.documentElement.classList.add('ttms-scroll-locked');
+      // iOS needs position:fixed + negative top. Android/desktop overflow:hidden is enough
+      // and avoids the large body top jump that makes modal open feel sticky.
+      var needsFixedLock =
+        document.documentElement.classList.contains('ttms-ios') ||
+        /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (needsFixedLock) {
+        document.body.classList.add('ttms-scroll-locked--fixed');
+        document.body.style.top = '-' + scrollY + 'px';
+      } else {
+        document.body.classList.remove('ttms-scroll-locked--fixed');
+        document.body.style.top = '';
+      }
       locked = true;
       syncViewportHeight();
       return;
     }
 
     if (!shouldLock && locked) {
-      document.body.classList.remove('ttms-scroll-locked');
+      var wasFixed = document.body.classList.contains('ttms-scroll-locked--fixed');
+      document.body.classList.remove('ttms-scroll-locked', 'ttms-scroll-locked--fixed');
       document.body.style.top = '';
       document.documentElement.classList.remove('ttms-scroll-locked');
       locked = false;
-      window.scrollTo(0, scrollY);
+      if (wasFixed) window.scrollTo(0, scrollY);
     }
   }
 

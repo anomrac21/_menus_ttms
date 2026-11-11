@@ -366,7 +366,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       var address = inputLocationAddress ? (inputLocationAddress.value || '').trim() : '';
       return city || address;
     }
-    if (inputTitle) return (inputTitle.value || '').trim();
+    if (inputTitle) {
+      return type === 'menu-item'
+        ? cleanMenuItemTitle(inputTitle.value)
+        : (inputTitle.value || '').trim();
+    }
     return '';
   }
 
@@ -1177,11 +1181,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.DashboardEditFieldPrompts.enable();
       }
     };
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(finish, { timeout: 180 });
-    } else {
-      setTimeout(finish, 0);
-    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(finish);
+    });
   }
 
   function homeHeroHasCachedContent() {
@@ -1308,8 +1310,33 @@ document.addEventListener('DOMContentLoaded', async function() {
     return null;
   }
 
+  function cleanMenuItemTitle(title) {
+    return String(title || '')
+      .replace(/Sold out\s*$/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function getTextContent(elt) {
-    return elt ? (elt.textContent || '').trim() : '';
+    if (!elt) return '';
+    // Sold-out / draft badges live inside .menu-item-title; never bake them into CMS titles.
+    if (
+      elt.querySelector &&
+      elt.querySelector('.menu-item-sold-out-badge, .menu-content-draft-badge')
+    ) {
+      var clone = elt.cloneNode(true);
+      clone
+        .querySelectorAll('.menu-item-sold-out-badge, .menu-content-draft-badge')
+        .forEach(function (n) {
+          n.remove();
+        });
+      return cleanMenuItemTitle(clone.textContent || '');
+    }
+    var text = (elt.textContent || '').trim();
+    if (elt.classList && elt.classList.contains('menu-item-title')) {
+      return cleanMenuItemTitle(text);
+    }
+    return text;
   }
 
   function promotionSlugFromLink(link) {
@@ -1616,7 +1643,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!selectedInfo || !selectedElement) return null;
     var contentPath = (selectedInfo.contentPath || '').trim();
     if (!contentPath || contentPath.indexOf('content/') !== 0 || contentPath.indexOf('...') !== -1 || /\/_index\.md$/i.test(contentPath)) return null;
-    var title = inputTitle ? (inputTitle.value || '').trim() : '';
+    var title = inputTitle ? cleanMenuItemTitle(inputTitle.value) : '';
     var desc = inputDesc ? (inputDesc.value || '').trim() : '';
     var imagesArr = inputMenuItemImages ? hoursParseStringList(inputMenuItemImages.value) : [];
     var pricesFlat = pricesContainer ? getPricesFromUI(pricesContainer) : [];
@@ -2384,9 +2411,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!itemUrl) return null;
     var contentPath = 'content' + itemUrl.replace(/\/$/, '') + '.md';
     var titleEl = card.querySelector('.menu-item-title a, .menu-item-title');
-    var title = titleEl ? (titleEl.textContent || '').trim() : 'Untitled';
+    var title = titleEl ? getTextContent(titleEl) : 'Untitled';
+    if (!title) title = 'Untitled';
     var descEl = card.querySelector('.menu-item-description');
-    var desc = descEl ? (descEl.textContent || '').trim() : '';
+    var desc = descEl ? getTextContent(descEl) : '';
     var weightVal = parseInt(card.getAttribute('data-weight') || String(MIN_MENU_ITEM_WEIGHT), 10);
     if (isNaN(weightVal) || weightVal < MIN_MENU_ITEM_WEIGHT) weightVal = MIN_MENU_ITEM_WEIGHT;
     var pa = parseJsonAttr(card, 'data-prices-array');
@@ -3071,7 +3099,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!selectedElement.hasAttribute('data-dashboard-edit-new-item')) return;
     if (!inputTitle || !iframe || !iframe.contentDocument) return;
     var doc = iframe.contentDocument;
-    var titleVal = (inputTitle.value || '').trim();
+    var titleVal = cleanMenuItemTitle(inputTitle.value);
     var baseSlug = slugifyMenuItemTitle(titleVal);
     var sectionSlug = (selectedElement.getAttribute('data-section-slug') || '').trim();
     var bg = selectedElement.closest('.main-menu-bg');
@@ -6411,8 +6439,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       return state;
     }
     if (p.indexOf('draft-assets/') === 0) {
-      var fetchUrl = resolveMenuItemImageSrcForPreview(p);
       bindLoadHandlers();
+      // Prefer in-memory upload preview — CMS preview URL can 404 across pods / after refresh.
+      if (draftAssetObjectUrls[p]) {
+        img.style.opacity = '1';
+        img.src = draftAssetObjectUrls[p];
+        return state;
+      }
+      var fetchUrl = resolveMenuItemImageSrcForPreview(p);
       fetch(fetchUrl, { credentials: 'include', headers: cmsAuthHeadersForImageThumb() })
         .then(function(res) {
           if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -6421,11 +6455,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         .then(function(blob) {
           if (seq !== state.seq) return;
           state.blobUrl = URL.createObjectURL(blob);
+          draftAssetObjectUrls[p] = state.blobUrl;
           img.src = state.blobUrl;
         })
         .catch(function() {
           if (seq !== state.seq) return;
-          img.src = fetchUrl;
+          img.style.opacity = '0.35';
+          img.removeAttribute('src');
         });
       return state;
     }
@@ -8279,7 +8315,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       var titleSrc = info.title != null ? info.title : getTextContent(info.element.querySelector('.menu-item-title, .menu-item-title a, h1, h2, a') || info.element);
       var descSrc = info.description != null ? info.description : getTextContent(info.element.querySelector('.menu-item-description, .menu-summary') || info.element);
       if (contentType === 'menu-item') {
-        if (inputTitle) inputTitle.value = titleSrc;
+        if (inputTitle) inputTitle.value = cleanMenuItemTitle(titleSrc);
         if (inputDesc) inputDesc.value = descSrc;
       } else {
         if (inputSectionTitle) inputSectionTitle.value = titleSrc;
@@ -8523,7 +8559,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (contentPath) draftContentPaths.add(contentPath);
 
       if (contentType === 'menu-item' || kind === 'menu-item') {
-        if (inputTitle && fm.title != null) inputTitle.value = fm.title;
+        if (inputTitle && fm.title != null) inputTitle.value = cleanMenuItemTitle(fm.title);
         if (inputDesc && p.body != null) inputDesc.value = p.body;
         if (pricesContainer && Array.isArray(fm.prices)) {
           var pricesFlat = [];
@@ -8966,7 +9002,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var esc = norm.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
     if (doc.querySelector('.menu-item-card[data-item-url="' + esc + '"]')) return;
 
-    var title = fm && fm.title != null ? String(fm.title) : 'New item';
+    var title = fm && fm.title != null ? cleanMenuItemTitle(fm.title) : 'New item';
     var summary = body != null && body !== '' ? String(body) : '';
     var mp = cp.match(/^content\/([^/]+)\/([^/]+)\.md$/);
     if (!mp) return;
@@ -9019,7 +9055,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
           }
           var fm = p.frontMatter || p.front_matter || {};
-          var title = fm.title != null ? fm.title : '';
+          var title = fm.title != null
+            ? (kind === 'menu-item' ? cleanMenuItemTitle(fm.title) : fm.title)
+            : '';
 
           if (kind === 'theme-css' || contentPath === THEME_COLORS_CONTENT_PATH || contentPath === THEME_OVERRIDES_LEGACY_PATH) {
             /* colors.css is the live source: do not rehydrate old theme drafts over a pick. */
@@ -9591,9 +9629,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   function collectMenuItemUnsavedFieldDetails(cardEl) {
     var details = [];
     if (!cardEl) return details;
-    var titleVal = inputTitle ? inputTitle.value.trim() : '';
+    var titleVal = inputTitle ? cleanMenuItemTitle(inputTitle.value) : '';
     var titleEl = cardEl.querySelector('.menu-item-title a, .menu-item-title');
-    var domTitle = titleEl ? (titleEl.textContent || '').trim() : '';
+    var domTitle = titleEl ? getTextContent(titleEl) : '';
     if (titleVal !== domTitle) {
       details.push('Title → ' + truncateChangeDetail(titleVal));
     }
@@ -11610,7 +11648,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     var kind = payload.kind || p.kind || 'content';
     var path = payload.contentPath || p.content_path || '';
     var fm = payload.frontMatter || payload.front_matter || {};
-    var title = (fm.title != null && fm.title !== '') ? String(fm.title) : (path ? path.replace(/^content\//, '').replace(/\.md$/, '') : '');
+    var title = (fm.title != null && fm.title !== '')
+      ? (kind === 'menu-item' ? cleanMenuItemTitle(fm.title) : String(fm.title))
+      : (path ? path.replace(/^content\//, '').replace(/\.md$/, '') : '');
     var kindLabel = kind === 'menu-item' ? 'Menu item' : kind === 'section-header' ? 'Section' : kind === 'promotion' ? 'Promotion' : kind === 'theme-css' ? 'Theme colors' : kind;
     return title ? kindLabel + ': ' + title + ' (' + path + ')' : kindLabel + ': ' + path;
   }
@@ -12436,6 +12476,29 @@ document.addEventListener('DOMContentLoaded', async function() {
         hydrateEditFormFromCmsPreview(draftPath, { force: true }).finally(function () {
           scheduleEndEditFormLoad();
         });
+        return;
+      }
+
+      if (data.type === 'ttms:embed-panel-refocus') {
+        try {
+          sessionStorage.removeItem('editMenuFocusItemUrl');
+          sessionStorage.removeItem('editMenuFocusSectionSlug');
+          sessionStorage.removeItem('editMenuFocusPromoCatalogIndex');
+          sessionStorage.removeItem('editMenuFocusPromoId');
+          if (data.kind === 'promotion') {
+            if (data.promoCatalogIndex != null && data.promoCatalogIndex !== '') {
+              sessionStorage.setItem('editMenuFocusPromoCatalogIndex', String(data.promoCatalogIndex));
+            }
+            if (data.promoId) sessionStorage.setItem('editMenuFocusPromoId', String(data.promoId));
+          } else if (data.kind === 'section-header') {
+            if (data.sectionSlug) sessionStorage.setItem('editMenuFocusSectionSlug', String(data.sectionSlug));
+          } else if (data.itemUrl) {
+            sessionStorage.setItem('editMenuFocusItemUrl', String(data.itemUrl));
+          }
+        } catch (refocusStoreErr) { /* ignore */ }
+        editFormDirty = false;
+        setEmbedPanelLoading(true, 'Opening…');
+        focusEditTargetInParentMenu();
         return;
       }
 

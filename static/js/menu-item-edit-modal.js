@@ -18,6 +18,9 @@
   var currentContentPath = '';
   var modalLoadingFallbackTimer = null;
   var editDomSnapshot = null;
+  var embedPanelReady = false;
+  var embedWarmStarted = false;
+  var pendingOpenRefocus = null;
 
   function getModal() {
     return document.getElementById(MODAL_ID);
@@ -77,6 +80,28 @@
   function hideDiscardPrompt() {
     var prompt = getDiscardPrompt();
     if (!prompt) return;
+    var active = document.activeElement;
+    if (active && prompt.contains(active)) {
+      try {
+        active.blur();
+      } catch (e) { /* ignore */ }
+    }
+    // Move focus out before aria-hidden — browsers warn if a focused descendant is hidden.
+    var closeBtn = document.querySelector(
+      '#' + MODAL_ID + ' [data-close-menu-item-edit-modal]'
+    );
+    var modal = getModal();
+    var focusTarget =
+      closeBtn && !prompt.contains(closeBtn)
+        ? closeBtn
+        : modal && typeof modal.focus === 'function'
+          ? modal
+          : document.body;
+    try {
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        focusTarget.focus({ preventScroll: true });
+      }
+    } catch (e2) { /* ignore */ }
     prompt.classList.add('hidden');
     prompt.hidden = true;
     prompt.setAttribute('aria-hidden', 'true');
@@ -461,11 +486,84 @@
     }
   }
 
+
+  function buildFocusPayload(menuRoot) {
+    var kind = (menuRoot && menuRoot.getAttribute('data-actions-kind')) || 'menu-item';
+    var payload = { type: 'ttms:embed-panel-refocus', kind: kind };
+    if (kind === 'promotion') {
+      var catalogIndex = menuRoot.getAttribute('data-promotion-catalog-index');
+      var adId = menuRoot.getAttribute('data-ad-id') || '';
+      var slide = menuRoot.closest('article.ads-reels-slide');
+      if ((!catalogIndex || catalogIndex === '') && slide) {
+        catalogIndex = slide.getAttribute('data-catalog-index') || '';
+      }
+      if (!adId && slide) {
+        adId = slide.getAttribute('data-ad-id') || slide.id || '';
+      }
+      if (catalogIndex != null && catalogIndex !== '') payload.promoCatalogIndex = String(catalogIndex);
+      if (adId) payload.promoId = adId;
+      return payload;
+    }
+    if (kind === 'section-header') {
+      var headerEl = menuRoot.closest('.menu-header');
+      payload.sectionSlug =
+        menuRoot.getAttribute('data-section-slug') ||
+        (headerEl && headerEl.getAttribute('data-section-slug')) ||
+        '';
+      return payload;
+    }
+    payload.itemUrl =
+      normalizeItemUrl(menuRoot.getAttribute('data-item-url')) ||
+      normalizeItemUrl(
+        (menuRoot.closest('.menu-item-card') &&
+          menuRoot.closest('.menu-item-card').getAttribute('data-item-url')) ||
+          ''
+      );
+    return payload;
+  }
+
+  function frameHasWarmEmbed(frame) {
+    if (!frame) return false;
+    var src = frame.getAttribute('src') || '';
+    return !!embedPanelReady && src.indexOf('embed=panel') !== -1 && src !== 'about:blank';
+  }
+
+  function warmEmbedPanel() {
+    if (embedWarmStarted) return;
+    var frame = getFrame();
+    if (!frame) return;
+    if (frameHasWarmEmbed(frame)) {
+      embedWarmStarted = true;
+      return;
+    }
+    var src = frame.getAttribute('src') || '';
+    if (src && src !== 'about:blank' && src.indexOf('embed=panel') !== -1) {
+      embedWarmStarted = true;
+      return;
+    }
+    embedWarmStarted = true;
+    try {
+      frame.setAttribute('src', EDIT_EMBED_PATH);
+    } catch (e) {
+      frame.src = EDIT_EMBED_PATH;
+    }
+  }
+
   function open(menuRoot) {
-    if (!hasAdminSiteAccess()) return false;
+    if (!hasAdminSiteAccess()) {
+      try {
+        window.alert('Sign in with site access to edit this item.');
+      } catch (e) { /* ignore */ }
+      return false;
+    }
     var modal = getModal();
     var frame = getFrame();
-    if (!modal || !frame) return false;
+    if (!modal || !frame) {
+      try {
+        window.alert('Editor is still loading. Try again in a moment.');
+      } catch (e) { /* ignore */ }
+      return false;
+    }
 
     hideDiscardPrompt();
     currentMenuRoot = menuRoot;
@@ -475,28 +573,49 @@
     storeFocusKeys(menuRoot);
     setModalTitle(menuRoot);
     refreshDraftBadgeState();
-    setModalLoading(true, 'Loading editor…');
 
     modal.classList.remove('is-closing');
     modal.hidden = false;
+    modal.removeAttribute('hidden');
+    modal.style.removeProperty('display');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('menu-item-edit-modal-open');
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        modal.classList.add('is-open');
-      });
+      modal.classList.add('is-open');
+      modal.style.removeProperty('display');
     });
 
-    var embedSrc = EDIT_EMBED_PATH;
-    if (frame.getAttribute('src') !== embedSrc) {
-      frame.setAttribute('src', embedSrc);
-    } else if (frame.contentWindow) {
-      try {
-        frame.contentWindow.location.reload();
-      } catch (reloadErr) {
-        frame.setAttribute('src', embedSrc);
-      }
+    var focusPayload = buildFocusPayload(menuRoot);
+    if (frameHasWarmEmbed(frame)) {
+      pendingOpenRefocus = null;
+      setModalLoading(true, 'Opening…');
+      postToFrame(focusPayload);
+      return true;
     }
+
+    setModalLoading(true, 'Loading editor…');
+    var currentSrc = frame.getAttribute('src') || '';
+    // Warm iframe still booting: wait for form-ready, then refocus (do not reset src).
+    if (currentSrc && currentSrc !== 'about:blank' && currentSrc.indexOf('embed=panel') !== -1) {
+      pendingOpenRefocus = focusPayload;
+      return true;
+    }
+
+    embedPanelReady = false;
+    // Cold load: dashboard-edit reads sessionStorage focus keys on boot.
+    pendingOpenRefocus = null;
+    var embedSrc =
+      EDIT_EMBED_PATH +
+      (EDIT_EMBED_PATH.indexOf('?') >= 0 ? '&' : '?') +
+      '_=' +
+      Date.now();
+    window.setTimeout(function () {
+      try {
+        frame.setAttribute('src', embedSrc);
+      } catch (srcErr) {
+        frame.src = embedSrc;
+      }
+    }, 0);
 
     return true;
   }
@@ -541,9 +660,9 @@
     var finishClose = function () {
       modal.classList.remove('is-closing');
       modal.hidden = true;
-      if (frame) {
-        frame.setAttribute('src', 'about:blank');
-      }
+      modal.setAttribute('hidden', '');
+      modal.style.removeProperty('display');
+      // Keep the embed panel warm so the next Edit opens without a full reload.
     };
     var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) {
@@ -681,6 +800,17 @@
       return;
     }
     if (data.type !== 'ttms:embed-panel-form-ready') return;
+    embedPanelReady = true;
+    if (pendingOpenRefocus) {
+      var pending = pendingOpenRefocus;
+      pendingOpenRefocus = null;
+      var modalOpen = getModal() && !getModal().hidden;
+      if (modalOpen) {
+        setModalLoading(true, 'Opening…');
+        postToFrame(pending);
+        return;
+      }
+    }
     setModalLoading(false);
   }
 

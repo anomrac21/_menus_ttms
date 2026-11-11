@@ -46,7 +46,7 @@
   </script>
   <script src="{{ $deliveryJs }}" defer></script>
   {{- end }}
-  <script src="/js/dashboard-deploy-status.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/dashboard-deploy-status.js" }}" defer></script>
   {{- if default false site.Params.features.notifications }}
   <script src="{{ partial "head/asset-url.html" `/js/dashboard-notifications.js` }}" defer></script>
   {{- end }}

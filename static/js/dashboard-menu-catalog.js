@@ -4,6 +4,8 @@ function initMenuCatalog() {
   var addBtn = document.getElementById('btnMenuCatalogAdd');
   var summaryEl = document.getElementById('menuCatalogSummary');
   if (!list) return;
+  if (list.getAttribute('data-catalog-bound') === '1') return;
+  list.setAttribute('data-catalog-bound', '1');
 
   var kind = list.getAttribute('data-catalog-kind') || 'sections';
   var addParam = list.getAttribute('data-catalog-add') || 'section';
@@ -67,10 +69,31 @@ function initMenuCatalog() {
     else summaryEl.textContent = count + ' ' + noun + 's' + where;
   }
 
+  var lastOpenEditorAt = 0;
   function openEditor(card) {
+    var now = Date.now();
+    if (now - lastOpenEditorAt < 600) return;
     var root = card && card.querySelector('.menu-item-actions');
-    if (!root || !window.TTMSMenuItemEditModal || typeof window.TTMSMenuItemEditModal.open !== 'function') return;
+    if (!root) return;
+    if (!window.TTMSMenuItemEditModal || typeof window.TTMSMenuItemEditModal.open !== 'function') {
+      try {
+        window.alert('Editor is still loading. Try again in a moment.');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+    lastOpenEditorAt = now;
     window.TTMSMenuItemEditModal.open(root);
+  }
+
+  function refreshAvailabilityForCard(card) {
+    if (!card) return;
+    if (window.MenuAvailability && typeof window.MenuAvailability.enhance === 'function') {
+      window.MenuAvailability.enhance();
+      return;
+    }
+    if (window.MenuAvailability && typeof window.MenuAvailability.apply === 'function') {
+      window.MenuAvailability.apply();
+    }
   }
 
   function activeLocation() {
@@ -184,6 +207,7 @@ function initMenuCatalog() {
     if (loc.slug) card.setAttribute('data-location-slug', loc.slug);
     list.appendChild(card);
     applyLocation(activeSlug);
+    refreshAvailabilityForCard(card);
     openEditor(card);
     return card;
   }
@@ -241,7 +265,12 @@ function initMenuCatalog() {
       '<h3 class="dashboard-settings-location-card-title">' + esc(title) + '</h3>' +
       '</div>' +
       '<div class="dashboard-settings-location-card-actions">' +
-      '<button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>' +
+      '<button type="button" class="btn-dash btn-dash-secondary btn-menu-catalog-edit"><i class="fa fa-pencil" aria-hidden="true"></i><span>Edit</span></button>' +
+      '<label class="dashboard-sold-out-toggle dashboard-switch" title="Mark sold out without publishing">' +
+      '<input type="checkbox" class="dashboard-switch-input" data-sold-out-toggle aria-label="Sold out ' + esc(title) + '">' +
+      '<span class="dashboard-switch-track" aria-hidden="true"></span>' +
+      '<span data-sold-out-label>Available</span>' +
+      '</label>' +
       '</div>' +
       '<div class="menu-item-card" hidden data-dashboard-edit-new-item="1" data-item-url="' + esc(itemUrl) + '" data-section-slug="' + esc(section) + '">' +
       '<span class="menu-item-title">' + esc(title) + '</span>' +
@@ -288,8 +317,53 @@ function initMenuCatalog() {
   list.addEventListener('click', function (ev) {
     var btn = ev.target.closest('.btn-menu-catalog-edit');
     if (!btn || !list.contains(btn)) return;
+    ev.preventDefault();
     openEditor(btn.closest('.dashboard-settings-location-card'));
   });
+  // iOS: prefer pointerup for Edit so delayed click / drag neighbors do not swallow the tap.
+  list.addEventListener(
+    'pointerup',
+    function (ev) {
+      if (ev.pointerType !== 'touch' && ev.pointerType !== 'pen') return;
+      var btn = ev.target.closest('.btn-menu-catalog-edit');
+      if (!btn || !list.contains(btn)) return;
+      if (btn.getAttribute('data-touch-armed') !== '1') return;
+      btn.removeAttribute('data-touch-armed');
+      ev.preventDefault();
+      openEditor(btn.closest('.dashboard-settings-location-card'));
+    },
+    { passive: false }
+  );
+  list.addEventListener(
+    'pointerdown',
+    function (ev) {
+      if (ev.pointerType !== 'touch' && ev.pointerType !== 'pen') return;
+      var btn = ev.target.closest('.btn-menu-catalog-edit');
+      if (!btn || !list.contains(btn)) return;
+      btn.setAttribute('data-touch-armed', '1');
+    },
+    { passive: true }
+  );
+  list.addEventListener(
+    'pointercancel',
+    function (ev) {
+      var btn = ev.target.closest('.btn-menu-catalog-edit');
+      if (btn) btn.removeAttribute('data-touch-armed');
+    },
+    { passive: true }
+  );
+  list.addEventListener(
+    'pointermove',
+    function (ev) {
+      var btn = ev.target.closest('.btn-menu-catalog-edit');
+      if (!btn || btn.getAttribute('data-touch-armed') !== '1') return;
+      // Cancel arming if the finger slides (scroll / drag).
+      if (Math.abs(ev.movementX) + Math.abs(ev.movementY) > 8) {
+        btn.removeAttribute('data-touch-armed');
+      }
+    },
+    { passive: true }
+  );
   if (addBtn) addBtn.addEventListener('click', addCurrent);
   if (tabs) {
     tabs.addEventListener('click', function (ev) {

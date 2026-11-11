@@ -120,6 +120,11 @@ const AuthMiddleware = {
             el.style.display = showView ? '' : 'none';
             break;
           }
+          // Modal visibility is driven by [hidden] / .is-open — never stomp inline display.
+          if (el.id === 'menu-item-edit-modal') {
+            el.style.removeProperty('display');
+            break;
+          }
           el.style.display =
             isAdmin &&
             window.AuthClientAccess &&
