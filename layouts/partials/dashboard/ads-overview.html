@@ -23,10 +23,20 @@
   {{- end -}}
 {{- end -}}
 {{- $promos := slice -}}
+{{- $bag := newScratch -}}
+{{- $bag.Set "sharedOrder" (slice) -}}
 {{- range $collect -}}
-  {{- if not (index $seen .RelPermalink) -}}
-    {{- $seen = merge $seen (dict .RelPermalink true) -}}
+  {{- $pagePermalink := .RelPermalink -}}
+  {{- if not (index $seen $pagePermalink) -}}
+    {{- $seen = merge $seen (dict $pagePermalink true) -}}
     {{- $title := .LinkTitle | default .Title -}}
+    {{- $fileSlug := "" -}}
+    {{- with .File -}}{{- $fileSlug = .ContentBaseName -}}{{- end -}}
+    {{- if not $fileSlug -}}
+      {{- $fileSlug = $title | lower | replaceRE "[^a-z0-9]+" "-" | replaceRE "(^-|-$)" "" -}}
+    {{- end -}}
+    {{- $authoring := lower (printf "%s" (.Params.ttms_authoring | default "")) -}}
+    {{- $isShared := eq $authoring "shared" -}}
     {{- $img := "" -}}
     {{- with .Params.images -}}
       {{- range . -}}
@@ -38,18 +48,61 @@
     {{- if $img -}}
       {{- $imgSrc = partial "ttms/menu-img-src.html" (dict "path" $img "size" "ad") -}}
     {{- end -}}
-    {{- $locLabel := "" -}}
-    {{- $first := index (split (strings.TrimPrefix "/" .RelPermalink) "/") 0 -}}
+    {{- $first := index (split (strings.TrimPrefix "/" $pagePermalink) "/") 0 -}}
+    {{- $outletLabel := "" -}}
     {{- range $locs -}}
-      {{- if eq .slug $first -}}{{- $locLabel = .city | default .slug -}}{{- end -}}
+      {{- if eq .slug $first -}}{{- $outletLabel = .city | default .slug -}}{{- end -}}
     {{- end -}}
-    {{- $promos = $promos | append (dict
-      "title" $title
-      "url" .RelPermalink
-      "editUrl" "/promotion-settings/"
-      "image" $imgSrc
-      "location" $locLabel
-    ) -}}
+    {{- if and $isShared $fileSlug -}}
+      {{- $gKey := printf "shared:%s" $fileSlug -}}
+      {{- $existing := $bag.Get $gKey -}}
+      {{- if not $existing -}}
+        {{- $sharedUrl := printf "/promotions/%s/" $fileSlug -}}
+        {{- $promoUrl := $pagePermalink -}}
+        {{- with site.GetPage $sharedUrl -}}
+          {{- $promoUrl = .RelPermalink -}}
+        {{- end -}}
+        {{- $bag.Set $gKey (dict
+          "title" $title
+          "url" $promoUrl
+          "editUrl" "/promotion-settings/"
+          "image" $imgSrc
+          "location" "Shared"
+          "shared" true
+          "slug" $fileSlug
+          "outlets" (slice)
+        ) -}}
+        {{- $bag.Set "sharedOrder" (($bag.Get "sharedOrder") | append $fileSlug) -}}
+        {{- $existing = $bag.Get $gKey -}}
+      {{- end -}}
+      {{- if and $outletLabel $pagePermalink -}}
+        {{- $outlets := $existing.outlets | default slice -}}
+        {{- $dup := false -}}
+        {{- range $outlets -}}
+          {{- if eq .url $pagePermalink -}}{{- $dup = true -}}{{- end -}}
+        {{- end -}}
+        {{- if not $dup -}}
+          {{- $outlets = $outlets | append (dict "label" $outletLabel "url" $pagePermalink) -}}
+          {{- $keepImage := $existing.image | default $imgSrc -}}
+          {{- $bag.Set $gKey (merge $existing (dict "title" ($existing.title | default $title) "image" $keepImage "outlets" $outlets)) -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $promos = $promos | append (dict
+        "title" $title
+        "url" $pagePermalink
+        "editUrl" "/promotion-settings/"
+        "image" $imgSrc
+        "location" $outletLabel
+        "shared" false
+        "outlets" (slice)
+      ) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- range ($bag.Get "sharedOrder") -}}
+  {{- with $bag.Get (printf "shared:%s" .) -}}
+    {{- $promos = $promos | append . -}}
   {{- end -}}
 {{- end -}}
 {{- $promoCount := len $promos -}}
@@ -213,7 +266,16 @@
     </div>
     <div class="dashboard-ads-promo-list" id="dashboardAdsPromoList">
       {{- range $promos -}}
-      <article class="dashboard-ads-promo-card" data-promo-title="{{ .title }}" data-promo-kind="promotion">
+      {{- $outlets := .outlets | default slice -}}
+      {{- $outletCount := len $outlets -}}
+      {{- $isStack := and .shared (gt $outletCount 1) -}}
+      <article class="dashboard-ads-promo-card{{ if $isStack }} dashboard-ads-promo-card--stack{{ end }}" data-promo-title="{{ .title }}" data-promo-kind="promotion"{{ if .shared }} data-promo-shared="1"{{ end }}{{ if $outletCount }} data-promo-outlets="{{ $outletCount }}"{{ end }}>
+        {{- if $isStack -}}
+        <div class="dashboard-ads-promo-stack-peeks" aria-hidden="true">
+          <span class="dashboard-ads-promo-stack-peek dashboard-ads-promo-stack-peek--2"></span>
+          <span class="dashboard-ads-promo-stack-peek dashboard-ads-promo-stack-peek--1"></span>
+        </div>
+        {{- end -}}
         <div class="dashboard-ads-promo-media"{{ if not .image }} aria-hidden="true"{{ end }}>
           {{- if .image -}}
           <img src="{{ .image }}" alt="" loading="lazy" decoding="async">
@@ -223,7 +285,7 @@
         </div>
         <div class="dashboard-ads-promo-body">
           <div class="dashboard-ads-promo-copy">
-            <span class="dashboard-ads-promo-kind">Promotion{{ with .location }} · {{ . }}{{ end }}</span>
+            <span class="dashboard-ads-promo-kind">Promotion{{ with .location }} · {{ . }}{{ end }}{{ if and .shared (gt $outletCount 0) }} · {{ $outletCount }} location{{ if ne $outletCount 1 }}s{{ end }}{{ end }}</span>
             <h4 class="dashboard-ads-promo-title">{{ .title }}</h4>
           </div>
           <dl class="dashboard-ads-promo-stats">
@@ -241,9 +303,24 @@
             </div>
           </dl>
           <div class="dashboard-ads-promo-links">
+            {{- if not $isStack -}}
             <a href="{{ .url }}" class="dashboard-ads-promo-link">View on menu</a>
+            {{- end -}}
             <a href="{{ .editUrl }}" class="dashboard-ads-promo-link">Edit</a>
           </div>
+          {{- if $isStack -}}
+          <details class="dashboard-ads-promo-stack">
+            <summary class="dashboard-ads-promo-stack-summary">{{ $outletCount }} locations · tap to see where it runs</summary>
+            <ol class="dashboard-ads-promo-stack-flow">
+              {{- range $outlets -}}
+              <li>
+                <span class="dashboard-ads-promo-stack-place">{{ .label }}</span>
+                <a href="{{ .url }}" class="dashboard-ads-promo-link">View on menu</a>
+              </li>
+              {{- end -}}
+            </ol>
+          </details>
+          {{- end -}}
         </div>
       </article>
       {{- end -}}

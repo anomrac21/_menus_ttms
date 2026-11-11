@@ -5386,6 +5386,84 @@ button.dashboard-ads-promo-link {
   text-decoration: underline;
 }
 
+.dashboard-ads-promo-card--stack {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-ads-promo-stack-peeks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dashboard-ads-promo-stack-peek {
+  position: absolute;
+  left: 0.45rem;
+  right: 0.45rem;
+  height: 100%;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+  background: color-mix(in srgb, var(--dash-bg) 70%, transparent);
+}
+
+.dashboard-ads-promo-stack-peek--1 {
+  top: 0.28rem;
+  opacity: 0.78;
+}
+
+.dashboard-ads-promo-stack-peek--2 {
+  top: 0.52rem;
+  opacity: 0.5;
+}
+
+.dashboard-ads-promo-card--stack > .dashboard-ads-promo-media,
+.dashboard-ads-promo-card--stack > .dashboard-ads-promo-body {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-ads-promo-stack {
+  margin: 0.15rem 0 0;
+}
+
+.dashboard-ads-promo-stack-summary {
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--dash-info, #3b82f6);
+  list-style: none;
+}
+
+.dashboard-ads-promo-stack-summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-ads-promo-stack-flow {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.dashboard-ads-promo-stack-flow li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
+}
+
+.dashboard-ads-promo-stack-place {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--dash-ink);
+}
+
 .dashboard-ads-external-actions {
   margin-top: 0.15rem;
 }
