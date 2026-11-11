@@ -386,8 +386,17 @@
     reprint: function (id) {
       return request('POST', '/orders/' + encodeURIComponent(id) + '/reprint', {});
     },
-    resendLoyverse: function (id) {
-      return request('POST', '/orders/' + encodeURIComponent(id) + '/loyverse-resend', {});
+    resendLoyverse: function (id, cartJson) {
+      var body = {};
+      if (cartJson != null) body.cart_json = cartJson;
+      return request('POST', '/orders/' + encodeURIComponent(id) + '/loyverse-resend', body);
+    },
+    notifyCustomer: function (id, payload) {
+      payload = payload || {};
+      return request('POST', '/orders/' + encodeURIComponent(id) + '/notify', {
+        title: payload.title || '',
+        message: payload.message || '',
+      });
     },
     requireSignIn: function () {
       if (this.isSignedIn()) return true;

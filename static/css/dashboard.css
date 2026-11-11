@@ -2361,6 +2361,92 @@ html:has(.dashboard-control-room)::after {
   margin: 0.7rem 0 0;
 }
 
+.dashboard-order-notify {
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 10%, transparent);
+  background: color-mix(in srgb, var(--dash-bg) 55%, transparent);
+}
+
+.dashboard-order-notify-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.dashboard-order-notify-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-order-notify-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.dashboard-order-notify-item {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--dash-surface) 80%, transparent);
+}
+
+.dashboard-order-notify-item-main {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.86rem;
+  color: var(--dash-ink);
+}
+
+.dashboard-order-notify-item-msg {
+  color: var(--dash-ink-muted);
+  font-size: 0.82rem;
+}
+
+.dashboard-order-notify-item-meta {
+  font-size: 0.72rem;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-order-notify-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-order-notify-form {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.dashboard-order-notify-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--dash-ink) 14%, transparent);
+  background: var(--dash-surface);
+  color: var(--dash-ink);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.dashboard-order-notify-input:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
 .dashboard-order-adapter--ok {
   border-color: color-mix(in srgb, var(--dash-success) 28%, transparent);
   background: color-mix(in srgb, var(--dash-success) 14%, transparent);

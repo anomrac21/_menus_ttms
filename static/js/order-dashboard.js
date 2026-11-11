@@ -8,6 +8,9 @@
   var lastFingerprint = '';
   var knownIds = {};
   var refreshSeq = 0;
+  var notifyByOrderId = {};
+  var notifyLoadSeq = 0;
+  var lastOrdersCache = [];
 
   function $(id) {
     return document.getElementById(id);
@@ -63,6 +66,23 @@
     return { kind: fulfill || 'order', label: titleCase(fulfill) || 'Order' };
   }
 
+  function loyverseErrorLabel(raw) {
+    var text = String(raw || '').trim();
+    if (!text) return 'Loyverse failed';
+    try {
+      var parsed = JSON.parse(text.replace(/^loyverse status \d+:\s*/i, ''));
+      if (parsed && Array.isArray(parsed.unmapped_lines) && parsed.unmapped_lines.length) {
+        return 'Loyverse: map ' + parsed.unmapped_lines.join(', ');
+      }
+      if (parsed && parsed.error) return 'Loyverse: ' + parsed.error;
+    } catch (_) {}
+    if (/missing loyverse variant_id/i.test(text)) {
+      return 'Loyverse: item not mapped — open POS Connect or Send to Loyverse after mapping';
+    }
+    if (text.length > 120) return 'Loyverse: ' + text.slice(0, 117) + '…';
+    return 'Loyverse: ' + text;
+  }
+
   function adapterChips(order) {
     var chips = [];
     if (order.loyverse_receipt_number) {
@@ -73,7 +93,7 @@
     } else if (order.loyverse_receipt_status === 'queued') {
       chips.push({ text: 'Loyverse queued', kind: '' });
     } else if (order.loyverse_error) {
-      chips.push({ text: 'Loyverse: ' + order.loyverse_error, kind: 'fail' });
+      chips.push({ text: loyverseErrorLabel(order.loyverse_error), kind: 'fail' });
     } else if (order.loyverse_receipt_mode === 'off') {
       chips.push({ text: 'Loyverse off', kind: '' });
     } else if (order.loyverse_receipt_mode) {
@@ -322,6 +342,170 @@
     host.innerHTML = skeletonMarkup();
   }
 
+  function enrichCartVariants(lines) {
+    var resolver =
+      window.posIntegration && typeof window.posIntegration.resolveVariantId === 'function'
+        ? window.posIntegration.resolveVariantId
+        : null;
+    return (Array.isArray(lines) ? lines : []).map(function (line) {
+      if (!line || typeof line !== 'object') return line;
+      var copy = {};
+      Object.keys(line).forEach(function (k) {
+        copy[k] = line[k];
+      });
+      var existing = String(copy.variant_id || copy.loyverse_variant_id || '').trim();
+      var mapped = resolver ? String(resolver(copy) || '').trim() : '';
+      var vid = existing || mapped;
+      if (vid) {
+        copy.variant_id = vid;
+        copy.loyverse_variant_id = vid;
+      }
+      return copy;
+    });
+  }
+
+  function notifyActionLabel(action) {
+    var key = String(action || '').toLowerCase();
+    if (key === 'order_ready') return 'Ready';
+    if (key === 'order_paid') return 'Paid';
+    if (key === 'order_cancelled') return 'Cancelled';
+    if (key === 'order_created') return 'Received';
+    if (key === 'staff_message') return 'Staff message';
+    return titleCase(key || 'Alert');
+  }
+
+  function formatNotifyWhen(value) {
+    if (!value) return '';
+    try {
+      var d = new Date(value);
+      if (isNaN(d.getTime())) return String(value);
+      return d.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch (_) {
+      return String(value);
+    }
+  }
+
+  function renderNotifyHistory(orderId) {
+    var items = notifyByOrderId[orderId] || [];
+    if (!items.length) {
+      return '<p class="dashboard-order-notify-empty">No customer alerts yet.</p>';
+    }
+    return (
+      '<ul class="dashboard-order-notify-list">' +
+      items
+        .slice(0, 8)
+        .map(function (n) {
+          var data = (n && n.data) || {};
+          var action = notifyActionLabel(data.action || n.type);
+          var title = String((n && n.title) || action).trim();
+          var message = String((n && n.message) || '').trim();
+          var when = formatNotifyWhen(n.created_at || n.createdAt || n.sent_at);
+          return (
+            '<li class="dashboard-order-notify-item">' +
+            '<span class="dashboard-order-notify-item-main">' +
+            '<strong>' +
+            escapeHtml(title) +
+            '</strong>' +
+            (message && message !== title
+              ? '<span class="dashboard-order-notify-item-msg">' + escapeHtml(message) + '</span>'
+              : '') +
+            '</span>' +
+            '<span class="dashboard-order-notify-item-meta">' +
+            escapeHtml(action) +
+            (when ? ' · ' + escapeHtml(when) : '') +
+            '</span>' +
+            '</li>'
+          );
+        })
+        .join('') +
+      '</ul>'
+    );
+  }
+
+  function notifyApiBase() {
+    var cfg = window.NOTIFY_CONFIG || {};
+    var raw = String(cfg.apiUrl || '').replace(/\/+$/, '');
+    if (raw) return raw;
+    var service = String(cfg.serviceUrl || 'https://notify.ttmenus.com').replace(/\/+$/, '');
+    return service + '/api/v1';
+  }
+
+  function notifyClientDomain() {
+    var cfg = window.NOTIFY_CONFIG || {};
+    return String(cfg.clientDomain || (window.location && window.location.hostname) || '')
+      .replace(/^www\./i, '')
+      .trim();
+  }
+
+  async function fetchOrderNotifications(orders) {
+    var domain = notifyClientDomain();
+    var base = notifyApiBase();
+    if (!domain || !base) return;
+    var seq = ++notifyLoadSeq;
+    var token = '';
+    try {
+      if (window.AuthClient && typeof window.AuthClient.getAccessToken === 'function') {
+        token = window.AuthClient.getAccessToken() || '';
+      }
+    } catch (_) {}
+    if (!token) return;
+    try {
+      var res = await fetch(
+        base + '/notifications?client_domain=' + encodeURIComponent(domain) + '&limit=80',
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/json',
+          },
+        }
+      );
+      var data = null;
+      try {
+        data = await res.json();
+      } catch (_) {
+        data = null;
+      }
+      if (seq !== notifyLoadSeq || !res.ok) return;
+      var items = (data && (data.notifications || data.items || data.data)) || [];
+      var next = {};
+      (Array.isArray(orders) ? orders : []).forEach(function (o) {
+        if (o && o.id) next[o.id] = [];
+      });
+      items.forEach(function (n) {
+        var dataMap = (n && n.data) || {};
+        var oid = String(dataMap.order_id || dataMap.orderId || '').trim();
+        if (!oid || !next[oid]) return;
+        next[oid].push(n);
+      });
+      Object.keys(next).forEach(function (id) {
+        next[id].sort(function (a, b) {
+          var ta = new Date(a.created_at || a.createdAt || 0).getTime();
+          var tb = new Date(b.created_at || b.createdAt || 0).getTime();
+          return tb - ta;
+        });
+      });
+      notifyByOrderId = next;
+      paintNotifyHistories();
+    } catch (_) {}
+  }
+
+  function paintNotifyHistories() {
+    var host = $('ttms-orders-list');
+    if (!host) return;
+    host.querySelectorAll('[data-order-notify-history]').forEach(function (el) {
+      var id = el.getAttribute('data-order-notify-history');
+      if (!id) return;
+      el.innerHTML = renderNotifyHistory(id);
+    });
+  }
+
   function renderTicket(o, enter) {
     var cartLines = parseCart(o);
     var lines = cartLines.length
@@ -346,6 +530,7 @@
     var paidDisabled = o.status === 'paid' || o.status === 'cancelled' ? ' disabled' : '';
     var readyDisabled = o.status !== 'open' && o.status !== 'ready' ? ' disabled' : '';
     var cancelDisabled = o.status === 'paid' || o.status === 'cancelled' ? ' disabled' : '';
+    var canNotify = !!o.customer_user_id;
     var status = o.status || 'open';
     return (
       '<article class="dashboard-order-ticket dashboard-order-ticket--' +
@@ -353,6 +538,8 @@
       (enter ? ' is-entering' : '') +
       '" data-id="' +
       escapeHtml(o.id) +
+      '" data-customer-user-id="' +
+      escapeHtml(o.customer_user_id || '') +
       '">' +
       '<div class="dashboard-order-ticket-head">' +
       '<strong class="dashboard-order-ticket-ref">#' +
@@ -372,7 +559,9 @@
       '</span>' +
       (o.customer_name
         ? '<span class="dashboard-order-chip">' + escapeHtml(o.customer_name) + '</span>'
-        : '') +
+        : o.customer_email
+          ? '<span class="dashboard-order-chip">' + escapeHtml(o.customer_email) + '</span>'
+          : '') +
       '<span class="dashboard-order-total">' +
       escapeHtml(moneyLabel(o)) +
       '</span>' +
@@ -387,6 +576,29 @@
           '</p>'
         : '') +
       (adapters ? '<p class="dashboard-order-adapters">' + adapters + '</p>' : '') +
+      '<div class="dashboard-order-notify" data-order-notify="' +
+      escapeHtml(o.id) +
+      '">' +
+      '<div class="dashboard-order-notify-head">' +
+      '<span class="dashboard-order-notify-title">Customer alerts</span>' +
+      '</div>' +
+      '<div class="dashboard-order-notify-history" data-order-notify-history="' +
+      escapeHtml(o.id) +
+      '">' +
+      renderNotifyHistory(o.id) +
+      '</div>' +
+      (canNotify
+        ? '<form class="dashboard-order-notify-form" data-act-form="notify">' +
+          '<label class="visually-hidden" for="order-notify-' +
+          escapeHtml(o.id) +
+          '">Message to customer</label>' +
+          '<input id="order-notify-' +
+          escapeHtml(o.id) +
+          '" class="dashboard-order-notify-input" type="text" maxlength="280" placeholder="Personal message to customer" required />' +
+          '<button type="submit" class="btn-dash btn-dash-secondary" data-act="notify">Send</button>' +
+          '</form>'
+        : '<p class="dashboard-order-notify-empty">Guest checkout — no push inbox for a personal alert.</p>') +
+      '</div>' +
       '<div class="dashboard-order-actions">' +
       '<button type="button" class="btn-dash btn-dash-secondary" data-act="ready"' +
       readyDisabled +
@@ -513,8 +725,10 @@
       var orders = res && res.orders ? res.orders : [];
       var fingerprint = ordersFingerprint(orders, filter, location);
       if (silent && fingerprint === lastFingerprint) return;
+      lastOrdersCache = orders;
       renderOrders(orders, { animateAll: !silent && !opts.preserve });
       lastFingerprint = fingerprint;
+      fetchOrderNotifications(orders);
       if (statusEl) {
         statusEl.textContent = orders.length
           ? orders.length + ' ticket' + (orders.length === 1 ? '' : 's')
@@ -529,9 +743,54 @@
     }
   }
 
+  function findCachedOrder(id) {
+    for (var i = 0; i < lastOrdersCache.length; i++) {
+      if (lastOrdersCache[i] && lastOrdersCache[i].id === id) return lastOrdersCache[i];
+    }
+    return null;
+  }
+
+  async function onNotifySubmit(e) {
+    var form = e.target.closest('[data-act-form="notify"]');
+    if (!form) return;
+    e.preventDefault();
+    var card = form.closest('[data-id]');
+    if (!card) return;
+    var id = card.getAttribute('data-id');
+    var input = form.querySelector('.dashboard-order-notify-input');
+    var btn = form.querySelector('[data-act="notify"]');
+    var message = input ? String(input.value || '').trim() : '';
+    if (!message) {
+      if (input) input.focus();
+      return;
+    }
+    if (btn) btn.disabled = true;
+    try {
+      var order = findCachedOrder(id);
+      var title =
+        'Message from ' +
+        String((order && order.restaurant_name) || 'the restaurant').trim();
+      await window.OrderClient.notifyCustomer(id, { title: title, message: message });
+      if (input) input.value = '';
+      var statusEl = $('dashboardOrdersStatus');
+      if (statusEl) statusEl.textContent = 'Personal alert sent for #' + (order && (order.ticket_number || order.order_ref) || id);
+      await fetchOrderNotifications(lastOrdersCache);
+      await refresh({ preserve: true });
+    } catch (err) {
+      alert(err.message || 'Could not send alert');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   async function onAction(e) {
+    var form = e.target.closest('[data-act-form="notify"]');
+    if (form && e.target.closest('[data-act="notify"]') && e.type === 'click') {
+      // Let the form submit handler run.
+      return;
+    }
     var btn = e.target.closest('[data-act]');
-    if (!btn) return;
+    if (!btn || btn.getAttribute('data-act') === 'notify') return;
     var card = btn.closest('[data-id]');
     if (!card) return;
     var id = card.getAttribute('data-id');
@@ -547,7 +806,11 @@
       if (act === 'ready') await window.OrderClient.ready(id);
       if (act === 'charge') await window.OrderClient.charge(id);
       if (act === 'reprint') await window.OrderClient.reprint(id);
-      if (act === 'loyverse-resend') await window.OrderClient.resendLoyverse(id);
+      if (act === 'loyverse-resend') {
+        var order = findCachedOrder(id);
+        var enriched = enrichCartVariants(parseCart(order || { id: id }));
+        await window.OrderClient.resendLoyverse(id, enriched.length ? enriched : undefined);
+      }
       if (act === 'cancel') await window.OrderClient.cancel(id, '');
       if (needsConfirm) await playTicketOutcome(card, act, true);
       await refresh({ preserve: true });
@@ -576,7 +839,10 @@
       return;
     }
     var list = $('ttms-orders-list');
-    if (list) list.addEventListener('click', onAction);
+    if (list) {
+      list.addEventListener('click', onAction);
+      list.addEventListener('submit', onNotifySubmit);
+    }
     var refreshBtn = $('ttms-orders-refresh');
     if (refreshBtn) refreshBtn.addEventListener('click', refresh);
     var filter = $('dashboardOrdersFilter');

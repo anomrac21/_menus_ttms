@@ -221,23 +221,7 @@
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardMenuHubPanel-publish" role="tabpanel" data-menu-hub-panel="publish" aria-labelledby="dashboardMenuHubTab-publish" hidden>
               <div id="dashboardPublishFlash" class="dashboard-publish-flash hidden" role="status" aria-live="polite"></div>
-              <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Menu snapshot, content change report, and last published">
-                <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots is-status-loading" data-menu-status-block="snapshots">
-                  <div class="dashboard-menu-status-heading">
-                    <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
-                    <span class="dashboard-menu-status-heading-main">
-                      <span class="dashboard-menu-status-heading-text">Menu snapshot</span>
-                      <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary">Loading…</span>
-                    </span>
-                    <span class="dashboard-menu-status-heading-spin" aria-hidden="true"></span>
-                  </div>
-                  <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite" aria-busy="true">
-                    <div class="dashboard-orders-throbber dashboard-menu-status-throbber" role="status">
-                      <span class="dashboard-orders-throbber-spin" aria-hidden="true"></span>
-                      <p class="dashboard-orders-throbber-label">Loading menu snapshot…</p>
-                    </div>
-                  </div>
-                </div>
+              <div id="dashboardMenuStatusPanel" class="dashboard-menu-status-panel" aria-label="Content change report, last published, and menu snapshot">
                 <div class="dashboard-menu-status-block dashboard-menu-status-block--drafts is-status-loading" data-menu-status-block="drafts">
                   <div class="dashboard-menu-status-heading">
                     <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
@@ -266,6 +250,22 @@
                     </span>
                   </div>
                   <div id="dashboardLastPublishSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite"></div>
+                </div>
+                <div class="dashboard-menu-status-block dashboard-menu-status-block--snapshots is-status-loading" data-menu-status-block="snapshots">
+                  <div class="dashboard-menu-status-heading">
+                    <span class="dashboard-menu-status-heading-icon" aria-hidden="true"><i class="fa fa-history"></i></span>
+                    <span class="dashboard-menu-status-heading-main">
+                      <span class="dashboard-menu-status-heading-text">Menu snapshot</span>
+                      <span class="dashboard-menu-status-heading-summary" id="dashboardSnapshotBlockSummary">Loading…</span>
+                    </span>
+                    <span class="dashboard-menu-status-heading-spin" aria-hidden="true"></span>
+                  </div>
+                  <div id="dashboardSnapshotStatusSummary" class="dashboard-menu-status-body dashboard-menu-status-block-detail" aria-live="polite" aria-busy="true">
+                    <div class="dashboard-orders-throbber dashboard-menu-status-throbber" role="status">
+                      <span class="dashboard-orders-throbber-spin" aria-hidden="true"></span>
+                      <p class="dashboard-orders-throbber-label">Loading menu snapshot…</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
