@@ -20,7 +20,8 @@
       <img src="{{ printf "/branding/%s" $fn | relURL }}" alt="{{ $title }}" class="dashboard-settings-thumb dashboard-branding-preview dashboard-branding-preview--{{ $frame }}" data-branding-preview="{{ $fn }}">
       {{- if eq $frame "tab" -}}<span class="dashboard-branding-frame-label" aria-hidden="true">Menu</span>{{- end -}}
     </span>
-    <label class="dashboard-branding-file-label btn-dash btn-dash-secondary"><input type="file" class="dashboard-branding-file-input" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}">Replace</label>
+    <button type="button" class="dashboard-branding-file-label btn-dash btn-dash-secondary" data-branding-pick="{{ $fn }}">Replace</button>
+    <input type="file" class="dashboard-branding-file-input hidden" accept="image/webp,image/png,image/jpeg,image/gif" data-branding-file="{{ $fn }}" tabindex="-1">
     <span class="dashboard-branding-upload-status" data-branding-status="{{ $fn }}" role="status" aria-live="polite"></span>
   </div>
 </div>

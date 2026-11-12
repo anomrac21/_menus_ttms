@@ -616,6 +616,14 @@
       });
     });
 
+    document.querySelectorAll('[data-branding-pick]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var wrap = btn.closest('.dashboard-settings-branding-upload');
+        var input = wrap ? wrap.querySelector('.dashboard-branding-file-input') : null;
+        if (input) input.click();
+      });
+    });
+
     var heroSettingsForm = document.getElementById('heroSettingsForm');
     var heroImagePathEl = document.getElementById('settingsHeroImagePath');
     var heroIntroEl = document.getElementById('settingsHeroIntro');
@@ -723,9 +731,40 @@
         });
     }
 
+    function autoResizeTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+
+    function updateTextareaCharCount(textarea, counterEl, maxLen) {
+      if (!textarea || !counterEl) return;
+      var len = (textarea.value || '').length;
+      counterEl.textContent = len + '/' + maxLen;
+      counterEl.classList.toggle('dashboard-settings-char-count--limit', len >= maxLen);
+    }
+
+    function bindAutosizeTextarea(el, maxLen) {
+      if (!el) return;
+      var counter = document.getElementById(el.id + '-count');
+      function refresh() {
+        autoResizeTextarea(el);
+        updateTextareaCharCount(el, counter, maxLen);
+      }
+      el.addEventListener('input', refresh);
+      refresh();
+    }
+
     if (heroIntroEl) {
       bindAutosizeTextarea(heroIntroEl, 2000);
       heroIntroEl.addEventListener('input', updateHeroSettingsPreview);
+    }
+
+    var btnSettingsHeroChoose = document.getElementById('btnSettingsHeroChoose');
+    if (btnSettingsHeroChoose && heroImageFile) {
+      btnSettingsHeroChoose.addEventListener('click', function() {
+        heroImageFile.click();
+      });
     }
 
     if (heroImageFile) {

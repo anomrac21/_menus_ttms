@@ -15695,20 +15695,17 @@ select.dashboard-settings-input {
   justify-content: center;
   gap: 0.35rem;
   position: relative;
-  overflow: hidden;
 }
 
 .dashboard-branding-file-label input[type="file"] {
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  margin: 0;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  opacity: 0;
-  cursor: pointer;
-  font-size: 1rem;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
   border: 0;
 }
 
