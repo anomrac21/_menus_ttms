@@ -75,12 +75,12 @@
             <input type="hidden" id="settingsHeroImagePath" name="image" value="{{ $heroImage }}">
             <div class="dashboard-settings-hero-image-row">
               <div class="dashboard-settings-hero-thumb-wrap" id="settingsHeroThumbWrap">
-                <img id="settingsHeroThumb" class="dashboard-settings-thumb dashboard-settings-hero-thumb" alt="" width="96" height="54">
+                <img id="settingsHeroThumb" class="dashboard-settings-thumb dashboard-settings-hero-thumb" src="{{ partial "ttms/menu-img-src.html" (dict "path" $heroImage "size" "hero") }}" alt="" width="96" height="54">
                 <span id="settingsHeroThumbLoading" class="dashboard-settings-hero-thumb-loading hidden" aria-hidden="true"><i class="fa fa-spinner fa-spin"></i></span>
               </div>
               <div class="dashboard-settings-hero-image-actions">
                 <label class="btn-dash btn-dash-secondary dashboard-branding-file-label">
-                  <input type="file" id="settingsHeroImageFile" class="dashboard-branding-file-input hidden" accept="image/jpeg,image/png,image/webp,image/gif">
+                  <input type="file" id="settingsHeroImageFile" class="dashboard-branding-file-input" accept="image/jpeg,image/png,image/webp,image/gif">
                   <i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose image
                 </label>
                 <button type="button" class="btn-dash btn-dash-secondary" id="btnSettingsHeroRemove" aria-label="Remove hero image"><i class="fa fa-times" aria-hidden="true"></i> Remove</button>

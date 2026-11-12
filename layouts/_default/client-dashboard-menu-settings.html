@@ -290,17 +290,9 @@
     function applyBrandingSite(branding) {
       if (!branding || typeof branding !== 'object') return;
       Object.keys(branding).forEach(function(name) {
-        var ref = String(branding[name] || '');
-        var file = ref.replace(/^draft-assets\//, '');
-        if (!file) return;
-        var src = cmsApiBase() + '/clients/' + encodeURIComponent(settingsClientId()) + '/preview/draft-assets/' + encodeURIComponent(file);
-        var img = document.querySelector('.dashboard-branding-preview[data-branding-preview="' + name + '"]');
-        if (img) img.src = src;
-        if (name === 'favicon512.webp' && heroPreviewLogo) heroPreviewLogo.src = src;
-        if (name === 'mappin.webp') {
-          var previewIcon = document.getElementById('mappinPinPreviewIcon');
-          if (previewIcon) previewIcon.src = src;
-        }
+        var url = draftAssetPreviewUrl(branding[name]);
+        if (!url) return;
+        paintBrandingDraft(name, url);
       });
     }
     var snapshotHeroApplied = false;
@@ -485,16 +477,55 @@
     var brandingSaveBtn = document.getElementById('btnSaveBranding');
     var brandingSaveStatus = document.getElementById('brandingSaveStatus');
 
-    function refreshBrandingPreview(name) {
+    var authedPreviewBlobs = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+    function absoluteCmsUrl(path) {
+      path = String(path || '').trim();
+      if (!path) return '';
+      if (/^https?:\/\//i.test(path)) return path;
+      var origin = cmsApiBase().replace(/\/api$/i, '');
+      return origin + (path.charAt(0) === '/' ? path : '/' + path);
+    }
+
+    function loadAuthedImage(img, url) {
+      if (!img || !url) return Promise.resolve();
+      var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+      var headers = {};
+      if (token) headers.Authorization = 'Bearer ' + token;
+      return fetch(url, { credentials: 'include', headers: headers }).then(function(res) {
+        if (!res.ok) throw new Error('Image preview failed (' + res.status + ')');
+        return res.blob();
+      }).then(function(blob) {
+        var obj = URL.createObjectURL(blob);
+        var prev = authedPreviewBlobs ? authedPreviewBlobs.get(img) : '';
+        img.onerror = null;
+        img.removeAttribute('data-fellback');
+        img.src = obj;
+        if (prev) {
+          try { URL.revokeObjectURL(prev); } catch (e) {}
+        }
+        if (authedPreviewBlobs) authedPreviewBlobs.set(img, obj);
+      });
+    }
+
+    function draftAssetPreviewUrl(ref) {
+      ref = String(ref || '').trim().replace(/^\/+/, '');
+      if (ref.indexOf('draft-assets/') !== 0) return '';
+      var name = ref.replace(/^draft-assets\//, '');
+      if (!name) return '';
+      return cmsApiBase() + '/clients/' + encodeURIComponent(settingsClientId()) + '/preview/draft-assets/' + encodeURIComponent(name);
+    }
+
+    function paintBrandingDraft(name, url) {
+      var jobs = [];
       var img = document.querySelector('.dashboard-branding-preview[data-branding-preview="' + name + '"]');
-      if (img) img.src = '/branding/' + name + '?t=' + Date.now();
-      if (name === 'favicon512.webp' && heroPreviewLogo) {
-        heroPreviewLogo.src = '/branding/favicon512.webp?t=' + Date.now();
-      }
+      if (img) jobs.push(loadAuthedImage(img, url));
+      if (name === 'favicon512.webp' && heroPreviewLogo) jobs.push(loadAuthedImage(heroPreviewLogo, url));
       if (name === 'mappin.webp') {
         var previewIcon = document.getElementById('mappinPinPreviewIcon');
-        if (previewIcon) previewIcon.src = '/branding/mappin.webp?t=' + Date.now();
+        if (previewIcon) jobs.push(loadAuthedImage(previewIcon, url));
       }
+      return Promise.all(jobs);
     }
 
     function uploadBrandingFile(name, file, token, clientId) {
@@ -533,12 +564,15 @@
             return uploadBrandingFile(name, brandingPendingUploads[name], token, clientId).then(function(data) {
               if (data && data.version_id) rememberSnapshot(data.version_id);
               delete brandingPendingUploads[name];
-              if (brandingPreviewUrls[name]) {
-                URL.revokeObjectURL(brandingPreviewUrls[name]);
-                delete brandingPreviewUrls[name];
-              }
-              refreshBrandingPreview(name);
-              if (statusEl) statusEl.textContent = 'Saved.';
+              var previewUrl = absoluteCmsUrl(data && (data.previewPath || data.preview_path));
+              var painted = previewUrl ? paintBrandingDraft(name, previewUrl) : Promise.resolve();
+              return painted.then(function() {
+                if (brandingPreviewUrls[name]) {
+                  URL.revokeObjectURL(brandingPreviewUrls[name]);
+                  delete brandingPreviewUrls[name];
+                }
+                if (statusEl) statusEl.textContent = 'Saved.';
+              });
             });
           });
         });
@@ -572,6 +606,7 @@
         if (brandingPreviewUrls[name]) URL.revokeObjectURL(brandingPreviewUrls[name]);
         brandingPreviewUrls[name] = URL.createObjectURL(file);
         if (img) img.src = brandingPreviewUrls[name];
+        if (name === 'favicon512.webp' && heroPreviewLogo) heroPreviewLogo.src = brandingPreviewUrls[name];
         if (name === 'mappin.webp') {
           var previewIcon = document.getElementById('mappinPinPreviewIcon');
           if (previewIcon) previewIcon.src = brandingPreviewUrls[name];
@@ -614,6 +649,18 @@
     function updateHeroSettingsPreview() {
       var path = heroImagePathEl ? heroImagePathEl.value.trim() : '';
       var src = heroPublicSrc(path);
+      if (path.indexOf('draft-assets/') === 0) {
+        if (heroPreviewBg) {
+          heroPreviewBg.onerror = null;
+          heroPreviewBg.removeAttribute('data-src-path');
+          heroPreviewBg.removeAttribute('data-fellback');
+        }
+        if (heroThumb) heroThumb.onerror = null;
+        var jobs = [];
+        if (heroPreviewBg) jobs.push(loadAuthedImage(heroPreviewBg, src));
+        if (heroThumb) jobs.push(loadAuthedImage(heroThumb, src));
+        return Promise.all(jobs);
+      }
       if (heroPreviewBg) {
         heroPreviewBg.src = src;
         heroPreviewBg.setAttribute('data-src-path', path || '');
@@ -685,10 +732,21 @@
       heroImageFile.addEventListener('change', function() {
         var file = heroImageFile.files && heroImageFile.files[0];
         if (!file) return;
+        var localPreview = URL.createObjectURL(file);
+        if (heroPreviewBg) {
+          heroPreviewBg.onerror = null;
+          heroPreviewBg.removeAttribute('data-fellback');
+          heroPreviewBg.src = localPreview;
+        }
+        if (heroThumb) {
+          heroThumb.onerror = null;
+          heroThumb.src = localPreview;
+        }
         uploadHeroDraftAsset(file)
           .catch(function(err) {
             alert('Upload failed: ' + (err.message || err));
             if (heroImageStatus) heroImageStatus.textContent = '';
+            updateHeroSettingsPreview();
           })
           .finally(function() {
             heroImageFile.value = '';
