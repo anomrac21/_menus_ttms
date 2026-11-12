@@ -184,6 +184,9 @@ function initMenuCatalog() {
     arrangeVisibleOrder();
     updateSummary();
     refreshOrderFeedback();
+    if (window.MenuPromoPause && typeof window.MenuPromoPause.enhanceCatalog === 'function') {
+      window.MenuPromoPause.enhanceCatalog();
+    }
   }
 
   function sectionsForLocation() {

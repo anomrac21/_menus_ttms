@@ -228,6 +228,23 @@
     return filtered.length > 0 ? filtered : ads;
   },
 
+  /** Live-paused menu promotions (order-service overlay) must not enter reels. */
+  isMenuPromoPaused(url) {
+    if (!url || url === '#') return false;
+    if (!window.MenuAvailability || typeof window.MenuAvailability.isPromoPaused !== 'function') {
+      return false;
+    }
+    return !!window.MenuAvailability.isPromoPaused(url);
+  },
+
+  filterPausedMenuPromos(ads) {
+    if (!Array.isArray(ads) || !ads.length) return ads || [];
+    return ads.filter((ad) => {
+      const url = (ad && (ad.link_url || ad.link || ad.url)) || '';
+      return !this.isMenuPromoPaused(url);
+    });
+  },
+
   /** Normalize ads-service payload so reels display can read images/links. */
   normalizeServiceAds(ads, adsServiceUrl) {
     if (!Array.isArray(ads)) return [];
@@ -664,10 +681,52 @@
       const mediaUrl = firstMedia.image_url || firstMedia.imageUrl || firstMedia.url || firstMedia.src || firstMedia.image;
       if (!mediaUrl) continue;
       const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaUrl);
-      const linkUrl = ad.link_url || '#';
+      const linkUrl = ad.link_url || ad.link || '#';
+      if (this.isMenuPromoPaused(linkUrl)) continue;
       items.push({ ad, firstMedia, mediaUrl, isVideo, linkUrl });
     }
     return items;
+  },
+
+  /** Drop live-paused promos from an open reels catalog/DOM; close if none left. */
+  prunePausedReelsCatalog() {
+    if (!this._reelsCatalog || !this._reelsCatalog.length) {
+      if (window.MenuAvailability && typeof window.MenuAvailability.applyPromoSlides === 'function') {
+        window.MenuAvailability.applyPromoSlides();
+      }
+      return;
+    }
+    const next = this._reelsCatalog.filter((item) => {
+      const url = (item && (item.linkUrl || (item.ad && (item.ad.link_url || item.ad.link)))) || '';
+      return !this.isMenuPromoPaused(url);
+    });
+    const changed = next.length !== this._reelsCatalog.length;
+    if (changed) this._reelsCatalog = next;
+
+    const overlay = document.getElementById('ads-reels-overlay');
+    const track = document.getElementById('ads-reels-track');
+    if (overlay && !overlay.hasAttribute('hidden') && track) {
+      Array.from(track.children).forEach((slide) => {
+        const url =
+          slide.getAttribute('data-ad-url') ||
+          slide.getAttribute('data-ad-link') ||
+          slide.getAttribute('data-item-url') ||
+          '';
+        if (this.isMenuPromoPaused(url)) slide.remove();
+      });
+      if (!this._reelsCatalog.length || !track.children.length) {
+        this.closeReelsViewer();
+        return;
+      }
+      if (changed) {
+        this._syncReelMediaWindow(track);
+        this._syncReelsDominantMedia(track);
+      }
+    }
+
+    if (window.MenuAvailability && typeof window.MenuAvailability.applyPromoSlides === 'function') {
+      window.MenuAvailability.applyPromoSlides();
+    }
   },
 
   _shuffleArray(arr) {
@@ -2531,7 +2590,7 @@
 
       // Menu promotions from same-origin /promotions/index.json (fast)
       const menuAdsRaw = await this.loadMenuAds(config.menuUrl || null);
-      const menuAds = this.filterAdsByDay(menuAdsRaw);
+      const menuAds = this.filterPausedMenuPromos(this.filterAdsByDay(menuAdsRaw));
 
       if (displayGen !== this._displayGeneration) return;
 
@@ -2695,7 +2754,7 @@
     var serviceAds = [];
     var self = this;
     var present = function () {
-      var menuAds = self.filterAdsByDay(menuAdsRaw);
+      var menuAds = self.filterPausedMenuPromos(self.filterAdsByDay(menuAdsRaw));
       var raw = self.mergeAdSources(menuAds, serviceAds, serviceUrl);
       return self._presentLoaderReel(raw, config);
     };
@@ -2741,6 +2800,12 @@
       AdsClient.loadClientAds(clientId);
     }
   };
+
+  window.addEventListener('ttms:menu-availability', () => {
+    if (typeof AdsClient.prunePausedReelsCatalog === 'function') {
+      AdsClient.prunePausedReelsCatalog();
+    }
+  });
 
   // Barba transitions re-load ads after navigation
   function loadClientPageAdsIfPresent() {

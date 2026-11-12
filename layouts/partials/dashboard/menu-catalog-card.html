@@ -124,7 +124,24 @@
     <div class="menu-item-actions" data-actions-kind="promotion" data-promotion-catalog-index="{{ .catalogIndex }}" data-ad-id="{{ .adId }}" data-item-title="{{ $title }}" data-item-url="{{ .adUrl }}"></div>
   </article>
   {{- else -}}
-  <div class="menu-item-card" hidden data-item-url="{{ .itemUrl }}" data-section-slug="{{ .sectionSlug }}">
+  <div
+    class="menu-item-card"
+    hidden
+    data-item-url="{{ .itemUrl }}"
+    data-section-slug="{{ .sectionSlug }}"
+    {{- with .pricesArray }} data-prices-array="{{ . | jsonify }}"{{ end }}
+    {{- with .imagesPaths }} data-images-array="{{ . | jsonify }}"{{ end }}
+    {{- with .modificationsFlat }} data-modifications="{{ . | jsonify }}"{{ end }}
+    {{- with .additionsFlat }} data-additions="{{ . | jsonify }}"{{ end }}
+    {{- with .tags }} data-tags="{{ . | jsonify }}"{{ end }}
+    {{- with .ingredients }} data-ingredients="{{ . | jsonify }}"{{ end }}
+    {{- with .types }} data-types="{{ . | jsonify }}"{{ end }}
+    {{- with .cookingmethods }} data-cookingmethods="{{ . | jsonify }}"{{ end }}
+    {{- with .events }} data-events="{{ . | jsonify }}"{{ end }}
+    {{- with .sideCategories }} data-side-categories="{{ . | jsonify }}"{{ end }}
+    {{- with .availability }} data-availability="{{ . | jsonify }}"{{ end }}
+    {{- with .promotions }} data-promotions="{{ . | jsonify }}"{{ end }}
+  >
     <span class="menu-item-title">{{ $title }}</span>
     <p class="menu-item-description">{{ .description }}</p>
     <div class="menu-item-actions" data-actions-kind="menu-item" data-item-url="{{ .itemUrl }}" data-item-title="{{ $title }}" data-section-slug="{{ .sectionSlug }}"></div>

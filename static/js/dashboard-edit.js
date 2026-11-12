@@ -8545,6 +8545,118 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
+  function pricesFlatFromFrontMatter(prices) {
+    if (!Array.isArray(prices)) return [];
+    var pricesFlat = [];
+    prices.forEach(function (pr) {
+      if (!pr || typeof pr !== 'object') return;
+      pricesFlat.push(
+        pr.variable1 != null ? pr.variable1 : '-',
+        pr.variable2 != null ? pr.variable2 : '-',
+        pr.price != null && pr.price !== '' ? Number(pr.price) : pr.price
+      );
+    });
+    return pricesFlat;
+  }
+
+  function menuItemPricesUiIsEmpty() {
+    if (!pricesContainer) return true;
+    return !pricesContainer.querySelector('.dashboard-price-row');
+  }
+
+  function applyMenuItemFrontMatterToForm(fm, body) {
+    if (!fm || typeof fm !== 'object') return false;
+    var applied = false;
+    if (inputTitle && fm.title != null) {
+      inputTitle.value = cleanMenuItemTitle(fm.title);
+      applied = true;
+    }
+    if (inputDesc && body != null) {
+      inputDesc.value = body;
+      applied = true;
+    }
+    if (pricesContainer && Array.isArray(fm.prices) && fm.prices.length) {
+      renderPricesUI(pricesContainer, pricesFlatFromFrontMatter(fm.prices));
+      applied = true;
+    }
+    var imagesArr = pathsFromFmImages(fm.images);
+    if (imagesArr.length) {
+      if (menuItemImagesContainer) renderMenuItemImagesUI(imagesArr, true);
+      else if (inputMenuItemImages) {
+        inputMenuItemImages.value = imagesArr.join('\n');
+        renderMenuItemImagesUI(imagesArr, true);
+      }
+      applied = true;
+    }
+    if (fm.side_categories != null || fm.sideCategories != null) {
+      var sc = fm.side_categories != null ? fm.side_categories : fm.sideCategories;
+      if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, Array.isArray(sc) ? sc : []);
+      applied = true;
+    }
+    if (fm.modifications != null && modificationsContainer) {
+      renderPairsUI(modificationsContainer, frontMatterModsToFlat(fm.modifications));
+      applied = true;
+    }
+    if (fm.additions != null && additionsContainer) {
+      renderPairsUI(additionsContainer, frontMatterModsToFlat(fm.additions));
+      applied = true;
+    }
+    if (fm.tags != null && tagsContainer) {
+      renderStringListUI(tagsContainer, Array.isArray(fm.tags) ? fm.tags : []);
+      applied = true;
+    }
+    if (fm.ingredients != null && ingredientsContainer) {
+      renderStringListUI(ingredientsContainer, Array.isArray(fm.ingredients) ? fm.ingredients : []);
+      applied = true;
+    }
+    if (fm.cookingmethods != null && cookingmethodsContainer) {
+      renderStringListUI(cookingmethodsContainer, Array.isArray(fm.cookingmethods) ? fm.cookingmethods : []);
+      applied = true;
+    }
+    if (fm.types != null && typesContainer) {
+      renderStringListUI(typesContainer, Array.isArray(fm.types) ? fm.types : []);
+      applied = true;
+    }
+    if (fm.events != null && eventsContainer) {
+      renderStringListUI(eventsContainer, Array.isArray(fm.events) ? fm.events : []);
+      applied = true;
+    }
+    if (fm.promotions != null && menuItemPromotionsContainer) {
+      renderMenuItemPromotionsUI(menuItemPromotionsContainer, Array.isArray(fm.promotions) ? fm.promotions : []);
+      applied = true;
+    }
+    if (fm.availability != null) {
+      populateMenuItemAvailabilityFromObject(fm.availability);
+      applied = true;
+    }
+    if (applied && window.DashboardEditFieldPrompts && typeof window.DashboardEditFieldPrompts.refresh === 'function') {
+      window.DashboardEditFieldPrompts.refresh();
+    } else if (applied && window.DashboardEditFieldPrompts && typeof window.DashboardEditFieldPrompts.enable === 'function') {
+      window.DashboardEditFieldPrompts.enable();
+    }
+    return applied;
+  }
+
+  function hydrateEditFormFromPublishedFile(contentPath) {
+    if (!contentPath || contentPath.indexOf('...') !== -1) return Promise.resolve(false);
+    if (!selectedInfo || (selectedInfo.contentType || 'menu-item') !== 'menu-item') return Promise.resolve(false);
+    var filePath =
+      '/api/clients/' +
+      encodeURIComponent(CMS_CLIENT_ID) +
+      '/content/file?path=' +
+      encodeURIComponent(contentPath);
+    return getFromCMS(filePath)
+      .then(function (data) {
+        if (!data) return false;
+        var fm = data.frontMatter || data.front_matter || {};
+        var body = data.body != null ? data.body : '';
+        return applyMenuItemFrontMatterToForm(fm, body);
+      })
+      .catch(function () {
+        return false;
+      });
+  }
+
   function hydrateEditFormFromCmsPreview(contentPath, options) {
     options = options || {};
     if (!contentPath || contentPath.indexOf('...') !== -1) return Promise.resolve(false);
@@ -8559,40 +8671,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (contentPath) draftContentPaths.add(contentPath);
 
       if (contentType === 'menu-item' || kind === 'menu-item') {
-        if (inputTitle && fm.title != null) inputTitle.value = cleanMenuItemTitle(fm.title);
-        if (inputDesc && p.body != null) inputDesc.value = p.body;
-        if (pricesContainer && Array.isArray(fm.prices)) {
-          var pricesFlat = [];
-          fm.prices.forEach(function(pr) {
-            pricesFlat.push(pr.variable1 != null ? pr.variable1 : '-', pr.variable2 != null ? pr.variable2 : '-', Number(pr.price));
-          });
-          renderPricesUI(pricesContainer, pricesFlat);
-        }
-        var imagesArr = pathsFromFmImages(fm.images);
-        if (menuItemImagesContainer) renderMenuItemImagesUI(imagesArr, true);
-        else if (inputMenuItemImages) {
-          inputMenuItemImages.value = imagesArr.join('\n');
-          renderMenuItemImagesUI(imagesArr, true);
-        }
-        if (fm.side_categories != null || fm.sideCategories != null) {
-          var sc = fm.side_categories != null ? fm.side_categories : fm.sideCategories;
-          if (sideCategoriesContainer) renderSideCategoriesUI(sideCategoriesContainer, Array.isArray(sc) ? sc : []);
-        }
-        if (fm.modifications != null && modificationsContainer) {
-          renderPairsUI(modificationsContainer, frontMatterModsToFlat(fm.modifications));
-        }
-        if (fm.additions != null && additionsContainer) {
-          renderPairsUI(additionsContainer, frontMatterModsToFlat(fm.additions));
-        }
-        if (fm.tags != null && tagsContainer) renderStringListUI(tagsContainer, Array.isArray(fm.tags) ? fm.tags : []);
-        if (fm.ingredients != null && ingredientsContainer) renderStringListUI(ingredientsContainer, Array.isArray(fm.ingredients) ? fm.ingredients : []);
-        if (fm.cookingmethods != null && cookingmethodsContainer) renderStringListUI(cookingmethodsContainer, Array.isArray(fm.cookingmethods) ? fm.cookingmethods : []);
-        if (fm.types != null && typesContainer) renderStringListUI(typesContainer, Array.isArray(fm.types) ? fm.types : []);
-        if (fm.events != null && eventsContainer) renderStringListUI(eventsContainer, Array.isArray(fm.events) ? fm.events : []);
-        if (fm.promotions != null && menuItemPromotionsContainer) {
-          renderMenuItemPromotionsUI(menuItemPromotionsContainer, Array.isArray(fm.promotions) ? fm.promotions : []);
-        }
-        if (fm.availability != null) populateMenuItemAvailabilityFromObject(fm.availability);
+        applyMenuItemFrontMatterToForm(fm, p.body);
         setEditStatus('Loaded CMS draft');
         return true;
       }
@@ -8653,13 +8732,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       return false;
     }
 
+    function finishHydrate(applied) {
+      if (!menuItemPricesUiIsEmpty()) return Promise.resolve(!!applied);
+      return hydrateEditFormFromPublishedFile(contentPath).then(function (ok) {
+        return !!applied || !!ok;
+      });
+    }
+
     if (
       !options.force &&
       window.TTMSContentDrafts &&
       typeof window.TTMSContentDrafts.getPreview === 'function'
     ) {
       var cached = window.TTMSContentDrafts.getPreview(contentPath);
-      if (cached) return Promise.resolve(applyPreview(cached));
+      if (cached) return finishHydrate(applyPreview(cached));
     }
 
     var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
@@ -8677,7 +8763,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           var cp = p.content_path || payload.contentPath || '';
           if (cp === contentPath) match = p;
         });
-        return applyPreview(match);
+        return finishHydrate(applyPreview(match));
       });
   }
 

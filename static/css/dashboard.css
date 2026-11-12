@@ -5464,6 +5464,29 @@ button.dashboard-ads-promo-link {
   color: var(--dash-ink);
 }
 
+.dashboard-ads-promo-card.is-promo-paused {
+  opacity: 0.72;
+}
+
+.dashboard-ads-promo-card.is-promo-paused .dashboard-ads-promo-kind,
+.dashboard-ads-promo-card[data-promo-paused='true'] .dashboard-ads-promo-kind {
+  color: color-mix(in srgb, var(--dash-ink-muted, #6b7280) 92%, transparent);
+}
+
+.dashboard-ads-promo-card.is-promo-pause-busy {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.dashboard-promo-pause-toggle {
+  margin-left: 0.15rem;
+}
+
+#menuCatalogList .dashboard-settings-location-card.is-promo-paused {
+  border-color: color-mix(in srgb, var(--dash-ink) 18%, transparent);
+  opacity: 0.88;
+}
+
 .dashboard-ads-external-actions {
   margin-top: 0.15rem;
 }

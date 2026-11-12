@@ -1,5 +1,7 @@
 {{ define "main" }}
-{{- $notifyFeature := default false site.Params.features.notifications -}}
+{{- $featureFlags := site.Params.features | default dict -}}
+{{- $notifyFeature := default false $featureFlags.notifications -}}
+{{- $sendFeature := or (default false $featureFlags.analytics_access) (default false $featureFlags.analytics) -}}
 {{- $notifyApiUrl := site.Params.notifications.apiUrl | default "https://notify.ttmenus.com/api/v1" -}}
 {{- $notifyClientDomain := site.Params.notifications.clientDomain | default (urls.Parse site.BaseURL).Host -}}
 {{- if site.Params.menuImageService.enabled }}
@@ -24,7 +26,7 @@ window.MENU_IMAGE_CONFIG = {
     {{- if not $notifyFeature -}}
     <p class="dashboard-notify-banner dashboard-notify-banner-warn" role="status">
       <i class="fa fa-lock" aria-hidden="true"></i>
-      <span>Push notifications are a Free verified+ entitlement. Renew free listing or upgrade on Account to restore them.</span>
+      <span>Menu Notifications are off on this site. Renew or upgrade from Account to turn them back on.</span>
     </p>
     {{- end -}}
 
@@ -43,7 +45,7 @@ window.MENU_IMAGE_CONFIG = {
           <div class="insights-shell-title-row">
             <h2 id="notify-shell-heading" class="dashboard-analytics-heading">Notifications</h2>
           </div>
-          <p class="dashboard-analytics-subtitle">Send updates, offers, and reminders to subscribers.</p>
+          <p class="dashboard-analytics-subtitle">{{ if $sendFeature }}Send updates, offers, and reminders to subscribers.{{ else }}Automatic menu alerts for this site.{{ end }}</p>
         </div>
       </div>
 
@@ -53,7 +55,9 @@ window.MENU_IMAGE_CONFIG = {
           <div class="dashboard-side-nav" role="tablist" aria-label="Notification sections">
             <button type="button" class="dashboard-side-link insights-nav-link is-active" role="tab" id="notifyTabOverview" aria-controls="notifyPanelOverview" aria-selected="true" tabindex="0" data-notify-tab="overview"><i class="fa fa-bar-chart" aria-hidden="true"></i><span class="dashboard-side-label">Overview</span></button>
             <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabWelcome" aria-controls="notifyPanelWelcome" aria-selected="false" tabindex="-1" data-notify-tab="welcome"><i class="fa fa-handshake-o" aria-hidden="true"></i><span class="dashboard-side-label">Welcome</span></button>
+            {{- if $sendFeature -}}
             <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabSend" aria-controls="notifyPanelSend" aria-selected="false" tabindex="-1" data-notify-tab="send"><i class="fa fa-paper-plane" aria-hidden="true"></i><span class="dashboard-side-label">Send</span></button>
+            {{- end -}}
             <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabSubscribers" aria-controls="notifyPanelSubscribers" aria-selected="false" tabindex="-1" data-notify-tab="subscribers"><i class="fa fa-users" aria-hidden="true"></i><span class="dashboard-side-label">Subscribers</span><span class="dashboard-side-count" id="notifyNavSubscribersCount" hidden></span></button>
             <button type="button" class="dashboard-side-link insights-nav-link" role="tab" id="notifyTabHistory" aria-controls="notifyPanelHistory" aria-selected="false" tabindex="-1" data-notify-tab="history"><i class="fa fa-history" aria-hidden="true"></i><span class="dashboard-side-label">History</span></button>
           </div>
@@ -278,6 +282,7 @@ window.MENU_IMAGE_CONFIG = {
 
 
 
+        {{- if $sendFeature -}}
         <div class="insights-panel dashboard-notify-tab-panel" id="notifyPanelSend" role="tabpanel" aria-labelledby="notifyTabSend" data-notify-panel="send" hidden>
 
           <section class="dashboard-settings-section dashboard-settings-panel dashboard-notify-panel dashboard-notify-panel--send dashboard-notify-tab-section" aria-labelledby="notify-send-heading">
@@ -531,6 +536,7 @@ window.MENU_IMAGE_CONFIG = {
           </section>
 
         </div>
+        {{- end -}}
 
 
 

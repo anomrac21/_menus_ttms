@@ -430,28 +430,47 @@ class ClientAdManager {
     if (!scope) return;
 
     const day = this.currentDay || new Date().toLocaleDateString('en-US', { weekday: 'long' });
-    const slides = scope.querySelectorAll('.ads-reels-slide[data-daysofweek]');
+    // Include slides without daysofweek so paused shared promos still hide.
+    const slides = scope.querySelectorAll('article.ads-reels-slide');
     let visible = 0;
 
+    const isPaused = (slide) => {
+      if (slide.classList && slide.classList.contains('menu-ad-scroll-end')) return false;
+      if (typeof window !== 'undefined' && window.MenuAvailability && typeof window.MenuAvailability.isPromoPaused === 'function') {
+        const url =
+          slide.getAttribute('data-ad-url') ||
+          slide.getAttribute('data-ad-link') ||
+          slide.getAttribute('data-item-url') ||
+          '';
+        return window.MenuAvailability.isPromoPaused(url);
+      }
+      return slide.getAttribute('data-promo-paused') === 'true';
+    };
+
     slides.forEach((slide) => {
+      if (slide.classList && slide.classList.contains('menu-ad-scroll-end')) return;
       let days = [];
       try {
         days = JSON.parse(slide.getAttribute('data-daysofweek') || '[]');
       } catch (_) {
         days = [];
       }
-      const show = !days.length || days.includes(day);
+      const paused = isPaused(slide);
+      const show = !paused && (!days.length || days.includes(day));
       slide.hidden = !show;
       slide.classList.toggle('ads-reels-slide--hidden', !show);
+      slide.classList.toggle('ads-reels-slide--paused', paused);
       if (show) visible += 1;
     });
 
     if (visible === 0 && slides.length) {
       slides.forEach((slide) => {
+        if (slide.classList && slide.classList.contains('menu-ad-scroll-end')) return;
+        if (isPaused(slide)) return;
         slide.hidden = false;
         slide.classList.remove('ads-reels-slide--hidden');
       });
-      visible = slides.length;
+      visible = Array.from(slides).filter((slide) => !slide.hidden && !(slide.classList && slide.classList.contains('menu-ad-scroll-end'))).length;
     }
 
     return visible;
@@ -640,6 +659,12 @@ if (document.readyState === 'loading') {
   initAdManager();
   initClientAdsReelsSlides();
 }
+
+window.addEventListener('ttms:menu-availability', () => {
+  if (window.adManager && typeof window.adManager.applyHomepageDayFilter === 'function') {
+    window.adManager.applyHomepageDayFilter();
+  }
+});
 
 window.initAdManager = initAdManager;
 

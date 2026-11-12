@@ -36,18 +36,89 @@
 {{- end -}}
 
 {{- $priceRows := slice -}}
+{{- $pricesArray := slice -}}
 {{- range .prices -}}
   {{- $amount := .price -}}
   {{- $amountText := strings.TrimSpace (printf "%v" $amount) -}}
   {{- if and $amountText (ne $amountText "<nil>") -}}
-    {{- $v1 := strings.TrimSpace (printf "%v" (.variable1 | default .size | default "")) -}}
-    {{- $v2 := strings.TrimSpace (printf "%v" (.variable2 | default .flavour | default .flavor | default "")) -}}
-    {{- if or (eq (lower $v1) "-") (eq (lower $v1) "—") (eq (lower $v1) "n/a") (eq (lower $v1) "none") (eq $v1 "<nil>") -}}{{- $v1 = "" -}}{{- end -}}
-    {{- if or (eq (lower $v2) "-") (eq (lower $v2) "—") (eq (lower $v2) "n/a") (eq (lower $v2) "none") (eq $v2 "<nil>") -}}{{- $v2 = "" -}}{{- end -}}
+    {{- $v1Raw := strings.TrimSpace (printf "%v" (.variable1 | default .size | default "-")) -}}
+    {{- $v2Raw := strings.TrimSpace (printf "%v" (.variable2 | default .flavour | default .flavor | default "-")) -}}
+    {{- if or (eq $v1Raw "") (eq $v1Raw "<nil>") -}}{{- $v1Raw = "-" -}}{{- end -}}
+    {{- if or (eq $v2Raw "") (eq $v2Raw "<nil>") -}}{{- $v2Raw = "-" -}}{{- end -}}
+    {{- $pricesArray = $pricesArray | append $v1Raw -}}
+    {{- $pricesArray = $pricesArray | append $v2Raw -}}
+    {{- $pricesArray = $pricesArray | append $amount -}}
+    {{- $v1 := $v1Raw -}}
+    {{- $v2 := $v2Raw -}}
+    {{- if or (eq (lower $v1) "-") (eq (lower $v1) "—") (eq (lower $v1) "n/a") (eq (lower $v1) "none") -}}{{- $v1 = "" -}}{{- end -}}
+    {{- if or (eq (lower $v2) "-") (eq (lower $v2) "—") (eq (lower $v2) "n/a") (eq (lower $v2) "none") -}}{{- $v2 = "" -}}{{- end -}}
     {{- $bits := slice -}}
     {{- with $v1 -}}{{- $bits = $bits | append . -}}{{- end -}}
     {{- with $v2 -}}{{- $bits = $bits | append . -}}{{- end -}}
     {{- $priceRows = $priceRows | append (dict "label" (delimit $bits " · ") "value" (printf "%s %s" $currency $amountText)) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $imagesPaths := slice -}}
+{{- range $imageRows -}}
+  {{- with .path -}}{{- $imagesPaths = $imagesPaths | append . -}}{{- end -}}
+{{- end -}}
+
+{{- $modificationsFlat := slice -}}
+{{- range .modifications -}}
+  {{- if reflect.IsMap . -}}
+    {{- $modName := .name -}}
+    {{- $modPrice := .price | default 0 -}}
+    {{- with $modName -}}
+      {{- $modificationsFlat = $modificationsFlat | append . -}}
+      {{- $modificationsFlat = $modificationsFlat | append $modPrice -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $additionsFlat := slice -}}
+{{- range .additions -}}
+  {{- if reflect.IsMap . -}}
+    {{- $addName := .name -}}
+    {{- $addPrice := .price | default 0 -}}
+    {{- with $addName -}}
+      {{- $additionsFlat = $additionsFlat | append . -}}
+      {{- $additionsFlat = $additionsFlat | append $addPrice -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $stringList := dict
+  "tags" (.tags | default slice)
+  "ingredients" (.ingredients | default slice)
+  "types" (.types | default slice)
+  "cookingmethods" (.cookingmethods | default slice)
+  "events" (.events | default slice)
+-}}
+{{- $tags := slice -}}
+{{- $ingredients := slice -}}
+{{- $types := slice -}}
+{{- $cookingmethods := slice -}}
+{{- $events := slice -}}
+{{- range $key, $items := $stringList -}}
+  {{- $out := slice -}}
+  {{- range $items -}}
+    {{- $name := "" -}}
+    {{- if reflect.IsMap . -}}
+      {{- $name = .name | default .title | default .label | default "" -}}
+    {{- else -}}
+      {{- $name = . -}}
+    {{- end -}}
+    {{- $name = strings.TrimSpace (printf "%s" $name) -}}
+    {{- if and $name (ne $name "<nil>") (ne $name "-") -}}
+      {{- $out = $out | append $name -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if eq $key "tags" -}}{{- $tags = $out -}}
+  {{- else if eq $key "ingredients" -}}{{- $ingredients = $out -}}
+  {{- else if eq $key "types" -}}{{- $types = $out -}}
+  {{- else if eq $key "cookingmethods" -}}{{- $cookingmethods = $out -}}
+  {{- else if eq $key "events" -}}{{- $events = $out -}}
   {{- end -}}
 {{- end -}}
 
@@ -166,4 +237,21 @@
   {{- $facts = $facts | append (dict "label" "Promotions" "value" .) -}}
 {{- end -}}
 
-{{- return dict "images" $imageRows "description" $desc "prices" $priceRows "facts" $facts -}}
+{{- return dict
+  "images" $imageRows
+  "imagesPaths" $imagesPaths
+  "description" $desc
+  "prices" $priceRows
+  "pricesArray" $pricesArray
+  "facts" $facts
+  "modificationsFlat" $modificationsFlat
+  "additionsFlat" $additionsFlat
+  "tags" $tags
+  "ingredients" $ingredients
+  "types" $types
+  "cookingmethods" $cookingmethods
+  "events" $events
+  "sideCategories" (.side_categories | default slice)
+  "availability" (.availability | default dict)
+  "promotions" (.promotions | default slice)
+-}}

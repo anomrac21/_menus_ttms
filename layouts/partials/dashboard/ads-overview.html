@@ -269,7 +269,12 @@
       {{- $outlets := .outlets | default slice -}}
       {{- $outletCount := len $outlets -}}
       {{- $isStack := and .shared (gt $outletCount 1) -}}
-      <article class="dashboard-ads-promo-card{{ if $isStack }} dashboard-ads-promo-card--stack{{ end }}" data-promo-title="{{ .title }}" data-promo-kind="promotion"{{ if .shared }} data-promo-shared="1"{{ end }}{{ if $outletCount }} data-promo-outlets="{{ $outletCount }}"{{ end }}>
+      {{- $outletUrls := slice -}}
+      {{- range $outlets -}}
+        {{- with .url -}}{{- $outletUrls = $outletUrls | append . -}}{{- end -}}
+      {{- end -}}
+      {{- if and (not $outletUrls) .url -}}{{- $outletUrls = slice .url -}}{{- end -}}
+      <article class="dashboard-ads-promo-card{{ if $isStack }} dashboard-ads-promo-card--stack{{ end }}" data-promo-title="{{ .title }}" data-promo-kind="promotion" data-promo-url="{{ .url }}"{{ if .shared }} data-promo-shared="1"{{ end }}{{ if $outletCount }} data-promo-outlets="{{ $outletCount }}"{{ end }}{{ with $outletUrls }} data-promo-outlet-urls="{{ . | jsonify }}"{{ end }}>
         {{- if $isStack -}}
         <div class="dashboard-ads-promo-stack-peeks" aria-hidden="true">
           <span class="dashboard-ads-promo-stack-peek dashboard-ads-promo-stack-peek--2"></span>
@@ -285,7 +290,7 @@
         </div>
         <div class="dashboard-ads-promo-body">
           <div class="dashboard-ads-promo-copy">
-            <span class="dashboard-ads-promo-kind">Promotion{{ with .location }} · {{ . }}{{ end }}{{ if and .shared (gt $outletCount 0) }} · {{ $outletCount }} location{{ if ne $outletCount 1 }}s{{ end }}{{ end }}</span>
+            <span class="dashboard-ads-promo-kind" data-promo-kind-label>Promotion{{ with .location }} · {{ . }}{{ end }}{{ if and .shared (gt $outletCount 0) }} · {{ $outletCount }} location{{ if ne $outletCount 1 }}s{{ end }}{{ end }}</span>
             <h4 class="dashboard-ads-promo-title">{{ .title }}</h4>
           </div>
           <dl class="dashboard-ads-promo-stats">
@@ -306,6 +311,7 @@
             {{- if not $isStack -}}
             <a href="{{ .url }}" class="dashboard-ads-promo-link">View on menu</a>
             {{- end -}}
+            <button type="button" class="dashboard-ads-promo-link dashboard-ads-promo-pause" data-promo-pause>Pause</button>
             <a href="{{ .editUrl }}" class="dashboard-ads-promo-link">Edit</a>
           </div>
           {{- if $isStack -}}

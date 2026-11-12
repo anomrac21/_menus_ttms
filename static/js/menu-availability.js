@@ -57,6 +57,70 @@
     return !!(key && state.items[key] && state.items[key].unavailable);
   }
 
+  function isPromoPath(url) {
+    var key = normalizeItemKey(url);
+    return !!key && key.indexOf('/promotions/') !== -1;
+  }
+
+  function isPromoPaused(url) {
+    return isPromoPath(url) && isSoldOut(url);
+  }
+
+  function promoSlideUrl(slide) {
+    if (!slide || !slide.getAttribute) return '';
+    return (
+      slide.getAttribute('data-ad-url') ||
+      slide.getAttribute('data-ad-link') ||
+      slide.getAttribute('data-item-url') ||
+      ''
+    );
+  }
+
+  function slideIsVisibleInReels(slide) {
+    if (!slide || (slide.classList && slide.classList.contains('menu-ad-scroll-end'))) return false;
+    if (slide.hidden) return false;
+    if (slide.classList && slide.classList.contains('ads-reels-slide--hidden')) return false;
+    if (slide.getAttribute('data-promo-paused') === 'true') return false;
+    return true;
+  }
+
+  function closeReelsIfNoVisibleSlides() {
+    var overlay = document.getElementById('ads-reels-overlay');
+    if (!overlay || overlay.hasAttribute('hidden')) return;
+    var track = document.getElementById('ads-reels-track');
+    if (!track) return;
+    var visible = 0;
+    Array.prototype.forEach.call(track.children, function (slide) {
+      if (slideIsVisibleInReels(slide)) visible += 1;
+    });
+    if (visible > 0) return;
+    if (global.AdsClient && typeof global.AdsClient.closeReelsViewer === 'function') {
+      global.AdsClient.closeReelsViewer();
+    }
+  }
+
+  function applyPromoSlides() {
+    document.querySelectorAll('article.ads-reels-slide').forEach(function (slide) {
+      if (slide.classList && slide.classList.contains('menu-ad-scroll-end')) return;
+      var url = promoSlideUrl(slide);
+      if (!isPromoPath(url)) return;
+      var paused = isSoldOut(url);
+      slide.setAttribute('data-promo-paused', paused ? 'true' : 'false');
+      if (paused) {
+        slide.hidden = true;
+        slide.classList.add('ads-reels-slide--hidden', 'ads-reels-slide--paused');
+      } else {
+        slide.classList.remove('ads-reels-slide--paused');
+        // Day filter owns un-hiding when a schedule exists; otherwise show.
+        if (!slide.hasAttribute('data-daysofweek')) {
+          slide.hidden = false;
+          slide.classList.remove('ads-reels-slide--hidden');
+        }
+      }
+    });
+    closeReelsIfNoVisibleSlides();
+  }
+
   function hasStaffAccess() {
     try {
       if (!global.AuthClient || !AuthClient.isAuthenticated || !AuthClient.isAuthenticated()) return false;
@@ -148,10 +212,15 @@
       var label = card.querySelector('[data-sold-out-label]');
       if (label) label.textContent = soldOut ? 'Sold out' : 'Available';
     });
+    applyPromoSlides();
     syncActionMenuLabels();
     syncEodToggle();
     try {
-      global.dispatchEvent(new CustomEvent('ttms:menu-availability', { detail: { items: state.items } }));
+      global.dispatchEvent(
+        new CustomEvent('ttms:menu-availability', {
+          detail: { items: state.items, applyPromoSlides: applyPromoSlides }
+        })
+      );
     } catch (e) {}
   }
 
@@ -239,6 +308,25 @@
         return res.json();
       }).then(ingestSnapshot);
     });
+  }
+
+  function setUnavailableMany(itemKeys, unavailable) {
+    var keys = [];
+    var seen = {};
+    (itemKeys || []).forEach(function (raw) {
+      var key = normalizeItemKey(raw);
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      keys.push(key);
+    });
+    if (!keys.length) return Promise.resolve(state.items);
+    var chain = Promise.resolve();
+    keys.forEach(function (key) {
+      chain = chain.then(function () {
+        return setUnavailable(key, unavailable);
+      });
+    });
+    return chain;
   }
 
   function setAutoClearEod(enabled) {
@@ -391,10 +479,14 @@
 
   global.MenuAvailability = {
     isSoldOut: isSoldOut,
+    isPromoPaused: isPromoPaused,
+    isPromoPath: isPromoPath,
     normalizeItemKey: normalizeItemKey,
     refresh: fetchSnapshot,
     setUnavailable: setUnavailable,
+    setUnavailableMany: setUnavailableMany,
     apply: applyAllCards,
+    applyPromoSlides: applyPromoSlides,
     enhance: enhanceDashboardCards
   };
 
