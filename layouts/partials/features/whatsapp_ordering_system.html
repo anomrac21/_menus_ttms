@@ -449,7 +449,7 @@ function findMenuItemByUrl(url) {
 
 function findMenuItemByTitle(itemName) {
 	if (!menuItemsCache || !itemName) return null;
-	var name = String(itemName).trim().toLowerCase();
+	var name = String(itemName).replace(/Sold out\s*$/i, '').replace(/\s+/g, ' ').trim().toLowerCase();
 	var matches = menuItemsCache.filter(function (it) {
 		return String((it && (it.linkTitle || it.name || it.title)) || '').trim().toLowerCase() === name;
 	});
@@ -1994,6 +1994,7 @@ function toggleCart(){
     modsArray = mods.split(',').map(s => s.trim()).filter(s => s);
   }
   
+  item = String(item || '').replace(/Sold out\s*$/i, '').replace(/\s+/g, ' ').trim();
   console.log('📦 Adding to cart:', {item, sidesData, adds: addsArray, mods: modsArray, promoData});
   
   const orderEntry = {"item":item,"size":size,"sides":sidesData,"adds":addsArray, "mods":modsArray, "amt":amt,"cost":cost};
@@ -2480,7 +2481,7 @@ function buildCartCards() {
 		const imageSrc = imagePath ? ttmsMenuImgSrc(imagePath, 'thumb') : '';
 		const largeSrc = imagePath ? ttmsMenuImgSrc(imagePath, 'carousel') : '';
 		const description = cartLineDescription(item);
-		const safeName = cartEscapeHtml(item.item);
+		const safeName = cartEscapeHtml(String(item.item || '').replace(/Sold out\s*$/i, '').replace(/\s+/g, ' ').trim());
 		const safeUrl = cartEscapeHtml(itemUrl);
 		const canExpand = !!(imageSrc || description || hasDetails);
 		const imageHtml = imageSrc

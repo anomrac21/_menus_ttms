@@ -53,8 +53,14 @@
       .trim();
   }
 
+  function lineItemName(line) {
+    var name = String(line.item || line.name || line.title || line.product || 'Item');
+    name = name.replace(/Sold out\s*$/i, '').replace(/\s+/g, ' ').trim();
+    return name || 'Item';
+  }
+
   function lineLabel(line) {
-    var name = line.item || line.name || line.title || line.product || 'Item';
+    var name = lineItemName(line);
     var size = line.size && String(line.size) !== '-' ? ' (' + line.size + ')' : '';
     var qty = line.quantity || line.amt || line.qty || 1;
     var extra = line.note ? ': ' + line.note : '';

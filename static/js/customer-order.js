@@ -77,8 +77,14 @@
     return 'Live status for this order.';
   }
 
+  function lineItemName(line) {
+    var name = String(line.item || line.name || line.title || line.product || 'Item');
+    name = name.replace(/Sold out\s*$/i, '').replace(/\s+/g, ' ').trim();
+    return name || 'Item';
+  }
+
   function lineLabel(line) {
-    var name = line.item || line.name || line.title || line.product || 'Item';
+    var name = lineItemName(line);
     var qty = line.quantity || line.amt || line.qty || 1;
     return qty + '× ' + name;
   }

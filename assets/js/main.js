@@ -16,6 +16,26 @@
         return typeof price === 'number' && !isNaN(price);
     }
 
+    // Sold-out and promo badges live inside .menu-item-title. Cart and order
+    // lines need the dish name only.
+    function readMenuItemTitle(root) {
+        if (!root || !root.querySelector) return '';
+        const textEl = root.querySelector('.menu-item-title-text');
+        if (textEl) return String(textEl.textContent || '').replace(/\s+/g, ' ').trim();
+        const link = root.querySelector('.menu-item-title a');
+        if (link) return String(link.textContent || '').replace(/\s+/g, ' ').trim();
+        const title = root.querySelector('.menu-item-title, .single-page-title, h3.menu-item-title');
+        if (!title) return '';
+        const clone = title.cloneNode(true);
+        clone.querySelectorAll('.menu-item-sold-out-badge, .menu-item-promo-badge, .menu-content-draft-badge').forEach(function (node) {
+            node.remove();
+        });
+        return String(clone.textContent || '')
+            .replace(/Sold out\s*$/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
     function isBogoPromo(promo) {
         if (!promo || promo.type == null) return false;
         const t = String(promo.type).toLowerCase();
@@ -323,7 +343,7 @@
         const img = document.createElement('img');
         img.className = 'menu-item-img';
         img.loading = 'lazy';
-        img.alt = (card.querySelector('.menu-item-title') && card.querySelector('.menu-item-title').textContent.trim()) || '';
+        img.alt = readMenuItemTitle(card);
         const initialPath = selectMenuCardImagePath({
             dayPromoImage: '',
             regular: parseJsonAttr(card, 'data-regular-images-array'),
@@ -1399,8 +1419,7 @@
      * @param {string} url. Item URL
      */
     function trackMenuItemCardClick(element, url) {
-        const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || 
-                        element.querySelector('.menu-item-title a')?.textContent?.trim() || '';
+        const itemName = readMenuItemTitle(element);
         const itemPrice = element.querySelector('.menu-item-price')?.textContent?.trim() || '';
         
         // Store in session for tracking
@@ -1707,10 +1726,7 @@
             } else {
                 window.trackMenuItemView({
                     url: trackUrl,
-                    title: element.querySelector('.menu-item-title-text')?.textContent?.trim()
-                        || element.querySelector('.menu-item-title a')?.textContent?.trim()
-                        || element.querySelector('.menu-item-title')?.textContent?.trim()
-                        || 'Unknown Item',
+                    title: readMenuItemTitle(element) || 'Unknown Item',
                     category: element.closest('section')?.id || element.getAttribute('data-favorite-section') || 'Unknown Category',
                     price: parseFloat(element.querySelector('.menu-item-price, .expanded-price, .price')?.textContent?.replace(/[^0-9.]/g, '') || '') || 0
                 });
@@ -1909,8 +1925,7 @@
                 }
                 
                 // Try to get item data from the page
-                const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() ||
-                                element.querySelector('.menu-item-title a')?.textContent?.trim() || '';
+                const itemName = readMenuItemTitle(element);
                 // Get description from card (summary): try both with and without p tag
                 const itemDescCard = element.querySelector('.menu-item-description')?.textContent?.trim() || 
                                      element.querySelector('.menu-item-description p')?.textContent?.trim() || '';
@@ -2240,7 +2255,7 @@
                         });
                     }
                 } else if (hasExpandedCarousel) {
-                    const itemName = element.querySelector('.menu-item-title')?.textContent?.trim() || '';
+                    const itemName = readMenuItemTitle(element);
                     const showNavButtons = imagesArray.length > 1;
                     const showIndicators = imagesArray.length > 1;
                     imageCarouselHTML = `
@@ -3114,8 +3129,7 @@
         const quantitySpan = root.querySelector('.expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
-        const titleElement = card.querySelector('.menu-item-title a') || card.querySelector('.menu-item-title');
-        const itemName = titleElement?.textContent?.trim() || '';
+        const itemName = readMenuItemTitle(card);
         
         // Get selected variable1 and variable2
         const selectedVariable1 = card.getAttribute('data-selected-variable1') ;
@@ -3836,15 +3850,13 @@
         const quantitySpan = document.querySelector('.single-page-quantity, .single-page-item-card .expanded-quantity');
         const quantity = parseInt(quantitySpan?.textContent) || 1;
         
-        const titleTextEl = document.querySelector('h3.menu-item-title.single-page-title .menu-item-title-text');
-        const titleElement = titleTextEl || document.querySelector('h3.menu-item-title.single-page-title') || document.querySelector('.single-page-title');
-        const itemName = (titleTextEl ? titleTextEl.textContent : titleElement?.textContent)?.trim() || '';
+        const titleRoot = document.querySelector('.single-page-item-card') || document;
+        const itemName = readMenuItemTitle(titleRoot);
         
         // Debug log to help identify issues
         if (!itemName || itemName === 'Results') {
             console.warn('⚠️ Item name issue detected:', {
                 foundName: itemName,
-                titleElement: titleElement,
                 allH1s: Array.from(document.querySelectorAll('h1')).map(h => ({ text: h.textContent.trim(), classes: h.className }))
             });
         }

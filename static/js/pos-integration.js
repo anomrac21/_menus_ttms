@@ -97,7 +97,10 @@
     if (line && line.variant_id) return String(line.variant_id).trim();
     if (line && line.loyverse_variant_id) return String(line.loyverse_variant_id).trim();
     var map = mapping();
-    var item = String((line && (line.item || line.name)) || '').trim();
+    var item = String((line && (line.item || line.name)) || '')
+      .replace(/Sold out\s*$/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     var size = String((line && line.size) || '').trim();
     if (!item) return '';
 
