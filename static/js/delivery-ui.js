@@ -552,7 +552,6 @@
     var form = document.createElement('form');
     form.method = 'POST';
     form.action = pay.form_action;
-    form.acceptCharset = 'UTF-8';
     form.style.display = 'none';
     Object.keys(pay.form_fields || {}).forEach(function (key) {
       var input = document.createElement('input');
