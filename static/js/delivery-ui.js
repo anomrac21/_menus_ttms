@@ -599,6 +599,7 @@
         '<div class="ttms-delivery-pin">' +
         '<div id="ttms-delivery-pin-map" class="ttms-delivery-map" role="application" aria-label="Drop-off map"></div>' +
         '<p class="ttms-delivery-pin__hint" id="ttms-delivery-pin-hint">Tap the map to set drop-off</p>' +
+        '<p class="ttms-delivery-coverage" id="ttms-delivery-coverage" aria-live="polite">Checking drivers nearby…</p>' +
         '<input name="lat" type="hidden" value="' +
         escapeAttr(saved.lat) +
         '">' +

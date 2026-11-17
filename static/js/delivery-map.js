@@ -335,6 +335,90 @@
     if (el) el.textContent = text;
   }
 
+  function deliveryApiBase() {
+    var cfg = global.DELIVERY_CONFIG || {};
+    var raw = String(cfg.apiUrl || 'https://delivery.ttmenus.com/api/v1').trim();
+    while (
+      raw.length >= 2 &&
+      ((raw.charAt(0) === '"' && raw.charAt(raw.length - 1) === '"') ||
+        (raw.charAt(0) === "'" && raw.charAt(raw.length - 1) === "'"))
+    ) {
+      raw = raw.slice(1, -1).trim();
+    }
+    return raw.replace(/\/$/, '');
+  }
+
+  function nearPhrase(count, place, radius) {
+    var n = Number(count) || 0;
+    var km = Number(radius) || 8;
+    if (!n) return 'none within ' + km + ' km of ' + place;
+    if (n === 1) return '1 within ' + km + ' km of ' + place;
+    return n + ' within ' + km + ' km of ' + place;
+  }
+
+  function coverageSentence(data) {
+    var n = Number(data && data.drivers_online) || 0;
+    var radius = Number(data && data.radius_km) || 8;
+    if (!n) return 'No drivers online right now';
+    var parts = [n === 1 ? '1 driver online' : n + ' drivers online'];
+    if (data && data.near_client != null) parts.push(nearPhrase(data.near_client, 'the restaurant', radius));
+    if (data && data.near_you != null) parts.push(nearPhrase(data.near_you, 'you', radius));
+    return parts.join(' · ');
+  }
+
+  function ensureCoverageEl(inst) {
+    var el = $('ttms-delivery-coverage');
+    if (!el && inst && inst.hint && inst.hint.parentNode) {
+      el = document.createElement('p');
+      el.id = 'ttms-delivery-coverage';
+      el.className = 'ttms-delivery-coverage';
+      el.setAttribute('aria-live', 'polite');
+      inst.hint.parentNode.insertBefore(el, inst.hint.nextSibling);
+    }
+    if (inst) inst.coverageEl = el;
+    return el;
+  }
+
+  function paintCoverage(inst, data, failed) {
+    var el = ensureCoverageEl(inst);
+    if (!el) return;
+    el.textContent = failed ? 'Driver count unavailable' : coverageSentence(data);
+  }
+
+  function refreshCoverage(inst) {
+    if (!inst || inst.kind !== 'picker') return;
+    if (inst.coverageTimer) window.clearTimeout(inst.coverageTimer);
+    inst.coverageTimer = window.setTimeout(function () {
+      inst.coverageTimer = null;
+      var q = [];
+      if (inst.dropoff) {
+        q.push('lat=' + encodeURIComponent(inst.dropoff.lat));
+        q.push('lng=' + encodeURIComponent(inst.dropoff.lng));
+      }
+      if (inst.shop) {
+        q.push('client_lat=' + encodeURIComponent(inst.shop.lat));
+        q.push('client_lng=' + encodeURIComponent(inst.shop.lng));
+      }
+      var url = deliveryApiBase() + '/jobs/available' + (q.length ? '?' + q.join('&') : '');
+      var token = (inst.coverageToken = (inst.coverageToken || 0) + 1);
+      fetch(url, { method: 'GET', credentials: 'omit', mode: 'cors', headers: { Accept: 'application/json' } })
+        .then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (data) {
+            if (!res.ok) throw new Error((data && data.error) || 'coverage failed');
+            return data;
+          });
+        })
+        .then(function (data) {
+          if (token !== inst.coverageToken) return;
+          paintCoverage(inst, data, false);
+        })
+        .catch(function () {
+          if (token !== inst.coverageToken) return;
+          paintCoverage(inst, null, true);
+        });
+    }, 280);
+  }
+
   function nominatim(url) {
     return fetch(url, { headers: { Accept: 'application/json' } }).then(function (res) {
       if (!res.ok) throw new Error('Lookup failed');
@@ -407,7 +491,6 @@
     inst.eta = { duration: durationSec, distance: distanceM, label: label };
   }
 
-  var FIT_DELAY_MS = 2600;
   var PIN_FOCUS_ZOOM = 16;
 
   function fitPadding() {
@@ -429,28 +512,6 @@
   function focusPoint(map, pt, zoom) {
     if (!map || !pt || typeof map.setView !== 'function') return;
     map.setView(pt, zoom || PIN_FOCUS_ZOOM, { duration: 450 });
-  }
-
-  function cancelFit(inst) {
-    if (inst && inst.fitTimer) {
-      window.clearTimeout(inst.fitTimer);
-      inst.fitTimer = null;
-    }
-  }
-
-  function scheduleFitPins(inst, delay) {
-    if (!inst || !inst.map) return;
-    cancelFit(inst);
-    var wait = delay == null ? FIT_DELAY_MS : delay;
-    var run = function () {
-      inst.fitTimer = null;
-      fitPoints(inst.map, [inst.shop, inst.dropoff, inst.driver].filter(Boolean));
-    };
-    if (wait <= 0) {
-      run();
-      return;
-    }
-    inst.fitTimer = window.setTimeout(run, wait);
   }
 
   function resizeMap(map) {
@@ -569,6 +630,7 @@
         lineWeight: 7,
         lineOpacity: 1,
         casingColor: routeCasing(currentMode),
+        straightFallback: inst.kind !== 'picker',
         createMarker: function () {
           return null;
         },
@@ -645,7 +707,7 @@
       return;
     }
     if (inst.routeTimer) window.clearTimeout(inst.routeTimer);
-    cancelFit(inst);
+    if (inst.coverageTimer) window.clearTimeout(inst.coverageTimer);
     if (inst.router && inst.router.remove) inst.router.remove();
     ['shopMarker', 'dropoffMarker', 'driverMarker'].forEach(function (key) {
       if (inst[key] && inst[key].remove) inst[key].remove();
@@ -747,16 +809,14 @@
               draggable: true,
               zIndexOffset: 500,
             }).addTo(map);
-            inst.dropoffMarker.on('dragstart', function () {
-              cancelFit(inst);
-            });
             inst.dropoffMarker.on('dragend', function (ev) {
               var ll = (ev && ev.latlng) || inst.dropoffMarker.getLatLng();
               writeInputs(form, ll.lat, ll.lng);
               inst.dropoff = { lat: ll.lat, lng: ll.lng };
               setHint(hint, inst.shop ? 'Routing pickup to drop-off…' : 'Pin set · ' + formatCoord(ll.lat, ll.lng));
               refreshRoute(inst, true);
-              scheduleFitPins(inst);
+              refreshCoverage(inst);
+              focusPoint(map, inst.dropoff, PIN_FOCUS_ZOOM);
               if (typeof opts.onChange === 'function') opts.onChange(ll.lat, ll.lng, { source: 'drag' });
             });
           } else if (inst.dropoffMarker.setLatLng) {
@@ -764,8 +824,8 @@
           }
           setHint(hint, inst.shop ? 'Routing pickup to drop-off…' : 'Pin set · ' + formatCoord(pt.lat, pt.lng));
           if (source !== 'drag') focusPoint(map, pt, PIN_FOCUS_ZOOM);
-          if (inst.shop) scheduleFitPins(inst);
           refreshRoute(inst, true);
+          refreshCoverage(inst);
           if (typeof opts.onChange === 'function') opts.onChange(pt.lat, pt.lng, { source: source || 'move' });
         }
 
@@ -779,6 +839,7 @@
         else {
           setHint(hint, 'Tap the map to set drop-off');
           if (shop) map.setView(shop, 13);
+          refreshCoverage(inst);
         }
         resizeMap(map);
         map.once('idle', function () {

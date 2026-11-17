@@ -148,37 +148,47 @@
     }
   }
 
+  function styleDocumentReady(map) {
+    try {
+      const style = map && typeof map.getStyle === 'function' && map.getStyle();
+      return !!(style && style.layers);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // isStyleLoaded() flips false while the camera eases or tiles refresh, and
+  // style.load does not fire again. Waiting only on that event leaves routes stuck.
   function whenStyleReady(map, fn, attempt) {
     if (!map || typeof fn !== 'function') return;
     const n = attempt || 0;
-    if (n > 12) {
-      console.warn('whenStyleReady: style never settled');
-      try {
-        fn();
-      } catch (e) {
-        console.error(e);
-      }
-      return;
-    }
-    if (styleIsReady(map)) {
+    const invoke = () => {
       try {
         fn();
       } catch (e) {
         const msg = String((e && e.message) || e || '');
-        if (n < 12 && /not done loading|unloaded|does not exist|missing/i.test(msg)) {
-          map.once('idle', function () {
-            whenStyleReady(map, fn, n + 1);
-          });
+        if (n < 8 && /not done loading|unloaded|does not exist|missing/i.test(msg)) {
+          window.setTimeout(() => whenStyleReady(map, fn, n + 1), 80);
           return;
         }
         console.error('whenStyleReady callback failed:', e);
       }
+    };
+    if (styleIsReady(map) || n > 8 || (n >= 2 && styleDocumentReady(map))) {
+      invoke();
       return;
     }
-    const ev = n < 3 ? 'style.load' : 'idle';
-    map.once(ev, function () {
+    let settled = false;
+    const next = () => {
+      if (settled) return;
+      settled = true;
       whenStyleReady(map, fn, n + 1);
-    });
+    };
+    const ev = styleDocumentReady(map) ? 'idle' : 'style.load';
+    try {
+      map.once(ev, next);
+    } catch (_) {}
+    window.setTimeout(next, styleDocumentReady(map) ? 60 : 400);
   }
 
   function normalizeLineCoords(coordinates) {
@@ -773,15 +783,62 @@
         properties: {},
         geometry: { type: 'LineString', coordinates: this._coords },
       };
+      const generation = (this._paintGen = (this._paintGen || 0) + 1);
       return new Promise((resolve) => {
-        whenStyleReady(map, () => {
-          if (this._map !== map) {
-            resolve(false);
+        let done = false;
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          resolve(!!ok);
+        };
+        const attempt = (n) => {
+          if (done) return;
+          if (this._map !== map || this._paintGen !== generation) {
+            finish(false);
             return;
           }
-          this._applyLayer(map, geo);
-          resolve(true);
-        });
+          const apply = () => {
+            if (done || this._map !== map || this._paintGen !== generation) {
+              finish(false);
+              return;
+            }
+            // The first camera ease reports the style as not loaded. Adding the
+            // line then throws, which used to leave the straight preview in place.
+            if (!styleIsReady(map)) {
+              if (n < 24) {
+                window.setTimeout(() => attempt(n + 1), 100);
+                return;
+              }
+            }
+            try {
+              this._applyLayer(map, geo);
+              finish(true);
+            } catch (e) {
+              if (n < 24) {
+                window.setTimeout(() => attempt(n + 1), 120);
+                return;
+              }
+              console.warn('RouteLine paint:', e);
+              finish(false);
+            }
+          };
+          if (styleIsReady(map)) {
+            apply();
+            return;
+          }
+          let started = false;
+          const go = () => {
+            if (started) return;
+            started = true;
+            apply();
+          };
+          try {
+            map.once('idle', go);
+          } catch (_) {}
+          window.setTimeout(go, 120);
+        };
+        attempt(0);
+        window.setTimeout(() => finish(false), 6000);
       });
     }
   }
@@ -1266,6 +1323,7 @@
           lineWeight: 7,
           lineOpacity: 1,
           casingColor: '#ffffff',
+          straightFallback: true,
         },
         options || {}
       );
@@ -1337,7 +1395,9 @@
       const requestMap = this._map;
       const requestId = (this._routeRequestId = (this._routeRequestId || 0) + 1);
       this.fire('routingstart', { waypoints: this.getWaypoints() });
-      if (!this._line) this._showLine(this._straightCoords(), { fallback: true });
+      if (this.options.straightFallback !== false && !this._line) {
+        this._showLine(this._straightCoords(), { fallback: true });
+      }
       const base = this.options.serviceUrl.replace(/\/$/, '');
       const coords = this._waypoints.map((w) => w.lng + ',' + w.lat).join(';');
       const url =
@@ -1351,11 +1411,31 @@
       const stillCurrent = () =>
         this._map && this._map === requestMap && this._routeRequestId === requestId;
 
+      const fetchOnce = async () => {
+        const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = ctrl ? window.setTimeout(() => ctrl.abort(), 8000) : 0;
+        try {
+          const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+          if (!res.ok) throw new Error('HTTP request failed status: ' + res.status);
+          return await res.json();
+        } finally {
+          if (timer) window.clearTimeout(timer);
+        }
+      };
       try {
-        const res = await fetch(url);
-        if (!stillCurrent()) return this;
-        if (!res.ok) throw new Error('HTTP request failed status: ' + res.status);
-        const data = await res.json();
+        let data;
+        try {
+          data = await fetchOnce();
+        } catch (firstErr) {
+          if (!stillCurrent()) return this;
+          await new Promise((resolve) => window.setTimeout(resolve, 250));
+          if (!stillCurrent()) return this;
+          try {
+            data = await fetchOnce();
+          } catch (_) {
+            throw firstErr;
+          }
+        }
         if (!stillCurrent()) return this;
         if (!data.routes || !data.routes.length) throw new Error('No routes found');
 
@@ -1363,8 +1443,9 @@
         const coordinates = (osrm.geometry && osrm.geometry.coordinates) || [];
         if (coordinates.length < 2) throw new Error('Route geometry missing');
 
-        await this._showLine(coordinates);
-        if (!stillCurrent()) return this;
+        // Keep the road geometry even if the first paint runs while the camera eases.
+        this._roadCoords = coordinates;
+        this._lastCoords = coordinates;
 
         this._markers.forEach((m) => m.remove && m.remove());
         this._markers = [];
@@ -1401,10 +1482,20 @@
           },
         ];
         this.fire('routesfound', { routes: this._routes });
+        const painted = await this._showLine(coordinates);
+        if (!stillCurrent()) return this;
+        if (!painted && requestMap && typeof requestMap.once === 'function') {
+          const redraw = () => {
+            if (!stillCurrent() || !this._roadCoords) return;
+            this._showLine(this._roadCoords);
+          };
+          requestMap.once('idle', redraw);
+        }
       } catch (err) {
         if (!stillCurrent()) return this;
         console.error('Routing error', err);
-        await this._showLine(this._straightCoords(), { fallback: true });
+        if (this.options.straightFallback === false) this.clearVisuals();
+        else await this._showLine(this._straightCoords(), { fallback: true });
         this.fire('routingerror', {
           error: { message: err.message || String(err), status: -1, url },
         });
@@ -1425,7 +1516,7 @@
     repaint() {
       if (!this._map) return this;
       const coords =
-        (this._line && this._line._coords) || this._lastCoords || this._straightCoords();
+        this._roadCoords || (this._line && this._line._coords) || this._lastCoords || this._straightCoords();
       if (coords && coords.length >= 2) this._showLine(coords);
       return this;
     }
