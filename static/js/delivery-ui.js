@@ -807,12 +807,61 @@
     return;
   }
 
-  // Deep-link track: ?delivery_order=...
+  function openDeliveryPayment(order) {
+    if (!order || order.status !== 'payment_pending' || !order.payment_url) return;
+    var modal = document.getElementById('paymentModal');
+    if (!modal) {
+      window.location.href = order.payment_url;
+      return;
+    }
+    var amountEl = document.getElementById('paymentModalAmount');
+    var detailEl = document.getElementById('paymentModalDetails');
+    var statusEl = document.getElementById('paymentModalStatus');
+    var actions = document.getElementById('paymentModalActions');
+    var total = Number(order.total);
+    if (amountEl) {
+      amountEl.textContent =
+        '$' + (isFinite(total) ? total.toFixed(2) : '0.00') + ' ' + (order.currency || 'TTD');
+    }
+    if (detailEl) {
+      detailEl.textContent =
+        (order.restaurant_name || 'Delivery') + ' · Order ' + String(order.id || '').slice(0, 8);
+    }
+    if (statusEl) {
+      statusEl.textContent = 'Pay to send this order to the kitchen.';
+      statusEl.className = 'payment-modal__status payment-modal__status--idle';
+    }
+    if (actions) {
+      actions.classList.remove('hide');
+      var payBtn = document.getElementById('ttms-delivery-pay-go');
+      if (!payBtn) {
+        payBtn = document.createElement('button');
+        payBtn.type = 'button';
+        payBtn.id = 'ttms-delivery-pay-go';
+        payBtn.className = 'btn-payment-primary';
+        payBtn.textContent = 'Pay now';
+        actions.appendChild(payBtn);
+      }
+      payBtn.onclick = function () {
+        window.location.href = order.payment_url;
+      };
+    }
+    modal.classList.remove('hide');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  // Deep-link track: ?delivery_order=...  Payment alerts add pay=1 and open the payment modal.
   function bootFromQuery() {
     var params = new URLSearchParams(location.search);
     var oid = params.get('delivery_order') || params.get('order');
+    var pay = params.get('pay') === '1';
     if (!oid || !window.DeliveryClient) return;
-    DeliveryClient.getOrder(oid).then(showOrderStatus).catch(function () {});
+    DeliveryClient.getOrder(oid)
+      .then(function (order) {
+        showOrderStatus(order);
+        if (pay) openDeliveryPayment(order);
+      })
+      .catch(function () {});
   }
 
   document.addEventListener('DOMContentLoaded', function () {
