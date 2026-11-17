@@ -1,0 +1,24 @@
+{{ define "main" }}
+<div id="ttms-delivery-page" class="ttms-delivery-page">
+  <div id="ttms-delivery-panel" class="ttms-delivery-panel is-open is-page">
+    <div class="ttms-delivery-panel__backdrop" hidden></div>
+    <div class="ttms-delivery-panel__sheet" role="dialog" aria-modal="true" aria-labelledby="ttms-delivery-title">
+      <header class="ttms-delivery-panel__header">
+        <div class="ttms-delivery-panel__brand">
+          <span class="ttms-delivery-panel__logo-wrap" aria-hidden="true">
+            <img class="ttms-delivery-panel__logo" src="/branding/favicon192.webp" alt="" width="32" height="32">
+          </span>
+          <div>
+            <h2 id="ttms-delivery-title">Your delivery</h2>
+            <p class="ttms-delivery-panel__sub" id="ttms-delivery-sub">Loading this order</p>
+          </div>
+        </div>
+        <a class="ttms-delivery-panel__close" href="/" aria-label="Back to menu"><i class="fa fa-times" aria-hidden="true"></i></a>
+      </header>
+      <div class="ttms-delivery-panel__body" id="ttms-delivery-body">
+        <p class="ttms-delivery-status">Loading your delivery…</p>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}

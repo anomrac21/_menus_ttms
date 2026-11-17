@@ -27,13 +27,14 @@
 {{- $isMenuCategoryList := and (eq .Kind "section") (ne .Type "locations") (ne .Section "locations") (ne .Section "payment") (not .IsHome) -}}
 {{- $isTaxonomyTerm := eq .Kind "term" -}}
 {{- $isPaymentReturn := eq .Section "payment" -}}
+{{- $isDeliveryPage := eq .Layout "delivery-order" -}}
 {{- $isMenuReelsPage := and (not $multiLocHome) (or .IsHome (eq .Layout "location-home") $isLocationHome $isMenuCategoryList $isTaxonomyTerm) -}}
 <!DOCTYPE html>
 <html lang="{{ site.Language.LanguageCode }}" dir="{{ or site.Language.LanguageDirection `ltr` }}"{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}{{ if $isPaymentReturn }} class="ttms-payment-return"{{ end }}>
 <head>
   {{ partial "head.html" . }}
 </head>
-<body{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}{{ if $isPaymentReturn }} class="ttms-payment-return"{{ end }}>
+<body{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}{{ if $isPaymentReturn }} class="ttms-payment-return"{{ end }}{{ if $isDeliveryPage }} class="ttms-delivery-page"{{ end }}>
   <a class="skip-link" href="#main">Skip to main content</a>
   {{ partial "layout/loader.html" . }}
   {{ partial "features/askofserver.html" . }}
@@ -48,7 +49,7 @@
         {{ block "main" . }}{{ end }}
         
       </main>
-      {{- if not (or $isMenuReelsPage $multiLocHome $isPaymentReturn) -}}
+      {{- if not (or $isMenuReelsPage $multiLocHome $isPaymentReturn $isDeliveryPage) -}}
       <div class="bottomads">
           {{ partial "ads/frontpageads.html" . }}
       </div>

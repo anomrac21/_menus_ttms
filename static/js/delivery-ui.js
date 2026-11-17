@@ -16,6 +16,8 @@
   var closeTimer = null;
   var bodyFreshTimer = null;
   var expireTimer = null;
+  var offerTimer = null;
+  var refreshOffersNow = function () {};
 
   function prefersReducedMotion() {
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -29,7 +31,16 @@
     if (s) s.textContent = sub || '';
   }
 
+  function clearOfferWatch() {
+    if (offerTimer) {
+      window.clearInterval(offerTimer);
+      offerTimer = null;
+    }
+    refreshOffersNow = function () {};
+  }
+
   function tearDownMaps() {
+    clearOfferWatch();
     if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.destroyAll === 'function') {
       TTMSDeliveryMap.destroyAll();
     }
@@ -125,6 +136,10 @@
 
   function closePanel() {
     var panel = $('ttms-delivery-panel');
+    if (panel && panel.classList.contains('is-page')) {
+      window.location.href = '/';
+      return;
+    }
     if (!panel || panel.hidden) return;
     clearExpireTimer();
     tearDownMaps();
@@ -167,9 +182,25 @@
     }, 520);
   }
 
+  function bindPanel(el) {
+    if (!el || el.dataset.ttmsBound === '1') return;
+    el.dataset.ttmsBound = '1';
+    el.addEventListener('click', function (e) {
+      if (e.target && e.target.closest('[data-close]')) closePanel();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.classList.contains('is-open') && !el.hidden && !el.classList.contains('is-page')) {
+        closePanel();
+      }
+    });
+  }
+
   function ensurePanel() {
     var existing = $('ttms-delivery-panel');
-    if (existing) return existing;
+    if (existing) {
+      bindPanel(existing);
+      return existing;
+    }
     var el = document.createElement('div');
     el.id = 'ttms-delivery-panel';
     el.className = 'ttms-delivery-panel';
@@ -192,16 +223,7 @@
       '<div class="ttms-delivery-panel__body" id="ttms-delivery-body"></div>' +
       '</div>';
     document.body.appendChild(el);
-    el.addEventListener('click', function (e) {
-      if (e.target && e.target.closest('[data-close]')) {
-        closePanel();
-      }
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && el.classList.contains('is-open') && !el.hidden) {
-        closePanel();
-      }
-    });
+    bindPanel(el);
     return el;
   }
 
@@ -630,10 +652,89 @@
     );
   }
 
+  function choosingDriver(order) {
+    var status = order && order.status;
+    return status === 'driver_offers' || status === 'awaiting_drivers' || status === 'offered' || status === 'requested';
+  }
+
+  function paintOffers(orderId, offers, mapId) {
+    var ul = $('ttms-driver-offers');
+    if (!ul) return;
+    ul.innerHTML = '';
+    (offers || []).forEach(function (o) {
+      var d = o.driver || {};
+      var name = d.display_name || d.email || 'Driver #' + o.driver_id;
+      var dist = o.distance_m ? (o.distance_m / 1000).toFixed(1) + ' km away' : 'Nearby';
+      var li = document.createElement('li');
+      li.innerHTML =
+        '<div class="ttms-driver-offer__copy"><strong>' +
+        escapeHtml(name) +
+        '</strong><div class="ttms-driver-offer__meta">' +
+        escapeHtml(dist) +
+        '</div></div>' +
+        '<button type="button" data-driver="' +
+        o.driver_id +
+        '">Accept</button>';
+      ul.appendChild(li);
+    });
+    if (mapId && window.TTMSDeliveryMap && typeof TTMSDeliveryMap.setOfferMarkers === 'function') {
+      TTMSDeliveryMap.setOfferMarkers(mapId, offers || []);
+    }
+    ul.querySelectorAll('button[data-driver]').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        btn.disabled = true;
+        btn.textContent = 'Accepting…';
+        try {
+          var order = await DeliveryClient.acceptDriver(orderId, Number(btn.getAttribute('data-driver')));
+          showOrderStatus(order);
+        } catch (err) {
+          alert(err.message || String(err));
+          btn.disabled = false;
+          btn.textContent = 'Accept';
+        }
+      });
+    });
+  }
+
+  function watchOffers(orderId, mapId) {
+    clearOfferWatch();
+    async function refresh() {
+      if (!$('ttms-driver-offers') || !window.DeliveryClient) return;
+      var res = await DeliveryClient.listOffers(orderId);
+      paintOffers(orderId, (res && res.offers) || [], mapId);
+    }
+    refreshOffersNow = function () {
+      refresh().catch(function () {});
+    };
+    var btn = $('ttms-refresh-offers');
+    if (btn) {
+      btn.onclick = function () {
+        refresh().catch(function (e) {
+          alert(e.message || String(e));
+        });
+      };
+    }
+    refresh().catch(function () {});
+    offerTimer = window.setInterval(refreshOffersNow, 8000);
+  }
+
   function showOrderStatus(order) {
     if (!order) return;
     var paying = order.status === 'payment_pending';
-    setPanelCopy(statusLabel(order.status), order.restaurant_name || 'Order ' + String(order.id || '').slice(0, 8));
+    var choosing = choosingDriver(order);
+    setPanelCopy(
+      choosing ? 'Choose a driver' : statusLabel(order.status),
+      order.restaurant_name || 'Order ' + String(order.id || '').slice(0, 8)
+    );
+    var offers = '';
+    if (choosing) {
+      offers =
+        '<p class="ttms-delivery-offers-lead">Accept a driver to continue</p>' +
+        '<ul id="ttms-driver-offers" class="ttms-driver-offers"></ul>' +
+        '<div class="ttms-delivery-actions">' +
+        '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-refresh-offers">' +
+        '<i class="fa fa-refresh" aria-hidden="true"></i> Refresh drivers</button></div>';
+    }
     var pay = '';
     if (paying) {
       pay =
@@ -655,6 +756,7 @@
       '<div class="ttms-delivery-track-stage">' +
         '<div id="ttms-live-map" class="ttms-live-map ttms-delivery-map" aria-live="polite">Waiting for driver location…</div>' +
         '<div class="ttms-delivery-map-dock">' +
+        offers +
         orderSheet(order) +
         pay +
         scan +
@@ -704,6 +806,7 @@
       };
     }
     startExpireCountdown(order);
+    if (choosing) watchOffers(order.id, 'ttms-live-map');
     startLiveTrack(order);
   }
 
@@ -739,6 +842,7 @@
     DeliveryClient.connectTrackWS(orderId, function (msg) {
       if (msg && msg.type === 'driver_location') applyLocation(msg.location);
       else if (msg && msg.location) applyLocation(msg.location);
+      if (msg && msg.type === 'driver_offer') refreshOffersNow();
       if (msg && msg.type === 'status') {
         DeliveryClient.getOrder(orderId).then(showOrderStatus).catch(function () {});
       }
@@ -1052,18 +1156,46 @@
     modal.setAttribute('aria-hidden', 'false');
   }
 
-  // Deep-link track: ?delivery_order=...  Payment alerts add pay=1 and open the payment modal.
+  function orderPageURL(orderId, pay) {
+    var url = '/delivery/?order=' + encodeURIComponent(orderId);
+    if (pay) url += '&pay=1';
+    return url;
+  }
+
+  function onOrderPage() {
+    return !!(document.body && document.body.classList.contains('ttms-delivery-page'));
+  }
+
+  // Deep link: /delivery/?order=... is the order page. Older menu links redirect here.
   function bootFromQuery() {
     var params = new URLSearchParams(location.search);
     var oid = params.get('delivery_order') || params.get('order');
     var pay = params.get('pay') === '1';
-    if (!oid || !window.DeliveryClient) return;
+    if (!oid) {
+      if (onOrderPage()) {
+        setPanelCopy('Your delivery', 'Open the link from your order');
+        show('<p class="ttms-delivery-status">This page shows a delivery once you open it from your order link.</p>');
+      }
+      return;
+    }
+    if (!onOrderPage()) {
+      window.location.replace(orderPageURL(oid, pay));
+      return;
+    }
+    if (!window.DeliveryClient) return;
     DeliveryClient.getOrder(oid)
       .then(function (order) {
         showOrderStatus(order);
-        if (pay) openDeliveryPayment(order);
+        if (pay && order && order.status === 'payment_pending') openDeliveryPayment(order);
       })
-      .catch(function () {});
+      .catch(function (err) {
+        setPanelCopy('Your delivery', 'Sign in to see this order');
+        show(
+          '<p class="ttms-delivery-status">' +
+            escapeHtml((err && err.message) || 'Could not load this order.') +
+            '</p><div class="ttms-delivery-actions"><a class="ttms-delivery-cta ttms-delivery-cta--primary" href="/login/">Sign in</a></div>'
+        );
+      });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
