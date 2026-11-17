@@ -15,6 +15,7 @@
 
   var closeTimer = null;
   var bodyFreshTimer = null;
+  var expireTimer = null;
 
   function prefersReducedMotion() {
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -48,9 +49,84 @@
     };
   }
 
+  function clearExpireTimer() {
+    if (expireTimer) {
+      window.clearInterval(expireTimer);
+      expireTimer = null;
+    }
+  }
+
+  function orderExpireAt(order) {
+    if (!order) return null;
+    var raw = '';
+    if (order.status === 'payment_pending') raw = order.payment_expire_at;
+    else if (order.status === 'awaiting_client') raw = order.client_expire_at;
+    else if (
+      order.status === 'awaiting_drivers' ||
+      order.status === 'driver_offers' ||
+      order.status === 'requested' ||
+      order.status === 'offered'
+    ) {
+      raw = order.offers_expire_at;
+    }
+    if (!raw) return null;
+    var at = Date.parse(raw);
+    return isFinite(at) ? at : null;
+  }
+
+  function formatRemain(ms) {
+    var total = Math.max(0, Math.ceil(ms / 1000));
+    var hours = Math.floor(total / 3600);
+    var minutes = Math.floor((total % 3600) / 60);
+    var seconds = total % 60;
+    function pad(n) {
+      return (n < 10 ? '0' : '') + n;
+    }
+    if (hours > 0) return hours + ':' + pad(minutes) + ':' + pad(seconds);
+    return pad(minutes) + ':' + pad(seconds);
+  }
+
+  function paintExpire(el, at) {
+    var left = at - Date.now();
+    if (left <= 0) {
+      el.textContent = 'Order expired';
+      el.classList.add('is-expired');
+      el.classList.remove('is-soon');
+      var payBtn = $('ttms-delivery-pay-progress');
+      if (payBtn) payBtn.disabled = true;
+      return true;
+    }
+    el.classList.toggle('is-soon', left < 60000);
+    el.textContent = 'Expires in ' + formatRemain(left);
+    return false;
+  }
+
+  function startExpireCountdown(order) {
+    clearExpireTimer();
+    var at = orderExpireAt(order);
+    var el = $('ttms-delivery-expire');
+    if (!el || at == null) return;
+    var finished = false;
+    function tick() {
+      if (finished) return;
+      if (!paintExpire(el, at)) return;
+      finished = true;
+      clearExpireTimer();
+      if (!window.DeliveryClient || !order.id) return;
+      DeliveryClient.getOrder(order.id)
+        .then(function (fresh) {
+          if (fresh && fresh.status && fresh.status !== order.status) showOrderStatus(fresh);
+        })
+        .catch(function () {});
+    }
+    tick();
+    expireTimer = window.setInterval(tick, 1000);
+  }
+
   function closePanel() {
     var panel = $('ttms-delivery-panel');
     if (!panel || panel.hidden) return;
+    clearExpireTimer();
     tearDownMaps();
     if (closeTimer) {
       window.clearTimeout(closeTimer);
@@ -547,7 +623,11 @@
       feeRow +
       '<li class="ttms-delivery-order__total"><span>Total</span><span>' +
       escapeHtml(money(order.total, currency)) +
-      '</span></li></ul></div>'
+      '</span></li></ul>' +
+      (orderExpireAt(order) == null
+        ? ''
+        : '<p class="ttms-delivery-expire" id="ttms-delivery-expire" role="timer"></p>') +
+      '</div>'
     );
   }
 
@@ -624,6 +704,7 @@
         }
       };
     }
+    startExpireCountdown(order);
     startLiveTrack(order);
   }
 

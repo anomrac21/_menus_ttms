@@ -682,6 +682,23 @@ body.ttms-delivery-open {
   padding-top: 0.4rem;
 }
 
+.ttms-delivery-expire {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-expire {
+  color: #f0c14b;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-expire.is-soon,
+.ttms-delivery-panel.is-map-step .ttms-delivery-expire.is-expired {
+  color: #ffb4a8;
+}
+
 .ttms-delivery-panel.is-map-step .ttms-delivery-status {
   margin: 0;
   color: #fff;
