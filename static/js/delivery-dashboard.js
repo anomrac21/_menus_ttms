@@ -165,7 +165,8 @@
       scan.className = 'ttms-code-scan';
       scan.hidden = true;
       scan.innerHTML =
-        '<video id="ttms-code-scan-video" playsinline webkit-playsinline autoplay muted></video>' +
+        '<video id="ttms-code-scan-video" class="ttms-scan-source" playsinline webkit-playsinline autoplay muted></video>' +
+        '<canvas class="ttms-scan-preview" aria-hidden="true"></canvas>' +
         '<div class="ttms-code-scan__finder" aria-hidden="true"></div>' +
         '<div class="ttms-code-scan__bar"><p id="ttms-code-scan-status">Point the camera at the code</p>' +
         '<label class="ttms-code-scan__cam">Camera<select id="ttms-code-scan-camera"></select></label>' +
