@@ -609,7 +609,10 @@
         '"></div>' +
         '<div class="ttms-delivery-map-dock">' +
         '<div class="ttms-delivery-pin__head"><strong>Drop-off pin</strong>' +
-        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find address</button></div>' +
+        '<div class="ttms-delivery-pin__tools">' +
+        '<button type="button" class="ttms-delivery-journey" id="ttms-delivery-journey">Journey</button>' +
+        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find address</button>' +
+        '</div></div>' +
         '<ul class="ttms-delivery-drivers" id="ttms-delivery-drivers" hidden></ul>' +
         '<div class="ttms-delivery-actions">' +
         '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-delivery-back">Back</button>' +
@@ -620,6 +623,7 @@
     setCheckout(true);
     var form = $('ttms-delivery-form');
     var locateBtn = $('ttms-locate-address');
+    var journeyBtn = $('ttms-delivery-journey');
     var nextBtn = $('ttms-delivery-next');
     var backBtn = $('ttms-delivery-back');
     var mapReady = false;
@@ -726,6 +730,16 @@
     if (backBtn) {
       backBtn.onclick = function () {
         goToStep(1);
+      };
+    }
+
+    if (journeyBtn) {
+      journeyBtn.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.showJourney === 'function') {
+          TTMSDeliveryMap.showJourney('ttms-delivery-pin-map');
+        }
       };
     }
 

@@ -577,7 +577,16 @@
   }
 
   function journeyPoints(inst) {
-    var pts = [inst.shop, inst.dropoff].concat(inst.routePts || []);
+    if (
+      (!inst.routePts || !inst.routePts.length) &&
+      inst.router &&
+      inst.router._routes &&
+      inst.router._routes[0] &&
+      inst.router._routes[0].coordinates
+    ) {
+      inst.routePts = inst.router._routes[0].coordinates;
+    }
+    var pts = [inst.shop || restaurantPoint(), inst.dropoff].concat(inst.routePts || []);
     (inst.availableMarkers || []).forEach(function (marker) {
       var ll = marker && marker.getLatLng && marker.getLatLng();
       if (ll) pts.push(ll);
@@ -589,15 +598,23 @@
     return pts.filter(Boolean);
   }
 
-  function showJourney(inst) {
+  function showJourney(target) {
+    var inst = target && target.map ? target : instances[target || 'ttms-delivery-pin-map'];
     if (!inst || !inst.map) return;
+    var map = inst.map;
+    try {
+      if (typeof map.resize === 'function') map.resize();
+    } catch (err) {}
+    try {
+      if (typeof map.stop === 'function') map.stop();
+    } catch (err2) {}
     var pts = journeyPoints(inst);
     if (!pts.length) return;
     if (pts.length === 1) {
-      focusPoint(inst.map, pts[0], 14);
+      focusPoint(map, pts[0], 13);
       return;
     }
-    fitPoints(inst.map, pts, { top: 150, bottom: 210, left: 48, right: 72 });
+    fitPoints(map, pts, { top: 88, bottom: 190, left: 28, right: 28 });
   }
 
   function focusPoint(map, pt, zoom) {
@@ -629,17 +646,6 @@
     inst.hud = document.createElement('div');
     inst.hud.className = 'ttms-delivery-map-hud-ctrl';
     inst.hud.appendChild(btn);
-    var journey = document.createElement('button');
-    journey.type = 'button';
-    journey.className = 'ttms-delivery-journey';
-    journey.textContent = 'Journey';
-    journey.setAttribute('aria-label', 'Show the whole journey');
-    inst.hud.appendChild(journey);
-    journey.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      showJourney(inst);
-    });
     var ctrl = {
       onAdd: function () {
         return inst.hud;
@@ -1075,5 +1081,6 @@
       var inst = instances[id || 'ttms-delivery-pin-map'];
       if (inst && inst.map) resizeMap(inst.map);
     },
+    showJourney: showJourney,
   };
 })(window);
