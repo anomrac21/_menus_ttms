@@ -612,6 +612,9 @@
           window.trackPaymentEvent('Return Success', paymentId);
         }
         var delivery = deliveryPage();
+        if (delivery && window.DeliveryClient && typeof DeliveryClient.syncPayment === 'function') {
+          DeliveryClient.syncPayment(deliveryOrderId).catch(function () {});
+        }
         if (titleEl) titleEl.textContent = 'Payment successful';
         if (statusEl) {
           if (delivery) {

@@ -174,6 +174,12 @@
     startPayment: function (orderId) {
       return request('POST', '/orders/' + encodeURIComponent(orderId) + '/payment', {});
     },
+    syncPayment: function (orderId) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/payment/sync', {});
+    },
+    syncClientPayment: function (orderId) {
+      return request('POST', '/client/orders/' + encodeURIComponent(orderId) + '/payment/sync', {});
+    },
     listMyOrders: function () {
       return request('GET', '/orders/mine');
     },

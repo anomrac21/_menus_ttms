@@ -27,7 +27,7 @@
     return String(status || 'unknown').replace(/_/g, ' ');
   }
 
-  async function refresh(listEl) {
+  async function refresh(listEl, synced) {
     if (!window.DeliveryClient) return;
     if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.destroyAll === 'function') {
       TTMSDeliveryMap.destroyAll();
@@ -36,6 +36,19 @@
     try {
       var res = await DeliveryClient.listClientOrders();
       var orders = res.orders || [];
+      if (!synced && typeof DeliveryClient.syncClientPayment === 'function') {
+        var changed = false;
+        var waiting = orders.filter(function (o) {
+          return o.status === 'payment_pending' || o.status === 'expired';
+        });
+        for (var i = 0; i < waiting.length; i++) {
+          try {
+            var updated = await DeliveryClient.syncClientPayment(waiting[i].id);
+            if (updated && updated.status && updated.status !== waiting[i].status) changed = true;
+          } catch (err) {}
+        }
+        if (changed) return refresh(listEl, true);
+      }
       if (!orders.length) {
         listEl.innerHTML = '<p class="dashboard-delivery-empty">No delivery orders yet.</p>';
         return;

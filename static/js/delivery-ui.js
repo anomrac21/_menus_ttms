@@ -1163,11 +1163,21 @@
   }
 
   function onOrderPage() {
-    return !!(document.body && document.body.classList.contains('ttms-delivery-page'));
+    var page = document.getElementById('ttms-delivery-page');
+    if (page && document.body) document.body.classList.add('ttms-delivery-page');
+    return !!page;
   }
+
+  var bootToken = 0;
 
   // Deep link: /delivery/?order=... is the order page. Older menu links redirect here.
   function bootFromQuery() {
+    var token = ++bootToken;
+    loadFromQuery(token, 0);
+  }
+
+  function loadFromQuery(token, attempt) {
+    if (token !== bootToken) return;
     var params = new URLSearchParams(location.search);
     var oid = params.get('delivery_order') || params.get('order');
     var pay = params.get('pay') === '1';
@@ -1182,13 +1192,30 @@
       window.location.replace(orderPageURL(oid, pay));
       return;
     }
-    if (!window.DeliveryClient) return;
+    if (!window.DeliveryClient) {
+      if (attempt < 8) {
+        window.setTimeout(function () { loadFromQuery(token, attempt + 1); }, 250);
+        return;
+      }
+      setPanelCopy('Your delivery', 'Still loading');
+      show('<p class="ttms-delivery-status">Reload this page to see the order.</p>');
+      return;
+    }
     DeliveryClient.getOrder(oid)
       .then(function (order) {
+        if (token !== bootToken) return null;
+        if (order && (order.status === 'payment_pending' || order.status === 'expired') && typeof DeliveryClient.syncPayment === 'function') {
+          return DeliveryClient.syncPayment(order.id).catch(function () { return order; });
+        }
+        return order;
+      })
+      .then(function (order) {
+        if (!order || token !== bootToken) return;
         showOrderStatus(order);
-        if (pay && order && order.status === 'payment_pending') openDeliveryPayment(order);
+        if (pay && order.status === 'payment_pending') openDeliveryPayment(order);
       })
       .catch(function (err) {
+        if (token !== bootToken) return;
         setPanelCopy('Your delivery', 'Sign in to see this order');
         show(
           '<p class="ttms-delivery-status">' +
@@ -1198,10 +1225,17 @@
       });
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function startDeliveryPage() {
     injectCartButton();
     bootFromQuery();
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startDeliveryPage);
+  } else {
+    startDeliveryPage();
+  }
+  document.addEventListener('ttms:page-enter', startDeliveryPage);
 
   window.TTMSDeliveryUI = {
     openCheckout: openCheckoutForm,
