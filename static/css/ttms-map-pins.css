@@ -119,6 +119,35 @@
   gap: 0.45rem;
 }
 
+.ttms-delivery-journey {
+  appearance: none;
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+  background: color-mix(in srgb, var(--scheme-white) 92%, transparent);
+  color: #1c1c1c;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--scheme-black) 16%, transparent);
+}
+
+.ttms-delivery-journey:hover,
+.ttms-delivery-journey:focus-visible {
+  background: #fff;
+  outline: none;
+}
+
+.ttms-delivery-map[data-map-mode="night"] .ttms-delivery-journey,
+.ttms-delivery-map.is-night .ttms-delivery-journey {
+  background: #1a2a38;
+  color: #e8eef6;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
 .ttms-map-marker__pin {
   display: flex;
   align-items: center;

@@ -564,16 +564,40 @@
     return { top: 120, bottom: 280, left: 36, right: 36 };
   }
 
-  function fitPoints(map, points) {
+  function fitPoints(map, points, padding) {
     if (!map || typeof map.fitLatLngBounds !== 'function') return;
     var pts = (points || []).filter(Boolean);
     if (!pts.length) return;
     map.fitLatLngBounds(pts, {
-      padding: fitPadding(),
+      padding: padding || fitPadding(),
       maxZoom: 15,
       duration: 0.9,
       animate: true,
     });
+  }
+
+  function journeyPoints(inst) {
+    var pts = [inst.shop, inst.dropoff].concat(inst.routePts || []);
+    (inst.availableMarkers || []).forEach(function (marker) {
+      var ll = marker && marker.getLatLng && marker.getLatLng();
+      if (ll) pts.push(ll);
+    });
+    if (inst.driverMarker && inst.driverMarker.getLatLng) {
+      var driver = inst.driverMarker.getLatLng();
+      if (driver) pts.push(driver);
+    }
+    return pts.filter(Boolean);
+  }
+
+  function showJourney(inst) {
+    if (!inst || !inst.map) return;
+    var pts = journeyPoints(inst);
+    if (!pts.length) return;
+    if (pts.length === 1) {
+      focusPoint(inst.map, pts[0], 14);
+      return;
+    }
+    fitPoints(inst.map, pts, { top: 150, bottom: 210, left: 48, right: 72 });
   }
 
   function focusPoint(map, pt, zoom) {
@@ -605,6 +629,17 @@
     inst.hud = document.createElement('div');
     inst.hud.className = 'ttms-delivery-map-hud-ctrl';
     inst.hud.appendChild(btn);
+    var journey = document.createElement('button');
+    journey.type = 'button';
+    journey.className = 'ttms-delivery-journey';
+    journey.textContent = 'Journey';
+    journey.setAttribute('aria-label', 'Show the whole journey');
+    inst.hud.appendChild(journey);
+    journey.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showJourney(inst);
+    });
     var ctrl = {
       onAdd: function () {
         return inst.hud;
@@ -705,10 +740,12 @@
       inst.router.on('routesfound', function (e) {
         var route = e.routes && e.routes[0];
         var summary = route && route.summary;
+        inst.routePts = (route && route.coordinates) || [];
         if (summary) showEta(inst, summary.totalTime, summary.totalDistance);
         if (inst.kind !== 'picker') fitPoints(inst.map, [inst.shop, inst.dropoff]);
       });
       inst.router.on('routingerror', function () {
+        inst.routePts = [];
         var meters = haversineMeters(inst.shop, inst.dropoff);
         showEta(inst, (meters / 1000) * 120, meters, 'estimate');
         if (inst.kind !== 'picker') fitPoints(inst.map, [inst.shop, inst.dropoff]);
