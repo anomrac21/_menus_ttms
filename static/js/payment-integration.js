@@ -424,6 +424,11 @@
       var pending = readPending();
       var params = new URLSearchParams(window.location.search);
       var paymentId = params.get('payment_id') || (pending && pending.paymentId) || '';
+      var deliveryOrderId = params.get('order') || params.get('delivery_order') || '';
+      function deliveryPage() {
+        if (!deliveryOrderId) return '';
+        return '/delivery/?order=' + encodeURIComponent(deliveryOrderId);
+      }
       var titleEl = document.getElementById('paymentReturnTitle');
       var statusEl = document.getElementById('paymentReturnMessage');
       var detailEl = document.getElementById('paymentReturnDetail');
@@ -486,6 +491,11 @@
           params.get('response_code_3dsecure') ||
           params.get('processor_response_code')
         );
+        var delivery = deliveryPage();
+        if (delivery && continueBtn) {
+          continueBtn.href = delivery;
+          continueBtn.textContent = 'Back to delivery';
+        }
         if (titleEl) {
           titleEl.textContent = providerRejected ? 'Payment could not start' : 'Payment cancelled';
         }
@@ -601,23 +611,35 @@
         if (typeof window.trackPaymentEvent === 'function') {
           window.trackPaymentEvent('Return Success', paymentId);
         }
+        var delivery = deliveryPage();
         if (titleEl) titleEl.textContent = 'Payment successful';
         if (statusEl) {
-          statusEl.textContent = amountLabel
-            ? 'Paid ' + amountLabel + '. Return to the menu to finish placing your order.'
-            : 'Payment confirmed. Return to the menu to finish placing your order.';
+          if (delivery) {
+            statusEl.textContent = amountLabel
+              ? 'Paid ' + amountLabel + '. Your delivery is confirmed.'
+              : 'Payment confirmed. Your delivery is confirmed.';
+          } else {
+            statusEl.textContent = amountLabel
+              ? 'Paid ' + amountLabel + '. Return to the menu to finish placing your order.'
+              : 'Payment confirmed. Return to the menu to finish placing your order.';
+          }
         }
         setDetail('Reference: ' + shortPaymentRef(paymentId));
         if (continueBtn) {
           continueBtn.classList.remove('hide');
-          continueBtn.onclick = function (ev) {
-            if (ev) ev.preventDefault();
-            var target = (pending && pending.returnPath) || '/';
-            try {
-              sessionStorage.setItem('ttms_open_cart', '1');
-            } catch (err) {}
-            window.location.href = target;
-          };
+          if (delivery) {
+            continueBtn.textContent = 'View delivery';
+            continueBtn.href = delivery;
+          } else {
+            continueBtn.onclick = function (ev) {
+              if (ev) ev.preventDefault();
+              var target = (pending && pending.returnPath) || '/';
+              try {
+                sessionStorage.setItem('ttms_open_cart', '1');
+              } catch (err) {}
+              window.location.href = target;
+            };
+          }
         }
       }
     },
