@@ -747,8 +747,11 @@
     if (order.status === 'delivering' || order.status === 'picked_up') {
       scan =
         '<div class="ttms-delivery-scan">' +
-        '<p>Show this code to your driver.</p>' +
+        '<p>Your code. The driver enters it. Enter the driver\'s code below. Your own code will not confirm delivery.</p>' +
+        '<p id="ttms-delivery-customer-code-text" class="ttms-handoff-code"></p>' +
         '<div class="ttms-delivery-code-frame"><img id="ttms-delivery-customer-code" class="ttms-delivery-code" alt="Drop-off code" width="240" height="240" hidden></div>' +
+        '<label class="ttms-handoff-type">Driver\'s code<input id="ttms-delivery-driver-code" maxlength="8" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="K7M2P4"></label>' +
+        '<button type="button" class="ttms-delivery-cta" id="ttms-use-driver-code">Use driver\'s code</button>' +
         '</div>';
     }
     show(
@@ -808,10 +811,27 @@
       var codeImg = $('ttms-delivery-customer-code');
       if (codeImg && DeliveryClient.getCustomerDeliveryQR) {
         DeliveryClient.getCustomerDeliveryQR(order.id).then(function (res) {
-          if (!codeImg || !res || !res.token || !window.TTMSCode) return;
-          codeImg.src = TTMSCode.draw(res.token);
+          var shown = res && (res.code || res.token);
+          var text = $('ttms-delivery-customer-code-text');
+          if (text) text.textContent = shown ? String(shown).toUpperCase() : '';
+          if (!codeImg || !shown || !window.TTMSCode) return;
+          codeImg.src = TTMSCode.draw(shown);
           codeImg.hidden = false;
         }).catch(function () {});
+      var useDriver = $('ttms-use-driver-code');
+      if (useDriver) {
+        useDriver.onclick = async function () {
+          var input = $('ttms-delivery-driver-code');
+          var code = input && input.value ? input.value.trim() : '';
+          if (!code) return;
+          try {
+            var updated = await DeliveryClient.scanDelivery(code);
+            showOrderStatus(updated);
+          } catch (e) {
+            alert(e.message || String(e));
+          }
+        };
+      }
       }
     }
     startExpireCountdown(order);

@@ -1323,7 +1323,7 @@ a.ttms-delivery-cta,
   width: 100%;
   height: 100%;
   height: 100dvh;
-  overflow: hidden;
+  overflow: visible;
   background: #000;
 }
 
@@ -1336,24 +1336,11 @@ a.ttms-delivery-cta,
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  background: #000;
-  opacity: 1;
-  pointer-events: none;
-}
-
-.ttms-code-scan video::-webkit-media-controls,
-.ttms-code-scan video::-webkit-media-controls-panel,
-.ttms-code-scan video::-webkit-media-controls-start-playback-button,
-.ttms-code-scan video::-webkit-media-controls-overlay-play-button,
-.ttms-code-scan video::-webkit-media-controls-play-button {
-  display: none !important;
-  -webkit-appearance: none;
-  opacity: 0;
+  background: transparent;
   pointer-events: none;
 }
 

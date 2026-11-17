@@ -102,7 +102,7 @@
           }));
           actions.appendChild(actionBtn('Show pickup code', 'btn-dash btn-dash-secondary', async function () {
             var res = await DeliveryClient.getClientPickupQR(o.id);
-            showCode('Show this to the driver', res && res.token);
+            showCode('Your restaurant code', res && (res.code || res.token), res && (res.code || res.token));
           }));
         }
         if (['awaiting_client', 'preparing', 'ready', 'delivering', 'picked_up', 'payment_pending'].indexOf(o.status) >= 0) {
@@ -170,6 +170,8 @@
         '<div class="ttms-code-scan__finder" aria-hidden="true"></div>' +
         '<div class="ttms-code-scan__bar"><p id="ttms-code-scan-status">Point the camera at the code</p>' +
         '<label class="ttms-code-scan__cam">Camera<select id="ttms-code-scan-camera"></select></label>' +
+        '<label class="ttms-code-scan__type">Their code<input id="ttms-code-type" maxlength="8" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="K7M2P4"></label>' +
+        '<button type="button" class="btn-dash btn-dash-primary" id="ttms-code-use">Use their code</button>' +
         '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-scan-close">Close camera</button></div>';
       document.body.appendChild(scan);
     }
@@ -182,6 +184,8 @@
       show.innerHTML =
         '<div class="ttms-code-show__card" role="dialog" aria-modal="true">' +
         '<h3 id="ttms-code-show-title">Pickup code</h3>' +
+        '<p id="ttms-code-show-code" class="ttms-handoff-code"></p>' +
+        '<p>This is your code. The driver enters it. You enter theirs.</p>' +
         '<div class="ttms-code-show__frame"><img id="ttms-code-show-img" alt="Pickup code" width="240" height="240"></div>' +
         '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-show-close">Hide code</button></div>';
       document.body.appendChild(show);
@@ -202,14 +206,17 @@
     if (box) box.hidden = true;
   }
 
-  function showCode(title, token) {
+  function showCode(title, token, code) {
     ensureCodeUI();
     stopCodeScan();
     var box = document.getElementById('ttms-code-show');
     var img = document.getElementById('ttms-code-show-img');
     var heading = document.getElementById('ttms-code-show-title');
+    var codeEl = document.getElementById('ttms-code-show-code');
+    var shown = String(code || token || '').toUpperCase();
     if (heading) heading.textContent = title || 'Code';
-    if (img) img.src = window.TTMSCode && token ? TTMSCode.draw(token) : '';
+    if (codeEl) codeEl.textContent = shown;
+    if (img) img.src = window.TTMSCode && shown ? TTMSCode.draw(shown) : '';
     if (box) box.hidden = false;
   }
 
@@ -220,9 +227,6 @@
     var status = document.getElementById('ttms-code-scan-status');
     var close = document.getElementById('ttms-code-scan-close');
     var select = document.getElementById('ttms-code-scan-camera');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.TTMSCode || !TTMSCode.session) {
-      return Promise.reject(new Error('This browser needs a camera to scan the code. Reload the page and try again.'));
-    }
     stopCodeScan();
     scanTitle = title || 'Point the camera at the code';
     if (box.parentNode !== document.body) document.body.appendChild(box);
@@ -242,30 +246,50 @@
         });
       });
     }
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       var reading = false;
+      function take(token, pendingText) {
+        if (reading) return;
+        reading = true;
+        if (status) status.textContent = pendingText || 'Checking code';
+        Promise.resolve(onToken(token))
+          .then(function (result) {
+            stopCodeScan();
+            resolve(result);
+          })
+          .catch(function (err) {
+            reading = false;
+            if (status) status.textContent = (err && err.message) || 'That code did not match';
+          });
+      }
+      var use = document.getElementById('ttms-code-use');
+      var typed = document.getElementById('ttms-code-type');
+      if (typed) typed.value = '';
+      function submitTyped() {
+        var code = typed && typed.value ? typed.value.trim() : '';
+        if (!code) {
+          if (status) status.textContent = 'Type their 6 character code';
+          return;
+        }
+        take(code, 'Checking code');
+      }
+      if (use) use.onclick = submitTyped;
+      if (!video || !navigator.mediaDevices || !window.TTMSCode || !TTMSCode.session) {
+        if (status) status.textContent = 'Type their 6 character code';
+        return;
+      }
       codeSession = TTMSCode.session({
         video: video,
-        onCode: function (token) {
-          if (reading) return;
-          reading = true;
-          if (status) status.textContent = 'Code read';
-          Promise.resolve(onToken(token))
-            .then(function (result) {
-              stopCodeScan();
-              resolve(result);
-            })
-            .catch(function (err) {
-              reading = false;
-              if (status) status.textContent = (err && err.message) || 'That code did not match';
-            });
-        },
+        onCode: function (token) { take(token, 'Code read'); },
       });
       codeSession.open('').then(function (cams) {
         TTMSCode.fillSelect(select, cams, codeSession && codeSession.deviceId());
-      }).catch(function (err) {
-        stopCodeScan();
-        reject(err instanceof Error ? err : new Error('Allow the camera to scan the code.'));
+      }).catch(function () {
+        if (codeSession) {
+          codeSession.stop();
+          codeSession = null;
+        }
+        if (status) status.textContent = 'Camera is off. Type their code.';
       });
     });
   }

@@ -291,13 +291,32 @@
     };
   }
 
+  function mountVideo(video) {
+    if (!video || !video.parentNode) return video;
+    var fresh = document.createElement('video');
+    fresh.id = video.id;
+    fresh.className = video.className;
+    fresh.muted = true;
+    fresh.defaultMuted = true;
+    fresh.autoplay = true;
+    fresh.playsInline = true;
+    fresh.controls = false;
+    fresh.setAttribute('muted', 'true');
+    fresh.setAttribute('autoplay', 'true');
+    fresh.setAttribute('playsinline', 'true');
+    fresh.setAttribute('webkit-playsinline', 'true');
+    fresh.disablePictureInPicture = true;
+    video.parentNode.replaceChild(fresh, video);
+    return fresh;
+  }
+
   function attach(video, stream) {
+    video = mountVideo(video);
     prepareVideo(video);
-    if (video.srcObject && video.srcObject !== stream) video.srcObject = null;
     video.srcObject = stream;
     var track = stream.getVideoTracks()[0];
     var settings = track && track.getSettings ? track.getSettings() : null;
-    if (track && typeof track.applyConstraints === 'function') {
+    if (!isiOS() && track && typeof track.applyConstraints === 'function') {
       track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(function () {});
     }
     function kick() {
@@ -306,7 +325,7 @@
     }
     kick();
     video.addEventListener('loadedmetadata', kick, { once: true });
-    return (settings && settings.deviceId) || '';
+    return { video: video, deviceId: (settings && settings.deviceId) || '' };
   }
 
   function session(options) {
@@ -328,7 +347,13 @@
     function open(deviceId) {
       var replacing = !!stream;
       stopTracks();
-      var ready = replacing ? new Promise(function (resolve) { global.setTimeout(resolve, 200); }) : Promise.resolve();
+      var ready = new Promise(function (resolve) {
+        global.requestAnimationFrame(function () {
+          global.requestAnimationFrame(function () {
+            global.setTimeout(resolve, replacing ? 250 : 30);
+          });
+        });
+      });
       return ready.then(function () {
         return capture(deviceId);
       }).then(function (next) {
@@ -337,7 +362,9 @@
           return [];
         }
         stream = next;
-        currentId = attach(options.video, next) || deviceId || '';
+        var attached = attach(options.video, next);
+        options.video = attached.video;
+        currentId = attached.deviceId || deviceId || '';
         return cameras().then(function (list) {
           if (stopped) return list;
           if (!deviceId) {
