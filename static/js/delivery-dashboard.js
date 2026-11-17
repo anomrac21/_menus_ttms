@@ -93,11 +93,16 @@
           }));
         }
         if (o.status === 'ready') {
-          actions.appendChild(actionBtn('Scan pickup QR', 'btn-dash btn-dash-primary', async function () {
-            var token = prompt('Scan or paste driver order QR token');
-            if (!token) return;
-            await DeliveryClient.scanPickup(token.trim());
-            refresh(listEl);
+          actions.appendChild(actionBtn('Scan driver code', 'btn-dash btn-dash-primary', function () {
+            return openCodeScan('Point the camera at the driver’s pickup code', function (token) {
+              return DeliveryClient.scanPickup(token);
+            }).then(function () {
+              refresh(listEl);
+            });
+          }));
+          actions.appendChild(actionBtn('Show pickup code', 'btn-dash btn-dash-secondary', async function () {
+            var res = await DeliveryClient.getClientPickupQR(o.id);
+            showCode('Show this to the driver', res && res.token);
           }));
         }
         if (['awaiting_client', 'preparing', 'ready', 'delivering', 'picked_up', 'payment_pending'].indexOf(o.status) >= 0) {
@@ -150,6 +155,107 @@
         escapeHtml(e.message || e) +
         '</p>';
     }
+  }
+
+  function ensureCodeUI() {
+    var scan = document.getElementById('ttms-code-scan');
+    if (!scan) {
+      scan = document.createElement('div');
+      scan.id = 'ttms-code-scan';
+      scan.className = 'ttms-code-scan';
+      scan.hidden = true;
+      scan.innerHTML =
+        '<video id="ttms-code-scan-video" playsinline autoplay muted></video>' +
+        '<div class="ttms-code-scan__bar"><p id="ttms-code-scan-status">Point the camera at the code</p>' +
+        '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-scan-close">Close camera</button></div>';
+      document.body.appendChild(scan);
+    }
+    var show = document.getElementById('ttms-code-show');
+    if (!show) {
+      show = document.createElement('div');
+      show.id = 'ttms-code-show';
+      show.className = 'ttms-code-show';
+      show.hidden = true;
+      show.innerHTML =
+        '<div class="ttms-code-show__card" role="dialog" aria-modal="true">' +
+        '<h3 id="ttms-code-show-title">Pickup code</h3>' +
+        '<img id="ttms-code-show-img" alt="Pickup code" width="240" height="240">' +
+        '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-show-close">Hide code</button></div>';
+      document.body.appendChild(show);
+      document.getElementById('ttms-code-show-close').onclick = function () { show.hidden = true; };
+    }
+    return scan;
+  }
+
+  var codeScanStop = null;
+  var codeScanStream = null;
+
+  function stopCodeScan() {
+    if (codeScanStop) codeScanStop();
+    codeScanStop = null;
+    if (codeScanStream) {
+      codeScanStream.getTracks().forEach(function (track) { track.stop(); });
+      codeScanStream = null;
+    }
+    var video = document.getElementById('ttms-code-scan-video');
+    if (video) video.srcObject = null;
+    var box = document.getElementById('ttms-code-scan');
+    if (box) box.hidden = true;
+  }
+
+  function showCode(title, token) {
+    ensureCodeUI();
+    stopCodeScan();
+    var box = document.getElementById('ttms-code-show');
+    var img = document.getElementById('ttms-code-show-img');
+    var heading = document.getElementById('ttms-code-show-title');
+    if (heading) heading.textContent = title || 'Code';
+    if (img) img.src = window.TTMSCode && token ? TTMSCode.draw(token) : '';
+    if (box) box.hidden = false;
+  }
+
+  function openCodeScan(title, onToken) {
+    ensureCodeUI();
+    var box = document.getElementById('ttms-code-scan');
+    var video = document.getElementById('ttms-code-scan-video');
+    var status = document.getElementById('ttms-code-scan-status');
+    var close = document.getElementById('ttms-code-scan-close');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.TTMSCode) {
+      return Promise.reject(new Error('This browser needs a camera to scan the code.'));
+    }
+    stopCodeScan();
+    box.hidden = false;
+    if (status) status.textContent = title || 'Point the camera at the code';
+    if (close) close.onclick = stopCodeScan;
+    return navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: 'environment' } },
+    }).then(function (stream) {
+      codeScanStream = stream;
+      video.srcObject = stream;
+      var play = video.play();
+      if (play && play.catch) play.catch(function () {});
+      return new Promise(function (resolve) {
+        var reading = false;
+        codeScanStop = TTMSCode.watch(video, function (token) {
+          if (reading) return;
+          reading = true;
+          if (status) status.textContent = 'Code read';
+          Promise.resolve(onToken(token))
+            .then(function (result) {
+              stopCodeScan();
+              resolve(result);
+            })
+            .catch(function (err) {
+              reading = false;
+              if (status) status.textContent = (err && err.message) || 'That code did not match';
+            });
+        });
+      });
+    }).catch(function (err) {
+      stopCodeScan();
+      throw err;
+    });
   }
 
   function actionBtn(label, className, fn) {

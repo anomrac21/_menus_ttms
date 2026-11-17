@@ -747,9 +747,8 @@
     if (order.status === 'delivering' || order.status === 'picked_up') {
       scan =
         '<div class="ttms-delivery-scan">' +
-        '<label for="ttms-delivery-qr-input">Scan driver QR to confirm receipt</label>' +
-        '<input type="text" id="ttms-delivery-qr-input" placeholder="Paste or scan QR token" autocomplete="off" />' +
-        '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-confirm-delivery">Confirm received</button>' +
+        '<p>Show this code to your driver.</p>' +
+        '<img id="ttms-delivery-customer-code" class="ttms-delivery-code" alt="Drop-off code" width="220" height="220" hidden>' +
         '</div>';
     }
     show(
@@ -794,7 +793,7 @@
         };
       }
     }
-    if (scan) {
+    if (scan && order.status !== 'delivering' && order.status !== 'picked_up') {
       $('ttms-confirm-delivery').onclick = async function () {
         try {
           var token = $('ttms-delivery-qr-input').value.trim();
@@ -804,6 +803,16 @@
           alert(e.message || String(e));
         }
       };
+    }
+    if (order.status === 'delivering' || order.status === 'picked_up') {
+      var codeImg = $('ttms-delivery-customer-code');
+      if (codeImg && DeliveryClient.getCustomerDeliveryQR) {
+        DeliveryClient.getCustomerDeliveryQR(order.id).then(function (res) {
+          if (!codeImg || !res || !res.token || !window.TTMSCode) return;
+          codeImg.src = TTMSCode.draw(res.token);
+          codeImg.hidden = false;
+        }).catch(function () {});
+      }
     }
     startExpireCountdown(order);
     if (choosing) watchOffers(order.id, 'ttms-live-map');

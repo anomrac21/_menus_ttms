@@ -109,6 +109,9 @@ window.DELIVERY_CONFIG = {
   cfg.nightStyle = unwrap(cfg.nightStyle || map.nightStyle);
 })(window.DELIVERY_CONFIG);
 </script>
+<script src="{{ partial "head/asset-url.html" "/js/vendor/qrcode.js" }}"></script>
+<script src="{{ partial "head/asset-url.html" "/js/vendor/jsQR.js" }}"></script>
+<script src="{{ partial "head/asset-url.html" "/js/ttms-code.js" }}"></script>
 <script src="{{ partial "head/asset-url.html" "/js/delivery-client.js" }}"></script>
 <script src="{{ partial "head/asset-url.html" "/js/delivery-dashboard.js" }}"></script>
 {{- end }}

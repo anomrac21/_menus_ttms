@@ -218,6 +218,12 @@
     scanPickup: function (token) {
       return request('POST', '/orders/scan-pickup', { token: token });
     },
+    getClientPickupQR: function (orderId) {
+      return request('GET', '/client/orders/' + encodeURIComponent(orderId) + '/pickup-qr');
+    },
+    getCustomerDeliveryQR: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId) + '/customer-delivery-qr');
+    },
     scanDelivery: function (token) {
       return request('POST', '/orders/scan-delivery', { token: token });
     },
