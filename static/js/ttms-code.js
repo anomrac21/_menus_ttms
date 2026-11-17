@@ -7,7 +7,7 @@
 
   function draw(text) {
     if (typeof global.qrcode !== 'function' || !text) return '';
-    var qr = global.qrcode(0, 'Q');
+    var qr = global.qrcode(0, 'M');
     qr.addData(String(text));
     qr.make();
     return qr.createDataURL(8, 32);
@@ -28,6 +28,31 @@
       });
       return list;
     }).catch(function () { return []; });
+  }
+
+  function scoreCamera(cam) {
+    var label = String((cam && cam.label) || '').toLowerCase();
+    var score = 0;
+    if (/front|user|face|facetime|truedepth/.test(label)) score -= 80;
+    if (/tele|zoom|ultra|depth|lidar/.test(label)) score -= 40;
+    if (/back|rear|environment/.test(label)) score += 30;
+    if (/wide/.test(label) && !/ultra/.test(label)) score += 25;
+    if (label === 'back camera') score += 50;
+    return score;
+  }
+
+  function preferredId(list) {
+    if (!list || !list.length) return '';
+    var best = list[0];
+    var bestScore = scoreCamera(best);
+    list.forEach(function (cam) {
+      var score = scoreCamera(cam);
+      if (score > bestScore) {
+        best = cam;
+        bestScore = score;
+      }
+    });
+    return best.id || '';
   }
 
   function capture(deviceId) {
@@ -95,9 +120,9 @@
       onCode(text);
     }
 
-    function sample(sx, sy, sw, sh) {
+    function sample(sx, sy, sw, sh, maxEdge) {
       if (!ctx || typeof global.jsQR !== 'function' || !sw || !sh) return false;
-      var maxEdge = 800;
+      maxEdge = maxEdge || 1000;
       var scale = Math.min(1, maxEdge / Math.max(sw, sh));
       var w = Math.max(1, Math.round(sw * scale));
       var h = Math.max(1, Math.round(sh * scale));
@@ -118,13 +143,12 @@
       var vh = video.videoHeight;
       if (!vw || !vh) return;
       pass += 1;
-      if (pass % 2 === 0) {
-        sample(0, 0, vw, vh);
-        return;
-      }
-      var cw = Math.round(vw * 0.72);
-      var ch = Math.round(vh * 0.72);
-      sample(Math.round((vw - cw) / 2), Math.round((vh - ch) / 2), cw, ch);
+      var side = Math.round(Math.min(vw, vh) * (pass % 2 === 0 ? 0.55 : 0.78));
+      var sx = Math.round((vw - side) / 2);
+      var sy = Math.max(0, Math.round((vh - side) / 2 - vh * 0.06));
+      if (sy + side > vh) sy = Math.max(0, vh - side);
+      if (sample(sx, sy, side, side, 1200)) return;
+      sample(0, 0, vw, vh, 960);
     }
 
     function step() {
@@ -169,7 +193,11 @@
     if (play && play.catch) play.catch(function () {});
     var track = stream.getVideoTracks()[0];
     if (track && typeof track.applyConstraints === 'function') {
-      track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(function () {});
+      track.applyConstraints({
+        advanced: [{ focusMode: 'continuous' }, { exposureMode: 'continuous' }, { whiteBalanceMode: 'continuous' }],
+      }).catch(function () {
+        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(function () {});
+      });
     }
     var settings = track && track.getSettings ? track.getSettings() : null;
     return (settings && settings.deviceId) || '';
@@ -190,6 +218,27 @@
       }
     }
 
+    function open(deviceId) {
+      stopTracks();
+      return capture(deviceId).then(function (next) {
+        if (stopped) {
+          next.getTracks().forEach(function (track) { track.stop(); });
+          return [];
+        }
+        stream = next;
+        currentId = attach(options.video, next) || deviceId || '';
+        return cameras().then(function (list) {
+          if (stopped) return list;
+          if (!deviceId) {
+            var best = preferredId(list);
+            if (best && best !== currentId) return open(best);
+          }
+          if (!stopWatch) stopWatch = watch(options.video, options.onCode);
+          return list;
+        });
+      });
+    }
+
     return {
       deviceId: function () { return currentId; },
       stop: function () {
@@ -197,19 +246,7 @@
         stopTracks();
         if (options.video) options.video.srcObject = null;
       },
-      open: function (deviceId) {
-        stopTracks();
-        return capture(deviceId).then(function (next) {
-          if (stopped) {
-            next.getTracks().forEach(function (track) { track.stop(); });
-            return [];
-          }
-          stream = next;
-          currentId = attach(options.video, next) || deviceId || '';
-          stopWatch = watch(options.video, options.onCode);
-          return cameras();
-        });
-      },
+      open: open,
     };
   }
 

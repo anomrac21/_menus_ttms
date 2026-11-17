@@ -1275,10 +1275,15 @@ a.ttms-delivery-cta,
 
 .ttms-code-scan {
   position: fixed;
-  inset: 0;
-  z-index: 13000;
-  display: flex;
-  flex-direction: column;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30000;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
   background: #000;
 }
 
@@ -1288,22 +1293,25 @@ a.ttms-delivery-cta,
 }
 
 .ttms-code-scan video {
-  flex: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  min-height: 0;
+  height: 100%;
   object-fit: cover;
+  transform: translateZ(0);
 }
 
 .ttms-code-scan__finder {
   position: absolute;
   left: 50%;
-  top: 42%;
-  width: min(70vw, 18rem);
+  top: calc(50% - 5.5rem);
+  width: min(72vw, calc(100dvh - 16rem));
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border: 3px solid #fff;
-  border-radius: 16px;
-  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.28);
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
@@ -1314,7 +1322,10 @@ a.ttms-delivery-cta,
 }
 
 .ttms-code-scan__bar {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1;
   background: rgba(0, 0, 0, 0.86);
   color: #fff;

@@ -224,6 +224,7 @@
     }
     stopCodeScan();
     scanTitle = title || 'Point the camera at the code';
+    if (box.parentNode !== document.body) document.body.appendChild(box);
     box.hidden = false;
     if (status) status.textContent = scanTitle;
     if (close) close.onclick = stopCodeScan;
