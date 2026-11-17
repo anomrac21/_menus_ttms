@@ -472,19 +472,78 @@
     });
   }
 
+  function orderLines(order) {
+    var raw = order && (order.cart_json || order.cart || order.lines);
+    var n = 0;
+    while (typeof raw === 'string' && n < 3) {
+      try {
+        raw = JSON.parse(raw);
+      } catch (err) {
+        return [];
+      }
+      n += 1;
+    }
+    if (Array.isArray(raw)) return raw;
+    if (raw && Array.isArray(raw.lines)) return raw.lines;
+    return [];
+  }
+
+  function lineName(it) {
+    return (it && (it.name || it.title || it.item || it.itemName)) || 'Item';
+  }
+
+  function lineQty(it) {
+    var q = Number(it && (it.quantity || it.amt || it.qty || 1));
+    return isFinite(q) && q > 0 ? q : 1;
+  }
+
+  function money(amount, currency) {
+    var n = Number(amount);
+    return (isFinite(n) ? n.toFixed(2) : '0.00') + ' ' + (currency || 'TTD');
+  }
+
+  function orderSheet(order) {
+    var currency = order.currency || 'TTD';
+    var lines = orderLines(order)
+      .map(function (it) {
+        var qty = lineQty(it);
+        return (
+          '<li><span>' +
+          escapeHtml(qty > 1 ? qty + ' × ' + lineName(it) : lineName(it)) +
+          '</span><span>' +
+          escapeHtml(money(lineAmount(it), currency)) +
+          '</span></li>'
+        );
+      })
+      .join('');
+    var fee = Number(order.delivery_fee);
+    var feeRow =
+      isFinite(fee) && fee > 0
+        ? '<li><span>Delivery</span><span>' + escapeHtml(money(fee, currency)) + '</span></li>'
+        : '';
+    var place = [order.restaurant_name, order.dropoff_address].filter(Boolean).join(' · ');
+    return (
+      '<div class="ttms-delivery-order">' +
+      (place ? '<p class="ttms-delivery-order__place">' + escapeHtml(place) + '</p>' : '') +
+      '<ul class="ttms-delivery-order__lines">' +
+      lines +
+      feeRow +
+      '<li class="ttms-delivery-order__total"><span>Total</span><span>' +
+      escapeHtml(money(order.total, currency)) +
+      '</span></li></ul></div>'
+    );
+  }
+
   function showOrderStatus(order) {
     if (!order) return;
-    setPanelCopy(statusLabel(order.status), 'Order ' + order.id);
+    var paying = order.status === 'payment_pending';
+    setPanelCopy(statusLabel(order.status), order.restaurant_name || 'Order ' + String(order.id || '').slice(0, 8));
     var pay = '';
-    if (order.status === 'payment_pending' && order.payment_url) {
+    if (paying) {
       pay =
-        '<div class="ttms-delivery-actions"><a class="ttms-delivery-cta ttms-delivery-cta--primary" href="' +
-        escapeAttr(order.payment_url) +
-        '" target="_blank" rel="noopener">Pay now · ' +
-        escapeHtml(order.total) +
-        ' ' +
-        escapeHtml(order.currency) +
-        '</a></div>';
+        '<div class="ttms-delivery-actions"><button type="button" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-delivery-pay-progress">' +
+        (order.payment_url ? 'Pay now · ' + escapeHtml(money(order.total, order.currency)) : 'Continue to payment') +
+        '</button></div>';
     }
     var scan = '';
     if (order.status === 'delivering' || order.status === 'picked_up') {
@@ -496,17 +555,42 @@
         '</div>';
     }
     show(
-      '<div class="ttms-delivery-status ttms-delivery-status-card">' +
-        '<span class="ttms-delivery-status__pulse" aria-hidden="true"></span>' +
-        '<div><strong>' +
-        escapeHtml(statusLabel(order.status)) +
-        '</strong><p>Order <code>' +
-        escapeHtml(order.id) +
-        '</code></p></div></div>' +
-        pay +
+      '<div class="ttms-delivery-track-stage">' +
         '<div id="ttms-live-map" class="ttms-live-map ttms-delivery-map" aria-live="polite">Waiting for driver location…</div>' +
-        scan
+        '<div class="ttms-delivery-map-dock">' +
+        orderSheet(order) +
+        pay +
+        scan +
+        '</div></div>'
     );
+    setMapStep(true);
+    setCheckout(true);
+    if (paying) {
+      var payBtn = $('ttms-delivery-pay-progress');
+      if (payBtn) {
+        payBtn.onclick = function () {
+          if (order.payment_url) {
+            openDeliveryPayment(order);
+            return;
+          }
+          payBtn.disabled = true;
+          DeliveryClient.getOrder(order.id)
+            .then(function (fresh) {
+              payBtn.disabled = false;
+              if (fresh && fresh.payment_url) {
+                showOrderStatus(fresh);
+                openDeliveryPayment(fresh);
+                return;
+              }
+              alert('Payment is not ready yet. Try again in a moment.');
+            })
+            .catch(function (err) {
+              payBtn.disabled = false;
+              alert(err.message || String(err));
+            });
+        };
+      }
+    }
     if (scan) {
       $('ttms-confirm-delivery').onclick = async function () {
         try {
