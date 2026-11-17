@@ -476,8 +476,56 @@ body.ttms-delivery-open {
 }
 
 .ttms-delivery-panel.is-map-step .ttms-delivery-pin__hint,
-.ttms-delivery-panel.is-map-step .ttms-delivery-coverage {
+.ttms-delivery-panel.is-map-step .ttms-delivery-coverage,
+.ttms-delivery-panel.is-map-step .ttms-delivery-drivers,
+.ttms-delivery-panel.is-map-step .ttms-delivery-drivers li {
   color: #fff;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-coverage {
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--scheme-black) 62%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-drivers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 5.6rem;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-drivers[hidden] {
+  display: none;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-drivers li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--scheme-black) 55%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ttms-delivery-panel.is-map-step .ttms-delivery-drivers .fa {
+  color: #f0c14b;
 }
 
 .ttms-delivery-panel.is-map-step .ttms-delivery-pin__locate {
@@ -494,11 +542,15 @@ body.ttms-delivery-open {
   border-color: color-mix(in srgb, var(--scheme-white) 36%, transparent);
 }
 
+.ttms-delivery-panel.is-map-step.has-nearby-drivers .ttms-delivery-pin__hint {
+  bottom: calc(14.4rem + env(safe-area-inset-bottom, 0px));
+}
+
 .ttms-delivery-panel.is-map-step .ttms-delivery-pin__hint {
   position: absolute;
   left: max(0.85rem, env(safe-area-inset-left, 0px));
   right: max(0.85rem, env(safe-area-inset-right, 0px));
-  bottom: calc(7.4rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(10.6rem + env(safe-area-inset-bottom, 0px));
   z-index: 5;
   margin: 0;
   padding: 0.5rem 0.85rem;

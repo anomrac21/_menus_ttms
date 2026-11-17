@@ -599,7 +599,6 @@
         '<div class="ttms-delivery-pin">' +
         '<div id="ttms-delivery-pin-map" class="ttms-delivery-map" role="application" aria-label="Drop-off map"></div>' +
         '<p class="ttms-delivery-pin__hint" id="ttms-delivery-pin-hint">Tap the map to set drop-off</p>' +
-        '<p class="ttms-delivery-coverage" id="ttms-delivery-coverage" aria-live="polite">Checking drivers nearby…</p>' +
         '<input name="lat" type="hidden" value="' +
         escapeAttr(saved.lat) +
         '">' +
@@ -609,6 +608,8 @@
         '<div class="ttms-delivery-map-dock">' +
         '<div class="ttms-delivery-pin__head"><strong>Drop-off pin</strong>' +
         '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find address</button></div>' +
+        '<p class="ttms-delivery-coverage" id="ttms-delivery-coverage" aria-live="polite">Checking drivers nearby…</p>' +
+        '<ul class="ttms-delivery-drivers" id="ttms-delivery-drivers" hidden></ul>' +
         '<div class="ttms-delivery-actions">' +
         '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-delivery-back">Back</button>' +
         '<button type="submit" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-find-drivers">' +

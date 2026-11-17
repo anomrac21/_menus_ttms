@@ -348,22 +348,65 @@
     return raw.replace(/\/$/, '');
   }
 
-  function nearPhrase(count, place, radius) {
-    var n = Number(count) || 0;
-    var km = Number(radius) || 8;
-    if (!n) return 'none within ' + km + ' km of ' + place;
-    if (n === 1) return '1 within ' + km + ' km of ' + place;
-    return n + ' within ' + km + ' km of ' + place;
+  function coverageSentence(data) {
+    var online = Number(data && data.drivers_online) || 0;
+    var near = data && data.near_you != null && data.near_you !== '' ? Number(data.near_you) : null;
+    if (!online) return 'No drivers available';
+    if (near === 0) {
+      return 'No drivers near this pin · ' + (online === 1 ? '1 online' : online + ' online');
+    }
+    if (near === 1) return '1 driver near this pin';
+    if (near > 1) return near + ' drivers near this pin';
+    return online === 1 ? '1 driver available' : online + ' drivers available';
   }
 
-  function coverageSentence(data) {
-    var n = Number(data && data.drivers_online) || 0;
-    var radius = Number(data && data.radius_km) || 8;
-    if (!n) return 'No drivers online right now';
-    var parts = [n === 1 ? '1 driver online' : n + ' drivers online'];
-    if (data && data.near_client != null) parts.push(nearPhrase(data.near_client, 'the restaurant', radius));
-    if (data && data.near_you != null) parts.push(nearPhrase(data.near_you, 'you', radius));
-    return parts.join(' · ');
+  function driverDistanceLabel(km) {
+    var n = Number(km);
+    if (!isFinite(n) || n < 0) return '';
+    if (n < 1) return Math.max(1, Math.round(n * 1000)) + ' m';
+    return n.toFixed(1) + ' km';
+  }
+
+  function paintAvailableDrivers(inst, drivers) {
+    (inst.availableMarkers || []).forEach(function (marker) {
+      if (marker && marker.remove) marker.remove();
+    });
+    inst.availableMarkers = [];
+    var list = $('ttms-delivery-drivers');
+    if (!list) return;
+    list.innerHTML = '';
+    var rows = Array.isArray(drivers) ? drivers : [];
+    var panel = document.querySelector('.ttms-delivery-panel');
+    if (panel) panel.classList.toggle('has-nearby-drivers', rows.length > 0);
+    if (!rows.length) {
+      list.hidden = true;
+      return;
+    }
+    list.hidden = false;
+    rows.forEach(function (driver) {
+      var name = (driver && driver.name) || 'Driver';
+      var vehicle = driver && driver.vehicle ? String(driver.vehicle) : '';
+      var dist = driverDistanceLabel(driver && driver.distance_km);
+      var detail = [vehicle, dist].filter(Boolean).join(' · ');
+      var li = document.createElement('li');
+      var icon = document.createElement('i');
+      icon.className = 'fa fa-motorcycle';
+      icon.setAttribute('aria-hidden', 'true');
+      var text = document.createElement('span');
+      text.textContent = detail ? name + ' · ' + detail : name;
+      li.appendChild(icon);
+      li.appendChild(text);
+      list.appendChild(li);
+      var pt = validPoint(driver && driver.lat, driver && driver.lng);
+      if (!pt || !inst.map || !global.TTMSMap) return;
+      var marker = new global.TTMSMap.Marker(pt, {
+        pin: simplePin('driver', 'fa-motorcycle'),
+        title: name,
+        zIndexOffset: 450,
+      }).addTo(inst.map);
+      if (marker.bindTooltip) marker.bindTooltip(detail ? name + ' · ' + detail : name);
+      inst.availableMarkers.push(marker);
+    });
   }
 
   function ensureCoverageEl(inst) {
@@ -383,6 +426,7 @@
     var el = ensureCoverageEl(inst);
     if (!el) return;
     el.textContent = failed ? 'Driver count unavailable' : coverageSentence(data);
+    paintAvailableDrivers(inst, failed ? [] : data && data.drivers);
   }
 
   function refreshCoverage(inst) {
@@ -494,7 +538,7 @@
   var PIN_FOCUS_ZOOM = 16;
 
   function fitPadding() {
-    return { top: 120, bottom: 220, left: 36, right: 36 };
+    return { top: 120, bottom: 280, left: 36, right: 36 };
   }
 
   function fitPoints(map, points) {
@@ -713,6 +757,9 @@
       if (inst[key] && inst[key].remove) inst[key].remove();
     });
     (inst.offerMarkers || []).forEach(function (m) {
+      if (m && m.remove) m.remove();
+    });
+    (inst.availableMarkers || []).forEach(function (m) {
       if (m && m.remove) m.remove();
     });
     try {
