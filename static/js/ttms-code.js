@@ -114,16 +114,68 @@
     video.disablePictureInPicture = true;
   }
 
-  function previewCanvas(video) {
-    var box = video && video.parentNode;
-    if (!box) return null;
-    var canvas = box.querySelector('canvas.ttms-scan-preview');
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      canvas.className = 'ttms-scan-preview';
-      box.insertBefore(canvas, video.nextSibling);
+  function finderBox(video) {
+    var vw = video.videoWidth;
+    var vh = video.videoHeight;
+    var box = video.parentNode;
+    var dw = box ? box.clientWidth : vw;
+    var dh = box ? box.clientHeight : vh;
+    if (!vw || !vh || !dw || !dh) return null;
+    var cover = Math.max(dw / vw, dh / vh);
+    var offX = (vw * cover - dw) / 2;
+    var offY = (vh * cover - dh) / 2;
+    var finder = box.querySelector('.ttms-code-scan__finder, .ttms-driver-scan__finder');
+    var fx;
+    var fy;
+    var fw;
+    var fh;
+    if (finder) {
+      var fr = finder.getBoundingClientRect();
+      var br = box.getBoundingClientRect();
+      fx = fr.left - br.left;
+      fy = fr.top - br.top;
+      fw = fr.width;
+      fh = fr.height;
+    } else {
+      fw = Math.min(dw, dh) * 0.72;
+      fh = fw;
+      fx = (dw - fw) / 2;
+      fy = (dh - fh) / 2 - 88;
     }
-    return canvas;
+    var pad = Math.min(fw, fh) * 0.16;
+    fx -= pad;
+    fy -= pad;
+    fw += pad * 2;
+    fh += pad * 2;
+    var sx = (fx + offX) / cover;
+    var sy = (fy + offY) / cover;
+    var sw = fw / cover;
+    var sh = fh / cover;
+    if (sx < 0) { sw += sx; sx = 0; }
+    if (sy < 0) { sh += sy; sy = 0; }
+    if (sx + sw > vw) sw = vw - sx;
+    if (sy + sh > vh) sh = vh - sy;
+    if (sw < 8 || sh < 8) return { sx: 0, sy: 0, sw: vw, sh: vh };
+    return { sx: sx, sy: sy, sw: sw, sh: sh };
+  }
+
+  function stretchContrast(image) {
+    var data = image.data;
+    var min = 255;
+    var max = 0;
+    var i;
+    var y;
+    for (i = 0; i < data.length; i += 16) {
+      y = (data[i] * 3 + data[i + 1] * 6 + data[i + 2]) / 10;
+      if (y < min) min = y;
+      if (y > max) max = y;
+    }
+    if (max - min < 28) return;
+    var scale = 255 / (max - min);
+    for (i = 0; i < data.length; i += 4) {
+      y = (data[i] - min) * scale;
+      data[i] = data[i + 1] = data[i + 2] = y < 0 ? 0 : (y > 255 ? 255 : y);
+    }
   }
 
   function watch(video, onCode) {
@@ -131,13 +183,12 @@
     var ctx = canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d');
     var stopped = false;
     var detecting = false;
+    var detectorDead = false;
     var last = '';
     var lastAt = 0;
     var pass = 0;
     var timer = 0;
-    var raf = 0;
-    var view = previewCanvas(video);
-    var viewCtx = view ? view.getContext('2d') : null;
+    var frame = 0;
     var detector = null;
     if (typeof global.BarcodeDetector === 'function') {
       try {
@@ -158,92 +209,85 @@
       onCode(text);
     }
 
-    function sample(sx, sy, sw, sh) {
-      if (!ctx || typeof global.jsQR !== 'function' || sw < 8 || sh < 8) return false;
+    function readFrame() {
+      var region = finderBox(video);
+      if (!region || !ctx) return;
       var maxEdge = 520;
-      var scale = Math.min(1, maxEdge / Math.max(sw, sh));
-      var w = Math.max(1, Math.round(sw * scale));
-      var h = Math.max(1, Math.round(sh * scale));
+      var fit = Math.min(1, maxEdge / Math.max(region.sw, region.sh));
+      var w = Math.max(1, Math.round(region.sw * fit));
+      var h = Math.max(1, Math.round(region.sh * fit));
       if (canvas.width !== w) canvas.width = w;
       if (canvas.height !== h) canvas.height = h;
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
-      var image = ctx.getImageData(0, 0, w, h);
-      var mode = pass % 3 === 0 ? 'attemptBoth' : 'dontInvert';
-      var code = global.jsQR(image.data, w, h, { inversionAttempts: mode });
-      if (code && code.data) {
-        emit(code.data);
-        return true;
-      }
-      return false;
-    }
-
-    function decodeCanvas() {
-      var vw = video.videoWidth;
-      var vh = video.videoHeight;
-      if (!vw || !vh) return;
+      ctx.drawImage(video, region.sx, region.sy, region.sw, region.sh, 0, 0, w, h);
       pass += 1;
-      if (pass % 4 === 0) {
-        sample(0, 0, vw, vh);
-        return;
-      }
-      var side = Math.round(Math.min(vw, vh) * 0.7);
-      var sx = Math.round((vw - side) / 2);
-      var sy = Math.max(0, Math.round((vh - side) / 2 - vh * 0.08));
-      if (sy + side > vh) sy = Math.max(0, vh - side);
-      sample(sx, sy, side, side);
-    }
-
-    function step() {
-      if (stopped) return;
-      if (!video || video.readyState < 2 || !video.videoWidth) {
-        if (video && video.srcObject && video.paused) {
-          var retry = video.play();
-          if (retry && retry.catch) retry.catch(function () {});
-        }
-        timer = global.setTimeout(step, 250);
-        return;
-      }
-      try {
-        decodeCanvas();
-      } catch (e) {}
-      if (detector && !detecting) {
+      if (detector && !detecting && !detectorDead) {
         detecting = true;
-        var detect = detector.detect(video);
-        if (detect && detect.then) {
-          detect.then(function (codes) {
-            if (codes && codes[0] && codes[0].rawValue) emit(codes[0].rawValue);
-          }).catch(function () {}).then(function () { detecting = false; }, function () { detecting = false; });
-        } else {
+        var settled = false;
+        function finish() {
+          if (settled) return;
+          settled = true;
           detecting = false;
         }
+        var hung = global.setTimeout(function () {
+          detectorDead = true;
+          finish();
+        }, 700);
+        var shot = global.createImageBitmap ? global.createImageBitmap(canvas) : Promise.resolve(canvas);
+        shot.then(function (bmp) {
+          return detector.detect(bmp).then(function (codes) {
+            if (bmp && bmp.close) bmp.close();
+            if (codes && codes[0] && codes[0].rawValue) emit(codes[0].rawValue);
+          });
+        }).catch(function () {}).then(function () {
+          global.clearTimeout(hung);
+          finish();
+        }, function () {
+          global.clearTimeout(hung);
+          finish();
+        });
       }
-      timer = global.setTimeout(step, 180);
+      if (typeof global.jsQR !== 'function') return;
+      var image = ctx.getImageData(0, 0, w, h);
+      if (pass % 3 === 0) stretchContrast(image);
+      var code = global.jsQR(image.data, w, h, {
+        inversionAttempts: pass % 3 === 0 ? 'attemptBoth' : 'dontInvert',
+      });
+      if (code && code.data) emit(code.data);
     }
 
-    function paint() {
+    var lastScan = 0;
+    function scanNow() {
+      if (stopped || !video || video.readyState < 2 || !video.videoWidth) return;
+      var now = Date.now();
+      if (now - lastScan < 180) return;
+      lastScan = now;
+      try {
+        readFrame();
+      } catch (e) {}
+    }
+
+    function wake() {
       if (stopped) return;
-      var vw = video.videoWidth;
-      var vh = video.videoHeight;
-      if (view && viewCtx && vw && vh) {
-        var box = view.parentNode;
-        var dw = Math.max(1, Math.round(box.clientWidth || global.innerWidth));
-        var dh = Math.max(1, Math.round(box.clientHeight || global.innerHeight));
-        if (view.width !== dw) view.width = dw;
-        if (view.height !== dh) view.height = dh;
-        var scale = Math.max(dw / vw, dh / vh);
-        var sw = dw / scale;
-        var sh = dh / scale;
-        viewCtx.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, dw, dh);
+      if (video && video.srcObject && !video.videoWidth && video.paused) {
+        var retry = video.play();
+        if (retry && retry.catch) retry.catch(function () {});
       }
-      raf = global.requestAnimationFrame(paint);
+      scanNow();
+      timer = global.setTimeout(wake, 220);
     }
 
-    raf = global.requestAnimationFrame(paint);
-    timer = global.setTimeout(step, 200);
+    if (video.requestVideoFrameCallback) {
+      frame = video.requestVideoFrameCallback(function loop() {
+        if (stopped) return;
+        scanNow();
+        frame = video.requestVideoFrameCallback(loop);
+      });
+    }
+    timer = global.setTimeout(wake, 220);
     return function stop() {
       stopped = true;
       if (timer) global.clearTimeout(timer);
-      if (raf) global.cancelAnimationFrame(raf);
+      if (frame && video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(frame);
     };
   }
 
@@ -260,8 +304,8 @@
       var play = video.play();
       if (play && play.catch) play.catch(function () {});
     }
-    if (video.readyState >= 1) kick();
-    else video.addEventListener('loadedmetadata', kick, { once: true });
+    kick();
+    video.addEventListener('loadedmetadata', kick, { once: true });
     return (settings && settings.deviceId) || '';
   }
 
