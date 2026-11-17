@@ -472,6 +472,23 @@
     });
   }
 
+  function submitHostedPayment(pay) {
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = pay.form_action;
+    form.acceptCharset = 'UTF-8';
+    form.style.display = 'none';
+    Object.keys(pay.form_fields || {}).forEach(function (key) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = pay.form_fields[key] == null ? '' : String(pay.form_fields[key]);
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+  }
+
   function orderLines(order) {
     var raw = order && (order.cart_json || order.cart || order.lines);
     var n = 0;
@@ -542,7 +559,8 @@
     if (paying) {
       pay =
         '<div class="ttms-delivery-actions"><button type="button" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-delivery-pay-progress">' +
-        (order.payment_url ? 'Pay now · ' + escapeHtml(money(order.total, order.currency)) : 'Continue to payment') +
+        'Pay now · ' +
+        escapeHtml(money(order.total, order.currency)) +
         '</button></div>';
     }
     var scan = '';
@@ -569,23 +587,27 @@
       var payBtn = $('ttms-delivery-pay-progress');
       if (payBtn) {
         payBtn.onclick = function () {
-          if (order.payment_url) {
-            openDeliveryPayment(order);
-            return;
-          }
           payBtn.disabled = true;
-          DeliveryClient.getOrder(order.id)
-            .then(function (fresh) {
-              payBtn.disabled = false;
-              if (fresh && fresh.payment_url) {
-                showOrderStatus(fresh);
-                openDeliveryPayment(fresh);
+          var original = payBtn.textContent;
+          payBtn.textContent = 'Opening payment…';
+          DeliveryClient.startPayment(order.id)
+            .then(function (pay) {
+              if (pay && pay.form_action && pay.form_fields) {
+                submitHostedPayment(pay);
                 return;
               }
-              alert('Payment is not ready yet. Try again in a moment.');
+              var url = pay && (pay.payment_url || pay.checkout_url || pay.redirect_url);
+              if (url) {
+                window.location.href = url;
+                return;
+              }
+              payBtn.disabled = false;
+              payBtn.textContent = original;
+              alert('Payment service did not return a checkout.');
             })
             .catch(function (err) {
               payBtn.disabled = false;
+              payBtn.textContent = original;
               alert(err.message || String(err));
             });
         };

@@ -171,6 +171,9 @@
     getOrder: function (orderId) {
       return request('GET', '/orders/' + encodeURIComponent(orderId));
     },
+    startPayment: function (orderId) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/payment', {});
+    },
     listMyOrders: function () {
       return request('GET', '/orders/mine');
     },
