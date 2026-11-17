@@ -390,7 +390,7 @@
       var detail = [vehicle, dist].filter(Boolean).join(' · ');
       var li = document.createElement('li');
       var icon = document.createElement('i');
-      icon.className = 'fa fa-motorcycle';
+      icon.className = 'fa fa-car';
       icon.setAttribute('aria-hidden', 'true');
       var text = document.createElement('span');
       text.textContent = detail ? name + ' · ' + detail : name;
@@ -400,7 +400,7 @@
       var pt = validPoint(driver && driver.lat, driver && driver.lng);
       if (!pt || !inst.map || !global.TTMSMap) return;
       var marker = new global.TTMSMap.Marker(pt, {
-        pin: simplePin('driver', 'fa-motorcycle'),
+        pin: simplePin('driver', 'fa-car'),
         title: name,
         zIndexOffset: 450,
       }).addTo(inst.map);
@@ -409,14 +409,30 @@
     });
   }
 
+  function hideCenterSummary(hint) {
+    if (!hint) return;
+    hint.hidden = true;
+    var summary = hint.parentNode;
+    if (summary && summary.classList && summary.classList.contains('ttms-delivery-map-summary')) {
+      summary.hidden = true;
+    }
+  }
+
   function ensureCoverageEl(inst) {
     var el = $('ttms-delivery-coverage');
-    if (!el && inst && inst.hint && inst.hint.parentNode) {
+    if (!el) {
       el = document.createElement('p');
       el.id = 'ttms-delivery-coverage';
       el.className = 'ttms-delivery-coverage';
       el.setAttribute('aria-live', 'polite');
-      inst.hint.parentNode.insertBefore(el, inst.hint.nextSibling);
+      el.textContent = 'Checking drivers nearby…';
+    }
+    if (inst && inst.hud) {
+      if (inst.etaEl && inst.etaEl.parentNode === inst.hud) {
+        if (inst.etaEl.nextSibling !== el) inst.hud.insertBefore(el, inst.etaEl.nextSibling);
+      } else if (el.parentNode !== inst.hud) {
+        inst.hud.appendChild(el);
+      }
     }
     if (inst) inst.coverageEl = el;
     return el;
@@ -521,7 +537,13 @@
     el.className = 'ttms-delivery-eta';
     el.setAttribute('aria-live', 'polite');
     inst.etaEl = el;
-    if (inst.hud) inst.hud.appendChild(el);
+    if (inst.hud) {
+      if (inst.coverageEl && inst.coverageEl.parentNode === inst.hud) {
+        inst.hud.insertBefore(el, inst.coverageEl);
+      } else {
+        inst.hud.appendChild(el);
+      }
+    }
     return el;
   }
 
@@ -531,7 +553,8 @@
     if (source === 'estimate') label += ' (est.)';
     el.textContent = label;
     el.hidden = false;
-    if (inst.hint) setHint(inst.hint, 'Pickup to drop-off · ' + label);
+    hideCenterSummary(inst.hint);
+    if (inst.coverageEl) ensureCoverageEl(inst);
     inst.eta = { duration: durationSec, distance: distanceM, label: label };
   }
 
@@ -860,7 +883,8 @@
               var ll = (ev && ev.latlng) || inst.dropoffMarker.getLatLng();
               writeInputs(form, ll.lat, ll.lng);
               inst.dropoff = { lat: ll.lat, lng: ll.lng };
-              setHint(hint, inst.shop ? 'Routing pickup to drop-off…' : 'Pin set · ' + formatCoord(ll.lat, ll.lng));
+              if (inst.shop) hideCenterSummary(hint);
+              else setHint(hint, 'Pin set · ' + formatCoord(ll.lat, ll.lng));
               refreshRoute(inst, true);
               refreshCoverage(inst);
               focusPoint(map, inst.dropoff, PIN_FOCUS_ZOOM);
@@ -869,7 +893,8 @@
           } else if (inst.dropoffMarker.setLatLng) {
             inst.dropoffMarker.setLatLng(pt);
           }
-          setHint(hint, inst.shop ? 'Routing pickup to drop-off…' : 'Pin set · ' + formatCoord(pt.lat, pt.lng));
+          if (inst.shop) hideCenterSummary(hint);
+          else setHint(hint, 'Pin set · ' + formatCoord(pt.lat, pt.lng));
           if (source !== 'drag') focusPoint(map, pt, PIN_FOCUS_ZOOM);
           refreshRoute(inst, true);
           refreshCoverage(inst);
@@ -918,7 +943,7 @@
       var pt = validPoint(driver.lat, driver.lng);
       if (!pt) return;
       var marker = new global.TTMSMap.Marker(pt, {
-        pin: simplePin('driver', 'fa-motorcycle'),
+        pin: simplePin('driver', 'fa-car'),
         title: driver.display_name || 'Driver',
       }).addTo(inst.map);
       var name = driver.display_name || driver.email || 'Driver';
@@ -936,7 +961,7 @@
     if (!inst || !pt) return;
     if (!inst.driverMarker) {
       inst.driverMarker = new global.TTMSMap.Marker(pt, {
-        pin: simplePin('driver', 'fa-motorcycle'),
+        pin: simplePin('driver', 'fa-car'),
         title: label || 'Driver',
       }).addTo(inst.map);
     } else {
