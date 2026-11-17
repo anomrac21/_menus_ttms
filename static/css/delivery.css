@@ -1236,8 +1236,7 @@ a.ttms-delivery-cta,
   color: color-mix(in srgb, var(--main-bg) 85%, var(--scheme-black));
 }
 
-.ttms-live-map,
-.ttms-delivery-code {
+.ttms-live-map {
   display: block;
   width: min(14rem, 70vw);
   height: auto;
@@ -1245,6 +1244,33 @@ a.ttms-delivery-cta,
   padding: 0.65rem;
   background: #fff;
   border-radius: 12px;
+}
+
+.ttms-delivery-code-frame,
+.ttms-code-show__frame {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: min(16.5rem, 78vw);
+  aspect-ratio: 1;
+  margin: 0.75rem auto;
+  padding: 0.7rem;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.ttms-delivery-code,
+.ttms-code-show__frame img {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
 }
 
 .ttms-code-scan {
@@ -1268,6 +1294,19 @@ a.ttms-delivery-cta,
   object-fit: cover;
 }
 
+.ttms-code-scan__finder {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(70vw, 18rem);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 3px solid #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+
 .ttms-code-scan__bar,
 .ttms-code-show__card {
   padding: 1rem;
@@ -1275,12 +1314,42 @@ a.ttms-delivery-cta,
 }
 
 .ttms-code-scan__bar {
-  background: rgba(0, 0, 0, 0.78);
+  position: relative;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.86);
   color: #fff;
 }
 
 .ttms-code-scan__bar p {
   margin: 0 0 0.7rem;
+}
+
+.ttms-code-scan__cam {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  margin: 0 0 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ttms-code-scan__cam select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #111;
+  background: #fff;
 }
 
 .ttms-code-show {
@@ -1300,15 +1369,6 @@ a.ttms-delivery-cta,
   color: var(--main-text-color, #fff);
 }
 
-.ttms-code-show__card img {
-  display: block;
-  width: min(16rem, 70vw);
-  height: auto;
-  margin: 0.75rem auto;
-  padding: 0.65rem;
-  background: #fff;
-  border-radius: 12px;
-}
 
 .ttms-delivery-scan {
   margin-top: 0.85rem;

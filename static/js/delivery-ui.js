@@ -748,7 +748,7 @@
       scan =
         '<div class="ttms-delivery-scan">' +
         '<p>Show this code to your driver.</p>' +
-        '<img id="ttms-delivery-customer-code" class="ttms-delivery-code" alt="Drop-off code" width="220" height="220" hidden>' +
+        '<div class="ttms-delivery-code-frame"><img id="ttms-delivery-customer-code" class="ttms-delivery-code" alt="Drop-off code" width="240" height="240" hidden></div>' +
         '</div>';
     }
     show(

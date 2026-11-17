@@ -165,8 +165,10 @@
       scan.className = 'ttms-code-scan';
       scan.hidden = true;
       scan.innerHTML =
-        '<video id="ttms-code-scan-video" playsinline autoplay muted></video>' +
+        '<video id="ttms-code-scan-video" playsinline webkit-playsinline autoplay muted></video>' +
+        '<div class="ttms-code-scan__finder" aria-hidden="true"></div>' +
         '<div class="ttms-code-scan__bar"><p id="ttms-code-scan-status">Point the camera at the code</p>' +
+        '<label class="ttms-code-scan__cam">Camera<select id="ttms-code-scan-camera"></select></label>' +
         '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-scan-close">Close camera</button></div>';
       document.body.appendChild(scan);
     }
@@ -179,7 +181,7 @@
       show.innerHTML =
         '<div class="ttms-code-show__card" role="dialog" aria-modal="true">' +
         '<h3 id="ttms-code-show-title">Pickup code</h3>' +
-        '<img id="ttms-code-show-img" alt="Pickup code" width="240" height="240">' +
+        '<div class="ttms-code-show__frame"><img id="ttms-code-show-img" alt="Pickup code" width="240" height="240"></div>' +
         '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-show-close">Hide code</button></div>';
       document.body.appendChild(show);
       document.getElementById('ttms-code-show-close').onclick = function () { show.hidden = true; };
@@ -187,18 +189,14 @@
     return scan;
   }
 
-  var codeScanStop = null;
-  var codeScanStream = null;
+  var codeSession = null;
+  var scanTitle = 'Point the camera at the code';
 
   function stopCodeScan() {
-    if (codeScanStop) codeScanStop();
-    codeScanStop = null;
-    if (codeScanStream) {
-      codeScanStream.getTracks().forEach(function (track) { track.stop(); });
-      codeScanStream = null;
+    if (codeSession) {
+      codeSession.stop();
+      codeSession = null;
     }
-    var video = document.getElementById('ttms-code-scan-video');
-    if (video) video.srcObject = null;
     var box = document.getElementById('ttms-code-scan');
     if (box) box.hidden = true;
   }
@@ -220,24 +218,33 @@
     var video = document.getElementById('ttms-code-scan-video');
     var status = document.getElementById('ttms-code-scan-status');
     var close = document.getElementById('ttms-code-scan-close');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.TTMSCode) {
-      return Promise.reject(new Error('This browser needs a camera to scan the code.'));
+    var select = document.getElementById('ttms-code-scan-camera');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.TTMSCode || !TTMSCode.session) {
+      return Promise.reject(new Error('This browser needs a camera to scan the code. Reload the page and try again.'));
     }
     stopCodeScan();
+    scanTitle = title || 'Point the camera at the code';
     box.hidden = false;
-    if (status) status.textContent = title || 'Point the camera at the code';
+    if (status) status.textContent = scanTitle;
     if (close) close.onclick = stopCodeScan;
-    return navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { ideal: 'environment' } },
-    }).then(function (stream) {
-      codeScanStream = stream;
-      video.srcObject = stream;
-      var play = video.play();
-      if (play && play.catch) play.catch(function () {});
-      return new Promise(function (resolve) {
-        var reading = false;
-        codeScanStop = TTMSCode.watch(video, function (token) {
+    if (select && !select.getAttribute('data-bound')) {
+      select.setAttribute('data-bound', '1');
+      select.addEventListener('change', function () {
+        if (!codeSession || select.dataset.filling) return;
+        if (status) status.textContent = 'Switching camera…';
+        codeSession.open(select.value).then(function (cams) {
+          TTMSCode.fillSelect(select, cams, codeSession && codeSession.deviceId());
+          if (status) status.textContent = scanTitle;
+        }).catch(function () {
+          if (status) status.textContent = 'That camera did not open';
+        });
+      });
+    }
+    return new Promise(function (resolve, reject) {
+      var reading = false;
+      codeSession = TTMSCode.session({
+        video: video,
+        onCode: function (token) {
           if (reading) return;
           reading = true;
           if (status) status.textContent = 'Code read';
@@ -250,11 +257,14 @@
               reading = false;
               if (status) status.textContent = (err && err.message) || 'That code did not match';
             });
-        });
+        },
       });
-    }).catch(function (err) {
-      stopCodeScan();
-      throw err;
+      codeSession.open('').then(function (cams) {
+        TTMSCode.fillSelect(select, cams, codeSession && codeSession.deviceId());
+      }).catch(function (err) {
+        stopCodeScan();
+        reject(err instanceof Error ? err : new Error('Allow the camera to scan the code.'));
+      });
     });
   }
 
