@@ -653,6 +653,10 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     text-align: center;
 }
 
+.notify-inbox-empty[hidden] {
+    display: none !important;
+}
+
 .notify-inbox-empty__icon {
     display: flex;
     align-items: center;

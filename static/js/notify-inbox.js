@@ -684,6 +684,7 @@
     var settle = !!(opts && opts.settle);
     if (sig && sig === paintedSig && list.querySelector('.notify-inbox-item')) {
       list.classList.add('is-settled');
+      if (empty) empty.hidden = true;
       return;
     }
     paintedSig = sig;
