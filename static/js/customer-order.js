@@ -68,6 +68,88 @@
     return titleCase(fulfill) || 'Order';
   }
 
+  var ORDER_PROGRESS_LABEL = {
+    awaiting_drivers: 'Finding drivers',
+    requested: 'Finding drivers',
+    driver_offers: 'Drivers available',
+    offered: 'Drivers available',
+    driver_selected: 'Driver selected',
+    accepted: 'Driver accepted',
+    awaiting_client: 'Restaurant reviewing',
+    payment_pending: 'Payment needed',
+    preparing: 'Kitchen preparing',
+    ready: 'Ready for pickup',
+    picked_up: 'Picked up',
+    delivering: 'On the way',
+    delivered: 'Delivered',
+    completed: 'Completed',
+    complete: 'Completed',
+    paid: 'Paid',
+    cancelled: 'Cancelled',
+    canceled: 'Cancelled',
+    expired: 'Expired',
+    failed: 'Could not deliver',
+    refunded: 'Refunded',
+    closed: 'Closed'
+  };
+
+  function deliveryProgressKey(order) {
+    if (!order) return '';
+    var fulfill = String(order.fulfillment || '').toLowerCase();
+    var id = String(order.delivery_order_id || '').trim();
+    if (fulfill !== 'delivery' && !id) return '';
+    var raw = String(order.delivery_status || '')
+      .toLowerCase()
+      .trim();
+    if (raw && raw !== 'created' && raw !== 'open') return raw;
+    var kitchen = String(order.status || '').toLowerCase();
+    if (kitchen && kitchen !== 'open' && kitchen !== 'created') return kitchen;
+    return 'awaiting_drivers';
+  }
+
+  function progressTone(key) {
+    if (
+      key === 'ready' ||
+      key === 'picked_up' ||
+      key === 'delivering' ||
+      key === 'delivered' ||
+      key === 'completed' ||
+      key === 'complete'
+    ) {
+      return 'ready';
+    }
+    if (
+      key === 'paid' ||
+      key === 'payment_pending' ||
+      key === 'driver_selected' ||
+      key === 'accepted' ||
+      key === 'awaiting_client' ||
+      key === 'preparing'
+    ) {
+      return 'paid';
+    }
+    if (
+      key === 'cancelled' ||
+      key === 'canceled' ||
+      key === 'expired' ||
+      key === 'failed' ||
+      key === 'refunded'
+    ) {
+      return 'cancelled';
+    }
+    return 'open';
+  }
+
+  function orderProgress(order) {
+    var key = deliveryProgressKey(order);
+    if (!key) key = String((order && order.status) || 'open').toLowerCase();
+    return {
+      key: key,
+      label: ORDER_PROGRESS_LABEL[key] || titleCase(key) || 'Open',
+      tone: progressTone(key)
+    };
+  }
+
   function kitchenHint(status) {
     var key = String(status || '').toLowerCase();
     if (key === 'ready') return 'Your order is ready. Show this ticket at pickup.';
@@ -457,7 +539,7 @@
   }
 
   function cartOrderRowHtml(o, i) {
-    var st = o.status || 'open';
+    var progress = orderProgress(o);
     var lines = orderLinesSummary(o);
     var ticket = o.ticket_number || o.order_ref || '';
     var oid = o.id || '';
@@ -466,20 +548,22 @@
       i +
       '">' +
       '<button type="button" class="cart-order-row cart-order-row--' +
-      escapeHtml(st) +
+      escapeHtml(progress.tone) +
       ' js-customer-order" data-order-id="' +
       escapeHtml(oid) +
       '"' +
       (oid ? '' : ' disabled') +
       ' aria-label="Open order #' +
       escapeHtml(ticket) +
+      ', ' +
+      escapeHtml(progress.label) +
       '">' +
       '<div class="cart-order-row__top">' +
       '<b>#' +
       escapeHtml(ticket) +
       '</b>' +
       '<span class="cart-order-row__status">' +
-      escapeHtml(titleCase(st)) +
+      escapeHtml(progress.label) +
       '</span></div>' +
       '<div class="cart-order-row__meta">' +
       escapeHtml(fulfillmentLabel(o)) +
@@ -724,24 +808,26 @@
     if (!list) return;
     list.innerHTML = (orders || [])
       .map(function (o) {
-        var st = o.status || 'open';
+        var progress = orderProgress(o);
         var ticket = o.ticket_number || o.order_ref || '';
         var oid = o.id || '';
         var lines = orderLinesSummary(o);
         return (
           '<li><button type="button" class="dashboard-panel-order dashboard-panel-order--' +
-          escapeHtml(st) +
+          escapeHtml(progress.tone) +
           ' js-customer-order" data-order-id="' +
           escapeHtml(oid) +
           '"' +
           (oid ? '' : ' disabled') +
           ' aria-label="Open order #' +
           escapeHtml(ticket) +
+          ', ' +
+          escapeHtml(progress.label) +
           '">' +
           '<span class="dashboard-panel-order__top"><b>#' +
           escapeHtml(ticket) +
           '</b><span class="dashboard-panel-order__status">' +
-          escapeHtml(titleCase(st)) +
+          escapeHtml(progress.label) +
           '</span></span>' +
           '<span class="dashboard-panel-order__meta">' +
           escapeHtml(fulfillmentLabel(o)) +
