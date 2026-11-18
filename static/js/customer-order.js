@@ -348,6 +348,83 @@
     { key: 'more', label: 'More' }
   ];
 
+  var DONE_ORDER_STATUS = {
+    cancelled: true,
+    canceled: true,
+    paid: true,
+    delivered: true,
+    completed: true,
+    complete: true,
+    refunded: true,
+    expired: true,
+    failed: true,
+    closed: true
+  };
+
+  function isActiveOrder(order) {
+    var st = String((order && order.status) || '').toLowerCase();
+    return !!st && !DONE_ORDER_STATUS[st];
+  }
+
+  function ordersForHere(orders) {
+    var cid = currentClientId();
+    var list = orders || [];
+    if (!cid) return list.slice();
+    return list.filter(function (o) {
+      return clientMatch(o.client_id, cid);
+    });
+  }
+
+  function activeOrderLabel(n) {
+    return n === 1 ? '1 active order' : n + ' active orders';
+  }
+
+  function paintActiveOrderCount(n, orders) {
+    n = Math.max(0, parseInt(n, 10) || 0);
+    var text = n > 9 ? '9+' : String(n);
+    var label = activeOrderLabel(n);
+    var cartBtn = $('cartOrdersBtn');
+    var cartCount = $('cartOrdersCount');
+    if (cartBtn) {
+      cartBtn.classList.toggle('has-active-orders', n > 0);
+      if (!isCartOrdersOpen()) {
+        cartBtn.title = n ? 'My orders · ' + label : 'My orders';
+        cartBtn.setAttribute(
+          'aria-label',
+          n ? label + ' at this restaurant' : 'My orders at this restaurant'
+        );
+      }
+    }
+    if (cartCount) {
+      cartCount.textContent = text;
+      cartCount.hidden = n < 1;
+    }
+    var dash = $('dashboardActiveOrders');
+    var dashCount = $('dashboardActiveOrdersCount');
+    if (dash) dash.hidden = n < 1;
+    if (dashCount) dashCount.textContent = String(n);
+    var headerBadge = $('headerActiveOrders');
+    var menuBtn = $('dashboardBtn');
+    if (headerBadge) {
+      headerBadge.textContent = text;
+      headerBadge.hidden = n < 1;
+    }
+    if (menuBtn) {
+      menuBtn.setAttribute('aria-label', n ? 'Open menu, ' + label : 'Open menu');
+    }
+    var footerBadge = $('footerActiveOrders');
+    var footerBtn = footerBadge && footerBadge.closest('[data-dashboard-toggle]');
+    if (footerBadge) {
+      footerBadge.textContent = text;
+      footerBadge.classList.toggle('hide', n < 1);
+    }
+    if (footerBtn) {
+      footerBtn.setAttribute('aria-label', n ? 'Open menu, ' + label : 'Open menu dashboard');
+    }
+    if (orders) paintDashboardActiveOrders(orders);
+    else if (n < 1) paintDashboardActiveOrders([]);
+  }
+
   function startOfLocalDay(d) {
     var x = new Date(d.getTime());
     x.setHours(0, 0, 0, 0);
@@ -488,23 +565,32 @@
     }
     if (loading || !orders || !orders.length) {
       list.innerHTML = '';
+      if (!loading && !opts.error) paintActiveOrderCount(0, []);
       return;
     }
-    var buckets = groupCartOrders(orders);
+    var active = [];
+    var rest = [];
+    orders.forEach(function (o) {
+      if (isActiveOrder(o)) active.push(o);
+      else rest.push(o);
+    });
+    paintActiveOrderCount(active.length, active);
+    var buckets = groupCartOrders(rest);
     var html = '';
     var i = 0;
-    CART_ORDER_GROUPS.forEach(function (g) {
-      var items = buckets[g.key];
+    function appendGroup(key, label, items) {
       if (!items.length) return;
       html +=
-        '<section class="cart-orders-group" aria-labelledby="cartOrdersGroup-' +
-        g.key +
+        '<section class="cart-orders-group' +
+        (key === 'active' ? ' cart-orders-group--active' : '') +
+        '" aria-labelledby="cartOrdersGroup-' +
+        key +
         '">' +
         '<h3 id="cartOrdersGroup-' +
-        g.key +
+        key +
         '" class="cart-orders-group__title">' +
         '<span class="cart-orders-group__label">' +
-        escapeHtml(g.label) +
+        escapeHtml(label) +
         '</span>' +
         '<span class="cart-orders-group__count">' +
         items.length +
@@ -515,6 +601,10 @@
         i += 1;
       });
       html += '</ul></section>';
+    }
+    appendGroup('active', 'Active', active);
+    CART_ORDER_GROUPS.forEach(function (g) {
+      appendGroup(g.key, g.label, buckets[g.key]);
     });
     list.innerHTML = html;
   }
@@ -545,14 +635,7 @@
     global.OrderClient.mine()
       .then(function (res) {
         if (req !== cartOrdersReq || !isCartOrdersOpen()) return;
-        var orders = (res && res.orders) || [];
-        var cid = currentClientId();
-        if (cid) {
-          orders = orders.filter(function (o) {
-            return clientMatch(o.client_id, cid);
-          });
-        }
-        renderCartOrders(orders, {});
+        renderCartOrders(ordersForHere((res && res.orders) || []), {});
       })
       .catch(function () {
         if (req !== cartOrdersReq || !isCartOrdersOpen()) return;
@@ -607,9 +690,89 @@
     });
   }
 
+  var activeOrdersTimer = null;
+
+  function refreshActiveOrders() {
+    if (
+      !global.OrderClient ||
+      typeof global.OrderClient.mine !== 'function' ||
+      !global.OrderClient.isSignedIn()
+    ) {
+      paintActiveOrderCount(0);
+      return;
+    }
+    global.OrderClient.mine()
+      .then(function (res) {
+        var active = ordersForHere((res && res.orders) || []).filter(isActiveOrder);
+        paintActiveOrderCount(active.length, active);
+      })
+      .catch(function () {});
+  }
+
+  function openActiveOrdersFromMenu() {
+    if (typeof global.closeAllUiPanels === 'function') {
+      global.closeAllUiPanels({ keepCart: true, skipReelsModal: true });
+    } else if (typeof global.closeDashboard === 'function') {
+      global.closeDashboard({ instant: true });
+    }
+    hookCartClose();
+    showCartOrders();
+  }
+
+  function paintDashboardActiveOrders(orders) {
+    var list = $('dashboardActiveOrdersList');
+    if (!list) return;
+    list.innerHTML = (orders || [])
+      .map(function (o) {
+        var st = o.status || 'open';
+        var ticket = o.ticket_number || o.order_ref || '';
+        var oid = o.id || '';
+        var lines = orderLinesSummary(o);
+        return (
+          '<li><button type="button" class="dashboard-panel-order dashboard-panel-order--' +
+          escapeHtml(st) +
+          ' js-customer-order" data-order-id="' +
+          escapeHtml(oid) +
+          '"' +
+          (oid ? '' : ' disabled') +
+          ' aria-label="Open order #' +
+          escapeHtml(ticket) +
+          '">' +
+          '<span class="dashboard-panel-order__top"><b>#' +
+          escapeHtml(ticket) +
+          '</b><span class="dashboard-panel-order__status">' +
+          escapeHtml(titleCase(st)) +
+          '</span></span>' +
+          '<span class="dashboard-panel-order__meta">' +
+          escapeHtml(fulfillmentLabel(o)) +
+          ' · ' +
+          escapeHtml(formatMoney(o.currency, o.total)) +
+          '</span>' +
+          (lines ? '<span class="dashboard-panel-order__lines">' + escapeHtml(lines) + '</span>' : '') +
+          '</button></li>'
+        );
+      })
+      .join('');
+  }
+
+  function bindActiveOrdersButton() {
+    var btn = $('dashboardActiveOrdersAll');
+    if (!btn || btn._ttmsOrdersBound) return;
+    btn._ttmsOrdersBound = true;
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openActiveOrdersFromMenu();
+    });
+  }
+
   function initCartOrders() {
     hookCartClose();
     bindCartOrdersBtn();
+    bindActiveOrdersButton();
+    refreshActiveOrders();
+    if (!activeOrdersTimer) {
+      activeOrdersTimer = global.setInterval(refreshActiveOrders, 60000);
+    }
   }
 
   global.TTMSCustomerOrder = {
@@ -626,5 +789,9 @@
   } else {
     initCartOrders();
   }
-  global.addEventListener('ttms:auth-ready', hookCartClose);
+  global.addEventListener('ttms:auth-ready', function () {
+    hookCartClose();
+    refreshActiveOrders();
+  });
+  global.addEventListener('focus', refreshActiveOrders);
 })(typeof window !== 'undefined' ? window : this);

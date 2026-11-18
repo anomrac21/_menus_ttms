@@ -114,9 +114,33 @@
 }
 
 .dashboard-menu-btn-wrap #dashboardBtn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.dashboard-active-badge {
+  position: absolute;
+  top: -0.25rem;
+  left: -0.15rem;
+  z-index: 3;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--scheme-white) 85%, transparent);
+  background: var(--scheme-accent, var(--accent-color, #f0c43a));
+  color: var(--scheme-white, #fff);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dashboard-active-badge[hidden] {
+  display: none !important;
 }
 
 .dashboard-menu-btn-wrap .account-badge {

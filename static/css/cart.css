@@ -248,6 +248,7 @@ body.is-cart-closing .footer-dock__action--cart {
 
 .cart-back-btn,
 .cart-close-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -283,6 +284,39 @@ body.is-cart-closing .footer-dock__action--cart {
 .cart-close-btn:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--scheme-white) 65%, transparent);
     outline-offset: 2px;
+}
+
+.cart-back-btn.has-active-orders {
+    border-color: color-mix(in srgb, var(--scheme-accent, var(--cart-accent)) 72%, transparent);
+    color: var(--scheme-accent, var(--cart-accent));
+}
+
+.cart-orders-count {
+    position: absolute;
+    top: -0.2rem;
+    right: -0.15rem;
+    z-index: 2;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.28rem;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--scheme-white) 85%, transparent);
+    background: linear-gradient(135deg, var(--scheme-accent-deep, var(--scheme-accent)), var(--scheme-accent, var(--cart-accent)));
+    color: var(--scheme-white, #fff);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.15rem;
+    text-align: center;
+    pointer-events: none;
+}
+
+.cart-orders-count[hidden] {
+    display: none !important;
+}
+
+#cart .cart-orders-group--active .cart-orders-group__count {
+    background: var(--scheme-accent, var(--cart-accent));
+    color: var(--scheme-white, #fff);
 }
 
 /* ============================================

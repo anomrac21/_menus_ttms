@@ -1,6 +1,11 @@
 		{{- $sales := site.Params.salespricing | default dict -}}
 		{{- $leadEmail := $sales.contactemail | default "ttmenus868@gmail.com" -}}
 		{{- $leadTel := $sales.demotel | default "tel:+1-868-364-5662" -}}
+		<section class="dashboard-panel-orders" id="dashboardActiveOrders" hidden aria-labelledby="dashboardActiveOrdersTitle">
+			<h2 class="dashboard-panel-orders__title" id="dashboardActiveOrdersTitle">Active orders <span id="dashboardActiveOrdersCount">0</span></h2>
+			<ul class="body dashboard-panel-list" id="dashboardActiveOrdersList"></ul>
+			<button type="button" class="dashboard-active-orders__all" id="dashboardActiveOrdersAll">All orders</button>
+		</section>
 		<section class="dashboard-lead" id="dashboard-dine" aria-labelledby="dashboard-dine-title">
 			<button
 				type="button"

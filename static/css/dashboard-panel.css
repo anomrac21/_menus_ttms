@@ -242,6 +242,27 @@ body.ttms-logged-in #dashboard.dashboard-panel .account-panel-btn {
     display: none !important;
 }
 
+#dashboard.dashboard-panel .dashboard-active-orders__all {
+    display: inline-flex;
+    align-items: center;
+    margin: 0.1rem 0 0.45rem 0.15rem;
+    padding: 0.38rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--dashboard-accent) 45%, var(--hub-panel-border));
+    background: color-mix(in srgb, var(--dashboard-accent) 14%, transparent);
+    color: inherit;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#dashboard.dashboard-panel .dashboard-active-orders__all:hover,
+#dashboard.dashboard-panel .dashboard-active-orders__all:focus-visible {
+    outline: none;
+    border-color: var(--dashboard-accent);
+}
+
 #dashboard.dashboard-panel .dashboard-panel-orders__title {
     margin: 0 0 0.7rem 0.15rem;
     font-size: 0.78rem;
