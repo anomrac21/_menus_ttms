@@ -8,7 +8,7 @@
   var OPENING = 'is-notify-opening';
   var CLOSING = 'is-notify-closing';
   var CACHE_KEY = 'ttmenus_notify_inbox';
-  var SEEN_KEY = 'ttmenus_notify_inbox_seen';
+  var READ_KEY = 'ttmenus_notify_inbox_read';
   var OPEN_MS = 420;
   var CLOSE_MS = 280;
   var animTimer = null;
@@ -110,15 +110,57 @@
     } catch (e) {}
   }
 
-  function seenAt() {
-    var n = parseInt(localStorage.getItem(SEEN_KEY) || '0', 10);
-    return n > 0 ? n : 0;
+  function readBook() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(READ_KEY) || '{}');
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch (e) {
+      return {};
+    }
   }
 
-  function markSeen() {
+  function isUnread(item) {
+    if (!item) return false;
+    if (!item.id) return true;
+    return !readBook()[item.id];
+  }
+
+  function markAllRead() {
+    markRead(
+      readCache().map(function (item) {
+        return item.id;
+      })
+    );
+    var list = document.getElementById('notify-inbox-list');
+    if (!list) return;
+    Array.prototype.forEach.call(list.querySelectorAll('.is-unread'), function (node) {
+      node.classList.remove('is-unread');
+    });
+  }
+
+  function markRead(ids) {
+    var book = readBook();
+    (ids || []).forEach(function (id) {
+      if (id) book[id] = 1;
+    });
+    var keys = Object.keys(book);
+    if (keys.length > 240) {
+      keys.slice(0, keys.length - 240).forEach(function (key) {
+        delete book[key];
+      });
+    }
     try {
-      localStorage.setItem(SEEN_KEY, String(Date.now()));
+      localStorage.setItem(READ_KEY, JSON.stringify(book));
     } catch (e) {}
+    syncBadge(readCache());
+  }
+
+  function paintRead(root) {
+    if (!root) return;
+    root.classList.remove('is-unread');
+    Array.prototype.forEach.call(root.querySelectorAll('.is-unread'), function (node) {
+      node.classList.remove('is-unread');
+    });
   }
 
   function itemTime(item) {
@@ -283,10 +325,7 @@
   }
 
   function unreadCount(items) {
-    var seen = seenAt();
-    return (items || []).filter(function (item) {
-      return itemTime(item) > seen;
-    }).length;
+    return (items || []).filter(isUnread).length;
   }
 
   function syncBadge(items) {
@@ -351,6 +390,8 @@
   function bindCardClick(node, item) {
     if (!node || !item) return;
     node.addEventListener('click', function () {
+      markRead([item.id]);
+      paintRead(node);
       if (
         item.id &&
         window.NotificationService &&
@@ -436,6 +477,12 @@
       sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
     }
     front.addEventListener('click', function () {
+      var ids = [];
+      Array.prototype.forEach.call(root.querySelectorAll('[data-notify-id]'), function (node) {
+        if (node.getAttribute('data-notify-id')) ids.push(node.getAttribute('data-notify-id'));
+      });
+      markRead(ids);
+      paintRead(root);
       setOpen(true);
     });
     if (collapse) {
@@ -455,14 +502,11 @@
       return;
     }
     if (empty) empty.hidden = true;
-    var seen = seenAt();
     groupItems(items).forEach(function (group, index) {
       var latest = group.latest;
       var li = document.createElement('li');
       li.style.setProperty('--i', String(index));
-      var unread = group.items.some(function (item) {
-        return itemTime(item) > seen;
-      });
+      var unread = group.items.some(isUnread);
       var place = threadPlace(group);
       if (group.items.length < 2) {
         li.className = 'notify-inbox-item';
@@ -482,7 +526,9 @@
         '<span class="notify-stack__peek notify-stack__peek--2"></span>' +
         '<span class="notify-stack__peek notify-stack__peek--1"></span>' +
         '</div>' +
-        '<button type="button" class="notify-stack__front notify-ios" aria-expanded="false">' +
+        '<button type="button" class="notify-stack__front notify-ios' +
+        (unread ? ' is-unread' : '') +
+        '" aria-expanded="false">' +
         iosCardInner(latest, place) +
         '<span class="notify-stack__hint">' +
         escapeHtml(String(group.items.length) + ' notifications · tap to see the flow') +
@@ -500,7 +546,7 @@
               '" style="--i:' +
               escapeHtml(String(idx)) +
               '">' +
-              iosLinkMarkup(item, itemTime(item) > seen, place, idx + 1) +
+              iosLinkMarkup(item, isUnread(item), place, idx + 1) +
               '</li>'
             );
           })
@@ -668,7 +714,6 @@
     setOrigin(panel);
     document.body.classList.add('modal-open');
     panel.setAttribute('aria-hidden', 'false');
-    markSeen();
     loadInbox();
 
     if (prefersReducedMotion()) {
@@ -771,6 +816,11 @@
   };
 
   function bootInboxChrome() {
+    var mark = document.getElementById('notify-inbox-mark');
+    if (mark && !mark.getAttribute('data-bound')) {
+      mark.setAttribute('data-bound', '1');
+      mark.addEventListener('click', markAllRead);
+    }
     waitForAuth().then(
       function () {
         syncBadge(signedIn() ? readCache() : []);
