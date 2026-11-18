@@ -14360,6 +14360,70 @@ button.dashboard-settings-panel-toggle:focus-visible {
   opacity: 1;
 }
 
+.dashboard-delivery-active {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.dashboard-delivery-active[hidden],
+.dashboard-delivery-active-empty[hidden] {
+  display: none !important;
+}
+
+.dashboard-delivery-active-empty {
+  margin: 0.65rem 0 0;
+  color: var(--dash-ink-muted);
+  font-size: 0.85rem;
+}
+
+.dashboard-delivery-active-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 8.5rem) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+  background: color-mix(in srgb, var(--dash-ink, #1e2a38) 6%, transparent);
+}
+
+.dashboard-delivery-active-row.is-notify-target {
+  outline: 2px solid var(--dash-accent, var(--accent-color, #a92700));
+  outline-offset: 2px;
+}
+
+.dashboard-delivery-active-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: var(--dash-accent, var(--accent-color, #a92700));
+}
+
+.dashboard-delivery-active-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.dashboard-delivery-active-copy strong,
+.dashboard-delivery-active-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-delivery-active-copy span {
+  font-size: 0.78rem;
+  color: var(--dash-ink-muted);
+}
+
 #dashboardOrdersHubPanel-delivery .dashboard-card-analytics-hint {
   color: var(--dash-ink-muted);
 }

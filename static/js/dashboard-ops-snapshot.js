@@ -134,7 +134,79 @@
 
   function isOpenDelivery(order) {
     var s = String((order && order.status) || '').toLowerCase();
-    return !/^(delivered|completed|cancelled|canceled|expired|rejected)$/.test(s);
+    return !!s && !/^(delivered|completed|complete|cancelled|canceled|expired|rejected|failed|closed)$/.test(s);
+  }
+
+  var DELIVERY_LABEL = {
+    awaiting_drivers: 'Finding drivers',
+    requested: 'Finding drivers',
+    driver_offers: 'Drivers available',
+    offered: 'Drivers available',
+    driver_selected: 'Driver selected',
+    accepted: 'Driver accepted',
+    awaiting_client: 'Needs review',
+    payment_pending: 'Payment needed',
+    preparing: 'Kitchen preparing',
+    ready: 'Ready for pickup',
+    picked_up: 'Picked up',
+    delivering: 'On the way',
+    paid: 'Paid',
+  };
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function deliveryLabel(status) {
+    var key = String(status || '').toLowerCase();
+    return DELIVERY_LABEL[key] || key.replace(/_/g, ' ') || 'Open';
+  }
+
+  function paintActiveDeliveries(orders) {
+    var open = (orders || []).filter(isOpenDelivery);
+    var status = $('dashboardCardDeliveryStatus');
+    var list = $('dashboardDeliveryActive');
+    var empty = $('dashboardDeliveryActiveEmpty');
+    if (status && status.textContent !== 'Off') {
+      status.textContent = open.length ? String(open.length) : 'None';
+    }
+    if (!list) return;
+    if (!open.length) {
+      list.hidden = true;
+      list.innerHTML = '';
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    var html = open.slice(0, 8).map(function (order) {
+      var name = order.customer_name || order.customer_email || 'Customer';
+      var place = order.dropoff_address || '';
+      var money = order.total == null || order.total === ''
+        ? ''
+        : String(order.total) + (order.currency ? ' ' + order.currency : '');
+      var meta = [place, money].filter(Boolean).join(' · ');
+      return (
+        '<li>' +
+        '<a class="dashboard-delivery-active-row" href="/delivery-orders/" data-id="' + escapeHtml(order.id) + '">' +
+        '<span class="dashboard-delivery-active-status">' + escapeHtml(deliveryLabel(order.status)) + '</span>' +
+        '<span class="dashboard-delivery-active-copy">' +
+        '<strong>' + escapeHtml(name) + '</strong>' +
+        (meta ? '<span>' + escapeHtml(meta) + '</span>' : '') +
+        '</span>' +
+        '</a></li>'
+      );
+    }).join('');
+    if (list.getAttribute('data-sig') === html) {
+      list.hidden = false;
+      return;
+    }
+    list.setAttribute('data-sig', html);
+    list.innerHTML = html;
+    list.hidden = false;
   }
 
   function setOrdersCount(n) {
@@ -173,8 +245,17 @@
     }
   }
 
+  var deliveryWait = 0;
+
   async function loadDelivery() {
-    if (!global.DeliveryClient || typeof global.DeliveryClient.listClientOrders !== 'function' || !global.DeliveryClient.enabled()) {
+    if (!global.DeliveryClient || typeof global.DeliveryClient.listClientOrders !== 'function') {
+      if (deliveryWait < 8) {
+        deliveryWait += 1;
+        setTimeout(loadDelivery, 250);
+      }
+      return;
+    }
+    if (!global.DeliveryClient.enabled()) {
       setCount('dashboardCardDeliveryCount', 0);
       return;
     }
@@ -182,12 +263,12 @@
       var res = await global.DeliveryClient.listClientOrders();
       var orders = (res && (res.orders || res)) || [];
       if (!Array.isArray(orders)) orders = [];
-      setCount(
-        'dashboardCardDeliveryCount',
-        orders.filter(isOpenDelivery).length
-      );
+      var open = orders.filter(isOpenDelivery);
+      setCount('dashboardCardDeliveryCount', open.length);
+      paintActiveDeliveries(open);
     } catch (_) {
       setCount('dashboardCardDeliveryCount', 0);
+      paintActiveDeliveries([]);
     }
   }
 

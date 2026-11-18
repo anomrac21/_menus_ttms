@@ -117,11 +117,15 @@
               <div class="dashboard-card-notify-snapshot" id="dashboardCardDeliverySnapshot" aria-label="Delivery status">
                 <div class="dashboard-card-notify-snapshot-grid">
                   <div class="dashboard-card-notify-snapshot-cell">
-                    <span class="dashboard-card-notify-snapshot-label">Status</span>
-                    <span class="dashboard-card-notify-snapshot-value" id="dashboardCardDeliveryStatus">{{ if $deliveryOn }}Active{{ else }}Off{{ end }}</span>
+                    <span class="dashboard-card-notify-snapshot-label">Open now</span>
+                    <span class="dashboard-card-notify-snapshot-value" id="dashboardCardDeliveryStatus">{{ if $deliveryOn }}Checking…{{ else }}Off{{ end }}</span>
                   </div>
                 </div>
               </div>
+              {{- if $deliveryOn }}
+              <ul class="dashboard-delivery-active" id="dashboardDeliveryActive" hidden></ul>
+              <p class="dashboard-delivery-active-empty" id="dashboardDeliveryActiveEmpty" hidden>No active deliveries.</p>
+              {{- end }}
               {{- if not $deliveryOn }}
               <p class="dashboard-card-analytics-hint" role="status">Delivery is a platform add-on. Enable it on Account to open the fleet inbox.</p>
               {{- end }}

@@ -475,8 +475,13 @@
   }
 
   function focusDashboardCard(action) {
-    var bodyId = action.card === 'delivery' ? 'dashboardCardBody-delivery' : 'dashboardCardBody-orders';
+    var bodyId = 'dashboardCardBody-orders';
     var body = document.getElementById(bodyId);
+    if (action.card === 'delivery') {
+      var tab = document.getElementById('dashboardOrdersHubTab-delivery');
+      if (tab && tab.getAttribute('aria-selected') !== 'true') tab.click();
+      body = document.getElementById('dashboardOrdersHubPanel-delivery') || body;
+    }
     var card = body && body.closest ? body.closest('.card, [data-dashboard-card]') : null;
     if (card) {
       card.classList.remove('is-collapsed');
