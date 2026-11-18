@@ -27,27 +27,65 @@
     return String(status || 'unknown').replace(/_/g, ' ');
   }
 
+  var listSig = '';
+  var settledExpired = {};
+
+  function ordersSig(orders) {
+    return (orders || [])
+      .map(function (o) {
+        return [o && o.id, o && o.status, o && o.total, o && o.dropoff_address, o && o.customer_name].join('|');
+      })
+      .join('~');
+  }
+
+  function afterPickup(status) {
+    return status === 'picked_up' || status === 'delivering';
+  }
+
+  function settlePayments(listEl, orders) {
+    if (!window.DeliveryClient || typeof DeliveryClient.syncClientPayment !== 'function') return;
+    var waiting = (orders || []).filter(function (o) {
+      if (!o || !o.id) return false;
+      if (o.status === 'payment_pending') return true;
+      return o.status === 'expired' && !settledExpired[o.id];
+    });
+    if (!waiting.length) return;
+    waiting.forEach(function (o) {
+      if (o.status === 'expired') settledExpired[o.id] = 1;
+    });
+    var chain = Promise.resolve(false);
+    waiting.forEach(function (order) {
+      chain = chain.then(function (changed) {
+        return DeliveryClient.syncClientPayment(order.id)
+          .then(function (updated) {
+            return changed || !!(updated && updated.status && updated.status !== order.status);
+          })
+          .catch(function () {
+            if (order.status === 'payment_pending') delete settledExpired[order.id];
+            return changed;
+          });
+      });
+    });
+    chain.then(function (changed) {
+      if (changed) refresh(listEl, true);
+    });
+  }
+
   async function refresh(listEl, synced) {
     if (!window.DeliveryClient) return;
-    if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.destroyAll === 'function') {
-      TTMSDeliveryMap.destroyAll();
-    }
-    listEl.innerHTML = '<p class="dashboard-delivery-empty">Loading orders…</p>';
+    var hasCards = !!listEl.querySelector('.ttms-delivery-order-card, .dashboard-delivery-empty');
+    if (!hasCards) listEl.innerHTML = '<p class="dashboard-delivery-empty">Loading orders…</p>';
     try {
       var res = await DeliveryClient.listClientOrders();
       var orders = res.orders || [];
-      if (!synced && typeof DeliveryClient.syncClientPayment === 'function') {
-        var changed = false;
-        var waiting = orders.filter(function (o) {
-          return o.status === 'payment_pending' || o.status === 'expired';
+      var sig = ordersSig(orders);
+      if (!synced) settlePayments(listEl, orders);
+      if (sig === listSig && listEl.querySelector('.ttms-delivery-order-card, .dashboard-delivery-empty')) return;
+      listSig = sig;
+      if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.destroy === 'function') {
+        listEl.querySelectorAll('.ttms-delivery-order-track[id]').forEach(function (track) {
+          TTMSDeliveryMap.destroy(track.id);
         });
-        for (var i = 0; i < waiting.length; i++) {
-          try {
-            var updated = await DeliveryClient.syncClientPayment(waiting[i].id);
-            if (updated && updated.status && updated.status !== waiting[i].status) changed = true;
-          } catch (err) {}
-        }
-        if (changed) return refresh(listEl, true);
       }
       if (!orders.length) {
         listEl.innerHTML = '<p class="dashboard-delivery-empty">No delivery orders yet.</p>';
@@ -135,6 +173,7 @@
                 dropoffLat: o.dropoff_lat,
                 dropoffLng: o.dropoff_lng,
                 dropoffLabel: o.dropoff_address || 'Drop-off',
+                afterPickup: afterPickup(o.status),
               }).catch(function () {
                 track.textContent = 'Map unavailable';
               });

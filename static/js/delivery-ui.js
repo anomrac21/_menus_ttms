@@ -850,6 +850,7 @@
     }
 
     if (window.TTMSDeliveryMap) {
+      var headingToCustomer = order.status === 'picked_up' || order.status === 'delivering';
       TTMSDeliveryMap.mountTrack({
         containerId: 'ttms-live-map',
         restaurantLat: order.restaurant_lat,
@@ -858,6 +859,7 @@
         dropoffLat: order.dropoff_lat,
         dropoffLng: order.dropoff_lng,
         dropoffLabel: order.dropoff_address || 'Drop-off',
+        afterPickup: headingToCustomer,
       }).catch(function () {
         slot.textContent = 'Waiting for driver location…';
       });

@@ -667,6 +667,60 @@
   }
 
   // ---------- Route line ----------
+  const routeFlowFrames = (function () {
+    const frames = [];
+    const period = 8;
+    const dash = 1.15;
+    const steps = 16;
+    for (let i = 0; i < steps; i++) {
+      const offset = (i / steps) * period;
+      const n = (v) => Math.round(v * 100) / 100;
+      if (offset + dash <= period) {
+        frames.push([n(offset), dash, n(period - offset - dash), 0]);
+      } else {
+        const overflow = offset + dash - period;
+        frames.push([0, n(overflow), n(period - dash), n(dash - overflow)]);
+      }
+    }
+    return frames;
+  })();
+  const routeFlowLines = new Set();
+  let routeFlowTimer = 0;
+  let routeFlowFrame = 0;
+
+  function routeMotionOk() {
+    return !(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function routeFlowTick(line, frame) {
+    const map = line && line._map;
+    const flowId = line && line.id ? line.id + '-flow' : '';
+    if (!map || !flowId || !map.getLayer || !map.getLayer(flowId)) return;
+    try {
+      map.setPaintProperty(flowId, 'line-dasharray', frame);
+    } catch (_) {}
+  }
+
+  function routeFlowWatch(line) {
+    if (!line || !routeMotionOk()) return;
+    routeFlowLines.add(line);
+    if (routeFlowTimer) return;
+    routeFlowTimer = global.setInterval(function () {
+      routeFlowFrame = (routeFlowFrame + 1) % routeFlowFrames.length;
+      const frame = routeFlowFrames[routeFlowFrame];
+      routeFlowLines.forEach(function (item) {
+        routeFlowTick(item, frame);
+      });
+    }, 150);
+  }
+
+  function routeFlowForget(line) {
+    routeFlowLines.delete(line);
+    if (routeFlowLines.size || !routeFlowTimer) return;
+    global.clearInterval(routeFlowTimer);
+    routeFlowTimer = 0;
+  }
+
   class RouteLine {
     constructor(coordinates, options) {
       this._coords = normalizeLineCoords(coordinates);
@@ -696,9 +750,12 @@
     }
 
     remove() {
+      routeFlowForget(this);
       if (this._map) {
         try {
           const casingId = this.id + '-casing';
+          const flowId = this.id + '-flow';
+          if (this._map.getLayer(flowId)) this._map.removeLayer(flowId);
           if (this._map.getLayer(this.id)) this._map.removeLayer(this.id);
           if (this._map.getLayer(casingId)) this._map.removeLayer(casingId);
           if (this._map.getSource(this.id)) this._map.removeSource(this.id);
@@ -767,7 +824,32 @@
           map.setPaintProperty(this.id, 'line-dasharray', dash);
         } catch (_) {}
       }
+      const flowId = this.id + '-flow';
+      const flowWidth = Math.max(2, weight * 0.4);
+      if (routeMotionOk()) {
+        if (!map.getLayer(flowId)) {
+          map.addLayer({
+            id: flowId,
+            type: 'line',
+            source: this.id,
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: {
+              'line-color': '#ffffff',
+              'line-width': flowWidth,
+              'line-opacity': 0.7,
+              'line-dasharray': routeFlowFrames[routeFlowFrame],
+            },
+          });
+        } else {
+          map.setPaintProperty(flowId, 'line-width', flowWidth);
+          map.setPaintProperty(flowId, 'line-dasharray', routeFlowFrames[routeFlowFrame]);
+        }
+        routeFlowWatch(this);
+      }
       this._bringToFront(map);
+      try {
+        if (map.getLayer(flowId)) map.moveLayer(flowId);
+      } catch (_) {}
       if (!map.getLayer(this.id)) throw new Error('route layer missing');
     }
 

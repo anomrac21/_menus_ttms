@@ -728,8 +728,19 @@
     }, 5 * 60 * 1000);
   }
 
+  function routeEnds(inst) {
+    if (!inst || !inst.dropoff) return null;
+    if (inst.afterPickup) {
+      if (!inst.driverPoint) return null;
+      return [inst.driverPoint, inst.dropoff];
+    }
+    if (!inst.shop) return null;
+    return [inst.shop, inst.dropoff];
+  }
+
   function paintRoute(inst) {
-    if (!inst || !inst.map || !inst.shop || !inst.dropoff || !global.TTMSMap) return;
+    var ends = routeEnds(inst);
+    if (!inst || !inst.map || !ends || !global.TTMSMap) return;
     if (!inst.router || inst.router._map !== inst.map) {
       if (inst.router && typeof inst.router.remove === 'function') inst.router.remove();
       inst.router = new global.TTMSMap.Router(inst.map, {
@@ -749,23 +760,32 @@
         var summary = route && route.summary;
         inst.routePts = (route && route.coordinates) || [];
         if (summary) showEta(inst, summary.totalTime, summary.totalDistance);
-        if (inst.kind !== 'picker') fitPoints(inst.map, [inst.shop, inst.dropoff]);
+        var found = routeEnds(inst);
+        if (inst.kind !== 'picker' && found && inst.fittedLeg !== (inst.afterPickup ? 'driver' : 'shop')) {
+          inst.fittedLeg = inst.afterPickup ? 'driver' : 'shop';
+          fitPoints(inst.map, found);
+        }
       });
       inst.router.on('routingerror', function () {
         inst.routePts = [];
-        var meters = haversineMeters(inst.shop, inst.dropoff);
+        var failed = routeEnds(inst);
+        var meters = failed ? haversineMeters(failed[0], failed[1]) : 0;
         showEta(inst, (meters / 1000) * 120, meters, 'estimate');
-        if (inst.kind !== 'picker') fitPoints(inst.map, [inst.shop, inst.dropoff]);
+        if (inst.kind !== 'picker' && failed && inst.fittedLeg !== (inst.afterPickup ? 'driver' : 'shop')) {
+          inst.fittedLeg = inst.afterPickup ? 'driver' : 'shop';
+          fitPoints(inst.map, failed);
+        }
       });
     } else {
       inst.router.options.serviceUrl = osrmBase();
       inst.router.options.lineColor = routeColor(currentMode);
       inst.router.options.casingColor = routeCasing(currentMode);
     }
-    inst.router.setWaypoints(inst.shop, inst.dropoff);
+    inst.router.setWaypoints(ends[0], ends[1]);
     var run = function () {
-      if (!inst.router || !inst.shop || !inst.dropoff) return;
-      inst.router.setWaypoints(inst.shop, inst.dropoff);
+      var live = routeEnds(inst);
+      if (!inst.router || !live) return;
+      inst.router.setWaypoints(live[0], live[1]);
       inst.router.route();
     };
     if (typeof inst.map.whenStyleReady === 'function') inst.map.whenStyleReady(run);
@@ -1012,7 +1032,20 @@
       inst.driverMarker.setLatLng(pt);
     }
     if (label) inst.driverMarker.bindTooltip(label);
-    fitPoints(inst.map, [inst.shop, inst.dropoff, pt]);
+    inst.driverPoint = pt;
+    if (inst.afterPickup && inst.dropoff) {
+      var firstFix = !inst.routedFrom;
+      var moved = !inst.routedFrom || haversineMeters(inst.routedFrom, pt) >= 100;
+      if (firstFix || moved) {
+        inst.routedFrom = { lat: pt.lat, lng: pt.lng };
+        if (firstFix) inst.fittedLeg = '';
+        refreshRoute(inst, firstFix);
+      }
+    }
+    if (!inst.afterPickup || !inst.framedDriver) {
+      fitPoints(inst.map, inst.afterPickup ? [inst.dropoff, pt] : [inst.shop, inst.dropoff, pt]);
+      if (inst.afterPickup) inst.framedDriver = true;
+    }
   }
 
   function mountTrack(opts) {
@@ -1039,6 +1072,8 @@
           map: map,
           shop: shop,
           dropoff: dropoff,
+          afterPickup: !!opts.afterPickup,
+          driverPoint: driver,
         };
         addModeToggle(inst);
         inst.shopMarker = addShopMarker(map, shop, opts.restaurantLabel || restaurantLabel());
@@ -1050,14 +1085,15 @@
           if (opts.dropoffLabel) inst.dropoffMarker.bindTooltip(opts.dropoffLabel);
         }
         instances[id] = inst;
-        if (shop && dropoff) refreshRoute(inst, true);
-        else fitPoints(map, [shop, dropoff]);
+        if (inst.afterPickup && driver) inst.routedFrom = driver;
+        if (routeEnds(inst)) refreshRoute(inst, true);
+        else fitPoints(map, [shop, dropoff, driver]);
         if ($('ttms-offers-coverage')) refreshCoverage(inst);
         if (driver) setDriver(id, driver.lat, driver.lng, opts.driverLabel || 'Driver');
         resizeMap(map);
         map.once('idle', function () {
           if (inst.router && typeof inst.router.repaint === 'function') inst.router.repaint();
-          else if (inst.shop && inst.dropoff) refreshRoute(inst, true);
+          else if (routeEnds(inst)) refreshRoute(inst, true);
         });
         return inst;
       });
