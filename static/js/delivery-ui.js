@@ -1204,8 +1204,6 @@
 
     function ensureMap() {
       if (!window.TTMSDeliveryMap || typeof TTMSDeliveryMap.mountPicker !== 'function') {
-        var hint = $('ttms-delivery-pin-hint');
-        if (hint) hint.textContent = 'Loading map…';
         window.setTimeout(ensureMap, 200);
         return;
       }
@@ -1469,7 +1467,7 @@
         window.setTimeout(function () { loadFromQuery(token, attempt + 1); }, 250);
         return;
       }
-      setPanelCopy('Your delivery', 'Still loading');
+      setPanelCopy('Your delivery', 'Reload to see this order');
       show('<p class="ttms-delivery-status">Reload this page to see the order.</p>');
       return;
     }

@@ -258,6 +258,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function isDeliveryChromePath(pathname) {
+        var path = String(pathname || '').split('?')[0].split('#')[0];
+        return path === '/delivery' || path === '/delivery/';
+    }
+
     function pathFromBarba(data) {
         if (!data) return '';
         var next = data.next || {};
@@ -991,10 +996,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 var nextPath = pathFromBarba(data);
-                var nextSlug = slugFromPath(nextPath);
-                if (nextSlug) pendingLoaderSlug = nextSlug;
-                showLoader(nextPath || (pendingLoaderSlug ? '/' + pendingLoaderSlug + '/' : ''));
-                await new Promise(resolve => setTimeout(resolve, 500));
+                if (isDeliveryChromePath(nextPath)) {
+                    hideLoader();
+                    forceHideLoaderElement(loader);
+                } else {
+                    var nextSlug = slugFromPath(nextPath);
+                    if (nextSlug) pendingLoaderSlug = nextSlug;
+                    showLoader(nextPath || (pendingLoaderSlug ? '/' + pendingLoaderSlug + '/' : ''));
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
             },
             async enter(data) {
                 ensureSiteHeader(data && data.next && data.next.container);
@@ -1038,10 +1048,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (typeof window.ensureMenuReelsItemModalClosed === 'function') {
                     window.ensureMenuReelsItemModalClosed();
                 }
-                var holdingReels = await maybeHoldLoaderForReels('nav');
-                if (!holdingReels) {
-                    await waitMs(msUntilMinVisible());
+                if (document.body.classList.contains('ttms-delivery-page') || isDeliveryChromePath(enterPath)) {
                     hideLoader();
+                    forceHideLoaderElement(loader);
+                } else {
+                    var holdingReels = await maybeHoldLoaderForReels('nav');
+                    if (!holdingReels) {
+                        await waitMs(msUntilMinVisible());
+                        hideLoader();
+                    }
                 }
                 
                 // Ensure main element padding is correct (reset any inherited styles)
@@ -1144,9 +1159,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 300);
                 }
 
-                await waitForInitialPageReady(isReelsHome);
-                var holdingEnterReels = await maybeHoldLoaderForReels('enter');
-                if (!holdingEnterReels) hideLoader();
+                if (document.body.classList.contains('ttms-delivery-page')) {
+                    hideLoader();
+                    forceHideLoaderElement(loader);
+                } else {
+                    await waitForInitialPageReady(isReelsHome);
+                    var holdingEnterReels = await maybeHoldLoaderForReels('enter');
+                    if (!holdingEnterReels) hideLoader();
+                }
                 
                 setTimeout(() => {
                     if (!document.getElementById('pageadscontainer')) {

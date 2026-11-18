@@ -1014,14 +1014,10 @@ body.ttms-delivery-open {
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--scheme-white) 6%, transparent);
 }
 
-.ttms-delivery-map:empty::before {
-  content: 'Loading map…';
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 0.82rem;
-  color: var(--ttms-del-muted);
+body.ttms-delivery-page #loader {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .ttms-delivery-map .maplibregl-map {

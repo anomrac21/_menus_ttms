@@ -36,7 +36,9 @@
 </head>
 <body{{ if $isMenuReelsPage }} class="menu-reels-mode"{{ end }}{{ if $isPaymentReturn }} class="ttms-payment-return"{{ end }}{{ if $isDeliveryPage }} class="ttms-delivery-page"{{ end }}>
   <a class="skip-link" href="#main">Skip to main content</a>
+  {{- if not $isDeliveryPage }}
   {{ partial "layout/loader.html" . }}
+  {{- end }}
   {{ partial "features/askofserver.html" . }}
   {{ partial "modals/apple_instructions.html" . }}
 	<div data-barba="wrapper">
