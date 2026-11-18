@@ -307,9 +307,10 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     padding: 0.72rem 0.85rem 0.78rem;
     border: 0;
     border-radius: 1.2rem;
-    background: color-mix(in srgb, var(--scheme-surface, #141820) 88%, var(--scheme-white));
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
-    color: var(--scheme-on-surface, var(--menu-text-color));
+    background: color-mix(in srgb, var(--main-bg, #1e2a38) 88%, #000);
+    box-shadow: none;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 14%, transparent);
+    color: var(--main-text-color, #fff);
     font: inherit;
     text-align: left;
     text-decoration: none;
@@ -334,9 +335,9 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-ios:not(.is-unread) {
-    background: color-mix(in srgb, var(--scheme-surface, #141820) 78%, transparent);
+    background: color-mix(in srgb, var(--main-bg, #1e2a38) 92%, #000);
     box-shadow: none;
-    border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 16%, transparent);
     color: var(--main-text-color, #fff);
 }
 
@@ -405,7 +406,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-stack:not(.is-unread) .notify-stack__peek {
-    background: color-mix(in srgb, var(--main-text-color, #fff) 8%, transparent);
+    background: color-mix(in srgb, var(--main-bg, #1e2a38) 80%, #000);
     box-shadow: none;
 }
 
