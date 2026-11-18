@@ -674,12 +674,15 @@
     const steps = 16;
     for (let i = 0; i < steps; i++) {
       const offset = (i / steps) * period;
-      const n = (v) => Math.round(v * 100) / 100;
+      const n = (v) => {
+        const rounded = Math.round(v * 100) / 100;
+        return rounded > 0 ? rounded : 0.05;
+      };
       if (offset + dash <= period) {
-        frames.push([n(offset), dash, n(period - offset - dash), 0]);
+        frames.push([n(offset), dash, n(period - offset - dash), 0.05]);
       } else {
         const overflow = offset + dash - period;
-        frames.push([0, n(overflow), n(period - dash), n(dash - overflow)]);
+        frames.push([0.05, n(overflow), n(period - dash), n(dash - overflow)]);
       }
     }
     return frames;
