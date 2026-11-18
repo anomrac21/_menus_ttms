@@ -933,7 +933,6 @@
         '<button type="button" class="ttms-delivery-pin__locate" id="ttms-use-location">My location</button>' +
         '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find address</button>' +
         '</div></div>' +
-        '<ul class="ttms-delivery-drivers" id="ttms-delivery-drivers" hidden></ul>' +
         '<div class="ttms-delivery-actions">' +
         '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-delivery-back">Back</button>' +
         '<button type="submit" class="ttms-delivery-cta ttms-delivery-cta--primary" id="ttms-find-drivers">' +

@@ -379,30 +379,18 @@
     });
     inst.availableMarkers = [];
     var list = $('ttms-delivery-drivers');
-    if (!list) return;
-    list.innerHTML = '';
-    var rows = Array.isArray(drivers) ? drivers : [];
-    var panel = document.querySelector('.ttms-delivery-panel');
-    if (panel) panel.classList.toggle('has-nearby-drivers', rows.length > 0);
-    if (!rows.length) {
+    if (list) {
+      list.innerHTML = '';
       list.hidden = true;
-      return;
     }
-    list.hidden = false;
+    var panel = document.querySelector('.ttms-delivery-panel');
+    if (panel) panel.classList.remove('has-nearby-drivers');
+    var rows = Array.isArray(drivers) ? drivers : [];
     rows.forEach(function (driver) {
       var name = (driver && driver.name) || 'Driver';
       var vehicle = driver && driver.vehicle ? String(driver.vehicle) : '';
       var dist = driverDistanceLabel(driver && driver.distance_km);
       var detail = [vehicle, dist].filter(Boolean).join(' · ');
-      var li = document.createElement('li');
-      var icon = document.createElement('i');
-      icon.className = 'fa fa-car';
-      icon.setAttribute('aria-hidden', 'true');
-      var text = document.createElement('span');
-      text.textContent = detail ? name + ' · ' + detail : name;
-      li.appendChild(icon);
-      li.appendChild(text);
-      list.appendChild(li);
       var pt = validPoint(driver && driver.lat, driver && driver.lng);
       if (!pt || !inst.map || !global.TTMSMap) return;
       var marker = new global.TTMSMap.Marker(pt, {
