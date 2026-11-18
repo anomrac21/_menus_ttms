@@ -387,9 +387,70 @@
     el.textContent = text;
   }
 
+  function deliveryOrderFromHref(href) {
+    var raw = String(href || '');
+    if (!raw) return null;
+    try {
+      var url = new URL(raw, window.location.origin);
+      var path = url.pathname.replace(/\/+$/, '');
+      if (!/\/delivery$/i.test(path)) return null;
+      var id = url.searchParams.get('order') || url.searchParams.get('delivery_order') || '';
+      id = String(id).trim();
+      if (!id) return null;
+      return { id: id, pay: url.searchParams.get('pay') === '1' };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function deliveryPageHref(target) {
+    return '/delivery/?order=' + encodeURIComponent(target.id) + (target.pay ? '&pay=1' : '');
+  }
+
+  async function openDeliveryPanel(target) {
+    if (typeof window.closeAllUiPanels === 'function') {
+      window.closeAllUiPanels({ skipReelsModal: true });
+    } else if (typeof window.closeNotifyInbox === 'function') {
+      window.closeNotifyInbox({ instant: true });
+    }
+    if (!window.DeliveryClient || typeof DeliveryClient.getOrder !== 'function' || !window.TTMSDeliveryUI) {
+      window.location.href = deliveryPageHref(target);
+      return;
+    }
+    try {
+      var order = await DeliveryClient.getOrder(target.id);
+      if (
+        order &&
+        (order.status === 'payment_pending' || order.status === 'expired') &&
+        typeof DeliveryClient.syncPayment === 'function'
+      ) {
+        order = await DeliveryClient.syncPayment(order.id).catch(function () {
+          return order;
+        });
+      }
+      var st = String((order && order.status) || '');
+      if (
+        (st === 'awaiting_drivers' || st === 'driver_offers' || st === 'requested' || st === 'offered') &&
+        typeof TTMSDeliveryUI.showOffers === 'function'
+      ) {
+        await TTMSDeliveryUI.showOffers(order.id);
+        return;
+      }
+      if (order && typeof TTMSDeliveryUI.showOrder === 'function') {
+        TTMSDeliveryUI.showOrder(order);
+        return;
+      }
+    } catch (err) {}
+    window.location.href = deliveryPageHref(target);
+  }
+
   function bindCardClick(node, item) {
     if (!node || !item) return;
-    node.addEventListener('click', function () {
+    node.addEventListener('click', function (e) {
+      var delivery = deliveryOrderFromHref(item.url);
+      var stay =
+        delivery && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0;
+      if (stay) e.preventDefault();
       markRead([item.id]);
       paintRead(node);
       if (
@@ -398,6 +459,10 @@
         typeof NotificationService.trackNotificationClick === 'function'
       ) {
         NotificationService.trackNotificationClick(item.id);
+      }
+      if (stay) {
+        openDeliveryPanel(delivery);
+        return;
       }
       if (typeof window.closeNotifyInbox === 'function') {
         window.closeNotifyInbox({ instant: !item.url });
