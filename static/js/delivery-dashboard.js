@@ -206,12 +206,17 @@
       scan.innerHTML =
         '<video id="ttms-code-scan-video" class="ttms-scan-source" playsinline webkit-playsinline autoplay muted></video>' +
         '<canvas class="ttms-scan-preview" aria-hidden="true"></canvas>' +
-        '<div class="ttms-code-scan__finder" aria-hidden="true"></div>' +
-        '<div class="ttms-code-scan__bar"><p id="ttms-code-scan-status">Point the camera at the code</p>' +
+        '<div class="ttms-code-scan__stage"><div class="ttms-code-scan__finder" aria-hidden="true"></div></div>' +
+        '<div class="ttms-code-scan__bar">' +
+        '<p id="ttms-code-scan-status">Point the camera at the code</p>' +
+        '<div class="ttms-code-scan__row">' +
         '<label class="ttms-code-scan__cam">Camera<select id="ttms-code-scan-camera"></select></label>' +
+        '<button type="button" class="btn-dash btn-dash-secondary ttms-code-scan__close" id="ttms-code-scan-close">Close</button>' +
+        '</div>' +
+        '<div class="ttms-code-scan__row">' +
         '<label class="ttms-code-scan__type">Their code<input id="ttms-code-type" maxlength="8" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="K7M2P4"></label>' +
-        '<button type="button" class="btn-dash btn-dash-primary" id="ttms-code-use">Use their code</button>' +
-        '<button type="button" class="btn-dash btn-dash-secondary" id="ttms-code-scan-close">Close camera</button></div>';
+        '<button type="button" class="btn-dash btn-dash-primary ttms-code-scan__use" id="ttms-code-use">Use their code</button>' +
+        '</div></div>';
       document.body.appendChild(scan);
     }
     var show = document.getElementById('ttms-code-show');

@@ -186,6 +186,14 @@
     if (!el || el.dataset.ttmsBound === '1') return;
     el.dataset.ttmsBound = '1';
     el.addEventListener('click', function (e) {
+      if (e.target && e.target.closest('#ttms-delivery-nav-back')) {
+        if (navState.back) navState.back();
+        return;
+      }
+      if (e.target && e.target.closest('#ttms-delivery-nav-forward')) {
+        if (navState.forward) navState.forward();
+        return;
+      }
       if (e.target && e.target.closest('[data-close]')) closePanel();
     });
     document.addEventListener('keydown', function (e) {
@@ -217,9 +225,14 @@
       '<h2 id="ttms-delivery-title">Deliver with TTMenus</h2>' +
       '<p class="ttms-delivery-panel__sub" id="ttms-delivery-sub">Drop-off for nearby drivers</p>' +
       '</div></div>' +
+      '<div class="ttms-delivery-panel__tools">' +
+      '<button type="button" class="ttms-delivery-panel__nav" id="ttms-delivery-nav-back" hidden aria-label="Back">' +
+      '<i class="fa fa-chevron-left" aria-hidden="true"></i></button>' +
+      '<button type="button" class="ttms-delivery-panel__nav" id="ttms-delivery-nav-forward" hidden aria-label="Forward">' +
+      '<i class="fa fa-chevron-right" aria-hidden="true"></i></button>' +
       '<button type="button" class="ttms-delivery-panel__close" data-close="1" aria-label="Close">' +
       '<i class="fa fa-times" aria-hidden="true"></i></button>' +
-      '</header>' +
+      '</div></header>' +
       '<div class="ttms-delivery-panel__body" id="ttms-delivery-body"></div>' +
       '</div>';
     document.body.appendChild(el);
@@ -237,9 +250,27 @@
     if (panel) panel.classList.toggle('is-map-step', !!on);
   }
 
+  var navState = { back: null, forward: null };
+  var dockCollapsed = false;
+
+  function setNav(next) {
+    navState = next || {};
+    var back = $('ttms-delivery-nav-back');
+    var forward = $('ttms-delivery-nav-forward');
+    if (back) {
+      back.hidden = typeof navState.back !== 'function';
+      back.setAttribute('aria-label', navState.backLabel || 'Back');
+    }
+    if (forward) {
+      forward.hidden = typeof navState.forward !== 'function';
+      forward.setAttribute('aria-label', navState.forwardLabel || 'Forward');
+    }
+  }
+
   function show(html) {
     tearDownMaps();
     var panel = ensurePanel();
+    setNav({});
     panel.classList.remove('is-map-step', 'is-checkout');
     var body = $('ttms-delivery-body');
     if (bodyFreshTimer) {
@@ -616,6 +647,152 @@
     return (isFinite(n) ? n.toFixed(2) : '0.00') + ' ' + (currency || 'TTD');
   }
 
+  function formatStamp(value) {
+    var t = value ? Date.parse(value) : NaN;
+    if (isNaN(t)) return '';
+    var d = new Date(t);
+    var time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    var now = new Date();
+    if (d.toDateString() === now.toDateString()) return time;
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' · ' + time;
+  }
+
+  var HISTORY_LABEL = {
+    created: 'Order placed',
+    drivers_notified: 'Drivers notified',
+    driver_requested: 'Driver requested the order',
+    driver_selected: 'Driver selected',
+    driver_replaced: 'Driver changed',
+    driver_removed: 'Driver removed',
+    client_accepted: 'Restaurant accepted',
+    client_rejected: 'Restaurant declined',
+    paid: 'Payment received',
+    ready: 'Ready for pickup',
+    picked_up: 'Picked up',
+    delivered: 'Delivered',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    expired: 'Expired',
+  };
+
+  function historyRows(order) {
+    var rows = [];
+    var seen = {};
+    var events = (order && order.events) || [];
+    events.forEach(function (ev) {
+      if (!ev || !ev.created_at) return;
+      var type = String(ev.event_type || '');
+      if (type === 'notification_queued' || type === 'broadcast_error' || type === 'payment_init_error') return;
+      var title = HISTORY_LABEL[type] || statusLabel(type);
+      var detail = ev.message && ev.message !== title ? String(ev.message) : '';
+      rows.push({
+        at: ev.created_at,
+        title: title,
+        detail: detail,
+        amount: type === 'paid' ? money(order.total, order.currency) : '',
+      });
+      seen[type] = true;
+    });
+    function add(type, at, title, amount) {
+      if (!at || seen[type]) return;
+      rows.push({ at: at, title: title, detail: '', amount: amount || '' });
+      seen[type] = true;
+    }
+    add('created', order.created_at, 'Order placed', '');
+    var settlement = order.settlement || {};
+    add(
+      'paid',
+      settlement.created_at,
+      'Payment received',
+      money(settlement.gross_total || order.total, order.currency || settlement.currency)
+    );
+    add('ready', order.ready_at, 'Ready for pickup', '');
+    add('picked_up', order.picked_up_at, 'Picked up', '');
+    add('delivered', order.delivered_at, 'Delivered', '');
+    add('completed', order.completed_at, 'Completed', '');
+    add('cancelled', order.cancelled_at, 'Cancelled', '');
+    rows.sort(function (a, b) {
+      return Date.parse(a.at) - Date.parse(b.at);
+    });
+    return rows;
+  }
+
+  function historyHtml(order) {
+    var currency = order.currency || 'TTD';
+    var rows = historyRows(order);
+    var list = rows.length
+      ? rows
+          .map(function (row) {
+            return (
+              '<li><time datetime="' +
+              escapeAttr(row.at) +
+              '">' +
+              escapeHtml(formatStamp(row.at)) +
+              '</time><div><strong>' +
+              escapeHtml(row.title) +
+              '</strong>' +
+              (row.detail ? '<p>' + escapeHtml(row.detail) + '</p>' : '') +
+              '</div>' +
+              (row.amount ? '<span>' + escapeHtml(row.amount) + '</span>' : '<span></span>') +
+              '</li>'
+            );
+          })
+          .join('')
+      : '<li class="ttms-delivery-history__empty">No transactions yet</li>';
+    return (
+      '<ul class="ttms-delivery-history__totals">' +
+      '<li><span>Food</span><span>' +
+      escapeHtml(money(order.subtotal, currency)) +
+      '</span></li>' +
+      '<li><span>Delivery</span><span>' +
+      escapeHtml(money(order.delivery_fee, currency)) +
+      '</span></li>' +
+      '<li class="ttms-delivery-history__grand"><span>Total</span><span>' +
+      escapeHtml(money(order.total, currency)) +
+      '</span></li></ul>' +
+      '<ol class="ttms-delivery-history__list">' +
+      list +
+      '</ol>'
+    );
+  }
+
+  function showHistory(order) {
+    if (!order) return;
+    setPanelCopy('Transactions', order.restaurant_name || 'This order');
+    show('<div class="ttms-delivery-history">' + historyHtml(order) + '</div>');
+    setNav({
+      back: function () {
+        showOrderStatus(order);
+      },
+      backLabel: 'Back to order',
+    });
+  }
+
+  function bindDock(order) {
+    var dock = $('ttms-delivery-dock');
+    var btn = $('ttms-delivery-dock-toggle');
+    if (dock) dock.classList.toggle('is-collapsed', dockCollapsed);
+    if (btn) {
+      btn.setAttribute('aria-expanded', dockCollapsed ? 'false' : 'true');
+      btn.onclick = function () {
+        dockCollapsed = !dockCollapsed;
+        if (dock) dock.classList.toggle('is-collapsed', dockCollapsed);
+        btn.setAttribute('aria-expanded', dockCollapsed ? 'false' : 'true');
+        if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.resize === 'function') {
+          window.requestAnimationFrame(function () {
+            TTMSDeliveryMap.resize('ttms-live-map');
+          });
+        }
+      };
+    }
+    var historyBtn = $('ttms-delivery-history');
+    if (historyBtn) {
+      historyBtn.onclick = function () {
+        showHistory(order);
+      };
+    }
+  }
+
   function orderSheet(order) {
     var currency = order.currency || 'TTD';
     var lines = orderLines(order)
@@ -757,15 +934,32 @@
     show(
       '<div class="ttms-delivery-track-stage">' +
         '<div id="ttms-live-map" class="ttms-live-map ttms-delivery-map" aria-live="polite">Waiting for driver location…</div>' +
-        '<div class="ttms-delivery-map-dock">' +
+        '<div class="ttms-delivery-map-dock' +
+        (dockCollapsed ? ' is-collapsed' : '') +
+        '" id="ttms-delivery-dock">' +
+        '<button type="button" class="ttms-delivery-dock-toggle" id="ttms-delivery-dock-toggle" aria-expanded="' +
+        (dockCollapsed ? 'false' : 'true') +
+        '" aria-controls="ttms-delivery-dock-body">' +
+        '<span>Order · ' +
+        escapeHtml(money(order.total, order.currency)) +
+        '</span><i class="fa fa-chevron-down" aria-hidden="true"></i></button>' +
+        '<div id="ttms-delivery-dock-body">' +
         offers +
         orderSheet(order) +
         pay +
         scan +
-        '</div></div>'
+        '<div class="ttms-delivery-actions"><button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-delivery-history">Transactions</button></div>' +
+        '</div></div></div>'
     );
     setMapStep(true);
     setCheckout(true);
+    setNav({
+      forward: function () {
+        showHistory(order);
+      },
+      forwardLabel: 'Transaction history',
+    });
+    bindDock(order);
     if (paying) {
       var payBtn = $('ttms-delivery-pay-progress');
       if (payBtn) {
@@ -985,6 +1179,16 @@
         dot.classList.toggle('is-done', Number(dot.getAttribute('data-step-dot')) < next);
       });
       setMapStep(next === 2);
+      setNav(
+        next === 2
+          ? { back: function () { goToStep(1); }, backLabel: 'Back to details' }
+          : {
+              forward: function () {
+                if (nextBtn) nextBtn.click();
+              },
+              forwardLabel: 'Pin drop-off',
+            }
+      );
       if (next === 2) {
         setPanelCopy('Drop-off pin', 'Confirm where drivers should deliver');
         ensureMap();
@@ -1126,6 +1330,8 @@
           });
       };
     }
+
+    goToStep(1);
 
     form.onsubmit = async function (e) {
       e.preventDefault();
