@@ -1898,6 +1898,33 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (insertBefore) menublock.insertBefore(li, insertBefore);
       else menublock.appendChild(li);
     });
+    pinPromotionsAfterLocations(menublock);
+  }
+
+  function pinPromotionsAfterLocations(menublock) {
+    if (!menublock) return;
+    var promo = null;
+    Array.prototype.forEach.call(menublock.querySelectorAll('li.menublock-item'), function (li) {
+      if (promo) return;
+      var label = li.querySelector('.menublock-link__label');
+      var text = label ? String(label.textContent || '').trim().toLowerCase() : '';
+      var link = li.querySelector('a.menublock-link');
+      var href = link ? String(link.getAttribute('href') || '').toLowerCase() : '';
+      if (text === 'promotions' || text === 'promos' || /(^|\/|#)promotions?(?:$|[/?#])/.test(href)) {
+        promo = li;
+      }
+    });
+    if (!promo) return;
+    var locations = menublock.querySelector('.menublock-item--locations');
+    if (locations) {
+      if (locations.nextElementSibling !== promo) {
+        locations.parentNode.insertBefore(promo, locations.nextSibling);
+      }
+      return;
+    }
+    if (menublock.firstElementChild !== promo) {
+      menublock.insertBefore(promo, menublock.firstChild);
+    }
   }
 
   function sectionPermalinkFromHeader(header) {

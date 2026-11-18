@@ -4,6 +4,21 @@
 {{- $multi := partial "menu/multi-location-enabled.html" . -}}
 {{- $locSlug := partial "menu/location-slug.html" . -}}
 {{- $menuSections := partial "menu/category-sections.html" . -}}
+{{- $promoSections := slice -}}
+{{- $restSections := slice -}}
+{{- range $menuSections -}}
+  {{- $slug := lower (partial "menu/section-slug.html" .) -}}
+  {{- $label := lower .LinkTitle -}}
+  {{- if or (eq $label "promotions") (eq $label "promos") (eq $slug "promotions") (eq $slug "promotion") -}}
+    {{- $promoSections = $promoSections | append . -}}
+  {{- else -}}
+    {{- $restSections = $restSections | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- $orderedSections := $promoSections -}}
+{{- range $restSections -}}
+  {{- $orderedSections = $orderedSections | append . -}}
+{{- end -}}
 {{- $isMenuHome := or .IsHome (eq .Layout "location-home") (and $locSlug (eq .Kind "section") (eq (path.Base (strings.TrimSuffix .RelPermalink "/")) $locSlug)) -}}
 <div class="main-header">
 	<div class="container">
@@ -49,7 +64,7 @@
 			{{- end -}}
 		{{- end -}}
 		{{- if not $isMenuHome -}}
-			{{- range $menuSections -}}
+			{{- range $orderedSections -}}
 				{{- $title:= .LinkTitle -}}
 				{{- $titleurl := .RelPermalink -}}
 			<li class="item menublock-item{{ if eq $title $pagetitle }} active{{ end }}">
@@ -66,7 +81,7 @@
 			</li>
 			{{- end -}}
 		{{- else -}}
-			{{- range $menuSections -}}
+			{{- range $orderedSections -}}
 			<li class="item menublock-item">
 				<a href="#{{ .LinkTitle }}" class="menublock-link" onclick="closeCart();">
 					{{- if .Params.icon -}}
