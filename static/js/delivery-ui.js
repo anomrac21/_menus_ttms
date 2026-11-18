@@ -472,14 +472,14 @@
   }
 
   async function showDriverOffers(orderId) {
-    setPanelCopy('Nearby drivers', 'Choose a driver to start your delivery');
+    setPanelCopy('Nearby drivers', 'Checking drivers near the restaurant…');
     show(
       '<div class="ttms-delivery-offers-stage">' +
         '<div id="ttms-offers-map" class="ttms-delivery-map" role="application" aria-label="Drop-off map"></div>' +
         '<div class="ttms-delivery-map-dock">' +
         '<div class="ttms-delivery-status">' +
         '<span class="ttms-delivery-status__pulse" aria-hidden="true"></span>' +
-        '<div><strong>Listening for nearby drivers</strong>' +
+        '<div><strong id="ttms-offers-coverage">Checking drivers near the restaurant…</strong>' +
         '<p>Offers appear as drivers accept the request.</p></div></div>' +
         '<ul id="ttms-driver-offers" class="ttms-driver-offers"></ul>' +
         '<div class="ttms-delivery-actions">' +

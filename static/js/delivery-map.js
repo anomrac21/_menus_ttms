@@ -445,14 +445,21 @@
   }
 
   function paintCoverage(inst, data, failed) {
+    var sentence = failed ? 'Driver count unavailable' : coverageSentence(data);
     var el = ensureCoverageEl(inst);
-    if (!el) return;
-    el.textContent = failed ? 'Driver count unavailable' : coverageSentence(data);
+    if (el) el.textContent = sentence;
+    var offerCount = $('ttms-offers-coverage');
+    if (offerCount) {
+      offerCount.textContent = sentence;
+      var sub = $('ttms-delivery-sub');
+      if (sub) sub.textContent = sentence;
+    }
     paintAvailableDrivers(inst, failed ? [] : data && data.drivers);
   }
 
   function refreshCoverage(inst) {
-    if (!inst || inst.kind !== 'picker') return;
+    if (!inst || (inst.kind !== 'picker' && inst.kind !== 'track')) return;
+    if (!inst.shop && !inst.dropoff) return;
     if (inst.coverageTimer) window.clearTimeout(inst.coverageTimer);
     inst.coverageTimer = window.setTimeout(function () {
       inst.coverageTimer = null;
@@ -1057,6 +1064,7 @@
         instances[id] = inst;
         if (shop && dropoff) refreshRoute(inst, true);
         else fitPoints(map, [shop, dropoff]);
+        if ($('ttms-offers-coverage')) refreshCoverage(inst);
         if (driver) setDriver(id, driver.lat, driver.lng, opts.driverLabel || 'Driver');
         resizeMap(map);
         map.once('idle', function () {
