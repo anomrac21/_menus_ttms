@@ -930,6 +930,7 @@
         '<div class="ttms-delivery-pin__head"><strong>Drop-off pin</strong>' +
         '<div class="ttms-delivery-pin__tools">' +
         '<button type="button" class="ttms-delivery-journey" id="ttms-delivery-journey">Journey</button>' +
+        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-use-location">My location</button>' +
         '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find address</button>' +
         '</div></div>' +
         '<ul class="ttms-delivery-drivers" id="ttms-delivery-drivers" hidden></ul>' +
@@ -942,6 +943,7 @@
     setCheckout(true);
     var form = $('ttms-delivery-form');
     var locateBtn = $('ttms-locate-address');
+    var liveBtn = $('ttms-use-location');
     var journeyBtn = $('ttms-delivery-journey');
     var nextBtn = $('ttms-delivery-next');
     var backBtn = $('ttms-delivery-back');
@@ -1059,6 +1061,40 @@
         if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.showJourney === 'function') {
           TTMSDeliveryMap.showJourney('ttms-delivery-pin-map');
         }
+      };
+    }
+
+    if (liveBtn) {
+      liveBtn.onclick = function () {
+        if (!navigator.geolocation) {
+          alert('This phone cannot share its location');
+          return;
+        }
+        liveBtn.disabled = true;
+        liveBtn.textContent = 'Locating…';
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            liveBtn.disabled = false;
+            liveBtn.textContent = 'My location';
+            var lat = pos && pos.coords ? pos.coords.latitude : NaN;
+            var lng = pos && pos.coords ? pos.coords.longitude : NaN;
+            if (!isFinite(lat) || !isFinite(lng)) {
+              alert('Could not read your location');
+              return;
+            }
+            applyPin(lat, lng, true);
+          },
+          function (err) {
+            liveBtn.disabled = false;
+            liveBtn.textContent = 'My location';
+            var code = err && err.code;
+            var msg = 'Allow location to drop the pin where you are';
+            if (code === 2) msg = 'Location is unavailable right now';
+            if (code === 3) msg = 'Location timed out. Try again';
+            alert(msg);
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
       };
     }
 
