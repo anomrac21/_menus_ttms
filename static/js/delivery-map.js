@@ -350,13 +350,19 @@
 
   function coverageSentence(data) {
     var online = Number(data && data.drivers_online) || 0;
-    var near = data && data.near_you != null && data.near_you !== '' ? Number(data.near_you) : null;
+    var fromRestaurant = data && data.near_client != null && data.near_client !== '';
+    var near = fromRestaurant
+      ? Number(data.near_client)
+      : data && data.near_you != null && data.near_you !== ''
+        ? Number(data.near_you)
+        : null;
+    var place = fromRestaurant ? 'the restaurant' : 'this pin';
     if (!online) return 'No drivers available';
     if (near === 0) {
-      return 'No drivers near this pin · ' + (online === 1 ? '1 online' : online + ' online');
+      return 'No drivers near ' + place + ' · ' + (online === 1 ? '1 online' : online + ' online');
     }
-    if (near === 1) return '1 driver near this pin';
-    if (near > 1) return near + ' drivers near this pin';
+    if (near === 1) return '1 driver near ' + place;
+    if (near > 1) return near + ' drivers near ' + place;
     return online === 1 ? '1 driver available' : online + ' drivers available';
   }
 
