@@ -549,11 +549,19 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     z-index: 2;
 }
 
+.dashboard-order-ticket.is-notify-target,
+.ttms-delivery-order-card.is-notify-target {
+    outline: 2px solid var(--accent-color, #a92700);
+    outline-offset: 2px;
+}
+
 .notify-stack__hint {
     margin-top: 0.35rem;
     font-size: 0.7rem;
     font-weight: 700;
     color: var(--notify-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
 }
 
 .notify-stack__sheet {

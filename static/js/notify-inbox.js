@@ -444,13 +444,108 @@
     window.location.href = deliveryPageHref(target);
   }
 
+  function cssAttr(value) {
+    var text = String(value || '');
+    if (window.CSS && typeof CSS.escape === 'function') return CSS.escape(text);
+    return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  function dashboardOpen() {
+    var dash = document.getElementById('dashboard');
+    return !!(
+      dash &&
+      !dash.classList.contains('loader-hide-left') &&
+      !dash.classList.contains('is-dashboard-closing') &&
+      dash.getAttribute('aria-hidden') !== 'true'
+    );
+  }
+
+  function panelAction(item) {
+    var data = (item && item.data) || {};
+    var href = String((item && item.url) || '');
+    var delivery = deliveryOrderFromHref(href);
+    if (delivery) return { type: 'delivery', target: delivery };
+    var role = String(data.role || '').toLowerCase();
+    if (role === 'client' || /dashboard/i.test(href)) {
+      var card = /dashboardCardBody-delivery|\/delivery\//i.test(href) ? 'delivery' : 'orders';
+      return { type: 'dashboard', card: card, id: data.order_id || data.delivery_order_id || '' };
+    }
+    if (data.order_id) return { type: 'customer', id: String(data.order_id) };
+    return null;
+  }
+
+  function focusDashboardCard(action) {
+    var bodyId = action.card === 'delivery' ? 'dashboardCardBody-delivery' : 'dashboardCardBody-orders';
+    var body = document.getElementById(bodyId);
+    var card = body && body.closest ? body.closest('.card, [data-dashboard-card]') : null;
+    if (card) {
+      card.classList.remove('is-collapsed');
+      var toggle = card.querySelector('[data-dashboard-card-toggle]');
+      if (toggle) toggle.setAttribute('aria-expanded', 'true');
+    }
+    var row = action.id && body ? body.querySelector('[data-id="' + cssAttr(action.id) + '"]') : null;
+    if (row) {
+      row.classList.add('is-notify-target');
+      window.setTimeout(function () {
+        row.classList.remove('is-notify-target');
+      }, 2400);
+    }
+    var target = row || body || card;
+    if (target && target.scrollIntoView) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+
+  function openDashboardPanel(action) {
+    if (typeof window.closeAllUiPanels === 'function') {
+      window.closeAllUiPanels({ keepDashboard: true, skipReelsModal: true });
+    } else if (typeof window.closeNotifyInbox === 'function') {
+      window.closeNotifyInbox({ instant: true });
+    }
+    var already = dashboardOpen();
+    if (!already && typeof window.toggleDashboard === 'function') window.toggleDashboard();
+    window.setTimeout(function () {
+      focusDashboardCard(action);
+    }, already ? 40 : 420);
+  }
+
+  async function openCustomerOrder(id) {
+    if (typeof window.closeAllUiPanels === 'function') {
+      window.closeAllUiPanels({ keepCart: true, skipReelsModal: true });
+    } else if (typeof window.closeNotifyInbox === 'function') {
+      window.closeNotifyInbox({ instant: true });
+    }
+    if (window.TTMSCustomerOrder && typeof TTMSCustomerOrder.open === 'function') {
+      try {
+        await TTMSCustomerOrder.open(id);
+        return true;
+      } catch (err) {}
+    }
+    return false;
+  }
+
+  async function openItemPanel(item) {
+    var action = panelAction(item);
+    if (!action) return false;
+    if (action.type === 'delivery') {
+      await openDeliveryPanel(action.target);
+      return true;
+    }
+    if (action.type === 'customer') {
+      return openCustomerOrder(action.id);
+    }
+    openDashboardPanel(action);
+    return true;
+  }
+
   function bindCardClick(node, item) {
     if (!node || !item) return;
     node.addEventListener('click', function (e) {
-      var delivery = deliveryOrderFromHref(item.url);
-      var stay =
-        delivery && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0;
-      if (stay) e.preventDefault();
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      var action = panelAction(item);
+      if (!action) {
+        if (typeof window.closeNotifyInbox === 'function') window.closeNotifyInbox({ instant: !item.url });
+        return;
+      }
+      e.preventDefault();
       markRead([item.id]);
       paintRead(node);
       if (
@@ -460,13 +555,7 @@
       ) {
         NotificationService.trackNotificationClick(item.id);
       }
-      if (stay) {
-        openDeliveryPanel(delivery);
-        return;
-      }
-      if (typeof window.closeNotifyInbox === 'function') {
-        window.closeNotifyInbox({ instant: !item.url });
-      }
+      openItemPanel(item);
     });
   }
 
@@ -531,7 +620,7 @@
     );
   }
 
-  function bindStack(root) {
+  function bindStack(root, latest) {
     var front = root.querySelector('.notify-stack__front');
     var sheet = root.querySelector('.notify-stack__sheet');
     var collapse = root.querySelector('.notify-stack__collapse');
@@ -541,13 +630,29 @@
       front.setAttribute('aria-expanded', open ? 'true' : 'false');
       sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
     }
-    front.addEventListener('click', function () {
+    function readStack() {
       var ids = [];
       Array.prototype.forEach.call(root.querySelectorAll('[data-notify-id]'), function (node) {
         if (node.getAttribute('data-notify-id')) ids.push(node.getAttribute('data-notify-id'));
       });
       markRead(ids);
       paintRead(root);
+    }
+    front.addEventListener('click', function (e) {
+      if (e.target && e.target.closest && e.target.closest('.notify-stack__hint')) {
+        e.preventDefault();
+        readStack();
+        setOpen(true);
+        return;
+      }
+      if (latest && panelAction(latest)) {
+        e.preventDefault();
+        markRead([latest.id]);
+        paintRead(front);
+        openItemPanel(latest);
+        return;
+      }
+      readStack();
       setOpen(true);
     });
     if (collapse) {
@@ -642,7 +747,7 @@
         '<button type="button" class="notify-stack__collapse">Show less</button>' +
         '</div>' +
         '</article>';
-      bindStack(li.querySelector('.notify-stack'));
+      bindStack(li.querySelector('.notify-stack'), latest);
       Array.prototype.forEach.call(li.querySelectorAll('.notify-stack__flow .notify-ios'), function (node, idx) {
         bindCardClick(node, flow[idx]);
       });
