@@ -898,6 +898,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function syncPageChrome(container) {
+        if (!container || !container.getAttribute) return;
+        var chrome = container.getAttribute('data-page-chrome') || 'site';
+        document.body.classList.toggle('ttms-delivery-page', chrome === 'delivery');
+        document.body.classList.toggle('ttms-payment-return', chrome === 'payment');
+    }
+
+    function ensureSiteHeader(container) {
+        var wrapper = document.querySelector('[data-barba="wrapper"]');
+        if (!container && wrapper) {
+            var boxes = wrapper.querySelectorAll('[data-barba="container"]');
+            container = boxes.length ? boxes[boxes.length - 1] : null;
+        }
+        syncPageChrome(container);
+
+        var incoming = container ? container.querySelector('header.site-header') : null;
+        var header = incoming || document.getElementById('ttms-site-header') || document.querySelector('header.site-header');
+        if (!header) return;
+
+        if (wrapper && header.parentElement !== document.body) {
+            document.body.insertBefore(header, wrapper);
+        }
+        header.id = 'ttms-site-header';
+
+        document.querySelectorAll('header.site-header').forEach(function (node) {
+            if (node !== header && node.parentNode) node.parentNode.removeChild(node);
+        });
+
+        header.hidden = false;
+        if (!document.body.classList.contains('ttms-delivery-page')) {
+            header.style.removeProperty('display');
+            header.style.removeProperty('visibility');
+            header.style.removeProperty('opacity');
+            header.style.removeProperty('transform');
+        }
+        if (container) {
+            container.style.removeProperty('transform');
+            container.style.removeProperty('filter');
+        }
+        if (typeof window.scheduleReinitHeaderMenublock === 'function') {
+            window.scheduleReinitHeaderMenublock('site-header');
+        }
+    }
+
+    window.ensureSiteHeader = ensureSiteHeader;
+    ensureSiteHeader();
+
     barba.init({
         cacheIgnore: true,
         prevent: function (ctx) {
@@ -950,6 +997,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await new Promise(resolve => setTimeout(resolve, 500));
             },
             async enter(data) {
+                ensureSiteHeader(data && data.next && data.next.container);
                 var enterPath = pathFromBarba(data) || window.location.pathname;
                 var enterSlug = slugFromPath(enterPath);
                 if (enterSlug) pendingLoaderSlug = enterSlug;
@@ -1080,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             },
             async once(data) {
+                ensureSiteHeader(data && data.next && data.next.container);
                 var isReelsHome = !!document.getElementById('menu-reels-viewport');
                 scheduleLoaderFallback();
                 syncMenuReelsDocumentMode();

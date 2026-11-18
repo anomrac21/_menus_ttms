@@ -40,8 +40,8 @@
   {{ partial "features/askofserver.html" . }}
   {{ partial "modals/apple_instructions.html" . }}
 	<div data-barba="wrapper">
-    <div data-barba="container" data-barba-namespace="{{ .Title }}">
-      <header class="site-header">
+    <div data-barba="container" data-barba-namespace="{{ .Title }}" data-page-chrome="{{ if $isDeliveryPage }}delivery{{ else if $isPaymentReturn }}payment{{ else }}site{{ end }}">
+      <header class="site-header" id="ttms-site-header">
         {{ partial "layout/header.html" . }}
       </header>
       {{ partial "components/search.html" . }}
@@ -79,7 +79,7 @@
   <script src="/js/localStorage.js" defer></script>
   <!-- Barba.js must load early as loader.js depends on it -->
   <script src="https://cdn.jsdelivr.net/npm/@barba/core@2.9.7/dist/barba.umd.js" defer></script>
-  <script src="/js/barba-lifecycle.js" defer></script>
+  <script src="{{ partial "head/asset-url.html" "/js/barba-lifecycle.js" }}" defer></script>
   <script src="/js/menu-favorite-icons.js" defer></script>
   <script src="{{ partial "head/asset-url.html" "/js/home-menu-loader.js" }}" defer></script>
 

@@ -27,6 +27,17 @@
    SITE HEADER WRAPPER (fixed chrome around .main-header)
    ============================================ */
 
+body > #ttms-site-header.site-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    z-index: var(--ttms-z-header, 100);
+    visibility: visible;
+    transform: none;
+}
+
 .site-header {
     --header-bordercolor-1: var(--header-border-color);
     --header-bordercolor-2: var(--header-border-color);

@@ -100,6 +100,9 @@
         }
       });
 
+      if (typeof window.ensureSiteHeader === 'function') {
+        window.ensureSiteHeader();
+      }
       document.dispatchEvent(new CustomEvent('ttms:page-enter', { detail: { source: source } }));
     }, 100);
   }
