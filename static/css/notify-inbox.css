@@ -103,7 +103,7 @@ body.is-notify-closing {
 }
 
 #notify-inbox.is-notify-opening .notify-inbox-motion {
-    animation: notify-panel-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: notify-panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 #notify-inbox.is-notify-closing .notify-inbox-motion {
@@ -288,8 +288,12 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 
 .notify-inbox-item {
     margin: 0 0 0.55rem;
-    animation: notify-card-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: calc(var(--i, 0) * 55ms);
+    animation: notify-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 28ms);
+}
+
+.notify-inbox-list.is-settled .notify-inbox-item {
+    animation: none;
 }
 
 .notify-ios {
@@ -330,9 +334,9 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-ios:not(.is-unread) {
-    background: transparent;
+    background: color-mix(in srgb, var(--scheme-surface, #141820) 78%, transparent);
     box-shadow: none;
-    border: 1px solid color-mix(in srgb, var(--main-text-color, #fff) 24%, transparent);
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 12%, transparent);
     color: var(--main-text-color, #fff);
 }
 
@@ -489,7 +493,7 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 .notify-inbox-item--stack {
-    margin: 0 0 1.2rem;
+    margin: 0 0 0.85rem;
 }
 
 .notify-stack {
@@ -525,7 +529,6 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     border-radius: 1.2rem;
     background: color-mix(in srgb, var(--scheme-white) 8%, var(--scheme-surface, #141820));
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
-    animation: notify-peek-float 3.8s ease-in-out infinite;
 }
 
 .notify-stack__peek--1 {
@@ -534,7 +537,6 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     top: 0.3rem;
     height: calc(100% - 0.3rem);
     background: color-mix(in srgb, var(--scheme-white) 12%, var(--scheme-surface, #141820));
-    animation-delay: 0.18s;
 }
 
 .notify-stack__peek--2 {
@@ -753,24 +755,24 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
 }
 
 @keyframes notify-panel-in {
-    0% {
-        transform: scale(0.14);
-        opacity: 0.55;
+    from {
+        opacity: 0;
+        transform: translate3d(16px, 0, 0);
     }
-    100% {
-        transform: none;
+    to {
         opacity: 1;
+        transform: none;
     }
 }
 
 @keyframes notify-panel-out {
-    0% {
-        transform: none;
+    from {
         opacity: 1;
+        transform: none;
     }
-    100% {
-        transform: scale(0.14);
+    to {
         opacity: 0;
+        transform: translate3d(12px, 0, 0);
     }
 }
 

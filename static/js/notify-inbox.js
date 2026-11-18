@@ -296,7 +296,7 @@
     var next = mergeItems([item], readCache());
     writeCache(next);
     syncBadge(next);
-    if (isOpen()) renderList(next);
+    if (isOpen()) renderList(next, { settle: true });
   }
 
   function typeLabel(type) {
@@ -557,10 +557,32 @@
     }
   }
 
-  function renderList(items) {
+  var paintedSig = '';
+
+  function listSig(items) {
+    return groupItems(items)
+      .map(function (group) {
+        return group.items
+          .map(function (item) {
+            return (item.id || '') + (isUnread(item) ? 'u' : 'r');
+          })
+          .join(',');
+      })
+      .join('~');
+  }
+
+  function renderList(items, opts) {
     var list = document.getElementById('notify-inbox-list');
     var empty = document.getElementById('notify-inbox-empty');
     if (!list) return;
+    var sig = listSig(items || []);
+    var settle = !!(opts && opts.settle);
+    if (sig && sig === paintedSig && list.querySelector('.notify-inbox-item')) {
+      list.classList.add('is-settled');
+      return;
+    }
+    paintedSig = sig;
+    list.classList.toggle('is-settled', settle);
     list.innerHTML = '';
     if (!items || !items.length) {
       if (empty) empty.hidden = false;
@@ -596,7 +618,7 @@
         '" aria-expanded="false">' +
         iosCardInner(latest, place) +
         '<span class="notify-stack__hint">' +
-        escapeHtml(String(group.items.length) + ' notifications · tap to see the flow') +
+        escapeHtml(group.items.length === 1 ? '1 update' : String(group.items.length) + ' updates') +
         '</span>' +
         '</button>' +
         '</div>' +
@@ -667,7 +689,9 @@
     }
     setStatus('Loading alerts…');
     var cached = readCache();
-    renderList(cached);
+    var list = document.getElementById('notify-inbox-list');
+    var hadCards = !!(list && list.querySelector('.notify-inbox-item'));
+    renderList(cached, { settle: hadCards });
 
     var remote = [];
     var errors = [];
@@ -697,7 +721,9 @@
     var merged = mergeItems(remote, cached);
     writeCache(merged);
     setStatus(merged.length ? '' : errors[0] || '');
-    renderList(merged);
+    var listNow = document.getElementById('notify-inbox-list');
+    var showing = !!(listNow && listNow.querySelector('.notify-inbox-item'));
+    renderList(merged, { settle: showing });
     syncBadge(merged);
   }
 
@@ -750,6 +776,7 @@
       panel.setAttribute('aria-hidden', 'true');
     }
     document.body.classList.remove('is-notify-opening', 'is-notify-closing');
+    paintedSig = '';
     var dash = document.getElementById('dashboard');
     var account = document.getElementById('account-dashboard');
     var tastes = document.getElementById('ttms-guest-taste-modal');
@@ -768,6 +795,7 @@
   function openInbox() {
     var panel = getPanel();
     if (!panel) return;
+    if (panel.classList.contains(OPENING)) return;
     if (isOpen() && !panel.classList.contains(CLOSING)) return;
 
     if (typeof window.closeAllUiPanels === 'function') {
@@ -777,23 +805,22 @@
 
     clearTimeout(animTimer);
     setOrigin(panel);
-    document.body.classList.add('modal-open');
+    document.body.classList.add('modal-open', 'is-notify-opening');
+    document.body.classList.remove('is-notify-closing');
     panel.setAttribute('aria-hidden', 'false');
+    panel.classList.add(OPENING);
+    panel.classList.remove(HIDDEN, CLOSING);
+    syncExpanded();
     loadInbox();
 
     if (prefersReducedMotion()) {
-      panel.classList.remove(HIDDEN, OPENING, CLOSING);
-      document.body.classList.remove('is-notify-opening', 'is-notify-closing');
+      panel.classList.remove(OPENING);
+      document.body.classList.remove('is-notify-opening');
       syncExpanded();
       syncBadge(readCache());
       return;
     }
 
-    document.body.classList.add('is-notify-opening');
-    document.body.classList.remove('is-notify-closing');
-    panel.classList.add(OPENING);
-    panel.classList.remove(HIDDEN, CLOSING);
-    syncExpanded();
     animTimer = setTimeout(function () {
       animTimer = null;
       panel.classList.remove(OPENING);
