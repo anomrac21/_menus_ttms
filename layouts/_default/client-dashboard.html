@@ -160,6 +160,26 @@
               </div>
             </div>
           </div>
+          <div class="dashboard-payments-transfer" id="dashboardPaymentsTransfer">
+            <p class="dashboard-payments-bank" id="dashboardPaymentsBank" hidden></p>
+            <form class="dashboard-payments-account" id="dashboardPaymentsAccount" data-restaurant="{{ .Site.Title }}">
+              <label>Bank
+                <input name="bank_name" autocomplete="off" required>
+              </label>
+              <label>Account name
+                <input name="bank_account_name" autocomplete="off">
+              </label>
+              <label>Account number
+                <input name="bank_account" inputmode="numeric" autocomplete="off" required>
+              </label>
+              <button type="submit" class="btn-dash btn-dash-secondary">Save account</button>
+            </form>
+            <div class="dashboard-card-actions">
+              <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPaymentsAccountChange" hidden>Change account</button>
+              <button type="button" class="btn-dash btn-dash-primary" id="dashboardPaymentsTransferBtn" hidden>Request transfer</button>
+            </div>
+            <p class="dashboard-pos-inline-status" id="dashboardPaymentsTransferNote" role="status" hidden></p>
+          </div>
           <ul class="dashboard-payments-list" id="dashboardPaymentsList" hidden></ul>
           <p class="dashboard-payments-empty" id="dashboardPaymentsEmpty" hidden>No payments collected yet.</p>
         </div>

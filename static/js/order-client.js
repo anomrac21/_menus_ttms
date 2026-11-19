@@ -363,6 +363,15 @@
       if (opts.location) q.push('location=' + encodeURIComponent(opts.location));
       return request('GET', '/client/orders' + (q.length ? '?' + q.join('&') : ''));
     },
+    getPayout: function () {
+      return request('GET', '/client/payout');
+    },
+    savePayoutAccount: function (body) {
+      return request('PUT', '/client/payout-account', body || {});
+    },
+    requestPayout: function () {
+      return request('POST', '/client/transfer-request', {});
+    },
     kitchenPending: function (location) {
       var path = '/client/kitchen/pending';
       if (location) path += '?location=' + encodeURIComponent(location);

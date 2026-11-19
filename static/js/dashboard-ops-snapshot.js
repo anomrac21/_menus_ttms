@@ -356,6 +356,105 @@
     list.hidden = false;
   }
 
+  function paintPayout(status) {
+    var bank = $('dashboardPaymentsBank');
+    var form = $('dashboardPaymentsAccount');
+    var change = $('dashboardPaymentsAccountChange');
+    var btn = $('dashboardPaymentsTransferBtn');
+    var note = $('dashboardPaymentsTransferNote');
+    var last4 = status && status.bank_account_last4;
+    var requested = status && status.transfer_state === 'requested';
+    var outstanding = Number(status && status.outstanding);
+    if (!isFinite(outstanding)) outstanding = 0;
+    var when = (status && status.next_batch) || '';
+    var currency = (status && status.currency) || 'TTD';
+    if (bank) {
+      bank.hidden = !last4;
+      bank.textContent = last4 ? [status.bank_name, '····' + last4].filter(Boolean).join(' · ') : '';
+    }
+    if (form && form.getAttribute('data-open') !== '1') form.hidden = !!last4;
+    if (change) change.hidden = !last4;
+    if (btn) {
+      btn.hidden = !last4 || (outstanding <= 0 && !requested);
+      btn.disabled = !!requested;
+      btn.textContent = requested ? 'Transfer requested' : 'Request transfer';
+    }
+    if (note) {
+      if (!last4) {
+        note.hidden = false;
+        note.textContent = 'Add a bank account to transfer collected payments.';
+      } else if (requested && when) {
+        note.hidden = false;
+        note.textContent = 'Included in the ' + when + ' bank email with every restaurant who requested.';
+      } else if (outstanding > 0 && when) {
+        note.hidden = false;
+        note.textContent = paymentMoney(outstanding) + ' ' + currency + ' can transfer. Bank emails go out at 9:00 AM, 1:00 PM, and 5:00 PM. Next one is ' + when + '.';
+      } else {
+        note.hidden = true;
+        note.textContent = '';
+      }
+    }
+  }
+
+  function bindPayout() {
+    var form = $('dashboardPaymentsAccount');
+    var btn = $('dashboardPaymentsTransferBtn');
+    var change = $('dashboardPaymentsAccountChange');
+    if (form && !form.getAttribute('data-bound')) {
+      form.setAttribute('data-bound', '1');
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        if (!global.OrderClient || typeof global.OrderClient.savePayoutAccount !== 'function') return;
+        var data = new FormData(form);
+        var submit = form.querySelector('button[type="submit"]');
+        if (submit) submit.disabled = true;
+        global.OrderClient.savePayoutAccount({
+          bank_name: data.get('bank_name'),
+          bank_account_name: data.get('bank_account_name'),
+          bank_account: data.get('bank_account'),
+          restaurant_name: form.getAttribute('data-restaurant') || '',
+        }).then(function (status) {
+          form.removeAttribute('data-open');
+          form.reset();
+          paintPayout(status);
+        }).catch(function (err) {
+          var note = $('dashboardPaymentsTransferNote');
+          if (note) {
+            note.hidden = false;
+            note.textContent = (err && err.message) || 'Could not save the account';
+          }
+        }).finally(function () {
+          if (submit) submit.disabled = false;
+        });
+      });
+    }
+    if (change && !change.getAttribute('data-bound')) {
+      change.setAttribute('data-bound', '1');
+      change.addEventListener('click', function () {
+        if (!form) return;
+        form.hidden = false;
+        form.setAttribute('data-open', '1');
+      });
+    }
+    if (btn && !btn.getAttribute('data-bound')) {
+      btn.setAttribute('data-bound', '1');
+      btn.addEventListener('click', function () {
+        if (!global.OrderClient || typeof global.OrderClient.requestPayout !== 'function') return;
+        btn.disabled = true;
+        global.OrderClient.requestPayout().then(function (status) {
+          paintPayout(status);
+        }).catch(function (err) {
+          btn.disabled = false;
+          var note = $('dashboardPaymentsTransferNote');
+          if (note) {
+            note.hidden = false;
+            note.textContent = (err && err.message) || 'Could not request the transfer';
+          }
+        });
+      });
+    }
+  }
+
   async function loadPayments() {
     if (!global.OrderClient || typeof global.OrderClient.listClient !== 'function') {
       if (paymentWait < 8) {
@@ -370,6 +469,11 @@
       if (!Array.isArray(orders)) orders = [];
       setCount('dashboardCardPaymentsCount', orders.length);
       paintPayments(orders);
+      if (typeof global.OrderClient.getPayout === 'function') {
+        try {
+          paintPayout(await global.OrderClient.getPayout());
+        } catch (_) {}
+      }
     } catch (_) {
       setCount('dashboardCardPaymentsCount', 0);
       paintPayments([]);
@@ -398,6 +502,7 @@
       el.textContent = '';
     });
     loadStatic();
+    bindPayout();
     refresh();
     setInterval(refresh, POLL_MS);
     setTimeout(function () {

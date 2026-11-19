@@ -14480,6 +14480,48 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: var(--dash-ink-muted);
 }
 
+.dashboard-payments-transfer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.dashboard-payments-bank {
+  margin: 0;
+  font-weight: 650;
+}
+
+.dashboard-payments-account {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.dashboard-payments-account label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-payments-account input {
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #1e2a38) 16%, transparent);
+  background: transparent;
+  color: inherit;
+}
+
+.dashboard-payments-account[hidden],
+.dashboard-payments-bank[hidden],
+#dashboardPaymentsTransferBtn[hidden],
+#dashboardPaymentsAccountChange[hidden],
+#dashboardPaymentsTransferNote[hidden] {
+  display: none !important;
+}
+
 #dashboardOrdersHubPanel-delivery .dashboard-card-analytics-hint {
   color: var(--dash-ink-muted);
 }
