@@ -4,7 +4,7 @@
   {{- $hrefs = default false .hrefs -}}
   {{- $current = .current | default "orders" -}}
 {{- end -}}
-{{- $items := slice (dict "key" "orders" "icon" "fa-ticket" "label" "Orders") (dict "key" "edit-menu" "icon" "fa-cutlery" "label" "Menu") -}}
+{{- $items := slice (dict "key" "orders" "icon" "fa-ticket" "label" "Orders") (dict "key" "payments" "icon" "fa-credit-card" "label" "Payments") (dict "key" "edit-menu" "icon" "fa-cutlery" "label" "Menu") -}}
 {{- if site.Params.menuImageService.enabled -}}
   {{- $items = $items | append (dict "key" "menu-images" "icon" "fa-picture-o" "label" "Community Photos") -}}
 {{- end -}}

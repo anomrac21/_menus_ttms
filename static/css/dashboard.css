@@ -14424,6 +14424,62 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: var(--dash-ink-muted);
 }
 
+.dashboard-payments-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.dashboard-payments-list[hidden],
+.dashboard-payments-empty[hidden] {
+  display: none !important;
+}
+
+.dashboard-payments-empty {
+  margin: 0.65rem 0 0;
+  color: var(--dash-ink-muted);
+  font-size: 0.85rem;
+}
+
+.dashboard-payments-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 8.5rem) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--dash-ink, #1e2a38) 6%, transparent);
+}
+
+.dashboard-payments-amount {
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--dash-accent, var(--accent-color, #a92700));
+}
+
+.dashboard-payments-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.dashboard-payments-copy strong,
+.dashboard-payments-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-payments-copy span {
+  font-size: 0.78rem;
+  color: var(--dash-ink-muted);
+}
+
 #dashboardOrdersHubPanel-delivery .dashboard-card-analytics-hint {
   color: var(--dash-ink-muted);
 }

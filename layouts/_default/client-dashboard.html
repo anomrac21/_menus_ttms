@@ -144,6 +144,26 @@
           </div>
         </div>
       </div>
+      <div class="card card-dashboard-payments is-collapsed" data-dashboard-card="payments" id="dashboardPaymentsPanel">
+        <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="payments" aria-expanded="false" aria-controls="dashboardCardBody-payments">
+          <h3 class="dashboard-card-title"><i class="fa fa-credit-card" aria-hidden="true"></i> Payments</h3>
+          <span class="dashboard-card-count is-loading" id="dashboardCardPaymentsCount" aria-label="Payments collected" aria-busy="true"></span>
+          <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
+        </button>
+        <div class="dashboard-card-body" id="dashboardCardBody-payments">
+          <p class="dashboard-card-desc">Payments collected on this menu.</p>
+          <div class="dashboard-card-notify-snapshot" id="dashboardPaymentsSnapshot" aria-label="Collected payments">
+            <div class="dashboard-card-notify-snapshot-grid">
+              <div class="dashboard-card-notify-snapshot-cell">
+                <span class="dashboard-card-notify-snapshot-label">Collected</span>
+                <span class="dashboard-card-notify-snapshot-value" id="dashboardPaymentsTotal">Checking…</span>
+              </div>
+            </div>
+          </div>
+          <ul class="dashboard-payments-list" id="dashboardPaymentsList" hidden></ul>
+          <p class="dashboard-payments-empty" id="dashboardPaymentsEmpty" hidden>No payments collected yet.</p>
+        </div>
+      </div>
       <div class="card card-edit-menu is-collapsed" data-dashboard-card="edit-menu">
         <button type="button" class="dashboard-card-toggle" data-dashboard-card-toggle="edit-menu" aria-expanded="false" aria-controls="dashboardCardBody-edit-menu">
           <h3 class="dashboard-card-title"><i class="fa fa-cutlery" aria-hidden="true"></i> Menu</h3>

@@ -11,6 +11,7 @@
     'dashboardOrdersLinkInboxCount',
     'dashboardOrdersLinkKitchenCount',
     'dashboardCardDeliveryCount',
+    'dashboardCardPaymentsCount',
     'dashboardCardEditMenuCount',
     'dashboardMenuHubPublishCount',
     'dashboardCardMenuImagesCount',
@@ -272,6 +273,109 @@
     }
   }
 
+  var paymentWait = 0;
+
+  function paymentMoney(amount) {
+    var n = Number(amount);
+    if (!isFinite(n)) n = 0;
+    return n.toFixed(2);
+  }
+
+  function paymentStamp(value) {
+    var t = Date.parse(value || '');
+    if (isNaN(t)) return '';
+    try {
+      return new Date(t).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function paymentPlace(order) {
+    var kind = String((order && order.fulfillment) || '').toLowerCase();
+    if (kind === 'dine_in') kind = 'Dine in';
+    else if (kind === 'takeaway') kind = 'Takeaway';
+    else if (kind === 'delivery') kind = 'Delivery';
+    else kind = kind.replace(/_/g, ' ');
+    var loc = String((order && order.location_slug) || '').replace(/-/g, ' ');
+    return [kind, loc].filter(Boolean).join(' · ');
+  }
+
+  function paintPayments(orders) {
+    var list = $('dashboardPaymentsList');
+    var empty = $('dashboardPaymentsEmpty');
+    var totalEl = $('dashboardPaymentsTotal');
+    var rows = (orders || []).slice().sort(function (a, b) {
+      return Date.parse((b && (b.paid_at || b.updated_at)) || 0) - Date.parse((a && (a.paid_at || a.updated_at)) || 0);
+    });
+    var totals = {};
+    rows.forEach(function (order) {
+      var currency = String((order && order.currency) || 'TTD');
+      totals[currency] = (totals[currency] || 0) + Number(order && order.total);
+    });
+    var totalText = Object.keys(totals).map(function (currency) {
+      return paymentMoney(totals[currency]) + ' ' + currency;
+    }).join(' · ');
+    if (totalEl) totalEl.textContent = rows.length ? totalText : 'None';
+    if (!list) return;
+    if (!rows.length) {
+      list.hidden = true;
+      list.innerHTML = '';
+      list.removeAttribute('data-sig');
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    var html = rows.slice(0, 40).map(function (order) {
+      var ticket = order.ticket_number || order.order_ref || String(order.id || '').slice(0, 8);
+      var who = order.customer_name || 'Guest';
+      var place = paymentPlace(order);
+      var when = paymentStamp(order.paid_at || order.updated_at);
+      var meta = [place, when].filter(Boolean).join(' · ');
+      return (
+        '<li>' +
+        '<div class="dashboard-payments-row">' +
+        '<span class="dashboard-payments-amount">' + escapeHtml(paymentMoney(order.total) + ' ' + (order.currency || 'TTD')) + '</span>' +
+        '<span class="dashboard-payments-copy">' +
+        '<strong>' + escapeHtml(who) + (ticket ? ' · ' + escapeHtml(ticket) : '') + '</strong>' +
+        (meta ? '<span>' + escapeHtml(meta) + '</span>' : '') +
+        '</span></div></li>'
+      );
+    }).join('');
+    if (list.getAttribute('data-sig') === html) {
+      list.hidden = false;
+      return;
+    }
+    list.setAttribute('data-sig', html);
+    list.innerHTML = html;
+    list.hidden = false;
+  }
+
+  async function loadPayments() {
+    if (!global.OrderClient || typeof global.OrderClient.listClient !== 'function') {
+      if (paymentWait < 8) {
+        paymentWait += 1;
+        setTimeout(loadPayments, 250);
+      }
+      return;
+    }
+    try {
+      var res = await global.OrderClient.listClient({ status: 'paid' });
+      var orders = (res && res.orders) || [];
+      if (!Array.isArray(orders)) orders = [];
+      setCount('dashboardCardPaymentsCount', orders.length);
+      paintPayments(orders);
+    } catch (_) {
+      setCount('dashboardCardPaymentsCount', 0);
+      paintPayments([]);
+    }
+  }
+
   function loadStatic() {
     setCount('dashboardCardOrderingCount', locationCount());
     mirror('dashboardCardMenuImagesPending', 'dashboardCardMenuImagesCount', true);
@@ -282,7 +386,7 @@
   }
 
   async function refresh() {
-    await Promise.all([loadOrders(), loadKitchen(), loadDelivery()]);
+    await Promise.all([loadOrders(), loadKitchen(), loadDelivery(), loadPayments()]);
   }
 
   function init() {
