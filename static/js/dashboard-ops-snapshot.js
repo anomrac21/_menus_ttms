@@ -356,10 +356,60 @@
     list.hidden = false;
   }
 
+  function paymentsHubKey() {
+    var id = global.SITE_CLIENT_ID || global.CLIENT_ID || 'site';
+    return 'ttms.dashboard.paymentsHub.' + String(id);
+  }
+
+  function openPaymentsHub(name) {
+    var root = $('dashboardPaymentsHub');
+    if (!root) return;
+    if (name !== 'transfer' && name !== 'settings') name = 'overview';
+    var tabs = root.querySelectorAll('[data-payments-hub]');
+    var panels = root.querySelectorAll('[data-payments-hub-panel]');
+    var i;
+    for (i = 0; i < tabs.length; i++) {
+      var on = tabs[i].getAttribute('data-payments-hub') === name;
+      tabs[i].classList.toggle('is-active', on);
+      tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    for (i = 0; i < panels.length; i++) {
+      var show = panels[i].getAttribute('data-payments-hub-panel') === name;
+      if (show) panels[i].removeAttribute('hidden');
+      else panels[i].setAttribute('hidden', '');
+    }
+    try {
+      localStorage.setItem(paymentsHubKey(), name);
+    } catch (err) {}
+  }
+
+  function bindPaymentsHub() {
+    var root = $('dashboardPaymentsHub');
+    if (!root || root.getAttribute('data-hub-bound')) return;
+    root.setAttribute('data-hub-bound', '1');
+    root.addEventListener('click', function (ev) {
+      var tab = ev.target.closest('[data-payments-hub]');
+      if (!tab || !root.contains(tab)) return;
+      openPaymentsHub(tab.getAttribute('data-payments-hub'));
+    });
+    var saved = 'overview';
+    try {
+      saved = localStorage.getItem(paymentsHubKey()) || 'overview';
+    } catch (err) {}
+    openPaymentsHub(saved);
+    var openSettings = $('dashboardPaymentsOpenSettings');
+    if (openSettings && !openSettings.getAttribute('data-bound')) {
+      openSettings.setAttribute('data-bound', '1');
+      openSettings.addEventListener('click', function () {
+        openPaymentsHub('settings');
+      });
+    }
+  }
+
   function paintPayout(status) {
-    var bank = $('dashboardPaymentsBank');
-    var form = $('dashboardPaymentsAccount');
-    var change = $('dashboardPaymentsAccountChange');
+    var banks = document.querySelectorAll('.dashboard-payments-bank');
+    var ready = $('dashboardPaymentsReady');
+    var openSettings = $('dashboardPaymentsOpenSettings');
     var btn = $('dashboardPaymentsTransferBtn');
     var note = $('dashboardPaymentsTransferNote');
     var last4 = status && status.bank_account_last4;
@@ -368,12 +418,13 @@
     if (!isFinite(outstanding)) outstanding = 0;
     var when = (status && status.next_batch) || '';
     var currency = (status && status.currency) || 'TTD';
-    if (bank) {
+    var bankText = last4 ? [status.bank_name, '····' + last4].filter(Boolean).join(' · ') : '';
+    Array.prototype.forEach.call(banks, function (bank) {
       bank.hidden = !last4;
-      bank.textContent = last4 ? [status.bank_name, '····' + last4].filter(Boolean).join(' · ') : '';
-    }
-    if (form && form.getAttribute('data-open') !== '1') form.hidden = !!last4;
-    if (change) change.hidden = !last4;
+      bank.textContent = bankText;
+    });
+    if (ready) ready.textContent = paymentMoney(outstanding) + ' ' + currency;
+    if (openSettings) openSettings.hidden = !!last4;
     if (btn) {
       btn.hidden = !last4 || (outstanding <= 0 && !requested);
       btn.disabled = !!requested;
@@ -382,16 +433,16 @@
     if (note) {
       if (!last4) {
         note.hidden = false;
-        note.textContent = 'Add a bank account to transfer collected payments.';
+        note.textContent = 'Add a bank account in Settings before requesting a transfer.';
       } else if (requested && when) {
         note.hidden = false;
         note.textContent = 'Included in the ' + when + ' bank email with every restaurant who requested.';
       } else if (outstanding > 0 && when) {
         note.hidden = false;
-        note.textContent = paymentMoney(outstanding) + ' ' + currency + ' can transfer. Bank emails go out at 9:00 AM, 1:00 PM, and 5:00 PM. Next one is ' + when + '.';
+        note.textContent = 'Bank emails go out at 9:00 AM, 1:00 PM, and 5:00 PM. Next one is ' + when + '.';
       } else {
-        note.hidden = true;
-        note.textContent = '';
+        note.hidden = false;
+        note.textContent = 'Collected payments already sent to the bank stay off this request.';
       }
     }
   }
@@ -399,7 +450,6 @@
   function bindPayout() {
     var form = $('dashboardPaymentsAccount');
     var btn = $('dashboardPaymentsTransferBtn');
-    var change = $('dashboardPaymentsAccountChange');
     if (form && !form.getAttribute('data-bound')) {
       form.setAttribute('data-bound', '1');
       form.addEventListener('submit', function (ev) {
@@ -414,9 +464,9 @@
           bank_account: data.get('bank_account'),
           restaurant_name: form.getAttribute('data-restaurant') || '',
         }).then(function (status) {
-          form.removeAttribute('data-open');
           form.reset();
           paintPayout(status);
+          openPaymentsHub('transfer');
         }).catch(function (err) {
           var note = $('dashboardPaymentsTransferNote');
           if (note) {
@@ -426,14 +476,6 @@
         }).finally(function () {
           if (submit) submit.disabled = false;
         });
-      });
-    }
-    if (change && !change.getAttribute('data-bound')) {
-      change.setAttribute('data-bound', '1');
-      change.addEventListener('click', function () {
-        if (!form) return;
-        form.hidden = false;
-        form.setAttribute('data-open', '1');
       });
     }
     if (btn && !btn.getAttribute('data-bound')) {
@@ -502,6 +544,7 @@
       el.textContent = '';
     });
     loadStatic();
+    bindPaymentsHub();
     bindPayout();
     refresh();
     setInterval(refresh, POLL_MS);

@@ -151,37 +151,70 @@
           <span class="dashboard-card-toggle-chevron" aria-hidden="true"><i class="fa fa-chevron-down"></i></span>
         </button>
         <div class="dashboard-card-body" id="dashboardCardBody-payments">
-          <p class="dashboard-card-desc">Payments collected on this menu.</p>
-          <div class="dashboard-card-notify-snapshot" id="dashboardPaymentsSnapshot" aria-label="Collected payments">
-            <div class="dashboard-card-notify-snapshot-grid">
-              <div class="dashboard-card-notify-snapshot-cell">
-                <span class="dashboard-card-notify-snapshot-label">Collected</span>
-                <span class="dashboard-card-notify-snapshot-value" id="dashboardPaymentsTotal">Checking…</span>
+          <div class="dashboard-payments-hub" id="dashboardPaymentsHub">
+            <div class="dashboard-orders-hub-tabs" role="tablist" aria-label="Collected payments, transfer, and bank account">
+              <button type="button" class="dashboard-orders-hub-tab is-active" role="tab" id="dashboardPaymentsHubTab-overview" data-payments-hub="overview" aria-selected="true" aria-controls="dashboardPaymentsHubPanel-overview">
+                <i class="fa fa-list" aria-hidden="true"></i>
+                <span>Overview</span>
+              </button>
+              <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardPaymentsHubTab-transfer" data-payments-hub="transfer" aria-selected="false" aria-controls="dashboardPaymentsHubPanel-transfer">
+                <i class="fa fa-university" aria-hidden="true"></i>
+                <span>Transfer</span>
+              </button>
+              <button type="button" class="dashboard-orders-hub-tab" role="tab" id="dashboardPaymentsHubTab-settings" data-payments-hub="settings" aria-selected="false" aria-controls="dashboardPaymentsHubPanel-settings">
+                <i class="fa fa-cog" aria-hidden="true"></i>
+                <span>Settings</span>
+              </button>
+            </div>
+            <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-overview" role="tabpanel" data-payments-hub-panel="overview" aria-labelledby="dashboardPaymentsHubTab-overview">
+              <p class="dashboard-card-desc">Payments collected on this menu.</p>
+              <div class="dashboard-card-notify-snapshot" id="dashboardPaymentsSnapshot" aria-label="Collected payments">
+                <div class="dashboard-card-notify-snapshot-grid">
+                  <div class="dashboard-card-notify-snapshot-cell">
+                    <span class="dashboard-card-notify-snapshot-label">Collected</span>
+                    <span class="dashboard-card-notify-snapshot-value" id="dashboardPaymentsTotal">Checking…</span>
+                  </div>
+                </div>
+              </div>
+              <ul class="dashboard-payments-list" id="dashboardPaymentsList" hidden></ul>
+              <p class="dashboard-payments-empty" id="dashboardPaymentsEmpty" hidden>No payments collected yet.</p>
+            </div>
+            <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-transfer" role="tabpanel" data-payments-hub-panel="transfer" aria-labelledby="dashboardPaymentsHubTab-transfer" hidden>
+              <p class="dashboard-card-desc">Request a transfer of money that has not already been emailed to the bank.</p>
+              <div class="dashboard-card-notify-snapshot" aria-label="Ready to transfer">
+                <div class="dashboard-card-notify-snapshot-grid">
+                  <div class="dashboard-card-notify-snapshot-cell">
+                    <span class="dashboard-card-notify-snapshot-label">Ready</span>
+                    <span class="dashboard-card-notify-snapshot-value" id="dashboardPaymentsReady">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dashboard-payments-transfer" id="dashboardPaymentsTransfer">
+                <p class="dashboard-payments-bank" hidden></p>
+                <div class="dashboard-card-actions">
+                  <button type="button" class="btn-dash btn-dash-primary" id="dashboardPaymentsTransferBtn" hidden>Request transfer</button>
+                  <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPaymentsOpenSettings">Add a bank account</button>
+                </div>
+                <p class="dashboard-pos-inline-status" id="dashboardPaymentsTransferNote" role="status">Add a bank account in Settings before requesting a transfer.</p>
               </div>
             </div>
-          </div>
-          <div class="dashboard-payments-transfer" id="dashboardPaymentsTransfer">
-            <p class="dashboard-payments-bank" id="dashboardPaymentsBank" hidden></p>
-            <form class="dashboard-payments-account" id="dashboardPaymentsAccount" data-restaurant="{{ .Site.Title }}">
-              <label>Bank
-                <input name="bank_name" autocomplete="off" required>
-              </label>
-              <label>Account name
-                <input name="bank_account_name" autocomplete="off">
-              </label>
-              <label>Account number
-                <input name="bank_account" inputmode="numeric" autocomplete="off" required>
-              </label>
-              <button type="submit" class="btn-dash btn-dash-secondary">Save account</button>
-            </form>
-            <div class="dashboard-card-actions">
-              <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPaymentsAccountChange" hidden>Change account</button>
-              <button type="button" class="btn-dash btn-dash-primary" id="dashboardPaymentsTransferBtn" hidden>Request transfer</button>
+            <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-settings" role="tabpanel" data-payments-hub-panel="settings" aria-labelledby="dashboardPaymentsHubTab-settings" hidden>
+              <p class="dashboard-card-desc">Bank account that receives collected payments.</p>
+              <p class="dashboard-payments-bank" hidden></p>
+              <form class="dashboard-payments-account" id="dashboardPaymentsAccount" data-restaurant="{{ .Site.Title }}">
+                <label>Bank
+                  <input name="bank_name" autocomplete="off" required>
+                </label>
+                <label>Account name
+                  <input name="bank_account_name" autocomplete="off">
+                </label>
+                <label>Account number
+                  <input name="bank_account" inputmode="numeric" autocomplete="off" required>
+                </label>
+                <button type="submit" class="btn-dash btn-dash-secondary">Save account</button>
+              </form>
             </div>
-            <p class="dashboard-pos-inline-status" id="dashboardPaymentsTransferNote" role="status" hidden></p>
           </div>
-          <ul class="dashboard-payments-list" id="dashboardPaymentsList" hidden></ul>
-          <p class="dashboard-payments-empty" id="dashboardPaymentsEmpty" hidden>No payments collected yet.</p>
         </div>
       </div>
       <div class="card card-edit-menu is-collapsed" data-dashboard-card="edit-menu">

@@ -14517,7 +14517,7 @@ button.dashboard-settings-panel-toggle:focus-visible {
 .dashboard-payments-account[hidden],
 .dashboard-payments-bank[hidden],
 #dashboardPaymentsTransferBtn[hidden],
-#dashboardPaymentsAccountChange[hidden],
+#dashboardPaymentsOpenSettings[hidden],
 #dashboardPaymentsTransferNote[hidden] {
   display: none !important;
 }
