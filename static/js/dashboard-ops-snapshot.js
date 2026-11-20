@@ -729,19 +729,35 @@
       bank.textContent = bankText;
     });
     if (ready) ready.textContent = paymentMoney(outstanding) + ' ' + currency;
+    var amountInput = $('dashboardPaymentsAmount');
+    if (amountInput && document.activeElement !== amountInput) {
+      var asked = Number(status && status.requested_amount);
+      var shown = requested && isFinite(asked) && asked > 0 ? asked : outstanding;
+      var text = paymentMoney(shown);
+      var previous = amountInput.getAttribute('data-saved') || '';
+      if (!amountInput.value || amountInput.value === previous) {
+        amountInput.value = text;
+        amountInput.setAttribute('data-saved', text);
+      }
+    }
+    if (amountInput) amountInput.disabled = !last4 || outstanding <= 0;
     if (openSettings) openSettings.hidden = !!last4;
     if (btn) {
-      btn.hidden = !last4 || (outstanding <= 0 && !requested);
-      btn.disabled = !!requested;
-      btn.textContent = requested ? 'Transfer requested' : 'Request transfer';
+      btn.hidden = !last4 || outstanding <= 0;
+      btn.disabled = false;
+      btn.textContent = requested ? 'Update amount' : 'Request transfer';
+      btn.setAttribute('data-outstanding', String(outstanding));
+      btn.setAttribute('data-currency', currency);
     }
     if (note) {
       if (!last4) {
         note.hidden = false;
         note.textContent = 'Add a bank account in Settings before requesting a transfer.';
       } else if (requested && when) {
+        var queued = Number(status && status.requested_amount);
+        if (!isFinite(queued) || queued <= 0) queued = outstanding;
         note.hidden = false;
-        note.textContent = 'Included in the ' + when + ' bank email with every restaurant who requested.';
+        note.textContent = paymentMoney(queued) + ' ' + currency + ' is included in the ' + when + ' bank email with every restaurant who requested.';
       } else if (outstanding > 0 && when) {
         note.hidden = false;
         note.textContent = 'Bank emails go out at 9:00 AM, 1:00 PM, and 5:00 PM. Next one is ' + when + '.';
@@ -829,8 +845,30 @@
       btn.setAttribute('data-bound', '1');
       btn.addEventListener('click', function () {
         if (!global.OrderClient || typeof global.OrderClient.requestPayout !== 'function') return;
+        var amountInput = $('dashboardPaymentsAmount');
+        var amount = Number(String(amountInput && amountInput.value || '').replace(/[^0-9.]/g, ''));
+        if (!isFinite(amount)) amount = 0;
+        amount = Math.round(amount * 100) / 100;
+        var readyAmount = Number(btn.getAttribute('data-outstanding'));
+        var currency = btn.getAttribute('data-currency') || 'TTD';
+        var note = $('dashboardPaymentsTransferNote');
+        if (amount <= 0) {
+          if (note) {
+            note.hidden = false;
+            note.textContent = 'Enter an amount to transfer';
+          }
+          return;
+        }
+        if (isFinite(readyAmount) && amount > readyAmount + 0.001) {
+          if (note) {
+            note.hidden = false;
+            note.textContent = 'That is more than the ' + paymentMoney(readyAmount) + ' ' + currency + ' ready to transfer';
+          }
+          return;
+        }
         btn.disabled = true;
-        global.OrderClient.requestPayout().then(function (status) {
+        global.OrderClient.requestPayout({ amount: amount, currency: currency }).then(function (status) {
+          if (amountInput) amountInput.setAttribute('data-saved', paymentMoney(amount));
           paintPayout(status);
         }).catch(function (err) {
           btn.disabled = false;

@@ -369,8 +369,8 @@
     savePayoutAccount: function (body) {
       return request('PUT', '/client/payout-account', body || {});
     },
-    requestPayout: function () {
-      return request('POST', '/client/transfer-request', {});
+    requestPayout: function (body) {
+      return request('POST', '/client/transfer-request', body || {});
     },
     kitchenPending: function (location) {
       var path = '/client/kitchen/pending';

@@ -14487,6 +14487,26 @@ button.dashboard-settings-panel-toggle:focus-visible {
   margin-top: 0.75rem;
 }
 
+.dashboard-payments-amount-field {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-payments-amount-field input {
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #f4dec3) 16%, transparent);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f6f1e6;
+  caret-color: #f6f1e6;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
 .dashboard-payments-bank {
   margin: 0;
   font-weight: 650;
