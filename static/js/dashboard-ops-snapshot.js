@@ -332,6 +332,21 @@
 
   var paymentWait = 0;
 
+  function paymentDeliveryFee(order) {
+    var total = Number(order && order.total);
+    var fee = Number(order && order.delivery_fee);
+    if (!isFinite(total) || total < 0) total = 0;
+    if (!isFinite(fee) || fee <= 0) return 0;
+    if (fee > total) fee = total;
+    return Math.round(fee * 100) / 100;
+  }
+
+  function paymentMenuAmount(order) {
+    var total = Number(order && order.total);
+    if (!isFinite(total) || total < 0) total = 0;
+    return Math.round((total - paymentDeliveryFee(order)) * 100) / 100;
+  }
+
   function paymentMoney(amount) {
     var n = Number(amount);
     if (!isFinite(n)) n = 0;
@@ -467,8 +482,8 @@
         when: paymentStamp(order.paid_at || order.updated_at),
         who: order.customer_name || 'Guest',
         ticket: ticket,
-        place: paymentPlace(order),
-        amount: paymentMoney(order.total) + ' ' + (order.currency || 'TTD'),
+        place: [paymentPlace(order), paymentDeliveryFee(order) > 0 ? 'Delivery fee ' + paymentMoney(paymentDeliveryFee(order)) + ' ' + (order.currency || 'TTD') : ''].filter(Boolean).join(' · '),
+        amount: paymentMoney(paymentMenuAmount(order)) + ' ' + (order.currency || 'TTD'),
       };
     });
     var totalEl = $('dashboardPaymentsTotal');
@@ -504,14 +519,27 @@
       return Date.parse((b && (b.paid_at || b.updated_at)) || 0) - Date.parse((a && (a.paid_at || a.updated_at)) || 0);
     });
     var totals = {};
+    var fees = {};
     rows.forEach(function (order) {
       var currency = String((order && order.currency) || 'TTD');
-      totals[currency] = (totals[currency] || 0) + Number(order && order.total);
+      totals[currency] = (totals[currency] || 0) + paymentMenuAmount(order);
+      var fee = paymentDeliveryFee(order);
+      if (fee > 0) fees[currency] = (fees[currency] || 0) + fee;
     });
     var totalText = Object.keys(totals).map(function (currency) {
       return paymentMoney(totals[currency]) + ' ' + currency;
     }).join(' · ');
     if (totalEl) totalEl.textContent = rows.length ? totalText : 'None';
+    var feeEl = $('dashboardPaymentsFees');
+    var feeCell = $('dashboardPaymentsFeeCell');
+    var feeText = Object.keys(fees).map(function (currency) {
+      return paymentMoney(fees[currency]) + ' ' + currency;
+    }).join(' · ');
+    if (feeEl) feeEl.textContent = feeText || '—';
+    if (feeCell) {
+      if (feeText) feeCell.removeAttribute('hidden');
+      else feeCell.setAttribute('hidden', '');
+    }
     statementOrders = rows;
     var statementBtn = $('dashboardPaymentsStatement');
     if (statementBtn) statementBtn.disabled = !rows.length;
@@ -529,11 +557,13 @@
       var who = order.customer_name || 'Guest';
       var place = paymentPlace(order);
       var when = paymentStamp(order.paid_at || order.updated_at);
-      var meta = [place, when].filter(Boolean).join(' · ');
+      var fee = paymentDeliveryFee(order);
+      var feeNote = fee > 0 ? 'Delivery fee ' + paymentMoney(fee) + ' ' + (order.currency || 'TTD') : '';
+      var meta = [place, when, feeNote].filter(Boolean).join(' · ');
       return (
         '<li>' +
         '<div class="dashboard-payments-row">' +
-        '<span class="dashboard-payments-amount">' + escapeHtml(paymentMoney(order.total) + ' ' + (order.currency || 'TTD')) + '</span>' +
+        '<span class="dashboard-payments-amount">' + escapeHtml(paymentMoney(paymentMenuAmount(order)) + ' ' + (order.currency || 'TTD')) + '</span>' +
         '<span class="dashboard-payments-copy">' +
         '<strong>' + escapeHtml(who) + (ticket ? ' · ' + escapeHtml(ticket) : '') + '</strong>' +
         (meta ? '<span>' + escapeHtml(meta) + '</span>' : '') +

@@ -167,12 +167,16 @@
               </button>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-overview" role="tabpanel" data-payments-hub-panel="overview" aria-labelledby="dashboardPaymentsHubTab-overview">
-              <p class="dashboard-card-desc">Payments collected on this menu.</p>
+              <p class="dashboard-card-desc">Payments collected on this menu. Delivery fees stay separate from the menu amount.</p>
               <div class="dashboard-card-notify-snapshot" id="dashboardPaymentsSnapshot" aria-label="Collected payments">
                 <div class="dashboard-card-notify-snapshot-grid">
                   <div class="dashboard-card-notify-snapshot-cell">
                     <span class="dashboard-card-notify-snapshot-label">Collected</span>
                     <span class="dashboard-card-notify-snapshot-value" id="dashboardPaymentsTotal">Checking…</span>
+                  </div>
+                  <div class="dashboard-card-notify-snapshot-cell" id="dashboardPaymentsFeeCell" hidden>
+                    <span class="dashboard-card-notify-snapshot-label">Delivery fees</span>
+                    <span class="dashboard-card-notify-snapshot-value" id="dashboardPaymentsFees">—</span>
                   </div>
                 </div>
               </div>
