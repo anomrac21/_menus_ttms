@@ -102,7 +102,7 @@
     html:not(.ttms-mobile-menublock) #menublock {
         flex: 1 1 auto;
         flex-direction: row;
-        align-items: center;
+        align-items: stretch;
         overflow-x: auto;
         overflow-y: hidden;
         overscroll-behavior-x: contain;
@@ -123,6 +123,9 @@
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-item,
     html:not(.ttms-mobile-menublock) #menublock li {
+        display: flex;
+        align-items: stretch;
+        height: var(--menublock-chip-height);
         min-width: var(--menublock-chip-min-width);
         max-width: none;
         width: auto;
@@ -130,8 +133,10 @@
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-link {
         box-sizing: border-box;
-        flex-direction: column;
-        justify-content: center;
+        display: grid;
+        grid-template-rows: 1.35rem 1.45rem;
+        align-content: center;
+        justify-items: center;
         align-items: center;
         height: var(--menublock-chip-height);
         min-height: var(--menublock-chip-height);
@@ -141,6 +146,13 @@
         border-radius: var(--menublock-chip-radius);
         touch-action: manipulation;
         overflow: hidden;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link:not(:has(.menublock-link__icon))::before {
+        content: "";
+        display: block;
+        width: 1.35rem;
+        height: 1.35rem;
     }
 
     html:not(.ttms-mobile-menublock) #menublock .menublock-link:hover,
@@ -161,6 +173,11 @@
         text-align: center;
         width: 100%;
         -webkit-line-clamp: 2;
+    }
+
+    html:not(.ttms-mobile-menublock) #menublock .menublock-link__label {
+        align-self: start;
+        height: 1.45rem;
     }
 
     html:not(.ttms-mobile-menublock) #dashboardBtn img {
@@ -257,7 +274,7 @@
     html.ttms-mobile-menublock #menublock {
         flex: 1 1 auto;
         flex-direction: row;
-        align-items: center;
+        align-items: stretch;
         overflow-x: auto;
         overflow-y: hidden;
         max-height: none;
@@ -269,8 +286,10 @@
 
     html.ttms-mobile-menublock #menublock .menublock-link {
         box-sizing: border-box;
-        flex-direction: column;
-        justify-content: center;
+        display: grid;
+        grid-template-rows: 1.35rem 1.45rem;
+        align-content: center;
+        justify-items: center;
         align-items: center;
         height: var(--menublock-chip-height);
         min-height: var(--menublock-chip-height);
@@ -281,12 +300,24 @@
         overflow: hidden;
     }
 
+    html.ttms-mobile-menublock #menublock .menublock-link:not(:has(.menublock-link__icon))::before {
+        content: "";
+        display: block;
+        width: 1.35rem;
+        height: 1.35rem;
+    }
+
     html.ttms-mobile-menublock #menublock .menublock-link__label,
     html.ttms-mobile-menublock #menublock span {
         font-size: 0.62rem;
         font-weight: 700;
         text-align: center;
         width: 100%;
+    }
+
+    html.ttms-mobile-menublock #menublock .menublock-link__label {
+        align-self: start;
+        height: 1.45rem;
     }
 
     
