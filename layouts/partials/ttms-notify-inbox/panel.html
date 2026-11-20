@@ -11,7 +11,6 @@
 				</div>
 			</div>
 			<div class="notify-inbox-header-trailing">
-				<button type="button" class="notify-inbox-mark" id="notify-inbox-mark">Mark read</button>
 				{{ partial "ttms-account-dashboard/panel-button.html" . }}
 				<button type="button" class="notify-inbox-close ttms-icon-btn ttms-icon-btn--on-dark" onclick="if (typeof closeNotifyInbox === 'function') closeNotifyInbox(); return false;" aria-label="Close alerts">
 					<img src="https://cdn.ttmenus.com/icons/ui/close.svg" alt="" width="24" height="24" decoding="async">
@@ -21,9 +20,12 @@
 
 		<div class="notify-inbox-subscribe" id="notify-inbox-subscribe">
 			<p class="notify-inbox-subscribe__copy" id="notify-inbox-subscribe-copy">Get specials, hours, and menu updates on this phone.</p>
-			<button type="button" class="notify-inbox-subscribe__btn" id="notify-inbox-subscribe-btn" onclick="toggleNotificationSubscription(); return false;">
-				Get menu alerts
-			</button>
+			<div class="notify-inbox-subscribe__actions">
+				<button type="button" class="notify-inbox-mark" id="notify-inbox-mark">Mark read</button>
+				<button type="button" class="notify-inbox-subscribe__btn" id="notify-inbox-subscribe-btn" onclick="toggleNotificationSubscription(); return false;">
+					Get menu alerts
+				</button>
+			</div>
 		</div>
 
 		<div class="notify-inbox-scroll">

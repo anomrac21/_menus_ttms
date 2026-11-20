@@ -242,6 +242,13 @@ body.ttms-logged-in .notify-inbox-header .account-panel-btn,
     color: var(--notify-ink-muted);
 }
 
+.notify-inbox-subscribe__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+}
+
 .notify-inbox-subscribe__btn {
     flex-shrink: 0;
     min-height: 2.1rem;
