@@ -639,17 +639,29 @@
     if (list) list.innerHTML = '';
   }
 
+  function payoutSaveStatus(message) {
+    var status = $('dashboardPaymentsSaveStatus');
+    if (!status) return;
+    status.hidden = !message;
+    status.textContent = message || '';
+  }
+
   function collectPayoutAccounts(form) {
     var shared = '';
     var nameInput = form.querySelector('[name="bank_account_name"]');
     if (nameInput) shared = String(nameInput.value || '').trim();
     var accounts = [];
-    Array.prototype.forEach.call(form.querySelectorAll('.dashboard-payments-bankcard.is-open'), function (card) {
-      var bank = card.getAttribute('data-bank') || '';
+    var missing = [];
+    Array.prototype.forEach.call(form.querySelectorAll('.dashboard-payments-bankcard'), function (card) {
+      var box = card.querySelector('input[name="bank_pick"]');
+      if (!card.classList.contains('is-open') && !(box && box.checked)) return;
+      var bank = card.getAttribute('data-bank') || (box && box.value) || '';
+      var found = 0;
       Array.prototype.forEach.call(card.querySelectorAll('.dashboard-payments-account-no'), function (input) {
         var digits = String(input.value || '').replace(/\D/g, '');
         var keep = input.getAttribute('data-keep') || '';
         if (digits.length < 4 && !keep) return;
+        found += 1;
         accounts.push({
           bank_name: bank,
           bank_account_name: shared,
@@ -657,8 +669,12 @@
           keep_last4: digits.length >= 4 ? '' : keep,
         });
       });
+      if (!found) {
+        var label = card.querySelector('strong');
+        missing.push((label && label.textContent) || bank || 'that bank');
+      }
     });
-    return accounts;
+    return { accounts: accounts, missing: missing };
   }
 
   function paintSavedBanks(accounts, accountName) {
@@ -778,32 +794,32 @@
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
         if (!global.OrderClient || typeof global.OrderClient.savePayoutAccount !== 'function') return;
-        var accounts = collectPayoutAccounts(form);
-        var note = $('dashboardPaymentsTransferNote');
+        var picked = collectPayoutAccounts(form);
+        var accounts = picked.accounts;
         if (!accounts.length) {
-          if (note) {
-            note.hidden = false;
-            note.textContent = 'Add a bank name and account number';
-          }
+          payoutSaveStatus(picked.missing.length
+            ? 'Enter the account number for ' + picked.missing.join(', ') + '.'
+            : 'Choose a bank, then enter its account number.');
           return;
         }
         var data = new FormData(form);
+        var first = accounts[0];
         var submit = form.querySelector('button[type="submit"]');
         if (submit) submit.disabled = true;
+        payoutSaveStatus('Saving accounts…');
         global.OrderClient.savePayoutAccount({
+          bank_name: first.bank_name,
           bank_account_name: data.get('bank_account_name'),
+          bank_account: first.bank_account,
           restaurant_name: form.getAttribute('data-restaurant') || '',
           accounts: accounts,
         }).then(function (status) {
           form.removeAttribute('data-banks');
+          payoutSaveStatus('Accounts saved.');
           paintPayout(status);
           openPaymentsHub('transfer');
         }).catch(function (err) {
-          var note = $('dashboardPaymentsTransferNote');
-          if (note) {
-            note.hidden = false;
-            note.textContent = (err && err.message) || 'Could not save the account';
-          }
+          payoutSaveStatus((err && err.message) || 'Could not save the account');
         }).finally(function () {
           if (submit) submit.disabled = false;
         });
