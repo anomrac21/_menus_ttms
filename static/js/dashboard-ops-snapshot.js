@@ -757,15 +757,36 @@
         var queued = Number(status && status.requested_amount);
         if (!isFinite(queued) || queued <= 0) queued = outstanding;
         note.hidden = false;
-        note.textContent = paymentMoney(queued) + ' ' + currency + ' is included in the ' + when + ' bank email with every restaurant who requested.';
+        note.textContent = paymentMoney(queued) + ' ' + currency + ' is scheduled for ' + when + '.';
       } else if (outstanding > 0 && when) {
         note.hidden = false;
-        note.textContent = 'Bank emails go out at 9:00 AM, 1:00 PM, and 5:00 PM. Next one is ' + when + '.';
+        note.textContent = 'Transfers go out at 9:00 AM, 1:00 PM, and 5:00 PM. The next one is ' + when + '.';
       } else {
         note.hidden = false;
-        note.textContent = 'Collected payments already sent to the bank stay off this request.';
+        note.textContent = 'Money already transferred stays off this request.';
       }
     }
+    paintTransferHistory(status && status.transfers);
+  }
+
+  function paintTransferHistory(rows) {
+    var root = $('dashboardPaymentsHistory');
+    var list = $('dashboardPaymentsHistoryList');
+    if (!root || !list) return;
+    var items = Array.isArray(rows) ? rows : [];
+    if (!items.length) {
+      root.hidden = true;
+      list.innerHTML = '';
+      return;
+    }
+    var labels = { scheduled: 'Scheduled', sent: 'Sent', cancelled: 'Cancelled' };
+    list.innerHTML = items.map(function (row) {
+      var state = labels[row.state] || 'Scheduled';
+      var money = paymentMoney(row.amount) + ' ' + (row.currency || 'TTD');
+      var when = row.when ? ' · ' + row.when : '';
+      return '<li><span class="dashboard-payments-history-amount">' + escapeHtml(money) + '</span><span>' + escapeHtml(state + when) + '</span></li>';
+    }).join('');
+    root.hidden = false;
   }
 
   function bindPayout() {

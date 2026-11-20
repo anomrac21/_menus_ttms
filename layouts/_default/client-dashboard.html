@@ -185,7 +185,7 @@
               <p class="dashboard-payments-empty" id="dashboardPaymentsEmpty" hidden>No payments collected yet.</p>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-transfer" role="tabpanel" data-payments-hub-panel="transfer" aria-labelledby="dashboardPaymentsHubTab-transfer" hidden>
-              <p class="dashboard-card-desc">Request a transfer of money that has not already been emailed to the bank.</p>
+              <p class="dashboard-card-desc">Choose how much of the ready balance to transfer. Money already sent stays off the next one.</p>
               <div class="dashboard-card-notify-snapshot" aria-label="Ready to transfer">
                 <div class="dashboard-card-notify-snapshot-grid">
                   <div class="dashboard-card-notify-snapshot-cell">
@@ -204,6 +204,10 @@
                   <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPaymentsOpenSettings">Add a bank account</button>
                 </div>
                 <p class="dashboard-pos-inline-status" id="dashboardPaymentsTransferNote" role="status">Add a bank account in Settings before requesting a transfer.</p>
+                <div class="dashboard-payments-history" id="dashboardPaymentsHistory" hidden>
+                  <p class="dashboard-payments-history-label">History</p>
+                  <ul id="dashboardPaymentsHistoryList"></ul>
+                </div>
               </div>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-settings" role="tabpanel" data-payments-hub-panel="settings" aria-labelledby="dashboardPaymentsHubTab-settings" hidden>

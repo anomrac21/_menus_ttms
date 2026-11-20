@@ -14494,6 +14494,50 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: var(--dash-ink-muted);
 }
 
+.dashboard-payments-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.dashboard-payments-history[hidden] {
+  display: none !important;
+}
+
+.dashboard-payments-history-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-payments-history ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.dashboard-payments-history li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--dash-ink, #f6f1e6);
+  font-size: 0.82rem;
+}
+
+.dashboard-payments-history-amount {
+  font-weight: 750;
+  white-space: nowrap;
+}
+
 .dashboard-payments-amount-field input {
   width: 100%;
   min-height: 2.4rem;
