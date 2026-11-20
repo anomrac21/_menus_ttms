@@ -582,6 +582,114 @@
     }
   }
 
+  function payoutAccountList(status) {
+    var list = status && status.bank_accounts;
+    if (Array.isArray(list) && list.length) return list;
+    if (status && status.bank_account_last4) {
+      return [{
+        bank_name: status.bank_name,
+        bank_account_name: status.bank_account_name,
+        bank_account_last4: status.bank_account_last4,
+      }];
+    }
+    return [];
+  }
+
+  function syncPayoutAccountRemoves(bank) {
+    var rows = bank.querySelectorAll('.dashboard-payments-account-row');
+    Array.prototype.forEach.call(rows, function (row, index) {
+      var button = row.querySelector('.dashboard-payments-account-remove');
+      if (button) button.hidden = rows.length < 2 || index === 0;
+    });
+  }
+
+  function addPayoutAccountRow(bank, focus, placeholder, keep) {
+    var tpl = $('dashboardPaymentsAccountTemplate');
+    var list = bank.querySelector('.dashboard-payments-account-list');
+    if (!tpl || !list || !tpl.content || !tpl.content.firstElementChild) return null;
+    var row = tpl.content.firstElementChild.cloneNode(true);
+    list.appendChild(row);
+    var input = row.querySelector('input');
+    if (input && placeholder) input.placeholder = placeholder;
+    if (input && keep) input.setAttribute('data-keep', keep);
+    syncPayoutAccountRemoves(bank);
+    if (focus && input) input.focus();
+    return input;
+  }
+
+  function openPayoutBank(bank, focus) {
+    if (!bank) return;
+    bank.classList.add('is-open');
+    var box = bank.querySelector('input[name="bank_pick"]');
+    if (box) box.checked = true;
+    var list = bank.querySelector('.dashboard-payments-account-list');
+    if (list && !list.querySelector('input')) addPayoutAccountRow(bank, focus);
+    else if (focus) {
+      var input = bank.querySelector('.dashboard-payments-account-no');
+      if (input) input.focus();
+    }
+  }
+
+  function closePayoutBank(bank) {
+    if (!bank) return;
+    bank.classList.remove('is-open');
+    var box = bank.querySelector('input[name="bank_pick"]');
+    if (box) box.checked = false;
+    var list = bank.querySelector('.dashboard-payments-account-list');
+    if (list) list.innerHTML = '';
+  }
+
+  function collectPayoutAccounts(form) {
+    var shared = '';
+    var nameInput = form.querySelector('[name="bank_account_name"]');
+    if (nameInput) shared = String(nameInput.value || '').trim();
+    var accounts = [];
+    Array.prototype.forEach.call(form.querySelectorAll('.dashboard-payments-bankcard.is-open'), function (card) {
+      var bank = card.getAttribute('data-bank') || '';
+      Array.prototype.forEach.call(card.querySelectorAll('.dashboard-payments-account-no'), function (input) {
+        var digits = String(input.value || '').replace(/\D/g, '');
+        var keep = input.getAttribute('data-keep') || '';
+        if (digits.length < 4 && !keep) return;
+        accounts.push({
+          bank_name: bank,
+          bank_account_name: shared,
+          bank_account: digits.length >= 4 ? digits : '',
+          keep_last4: digits.length >= 4 ? '' : keep,
+        });
+      });
+    });
+    return accounts;
+  }
+
+  function paintSavedBanks(accounts, accountName) {
+    var form = $('dashboardPaymentsAccount');
+    if (!form) return;
+    var active = document.activeElement;
+    if (active && form.contains(active)) return;
+    var sig = JSON.stringify(accounts || []);
+    if (form.getAttribute('data-banks') === sig) return;
+    form.setAttribute('data-banks', sig);
+    var nameInput = form.querySelector('[name="bank_account_name"]');
+    if (nameInput && accountName && !nameInput.value) nameInput.value = accountName;
+    Array.prototype.forEach.call(form.querySelectorAll('.dashboard-payments-bankcard'), function (card) {
+      closePayoutBank(card);
+    });
+    (accounts || []).forEach(function (item) {
+      var card = form.querySelector('.dashboard-payments-bankcard[data-bank="' + String(item.bank_name || '').replace(/"/g, '\\"') + '"]');
+      if (!card) return;
+      openPayoutBank(card, false);
+      var list = card.querySelector('.dashboard-payments-account-list');
+      var existing = list ? list.querySelectorAll('.dashboard-payments-account-no') : [];
+      var empty = existing.length === 1 && !existing[0].value && !existing[0].getAttribute('data-keep');
+      if (empty) {
+        existing[0].placeholder = item.bank_account_last4 ? 'Current ending ' + item.bank_account_last4 : 'Account number';
+        if (item.bank_account_last4) existing[0].setAttribute('data-keep', item.bank_account_last4);
+        return;
+      }
+      addPayoutAccountRow(card, false, item.bank_account_last4 ? 'Current ending ' + item.bank_account_last4 : 'Account number', item.bank_account_last4 || '');
+    });
+  }
+
   function paintPayout(status) {
     var banks = document.querySelectorAll('.dashboard-payments-bank');
     var ready = $('dashboardPaymentsReady');
@@ -594,27 +702,12 @@
     if (!isFinite(outstanding)) outstanding = 0;
     var when = (status && status.next_batch) || '';
     var currency = (status && status.currency) || 'TTD';
-    var bankText = last4 ? [status.bank_name, '····' + last4].filter(Boolean).join(' · ') : '';
-    var bankSelect = document.querySelector('#dashboardPaymentsAccount select[name="bank_name"]');
-    if (bankSelect && status && status.bank_name) {
-      var savedBank = String(status.bank_name);
-      var known = false;
-      Array.prototype.forEach.call(bankSelect.options, function (option) {
-        if (option.value === savedBank) known = true;
-      });
-      if (!known) {
-        var extra = document.createElement('option');
-        extra.value = savedBank;
-        extra.textContent = savedBank;
-        bankSelect.appendChild(extra);
-      }
-      var current = bankSelect.value;
-      var previous = bankSelect.getAttribute('data-saved') || '';
-      if (!current || current === previous) {
-        bankSelect.value = savedBank;
-        bankSelect.setAttribute('data-saved', savedBank);
-      }
-    }
+    var accounts = payoutAccountList(status);
+    var bankText = accounts.map(function (item) {
+      return [item.bank_name, item.bank_account_last4 ? '····' + item.bank_account_last4 : ''].filter(Boolean).join(' · ');
+    }).join(' · ');
+    if (!bankText && last4) bankText = [status.bank_name, '····' + last4].filter(Boolean).join(' · ');
+    paintSavedBanks(accounts, status && status.bank_account_name);
     Array.prototype.forEach.call(banks, function (bank) {
       bank.hidden = !last4;
       bank.textContent = bankText;
@@ -648,19 +741,61 @@
     var btn = $('dashboardPaymentsTransferBtn');
     if (form && !form.getAttribute('data-bound')) {
       form.setAttribute('data-bound', '1');
+      form.addEventListener('change', function (ev) {
+        var box = ev.target;
+        if (!box || box.name !== 'bank_pick') return;
+        var card = box.closest('.dashboard-payments-bankcard');
+        if (!card) return;
+        if (box.checked) openPayoutBank(card, true);
+        else closePayoutBank(card);
+      });
+      form.addEventListener('click', function (ev) {
+        var reveal = ev.target.closest && ev.target.closest('.dashboard-payments-reveal');
+        if (reveal && form.contains(reveal)) {
+          var secret = reveal.closest('.dashboard-payments-secret');
+          var input = secret && secret.querySelector('input');
+          if (!input) return;
+          var show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          reveal.textContent = show ? 'Hide' : 'Show';
+          reveal.setAttribute('aria-pressed', show ? 'true' : 'false');
+          return;
+        }
+        var add = ev.target.closest && ev.target.closest('.dashboard-payments-add-account');
+        if (add && form.contains(add)) {
+          var bank = add.closest('.dashboard-payments-bankcard');
+          if (bank) addPayoutAccountRow(bank, true);
+          return;
+        }
+        var remove = ev.target.closest && ev.target.closest('.dashboard-payments-account-remove');
+        if (remove && form.contains(remove)) {
+          var row = remove.closest('.dashboard-payments-account-row');
+          var owner = remove.closest('.dashboard-payments-bankcard');
+          if (row) row.remove();
+          if (owner) syncPayoutAccountRemoves(owner);
+        }
+      });
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
         if (!global.OrderClient || typeof global.OrderClient.savePayoutAccount !== 'function') return;
+        var accounts = collectPayoutAccounts(form);
+        var note = $('dashboardPaymentsTransferNote');
+        if (!accounts.length) {
+          if (note) {
+            note.hidden = false;
+            note.textContent = 'Add a bank name and account number';
+          }
+          return;
+        }
         var data = new FormData(form);
         var submit = form.querySelector('button[type="submit"]');
         if (submit) submit.disabled = true;
         global.OrderClient.savePayoutAccount({
-          bank_name: data.get('bank_name'),
           bank_account_name: data.get('bank_account_name'),
-          bank_account: data.get('bank_account'),
           restaurant_name: form.getAttribute('data-restaurant') || '',
+          accounts: accounts,
         }).then(function (status) {
-          form.reset();
+          form.removeAttribute('data-banks');
           paintPayout(status);
           openPaymentsHub('transfer');
         }).catch(function (err) {

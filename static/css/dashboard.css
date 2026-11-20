@@ -14497,34 +14497,162 @@ button.dashboard-settings-panel-toggle:focus-visible {
   gap: 0.45rem;
 }
 
-.dashboard-payments-account label {
+.dashboard-payments-account label:not(.dashboard-payments-choice) {
   display: grid;
   gap: 0.2rem;
   font-size: 0.75rem;
   color: var(--dash-ink-muted);
 }
 
-.dashboard-payments-account input,
-.dashboard-payments-account select {
+.dashboard-payments-account-name {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--dash-ink-muted);
+}
+
+.dashboard-payments-account-name input {
   width: 100%;
   min-height: 2.4rem;
   padding: 0.4rem 0.65rem;
   border-radius: 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--dash-ink, #1e2a38) 16%, transparent);
-  background: transparent;
-  color: inherit;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #f4dec3) 16%, transparent);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dash-ink, #f6f1e6);
 }
 
-.dashboard-payments-account select {
+.dashboard-payments-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.dashboard-payments-bankcard {
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--dash-ink, #f4dec3) 14%, transparent);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.dashboard-payments-bankcard.is-open {
+  border-color: #e5ad36;
+  background: color-mix(in srgb, #e5ad36 22%, transparent);
+}
+
+.dashboard-payments-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.4rem;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  color: var(--dash-ink, #f6f1e6);
+  font-size: 1.05rem;
+  font-weight: 700;
   cursor: pointer;
-  color-scheme: light;
-  color: var(--dash-ink, #1a1208);
-  background-color: #fff;
 }
 
-.dashboard-payments-account select option {
-  background-color: #fff;
-  color: #1a1208;
+.dashboard-payments-choice input {
+  accent-color: #e5ad36;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.dashboard-payments-choice span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dashboard-payments-choice small {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--dash-ink-muted, #c8bba8);
+}
+
+.dashboard-payments-accounts {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard-payments-bankcard.is-open .dashboard-payments-accounts {
+  grid-template-rows: 1fr;
+}
+
+.dashboard-payments-accounts-clip {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.dashboard-payments-accounts-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.dashboard-payments-secret {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.15rem;
+  border: 1px solid color-mix(in srgb, var(--dash-ink, #f4dec3) 16%, transparent);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-payments-secret:focus-within {
+  border-color: #e5ad36;
+  box-shadow: 0 0 0 4px color-mix(in srgb, #e5ad36 18%, transparent);
+}
+
+.dashboard-payments-secret input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dash-ink, #f6f1e6);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-payments-secret input::-ms-reveal,
+.dashboard-payments-secret input::-ms-clear {
+  display: none;
+}
+
+.dashboard-payments-reveal,
+.dashboard-payments-add-account,
+.dashboard-payments-account-remove {
+  border: 0;
+  background: transparent;
+  color: #e5ad36;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.dashboard-payments-reveal {
+  flex: 0 0 auto;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--dash-ink, #f6f1e6);
+}
+
+.dashboard-payments-account-remove {
+  color: #cd2e57;
+}
+
+.dashboard-payments-account-remove[hidden] {
+  display: none;
 }
 
 .dashboard-payments-account[hidden],

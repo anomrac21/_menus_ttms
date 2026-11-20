@@ -210,30 +210,56 @@
                   <p id="dashboardPaymentsDirectStatus" class="dashboard-pos-account-status" role="status">{{ if site.Params.paymentService.direct }}Checking direct payment…{{ else }}Direct payment is off{{ end }}</p>
                 </div>
               </div>
-              <p class="dashboard-card-desc">Bank account that receives collected payments. Commercial banks licensed in Trinidad and Tobago.</p>
-              <p class="dashboard-payments-bank" hidden></p>
+              <p class="dashboard-card-desc">Choose a bank and the account number opens under it. Add every account we can pay. Commercial banks licensed in Trinidad and Tobago.</p>
               <form class="dashboard-payments-account" id="dashboardPaymentsAccount" data-restaurant="{{ .Site.Title }}">
-                <label>Bank
-                  <select name="bank_name" required>
-                    <option value="">Choose a bank</option>
-                    <option value="ANSA Bank Limited">ANSA Bank</option>
-                    <option value="CIBC Caribbean Bank (Trinidad and Tobago) Limited">CIBC Caribbean</option>
-                    <option value="Citibank (Trinidad &amp; Tobago) Limited">Citibank</option>
-                    <option value="First Citizens Bank Limited">First Citizens</option>
-                    <option value="JMMB Bank (T&amp;T) Limited">JMMB</option>
-                    <option value="RBC Royal Bank (Trinidad &amp; Tobago) Limited">RBC Royal Bank</option>
-                    <option value="Republic Bank Limited">Republic Bank</option>
-                    <option value="Scotiabank Trinidad and Tobago Limited">Scotiabank</option>
-                  </select>
-                </label>
-                <label>Account name
+                <label class="dashboard-payments-account-name">Account name
                   <input name="bank_account_name" autocomplete="off">
                 </label>
-                <label>Account number
-                  <input name="bank_account" inputmode="numeric" autocomplete="off" required>
-                </label>
-                <button type="submit" class="btn-dash btn-dash-secondary">Save account</button>
+                <div class="dashboard-payments-choices" id="dashboardPaymentsBanks">
+                  <div class="dashboard-payments-bankcard" data-bank="ANSA Bank Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="ANSA Bank Limited"> <span><strong>ANSA Bank</strong><small>ANSA Bank Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="CIBC Caribbean Bank (Trinidad and Tobago) Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="CIBC Caribbean Bank (Trinidad and Tobago) Limited"> <span><strong>CIBC Caribbean</strong><small>CIBC Caribbean Bank (Trinidad and Tobago) Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="Citibank (Trinidad &amp; Tobago) Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="Citibank (Trinidad &amp; Tobago) Limited"> <span><strong>Citibank</strong><small>Citibank (Trinidad &amp; Tobago) Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="First Citizens Bank Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="First Citizens Bank Limited"> <span><strong>First Citizens</strong><small>First Citizens Bank Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="JMMB Bank (T&amp;T) Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="JMMB Bank (T&amp;T) Limited"> <span><strong>JMMB</strong><small>JMMB Bank (T&amp;T) Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="RBC Royal Bank (Trinidad &amp; Tobago) Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="RBC Royal Bank (Trinidad &amp; Tobago) Limited"> <span><strong>RBC Royal Bank</strong><small>RBC Royal Bank (Trinidad &amp; Tobago) Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="Republic Bank Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="Republic Bank Limited"> <span><strong>Republic Bank</strong><small>Republic Bank Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                  <div class="dashboard-payments-bankcard" data-bank="Scotiabank Trinidad and Tobago Limited">
+                    <label class="dashboard-payments-choice"><input type="checkbox" name="bank_pick" value="Scotiabank Trinidad and Tobago Limited"> <span><strong>Scotiabank</strong><small>Scotiabank Trinidad and Tobago Limited</small></span></label>
+                    <div class="dashboard-payments-accounts"><div class="dashboard-payments-accounts-clip"><div class="dashboard-payments-accounts-body"><div class="dashboard-payments-account-list"></div><button type="button" class="dashboard-payments-add-account">Add another account</button></div></div></div>
+                  </div>
+                </div>
+                <button type="submit" class="btn-dash btn-dash-secondary">Save accounts</button>
               </form>
+              <template id="dashboardPaymentsAccountTemplate">
+                <div class="dashboard-payments-account-row">
+                  <div class="dashboard-payments-secret">
+                    <input class="dashboard-payments-account-no" type="password" inputmode="numeric" placeholder="Account number" autocomplete="off" spellcheck="false">
+                    <button type="button" class="dashboard-payments-reveal" aria-pressed="false" aria-label="Show account number">Show</button>
+                  </div>
+                  <button type="button" class="dashboard-payments-account-remove" hidden>Remove</button>
+                </div>
+              </template>
             </div>
           </div>
         </div>
