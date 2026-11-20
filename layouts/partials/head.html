@@ -1501,6 +1501,7 @@ window.PAYMENT_CONFIG = {
   enabled: true,
   apiUrl: "{{ $payApiUrl }}",
   apiKey: "{{ site.Params.paymentService.apiKey | default "" }}",
+  direct: {{ if site.Params.paymentService.direct }}true{{ else }}false{{ end }},
   clientId: "{{ $payClientId }}",
   currency: "{{ $payCurrency }}",
   provider: "{{ $payProvider }}",

@@ -176,6 +176,11 @@
                   </div>
                 </div>
               </div>
+              <div class="dashboard-card-actions">
+                <button type="button" class="btn-dash btn-dash-secondary" id="dashboardPaymentsStatement" disabled>
+                  <i class="fa fa-file-pdf-o" aria-hidden="true"></i> Create statement
+                </button>
+              </div>
               <ul class="dashboard-payments-list" id="dashboardPaymentsList" hidden></ul>
               <p class="dashboard-payments-empty" id="dashboardPaymentsEmpty" hidden>No payments collected yet.</p>
             </div>
@@ -199,6 +204,12 @@
               </div>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-settings" role="tabpanel" data-payments-hub-panel="settings" aria-labelledby="dashboardPaymentsHubTab-settings" hidden>
+              <div class="dashboard-pos-account" id="dashboardPaymentsDirect" data-state="{{ if site.Params.paymentService.direct }}checking{{ else }}disconnected{{ end }}" data-direct="{{ if site.Params.paymentService.direct }}true{{ else }}false{{ end }}" data-api="{{ site.Params.paymentService.apiUrl }}">
+                <span class="dashboard-pos-account-dot" aria-hidden="true"></span>
+                <div class="dashboard-pos-account-copy">
+                  <p id="dashboardPaymentsDirectStatus" class="dashboard-pos-account-status" role="status">{{ if site.Params.paymentService.direct }}Checking direct payment…{{ else }}Direct payment is off{{ end }}</p>
+                </div>
+              </div>
               <p class="dashboard-card-desc">Bank account that receives collected payments. Commercial banks licensed in Trinidad and Tobago.</p>
               <p class="dashboard-payments-bank" hidden></p>
               <form class="dashboard-payments-account" id="dashboardPaymentsAccount" data-restaurant="{{ .Site.Title }}">

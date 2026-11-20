@@ -306,6 +306,139 @@
     return [kind, loc].filter(Boolean).join(' · ');
   }
 
+  var statementOrders = [];
+
+  function pdfText(value) {
+    return '(' + String(value == null ? '' : value)
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/[^\x09\x20-\x7E]/g, ' ') + ')';
+  }
+
+  function pdfBlob(pageStreams) {
+    var objects = [];
+    var fontId = 3 + pageStreams.length * 2;
+    var kids = pageStreams.map(function (_, i) { return (3 + i * 2) + ' 0 R'; }).join(' ');
+    objects.push('<< /Type /Catalog /Pages 2 0 R >>');
+    objects.push('<< /Type /Pages /Kids [' + kids + '] /Count ' + pageStreams.length + ' >>');
+    pageStreams.forEach(function (stream, i) {
+      var pageId = 3 + i * 2;
+      objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ' + (pageId + 1) + ' 0 R /Resources << /Font << /F1 ' + fontId + ' 0 R >> >> >>');
+      objects.push('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
+    });
+    objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    var body = '%PDF-1.4\n';
+    var offsets = [0];
+    objects.forEach(function (obj, i) {
+      offsets.push(body.length);
+      body += (i + 1) + ' 0 obj\n' + obj + '\nendobj\n';
+    });
+    var xref = body.length;
+    body += 'xref\n0 ' + (objects.length + 1) + '\n0000000000 65535 f \n';
+    offsets.slice(1).forEach(function (off) {
+      body += ('0000000000' + off).slice(-10) + ' 00000 n \n';
+    });
+    body += 'trailer << /Size ' + (objects.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+    return new Blob([body], { type: 'application/pdf' });
+  }
+
+  function clipPdf(value, max) {
+    var text = String(value || '').replace(/\s+/g, ' ').trim();
+    if (text.length <= max) return text;
+    return text.slice(0, Math.max(0, max - 3)) + '...';
+  }
+
+  function statementPages(rows, meta) {
+    var pages = [];
+    var commands = [];
+    var y = 744;
+    function flush() {
+      pages.push(commands.join('\n'));
+      commands = [];
+      y = 744;
+    }
+    function ensure(need) {
+      if (y < need) flush();
+    }
+    function at(x, yy, size, text) {
+      commands.push('BT /F1 ' + size + ' Tf 1 0 0 1 ' + x + ' ' + yy + ' Tm ' + pdfText(text) + ' Tj ET');
+    }
+    function header() {
+      at(48, y, 16, 'Payment statement');
+      y -= 22;
+      at(48, y, 12, clipPdf(meta.title, 60));
+      y -= 18;
+      at(48, y, 10, 'Created ' + meta.when);
+      y -= 16;
+      at(48, y, 12, 'Collected ' + meta.total);
+      y -= 22;
+      at(48, y, 9, 'Date');
+      at(168, y, 9, 'Customer');
+      at(360, y, 9, 'Ticket');
+      at(470, y, 9, 'Amount');
+      y -= 8;
+      commands.push('0.75 w 48 ' + y + ' m 564 ' + y + ' l S');
+      y -= 16;
+    }
+    header();
+    if (!rows.length) {
+      at(48, y, 11, 'No payments collected yet.');
+    }
+    rows.forEach(function (row) {
+      ensure(72);
+      if (y > 720) header();
+      at(48, y, 9, clipPdf(row.when, 18));
+      at(168, y, 9, clipPdf(row.who, 28));
+      at(360, y, 9, clipPdf(row.ticket, 14));
+      at(470, y, 9, clipPdf(row.amount, 16));
+      y -= 13;
+      if (row.place) {
+        ensure(64);
+        at(168, y, 8, clipPdf(row.place, 70));
+        y -= 14;
+      }
+    });
+    flush();
+    return pages;
+  }
+
+  function downloadStatement() {
+    var rows = statementOrders.map(function (order) {
+      var ticket = order.ticket_number || order.order_ref || String(order.id || '').slice(0, 8);
+      return {
+        when: paymentStamp(order.paid_at || order.updated_at),
+        who: order.customer_name || 'Guest',
+        ticket: ticket,
+        place: paymentPlace(order),
+        amount: paymentMoney(order.total) + ' ' + (order.currency || 'TTD'),
+      };
+    });
+    var totalEl = $('dashboardPaymentsTotal');
+    var form = $('dashboardPaymentsAccount');
+    var title = (form && form.getAttribute('data-restaurant')) || document.title || 'Menu';
+    var when = '';
+    try {
+      when = new Date().toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      when = new Date().toISOString();
+    }
+    var blob = pdfBlob(statementPages(rows, {
+      title: title,
+      when: when,
+      total: (totalEl && totalEl.textContent) || '',
+    }));
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    var day = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = 'payment-statement-' + day + '.pdf';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
   function paintPayments(orders) {
     var list = $('dashboardPaymentsList');
     var empty = $('dashboardPaymentsEmpty');
@@ -322,6 +455,9 @@
       return paymentMoney(totals[currency]) + ' ' + currency;
     }).join(' · ');
     if (totalEl) totalEl.textContent = rows.length ? totalText : 'None';
+    statementOrders = rows;
+    var statementBtn = $('dashboardPaymentsStatement');
+    if (statementBtn) statementBtn.disabled = !rows.length;
     if (!list) return;
     if (!rows.length) {
       list.hidden = true;
@@ -383,6 +519,37 @@
     } catch (err) {}
   }
 
+  function paintDirectPayment() {
+    var row = $('dashboardPaymentsDirect');
+    if (!row) return;
+    var status = $('dashboardPaymentsDirectStatus');
+    if (row.getAttribute('data-direct') !== 'true') {
+      row.setAttribute('data-state', 'disconnected');
+      if (status) status.textContent = 'Direct payment is off';
+      return;
+    }
+    var api = String(row.getAttribute('data-api') || '').replace(/\/+$/, '');
+    if (!api) {
+      row.setAttribute('data-state', 'disconnected');
+      if (status) status.textContent = 'Direct payment is not connected';
+      return;
+    }
+    row.setAttribute('data-state', 'checking');
+    if (status) status.textContent = 'Checking direct payment…';
+    fetch(api + '/health', { method: 'GET' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('down');
+        row.setAttribute('data-state', 'connected');
+        row.classList.add('is-just-connected');
+        if (status) status.textContent = 'Direct payment connected';
+      })
+      .catch(function () {
+        row.setAttribute('data-state', 'disconnected');
+        row.classList.remove('is-just-connected');
+        if (status) status.textContent = 'Direct payment is not connected';
+      });
+  }
+
   function bindPaymentsHub() {
     var root = $('dashboardPaymentsHub');
     if (!root || root.getAttribute('data-hub-bound')) return;
@@ -397,6 +564,15 @@
       saved = localStorage.getItem(paymentsHubKey()) || 'overview';
     } catch (err) {}
     openPaymentsHub(saved);
+    paintDirectPayment();
+    var statementBtn = $('dashboardPaymentsStatement');
+    if (statementBtn && !statementBtn.getAttribute('data-bound')) {
+      statementBtn.setAttribute('data-bound', '1');
+      statementBtn.addEventListener('click', function () {
+        if (!statementOrders.length) return;
+        downloadStatement();
+      });
+    }
     var openSettings = $('dashboardPaymentsOpenSettings');
     if (openSettings && !openSettings.getAttribute('data-bound')) {
       openSettings.setAttribute('data-bound', '1');
