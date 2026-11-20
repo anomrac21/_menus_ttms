@@ -14517,7 +14517,14 @@ button.dashboard-settings-panel-toggle:focus-visible {
 
 .dashboard-payments-account select {
   cursor: pointer;
-  color-scheme: dark;
+  color-scheme: light;
+  color: var(--dash-ink, #1a1208);
+  background-color: #fff;
+}
+
+.dashboard-payments-account select option {
+  background-color: #fff;
+  color: #1a1208;
 }
 
 .dashboard-payments-account[hidden],
