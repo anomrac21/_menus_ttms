@@ -167,8 +167,40 @@
     return DELIVERY_LABEL[key] || key.replace(/_/g, ' ') || 'Open';
   }
 
-  function paintActiveDeliveries(orders) {
-    var open = (orders || []).filter(isOpenDelivery);
+  function deliveryDriverName(order) {
+    var driver = order && order.selected_driver;
+    if (!driver) return order && order.driver ? String(order.driver) : '';
+    return driver.display_name || driver.name || '';
+  }
+
+  function deliveryRow(order) {
+    var status = (order && (order.delivery_status || order.status)) || '';
+    return {
+      id: (order && (order.delivery_order_id || order.id)) || '',
+      customer_name: order && order.customer_name,
+      customer_email: order && order.customer_email,
+      dropoff_address: (order && (order.dropoff_address || order.location_slug)) || '',
+      total: order && order.total,
+      currency: order && order.currency,
+      status: status,
+      driver: deliveryDriverName(order),
+      ticket: (order && (order.ticket_number || order.order_ref)) || '',
+    };
+  }
+
+  function isActiveDeliveryTicket(order) {
+    if (!order || String(order.fulfillment || '').toLowerCase() !== 'delivery') return false;
+    var fleet = String(order.delivery_status || '').toLowerCase();
+    if (fleet && !isOpenDelivery({ status: fleet })) return false;
+    var ticket = String(order.status || '').toLowerCase();
+    if (ticket === 'paid' && !fleet) return false;
+    return isOpenDelivery({ status: fleet || ticket });
+  }
+
+  function paintActiveDeliveries(orders, emptyNote) {
+    var open = (orders || []).filter(function (order) {
+      return isOpenDelivery(order);
+    });
     var status = $('dashboardCardDeliveryStatus');
     var list = $('dashboardDeliveryActive');
     var empty = $('dashboardDeliveryActiveEmpty');
@@ -179,17 +211,23 @@
     if (!open.length) {
       list.hidden = true;
       list.innerHTML = '';
-      if (empty) empty.hidden = false;
+      list.removeAttribute('data-sig');
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = emptyNote || 'No active deliveries.';
+      }
       return;
     }
     if (empty) empty.hidden = true;
-    var html = open.slice(0, 8).map(function (order) {
+    var html = open.slice(0, 12).map(function (order) {
       var name = order.customer_name || order.customer_email || 'Customer';
       var place = order.dropoff_address || '';
       var money = order.total == null || order.total === ''
         ? ''
-        : String(order.total) + (order.currency ? ' ' + order.currency : '');
-      var meta = [place, money].filter(Boolean).join(' · ');
+        : paymentMoney(order.total) + (order.currency ? ' ' + order.currency : '');
+      var driver = order.driver ? 'Driver ' + order.driver : '';
+      var ticket = order.ticket ? String(order.ticket) : '';
+      var meta = [ticket, place, money, driver].filter(Boolean).join(' · ');
       return (
         '<li>' +
         '<a class="dashboard-delivery-active-row" href="/delivery-orders/" data-id="' + escapeHtml(order.id) + '">' +
@@ -260,17 +298,36 @@
       setCount('dashboardCardDeliveryCount', 0);
       return;
     }
+    var fleet = [];
+    var fleetNote = '';
     try {
       var res = await global.DeliveryClient.listClientOrders();
       var orders = (res && (res.orders || res)) || [];
       if (!Array.isArray(orders)) orders = [];
-      var open = orders.filter(isOpenDelivery);
-      setCount('dashboardCardDeliveryCount', open.length);
-      paintActiveDeliveries(open);
-    } catch (_) {
-      setCount('dashboardCardDeliveryCount', 0);
-      paintActiveDeliveries([]);
+      fleet = orders.filter(isOpenDelivery).map(deliveryRow);
+    } catch (err) {
+      fleetNote = (err && err.message) || 'Could not load deliveries.';
     }
+    var seen = {};
+    fleet.forEach(function (row) {
+      if (row.id) seen[row.id] = true;
+    });
+    var tickets = [];
+    if (global.OrderClient && typeof global.OrderClient.listClient === 'function') {
+      try {
+        var ticketRes = await global.OrderClient.listClient({});
+        var ticketOrders = (ticketRes && ticketRes.orders) || [];
+        if (!Array.isArray(ticketOrders)) ticketOrders = [];
+        ticketOrders.forEach(function (order) {
+          if (!isActiveDeliveryTicket(order)) return;
+          if (order.delivery_order_id && seen[order.delivery_order_id]) return;
+          tickets.push(deliveryRow(order));
+        });
+      } catch (_) {}
+    }
+    var open = fleet.concat(tickets);
+    setCount('dashboardCardDeliveryCount', open.length);
+    paintActiveDeliveries(open, open.length ? '' : fleetNote);
   }
 
   var paymentWait = 0;
