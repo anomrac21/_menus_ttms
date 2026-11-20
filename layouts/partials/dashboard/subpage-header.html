@@ -11,14 +11,16 @@
       <span class="dashboard-logo-frame" aria-hidden="true">
         <img class="dashboard-logo" src="/branding/favicon192.webp" alt="" width="52" height="52">
       </span>
-      <span class="dashboard-logo-live-badge dashboard-deploy-status-badge" id="dashboardDeployStatusBadge" data-state="unknown" title="Site deploy status">Live</span>
     </a>
     <div class="dashboard-header-main">
       <p class="dashboard-header-kicker">
         <span class="dashboard-header-kicker-dot dashboard-deploy-status-dot" id="dashboardDeployStatusDot" aria-hidden="true"></span>
         {{ $kicker }}
       </p>
-      <h1 class="dashboard-header-site"{{ with .siteNameId }} id="{{ . }}"{{ end }}>{{ $siteName }}</h1>
+      <div class="dashboard-header-titleline">
+        <h1 class="dashboard-header-site"{{ with .siteNameId }} id="{{ . }}"{{ end }}>{{ $siteName }}</h1>
+        <span class="dashboard-logo-live-badge dashboard-deploy-status-badge" id="dashboardDeployStatusBadge" data-state="unknown" title="Site deploy status">Live</span>
+      </div>
     </div>
     <div class="dashboard-header-end">
       {{ partial "dashboard/theme-toggle.html" . }}

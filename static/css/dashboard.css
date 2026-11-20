@@ -715,21 +715,27 @@ html:has(.dashboard-control-room)::after {
   border: 0;
 }
 
+.dashboard-control-room .dashboard-header-titleline {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
 .dashboard-control-room .dashboard-logo-live-badge {
-  position: absolute;
-  right: -0.28rem;
-  bottom: -0.22rem;
-  font-size: 0.56rem;
+  position: static;
+  flex: 0 0 auto;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--dash-success);
-  padding: 0.08rem 0.32rem;
+  padding: 0.16rem 0.48rem;
   border-radius: 999px;
   background: var(--dash-surface);
   border: 1px solid color-mix(in srgb, var(--dash-success) 45%, transparent);
   line-height: 1.2;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 18%, transparent);
+  box-shadow: none;
 }
 
 .dashboard-control-room .dashboard-deploy-status-badge[data-state="deploying"] {
@@ -1000,6 +1006,11 @@ html:has(.dashboard-control-room)::after {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dash-success) 45%, transparent); }
   70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--dash-success) 0%, transparent); }
   100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dash-success) 0%, transparent); }
+}
+
+.dashboard-control-room .dashboard-header-titleline .dashboard-header-site {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .dashboard-control-room .dashboard-header-site {
@@ -1307,10 +1318,8 @@ html:has(.dashboard-control-room)::after {
   }
 
   .dashboard-control-room .dashboard-logo-live-badge {
-    right: -0.2rem;
-    bottom: -0.15rem;
-    font-size: 0.5rem;
-    padding: 0.06rem 0.26rem;
+    font-size: 0.56rem;
+    padding: 0.12rem 0.4rem;
   }
 
   .dashboard-control-room .dashboard-header-main {
