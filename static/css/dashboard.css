@@ -715,11 +715,12 @@ html:has(.dashboard-control-room)::after {
   border: 0;
 }
 
-.dashboard-control-room .dashboard-header-titleline {
+.dashboard-control-room .dashboard-header-kickerline {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.4rem;
   min-width: 0;
+  margin: 0 0 0.28rem;
 }
 
 .dashboard-control-room .dashboard-logo-live-badge {
@@ -980,7 +981,7 @@ html:has(.dashboard-control-room)::after {
   gap: 0.4rem;
   width: fit-content;
   max-width: 100%;
-  margin: 0 0 0.28rem;
+  margin: 0;
   padding: 0.12rem 0.5rem 0.12rem 0.38rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dash-ink) 6%, transparent);
@@ -1006,11 +1007,6 @@ html:has(.dashboard-control-room)::after {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dash-success) 45%, transparent); }
   70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--dash-success) 0%, transparent); }
   100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dash-success) 0%, transparent); }
-}
-
-.dashboard-control-room .dashboard-header-titleline .dashboard-header-site {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .dashboard-control-room .dashboard-header-site {
@@ -1328,8 +1324,12 @@ html:has(.dashboard-control-room)::after {
     padding-left: 0;
   }
 
+  .dashboard-control-room .dashboard-header-kickerline {
+    margin-bottom: 0.1rem;
+  }
+
   .dashboard-control-room .dashboard-header-kicker {
-    margin: 0 0 0.1rem;
+    margin: 0;
     font-size: 0.58rem;
     letter-spacing: 0.08em;
   }

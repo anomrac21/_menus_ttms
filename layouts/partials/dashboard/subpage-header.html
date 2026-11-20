@@ -13,14 +13,14 @@
       </span>
     </a>
     <div class="dashboard-header-main">
-      <p class="dashboard-header-kicker">
-        <span class="dashboard-header-kicker-dot dashboard-deploy-status-dot" id="dashboardDeployStatusDot" aria-hidden="true"></span>
-        {{ $kicker }}
-      </p>
-      <div class="dashboard-header-titleline">
-        <h1 class="dashboard-header-site"{{ with .siteNameId }} id="{{ . }}"{{ end }}>{{ $siteName }}</h1>
+      <div class="dashboard-header-kickerline">
         <span class="dashboard-logo-live-badge dashboard-deploy-status-badge" id="dashboardDeployStatusBadge" data-state="unknown" title="Site deploy status">Live</span>
+        <p class="dashboard-header-kicker">
+          <span class="dashboard-header-kicker-dot dashboard-deploy-status-dot" id="dashboardDeployStatusDot" aria-hidden="true"></span>
+          {{ $kicker }}
+        </p>
       </div>
+      <h1 class="dashboard-header-site"{{ with .siteNameId }} id="{{ . }}"{{ end }}>{{ $siteName }}</h1>
     </div>
     <div class="dashboard-header-end">
       {{ partial "dashboard/theme-toggle.html" . }}
