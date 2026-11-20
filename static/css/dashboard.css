@@ -14504,7 +14504,8 @@ button.dashboard-settings-panel-toggle:focus-visible {
   color: var(--dash-ink-muted);
 }
 
-.dashboard-payments-account input {
+.dashboard-payments-account input,
+.dashboard-payments-account select {
   width: 100%;
   min-height: 2.4rem;
   padding: 0.4rem 0.65rem;
@@ -14512,6 +14513,11 @@ button.dashboard-settings-panel-toggle:focus-visible {
   border: 1px solid color-mix(in srgb, var(--dash-ink, #1e2a38) 16%, transparent);
   background: transparent;
   color: inherit;
+}
+
+.dashboard-payments-account select {
+  cursor: pointer;
+  color-scheme: dark;
 }
 
 .dashboard-payments-account[hidden],

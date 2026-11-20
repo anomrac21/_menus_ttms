@@ -419,6 +419,26 @@
     var when = (status && status.next_batch) || '';
     var currency = (status && status.currency) || 'TTD';
     var bankText = last4 ? [status.bank_name, '····' + last4].filter(Boolean).join(' · ') : '';
+    var bankSelect = document.querySelector('#dashboardPaymentsAccount select[name="bank_name"]');
+    if (bankSelect && status && status.bank_name) {
+      var savedBank = String(status.bank_name);
+      var known = false;
+      Array.prototype.forEach.call(bankSelect.options, function (option) {
+        if (option.value === savedBank) known = true;
+      });
+      if (!known) {
+        var extra = document.createElement('option');
+        extra.value = savedBank;
+        extra.textContent = savedBank;
+        bankSelect.appendChild(extra);
+      }
+      var current = bankSelect.value;
+      var previous = bankSelect.getAttribute('data-saved') || '';
+      if (!current || current === previous) {
+        bankSelect.value = savedBank;
+        bankSelect.setAttribute('data-saved', savedBank);
+      }
+    }
     Array.prototype.forEach.call(banks, function (bank) {
       bank.hidden = !last4;
       bank.textContent = bankText;

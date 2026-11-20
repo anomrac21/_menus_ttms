@@ -199,11 +199,21 @@
               </div>
             </div>
             <div class="dashboard-orders-hub-panel" id="dashboardPaymentsHubPanel-settings" role="tabpanel" data-payments-hub-panel="settings" aria-labelledby="dashboardPaymentsHubTab-settings" hidden>
-              <p class="dashboard-card-desc">Bank account that receives collected payments.</p>
+              <p class="dashboard-card-desc">Bank account that receives collected payments. Commercial banks licensed in Trinidad and Tobago.</p>
               <p class="dashboard-payments-bank" hidden></p>
               <form class="dashboard-payments-account" id="dashboardPaymentsAccount" data-restaurant="{{ .Site.Title }}">
                 <label>Bank
-                  <input name="bank_name" autocomplete="off" required>
+                  <select name="bank_name" required>
+                    <option value="">Choose a bank</option>
+                    <option value="ANSA Bank Limited">ANSA Bank</option>
+                    <option value="CIBC Caribbean Bank (Trinidad and Tobago) Limited">CIBC Caribbean</option>
+                    <option value="Citibank (Trinidad &amp; Tobago) Limited">Citibank</option>
+                    <option value="First Citizens Bank Limited">First Citizens</option>
+                    <option value="JMMB Bank (T&amp;T) Limited">JMMB</option>
+                    <option value="RBC Royal Bank (Trinidad &amp; Tobago) Limited">RBC Royal Bank</option>
+                    <option value="Republic Bank Limited">Republic Bank</option>
+                    <option value="Scotiabank Trinidad and Tobago Limited">Scotiabank</option>
+                  </select>
                 </label>
                 <label>Account name
                   <input name="bank_account_name" autocomplete="off">
