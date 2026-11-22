@@ -145,32 +145,27 @@
 
 .dashboard-menu-btn-wrap .account-badge {
   display: none;
-  position: relative;
-  flex: 0 0 auto;
+  position: absolute;
+  right: -0.2rem;
+  bottom: -0.12rem;
   z-index: 2;
-  width: 1.65em;
-  height: 1.65em;
-  margin-inline-start: 0.15rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  border: 2px solid var(--header-bg-color);
   background: var(--scheme-accent, var(--accent-color, #f0c43a));
   box-shadow: 0 2px 8px color-mix(in srgb, var(--dash-black) 35%, transparent);
   pointer-events: none;
 }
 
 .dashboard-menu-btn-wrap .account-badge .icon.account {
-  width: 0.95em;
-  height: 0.95em;
-  color: var(--main-bg, #070b16);
+  width: 0.72rem;
+  height: 0.72rem;
+  color: var(--header-bg-color, #070b16);
   fill: currentColor;
-}
-
-body.ttms-logged-in .main-header:not(.menublock-scrolled-right) .dashboard-menu-btn-wrap {
-  width: auto;
-  flex-basis: auto;
-  justify-content: flex-start;
-  gap: 0.15rem;
 }
 
 body.ttms-logged-in .dashboard-menu-btn-wrap .account-badge:not(.account-badge--on-logo) {
