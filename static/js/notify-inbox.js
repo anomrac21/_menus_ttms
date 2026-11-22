@@ -460,15 +460,40 @@
     );
   }
 
+  function isVenueHome(href) {
+    var raw = String(href || '').trim();
+    if (!raw) return true;
+    try {
+      var url = new URL(raw, window.location.origin);
+      var path = url.pathname.replace(/\/+$/, '');
+      return !path && !url.search && !url.hash;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function ordersTicketHref(item) {
+    var data = (item && item.data) || {};
+    var id = String(data.order_id || data.delivery_order_id || '').trim();
+    if (!id) return '/dashboard/orders/';
+    return '/dashboard/orders/?order=' + encodeURIComponent(id);
+  }
+
+  function itemHref(item) {
+    var href = String((item && item.url) || '').trim();
+    var role = String(((item && item.data) || {}).role || '').toLowerCase();
+    if (role === 'client' && isVenueHome(href)) return ordersTicketHref(item);
+    return href;
+  }
+
   function panelAction(item) {
     var data = (item && item.data) || {};
-    var href = String((item && item.url) || '');
+    var href = itemHref(item);
     var delivery = deliveryOrderFromHref(href);
     if (delivery) return { type: 'delivery', target: delivery };
     var role = String(data.role || '').toLowerCase();
-    if (role === 'client' || /dashboard/i.test(href)) {
-      var card = /dashboardCardBody-delivery|\/delivery\//i.test(href) ? 'delivery' : 'orders';
-      return { type: 'dashboard', card: card, id: data.order_id || data.delivery_order_id || '' };
+    if ((role === 'client' || /dashboard/i.test(href)) && href) {
+      return { type: 'navigate', href: href };
     }
     if (data.order_id) return { type: 'customer', id: String(data.order_id) };
     return null;
@@ -536,6 +561,10 @@
     }
     if (action.type === 'customer') {
       return openCustomerOrder(action.id);
+    }
+    if (action.type === 'navigate' && action.href) {
+      window.location.assign(action.href);
+      return true;
     }
     openDashboardPanel(action);
     return true;
@@ -606,7 +635,7 @@
   }
 
   function iosLinkMarkup(item, unread, place, step) {
-    var href = item.url || '';
+    var href = itemHref(item);
     var tag = href ? 'a' : 'button';
     return (
       '<' +

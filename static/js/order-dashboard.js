@@ -163,6 +163,47 @@
     return { slug: '', title: name || 'Menu', subtitle: '' };
   }
 
+  function requestedOrderId() {
+    try {
+      return String(new URLSearchParams(window.location.search).get('order') || '').trim();
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function selectOrdersStatus(status) {
+    var root = $('dashboardOrdersFilter');
+    if (!root) return;
+    var match = null;
+    root.querySelectorAll('[data-orders-status]').forEach(function (el) {
+      if (el.getAttribute('data-orders-status') === status) match = el;
+    });
+    if (!match) return;
+    root.querySelectorAll('[data-orders-status]').forEach(function (el) {
+      var on = el === match;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function focusRequestedTicket() {
+    var id = requestedOrderId();
+    if (!id) return;
+    var host = $('ttms-orders-list');
+    if (!host) return;
+    var row = null;
+    Array.prototype.forEach.call(host.querySelectorAll('[data-id]'), function (el) {
+      if (!row && el.getAttribute('data-id') === id) row = el;
+    });
+    if (!row) return;
+    row.classList.add('is-notify-target');
+    try {
+      row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } catch (e) {
+      row.scrollIntoView(true);
+    }
+  }
+
   function selectedOrdersStatus() {
     var root = $('dashboardOrdersFilter');
     if (!root) return '';
@@ -891,6 +932,7 @@
       })
       .join('');
     knownIds = nextKnown;
+    focusRequestedTicket();
   }
 
   async function refresh(opts) {
@@ -1061,6 +1103,7 @@
     var location = $('dashboardOrdersLocation');
     if (location) location.addEventListener('change', refresh);
     fillLocationFilter();
+    if (requestedOrderId()) selectOrdersStatus('all');
     await refresh();
     pollTimer = setInterval(function () {
       refresh({ silent: true });
