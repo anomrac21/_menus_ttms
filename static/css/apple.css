@@ -138,7 +138,7 @@
     min-height: 100lvh !important;
     max-height: none !important;
     transform: none !important;
-    background-color: var(--scheme-black);
+    background-color: transparent !important;
  }
  #wamodal, #itemSides, #itemMods, #itemAddMods {
     max-height: calc(100dvh - 12em); 

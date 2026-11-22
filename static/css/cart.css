@@ -37,13 +37,13 @@
     margin: 0;
     border: none;
     border-radius: 0;
-    background: var(--main-bg);
+    background: transparent;
     overflow: hidden;
     text-align: left;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: stretch;
+    align-items: center;
     transform: none;
     transition: opacity 0.28s ease, visibility 0.28s ease;
     padding-top: constant(safe-area-inset-top, 0);
@@ -56,7 +56,7 @@
 @supports (color: color-mix(in srgb, var(--main-bg) 50%, var(--main-text-color))) {
     #cart {
         --cart-ink-muted: color-mix(in srgb, var(--main-text-color) 68%, transparent);
-        background: var(--main-bg);
+        background: transparent;
     }
 }
 
@@ -75,7 +75,20 @@ html.ttms-ios body.ttms-scroll-locked #cart {
     min-height: 100lvh !important;
     max-height: none !important;
     transform: none !important;
-    background-color: var(--scheme-black);
+    background-color: transparent !important;
+}
+
+#cart:not(.cart-hidden)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--scheme-surface) 55%, transparent), transparent 55%),
+        color-mix(in srgb, var(--scheme-black) 72%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 }
 
 #cart.cart-hidden {
@@ -150,7 +163,9 @@ body.cart-open #footerSettings {
     z-index: 1;
     flex: 1 1 auto;
     min-height: 0;
-    width: 100%;
+    width: min(34rem, 100%);
+    max-width: 34rem;
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
     overflow: hidden;
