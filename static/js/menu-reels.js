@@ -359,15 +359,11 @@
     push(track.querySelector('.menu-reels-slide--hero'));
     push(track.querySelector('.menu-reels-slide--contact'));
 
-    // Promotions first, then community photos / share intro, then other section titles.
+    // Community photos, then the promotions reel, then other section titles.
+    push(track.querySelector('.menu-reels-slide--intro'));
     track.querySelectorAll('.menu-reels-slide--section-title[data-promo-section]').forEach(function (el) {
       push(el);
     });
-    push(track.querySelector('.menu-reels-slide--intro'));
-    track.querySelectorAll('.menu-reels-slide--section-title').forEach(function (el) {
-      push(el);
-    });
-
     Array.from(track.querySelectorAll('.ads-reels-slide'))
       .filter(isVisibleReelSlide)
       .sort(function (a, b) {
@@ -377,6 +373,9 @@
         );
       })
       .forEach(push);
+    track.querySelectorAll('.menu-reels-slide--section-title').forEach(function (el) {
+      push(el);
+    });
 
     Array.from(track.querySelectorAll('.menu-header.menu-reels-slide'))
       .sort(function (a, b) {
