@@ -186,8 +186,7 @@
     }
 
     html:not(.ttms-mobile-menublock) .header-leading .dashboard-menu-btn-wrap #dashboardBtn,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo,
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe--icon-only.contact-cta {
+    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo {
         box-sizing: border-box;
         display: grid;
         grid-template-rows: 1.35rem 1.45rem;
@@ -209,8 +208,7 @@
 
     html:not(.ttms-mobile-menublock) #dashboardBtn img,
     html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo .logo,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container img.logo,
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe--icon-only .contact-cta__icon {
+    html:not(.ttms-mobile-menublock) .header-leading .logo-container img.logo {
         grid-row: 1;
         align-self: center;
         justify-self: center;
@@ -227,22 +225,6 @@
         max-height: 2.4rem !important;
     }
 
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe--icon-only .contact-cta__icon {
-        width: 1.35rem;
-        height: 1.35rem;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe--icon-only .contact-cta__icon svg {
-        width: 1.15rem;
-        height: 1.15rem;
-    }
-
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe:hover,
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe:focus-visible,
-    html:not(.ttms-mobile-menublock) .header-leading .header-notify-subscribe:active,
     html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo:hover,
     html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo:focus-visible,
     html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo:active {
@@ -376,8 +358,7 @@
     }
 
     html.ttms-mobile-menublock .header-leading .dashboard-menu-btn-wrap #dashboardBtn,
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo,
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe--icon-only.contact-cta {
+    html.ttms-mobile-menublock .header-leading .logo-container.header-logo {
         box-sizing: border-box;
         display: grid;
         grid-template-rows: 1.35rem 1.45rem;
@@ -399,8 +380,7 @@
 
     html.ttms-mobile-menublock #dashboardBtn img,
     html.ttms-mobile-menublock .header-leading .logo-container.header-logo .logo,
-    html.ttms-mobile-menublock .header-leading .logo-container img.logo,
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe--icon-only .contact-cta__icon {
+    html.ttms-mobile-menublock .header-leading .logo-container img.logo {
         grid-row: 1;
         align-self: center;
         justify-self: center;
@@ -417,22 +397,6 @@
         max-height: 2.4rem !important;
     }
 
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe--icon-only .contact-cta__icon {
-        width: 1.35rem;
-        height: 1.35rem;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe--icon-only .contact-cta__icon svg {
-        width: 1.15rem;
-        height: 1.15rem;
-    }
-
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe:hover,
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe:focus-visible,
-    html.ttms-mobile-menublock .header-leading .header-notify-subscribe:active,
     html.ttms-mobile-menublock .header-leading .logo-container.header-logo:hover,
     html.ttms-mobile-menublock .header-leading .logo-container.header-logo:focus-visible,
     html.ttms-mobile-menublock .header-leading .logo-container.header-logo:active {
