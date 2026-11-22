@@ -18,7 +18,13 @@
   {{ with $location.loyverse_store_id }}data-loyverse-store-id="{{ . }}"{{ end }}
   {{ with $location.delivery }}{{ with .fooddrop }}data-delivery-fooddrop="{{ . }}"{{ end }}{{ end }}
   {{ if $location.opening_hours }}data-opening-hours="{{ $location.opening_hours | jsonify | safeHTMLAttr }}"{{ end }}
-  {{- if $hasCoords }} data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-map-client="{{ $siteName }}"{{ end }}>
+  {{- if $hasCoords }} data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-map-client="{{ $siteName }}"{{ end }}
+  {{- with $location.image }} data-image="{{ . }}"{{ end }}>
+  {{- with $location.image -}}
+  <div class="location-picker-card__photo">
+    <img src="{{ partial "ttms/menu-img-src.html" (dict "path" . "size" "card") }}" alt="{{ $location.city }}" loading="lazy" decoding="async" data-src-path="{{ . }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+  </div>
+  {{- end -}}
   {{- if $hasCoords -}}
   {{- if $readonly -}}
   <div class="location-picker-card__select locbtn" data-whatsapp="{{ $location.whatsapp }}"{{ with $location.slug }} data-slug="{{ . }}"{{ end }} data-lat="{{ index $location.latlon 0 }}" data-lng="{{ index $location.latlon 1 }}" data-orderingtables="{{ if $location.orderingtables }}{{ delimit $location.orderingtables "," }}{{ end }}"{{ with $location.loyverse_store_id }} data-loyverse-store-id="{{ . }}"{{ end }}>

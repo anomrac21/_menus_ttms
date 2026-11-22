@@ -47,7 +47,7 @@
   {{- end -}}
   <div class="dashboard-settings-panel-body" id="settings-locations-body">
   <div class="dashboard-settings-locations-wrap">
-    <p class="dashboard-settings-hint dashboard-settings-locations-hint">Addresses, hours, and how customers order at each place.</p>
+    <p class="dashboard-settings-hint dashboard-settings-locations-hint">Addresses, photos, hours, and how customers order at each place.</p>
     <div id="settingsLocationsList" class="dashboard-settings-locations-list" aria-live="polite">
       {{- range $index, $location := $locations -}}
       {{- $hasTakeaway := false -}}
@@ -63,6 +63,11 @@
         {{- end -}}
       {{- end -}}
       <article class="dashboard-settings-location-card">
+        {{- with $location.image }}
+        <div class="dashboard-settings-location-card-photo">
+          <img src="{{ partial "ttms/menu-img-src.html" (dict "path" . "size" "thumb") }}" alt="" data-src-path="{{ . }}" loading="lazy" decoding="async">
+        </div>
+        {{- end }}
         <div class="dashboard-settings-location-card-main">
           <h3 class="dashboard-settings-location-card-title">{{ default $location.address $location.city }}</h3>
           <p class="dashboard-settings-location-card-address">{{ $location.address }}</p>
@@ -120,6 +125,25 @@
     <form id="settingsLocationForm" class="dashboard-settings-location-form" autocomplete="off">
       <input type="hidden" id="settingsLocationEditIndex" value="">
       <div class="dashboard-settings-form-grid dashboard-settings-location-form-grid">
+        <div class="dashboard-settings-row dashboard-settings-row--full">
+          <span class="dashboard-settings-label" id="settingsLocationImageLabel">Photo</span>
+          <div class="dashboard-settings-value">
+            <div class="settings-location-image" id="settingsLocationImageRow">
+              <div class="settings-location-image-preview" id="settingsLocationImagePreview">
+                <img id="settingsLocationImageThumb" alt="" hidden>
+                <span class="settings-location-image-empty" id="settingsLocationImageEmpty">No photo</span>
+              </div>
+              <div class="settings-location-image-actions">
+                <input type="file" id="settingsLocationImageFile" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                <input type="hidden" id="settingsLocationImage" value="">
+                <button type="button" class="btn-dash btn-dash-secondary" id="btnSettingsLocationImage">Choose photo</button>
+                <button type="button" class="btn-dash btn-dash-secondary hidden" id="btnSettingsLocationImageClear">Remove photo</button>
+                <span id="settingsLocationImageStatus" class="dashboard-settings-save-status" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+            <p class="dashboard-settings-hint">Shown on the location card and the location chooser. It goes live when you publish.</p>
+          </div>
+        </div>
         <div class="dashboard-settings-row dashboard-settings-row--full">
           <label class="dashboard-settings-label" for="settingsLocationAddress">Address <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
           <div class="dashboard-settings-value">

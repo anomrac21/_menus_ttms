@@ -612,6 +612,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   var inputLocationOrderingtables = document.getElementById('dashboardEditLocationOrderingtables');
   var inputLocationFooddrop = document.getElementById('dashboardEditLocationFooddrop');
   var inputLocationOpeningHours = document.getElementById('dashboardEditLocationOpeningHours');
+  var inputLocationImage = document.getElementById('dashboardEditLocationImage');
+  var locationImageThumb = document.getElementById('dashboardLocationImageThumb');
+  var locationImageStatusEl = document.getElementById('dashboardLocationImageStatus');
+  var btnLocationImageReplace = document.getElementById('btnLocationImageReplace');
+  var btnLocationImageFile = document.getElementById('btnLocationImageFile');
+  var btnLocationImageRemove = document.getElementById('btnLocationImageRemove');
   var btnUseCurrentLocation = document.getElementById('btnUseCurrentLocation');
   var locationGeoStatusEl = document.getElementById('dashboardLocationGeoStatus');
   var locationPreviewApplyTimer = null;
@@ -5279,6 +5285,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (inputLocationOrderingtables) inputLocationOrderingtables.value = '';
     if (inputLocationFooddrop) inputLocationFooddrop.value = '';
     if (inputLocationOpeningHours) inputLocationOpeningHours.value = '';
+    if (inputLocationImage) {
+      inputLocationImage.value = '';
+      delete inputLocationImage.dataset.imageTouched;
+    }
+    paintLocationEditorThumb('');
+    if (locationImageStatusEl) locationImageStatusEl.textContent = '';
     if (inputPromoTitle) inputPromoTitle.value = '';
     if (inputPromoLink) inputPromoLink.value = '';
     promoLinkAutoDefault = '';
@@ -8070,6 +8082,127 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (btnUseCurrentLocation) {
     btnUseCurrentLocation.addEventListener('click', useCurrentLocationForEditor);
   }
+  function locationImageValue() {
+    return inputLocationImage ? String(inputLocationImage.value || '').trim() : '';
+  }
+  function markLocationImageTouched() {
+    if (inputLocationImage) inputLocationImage.dataset.imageTouched = '1';
+  }
+  function paintLocationEditorThumb(path, file) {
+    if (!locationImageThumb) return;
+    if (locationImageThumb.dataset.blob) {
+      try { URL.revokeObjectURL(locationImageThumb.dataset.blob); } catch (e) {}
+      delete locationImageThumb.dataset.blob;
+    }
+    path = String(path || '').trim();
+    if (file instanceof File) {
+      var blobUrl = URL.createObjectURL(file);
+      locationImageThumb.dataset.blob = blobUrl;
+      locationImageThumb.src = blobUrl;
+      return;
+    }
+    if (!path) {
+      locationImageThumb.removeAttribute('src');
+      return;
+    }
+    if (path.indexOf('draft-assets/') === 0) {
+      paintDraftAssetImage(locationImageThumb, path);
+      return;
+    }
+    locationImageThumb.src = /^https?:\/\//i.test(path) || path.charAt(0) === '/' ? path : '/' + path;
+  }
+  function paintLocationCardPhoto(card, path) {
+    if (!card) return;
+    var photo = null;
+    for (var pi = 0; pi < card.children.length; pi++) {
+      if (card.children[pi].classList && card.children[pi].classList.contains('location-picker-card__photo')) {
+        photo = card.children[pi];
+        break;
+      }
+    }
+    path = String(path || '').trim();
+    if (!path) {
+      if (photo) photo.remove();
+      card.removeAttribute('data-image');
+      return;
+    }
+    card.setAttribute('data-image', path);
+    if (!photo) {
+      photo = card.ownerDocument.createElement('div');
+      photo.className = 'location-picker-card__photo';
+      var created = card.ownerDocument.createElement('img');
+      created.alt = '';
+      photo.appendChild(created);
+      card.insertBefore(photo, card.firstChild);
+    }
+    var imgEl = photo.querySelector('img');
+    if (!imgEl) return;
+    imgEl.setAttribute('data-src-path', path);
+    imgEl.alt = card.getAttribute('data-city') || '';
+    if (path.indexOf('draft-assets/') === 0) {
+      paintDraftAssetImage(imgEl, path);
+      return;
+    }
+    imgEl.src = /^https?:\/\//i.test(path) || path.charAt(0) === '/' ? path : '/' + path;
+  }
+  function uploadLocationEditorImage(file) {
+    var previous = locationImageValue();
+    var url = CMS_SERVICE_URL.replace(/\/+$/, '') + '/api/clients/' + encodeURIComponent(CMS_CLIENT_ID) + '/content/draft-assets';
+    var fd = new FormData();
+    fd.append('file', file);
+    var headers = {};
+    var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+    if (token) headers.Authorization = 'Bearer ' + token;
+    if (locationImageStatusEl) locationImageStatusEl.textContent = 'Uploading photo…';
+    if (btnLocationImageReplace) btnLocationImageReplace.disabled = true;
+    paintLocationEditorThumb('', file);
+    fetch(url, { method: 'POST', credentials: 'include', headers: headers, body: fd })
+      .then(function(res) {
+        if (!res.ok) {
+          return res.text().then(function(t) { throw new Error(t || ('HTTP ' + res.status)); });
+        }
+        return res.json();
+      })
+      .then(function(data) {
+        var path = data && (data.path != null ? data.path : data.Path);
+        if (!path) throw new Error('No path in upload response');
+        if (inputLocationImage) inputLocationImage.value = path;
+        markLocationImageTouched();
+        paintLocationEditorThumb(path, file);
+        if (locationImageStatusEl) locationImageStatusEl.textContent = 'Photo ready. Save to keep it.';
+        editFormDirty = true;
+        setEditStatus('Unsaved changes (not yet published)');
+        scheduleLocationPreviewApply();
+      })
+      .catch(function(err) {
+        if (inputLocationImage) inputLocationImage.value = previous;
+        paintLocationEditorThumb(previous);
+        if (locationImageStatusEl) locationImageStatusEl.textContent = '';
+        alert('Could not upload the photo: ' + (err && err.message ? err.message : err));
+      })
+      .then(function() {
+        if (btnLocationImageReplace) btnLocationImageReplace.disabled = false;
+      });
+  }
+  if (btnLocationImageReplace && btnLocationImageFile) {
+    btnLocationImageReplace.addEventListener('click', function() { btnLocationImageFile.click(); });
+    btnLocationImageFile.addEventListener('change', function() {
+      var file = btnLocationImageFile.files && btnLocationImageFile.files[0];
+      btnLocationImageFile.value = '';
+      if (file) uploadLocationEditorImage(file);
+    });
+  }
+  if (btnLocationImageRemove) {
+    btnLocationImageRemove.addEventListener('click', function() {
+      if (inputLocationImage) inputLocationImage.value = '';
+      markLocationImageTouched();
+      paintLocationEditorThumb('');
+      if (locationImageStatusEl) locationImageStatusEl.textContent = 'Photo removed. Save to keep this.';
+      editFormDirty = true;
+      setEditStatus('Unsaved changes (not yet published)');
+      scheduleLocationPreviewApply();
+    });
+  }
   [inputLocationAddress, inputLocationCity, inputLocationIsland, inputLocationSubcategories,
     inputLocationLat, inputLocationLng, inputLocationPhone, inputLocationWhatsapp,
     inputLocationOrderingtables, inputLocationFooddrop].forEach(function(el) {
@@ -8421,6 +8554,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (inputLocationWhatsapp) inputLocationWhatsapp.value = el.getAttribute('data-whatsapp') || (waLink ? (waLink.getAttribute('href') || '').replace(/.*wa\.me\/?/, '') : '');
       if (inputLocationOrderingtables) inputLocationOrderingtables.value = (locLink ? locLink.getAttribute('data-orderingtables') : '') || el.getAttribute('data-orderingtables') || '';
       if (inputLocationFooddrop) inputLocationFooddrop.value = el.getAttribute('data-delivery-fooddrop') || '';
+      if (inputLocationImage) {
+        inputLocationImage.value = el.getAttribute('data-image') || '';
+        delete inputLocationImage.dataset.imageTouched;
+        paintLocationEditorThumb(inputLocationImage.value);
+      }
+      if (locationImageStatusEl) locationImageStatusEl.textContent = '';
       var oh = normalizeLocationOpeningHoursAttr(el.getAttribute('data-opening-hours'));
       if (inputLocationOpeningHours) inputLocationOpeningHours.value = oh;
       initOpeningHoursEditor();
@@ -12079,6 +12218,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             try { JSON.parse(oh); selectedElement.setAttribute('data-opening-hours', oh); } catch (e) { /* leave unchanged if invalid */ }
           }
         }
+        paintLocationCardPhoto(selectedElement, locationImageValue());
         return;
       }
       if (contentType === 'promotion') {
@@ -12355,6 +12495,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     var fooddrop = inputLocationFooddrop ? (inputLocationFooddrop.value || '').trim() : '';
     if (fooddrop) loc.delivery.fooddrop = fooddrop;
+    if (inputLocationImage) {
+      var imagePath = locationImageValue();
+      if (imagePath) loc.image = imagePath;
+      else if (inputLocationImage.dataset.imageTouched === '1') loc.image = '';
+    }
     return loc;
   }
 
@@ -12382,6 +12527,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var prev = list[idx] && typeof list[idx] === 'object' ? list[idx] : {};
         if (prev.slug) loc.slug = prev.slug;
         if (prev.loyverse_store_id) loc.loyverse_store_id = prev.loyverse_store_id;
+        if (loc.image === undefined && prev.image) loc.image = prev.image;
         list[idx] = loc;
       } else {
         list.push(loc);

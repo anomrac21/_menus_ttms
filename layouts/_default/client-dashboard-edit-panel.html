@@ -364,6 +364,23 @@
                   <div class="dashboard-menu-item-wizard-panels">
                     <div class="dashboard-menu-item-wizard-panel dashboard-location-wizard-panel" data-location-wizard-index="0" role="tabpanel" id="dashboardLocationWizardPanel0" aria-hidden="false">
                       <p class="dashboard-edit-field-note dashboard-menu-item-wizard-note">Street address, city, and island. Latitude and longitude place the pin on the map.</p>
+                      <div class="dashboard-edit-field" data-dashboard-composite="location-image">
+                        <label for="btnLocationImageFile">Photo</label>
+                        <div id="dashboardLocationImageRow" class="dashboard-hero-image-row dashboard-menu-item-image-row">
+                          <div class="dashboard-menu-item-image-thumb-wrap" id="dashboardLocationImageThumbWrap">
+                            <img id="dashboardLocationImageThumb" class="dashboard-menu-item-image-thumb" alt="">
+                          </div>
+                          <div class="dashboard-menu-item-image-path-col">
+                            <input type="hidden" id="dashboardEditLocationImage" value="">
+                            <div class="dashboard-menu-item-image-path-actions">
+                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnLocationImageReplace" aria-label="Choose location photo"><i class="fa fa-cloud-upload" aria-hidden="true"></i> Choose photo</button>
+                              <input type="file" id="btnLocationImageFile" class="hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+                              <button type="button" class="dashboard-btn dashboard-btn-secondary" id="btnLocationImageRemove" aria-label="Remove location photo"><i class="fa fa-times" aria-hidden="true"></i> Remove</button>
+                            </div>
+                          </div>
+                        </div>
+                        <p id="dashboardLocationImageStatus" class="dashboard-menu-item-images-upload-status" role="status" aria-live="polite"></p>
+                      </div>
                       <div class="dashboard-edit-field">
                         <label for="dashboardEditLocationAddress">Address <span class="dashboard-edit-required" aria-hidden="true">*</span></label>
                         <input type="text" id="dashboardEditLocationAddress" class="dashboard-edit-input" placeholder="e.g. Rodney Rd, Endeavour" required autocomplete="street-address">

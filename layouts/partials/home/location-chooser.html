@@ -48,8 +48,15 @@
       {{- $search := printf "%s %s %s %s" ($loc.city | default "") ($loc.address | default "") ($loc.island | default "") . -}}
       <li class="multi-loc-chooser__item" data-location-search="{{ $search }}">
         <a class="multi-loc-chooser__link" href="/{{ . }}/" data-location-slug="{{ . }}">
-          <span class="multi-loc-chooser__city">{{ $loc.city | default . }}</span>
-          <span class="multi-loc-chooser__address">{{ $loc.address }}</span>
+          {{- with $loc.image -}}
+          <span class="multi-loc-chooser__photo">
+            <img src="{{ partial "ttms/menu-img-src.html" (dict "path" . "size" "thumb") }}" alt="" loading="lazy" decoding="async" data-src-path="{{ . }}" onerror="window.TtmsThumbor&&window.TtmsThumbor.fallbackImg(this)">
+          </span>
+          {{- end -}}
+          <span class="multi-loc-chooser__copy">
+            <span class="multi-loc-chooser__city">{{ $loc.city | default . }}</span>
+            <span class="multi-loc-chooser__address">{{ $loc.address }}</span>
+          </span>
         </a>
       </li>
       {{- end -}}

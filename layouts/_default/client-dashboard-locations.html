@@ -23,7 +23,7 @@
     {{ partial "dashboard/locations-settings-panel.html" (dict "standalone" true) }}
   </main>
 </div>
-<script src="/js/dashboard-settings-locations.js"></script>
+<script src="{{ partial "head/asset-url.html" "/js/dashboard-settings-locations.js" }}"></script>
 <script>
   {{- $cmsSvc := site.Params.contentManagement.serviceUrl | default "https://cms.ttmenus.com" -}}
   {{- $apiUrl := site.Params.contentManagement.apiUrl | default (printf "%s/api" $cmsSvc) -}}

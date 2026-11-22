@@ -25,6 +25,129 @@ function initLocationsSettings() {
       function locDigits(v) {
         return locStr(v).replace(/\D/g, '');
       }
+      function locAttr(v) {
+        return locStr(v)
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;');
+      }
+      function locationImagePath(loc) {
+        return locStr(loc && loc.image);
+      }
+      function paintLocationImage(path, file) {
+        var preview = document.getElementById('settingsLocationImagePreview');
+        var thumb = document.getElementById('settingsLocationImageThumb');
+        var input = document.getElementById('settingsLocationImage');
+        var clearBtn = document.getElementById('btnSettingsLocationImageClear');
+        var p = locStr(path);
+        if (input) input.value = p;
+        if (clearBtn) clearBtn.classList.toggle('hidden', !p);
+        if (thumb && thumb.dataset.blob) {
+          try { URL.revokeObjectURL(thumb.dataset.blob); } catch (e) {}
+          delete thumb.dataset.blob;
+        }
+        if (!thumb || !preview) return;
+        if (!p && !(file instanceof File)) {
+          thumb.removeAttribute('src');
+          thumb.hidden = true;
+          preview.classList.remove('has-photo');
+          return;
+        }
+        preview.classList.add('has-photo');
+        thumb.hidden = false;
+        if (file instanceof File) {
+          var blobUrl = URL.createObjectURL(file);
+          thumb.dataset.blob = blobUrl;
+          thumb.src = blobUrl;
+          return;
+        }
+        if (p.indexOf('draft-assets/') === 0) {
+          var name = p.replace(/^draft-assets\//, '');
+          var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
+          var url = window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/preview/draft-assets/' + encodeURIComponent(name);
+          var headers = {};
+          var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+          if (token) headers.Authorization = 'Bearer ' + token;
+          fetch(url, { credentials: 'include', headers: headers })
+            .then(function(res) {
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              return res.blob();
+            })
+            .then(function(blob) {
+              if (input && input.value !== p) return;
+              var objectUrl = URL.createObjectURL(blob);
+              thumb.dataset.blob = objectUrl;
+              thumb.src = objectUrl;
+            })
+            .catch(function() {
+              thumb.hidden = true;
+              preview.classList.remove('has-photo');
+            });
+          return;
+        }
+        thumb.src = /^https?:\/\//i.test(p) || p.charAt(0) === '/' ? p : '/' + p;
+      }
+      function paintLocationImageInto(img, path) {
+        if (!img) return;
+        var p = locStr(path);
+        if (!p) return;
+        if (p.indexOf('draft-assets/') !== 0) {
+          img.src = /^https?:\/\//i.test(p) || p.charAt(0) === '/' ? p : '/' + p;
+          return;
+        }
+        var name = p.replace(/^draft-assets\//, '');
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
+        var url = window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/preview/draft-assets/' + encodeURIComponent(name);
+        var headers = {};
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (token) headers.Authorization = 'Bearer ' + token;
+        fetch(url, { credentials: 'include', headers: headers })
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.blob();
+          })
+          .then(function(blob) {
+            img.src = URL.createObjectURL(blob);
+          })
+          .catch(function() {});
+      }
+      function uploadLocationImage(file) {
+        var status = document.getElementById('settingsLocationImageStatus');
+        var chooseBtn = document.getElementById('btnSettingsLocationImage');
+        var clientId = window.CLIENT_ID || window.SITE_CLIENT_ID || '';
+        var token = (typeof AuthClient !== 'undefined' && AuthClient.getAccessToken) ? AuthClient.getAccessToken() : null;
+        if (!token) {
+          alert('Sign in required.');
+          return;
+        }
+        var previous = locStr(document.getElementById('settingsLocationImage') && document.getElementById('settingsLocationImage').value);
+        if (status) status.textContent = 'Uploading photo…';
+        if (chooseBtn) chooseBtn.disabled = true;
+        paintLocationImage(previous, file);
+        var body = new FormData();
+        body.append('file', file);
+        fetch(window.cmsApiBase() + '/clients/' + encodeURIComponent(clientId) + '/content/draft-assets', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { Authorization: 'Bearer ' + token },
+          body: body
+        })
+          .then(window.parseCmsApiResponse)
+          .then(function(data) {
+            var path = data && (data.path || data.Path);
+            if (!path) throw new Error('No path in upload response');
+            paintLocationImage(path, file);
+            if (status) status.textContent = 'Photo ready. Save the location to keep it.';
+          })
+          .catch(function(err) {
+            paintLocationImage(previous);
+            if (status) status.textContent = '';
+            alert('Could not upload the photo: ' + (err.message || err));
+          })
+          .finally(function() {
+            if (chooseBtn) chooseBtn.disabled = false;
+          });
+      }
       function slugifyLocationPart(value) {
         return locStr(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       }
@@ -200,6 +323,8 @@ function initLocationsSettings() {
         out.latlon = [out.latlon.lat || 0, out.latlon.lon || 0];
         var slug = locStr(loc.slug);
         if (slug) out.slug = slug;
+        var image = locationImagePath(loc);
+        if (image) out.image = image;
         var loyverseStoreId = locStr(loc.loyverse_store_id);
         if (loyverseStoreId) out.loyverse_store_id = loyverseStoreId;
         return out;
@@ -232,6 +357,7 @@ function initLocationsSettings() {
           if (existingStore) payload.loyverse_store_id = existingStore;
         }
         payload.slug = existingSlug || uniqueLocationSlug(payload.city, payload.address, isNaN(editIdx) ? -1 : editIdx);
+        payload.image = locStr(document.getElementById('settingsLocationImage').value);
         return payload;
       }
       function parseLocationsInitialText(raw) {
@@ -261,7 +387,11 @@ function initLocationsSettings() {
           card.className = 'dashboard-settings-location-card';
           var sub = Array.isArray(loc.subcategories) ? loc.subcategories.join(', ') : '';
           var orderingFlags = locationOrderingFlags(loc.orderingtables);
+          var image = locationImagePath(loc);
           card.innerHTML =
+            (image
+              ? '<div class="dashboard-settings-location-card-photo"><img alt="" data-location-image="' + locAttr(image) + '"></div>'
+              : '') +
             '<div class="dashboard-settings-location-card-main">' +
             '<h3 class="dashboard-settings-location-card-title">' + (locStr(loc.city) || locStr(loc.address) || 'Location') + '</h3>' +
             '<p class="dashboard-settings-location-card-address">' + locStr(loc.address) + '</p>' +
@@ -276,6 +406,7 @@ function initLocationsSettings() {
             '<button type="button" class="btn-dash btn-dash-secondary btn-settings-location-delete" data-index="' + index + '" aria-label="Remove location"><i class="fa fa-trash" aria-hidden="true"></i></button>' +
             '</div>';
           listEl.appendChild(card);
+          if (image) paintLocationImageInto(card.querySelector('[data-location-image]'), image);
         });
         listEl.querySelectorAll('.btn-settings-location-edit').forEach(function(btn) {
           btn.addEventListener('click', function() {
@@ -318,6 +449,9 @@ function initLocationsSettings() {
         document.getElementById('settingsLocationSubcategories').value = loc ? loc.subcategories.join(', ') : '';
         setOrderingTablesOnForm(loc ? loc.orderingtables : []);
         document.getElementById('settingsLocationFooddrop').value = loc && loc.delivery && loc.delivery.fooddrop ? locStr(loc.delivery.fooddrop) : '';
+        paintLocationImage(loc ? locationImagePath(loc) : '');
+        var imageStatus = document.getElementById('settingsLocationImageStatus');
+        if (imageStatus) imageStatus.textContent = '';
         if (locationHoursEditor) locationHoursEditor.load(loc ? loc.opening_hours : null);
         modal.classList.remove('hidden');
         modal.hidden = false;
@@ -330,6 +464,9 @@ function initLocationsSettings() {
         document.body.classList.remove('dashboard-settings-location-modal-open');
         if (modalForm) modalForm.reset();
         if (editIndexEl) editIndexEl.value = '';
+        paintLocationImage('');
+        var imageStatus = document.getElementById('settingsLocationImageStatus');
+        if (imageStatus) imageStatus.textContent = '';
         setOrderingTablesOnForm([]);
       }
       function loadLocationsFromCms(replaceAlways) {
@@ -430,6 +567,24 @@ function initLocationsSettings() {
       if (orderingTablesCb) orderingTablesCb.addEventListener('change', syncOrderingTablesListVisibility);
       var addOrderingTableBtn = document.getElementById('btnSettingsLocationAddTable');
       if (addOrderingTableBtn) addOrderingTableBtn.addEventListener('click', function() { addOrderingTableRow(''); });
+      var locationImageFile = document.getElementById('settingsLocationImageFile');
+      var locationImageChoose = document.getElementById('btnSettingsLocationImage');
+      var locationImageClear = document.getElementById('btnSettingsLocationImageClear');
+      if (locationImageChoose && locationImageFile) {
+        locationImageChoose.addEventListener('click', function() { locationImageFile.click(); });
+        locationImageFile.addEventListener('change', function() {
+          var file = locationImageFile.files && locationImageFile.files[0];
+          locationImageFile.value = '';
+          if (file) uploadLocationImage(file);
+        });
+      }
+      if (locationImageClear) {
+        locationImageClear.addEventListener('click', function() {
+          paintLocationImage('');
+          var imageStatus = document.getElementById('settingsLocationImageStatus');
+          if (imageStatus) imageStatus.textContent = 'Photo removed. Save the location to keep this.';
+        });
+      }
       if (saveAllBtn) saveAllBtn.addEventListener('click', saveAllLocations);
       if (modalForm) {
         modalForm.addEventListener('submit', function(ev) {
