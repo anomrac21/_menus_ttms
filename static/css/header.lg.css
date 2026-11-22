@@ -180,39 +180,6 @@
         height: 1.45rem;
     }
 
-    html:not(.ttms-mobile-menublock) .header-leading .dashboard-menu-btn-wrap {
-        flex-basis: var(--menublock-chip-min-width);
-        width: var(--menublock-chip-min-width);
-    }
-
-    html:not(.ttms-mobile-menublock) .header-leading .dashboard-menu-btn-wrap #dashboardBtn {
-        box-sizing: border-box;
-        display: grid;
-        grid-template-rows: 1.35rem 1.45rem;
-        align-content: center;
-        justify-items: center;
-        align-items: center;
-        width: var(--menublock-chip-min-width);
-        height: var(--menublock-chip-height);
-        min-width: var(--menublock-chip-min-width);
-        min-height: var(--menublock-chip-height);
-        max-height: var(--menublock-chip-height);
-        padding: 0.28rem 0.5rem 0.22rem;
-        gap: 0.12rem;
-    }
-
-    html:not(.ttms-mobile-menublock) #dashboardBtn img {
-        grid-row: 1;
-        align-self: center;
-        justify-self: center;
-        object-fit: contain;
-        object-position: center;
-        width: auto !important;
-        height: 2.4rem !important;
-        max-width: 3.2rem !important;
-        max-height: 2.4rem !important;
-    }
-
     html:not(.ttms-mobile-menublock) #main {
         box-sizing: border-box;
     }
@@ -332,39 +299,6 @@
     html.ttms-mobile-menublock #menublock .menublock-link__label {
         align-self: start;
         height: 1.45rem;
-    }
-
-    html.ttms-mobile-menublock .header-leading .dashboard-menu-btn-wrap {
-        flex-basis: var(--menublock-chip-min-width);
-        width: var(--menublock-chip-min-width);
-    }
-
-    html.ttms-mobile-menublock .header-leading .dashboard-menu-btn-wrap #dashboardBtn {
-        box-sizing: border-box;
-        display: grid;
-        grid-template-rows: 1.35rem 1.45rem;
-        align-content: center;
-        justify-items: center;
-        align-items: center;
-        width: var(--menublock-chip-min-width);
-        height: var(--menublock-chip-height);
-        min-width: var(--menublock-chip-min-width);
-        min-height: var(--menublock-chip-height);
-        max-height: var(--menublock-chip-height);
-        padding: 0.28rem 0.5rem 0.22rem;
-        gap: 0.12rem;
-    }
-
-    html.ttms-mobile-menublock #dashboardBtn img {
-        grid-row: 1;
-        align-self: center;
-        justify-self: center;
-        object-fit: contain;
-        object-position: center;
-        width: auto !important;
-        height: 2.4rem !important;
-        max-width: 3.2rem !important;
-        max-height: 2.4rem !important;
     }
 
     html.ttms-mobile-menublock #footer {
