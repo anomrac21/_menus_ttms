@@ -185,8 +185,7 @@
         width: var(--menublock-chip-min-width);
     }
 
-    html:not(.ttms-mobile-menublock) .header-leading .dashboard-menu-btn-wrap #dashboardBtn,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo {
+    html:not(.ttms-mobile-menublock) .header-leading .dashboard-menu-btn-wrap #dashboardBtn {
         box-sizing: border-box;
         display: grid;
         grid-template-rows: 1.35rem 1.45rem;
@@ -202,33 +201,16 @@
         gap: 0.12rem;
     }
 
-    html:not(.ttms-mobile-menublock) .header-leading .header-logo__frame {
-        display: contents;
-    }
-
-    html:not(.ttms-mobile-menublock) #dashboardBtn img,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo .logo,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container img.logo {
+    html:not(.ttms-mobile-menublock) #dashboardBtn img {
         grid-row: 1;
         align-self: center;
         justify-self: center;
         object-fit: contain;
         object-position: center;
-    }
-
-    html:not(.ttms-mobile-menublock) #dashboardBtn img,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo .logo,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container img.logo {
         width: auto !important;
         height: 2.4rem !important;
         max-width: 3.2rem !important;
         max-height: 2.4rem !important;
-    }
-
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo:hover,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo:focus-visible,
-    html:not(.ttms-mobile-menublock) .header-leading .logo-container.header-logo:active {
-        transform: none;
     }
 
     html:not(.ttms-mobile-menublock) #main {
@@ -357,8 +339,7 @@
         width: var(--menublock-chip-min-width);
     }
 
-    html.ttms-mobile-menublock .header-leading .dashboard-menu-btn-wrap #dashboardBtn,
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo {
+    html.ttms-mobile-menublock .header-leading .dashboard-menu-btn-wrap #dashboardBtn {
         box-sizing: border-box;
         display: grid;
         grid-template-rows: 1.35rem 1.45rem;
@@ -374,36 +355,17 @@
         gap: 0.12rem;
     }
 
-    html.ttms-mobile-menublock .header-leading .header-logo__frame {
-        display: contents;
-    }
-
-    html.ttms-mobile-menublock #dashboardBtn img,
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo .logo,
-    html.ttms-mobile-menublock .header-leading .logo-container img.logo {
+    html.ttms-mobile-menublock #dashboardBtn img {
         grid-row: 1;
         align-self: center;
         justify-self: center;
         object-fit: contain;
         object-position: center;
-    }
-
-    html.ttms-mobile-menublock #dashboardBtn img,
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo .logo,
-    html.ttms-mobile-menublock .header-leading .logo-container img.logo {
         width: auto !important;
         height: 2.4rem !important;
         max-width: 3.2rem !important;
         max-height: 2.4rem !important;
     }
-
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo:hover,
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo:focus-visible,
-    html.ttms-mobile-menublock .header-leading .logo-container.header-logo:active {
-        transform: none;
-    }
-
-    
 
     html.ttms-mobile-menublock #footer {
         left: 0;
