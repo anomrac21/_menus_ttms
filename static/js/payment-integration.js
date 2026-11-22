@@ -12,6 +12,10 @@
 
   var STORAGE_PAID = 'ttms_paid_orders_v1';
   var STORAGE_PENDING = 'ttms_payment_pending_v1';
+  var STORAGE_DINER = 'ttms_diner_session_v1';
+  var cardOnFileKnown = null;
+  var pendingPay = null;
+  var cardOnFileWired = false;
 
   function cfg() {
     return window.PAYMENT_CONFIG || {};
@@ -152,6 +156,10 @@
       modal.classList.toggle('hide', false);
       modal.setAttribute('aria-hidden', 'false');
     }
+    var cardBox = document.getElementById('paymentCardOnFile');
+    if (cardBox) {
+      cardBox.classList.toggle('hide', state !== 'choose');
+    }
   }
 
   function closeModal() {
@@ -238,6 +246,15 @@
         table_number: context.tableNumber || ''
       }
     };
+    if (context && context.dinerSession) {
+      body.metadata.diner_session = context.dinerSession;
+    }
+    if (context && context.saveCard) {
+      body.metadata.save_card = 'true';
+    }
+    if (context && context.walletId) {
+      body.metadata.wallet_id = context.walletId;
+    }
     if (!body.provider) {
       delete body.provider;
     }
@@ -278,6 +295,184 @@
       console.warn('Payment status check failed:', e);
     }
     return false;
+  }
+
+  function readDiner() {
+    try {
+      var raw = sessionStorage.getItem(STORAGE_DINER);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function writeDiner(session) {
+    if (!session) {
+      sessionStorage.removeItem(STORAGE_DINER);
+      return;
+    }
+    sessionStorage.setItem(STORAGE_DINER, JSON.stringify(session));
+  }
+
+  async function cardOnFileOn() {
+    if (cardOnFileKnown !== null) return cardOnFileKnown;
+    try {
+      var res = await fetch(apiBase() + '/card-on-file', { method: 'GET', headers: apiHeaders() });
+      var data = await res.json();
+      cardOnFileKnown = !!(data && data.enabled);
+    } catch (_) {
+      cardOnFileKnown = false;
+    }
+    return cardOnFileKnown;
+  }
+
+  function dinerHeaders() {
+    var headers = apiHeaders();
+    var diner = readDiner();
+    if (diner && diner.session) {
+      headers['X-Diner-Session'] = diner.session;
+    }
+    return headers;
+  }
+
+  async function renderCardOnFile() {
+    var signedOut = document.getElementById('paymentDinerSignedOut');
+    var signedIn = document.getElementById('paymentDinerSignedIn');
+    var who = document.getElementById('paymentDinerWho');
+    var saved = document.getElementById('paymentSavedCard');
+    var note = document.getElementById('paymentSavedCardNote');
+    var useBtn = document.getElementById('paymentUseSavedCard');
+    var removeBtn = document.getElementById('paymentRemoveCard');
+    var diner = readDiner();
+    if (signedOut) signedOut.classList.toggle('hide', !!diner);
+    if (signedIn) signedIn.classList.toggle('hide', !diner);
+    if (!diner) return;
+    if (who) who.textContent = diner.email || '';
+    var card = null;
+    try {
+      var res = await fetch(apiBase() + '/diner/wallet', { method: 'GET', headers: dinerHeaders() });
+      if (res.ok) card = await res.json();
+    } catch (_) {
+      card = null;
+    }
+    var hasCard = !!(card && card.saved && card.last4);
+    if (saved) {
+      saved.classList.toggle('hide', !hasCard);
+      saved.textContent = hasCard ? ((card.brand || 'Card') + ' •••• ' + card.last4) : '';
+    }
+    if (note) note.classList.toggle('hide', !hasCard);
+    if (useBtn) {
+      useBtn.classList.toggle('hide', !hasCard);
+      useBtn.textContent = hasCard ? ('Pay with ' + (card.brand || 'card') + ' •••• ' + card.last4) : 'Pay with this card';
+      useBtn.setAttribute('data-wallet-id', hasCard ? card.wallet_id : '');
+    }
+    if (removeBtn) removeBtn.classList.toggle('hide', !hasCard);
+    var box = document.getElementById('paymentSaveCard');
+    if (box) box.checked = false;
+  }
+
+  function continueSavedCheckout(extra) {
+    if (!pendingPay) return;
+    var context = pendingPay.context || {};
+    var diner = readDiner();
+    context._cardChoiceMade = true;
+    context.dinerSession = diner && diner.session ? diner.session : '';
+    context.saveCard = !!(extra && extra.saveCard);
+    context.walletId = extra && extra.walletId ? extra.walletId : '';
+    var done = pendingPay.onSuccess;
+    if (window.PaymentIntegration && typeof window.PaymentIntegration.startCheckout === 'function') {
+      window.PaymentIntegration.startCheckout(context, done);
+    }
+  }
+
+  function wireCardOnFile() {
+    if (cardOnFileWired) return;
+    cardOnFileWired = true;
+    var send = document.getElementById('paymentDinerSendCode');
+    var verify = document.getElementById('paymentDinerVerify');
+    var payNew = document.getElementById('paymentPayNewCard');
+    var payGuest = document.getElementById('paymentPayWithoutAccount');
+    var paySaved = document.getElementById('paymentUseSavedCard');
+    var remove = document.getElementById('paymentRemoveCard');
+    var signOut = document.getElementById('paymentDinerSignOut');
+    if (send) {
+      send.addEventListener('click', async function () {
+        var email = (document.getElementById('paymentDinerEmail') || {}).value || '';
+        setModalState('choose', 'Sending a code…');
+        try {
+          var res = await fetch(apiBase() + '/diner/code', {
+            method: 'POST',
+            headers: apiHeaders(),
+            body: JSON.stringify({ email: String(email).trim() })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error((data && data.error) || 'Could not send the code');
+          setModalState('choose', 'Check your email for the code.');
+        } catch (err) {
+          setModalState('choose', err.message || 'Could not send the code');
+        }
+      });
+    }
+    if (verify) {
+      verify.addEventListener('click', async function () {
+        var email = (document.getElementById('paymentDinerEmail') || {}).value || '';
+        var code = (document.getElementById('paymentDinerCode') || {}).value || '';
+        setModalState('choose', 'Checking the code…');
+        try {
+          var res = await fetch(apiBase() + '/diner/session', {
+            method: 'POST',
+            headers: apiHeaders(),
+            body: JSON.stringify({ email: String(email).trim(), code: String(code).trim() })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok || !data.session) throw new Error((data && data.error) || 'That code did not work');
+          writeDiner({ session: data.session, email: data.email || String(email).trim() });
+          setModalState('choose', 'Signed in.');
+          await renderCardOnFile();
+        } catch (err) {
+          setModalState('choose', err.message || 'That code did not work');
+        }
+      });
+    }
+    if (payNew) {
+      payNew.addEventListener('click', function () {
+        var box = document.getElementById('paymentSaveCard');
+        continueSavedCheckout({ saveCard: !!(box && box.checked) });
+      });
+    }
+    if (payGuest) {
+      payGuest.addEventListener('click', function () {
+        continueSavedCheckout({});
+      });
+    }
+    if (paySaved) {
+      paySaved.addEventListener('click', function () {
+        continueSavedCheckout({ walletId: paySaved.getAttribute('data-wallet-id') || '' });
+      });
+    }
+    if (remove) {
+      remove.addEventListener('click', async function () {
+        setModalState('choose', 'Removing the saved card…');
+        try {
+          var res = await fetch(apiBase() + '/diner/wallet', { method: 'DELETE', headers: dinerHeaders() });
+          if (!res.ok) {
+            var data = await res.json().catch(function () { return {}; });
+            throw new Error((data && data.error) || 'Could not remove the card');
+          }
+          setModalState('choose', 'Saved card removed.');
+          await renderCardOnFile();
+        } catch (err) {
+          setModalState('choose', err.message || 'Could not remove the card');
+        }
+      });
+    }
+    if (signOut) {
+      signOut.addEventListener('click', async function () {
+        writeDiner(null);
+        setModalState('choose', 'Signed out.');
+        await renderCardOnFile();
+      });
+    }
   }
 
   var PaymentIntegration = {
@@ -339,6 +534,16 @@
       if (await this.isCurrentOrderPaid(context)) {
         if (typeof onSuccess === 'function') onSuccess();
         return true;
+      }
+
+      if (!context._cardChoiceMade && await cardOnFileOn()) {
+        pendingPay = { context: context, onSuccess: onSuccess };
+        showModal();
+        updateModalSummary(context);
+        setModalState('choose', 'Sign in if you want to use a saved card.');
+        wireCardOnFile();
+        await renderCardOnFile();
+        return false;
       }
 
       showModal();

@@ -127,6 +127,53 @@
     color: var(--main-text-color);
 }
 
+.payment-card-on-file {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0.35rem 0 0.75rem;
+}
+
+.payment-card-on-file.hide {
+    display: none !important;
+}
+
+.payment-card-on-file__hint {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--main-text-color) 78%, transparent);
+}
+
+.payment-card-on-file__label {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.payment-card-on-file__input {
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--scheme-white) 18%, transparent);
+    background: color-mix(in srgb, var(--scheme-black) 18%, transparent);
+    color: var(--main-text-color);
+    font: inherit;
+    padding: 0 0.8rem;
+    box-sizing: border-box;
+}
+
+.payment-card-on-file__check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.payment-card-on-file__card {
+    margin: 0;
+    font-weight: 700;
+}
+
 .payment-return-page {
     max-width: 26rem;
     margin: 2.5rem auto 3rem;

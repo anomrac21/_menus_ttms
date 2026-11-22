@@ -11,6 +11,31 @@
 			<div id="paymentModalAmount" class="payment-modal__amount">$0.00 TTD</div>
 			<div id="paymentModalDetails" class="payment-modal__details"></div>
 		</div>
+		<div id="paymentCardOnFile" class="payment-card-on-file hide">
+			<div id="paymentDinerSignedOut">
+				<p class="payment-card-on-file__hint">Sign in to save a card for next time. The card number stays with the bank.</p>
+				<label class="payment-card-on-file__label" for="paymentDinerEmail">Email</label>
+				<input id="paymentDinerEmail" class="payment-card-on-file__input" type="email" autocomplete="email" inputmode="email">
+				<button type="button" class="btn-payment-secondary" id="paymentDinerSendCode">Email me a code</button>
+				<label class="payment-card-on-file__label" for="paymentDinerCode">Code</label>
+				<input id="paymentDinerCode" class="payment-card-on-file__input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+				<button type="button" class="btn-payment-primary" id="paymentDinerVerify">Sign in</button>
+				<button type="button" class="btn-payment-secondary" id="paymentPayWithoutAccount">Continue without saving a card</button>
+			</div>
+			<div id="paymentDinerSignedIn" class="hide">
+				<p id="paymentDinerWho" class="payment-card-on-file__hint"></p>
+				<p id="paymentSavedCard" class="payment-card-on-file__card hide"></p>
+				<p id="paymentSavedCardNote" class="payment-card-on-file__hint hide">Your bank may still ask you to confirm this payment.</p>
+				<button type="button" class="btn-payment-primary hide" id="paymentUseSavedCard">Pay with this card</button>
+				<button type="button" class="btn-payment-secondary hide" id="paymentRemoveCard">Remove card</button>
+				<label class="payment-card-on-file__check" id="paymentSaveCardLabel">
+					<input type="checkbox" id="paymentSaveCard">
+					Save this card for next time
+				</label>
+				<button type="button" class="btn-payment-primary" id="paymentPayNewCard">Continue to secure payment</button>
+				<button type="button" class="btn-payment-secondary" id="paymentDinerSignOut">Sign out</button>
+			</div>
+		</div>
 		<p id="paymentModalStatus" class="payment-modal__status payment-modal__status--idle"></p>
 		<div id="paymentModalActions" class="payment-modal__actions">
 			<button type="button" class="btn-payment-secondary" onclick="closePaymentModal();">Cancel</button>
