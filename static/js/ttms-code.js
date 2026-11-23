@@ -62,21 +62,28 @@
   }
 
   function capture(deviceId) {
-    var video = {};
-    if (deviceId) video.deviceId = { exact: deviceId };
-    else video.facingMode = isiOS() ? 'environment' : { ideal: 'environment' };
-    if (!isiOS()) {
-      video.width = { ideal: 1280 };
-      video.height = { ideal: 720 };
-    }
-    return global.navigator.mediaDevices.getUserMedia({ audio: false, video: video }).catch(function (err) {
-      var fallback = deviceId ? { deviceId: { ideal: deviceId } } : { facingMode: 'environment' };
-      if (!deviceId && err && err.name === 'OverconstrainedError') fallback = true;
-      return global.navigator.mediaDevices.getUserMedia({ audio: false, video: fallback }).catch(function () {
-        if (!deviceId) throw err;
-        return global.navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+    var tries = [];
+    if (deviceId) {
+      tries.push({ deviceId: { exact: deviceId } });
+      tries.push({ deviceId: { ideal: deviceId } });
+      tries.push(true);
+    } else if (isiOS()) {
+      tries.push(true);
+    } else {
+      tries.push({
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
       });
-    });
+      tries.push(true);
+    }
+    function next(i, err) {
+      if (i >= tries.length) return Promise.reject(err || new Error('camera'));
+      return global.navigator.mediaDevices.getUserMedia({ audio: false, video: tries[i] }).catch(function (e) {
+        return next(i + 1, e);
+      });
+    }
+    return next(0, null);
   }
 
   function fillSelect(select, list, currentId) {
@@ -347,16 +354,14 @@
     function open(deviceId) {
       var replacing = !!stream;
       stopTracks();
-      var ready = new Promise(function (resolve) {
-        global.requestAnimationFrame(function () {
-          global.requestAnimationFrame(function () {
-            global.setTimeout(resolve, replacing ? 250 : 30);
-          });
-        });
-      });
-      return ready.then(function () {
-        return capture(deviceId);
-      }).then(function (next) {
+      var captured = replacing
+        ? new Promise(function (resolve, reject) {
+            global.setTimeout(function () {
+              capture(deviceId).then(resolve, reject);
+            }, 180);
+          })
+        : capture(deviceId);
+      return captured.then(function (next) {
         if (stopped) {
           next.getTracks().forEach(function (track) { track.stop(); });
           return [];

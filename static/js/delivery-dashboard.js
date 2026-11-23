@@ -328,12 +328,17 @@
       });
       codeSession.open('').then(function (cams) {
         TTMSCode.fillSelect(select, cams, codeSession && codeSession.deviceId());
-      }).catch(function () {
+      }).catch(function (err) {
         if (codeSession) {
           codeSession.stop();
           codeSession = null;
         }
-        if (status) status.textContent = 'Camera is off. Type their code.';
+        var denied = err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError');
+        if (status) {
+          status.textContent = denied
+            ? 'Allow Camera for TT Menus in iPhone Settings, or type their code.'
+            : 'Camera is off. Type their code.';
+        }
       });
     });
   }
