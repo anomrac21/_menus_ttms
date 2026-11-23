@@ -303,7 +303,8 @@
       '"><span class="ttms-map-marker__pin" aria-hidden="true"><i class="fa ' +
       symbol +
       '"></i></span></span>';
-    return global.TTMSMap.createPin(html, [32, 40]);
+    var pin = global.TTMSMap.createPin(html, [32, 40], kind === 'driver' ? { anchor: 'center' } : null);
+    return pin;
   }
 
   function formatDuration(sec) {

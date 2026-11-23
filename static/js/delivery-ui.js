@@ -137,6 +137,14 @@
   var liveWatchId = 0;
   var chatOrderId = '';
   var chatTimer = 0;
+  var liveTrackTimer = 0;
+
+  function stopLiveTrack() {
+    if (liveTrackTimer) {
+      window.clearInterval(liveTrackTimer);
+      liveTrackTimer = 0;
+    }
+  }
 
   function hideDriverChat() {
     if (chatTimer) {
@@ -167,6 +175,7 @@
     }
     if (!panel || panel.hidden) return;
     clearExpireTimer();
+    stopLiveTrack();
     stopLiveLocation($('ttms-use-location'));
     hideDriverChat();
     tearDownMaps();
@@ -1098,15 +1107,31 @@
     var orderId = order && order.id;
     var slot = $('ttms-live-map');
     if (!slot || !orderId) return;
+    stopLiveTrack();
+
+    var assigned = order.selected_driver || {};
+    var driverName = assigned.display_name || 'Driver';
 
     function applyLocation(loc) {
-      if (!loc || !window.TTMSDeliveryMap) return;
-      TTMSDeliveryMap.setDriver('ttms-live-map', loc.lat, loc.lng, 'Driver');
+      if (!loc || !window.TTMSDeliveryMap || typeof TTMSDeliveryMap.setDriver !== 'function') return;
+      var lat = loc.lat != null ? loc.lat : loc.latitude;
+      var lng = loc.lng != null ? loc.lng : loc.longitude;
+      TTMSDeliveryMap.setDriver('ttms-live-map', lat, lng, driverName);
     }
 
+    function pull() {
+      if (!$('ttms-live-map') || !window.DeliveryClient) return;
+      DeliveryClient.track(orderId)
+        .then(function (t) {
+          applyLocation(t && t.location);
+        })
+        .catch(function () {});
+    }
+
+    var ready = Promise.resolve();
     if (window.TTMSDeliveryMap) {
       var headingToCustomer = order.status === 'picked_up' || order.status === 'delivering';
-      TTMSDeliveryMap.mountTrack({
+      ready = TTMSDeliveryMap.mountTrack({
         containerId: 'ttms-live-map',
         restaurantLat: order.restaurant_lat,
         restaurantLng: order.restaurant_lng,
@@ -1114,25 +1139,33 @@
         dropoffLat: order.dropoff_lat,
         dropoffLng: order.dropoff_lng,
         dropoffLabel: order.dropoff_address || 'Drop-off',
+        driverLat: assigned.lat,
+        driverLng: assigned.lng,
+        driverLabel: driverName,
         afterPickup: headingToCustomer,
       }).catch(function () {
-        slot.textContent = 'Waiting for driver location…';
+        if ($('ttms-live-map')) slot.textContent = 'Waiting for driver location…';
+        return null;
       });
     }
 
-    DeliveryClient.track(orderId)
-      .then(function (t) {
-        applyLocation(t && t.location);
-      })
-      .catch(function () {});
-    DeliveryClient.connectTrackWS(orderId, function (msg) {
-      if (msg && msg.type === 'driver_location') applyLocation(msg.location);
-      else if (msg && msg.location) applyLocation(msg.location);
-      if (msg && msg.type === 'driver_offer') refreshOffersNow();
-      if (msg && msg.type === 'status') {
-        DeliveryClient.getOrder(orderId).then(showOrderStatus).catch(function () {});
-      }
+    ready.then(function () {
+      if (!$('ttms-live-map')) return;
+      applyLocation(assigned);
+      pull();
+      liveTrackTimer = window.setInterval(pull, 4000);
     });
+
+    if (window.DeliveryClient) {
+      DeliveryClient.connectTrackWS(orderId, function (msg) {
+        if (msg && msg.type === 'driver_location') applyLocation(msg.location);
+        else if (msg && msg.location) applyLocation(msg.location);
+        if (msg && msg.type === 'driver_offer') refreshOffersNow();
+        if (msg && msg.type === 'status') {
+          DeliveryClient.getOrder(orderId).then(showOrderStatus).catch(function () {});
+        }
+      });
+    }
   }
 
   async function openCheckoutForm() {
