@@ -275,14 +275,14 @@ body > #ttms-site-header.site-header {
     width: 100%;
     height: 100%;
     min-width: 0;
-    border: 1px solid var(--header-border-color);
+    border: none;
     border-radius: var(--menublock-chip-radius);
     text-decoration: none;
     color: inherit;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 0.2s ease;
     cursor: pointer;
-    background: linear-gradient(135deg, var(--scheme-accent-2) 0%, var(--scheme-accent) 100%);
-    box-shadow: 0 3px 12px color-mix(in srgb, var(--scheme-black) 22%, transparent);
+    background: transparent;
+    box-shadow: none;
     position: relative;
     z-index: 1;
     overflow: hidden;
@@ -292,7 +292,7 @@ body > #ttms-site-header.site-header {
 
 #dashboardBtn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--scheme-black) 28%, transparent);
+    background: transparent;
 }
 
 #dashboardBtn img {

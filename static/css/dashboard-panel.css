@@ -663,6 +663,11 @@ html.ttms-ios body.ttms-scroll-locked #dashboard.dashboard-panel {
     padding: 0.45rem 0.55rem 0.85rem;
 }
 
+#dashboard.dashboard-panel a.dashboard-lead__toggle {
+    text-decoration: none;
+    color: inherit;
+}
+
 #dashboard.dashboard-panel .dashboard-lead__toggle {
     display: flex;
     align-items: center;
