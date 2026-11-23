@@ -443,9 +443,53 @@
     closed: true
   };
 
+  var LIVE_FLEET_STATUS = {
+    created: true,
+    open: true,
+    awaiting_drivers: true,
+    requested: true,
+    driver_offers: true,
+    offered: true,
+    driver_selected: true,
+    accepted: true,
+    awaiting_client: true,
+    payment_pending: true,
+    preparing: true,
+    ready: true,
+    picked_up: true,
+    delivering: true
+  };
+
   function isActiveOrder(order) {
-    var st = String((order && order.status) || '').toLowerCase();
-    return !!st && !DONE_ORDER_STATUS[st];
+    if (!order) return false;
+    var kitchen = String(order.status || '').toLowerCase();
+    var fleet = String(order.delivery_status || '').toLowerCase();
+    if (fleet && fleet !== 'paid' && DONE_ORDER_STATUS[fleet]) return false;
+    if (kitchen === 'paid' && LIVE_FLEET_STATUS[fleet]) return true;
+    if (!kitchen) return !!fleet && !DONE_ORDER_STATUS[fleet];
+    return !DONE_ORDER_STATUS[kitchen];
+  }
+
+  function annotateLiveDelivery(orders) {
+    var list = orders || [];
+    var client = global.DeliveryClient;
+    if (!client || typeof client.getOrder !== 'function') return Promise.resolve(list);
+    return Promise.all(
+      list.map(function (order) {
+        if (!order || !isActiveOrder(order)) return Promise.resolve(order);
+        var id = String(order.delivery_order_id || '').trim();
+        if (!id) return Promise.resolve(order);
+        return Promise.resolve(client.getOrder(id))
+          .then(function (live) {
+            var status = live && (live.status || live.delivery_status);
+            if (status) order.delivery_status = String(status).toLowerCase();
+            return order;
+          })
+          .catch(function () {
+            return order;
+          });
+      })
+    );
   }
 
   function ordersForHere(orders) {
@@ -718,8 +762,12 @@
     renderCartOrders([], { loading: true });
     global.OrderClient.mine()
       .then(function (res) {
-        if (req !== cartOrdersReq || !isCartOrdersOpen()) return;
-        renderCartOrders(ordersForHere((res && res.orders) || []), {});
+        if (req !== cartOrdersReq || !isCartOrdersOpen()) return null;
+        return annotateLiveDelivery(ordersForHere((res && res.orders) || []));
+      })
+      .then(function (orders) {
+        if (!orders || req !== cartOrdersReq || !isCartOrdersOpen()) return;
+        renderCartOrders(orders, {});
       })
       .catch(function () {
         if (req !== cartOrdersReq || !isCartOrdersOpen()) return;
@@ -775,6 +823,7 @@
   }
 
   var activeOrdersTimer = null;
+  var activeOrdersReq = 0;
 
   function refreshActiveOrders() {
     if (
@@ -785,9 +834,15 @@
       paintActiveOrderCount(0);
       return;
     }
+    var req = ++activeOrdersReq;
     global.OrderClient.mine()
       .then(function (res) {
-        var active = ordersForHere((res && res.orders) || []).filter(isActiveOrder);
+        if (req !== activeOrdersReq) return null;
+        return annotateLiveDelivery(ordersForHere((res && res.orders) || []));
+      })
+      .then(function (orders) {
+        if (!orders || req !== activeOrdersReq) return;
+        var active = orders.filter(isActiveOrder);
         paintActiveOrderCount(active.length, active);
       })
       .catch(function () {});
