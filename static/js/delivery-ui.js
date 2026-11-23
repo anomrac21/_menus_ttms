@@ -134,6 +134,31 @@
     expireTimer = window.setInterval(tick, 1000);
   }
 
+  var liveWatchId = 0;
+  var chatOrderId = '';
+  var chatTimer = 0;
+
+  function hideDriverChat() {
+    if (chatTimer) {
+      window.clearInterval(chatTimer);
+      chatTimer = 0;
+    }
+    var el = $('ttms-driver-chat');
+    if (el) el.hidden = true;
+  }
+
+  function stopLiveLocation(btn) {
+    if (liveWatchId && navigator.geolocation && typeof navigator.geolocation.clearWatch === 'function') {
+      navigator.geolocation.clearWatch(liveWatchId);
+    }
+    liveWatchId = 0;
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('is-live');
+      btn.textContent = 'My Live location';
+    }
+  }
+
   function closePanel() {
     var panel = $('ttms-delivery-panel');
     if (panel && panel.classList.contains('is-page')) {
@@ -142,6 +167,8 @@
     }
     if (!panel || panel.hidden) return;
     clearExpireTimer();
+    stopLiveLocation($('ttms-use-location'));
+    hideDriverChat();
     tearDownMaps();
     if (closeTimer) {
       window.clearTimeout(closeTimer);
@@ -198,6 +225,11 @@
     });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && el.classList.contains('is-open') && !el.hidden && !el.classList.contains('is-page')) {
+        var chat = $('ttms-driver-chat');
+        if (chat && !chat.hidden) {
+          hideDriverChat();
+          return;
+        }
         closePanel();
       }
     });
@@ -503,6 +535,7 @@
   }
 
   async function showDriverOffers(orderId) {
+    chatOrderId = orderId || chatOrderId;
     setPanelCopy('Nearby drivers', 'Checking drivers near the restaurant…');
     show(
       '<div class="ttms-delivery-offers-stage">' +
@@ -511,7 +544,8 @@
         '<div class="ttms-delivery-status">' +
         '<span class="ttms-delivery-status__pulse" aria-hidden="true"></span>' +
         '<div><strong id="ttms-offers-coverage">Checking drivers near the restaurant…</strong>' +
-        '<p>Offers appear as drivers accept the request.</p></div></div>' +
+        '<p id="ttms-offers-hint">Expires if no driver requests this order.</p>' +
+        '<p class="ttms-delivery-expire" id="ttms-delivery-expire" role="timer"></p></div></div>' +
         '<ul id="ttms-driver-offers" class="ttms-driver-offers"></ul>' +
         '<div class="ttms-delivery-actions">' +
         '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-refresh-offers">' +
@@ -521,6 +555,19 @@
     setCheckout(true);
     setMapStep(true);
     var lastOffers = [];
+    var requestCount = 0;
+    function syncOfferClock() {
+      if (!window.DeliveryClient || !$('ttms-delivery-expire')) return Promise.resolve();
+      return DeliveryClient.getOrder(orderId).then(function (order) {
+        if (!order || !$('ttms-delivery-expire')) return;
+        if (order.status === 'expired' || order.status === 'cancelled') {
+          showOrderStatus(order);
+          return;
+        }
+        startExpireCountdown(order);
+      });
+    }
+    syncOfferClock();
     function plotOffers() {
       if (window.TTMSDeliveryMap && typeof TTMSDeliveryMap.setOfferMarkers === 'function') {
         TTMSDeliveryMap.setOfferMarkers('ttms-offers-map', lastOffers);
@@ -574,6 +621,16 @@
         ul.appendChild(li);
       });
       plotOffers();
+      var hint = $('ttms-offers-hint');
+      if (hint) {
+        hint.textContent = lastOffers.length
+          ? 'A driver requested this order. The timer started over.'
+          : 'Expires if no driver requests this order.';
+      }
+      if (lastOffers.length !== requestCount) {
+        requestCount = lastOffers.length;
+        syncOfferClock();
+      }
       ul.querySelectorAll('button[data-driver]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           btn.disabled = true;
@@ -594,7 +651,10 @@
     };
     await refresh();
     DeliveryClient.connectTrackWS(orderId, function (msg) {
-      if (msg && msg.type === 'driver_offer') refresh();
+      if (msg && msg.type === 'driver_offer') {
+        refresh();
+        syncOfferClock();
+      }
       if (msg && msg.type === 'status') {
         DeliveryClient.getOrder(orderId).then(showOrderStatus).catch(function () {});
       }
@@ -897,6 +957,7 @@
 
   function showOrderStatus(order) {
     if (!order) return;
+    chatOrderId = order.id || chatOrderId;
     var paying = order.status === 'payment_pending';
     var choosing = choosingDriver(order);
     setPanelCopy(
@@ -1126,8 +1187,8 @@
         '<div class="ttms-delivery-pin__head"><strong>Drop-off pin</strong>' +
         '<div class="ttms-delivery-pin__tools">' +
         '<button type="button" class="ttms-delivery-journey" id="ttms-delivery-journey">Journey</button>' +
-        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-use-location">My location</button>' +
-        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find address</button>' +
+        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-use-location">My Live location</button>' +
+        '<button type="button" class="ttms-delivery-pin__locate" id="ttms-locate-address">Find My address</button>' +
         '</div></div>' +
         '<div class="ttms-delivery-actions">' +
         '<button type="button" class="ttms-delivery-cta ttms-delivery-cta--ghost" id="ttms-delivery-back">Back</button>' +
@@ -1267,65 +1328,121 @@
       };
     }
 
+    function showPinAddress(label) {
+      var text = String(label || '').trim();
+      if (text && form && form.address) form.address.value = text;
+      var hint = $('ttms-delivery-pin-hint');
+      if (hint) hint.textContent = text || 'Address not found';
+    }
+
+    function locationErrorMessage(err) {
+      var code = err && err.code;
+      if (code === 2) return 'Location is unavailable right now';
+      if (code === 3) return 'Location timed out. Try again';
+      return 'Allow location to drop the pin where you are';
+    }
+
     if (liveBtn) {
       liveBtn.onclick = function () {
         if (!navigator.geolocation) {
           alert('This phone cannot share its location');
           return;
         }
+        if (liveWatchId) {
+          stopLiveLocation(liveBtn);
+          var hintOff = $('ttms-delivery-pin-hint');
+          if (hintOff) hintOff.textContent = 'Tap the map to set drop-off';
+          return;
+        }
         liveBtn.disabled = true;
         liveBtn.textContent = 'Locating…';
-        navigator.geolocation.getCurrentPosition(
+        liveWatchId = navigator.geolocation.watchPosition(
           function (pos) {
             liveBtn.disabled = false;
-            liveBtn.textContent = 'My location';
+            liveBtn.classList.add('is-live');
+            liveBtn.textContent = 'My Live location';
             var lat = pos && pos.coords ? pos.coords.latitude : NaN;
             var lng = pos && pos.coords ? pos.coords.longitude : NaN;
-            if (!isFinite(lat) || !isFinite(lng)) {
-              alert('Could not read your location');
-              return;
-            }
-            applyPin(lat, lng, true);
+            if (!isFinite(lat) || !isFinite(lng)) return;
+            applyPin(lat, lng, false);
+            var hint = $('ttms-delivery-pin-hint');
+            if (hint) hint.textContent = 'Live location';
           },
           function (err) {
-            liveBtn.disabled = false;
-            liveBtn.textContent = 'My location';
-            var code = err && err.code;
-            var msg = 'Allow location to drop the pin where you are';
-            if (code === 2) msg = 'Location is unavailable right now';
-            if (code === 3) msg = 'Location timed out. Try again';
-            alert(msg);
+            stopLiveLocation(liveBtn);
+            alert(locationErrorMessage(err));
           },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
         );
       };
     }
 
     if (locateBtn) {
       locateBtn.onclick = function () {
-        var query = form && form.address ? form.address.value : '';
-        if (!String(query || '').trim()) {
-          alert('Enter an address first');
-          return;
-        }
         if (!window.TTMSDeliveryMap) return;
+        stopLiveLocation(liveBtn);
+        var query = form && form.address ? String(form.address.value || '').trim() : '';
         locateBtn.disabled = true;
         locateBtn.textContent = 'Finding…';
-        TTMSDeliveryMap.geocodeAddress(query)
-          .then(function (pt) {
-            locateBtn.disabled = false;
-            locateBtn.textContent = 'Find address';
-            if (!pt) {
-              alert('Could not find that address on the map');
+
+        function done(errMsg) {
+          locateBtn.disabled = false;
+          locateBtn.textContent = 'Find My address';
+          if (errMsg) alert(errMsg);
+        }
+
+        function placeFound(lat, lng, label) {
+          applyPin(lat, lng, false);
+          showPinAddress(label);
+          done();
+        }
+
+        if (query) {
+          TTMSDeliveryMap.geocodeAddress(query)
+            .then(function (pt) {
+              if (!pt) {
+                done('Could not find that address on the map');
+                return;
+              }
+              placeFound(pt.lat, pt.lng, pt.label || query);
+            })
+            .catch(function () {
+              done('Could not find that address on the map');
+            });
+          return;
+        }
+
+        if (!navigator.geolocation) {
+          done('Enter an address, or allow location so we can find it');
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            var lat = pos && pos.coords ? pos.coords.latitude : NaN;
+            var lng = pos && pos.coords ? pos.coords.longitude : NaN;
+            if (!isFinite(lat) || !isFinite(lng)) {
+              done('Could not read your location');
               return;
             }
-            applyPin(pt.lat, pt.lng, false);
-          })
-          .catch(function () {
-            locateBtn.disabled = false;
-            locateBtn.textContent = 'Find address';
-            alert('Could not find that address on the map');
-          });
+            TTMSDeliveryMap.reverseGeocode(lat, lng)
+              .then(function (label) {
+                if (!String(label || '').trim()) {
+                  applyPin(lat, lng, false);
+                  done('Found you on the map, but not a street address');
+                  return;
+                }
+                placeFound(lat, lng, label);
+              })
+              .catch(function () {
+                applyPin(lat, lng, false);
+                done('Found you on the map, but not a street address');
+              });
+          },
+          function (err) {
+            done(locationErrorMessage(err));
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        );
       };
     }
 
@@ -1494,6 +1611,208 @@
         );
       });
   }
+
+  function notifyApiBase() {
+    var cfg = window.NOTIFY_CONFIG;
+    if (typeof cfg === 'string') {
+      try { cfg = JSON.parse(cfg); } catch (e) { cfg = {}; }
+    }
+    if (cfg && cfg.apiUrl) return String(cfg.apiUrl).replace(/\/+$/, '');
+    var service = (window.SiteConfig && window.SiteConfig.notifyServiceUrl) || 'https://notify.ttmenus.com';
+    return String(service).replace(/\/+$/, '') + '/api/v1';
+  }
+
+  function chatStamp(iso) {
+    var d = new Date(iso);
+    if (!iso || isNaN(d.getTime())) return '';
+    try {
+      return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function chatDriverIdOf(data) {
+    var n = Number(data && (data.chat_driver_id || data.driver_id) || 0);
+    return isFinite(n) ? n : 0;
+  }
+
+  function ensureDriverChat() {
+    var existing = $('ttms-driver-chat');
+    if (existing) return existing;
+    var panel = $('ttms-delivery-panel');
+    var host = (panel && panel.querySelector('.ttms-delivery-panel__sheet')) || panel || document.body;
+    var el = document.createElement('div');
+    el.id = 'ttms-driver-chat';
+    el.className = 'ttms-driver-chat';
+    el.hidden = true;
+    el.innerHTML =
+      '<header class="ttms-driver-chat__bar">' +
+      '<button type="button" class="ttms-driver-chat__back" id="ttms-driver-chat-back" aria-label="Close chat">' +
+      '<i class="fa fa-chevron-left" aria-hidden="true"></i></button>' +
+      '<div><strong id="ttms-driver-chat-name">Driver</strong><span>Sent as a notification</span></div>' +
+      '</header>' +
+      '<div id="ttms-driver-chat-log" class="ttms-driver-chat__log"></div>' +
+      '<p id="ttms-driver-chat-status" class="ttms-driver-chat__status"></p>' +
+      '<form id="ttms-driver-chat-form" class="ttms-driver-chat__form">' +
+      '<input id="ttms-driver-chat-input" type="text" maxlength="280" placeholder="Message your driver" autocomplete="off" enterkeyhint="send">' +
+      '<button type="submit">Send</button></form>';
+    host.appendChild(el);
+    $('ttms-driver-chat-back').onclick = function () { hideDriverChat(); };
+    $('ttms-driver-chat-form').onsubmit = function (ev) {
+      ev.preventDefault();
+      sendDriverChat();
+    };
+    return el;
+  }
+
+  function paintDriverChat(lines) {
+    var log = $('ttms-driver-chat-log');
+    if (!log) return;
+    if (!lines.length) {
+      log.innerHTML = '<p class="ttms-driver-chat__empty">Send a message. Your driver gets it as a notification.</p>';
+      return;
+    }
+    log.innerHTML = lines.map(function (line) {
+      var when = chatStamp(line.at);
+      return '<div class="ttms-driver-chat__bubble' + (line.mine ? ' is-mine' : '') + '">' +
+        escapeHtml(line.text) +
+        (when ? '<time>' + escapeHtml(when) + '</time>' : '') +
+        '</div>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function chatLinesFrom(orderRows, inboxItems, driverId) {
+    var byId = {};
+    function keep(line) {
+      if (!line || !String(line.text || '').trim()) return;
+      if (driverId && line.driverId && line.driverId !== driverId) return;
+      var key = line.id || (line.mine ? 'm:' : 't:') + line.at + ':' + line.text;
+      byId[key] = line;
+    }
+    (orderRows || []).forEach(function (row) {
+      var action = row && row.action;
+      if (action !== 'customer_message' && action !== 'driver_message') return;
+      keep({
+        id: (row.notification_id || row.id || '') + '',
+        mine: action === 'customer_message',
+        text: row.message || '',
+        at: row.created_at || row.queued_at || '',
+        driverId: Number(row.driver_id) || 0,
+      });
+    });
+    (inboxItems || []).forEach(function (item) {
+      var data = (item && item.data) || {};
+      var action = data.action || '';
+      if (action !== 'driver_message' && action !== 'customer_message') return;
+      var orderId = String(data.order_id || '');
+      if (chatOrderId && orderId && orderId !== String(chatOrderId)) return;
+      keep({
+        id: String(item.id || ''),
+        mine: action === 'customer_message',
+        text: item.message || '',
+        at: item.created_at || item.createdAt || '',
+        driverId: chatDriverIdOf(data),
+      });
+    });
+    return Object.keys(byId).map(function (key) { return byId[key]; }).sort(function (a, b) {
+      return String(a.at).localeCompare(String(b.at));
+    });
+  }
+
+  function loadDriverChat(driverId) {
+    var jobs = [];
+    if (chatOrderId && window.DeliveryClient && DeliveryClient.listOrderNotifications) {
+      jobs.push(DeliveryClient.listOrderNotifications(chatOrderId).then(function (res) {
+        return (res && res.notifications) || [];
+      }).catch(function () { return []; }));
+    } else {
+      jobs.push(Promise.resolve([]));
+    }
+    var token = '';
+    try {
+      token = window.AuthClient && AuthClient.getAccessToken ? AuthClient.getAccessToken() : '';
+    } catch (e) {}
+    if (token) {
+      jobs.push(fetch(notifyApiBase() + '/me/notifications?limit=40', {
+        headers: { Accept: 'application/json', Authorization: 'Bearer ' + token },
+      }).then(function (res) {
+        return res.ok ? res.json() : { notifications: [] };
+      }).then(function (body) {
+        return (body && body.notifications) || [];
+      }).catch(function () { return []; }));
+    } else {
+      jobs.push(Promise.resolve([]));
+    }
+    return Promise.all(jobs).then(function (parts) {
+      paintDriverChat(chatLinesFrom(parts[0], parts[1], driverId));
+    });
+  }
+
+  function chatStatus(text) {
+    var el = $('ttms-driver-chat-status');
+    if (el) el.textContent = text || '';
+  }
+
+  function openDriverChat(detail) {
+    detail = detail || {};
+    var panel = $('ttms-delivery-panel');
+    if (!panel || panel.hidden) return;
+    var el = ensureDriverChat();
+    var name = detail.name || 'Driver';
+    var driverId = Number(detail.id) || 0;
+    var title = $('ttms-driver-chat-name');
+    if (title) title.textContent = name;
+    el.hidden = false;
+    el.dataset.driverId = String(driverId);
+    el.dataset.driverName = name;
+    chatStatus(driverId ? '' : 'This driver is not ready for messages yet.');
+    loadDriverChat(driverId);
+    if (chatTimer) window.clearInterval(chatTimer);
+    chatTimer = window.setInterval(function () {
+      if (el.hidden) return;
+      loadDriverChat(Number(el.dataset.driverId) || 0);
+    }, 8000);
+    var input = $('ttms-driver-chat-input');
+    if (input) window.setTimeout(function () { input.focus(); }, 50);
+  }
+
+  function sendDriverChat() {
+    var el = $('ttms-driver-chat');
+    var input = $('ttms-driver-chat-input');
+    var message = input ? String(input.value || '').trim() : '';
+    var driverId = el ? Number(el.dataset.driverId) || 0 : 0;
+    if (!message) return;
+    if (!chatOrderId) {
+      chatStatus('Place the delivery first, then message this driver.');
+      return;
+    }
+    if (!driverId) {
+      chatStatus('This driver is not ready for messages yet.');
+      return;
+    }
+    if (!window.DeliveryClient || !DeliveryClient.messageDriver) return;
+    var button = el.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+    chatStatus('Sending…');
+    DeliveryClient.messageDriver(chatOrderId, driverId, message)
+      .then(function () {
+        if (input) input.value = '';
+        chatStatus('Sent as a notification.');
+        return loadDriverChat(driverId);
+      })
+      .catch(function (err) {
+        chatStatus((err && err.message) || 'Could not send.');
+      })
+      .then(function () {
+        if (button) button.disabled = false;
+      });
+  }
+
+  document.addEventListener('ttms-driver-chat', function (ev) {
+    openDriverChat((ev && ev.detail) || {});
+  });
 
   function startDeliveryPage() {
     injectCartButton();

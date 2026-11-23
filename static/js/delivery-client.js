@@ -233,6 +233,15 @@
     getDeliveryQR: function (orderId) {
       return request('GET', '/orders/' + encodeURIComponent(orderId) + '/delivery-qr');
     },
+    listOrderNotifications: function (orderId) {
+      return request('GET', '/orders/' + encodeURIComponent(orderId) + '/notifications');
+    },
+    messageDriver: function (orderId, driverId, message) {
+      return request('POST', '/orders/' + encodeURIComponent(orderId) + '/customer-message', {
+        driver_id: Number(driverId) || 0,
+        message: message || '',
+      });
+    },
     track: function (orderId) {
       return request('GET', '/orders/' + encodeURIComponent(orderId) + '/track');
     },

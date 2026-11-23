@@ -373,6 +373,30 @@
     return n.toFixed(1) + ' km';
   }
 
+  function emitDriverChat(driver) {
+    var detail = {
+      id: Number((driver && (driver.id || driver.driver_id)) || 0) || 0,
+      name: (driver && (driver.name || driver.display_name)) || 'Driver',
+    };
+    try {
+      document.dispatchEvent(new CustomEvent('ttms-driver-chat', { detail: detail }));
+    } catch (e) {}
+  }
+
+  function armDriverPin(marker, driver) {
+    if (!marker) return;
+    marker._ttmsDriver = driver || { name: 'Driver' };
+    if (marker._ttmsDriverArmed || typeof marker.on !== 'function') return;
+    marker._ttmsDriverArmed = true;
+    marker.on('click', function (ev) {
+      if (ev && ev.originalEvent) {
+        ev.originalEvent.preventDefault();
+        ev.originalEvent.stopPropagation();
+      }
+      emitDriverChat(marker._ttmsDriver);
+    });
+  }
+
   function paintAvailableDrivers(inst, drivers) {
     (inst.availableMarkers || []).forEach(function (marker) {
       if (marker && marker.remove) marker.remove();
@@ -399,6 +423,7 @@
         zIndexOffset: 450,
       }).addTo(inst.map);
       if (marker.bindTooltip) marker.bindTooltip(detail ? name + ' · ' + detail : name);
+      armDriverPin(marker, { id: driver && driver.id, name: name });
       inst.availableMarkers.push(marker);
     });
   }
@@ -495,7 +520,10 @@
       encodeURIComponent(q);
     return nominatim(url).then(function (rows) {
       if (!rows || !rows.length) return null;
-      return validPoint(rows[0].lat, rows[0].lon);
+      var pt = validPoint(rows[0].lat, rows[0].lon);
+      if (!pt) return null;
+      pt.label = String(rows[0].display_name || q).trim();
+      return pt;
     });
   }
 
@@ -1013,6 +1041,7 @@
       var name = driver.display_name || driver.email || 'Driver';
       var dist = offer.distance_m ? (offer.distance_m / 1000).toFixed(1) + ' km away' : 'Nearby';
       marker.bindTooltip(name + ' · ' + dist);
+      armDriverPin(marker, { id: (driver && driver.id) || offer.driver_id, name: driver.display_name || 'Driver' });
       inst.offerMarkers.push(marker);
       points.push(pt);
     });
@@ -1032,6 +1061,7 @@
       inst.driverMarker.setLatLng(pt);
     }
     if (label) inst.driverMarker.bindTooltip(label);
+    armDriverPin(inst.driverMarker, { id: inst.driverId, name: label || 'Driver' });
     inst.driverPoint = pt;
     if (inst.afterPickup && inst.dropoff) {
       var firstFix = !inst.routedFrom;
