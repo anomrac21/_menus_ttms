@@ -122,19 +122,19 @@
 
 .dashboard-active-badge {
   position: absolute;
-  top: -0.25rem;
-  left: -0.15rem;
+  top: -0.28rem;
+  left: -0.28rem;
   z-index: 3;
-  min-width: 1.15rem;
-  height: 1.15rem;
-  padding: 0 0.28rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.22rem;
   border-radius: 999px;
-  border: 1.5px solid color-mix(in srgb, var(--scheme-white) 85%, transparent);
+  border: 1.5px solid var(--header-bg-color, #070b16);
   background: var(--scheme-accent, var(--accent-color, #f0c43a));
-  color: var(--scheme-white, #fff);
+  color: var(--header-bg-color, #070b16);
   font-size: 0.62rem;
   font-weight: 800;
-  line-height: 1.15rem;
+  line-height: 1.05rem;
   text-align: center;
   pointer-events: none;
 }
@@ -146,11 +146,11 @@
 .dashboard-menu-btn-wrap .account-badge {
   display: none;
   position: absolute;
-  right: -0.2rem;
+  right: -0.28rem;
   bottom: -0.12rem;
   z-index: 2;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.15rem;
+  height: 1.15rem;
   margin: 0;
   align-items: center;
   justify-content: center;
