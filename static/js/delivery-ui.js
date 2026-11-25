@@ -137,6 +137,7 @@
   var liveWatchId = 0;
   var chatOrderId = '';
   var chatTimer = 0;
+  var trackedDriverId = 0;
   var liveTrackTimer = 0;
 
   function stopLiveTrack() {
@@ -1111,12 +1112,35 @@
 
     var assigned = order.selected_driver || {};
     var driverName = assigned.display_name || 'Driver';
+    var driverId = Number(assigned.id || order.selected_driver_id) || 0;
+    if (driverId) trackedDriverId = driverId;
+
+    function syncOpenChatDriver(id, name) {
+      var n = Number(id) || 0;
+      if (n) trackedDriverId = n;
+      var chat = $('ttms-driver-chat');
+      if (!chat || chat.hidden) return;
+      var known = Number(chat.dataset.driverId) || 0;
+      if (!known && trackedDriverId) {
+        chat.dataset.driverId = String(trackedDriverId);
+        chatStatus('');
+        loadDriverChat(trackedDriverId);
+      }
+      if (name) {
+        var title = $('ttms-driver-chat-name');
+        if (title && (!title.textContent || title.textContent === 'Driver')) title.textContent = name;
+      }
+    }
 
     function applyLocation(loc) {
       if (!loc || !window.TTMSDeliveryMap || typeof TTMSDeliveryMap.setDriver !== 'function') return;
       var lat = loc.lat != null ? loc.lat : loc.latitude;
       var lng = loc.lng != null ? loc.lng : loc.longitude;
-      TTMSDeliveryMap.setDriver('ttms-live-map', lat, lng, driverName);
+      var fromLoc = Number(loc.driver_id || loc.id) || 0;
+      if (fromLoc) driverId = fromLoc;
+      var speed = loc.speed != null ? Number(loc.speed) : null;
+      syncOpenChatDriver(driverId, driverName);
+      TTMSDeliveryMap.setDriver('ttms-live-map', lat, lng, driverName, driverId, speed);
     }
 
     function pull() {
@@ -1142,6 +1166,7 @@
         driverLat: assigned.lat,
         driverLng: assigned.lng,
         driverLabel: driverName,
+        driverId: driverId,
         afterPickup: headingToCustomer,
       }).catch(function () {
         if ($('ttms-live-map')) slot.textContent = 'Waiting for driver location…';
@@ -1793,8 +1818,10 @@
     var panel = $('ttms-delivery-panel');
     if (!panel || panel.hidden) return;
     var el = ensureDriverChat();
-    var name = detail.name || 'Driver';
-    var driverId = Number(detail.id) || 0;
+    var existingTitle = $('ttms-driver-chat-name');
+    var keptName = existingTitle && existingTitle.textContent && existingTitle.textContent !== 'Driver' ? existingTitle.textContent : '';
+    var name = detail.name || keptName || 'Driver';
+    var driverId = Number(detail.id) || trackedDriverId || 0;
     var title = $('ttms-driver-chat-name');
     if (title) title.textContent = name;
     el.hidden = false;
@@ -1845,6 +1872,23 @@
 
   document.addEventListener('ttms-driver-chat', function (ev) {
     openDriverChat((ev && ev.detail) || {});
+  });
+
+  document.addEventListener('ttms:notify-received', function (ev) {
+    var note = (ev && ev.detail) || {};
+    var data = note.data || {};
+    var action = data.action || '';
+    if (action !== 'driver_message' && action !== 'customer_message') return;
+    var orderId = String(data.order_id || '');
+    if (chatOrderId && orderId && orderId !== String(chatOrderId)) return;
+    var id = Number(data.chat_driver_id || data.driver_id) || trackedDriverId || 0;
+    if (id) trackedDriverId = id;
+    if (action === 'driver_message') {
+      openDriverChat({ id: id, name: data.driver_name || '' });
+      return;
+    }
+    var chat = $('ttms-driver-chat');
+    if (chat && !chat.hidden) loadDriverChat(Number(chat.dataset.driverId) || id);
   });
 
   function startDeliveryPage() {

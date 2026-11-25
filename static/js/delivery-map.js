@@ -760,12 +760,16 @@
   }
 
   function routeEnds(inst) {
-    if (!inst || !inst.dropoff) return null;
-    if (inst.afterPickup) {
-      if (!inst.driverPoint) return null;
-      return [inst.driverPoint, inst.dropoff];
+    if (!inst) return null;
+    if (inst.kind === 'track' && inst.driverPoint) {
+      if (inst.afterPickup) {
+        if (!inst.dropoff) return null;
+        return [inst.driverPoint, inst.dropoff];
+      }
+      if (!inst.shop) return null;
+      return [inst.driverPoint, inst.shop];
     }
-    if (!inst.shop) return null;
+    if (!inst.shop || !inst.dropoff) return null;
     return [inst.shop, inst.dropoff];
   }
 
@@ -792,8 +796,9 @@
         inst.routePts = (route && route.coordinates) || [];
         if (summary) showEta(inst, summary.totalTime, summary.totalDistance);
         var found = routeEnds(inst);
-        if (inst.kind !== 'picker' && found && inst.fittedLeg !== (inst.afterPickup ? 'driver' : 'shop')) {
-          inst.fittedLeg = inst.afterPickup ? 'driver' : 'shop';
+        var leg = inst.afterPickup ? 'dropoff' : 'pickup';
+        if (inst.kind !== 'picker' && found && inst.fittedLeg !== leg) {
+          inst.fittedLeg = leg;
           fitPoints(inst.map, found);
         }
       });
@@ -802,8 +807,9 @@
         var failed = routeEnds(inst);
         var meters = failed ? haversineMeters(failed[0], failed[1]) : 0;
         showEta(inst, (meters / 1000) * 120, meters, 'estimate');
-        if (inst.kind !== 'picker' && failed && inst.fittedLeg !== (inst.afterPickup ? 'driver' : 'shop')) {
-          inst.fittedLeg = inst.afterPickup ? 'driver' : 'shop';
+        var leg = inst.afterPickup ? 'dropoff' : 'pickup';
+        if (inst.kind !== 'picker' && failed && inst.fittedLeg !== leg) {
+          inst.fittedLeg = leg;
           fitPoints(inst.map, failed);
         }
       });
@@ -1148,7 +1154,27 @@
     return Math.round(kmh);
   }
 
-  function setDriver(id, lat, lng, label) {
+  function paintDriverSpeed(inst, kmh) {
+    var el = inst && inst.driverMarker && inst.driverMarker._el;
+    if (!el) return;
+    var pin = el.querySelector('.ttms-map-marker--driver');
+    if (!pin) return;
+    var badge = pin.querySelector('.ttms-map-marker__speed');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'ttms-map-marker__speed';
+      pin.appendChild(badge);
+    }
+    if (kmh == null || !isFinite(kmh) || kmh < 1) {
+      badge.hidden = true;
+      badge.textContent = '';
+      return;
+    }
+    badge.hidden = false;
+    badge.textContent = Math.round(kmh) + ' km/h';
+  }
+
+  function setDriver(id, lat, lng, label, driverId, speedMps) {
     var inst = instances[id];
     var pt = validPoint(lat, lng);
     if (!inst || !pt) return;
@@ -1160,29 +1186,35 @@
     } else {
       inst.driverMarker.setLatLng(pt);
     }
+    var nextId = Number(driverId);
+    if (isFinite(nextId) && nextId > 0) inst.driverId = nextId;
+    if (label) inst.driverName = label;
     armTrackFollow(inst);
-    var kmh = noteDriverSpeed(inst, pt);
-    var tip = label || 'Driver';
-    if (kmh != null) tip += ' · ' + kmh + ' km/h';
+    var gpsKmh = Number(speedMps) * 3.6;
+    var kmh = isFinite(gpsKmh) && gpsKmh >= 1 ? Math.round(gpsKmh) : noteDriverSpeed(inst, pt);
+    var pinName = label || inst.driverName || 'Driver';
+    var tip = kmh != null ? pinName + ' · ' + kmh + ' km/h' : pinName;
     inst.driverMarker.bindTooltip(tip);
-    armDriverPin(inst.driverMarker, { id: inst.driverId, name: label || 'Driver' });
+    armDriverPin(inst.driverMarker, { id: inst.driverId || 0, name: pinName });
+    paintDriverSpeed(inst, kmh);
+    var livePin = inst.driverMarker._el && inst.driverMarker._el.querySelector('.ttms-map-marker--driver');
+    if (livePin) livePin.classList.add('is-live-driver');
     inst.driverPoint = pt;
-    if (inst.afterPickup && inst.dropoff) {
+    var dest = inst.afterPickup ? inst.dropoff : inst.shop;
+    if (dest) {
       var firstFix = !inst.routedFrom;
-      var moved = !inst.routedFrom || haversineMeters(inst.routedFrom, pt) >= 100;
+      var moved = !inst.routedFrom || haversineMeters(inst.routedFrom, pt) >= 50;
       if (firstFix || moved) {
         inst.routedFrom = { lat: pt.lat, lng: pt.lng };
         if (firstFix) inst.fittedLeg = '';
         refreshRoute(inst, firstFix);
       }
       trimDriverRoute(inst, pt);
-      if (shouldFollowDriver(inst)) followDriverCamera(inst, pt);
     }
-    if (!inst.afterPickup || !shouldFollowDriver(inst)) {
-      if (!inst.afterPickup || !inst.framedDriver) {
-        fitPoints(inst.map, inst.afterPickup ? [inst.dropoff, pt] : [inst.shop, inst.dropoff, pt]);
-        if (inst.afterPickup) inst.framedDriver = true;
-      }
+    if (inst.afterPickup && shouldFollowDriver(inst)) followDriverCamera(inst, pt);
+    if (!inst.framedDriver) {
+      fitPoints(inst.map, (inst.afterPickup ? [inst.dropoff, pt] : [inst.shop, pt]).filter(Boolean));
+      inst.framedDriver = true;
     }
   }
 
@@ -1212,6 +1244,8 @@
           dropoff: dropoff,
           afterPickup: !!opts.afterPickup,
           driverPoint: driver,
+          driverId: Number(opts.driverId) || 0,
+          driverName: opts.driverLabel || 'Driver',
         };
         addModeToggle(inst);
         inst.shopMarker = addShopMarker(map, shop, opts.restaurantLabel || restaurantLabel());
@@ -1223,11 +1257,11 @@
           if (opts.dropoffLabel) inst.dropoffMarker.bindTooltip(opts.dropoffLabel);
         }
         instances[id] = inst;
-        if (inst.afterPickup && driver) inst.routedFrom = driver;
+        if (driver) inst.routedFrom = { lat: driver.lat, lng: driver.lng };
         if (routeEnds(inst)) refreshRoute(inst, true);
         else fitPoints(map, [shop, dropoff, driver]);
         if ($('ttms-offers-coverage')) refreshCoverage(inst);
-        if (driver) setDriver(id, driver.lat, driver.lng, opts.driverLabel || 'Driver');
+        if (driver) setDriver(id, driver.lat, driver.lng, opts.driverLabel || 'Driver', opts.driverId);
         resizeMap(map);
         map.once('idle', function () {
           if (inst.router && typeof inst.router.repaint === 'function') inst.router.repaint();

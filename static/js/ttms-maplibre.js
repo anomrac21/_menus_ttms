@@ -1477,6 +1477,15 @@
       ];
     }
 
+    _setCarLoading(on) {
+      const el = this._map && this._map.getContainer && this._map.getContainer();
+      if (!el) return;
+      el.classList.toggle('is-route-loading', !!on);
+      el.querySelectorAll('.ttms-map-pin--car, .ttms-driver-pin--you, .ttms-map-marker--driver.is-live-driver').forEach((pin) => {
+        pin.setAttribute('aria-busy', on ? 'true' : 'false');
+      });
+    }
+
     _showLine(coordinates, opts) {
       const o = opts || {};
       if (!this._map || !coordinates || coordinates.length < 2) return Promise.resolve(false);
@@ -1504,9 +1513,6 @@
       const requestMap = this._map;
       const requestId = (this._routeRequestId = (this._routeRequestId || 0) + 1);
       this.fire('routingstart', { waypoints: this.getWaypoints() });
-      if (this.options.straightFallback !== false && !this._line) {
-        this._showLine(this._straightCoords(), { fallback: true });
-      }
       const base = this.options.serviceUrl.replace(/\/$/, '');
       const coords = this._waypoints
         .map((w) => osrmRound(w.lng) + ',' + osrmRound(w.lat))
@@ -1536,6 +1542,7 @@
       };
       try {
         let data = osrmCacheGet(cacheKey);
+        if (!data) this._setCarLoading(true);
         if (!data) {
           try {
             data = await fetchOnce();
@@ -1609,11 +1616,11 @@
       } catch (err) {
         if (!stillCurrent()) return this;
         console.error('Routing error', err);
-        if (this.options.straightFallback === false) this.clearVisuals();
-        else await this._showLine(this._straightCoords(), { fallback: true });
         this.fire('routingerror', {
           error: { message: err.message || String(err), status: -1, url },
         });
+      } finally {
+        if (this._routeRequestId === requestId) this._setCarLoading(false);
       }
       return this;
     }
@@ -1631,13 +1638,14 @@
     repaint() {
       if (!this._map) return this;
       const coords =
-        this._roadCoords || (this._line && this._line._coords) || this._lastCoords || this._straightCoords();
+        this._roadCoords || (this._line && this._line._coords) || this._lastCoords;
       if (coords && coords.length >= 2) this._showLine(coords);
       return this;
     }
 
     remove() {
       this._routeRequestId = (this._routeRequestId || 0) + 1;
+      this._setCarLoading(false);
       this.clearVisuals();
       if (this._map && this._map._ttmsActiveRoute === this) {
         this._map._ttmsActiveRoute = null;

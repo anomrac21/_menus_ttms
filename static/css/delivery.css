@@ -1947,6 +1947,47 @@ body.ttms-delivery-page #main {
   cursor: default;
 }
 
+.ttms-map-marker--driver.is-live-driver {
+  position: relative;
+}
+
+.ttms-map-marker__speed {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, 4px);
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #12182b;
+  color: #f3f6ff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.is-route-loading .ttms-map-marker--driver.is-live-driver .ttms-map-marker__pin {
+  position: relative;
+}
+
+.is-route-loading .ttms-map-marker--driver.is-live-driver .ttms-map-marker__pin::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #4f46e5;
+  animation: ttms-car-route-spin 0.7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes ttms-car-route-spin {
+  to { transform: rotate(360deg); }
+}
+
 .ttms-delivery-map.is-following .ttms-ml-marker-root:not(:has(.ttms-map-marker--driver)):not(:has(.ttms-map-marker--dropoff)) {
   opacity: 0.28;
   filter: saturate(0.35);
