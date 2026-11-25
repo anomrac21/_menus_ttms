@@ -1187,6 +1187,12 @@ body.ttms-delivery-page #loader {
   display: none;
 }
 
+.ttms-delivery-eta.is-signal-lost {
+  background: #7a2e12;
+  color: #fff;
+  border-color: rgba(255, 196, 140, 0.45);
+}
+
 .ttms-delivery-map[data-map-mode="night"],
 .ttms-delivery-map.is-night,
 .ttms-delivery-map[data-map-mode="night"] .maplibregl-map,
@@ -1842,7 +1848,10 @@ body.ttms-delivery-page #main {
 }
 
 .ttms-map-marker--driver {
+  display: block;
   position: relative;
+  width: 2rem;
+  height: 2rem;
   overflow: visible;
   cursor: pointer;
 }
@@ -1982,13 +1991,22 @@ body.ttms-delivery-page #main {
   position: relative;
 }
 
+.ttms-map-marker--driver.is-signal-lost .ttms-map-marker__speed {
+  background: #7a2e12;
+  color: #fff;
+}
+
+.ttms-map-marker--driver.is-signal-lost .ttms-map-marker__pin {
+  box-shadow: 0 0 0 3px #e25b2a, 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
 .ttms-map-marker__speed {
   position: absolute;
   left: 50%;
-  top: auto;
-  bottom: calc(100% + 0.15rem);
-  transform: translate(-50%, 0);
-  z-index: 2;
+  top: 0;
+  bottom: auto;
+  transform: translate(-50%, calc(-100% - 0.9rem));
+  z-index: 3;
   padding: 0.12rem 0.4rem;
   border-radius: 999px;
   background: #12182b;

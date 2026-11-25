@@ -577,12 +577,29 @@
     return el;
   }
 
+  var SIGNAL_LOST_MS = 20000;
+
+  function signalLost(inst) {
+    if (!inst || inst.kind !== 'track' || !inst.driverPoint || !inst.fixAt) return false;
+    return Date.now() - inst.fixAt > SIGNAL_LOST_MS;
+  }
+
   function renderEta(inst) {
-    if (!inst || !inst.etaEl || !inst.eta) return;
-    var text = inst.eta.label;
-    if (inst.speedKmh != null && isFinite(inst.speedKmh)) text += ' · ' + inst.speedKmh + ' km/h';
-    inst.etaEl.textContent = text;
-    inst.etaEl.hidden = false;
+    if (!inst) return;
+    var lost = signalLost(inst);
+    inst.signalLost = lost;
+    if (!inst.etaEl && !lost && !(inst.eta && inst.eta.label)) return;
+    var el = inst.etaEl || ensureEta(inst);
+    if (!el) return;
+    var text = inst.eta && inst.eta.label ? inst.eta.label : '';
+    if (lost) text = text ? text + ' · Signal lost' : 'Signal lost';
+    else if (inst.speedKmh != null && isFinite(inst.speedKmh)) {
+      text = text ? text + ' · ' + inst.speedKmh + ' km/h' : inst.speedKmh + ' km/h';
+    }
+    if (!text) return;
+    el.textContent = text;
+    el.classList.toggle('is-signal-lost', lost);
+    el.hidden = false;
   }
 
   function showEta(inst, durationSec, distanceM, source) {
@@ -889,6 +906,7 @@
       return;
     }
     if (inst.routeTimer) window.clearTimeout(inst.routeTimer);
+    if (inst.signalTimer) window.clearInterval(inst.signalTimer);
     if (inst.coverageTimer) window.clearTimeout(inst.coverageTimer);
     if (inst.router && inst.router.remove) inst.router.remove();
     ['shopMarker', 'dropoffMarker', 'driverMarker'].forEach(function (key) {
@@ -1187,13 +1205,47 @@
       pin.appendChild(badge);
     }
     var shown = kmh == null || !isFinite(kmh) ? 0 : Math.max(0, Math.round(kmh));
-    badge.hidden = false;
-    badge.textContent = shown + ' km/h';
     inst.speedKmh = shown;
+    paintSignal(inst);
+  }
+
+  function paintSignal(inst) {
+    if (!inst) return;
+    var lost = signalLost(inst);
+    inst.signalLost = lost;
+    var el = inst.driverMarker && inst.driverMarker._el;
+    var pin = el && el.querySelector('.ttms-map-marker--driver');
+    if (pin) {
+      pin.classList.toggle('is-signal-lost', lost);
+      var badge = pin.querySelector('.ttms-map-marker__speed');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'ttms-map-marker__speed';
+        pin.appendChild(badge);
+      }
+      badge.hidden = false;
+      badge.textContent = lost ? 'Signal lost' : (inst.speedKmh != null ? inst.speedKmh + ' km/h' : '');
+    }
+    if (inst.driverMarker && typeof inst.driverMarker.bindTooltip === 'function') {
+      var name = inst.driverName || 'Driver';
+      inst.driverMarker.bindTooltip(lost ? name + ' · Signal lost' : name + (inst.speedKmh != null ? ' · ' + inst.speedKmh + ' km/h' : ''));
+    }
     renderEta(inst);
   }
 
-  function setDriver(id, lat, lng, label, driverId, speedMps) {
+  function watchSignal(inst) {
+    if (!inst || inst.signalTimer) return;
+    inst.signalTimer = window.setInterval(function () {
+      if (!instances[inst.id]) {
+        window.clearInterval(inst.signalTimer);
+        inst.signalTimer = 0;
+        return;
+      }
+      paintSignal(inst);
+    }, 5000);
+  }
+
+  function setDriver(id, lat, lng, label, driverId, speedMps, fixAt) {
     var inst = instances[id];
     var pt = validPoint(lat, lng);
     if (!inst || !pt) return;
@@ -1212,13 +1264,14 @@
     var gpsKmh = Number(speedMps) * 3.6;
     var kmh = isFinite(gpsKmh) && gpsKmh >= 1 ? Math.round(gpsKmh) : noteDriverSpeed(inst, pt);
     var pinName = label || inst.driverName || 'Driver';
-    var tip = kmh != null ? pinName + ' · ' + kmh + ' km/h' : pinName;
     var livePin = inst.driverMarker._el && inst.driverMarker._el.querySelector('.ttms-map-marker--driver');
     if (livePin) livePin.classList.add('is-live-driver');
+    var stamp = Number(fixAt);
+    if (isFinite(stamp) && stamp > 0) inst.fixAt = stamp < 1e12 ? stamp * 1000 : stamp;
+    else if (!inst.fixAt) inst.fixAt = Date.now();
     paintDriverSpeed(inst, kmh);
-    if (inst.speedKmh != null) tip = pinName + ' · ' + inst.speedKmh + ' km/h';
-    inst.driverMarker.bindTooltip(tip);
     armDriverPin(inst.driverMarker, { id: inst.driverId || 0, name: pinName });
+    watchSignal(inst);
     inst.driverPoint = pt;
     var dest = inst.afterPickup ? inst.dropoff : inst.shop;
     if (dest) {
@@ -1278,6 +1331,7 @@
           if (opts.dropoffLabel) inst.dropoffMarker.bindTooltip(opts.dropoffLabel);
         }
         instances[id] = inst;
+        watchSignal(inst);
         if (driver) inst.routedFrom = { lat: driver.lat, lng: driver.lng };
         if (routeEnds(inst)) refreshRoute(inst, true);
         else fitPoints(map, [shop, dropoff, driver]);

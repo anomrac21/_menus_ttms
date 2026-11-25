@@ -1140,8 +1140,10 @@
       var fromLoc = Number(loc.driver_id || loc.id) || 0;
       if (fromLoc) driverId = fromLoc;
       var speed = loc.speed != null ? Number(loc.speed) : null;
+      var fixAt = Number(loc.updated_at || loc.location_at || 0);
+      if (!(fixAt > 0)) fixAt = Date.now();
       syncOpenChatDriver(driverId, driverName);
-      TTMSDeliveryMap.setDriver('ttms-live-map', lat, lng, driverName, driverId, speed);
+      TTMSDeliveryMap.setDriver('ttms-live-map', lat, lng, driverName, driverId, speed, fixAt);
     }
 
     function pull() {
