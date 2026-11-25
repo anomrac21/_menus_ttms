@@ -1394,6 +1394,30 @@
     return 'Continue' + onto;
   }
 
+  const osrmRouteCache = new Map();
+
+  function osrmRound(n) {
+    return Math.round(Number(n) * 10000) / 10000;
+  }
+
+  function osrmCacheGet(key) {
+    const hit = osrmRouteCache.get(key);
+    if (!hit) return null;
+    if (Date.now() - hit.at > 180000) {
+      osrmRouteCache.delete(key);
+      return null;
+    }
+    return hit.data;
+  }
+
+  function osrmCacheSet(key, data) {
+    if (osrmRouteCache.size > 24) {
+      const first = osrmRouteCache.keys().next().value;
+      osrmRouteCache.delete(first);
+    }
+    osrmRouteCache.set(key, { at: Date.now(), data });
+  }
+
   class Router {
     constructor(map, options) {
       this._map = map;
@@ -1484,14 +1508,17 @@
         this._showLine(this._straightCoords(), { fallback: true });
       }
       const base = this.options.serviceUrl.replace(/\/$/, '');
-      const coords = this._waypoints.map((w) => w.lng + ',' + w.lat).join(';');
+      const coords = this._waypoints
+        .map((w) => osrmRound(w.lng) + ',' + osrmRound(w.lat))
+        .join(';');
+      const cacheKey = this.options.profile + ':' + coords;
       const url =
         base +
         '/' +
         this.options.profile +
         '/' +
         coords +
-        '?overview=full&geometries=geojson&steps=true';
+        '?overview=simplified&geometries=geojson&steps=true';
 
       const stillCurrent = () =>
         this._map && this._map === requestMap && this._routeRequestId === requestId;
@@ -1508,18 +1535,21 @@
         }
       };
       try {
-        let data;
-        try {
-          data = await fetchOnce();
-        } catch (firstErr) {
-          if (!stillCurrent()) return this;
-          await new Promise((resolve) => window.setTimeout(resolve, 250));
-          if (!stillCurrent()) return this;
+        let data = osrmCacheGet(cacheKey);
+        if (!data) {
           try {
             data = await fetchOnce();
-          } catch (_) {
-            throw firstErr;
+          } catch (firstErr) {
+            if (!stillCurrent()) return this;
+            await new Promise((resolve) => window.setTimeout(resolve, 250));
+            if (!stillCurrent()) return this;
+            try {
+              data = await fetchOnce();
+            } catch (_) {
+              throw firstErr;
+            }
           }
+          if (data && data.routes && data.routes.length) osrmCacheSet(cacheKey, data);
         }
         if (!stillCurrent()) return this;
         if (!data.routes || !data.routes.length) throw new Error('No routes found');

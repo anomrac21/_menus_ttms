@@ -813,14 +813,7 @@
       inst.router.options.casingColor = routeCasing(currentMode);
     }
     inst.router.setWaypoints(ends[0], ends[1]);
-    var run = function () {
-      var live = routeEnds(inst);
-      if (!inst.router || !live) return;
-      inst.router.setWaypoints(live[0], live[1]);
-      inst.router.route();
-    };
-    if (typeof inst.map.whenStyleReady === 'function') inst.map.whenStyleReady(run);
-    else run();
+    inst.router.route();
   }
 
   function refreshRoute(inst, immediate) {
