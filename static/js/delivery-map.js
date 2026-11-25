@@ -577,15 +577,22 @@
     return el;
   }
 
+  function renderEta(inst) {
+    if (!inst || !inst.etaEl || !inst.eta) return;
+    var text = inst.eta.label;
+    if (inst.speedKmh != null && isFinite(inst.speedKmh)) text += ' · ' + inst.speedKmh + ' km/h';
+    inst.etaEl.textContent = text;
+    inst.etaEl.hidden = false;
+  }
+
   function showEta(inst, durationSec, distanceM, source) {
     var el = ensureEta(inst);
     var label = formatEta(durationSec, distanceM);
     if (source === 'estimate') label += ' (est.)';
-    el.textContent = label;
-    el.hidden = false;
     hideCenterSummary(inst.hint);
     if (inst.coverageEl) ensureCoverageEl(inst);
     inst.eta = { duration: durationSec, distance: distanceM, label: label };
+    renderEta(inst);
   }
 
   var PIN_FOCUS_ZOOM = 16;
@@ -761,7 +768,8 @@
 
   function routeEnds(inst) {
     if (!inst) return null;
-    if (inst.kind === 'track' && inst.driverPoint) {
+    if (inst.kind === 'track') {
+      if (!inst.driverPoint) return null;
       if (inst.afterPickup) {
         if (!inst.dropoff) return null;
         return [inst.driverPoint, inst.dropoff];
@@ -771,6 +779,10 @@
     }
     if (!inst.shop || !inst.dropoff) return null;
     return [inst.shop, inst.dropoff];
+  }
+
+  function routeLeg(inst) {
+    return inst && inst.afterPickup ? 'dropoff' : 'pickup';
   }
 
   function paintRoute(inst) {
@@ -804,10 +816,12 @@
       });
       inst.router.on('routingerror', function () {
         inst.routePts = [];
+        inst.routeFailed = true;
+        if (inst.router && typeof inst.router.clearVisuals === 'function') inst.router.clearVisuals();
         var failed = routeEnds(inst);
         var meters = failed ? haversineMeters(failed[0], failed[1]) : 0;
         showEta(inst, (meters / 1000) * 120, meters, 'estimate');
-        var leg = inst.afterPickup ? 'dropoff' : 'pickup';
+        var leg = routeLeg(inst);
         if (inst.kind !== 'picker' && failed && inst.fittedLeg !== leg) {
           inst.fittedLeg = leg;
           fitPoints(inst.map, failed);
@@ -818,6 +832,13 @@
       inst.router.options.lineColor = routeColor(currentMode);
       inst.router.options.casingColor = routeCasing(currentMode);
     }
+    var legName = routeLeg(inst);
+    if (inst.routeLeg && inst.routeLeg !== legName && typeof inst.router.clearVisuals === 'function') {
+      inst.router.clearVisuals();
+      inst.routePts = [];
+    }
+    inst.routeLeg = legName;
+    inst.routeFailed = false;
     inst.router.setWaypoints(ends[0], ends[1]);
     inst.router.route();
   }
@@ -1165,13 +1186,11 @@
       badge.className = 'ttms-map-marker__speed';
       pin.appendChild(badge);
     }
-    if (kmh == null || !isFinite(kmh) || kmh < 1) {
-      badge.hidden = true;
-      badge.textContent = '';
-      return;
-    }
+    var shown = kmh == null || !isFinite(kmh) ? 0 : Math.max(0, Math.round(kmh));
     badge.hidden = false;
-    badge.textContent = Math.round(kmh) + ' km/h';
+    badge.textContent = shown + ' km/h';
+    inst.speedKmh = shown;
+    renderEta(inst);
   }
 
   function setDriver(id, lat, lng, label, driverId, speedMps) {
@@ -1194,20 +1213,22 @@
     var kmh = isFinite(gpsKmh) && gpsKmh >= 1 ? Math.round(gpsKmh) : noteDriverSpeed(inst, pt);
     var pinName = label || inst.driverName || 'Driver';
     var tip = kmh != null ? pinName + ' · ' + kmh + ' km/h' : pinName;
-    inst.driverMarker.bindTooltip(tip);
-    armDriverPin(inst.driverMarker, { id: inst.driverId || 0, name: pinName });
-    paintDriverSpeed(inst, kmh);
     var livePin = inst.driverMarker._el && inst.driverMarker._el.querySelector('.ttms-map-marker--driver');
     if (livePin) livePin.classList.add('is-live-driver');
+    paintDriverSpeed(inst, kmh);
+    if (inst.speedKmh != null) tip = pinName + ' · ' + inst.speedKmh + ' km/h';
+    inst.driverMarker.bindTooltip(tip);
+    armDriverPin(inst.driverMarker, { id: inst.driverId || 0, name: pinName });
     inst.driverPoint = pt;
     var dest = inst.afterPickup ? inst.dropoff : inst.shop;
     if (dest) {
       var firstFix = !inst.routedFrom;
       var moved = !inst.routedFrom || haversineMeters(inst.routedFrom, pt) >= 50;
-      if (firstFix || moved) {
+      var legNow = routeLeg(inst);
+      if (firstFix || moved || inst.routeFailed || inst.routeLeg !== legNow) {
         inst.routedFrom = { lat: pt.lat, lng: pt.lng };
-        if (firstFix) inst.fittedLeg = '';
-        refreshRoute(inst, firstFix);
+        if (firstFix || inst.routeLeg !== legNow) inst.fittedLeg = '';
+        refreshRoute(inst, firstFix || inst.routeFailed || inst.routeLeg !== legNow);
       }
       trimDriverRoute(inst, pt);
     }

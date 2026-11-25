@@ -313,7 +313,7 @@
     tearDownMaps();
     var panel = ensurePanel();
     setNav({});
-    panel.classList.remove('is-map-step', 'is-checkout');
+    panel.classList.remove('is-map-step', 'is-checkout', 'is-history');
     var body = $('ttms-delivery-body');
     if (bodyFreshTimer) {
       window.clearTimeout(bodyFreshTimer);
@@ -730,7 +730,7 @@
   var HISTORY_LABEL = {
     created: 'Order placed',
     drivers_notified: 'Drivers notified',
-    driver_requested: 'Driver requested the order',
+    driver_requested: 'Driver requested',
     driver_selected: 'Driver selected',
     driver_replaced: 'Driver changed',
     driver_removed: 'Driver removed',
@@ -794,17 +794,16 @@
       ? rows
           .map(function (row) {
             return (
-              '<li><time datetime="' +
+              '<li class="ttms-delivery-history__row"><time datetime="' +
               escapeAttr(row.at) +
               '">' +
               escapeHtml(formatStamp(row.at)) +
-              '</time><div><strong>' +
+              '</time><div class="ttms-delivery-history__copy"><strong>' +
               escapeHtml(row.title) +
               '</strong>' +
               (row.detail ? '<p>' + escapeHtml(row.detail) + '</p>' : '') +
-              '</div>' +
-              (row.amount ? '<span>' + escapeHtml(row.amount) + '</span>' : '<span></span>') +
-              '</li>'
+              (row.amount ? '<b class="ttms-delivery-history__amount">' + escapeHtml(row.amount) + '</b>' : '') +
+              '</div></li>'
             );
           })
           .join('')
@@ -830,6 +829,8 @@
     if (!order) return;
     setPanelCopy('Transactions', order.restaurant_name || 'This order');
     show('<div class="ttms-delivery-history">' + historyHtml(order) + '</div>');
+    var panel = $('ttms-delivery-panel');
+    if (panel) panel.classList.add('is-history');
     setNav({
       back: function () {
         showOrderStatus(order);

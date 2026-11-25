@@ -541,8 +541,20 @@ body.ttms-delivery-open {
   font-weight: 800;
 }
 
-.ttms-delivery-history__list li {
-  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+.ttms-delivery-panel.is-history .ttms-delivery-panel__sheet,
+.ttms-delivery-panel.is-history .ttms-delivery-panel__header {
+  background: var(--main-bg, #12141c);
+}
+
+.ttms-delivery-panel.is-history .ttms-delivery-panel__body {
+  overflow: auto;
+}
+
+.ttms-delivery-history__list li,
+.ttms-delivery-panel .ttms-delivery-history__row {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  gap: 0.35rem 0.85rem;
   align-items: start;
   border-bottom: 1px solid color-mix(in srgb, var(--scheme-white) 8%, transparent);
 }
@@ -550,18 +562,35 @@ body.ttms-delivery-open {
 .ttms-delivery-history__list time {
   font-size: 0.75rem;
   font-weight: 700;
+  line-height: 1.35;
   color: var(--ttms-del-muted, color-mix(in srgb, var(--main-text-color, #fff) 70%, transparent));
+}
+
+.ttms-delivery-history__copy {
+  min-width: 0;
 }
 
 .ttms-delivery-history__list strong {
   display: block;
-  font-size: 0.92rem;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
-.ttms-delivery-history__list p {
-  margin: 0.15rem 0 0;
-  font-size: 0.78rem;
+.ttms-delivery-history__list p,
+.ttms-delivery-history__amount {
+  display: block;
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.35;
   color: var(--ttms-del-muted, color-mix(in srgb, var(--main-text-color, #fff) 70%, transparent));
+}
+
+.ttms-delivery-history__amount {
+  color: var(--ttms-del-ink, var(--main-text-color, #fff));
+  font-weight: 800;
 }
 
 .ttms-delivery-history__empty {
@@ -1813,6 +1842,8 @@ body.ttms-delivery-page #main {
 }
 
 .ttms-map-marker--driver {
+  position: relative;
+  overflow: visible;
   cursor: pointer;
 }
 
@@ -1954,8 +1985,10 @@ body.ttms-delivery-page #main {
 .ttms-map-marker__speed {
   position: absolute;
   left: 50%;
-  top: 100%;
-  transform: translate(-50%, 4px);
+  top: auto;
+  bottom: calc(100% + 0.15rem);
+  transform: translate(-50%, 0);
+  z-index: 2;
   padding: 0.12rem 0.4rem;
   border-radius: 999px;
   background: #12182b;
