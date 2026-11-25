@@ -1940,11 +1940,44 @@ body.ttms-delivery-page #main {
   background: color-mix(in srgb, var(--scheme-accent, #c0392b) 82%, #000);
 }
 
+.ttms-driver-chat__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.28rem;
+  margin-top: 0.2rem;
+}
+
 .ttms-driver-chat__bubble time {
   display: block;
-  margin-top: 0.2rem;
+  margin: 0;
   font-size: 0.68rem;
   opacity: 0.75;
+}
+
+.ttms-driver-chat__ticks {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0.95rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.ttms-driver-chat__ticks.is-read {
+  color: #9ad7ff;
+}
+
+.ttms-driver-chat__ticks.is-failed {
+  color: #ffd0c2;
+}
+
+.ttms-driver-chat__tick {
+  width: 0.95rem;
+  height: 0.7rem;
+  display: block;
+}
+
+.ttms-driver-chat__tick--second {
+  margin-left: -0.42rem;
 }
 
 .ttms-driver-chat__status {

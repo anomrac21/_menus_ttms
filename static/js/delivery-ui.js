@@ -1711,7 +1711,7 @@
       '<header class="ttms-driver-chat__bar">' +
       '<button type="button" class="ttms-driver-chat__back" id="ttms-driver-chat-back" aria-label="Close chat">' +
       '<i class="fa fa-chevron-left" aria-hidden="true"></i></button>' +
-      '<div><strong id="ttms-driver-chat-name">Driver</strong><span>Sent as a notification</span></div>' +
+      '<div><strong id="ttms-driver-chat-name">Driver</strong><span id="ttms-driver-chat-sub"></span></div>' +
       '</header>' +
       '<div id="ttms-driver-chat-log" class="ttms-driver-chat__log"></div>' +
       '<p id="ttms-driver-chat-status" class="ttms-driver-chat__status"></p>' +
@@ -1727,6 +1727,71 @@
     return el;
   }
 
+  function chatReceiptRank(status) {
+    var key = String(status || '').toLowerCase();
+    if (key === 'clicked' || key === 'read' || key === 'opened') return 5;
+    if (key === 'delivered' || key === 'received') return 3;
+    if (key === 'sent') return 2;
+    if (key === 'failed' || key === 'bounced') return 0;
+    return 1;
+  }
+
+  function chatReceiptStatus(row) {
+    var best = String((row && row.status) || 'sent').toLowerCase();
+    var rank = chatReceiptRank(best);
+    ((row && row.receipts) || []).forEach(function (item) {
+      var status = String((item && (item.status || item.event_type)) || '').toLowerCase();
+      var next = chatReceiptRank(status);
+      if (next > rank) {
+        best = status;
+        rank = next;
+      }
+    });
+    if (best === 'clicked' || best === 'opened') return 'read';
+    if (best === 'received') return 'delivered';
+    return best || 'sent';
+  }
+
+  function chatTicks(status) {
+    var key = chatReceiptStatus({ status: status });
+    var label = 'Sent';
+    var cls = 'is-sent';
+    if (key === 'failed' || key === 'bounced') {
+      label = 'Failed';
+      cls = 'is-failed';
+    } else if (key === 'read') {
+      label = 'Read';
+      cls = 'is-read';
+    } else if (key === 'delivered') {
+      label = 'Delivered';
+      cls = 'is-delivered';
+    } else if (key === 'queued' || key === 'pending') {
+      label = 'Sending';
+      cls = 'is-pending';
+    }
+    var twin = cls === 'is-delivered' || cls === 'is-read';
+    var mark =
+      cls === 'is-failed'
+        ? '<i class="fa fa-exclamation-circle" aria-hidden="true"></i>'
+        : cls === 'is-pending'
+          ? '<i class="fa fa-clock-o" aria-hidden="true"></i>'
+          : '<svg viewBox="0 0 16 11" aria-hidden="true" class="ttms-driver-chat__tick"><path d="M1.2 5.6l2.7 2.7L8.9 1.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>' +
+            (twin
+              ? '<svg viewBox="0 0 16 11" aria-hidden="true" class="ttms-driver-chat__tick ttms-driver-chat__tick--second"><path d="M1.2 5.6l2.7 2.7L8.9 1.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
+              : '');
+    return (
+      '<span class="ttms-driver-chat__ticks ' +
+      cls +
+      '" title="' +
+      escapeHtml(label) +
+      '" aria-label="' +
+      escapeHtml(label) +
+      '">' +
+      mark +
+      '</span>'
+    );
+  }
+
   function paintDriverChat(lines) {
     var log = $('ttms-driver-chat-log');
     if (!log) return;
@@ -1738,8 +1803,10 @@
       var when = chatStamp(line.at);
       return '<div class="ttms-driver-chat__bubble' + (line.mine ? ' is-mine' : '') + '">' +
         escapeHtml(line.text) +
+        '<span class="ttms-driver-chat__meta">' +
         (when ? '<time>' + escapeHtml(when) + '</time>' : '') +
-        '</div>';
+        (line.mine ? chatTicks(line.status) : '') +
+        '</span></div>';
     }).join('');
     log.scrollTop = log.scrollHeight;
   }
@@ -1750,6 +1817,8 @@
       if (!line || !String(line.text || '').trim()) return;
       if (driverId && line.driverId && line.driverId !== driverId) return;
       var key = line.id || (line.mine ? 'm:' : 't:') + line.at + ':' + line.text;
+      var prev = byId[key];
+      if (prev && !line.status && prev.status) line.status = prev.status;
       byId[key] = line;
     }
     (orderRows || []).forEach(function (row) {
@@ -1761,6 +1830,7 @@
         text: row.message || '',
         at: row.created_at || row.queued_at || '',
         driverId: Number(row.driver_id) || 0,
+        status: chatReceiptStatus(row),
       });
     });
     (inboxItems || []).forEach(function (item) {
@@ -1862,7 +1932,7 @@
     DeliveryClient.messageDriver(chatOrderId, driverId, message)
       .then(function () {
         if (input) input.value = '';
-        chatStatus('Sent as a notification.');
+        chatStatus('');
         return loadDriverChat(driverId);
       })
       .catch(function (err) {
