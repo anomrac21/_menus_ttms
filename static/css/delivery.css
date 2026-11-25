@@ -1947,6 +1947,12 @@ body.ttms-delivery-page #main {
   cursor: default;
 }
 
+.ttms-delivery-map.is-following .ttms-ml-marker-root:not(:has(.ttms-map-marker--driver)):not(:has(.ttms-map-marker--dropoff)) {
+  opacity: 0.28;
+  filter: saturate(0.35);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ttms-delivery-panel.is-opening .ttms-delivery-panel__backdrop,
   .ttms-delivery-panel.is-closing .ttms-delivery-panel__backdrop,

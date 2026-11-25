@@ -631,6 +631,8 @@
   function showJourney(target) {
     var inst = target && target.map ? target : instances[target || 'ttms-delivery-pin-map'];
     if (!inst || !inst.map) return;
+    inst.followHoldUntil = Date.now() + 12000;
+    setTrackFollowClass(inst, false);
     var map = inst.map;
     try {
       if (typeof map.resize === 'function') map.resize();
@@ -1049,6 +1051,110 @@
     fitPoints(inst.map, points);
   }
 
+  function setTrackFollowClass(inst, on) {
+    var el = inst && inst.map && inst.map.getContainer && inst.map.getContainer();
+    if (el) el.classList.toggle('is-following', !!on);
+  }
+
+  function armTrackFollow(inst) {
+    if (!inst || !inst.map || inst._followArmed) return;
+    inst._followArmed = true;
+    inst.followHoldUntil = 0;
+    inst.map.on('dragstart', function () {
+      inst.followHoldUntil = Date.now() + 8000;
+      setTrackFollowClass(inst, false);
+    });
+  }
+
+  function shouldFollowDriver(inst) {
+    return !!(
+      inst &&
+      inst.kind === 'track' &&
+      inst.afterPickup &&
+      Date.now() > (inst.followHoldUntil || 0)
+    );
+  }
+
+  function pointAhead(point, bearingDeg, meters) {
+    var lat = Number(point.lat);
+    var lng = Number(point.lng);
+    var br = ((Number(bearingDeg) || 0) * Math.PI) / 180;
+    var m = Number(meters) || 0;
+    return {
+      lat: lat + (m * Math.cos(br)) / 111320,
+      lng: lng + (m * Math.sin(br)) / (111320 * Math.max(0.2, Math.cos((lat * Math.PI) / 180))),
+    };
+  }
+
+  function driverBearing(inst, pt) {
+    var route = inst.routePts || [];
+    if (route.length > 1 && global.TTMSMap && global.TTMSMap.nearestOnRoute) {
+      var near = global.TTMSMap.nearestOnRoute(pt, route);
+      if (near && isFinite(near.bearing)) return near.bearing;
+    }
+    var prev = inst.prevSpeedSample;
+    if (prev && haversineMeters(prev, pt) > 4 && global.TTMSMap && global.TTMSMap.bearingBetween) {
+      return global.TTMSMap.bearingBetween(prev, pt);
+    }
+    return 0;
+  }
+
+  function followDriverCamera(inst, pt) {
+    if (!shouldFollowDriver(inst) || !pt || typeof inst.map.easeTo !== 'function') return;
+    var now = Date.now();
+    if (now - (inst.camAt || 0) < 700) return;
+    inst.camAt = now;
+    var bearing = driverBearing(inst, pt);
+    var zoom = inst.didFollow ? Math.max(14.5, Number(inst.map.getZoom && inst.map.getZoom()) || 16.2) : 16.2;
+    var el = inst.map.getContainer && inst.map.getContainer();
+    var h = (el && el.clientHeight) || 640;
+    var mPerPx = (156543.03392 * Math.cos((pt.lat * Math.PI) / 180)) / Math.pow(2, zoom);
+    var center = pointAhead(pt, bearing, mPerPx * Math.max(160, h * 0.45) * 0.32);
+    var cam = {
+      center: [center.lng, center.lat],
+      bearing: bearing,
+      pitch: 46,
+      duration: 800,
+      essential: true,
+    };
+    if (!inst.didFollow) {
+      cam.zoom = 16.2;
+      inst.didFollow = true;
+    }
+    try {
+      inst.map.easeTo(cam);
+    } catch (e) {}
+    setTrackFollowClass(inst, true);
+  }
+
+  function trimDriverRoute(inst, pt) {
+    var line = inst.router && inst.router._line;
+    var coords =
+      (inst.router &&
+        inst.router._routes &&
+        inst.router._routes[0] &&
+        inst.router._routes[0].coordinates) ||
+      inst.routePts;
+    if (!line || typeof line.setCoordinates !== 'function' || !coords || coords.length < 2) return;
+    if (!global.TTMSMap || !global.TTMSMap.nearestOnRoute) return;
+    var near = global.TTMSMap.nearestOnRoute(pt, coords);
+    if (!near || !near.point || near.distance > 80 || !isFinite(near.index)) return;
+    var rest = coords.slice(near.index + 1);
+    if (!rest.length) return;
+    line.setCoordinates([near.point].concat(rest));
+  }
+
+  function noteDriverSpeed(inst, pt) {
+    var prev = inst.speedSample;
+    var now = Date.now();
+    inst.prevSpeedSample = prev;
+    inst.speedSample = { lat: pt.lat, lng: pt.lng, at: now };
+    if (!prev || now - prev.at < 800 || now - prev.at > 20000) return null;
+    var kmh = (haversineMeters(prev, pt) / ((now - prev.at) / 1000)) * 3.6;
+    if (!isFinite(kmh) || kmh < 1 || kmh > 160) return null;
+    return Math.round(kmh);
+  }
+
   function setDriver(id, lat, lng, label) {
     var inst = instances[id];
     var pt = validPoint(lat, lng);
@@ -1061,7 +1167,11 @@
     } else {
       inst.driverMarker.setLatLng(pt);
     }
-    if (label) inst.driverMarker.bindTooltip(label);
+    armTrackFollow(inst);
+    var kmh = noteDriverSpeed(inst, pt);
+    var tip = label || 'Driver';
+    if (kmh != null) tip += ' · ' + kmh + ' km/h';
+    inst.driverMarker.bindTooltip(tip);
     armDriverPin(inst.driverMarker, { id: inst.driverId, name: label || 'Driver' });
     inst.driverPoint = pt;
     if (inst.afterPickup && inst.dropoff) {
@@ -1072,10 +1182,14 @@
         if (firstFix) inst.fittedLeg = '';
         refreshRoute(inst, firstFix);
       }
+      trimDriverRoute(inst, pt);
+      if (shouldFollowDriver(inst)) followDriverCamera(inst, pt);
     }
-    if (!inst.afterPickup || !inst.framedDriver) {
-      fitPoints(inst.map, inst.afterPickup ? [inst.dropoff, pt] : [inst.shop, inst.dropoff, pt]);
-      if (inst.afterPickup) inst.framedDriver = true;
+    if (!inst.afterPickup || !shouldFollowDriver(inst)) {
+      if (!inst.afterPickup || !inst.framedDriver) {
+        fitPoints(inst.map, inst.afterPickup ? [inst.dropoff, pt] : [inst.shop, inst.dropoff, pt]);
+        if (inst.afterPickup) inst.framedDriver = true;
+      }
     }
   }
 

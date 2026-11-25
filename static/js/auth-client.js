@@ -513,6 +513,74 @@ const AuthClient = {
     }
   },
 
+  formatRetryWait(seconds) {
+    var sec = Math.ceil(Number(seconds));
+    if (!Number.isFinite(sec) || sec < 1) return '';
+    if (sec < 60) return sec === 1 ? '1 second' : sec + ' seconds';
+    var minutes = Math.ceil(sec / 60);
+    if (minutes < 60) return minutes === 1 ? '1 minute' : minutes + ' minutes';
+    var hours = Math.floor(minutes / 60);
+    var rem = minutes % 60;
+    var hourLabel = hours === 1 ? '1 hour' : hours + ' hours';
+    if (!rem) return hourLabel;
+    var minuteLabel = rem === 1 ? '1 minute' : rem + ' minutes';
+    return hourLabel + ' ' + minuteLabel;
+  },
+
+  messageWithRetryWait(message, seconds) {
+    var wait = this.formatRetryWait(seconds);
+    var base = String(message || 'Too many login attempts').replace(
+      /\s*Please try again (?:later|in .+)\.?$/i,
+      ''
+    ).trim();
+    if (!base) base = 'Too many login attempts';
+    base = base.replace(/[.]+$/, '');
+    if (!wait) return base + '.';
+    return base + '. Please try again in ' + wait + '.';
+  },
+
+  _retryAfterSeconds(data, response) {
+    var n = Number(data && data.retry_after);
+    if (Number.isFinite(n) && n > 0) return Math.ceil(n);
+    try {
+      var header = response && response.headers && response.headers.get('Retry-After');
+      var h = Number(header);
+      if (Number.isFinite(h) && h > 0) return Math.ceil(h);
+    } catch (e) {}
+    return 0;
+  },
+
+  watchLoginLockout(seconds, hooks) {
+    if (this._loginLockoutTimer) {
+      clearInterval(this._loginLockoutTimer);
+      this._loginLockoutTimer = null;
+    }
+    var left = Math.ceil(Number(seconds) || 0);
+    hooks = hooks || {};
+    var base = hooks.baseMessage || 'Too many login attempts';
+    var self = this;
+    if (left <= 0) {
+      if (hooks.onDone) hooks.onDone();
+      return;
+    }
+    function tick() {
+      if (left <= 0) {
+        if (self._loginLockoutTimer) {
+          clearInterval(self._loginLockoutTimer);
+          self._loginLockoutTimer = null;
+        }
+        if (hooks.onDone) hooks.onDone();
+        return;
+      }
+      if (hooks.onTick) hooks.onTick(self.messageWithRetryWait(base, left), left);
+    }
+    tick();
+    this._loginLockoutTimer = setInterval(function () {
+      left -= 1;
+      tick();
+    }, 1000);
+  },
+
   async login(email, password, rememberMe) {
     try {
       const response = await fetch(this.config.apiUrl + '/login', {
@@ -522,10 +590,18 @@ const AuthClient = {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        data = {};
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        const retryAfter = this._retryAfterSeconds(data, response);
+        let message = (data && (data.error || data.message)) || 'Login failed';
+        if (retryAfter > 0) message = this.messageWithRetryWait(message, retryAfter);
+        return { success: false, error: message, retryAfter: retryAfter };
       }
 
       this.storeAuth(data.access_token, null, data.user);

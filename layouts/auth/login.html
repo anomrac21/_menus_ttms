@@ -50,15 +50,29 @@
 
         <div class="form-group">
           <label for="password" class="form-label">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            class="form-input" 
-            placeholder="Enter your password"
-            required
-            autocomplete="current-password"
-          >
+          <div class="password-field">
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              class="form-input" 
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            >
+            <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password" aria-pressed="false">
+              <svg class="password-toggle-icon password-toggle-icon-show" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="password-toggle-icon password-toggle-icon-hide" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3l18 18"/>
+                <path d="M10.6 10.6a3 3 0 004.2 4.2"/>
+                <path d="M9.9 5.2A10.8 10.8 0 0112 5c6.5 0 10 7 10 7a18.5 18.5 0 01-3.2 4.2"/>
+                <path d="M6.1 6.1C3.8 7.8 2 12 2 12s3.5 7 10 7a10.8 10.8 0 004.2-.8"/>
+              </svg>
+            </button>
+          </div>
           <div class="form-error" id="passwordError"></div>
         </div>
 
@@ -114,6 +128,7 @@
         var form = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        bindPasswordToggle(passwordInput);
         const loginBtn = document.getElementById('loginBtn');
         const alertContainer = document.getElementById('alertContainer');
 
@@ -190,6 +205,7 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (loginBtn.disabled) return;
 
         // Clear previous errors
         clearErrors();
@@ -245,9 +261,23 @@
             }, 600);
           } else {
             console.error('❌ Login failed:', result.error);
-            showAlert('error', result.error || 'Login failed. Please check your credentials.');
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = 'Sign In';
+            if (result.retryAfter > 0 && typeof AuthClient.watchLoginLockout === 'function') {
+              loginBtn.disabled = true;
+              loginBtn.innerHTML = 'Sign In';
+              AuthClient.watchLoginLockout(result.retryAfter, {
+                baseMessage: 'Too many login attempts',
+                onTick: function (msg) { showAlert('error', msg); },
+                onDone: function () {
+                  showAlert('error', 'You can try signing in again.');
+                  loginBtn.disabled = false;
+                  loginBtn.innerHTML = 'Sign In';
+                },
+              });
+            } else {
+              showAlert('error', result.error || 'Login failed. Please check your credentials.');
+              loginBtn.disabled = false;
+              loginBtn.innerHTML = 'Sign In';
+            }
           }
         } catch (error) {
           console.error('💥 Login exception:', error);
@@ -275,6 +305,18 @@
       });
 
       // Helper functions
+      function bindPasswordToggle(input) {
+        const btn = document.getElementById('togglePassword');
+        if (!input || !btn) return;
+        btn.addEventListener('click', function () {
+          const show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          btn.classList.toggle('is-visible', show);
+          btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+          btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        });
+      }
+
       function showError(elementId, message) {
         const errorElement = document.getElementById(elementId);
         if (errorElement) {
@@ -375,7 +417,7 @@
           return;
         }
         var base = new URL('/js/', window.location.origin).href;
-        loadScript(base + 'auth-client.js?v=google-signup-fix', function() {
+        loadScript(base + 'auth-client.js?v=login-lockout', function() {
           loadScript(base + 'auth-google-oauth.js?v=google-signup-fix', runLoginPage);
         });
       }
